@@ -14,6 +14,7 @@ import Challenges from "./pages/Challenges";
 import Patients from "./pages/Patients";
 import MealPlans from "./pages/MealPlans";
 import AnalyzeMeal from "./pages/AnalyzeMeal";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
