@@ -203,6 +203,7 @@ function PatientDashboardContent() {
         <SmartTips />
       </motion.div>
     </motion.div>
+    </>
   );
 }
 
