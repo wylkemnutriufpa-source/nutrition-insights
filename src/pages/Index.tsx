@@ -136,6 +136,11 @@ function PatientDashboardContent() {
         )}
       </motion.div>
 
+      {/* Smart Plan Card */}
+      <motion.div variants={item}>
+        <SmartPlanCard />
+      </motion.div>
+
       {/* Radar + Tips side by side */}
       <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <MetabolicRadar anamnesis={anamnesis} />
