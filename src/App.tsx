@@ -23,6 +23,7 @@ import Programs from "./pages/Programs";
 import ProgramDetail from "./pages/ProgramDetail";
 import Checklist from "./pages/Checklist";
 import DietTemplates from "./pages/DietTemplates";
+import PhysicalAssessment from "./pages/PhysicalAssessment";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
