@@ -229,7 +229,15 @@ export default function PatientDetail() {
               {patientProtocols.filter(p => p.status === "active").length} protocolos ativos
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => navigate(`/diet-templates?patientId=${patientId}`)}
+            >
+              <BookOpen className="w-4 h-4" />
+              Modelos de Dieta
+            </Button>
             <Button
               variant="outline"
               className="gap-2"
