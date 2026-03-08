@@ -34,9 +34,11 @@ const item = {
 // ──── Patient Dashboard ────
 function PatientDashboardContent() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<PlayerStats | null>(null);
   const [checklistTasks, setChecklistTasks] = useState<any[]>([]);
   const [anamnesis, setAnamnesis] = useState<any>(null);
+  const [showAnamnesisModal, setShowAnamnesisModal] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -45,11 +47,16 @@ function PatientDashboardContent() {
     Promise.all([
       supabase.from("player_stats").select("*").eq("user_id", user.id).single(),
       supabase.from("checklist_tasks").select("*").eq("patient_id", user.id).eq("date", today).order("category"),
-      supabase.from("patient_anamnesis").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
+      supabase.from("patient_anamnesis").select("*").eq("user_id", user.id).eq("status", "completed").order("created_at", { ascending: false }).limit(1),
     ]).then(([statsRes, checkRes, anamRes]) => {
       setStats(statsRes.data);
       setChecklistTasks(checkRes.data || []);
-      setAnamnesis(anamRes.data?.[0] || null);
+      const anam = anamRes.data?.[0] || null;
+      setAnamnesis(anam);
+      // Show modal if patient has no completed anamnesis
+      if (!anam) {
+        setShowAnamnesisModal(true);
+      }
     });
   }, [user]);
 
