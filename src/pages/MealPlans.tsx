@@ -17,6 +17,7 @@ type MealPlan = Tables<"meal_plans">;
 
 export default function MealPlans() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [plans, setPlans] = useState<(MealPlan & { patient_name?: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
