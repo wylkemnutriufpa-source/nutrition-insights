@@ -293,7 +293,7 @@ serve(async (req) => {
       });
     }
 
-    // ── NEW: Fetch AI insights for this patient ──
+    // ── Fetch AI insights for this patient ──
     const serviceClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -307,11 +307,22 @@ serve(async (req) => {
       .limit(1)
       .single();
 
-    const kcal = anamnesis.computed_kcal_target || 2000;
-    const protein = anamnesis.computed_protein || 100;
-    const carbs = anamnesis.computed_carbs || 250;
-    const fat = anamnesis.computed_fat || 60;
+    // ── Fetch latest physical assessment (priority over anamnesis) ──
+    const { data: physicalAssessment } = await serviceClient
+      .from("physical_assessments")
+      .select("calories_target, protein_target, carbs_target, fat_target, tdee, bmr, weight, body_fat_percentage")
+      .eq("patient_id", patient_id)
+      .order("assessment_date", { ascending: false })
+      .limit(1)
+      .single();
+
+    // Physical assessment targets take priority, then anamnesis, then defaults
+    const kcal = physicalAssessment?.calories_target || anamnesis.computed_kcal_target || 2000;
+    const protein = physicalAssessment?.protein_target || anamnesis.computed_protein || 100;
+    const carbs = physicalAssessment?.carbs_target || anamnesis.computed_carbs || 250;
+    const fat = physicalAssessment?.fat_target || anamnesis.computed_fat || 60;
     const answers = anamnesis.answers as Record<string, any>;
+    const dataSource = physicalAssessment?.calories_target ? "physical_assessment" : "anamnesis";
 
     // Generate meal plan items (now with AI insights)
     const planItems = generatePlan(answers, kcal, protein, carbs, fat, aiInsights);
