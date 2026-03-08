@@ -7,18 +7,21 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   LayoutDashboard, Users, UtensilsCrossed, Trophy, Target,
   Leaf, LogOut, Moon, Sun, ChevronRight, Sparkles, Settings,
-  ClipboardCheck
+  ClipboardCheck, FileText, Rocket, CheckCircle2, Activity
 } from "lucide-react";
 import { useState } from "react";
 
 const nutritionistLinks = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/patients", icon: Users, label: "Pacientes" },
+  { to: "/protocols", icon: FileText, label: "Protocolos" },
+  { to: "/programs", icon: Rocket, label: "Programas" },
   { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos" },
 ];
 
 const patientLinks = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/checklist", icon: CheckCircle2, label: "Checklist" },
   { to: "/meals", icon: UtensilsCrossed, label: "Refeições" },
   { to: "/anamnesis", icon: ClipboardCheck, label: "Anamnese" },
   { to: "/achievements", icon: Trophy, label: "Conquistas" },
@@ -65,7 +68,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               animate={{ opacity: 1 }}
               className="font-display font-bold text-lg"
             >
-              Nutri<span className="text-primary">Flow</span>
+              Fit<span className="text-gradient">Journey</span>
             </motion.span>
           )}
         </div>

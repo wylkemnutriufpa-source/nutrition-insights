@@ -12,11 +12,15 @@ import Meals from "./pages/Meals";
 import Achievements from "./pages/Achievements";
 import Challenges from "./pages/Challenges";
 import Patients from "./pages/Patients";
+import PatientDetail from "./pages/PatientDetail";
 import MealPlans from "./pages/MealPlans";
 import MealPlanEditor from "./pages/MealPlanEditor";
 import Anamnesis from "./pages/Anamnesis";
 import AnalyzeMeal from "./pages/AnalyzeMeal";
 import Settings from "./pages/Settings";
+import Protocols from "./pages/Protocols";
+import Programs from "./pages/Programs";
+import Checklist from "./pages/Checklist";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,6 +65,10 @@ const App = () => (
             <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
             <Route path="/challenges" element={<ProtectedRoute><Challenges /></ProtectedRoute>} />
             <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
+            <Route path="/patients/:patientId" element={<ProtectedRoute><PatientDetail /></ProtectedRoute>} />
+            <Route path="/protocols" element={<ProtectedRoute><Protocols /></ProtectedRoute>} />
+            <Route path="/programs" element={<ProtectedRoute><Programs /></ProtectedRoute>} />
+            <Route path="/checklist" element={<ProtectedRoute><Checklist /></ProtectedRoute>} />
             <Route path="/meal-plans" element={<ProtectedRoute><MealPlans /></ProtectedRoute>} />
             <Route path="/meal-plans/:id" element={<ProtectedRoute><MealPlanEditor /></ProtectedRoute>} />
             <Route path="/anamnesis" element={<ProtectedRoute><Anamnesis /></ProtectedRoute>} />
