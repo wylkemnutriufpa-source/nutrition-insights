@@ -19,8 +19,8 @@ interface Recipe {
   id: string;
   title: string;
   description: string | null;
-  ingredients: any[];
-  instructions: any[];
+  ingredients: any;
+  instructions: any;
   prep_time_minutes: number;
   cook_time_minutes: number;
   servings: number;
