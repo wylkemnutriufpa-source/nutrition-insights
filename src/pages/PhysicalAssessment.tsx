@@ -637,49 +637,159 @@ export default function PhysicalAssessment() {
               ) : history.length === 0 ? (
                 <p className="text-sm text-muted-foreground">Nenhuma avaliação anterior registrada.</p>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-border">
-                        <th className="text-left py-2 px-2 text-xs text-muted-foreground">Data</th>
-                        <th className="text-right py-2 px-2 text-xs text-muted-foreground">Peso</th>
-                        <th className="text-right py-2 px-2 text-xs text-muted-foreground">IMC</th>
-                        <th className="text-right py-2 px-2 text-xs text-muted-foreground">%G</th>
-                        <th className="text-right py-2 px-2 text-xs text-muted-foreground">M.Magra</th>
-                        <th className="text-right py-2 px-2 text-xs text-muted-foreground">TMB</th>
-                        <th className="text-right py-2 px-2 text-xs text-muted-foreground">GET</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {history.map((h: any) => (
-                        <tr key={h.id} className="border-b border-border/50 hover:bg-muted/30">
-                          <td className="py-2 px-2">{new Date(h.assessment_date + "T12:00:00").toLocaleDateString("pt-BR")}</td>
-                          <td className="py-2 px-2 text-right font-medium">{h.weight ?? "—"}kg</td>
-                          <td className="py-2 px-2 text-right">{h.bmi ?? "—"}</td>
-                          <td className="py-2 px-2 text-right text-orange-400">{h.body_fat_percentage ? h.body_fat_percentage + "%" : "—"}</td>
-                          <td className="py-2 px-2 text-right text-blue-400">{h.lean_mass ? h.lean_mass + "kg" : "—"}</td>
-                          <td className="py-2 px-2 text-right">{h.bmr ?? "—"}</td>
-                          <td className="py-2 px-2 text-right font-semibold text-primary">{h.tdee ?? "—"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                <>
+                  {/* Evolution Charts */}
+                  {history.length >= 2 && (() => {
+                    const chartData = [...history]
+                      .sort((a, b) => a.assessment_date.localeCompare(b.assessment_date))
+                      .map((h: any) => ({
+                        date: new Date(h.assessment_date + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
+                        peso: h.weight ? Number(h.weight) : null,
+                        gordura: h.body_fat_percentage ? Number(h.body_fat_percentage) : null,
+                        magra: h.lean_mass ? Number(h.lean_mass) : null,
+                        imc: h.bmi ? Number(h.bmi) : null,
+                        tmb: h.bmr ? Number(h.bmr) : null,
+                        get: h.tdee ? Number(h.tdee) : null,
+                      }));
 
-              {history.length >= 2 && (
-                <div className="mt-4 p-3 rounded-lg bg-primary/5 border border-primary/20">
-                  <p className="text-xs font-semibold text-primary mb-1">📊 Evolução</p>
-                  <p className="text-xs text-muted-foreground">
-                    {(() => {
-                      const first = history[history.length - 1];
-                      const last = history[0];
-                      const weightDiff = ((last.weight || 0) - (first.weight || 0)).toFixed(1);
-                      const fatDiff = ((last.body_fat_percentage || 0) - (first.body_fat_percentage || 0)).toFixed(1);
-                      return `Peso: ${Number(weightDiff) >= 0 ? "+" : ""}${weightDiff}kg • %G: ${Number(fatDiff) >= 0 ? "+" : ""}${fatDiff}% desde ${new Date(first.assessment_date + "T12:00:00").toLocaleDateString("pt-BR")}`;
-                    })()}
-                  </p>
-                </div>
+                    const first = history[history.length - 1];
+                    const last = history[0];
+                    const weightDiff = ((last.weight || 0) - (first.weight || 0)).toFixed(1);
+                    const fatDiff = ((last.body_fat_percentage || 0) - (first.body_fat_percentage || 0)).toFixed(1);
+                    const leanDiff = ((last.lean_mass || 0) - (first.lean_mass || 0)).toFixed(1);
+
+                    return (
+                      <div className="space-y-6">
+                        {/* Summary badges */}
+                        <div className="flex flex-wrap gap-3">
+                          <div className={`px-3 py-1.5 rounded-full text-xs font-semibold ${Number(weightDiff) <= 0 ? "bg-emerald-500/15 text-emerald-400" : "bg-orange-500/15 text-orange-400"}`}>
+                            Peso: {Number(weightDiff) >= 0 ? "+" : ""}{weightDiff}kg
+                          </div>
+                          <div className={`px-3 py-1.5 rounded-full text-xs font-semibold ${Number(fatDiff) <= 0 ? "bg-emerald-500/15 text-emerald-400" : "bg-orange-500/15 text-orange-400"}`}>
+                            %G: {Number(fatDiff) >= 0 ? "+" : ""}{fatDiff}%
+                          </div>
+                          <div className={`px-3 py-1.5 rounded-full text-xs font-semibold ${Number(leanDiff) >= 0 ? "bg-emerald-500/15 text-emerald-400" : "bg-orange-500/15 text-orange-400"}`}>
+                            M.Magra: {Number(leanDiff) >= 0 ? "+" : ""}{leanDiff}kg
+                          </div>
+                          <div className="px-3 py-1.5 rounded-full text-xs text-muted-foreground bg-muted">
+                            desde {new Date(first.assessment_date + "T12:00:00").toLocaleDateString("pt-BR")}
+                          </div>
+                        </div>
+
+                        {/* Weight Chart */}
+                        <div className="glass rounded-xl p-4">
+                          <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                            <Scale className="w-4 h-4 text-primary" /> Evolução do Peso (kg)
+                          </h4>
+                          <ResponsiveContainer width="100%" height={220}>
+                            <AreaChart data={chartData}>
+                              <defs>
+                                <linearGradient id="gradWeight" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                              <XAxis dataKey="date" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                              <YAxis domain={["dataMin - 2", "dataMax + 2"]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                              <Tooltip
+                                contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
+                                labelStyle={{ color: "hsl(var(--foreground))" }}
+                              />
+                              <Area type="monotone" dataKey="peso" stroke="hsl(var(--primary))" fill="url(#gradWeight)" strokeWidth={2.5} dot={{ r: 4, fill: "hsl(var(--primary))" }} name="Peso (kg)" connectNulls />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </div>
+
+                        {/* Body Fat & Lean Mass Chart */}
+                        <div className="glass rounded-xl p-4">
+                          <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                            <Activity className="w-4 h-4 text-orange-400" /> Composição Corporal
+                          </h4>
+                          <ResponsiveContainer width="100%" height={220}>
+                            <LineChart data={chartData}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                              <XAxis dataKey="date" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                              <YAxis yAxisId="left" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                              <Tooltip
+                                contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
+                                labelStyle={{ color: "hsl(var(--foreground))" }}
+                              />
+                              <Legend wrapperStyle={{ fontSize: 11 }} />
+                              <Line yAxisId="left" type="monotone" dataKey="gordura" stroke="#f97316" strokeWidth={2.5} dot={{ r: 4 }} name="% Gordura" connectNulls />
+                              <Line yAxisId="right" type="monotone" dataKey="magra" stroke="#60a5fa" strokeWidth={2.5} dot={{ r: 4 }} name="Massa Magra (kg)" connectNulls />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
+
+                        {/* BMI & Energy Chart */}
+                        <div className="glass rounded-xl p-4">
+                          <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                            <Flame className="w-4 h-4 text-red-400" /> Gasto Energético
+                          </h4>
+                          <ResponsiveContainer width="100%" height={220}>
+                            <AreaChart data={chartData}>
+                              <defs>
+                                <linearGradient id="gradTmb" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#f87171" stopOpacity={0.3} />
+                                  <stop offset="95%" stopColor="#f87171" stopOpacity={0} />
+                                </linearGradient>
+                                <linearGradient id="gradGet" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#a78bfa" stopOpacity={0.3} />
+                                  <stop offset="95%" stopColor="#a78bfa" stopOpacity={0} />
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                              <XAxis dataKey="date" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                              <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                              <Tooltip
+                                contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
+                                labelStyle={{ color: "hsl(var(--foreground))" }}
+                              />
+                              <Legend wrapperStyle={{ fontSize: 11 }} />
+                              <Area type="monotone" dataKey="tmb" stroke="#f87171" fill="url(#gradTmb)" strokeWidth={2} dot={{ r: 3 }} name="TMB (kcal)" connectNulls />
+                              <Area type="monotone" dataKey="get" stroke="#a78bfa" fill="url(#gradGet)" strokeWidth={2} dot={{ r: 3 }} name="GET (kcal)" connectNulls />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* History Table */}
+                  <div className={history.length >= 2 ? "mt-6" : ""}>
+                    <h4 className="text-sm font-semibold mb-3">Tabela de Avaliações</h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-border">
+                            <th className="text-left py-2 px-2 text-xs text-muted-foreground">Data</th>
+                            <th className="text-right py-2 px-2 text-xs text-muted-foreground">Peso</th>
+                            <th className="text-right py-2 px-2 text-xs text-muted-foreground">IMC</th>
+                            <th className="text-right py-2 px-2 text-xs text-muted-foreground">%G</th>
+                            <th className="text-right py-2 px-2 text-xs text-muted-foreground">M.Magra</th>
+                            <th className="text-right py-2 px-2 text-xs text-muted-foreground">TMB</th>
+                            <th className="text-right py-2 px-2 text-xs text-muted-foreground">GET</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {history.map((h: any) => (
+                            <tr key={h.id} className="border-b border-border/50 hover:bg-muted/30">
+                              <td className="py-2 px-2">{new Date(h.assessment_date + "T12:00:00").toLocaleDateString("pt-BR")}</td>
+                              <td className="py-2 px-2 text-right font-medium">{h.weight ?? "—"}kg</td>
+                              <td className="py-2 px-2 text-right">{h.bmi ?? "—"}</td>
+                              <td className="py-2 px-2 text-right text-orange-400">{h.body_fat_percentage ? h.body_fat_percentage + "%" : "—"}</td>
+                              <td className="py-2 px-2 text-right text-blue-400">{h.lean_mass ? h.lean_mass + "kg" : "—"}</td>
+                              <td className="py-2 px-2 text-right">{h.bmr ?? "—"}</td>
+                              <td className="py-2 px-2 text-right font-semibold text-primary">{h.tdee ?? "—"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>
               )}
             </div>
           </TabsContent>
