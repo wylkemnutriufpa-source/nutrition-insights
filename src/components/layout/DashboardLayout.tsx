@@ -176,7 +176,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         className="flex-1 transition-all duration-200"
         style={{ marginLeft: collapsed ? 72 : 260 }}
       >
-        <div className="p-6 max-w-7xl mx-auto">
+        <div className="fixed top-0 right-0 z-40 p-3" style={{ left: collapsed ? 72 : 260 }}>
+          <div className="flex justify-end">
+            <NotificationBell />
+          </div>
+        </div>
+        <div className="p-6 pt-14 max-w-7xl mx-auto">
           {children}
         </div>
       </main>
