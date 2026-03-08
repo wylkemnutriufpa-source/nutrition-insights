@@ -14,10 +14,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import MetabolicRadar from "@/components/dashboard/MetabolicRadar";
 import { AnamnesisInsightsFull } from "@/components/patient/AnamnesisInsightsCard";
+import PatientCalculators from "@/components/patient/PatientCalculators";
+import PatientAgenda from "@/components/patient/PatientAgenda";
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
-  TrendingUp, Zap, Heart, Brain, BookOpen, Scale
+  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays
 } from "lucide-react";
 
 interface PatientProfile {
