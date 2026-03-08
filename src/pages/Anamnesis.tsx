@@ -510,7 +510,7 @@ export default function Anamnesis() {
     const fat = Math.round((kcalTarget * 0.25) / 9);
 
     const { data: anamData, error } = await supabase.from("patient_anamnesis").insert({
-      user_id: user.id,
+      user_id: targetUserId,
       answers,
       computed_tmb: Math.round(tmb),
       computed_kcal_target: kcalTarget,
