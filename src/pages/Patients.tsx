@@ -22,6 +22,7 @@ interface PatientInfo {
 
 export default function Patients() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [patients, setPatients] = useState<PatientInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
