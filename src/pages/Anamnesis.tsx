@@ -423,6 +423,9 @@ export default function Anamnesis() {
   const [completed, setCompleted] = useState(false);
   const [aiResult, setAiResult] = useState<any>(null);
   const [patientName, setPatientName] = useState<string>("");
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // The target user: either the patient themselves or the patient being filled by nutritionist
   const targetUserId = forPatientId || user?.id;
@@ -439,19 +442,75 @@ export default function Anamnesis() {
     }
   }, [isNutritionistMode, forPatientId]);
 
-  // Check if already completed
+  // Load existing draft on mount
   useEffect(() => {
     if (!targetUserId) return;
     supabase
       .from("patient_anamnesis")
-      .select("id, status")
+      .select("id, status, answers")
       .eq("user_id", targetUserId)
       .order("created_at", { ascending: false })
       .limit(1)
       .then(({ data }) => {
-        if (data?.[0]?.status === "completed") setCompleted(true);
+        if (data?.[0]?.status === "completed") {
+          setCompleted(true);
+        } else if (data?.[0]?.status === "draft") {
+          // Restore draft
+          setDraftId(data[0].id);
+          const savedAnswers = data[0].answers as Record<string, any>;
+          if (savedAnswers && Object.keys(savedAnswers).length > 0) {
+            setAnswers(savedAnswers);
+            // Jump to last answered question
+            const lastIdx = questions.findIndex((q) => !(q.id in savedAnswers));
+            if (lastIdx > 0) setStep(lastIdx);
+            else if (lastIdx === -1) setStep(questions.length - 1);
+            toast.info("Rascunho restaurado! Continue de onde parou 📝");
+          }
+        }
       });
   }, [targetUserId]);
+
+  // Autosave function
+  const performAutoSave = useCallback(async (currentAnswers: Record<string, any>) => {
+    if (!targetUserId || !user || Object.keys(currentAnswers).length === 0) return;
+    setAutoSaveStatus("saving");
+
+    try {
+      if (draftId) {
+        await supabase
+          .from("patient_anamnesis")
+          .update({ answers: currentAnswers, updated_at: new Date().toISOString() })
+          .eq("id", draftId);
+      } else {
+        const { data } = await supabase
+          .from("patient_anamnesis")
+          .insert({
+            user_id: targetUserId,
+            answers: currentAnswers,
+            status: "draft",
+          })
+          .select("id")
+          .single();
+        if (data) setDraftId(data.id);
+      }
+      setAutoSaveStatus("saved");
+      setTimeout(() => setAutoSaveStatus("idle"), 2000);
+    } catch {
+      setAutoSaveStatus("idle");
+    }
+  }, [targetUserId, user, draftId]);
+
+  // Debounced autosave on answers change
+  useEffect(() => {
+    if (Object.keys(answers).length === 0 || completed) return;
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => {
+      performAutoSave(answers);
+    }, 1500);
+    return () => {
+      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    };
+  }, [answers, performAutoSave, completed]);
 
   const setAnswer = (value: any) => {
     setAnswers((prev) => ({ ...prev, [q.id]: value }));
