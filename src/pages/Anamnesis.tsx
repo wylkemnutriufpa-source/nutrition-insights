@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,7 +6,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Sparkles, Check, Heart, Brain, Loader2, UserCheck } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles, Check, Heart, Brain, Loader2, UserCheck, Save } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
 
@@ -423,6 +423,9 @@ export default function Anamnesis() {
   const [completed, setCompleted] = useState(false);
   const [aiResult, setAiResult] = useState<any>(null);
   const [patientName, setPatientName] = useState<string>("");
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // The target user: either the patient themselves or the patient being filled by nutritionist
   const targetUserId = forPatientId || user?.id;
@@ -439,19 +442,75 @@ export default function Anamnesis() {
     }
   }, [isNutritionistMode, forPatientId]);
 
-  // Check if already completed
+  // Load existing draft on mount
   useEffect(() => {
     if (!targetUserId) return;
     supabase
       .from("patient_anamnesis")
-      .select("id, status")
+      .select("id, status, answers")
       .eq("user_id", targetUserId)
       .order("created_at", { ascending: false })
       .limit(1)
       .then(({ data }) => {
-        if (data?.[0]?.status === "completed") setCompleted(true);
+        if (data?.[0]?.status === "completed") {
+          setCompleted(true);
+        } else if (data?.[0]?.status === "draft") {
+          // Restore draft
+          setDraftId(data[0].id);
+          const savedAnswers = data[0].answers as Record<string, any>;
+          if (savedAnswers && Object.keys(savedAnswers).length > 0) {
+            setAnswers(savedAnswers);
+            // Jump to last answered question
+            const lastIdx = questions.findIndex((q) => !(q.id in savedAnswers));
+            if (lastIdx > 0) setStep(lastIdx);
+            else if (lastIdx === -1) setStep(questions.length - 1);
+            toast.info("Rascunho restaurado! Continue de onde parou 📝");
+          }
+        }
       });
   }, [targetUserId]);
+
+  // Autosave function
+  const performAutoSave = useCallback(async (currentAnswers: Record<string, any>) => {
+    if (!targetUserId || !user || Object.keys(currentAnswers).length === 0) return;
+    setAutoSaveStatus("saving");
+
+    try {
+      if (draftId) {
+        await supabase
+          .from("patient_anamnesis")
+          .update({ answers: currentAnswers, updated_at: new Date().toISOString() })
+          .eq("id", draftId);
+      } else {
+        const { data } = await supabase
+          .from("patient_anamnesis")
+          .insert({
+            user_id: targetUserId,
+            answers: currentAnswers,
+            status: "draft",
+          })
+          .select("id")
+          .single();
+        if (data) setDraftId(data.id);
+      }
+      setAutoSaveStatus("saved");
+      setTimeout(() => setAutoSaveStatus("idle"), 2000);
+    } catch {
+      setAutoSaveStatus("idle");
+    }
+  }, [targetUserId, user, draftId]);
+
+  // Debounced autosave on answers change
+  useEffect(() => {
+    if (Object.keys(answers).length === 0 || completed) return;
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => {
+      performAutoSave(answers);
+    }, 1500);
+    return () => {
+      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    };
+  }, [answers, performAutoSave, completed]);
 
   const setAnswer = (value: any) => {
     setAnswers((prev) => ({ ...prev, [q.id]: value }));
@@ -509,7 +568,7 @@ export default function Anamnesis() {
     const carbs = Math.round((kcalTarget * 0.45) / 4);
     const fat = Math.round((kcalTarget * 0.25) / 9);
 
-    const { data: anamData, error } = await supabase.from("patient_anamnesis").insert({
+    const payload = {
       user_id: targetUserId,
       answers,
       computed_tmb: Math.round(tmb),
@@ -518,12 +577,35 @@ export default function Anamnesis() {
       computed_carbs: carbs,
       computed_fat: fat,
       status: "completed",
-    }).select().single();
+    };
 
-    if (error) {
-      toast.error("Erro ao salvar: " + error.message);
-      setSubmitting(false);
-      return;
+    let anamData: any;
+    if (draftId) {
+      // Update existing draft to completed
+      const { data, error } = await supabase
+        .from("patient_anamnesis")
+        .update(payload)
+        .eq("id", draftId)
+        .select()
+        .single();
+      if (error) {
+        toast.error("Erro ao salvar: " + error.message);
+        setSubmitting(false);
+        return;
+      }
+      anamData = data;
+    } else {
+      const { data, error } = await supabase
+        .from("patient_anamnesis")
+        .insert(payload)
+        .select()
+        .single();
+      if (error) {
+        toast.error("Erro ao salvar: " + error.message);
+        setSubmitting(false);
+        return;
+      }
+      anamData = data;
     }
 
     toast.success("Anamnese salva! Gerando análise inteligente... 🧠");
@@ -667,7 +749,19 @@ export default function Anamnesis() {
             <span className="text-sm text-muted-foreground">
               Pergunta {step + 1} de {questions.length}
             </span>
-            <span className="text-sm font-medium text-primary">{Math.round(progress)}%</span>
+            <div className="flex items-center gap-3">
+              {autoSaveStatus === "saving" && (
+                <span className="flex items-center gap-1 text-xs text-muted-foreground animate-pulse">
+                  <Loader2 className="w-3 h-3 animate-spin" /> Salvando...
+                </span>
+              )}
+              {autoSaveStatus === "saved" && (
+                <span className="flex items-center gap-1 text-xs text-success">
+                  <Save className="w-3 h-3" /> Salvo
+                </span>
+              )}
+              <span className="text-sm font-medium text-primary">{Math.round(progress)}%</span>
+            </div>
           </div>
           <Progress value={progress} className="h-2" />
         </div>
