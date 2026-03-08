@@ -84,6 +84,16 @@ export default function MealPlanEditor() {
   const [copySource, setCopySource] = useState<{ day: number; mealType: MealType } | null>(null);
   const [generating, setGenerating] = useState(false);
 
+  // Save/Import state
+  const [savingMeal, setSavingMeal] = useState(false);
+  const [savingPlan, setSavingPlan] = useState(false);
+  const [savedMealsDialogOpen, setSavedMealsDialogOpen] = useState(false);
+  const [savedMeals, setSavedMeals] = useState<any[]>([]);
+  const [loadingSavedMeals, setLoadingSavedMeals] = useState(false);
+  const [savedPlansDialogOpen, setSavedPlansDialogOpen] = useState(false);
+  const [savedPlans, setSavedPlans] = useState<any[]>([]);
+  const [loadingSavedPlans, setLoadingSavedPlans] = useState(false);
+
   const fetchData = useCallback(async () => {
     if (!id || !user) return;
     setLoading(true);
