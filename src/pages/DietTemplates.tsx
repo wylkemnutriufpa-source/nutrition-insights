@@ -188,10 +188,25 @@ export default function DietTemplates() {
     return Array.from(cats);
   }, [templates]);
 
-  // Calculate adjusted macros based on anamnesis
+  // Physical assessment takes priority over anamnesis for calorie targets
+  const getEffectiveCalories = () => {
+    if (physicalAssessment?.calories_target) return Math.round(Number(physicalAssessment.calories_target));
+    if (anamnesis?.computed_kcal_target) return Math.round(Number(anamnesis.computed_kcal_target));
+    return null;
+  };
+
+  const getEffectiveMacros = () => ({
+    protein: physicalAssessment?.protein_target ? Math.round(Number(physicalAssessment.protein_target)) : (anamnesis?.computed_protein ? Math.round(Number(anamnesis.computed_protein)) : null),
+    carbs: physicalAssessment?.carbs_target ? Math.round(Number(physicalAssessment.carbs_target)) : (anamnesis?.computed_carbs ? Math.round(Number(anamnesis.computed_carbs)) : null),
+    fat: physicalAssessment?.fat_target ? Math.round(Number(physicalAssessment.fat_target)) : (anamnesis?.computed_fat ? Math.round(Number(anamnesis.computed_fat)) : null),
+  });
+
+  const dataSource = physicalAssessment?.calories_target ? "assessment" : "anamnesis";
+
   const getAdjustedCalories = (template: DietTemplate) => {
-    if (!anamnesis?.computed_kcal_target) return template.base_calories;
-    return Math.round(anamnesis.computed_kcal_target);
+    const effective = getEffectiveCalories();
+    if (!effective) return template.base_calories;
+    return effective;
   };
 
   const getCalorieMultiplier = (template: DietTemplate) => {
