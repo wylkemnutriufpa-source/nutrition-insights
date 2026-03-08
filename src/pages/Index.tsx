@@ -7,6 +7,7 @@ import StatsCard from "@/components/dashboard/StatsCard";
 import XPBar from "@/components/gamification/XPBar";
 import StreakCounter from "@/components/gamification/StreakCounter";
 import MealCard from "@/components/meals/MealCard";
+import SmartTips from "@/components/patient/SmartTips";
 import { UtensilsCrossed, Users, TrendingUp, Target, Sparkles, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
