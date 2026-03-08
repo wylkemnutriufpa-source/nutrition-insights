@@ -316,6 +316,12 @@ export default function PatientDetail() {
             <TabsTrigger value="assessment">
               <Activity className="w-3.5 h-3.5 mr-1" /> Avaliação Física
             </TabsTrigger>
+            <TabsTrigger value="agenda">
+              <CalendarDays className="w-3.5 h-3.5 mr-1" /> Agenda
+            </TabsTrigger>
+            <TabsTrigger value="calculators">
+              <Calculator className="w-3.5 h-3.5 mr-1" /> Calculadoras
+            </TabsTrigger>
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
             <TabsTrigger value="protocols">Protocolos</TabsTrigger>
             <TabsTrigger value="radar">Radar Metabólico</TabsTrigger>
