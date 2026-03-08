@@ -412,31 +412,46 @@ function SliderInput({
 
 // ──── Main page ────
 export default function Anamnesis() {
-  const { user } = useAuth();
+  const { user, isNutritionist } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const forPatientId = searchParams.get("patientId");
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [submitting, setSubmitting] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [aiResult, setAiResult] = useState<any>(null);
+  const [patientName, setPatientName] = useState<string>("");
+
+  // The target user: either the patient themselves or the patient being filled by nutritionist
+  const targetUserId = forPatientId || user?.id;
+  const isNutritionistMode = isNutritionist && !!forPatientId;
 
   const q = questions[step];
   const progress = ((step + 1) / questions.length) * 100;
 
+  // Fetch patient name if nutritionist mode
+  useEffect(() => {
+    if (isNutritionistMode && forPatientId) {
+      supabase.from("profiles").select("full_name").eq("user_id", forPatientId).single()
+        .then(({ data }) => setPatientName(data?.full_name || "Paciente"));
+    }
+  }, [isNutritionistMode, forPatientId]);
+
   // Check if already completed
   useEffect(() => {
-    if (!user) return;
+    if (!targetUserId) return;
     supabase
       .from("patient_anamnesis")
       .select("id, status")
-      .eq("user_id", user.id)
+      .eq("user_id", targetUserId)
       .order("created_at", { ascending: false })
       .limit(1)
       .then(({ data }) => {
         if (data?.[0]?.status === "completed") setCompleted(true);
       });
-  }, [user]);
+  }, [targetUserId]);
 
   const setAnswer = (value: any) => {
     setAnswers((prev) => ({ ...prev, [q.id]: value }));
