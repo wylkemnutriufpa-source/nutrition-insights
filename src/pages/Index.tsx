@@ -173,7 +173,7 @@ function NutritionistDashboardContent() {
               .select("full_name").eq("user_id", p.patient_id).single();
 
             if (anam?.[0]?.answers) {
-              const a = anam[0].answers;
+              const a = anam[0].answers as Record<string, any>;
               const risks: string[] = [];
               if (a.health_conditions?.some((c: string) => c !== "none")) risks.push("Condição de saúde");
               if (a.activity_level === "sedentary") risks.push("Sedentário");
