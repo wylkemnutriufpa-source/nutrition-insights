@@ -8,9 +8,11 @@ import {
   LayoutDashboard, Users, UtensilsCrossed, Trophy, Target,
   Leaf, LogOut, Moon, Sun, ChevronRight, Sparkles, Settings,
   ClipboardCheck, FileText, Rocket, CheckCircle2, Activity,
-  MessageSquare, Lightbulb, ChefHat, ShoppingCart, Apple, Camera
+  MessageSquare, Lightbulb, ChefHat, ShoppingCart, Apple, Camera,
+  Palette, Bell, BarChart3
 } from "lucide-react";
 import { useState } from "react";
+import NotificationBell from "@/components/notifications/NotificationBell";
 
 const nutritionistLinks = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
@@ -20,8 +22,10 @@ const nutritionistLinks = [
   { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos" },
   { to: "/recipes", icon: ChefHat, label: "Receitas" },
   { to: "/food-database", icon: Apple, label: "Alimentos" },
+  { to: "/reports", icon: BarChart3, label: "Relatórios" },
   { to: "/global-tips", icon: Lightbulb, label: "Dicas" },
   { to: "/feedbacks", icon: MessageSquare, label: "Feedbacks" },
+  { to: "/branding", icon: Palette, label: "Branding" },
 ];
 
 const patientLinks = [
@@ -172,7 +176,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         className="flex-1 transition-all duration-200"
         style={{ marginLeft: collapsed ? 72 : 260 }}
       >
-        <div className="p-6 max-w-7xl mx-auto">
+        <div className="fixed top-0 right-0 z-40 p-3" style={{ left: collapsed ? 72 : 260 }}>
+          <div className="flex justify-end">
+            <NotificationBell />
+          </div>
+        </div>
+        <div className="p-6 pt-14 max-w-7xl mx-auto">
           {children}
         </div>
       </main>

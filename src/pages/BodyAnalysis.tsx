@@ -68,9 +68,9 @@ export default function BodyAnalysis() {
   const uploadImage = async (file: File, path: string): Promise<string | null> => {
     const ext = file.name.split(".").pop();
     const filePath = `${path}/${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("meal-images").upload(filePath, file);
+    const { error } = await supabase.storage.from("body-images").upload(filePath, file);
     if (error) { toast.error("Erro no upload: " + error.message); return null; }
-    const { data: urlData } = supabase.storage.from("meal-images").getPublicUrl(filePath);
+    const { data: urlData } = supabase.storage.from("body-images").getPublicUrl(filePath);
     return urlData.publicUrl;
   };
 
