@@ -418,6 +418,7 @@ export default function PatientDetail() {
               <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
                 <DialogTrigger asChild>
                   <Button size="sm" className="gap-1"><Plus className="w-4 h-4" /> Nota</Button>
+                </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle className="font-display">Adicionar Nota</DialogTitle>
