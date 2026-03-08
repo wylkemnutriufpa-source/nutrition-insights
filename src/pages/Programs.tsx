@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,7 @@ const TAGS = [
 
 export default function Programs() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [programs, setPrograms] = useState<Program[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
@@ -268,7 +270,7 @@ export default function Programs() {
             {programs.map((p) => {
               const daysProgress = getDaysProgress(p.start_date, p.end_date);
               return (
-                <motion.div key={p.id} whileHover={{ y: -2 }} className="glass rounded-xl overflow-hidden shadow-card">
+                <motion.div key={p.id} whileHover={{ y: -2 }} className="glass rounded-xl overflow-hidden shadow-card cursor-pointer" onClick={() => navigate(`/programs/${p.id}`)}>
                   {/* Header with gradient */}
                   <div className="gradient-primary p-4 text-primary-foreground relative">
                     <div className="flex items-start justify-between">

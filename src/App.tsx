@@ -20,6 +20,7 @@ import AnalyzeMeal from "./pages/AnalyzeMeal";
 import Settings from "./pages/Settings";
 import Protocols from "./pages/Protocols";
 import Programs from "./pages/Programs";
+import ProgramDetail from "./pages/ProgramDetail";
 import Checklist from "./pages/Checklist";
 import NotFound from "./pages/NotFound";
 
@@ -68,6 +69,7 @@ const App = () => (
             <Route path="/patients/:patientId" element={<ProtectedRoute><PatientDetail /></ProtectedRoute>} />
             <Route path="/protocols" element={<ProtectedRoute><Protocols /></ProtectedRoute>} />
             <Route path="/programs" element={<ProtectedRoute><Programs /></ProtectedRoute>} />
+            <Route path="/programs/:programId" element={<ProtectedRoute><ProgramDetail /></ProtectedRoute>} />
             <Route path="/checklist" element={<ProtectedRoute><Checklist /></ProtectedRoute>} />
             <Route path="/meal-plans" element={<ProtectedRoute><MealPlans /></ProtectedRoute>} />
             <Route path="/meal-plans/:id" element={<ProtectedRoute><MealPlanEditor /></ProtectedRoute>} />
