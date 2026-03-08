@@ -233,6 +233,14 @@ export default function PatientDetail() {
             <Button
               variant="outline"
               className="gap-2"
+              onClick={() => navigate(`/physical-assessment?patientId=${patientId}`)}
+            >
+              <Activity className="w-4 h-4" />
+              Avaliação Física
+            </Button>
+            <Button
+              variant="outline"
+              className="gap-2"
               onClick={() => navigate(`/diet-templates?patientId=${patientId}`)}
             >
               <BookOpen className="w-4 h-4" />
