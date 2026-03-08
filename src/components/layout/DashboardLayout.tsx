@@ -19,6 +19,7 @@ const nutritionistLinks = [
   { to: "/patients", icon: Users, label: "Pacientes" },
   { to: "/appointments", icon: Activity, label: "Agenda" },
   { to: "/chat", icon: MessageSquare, label: "Chat" },
+  { to: "/weekly-goals", icon: Target, label: "Metas" },
   { to: "/protocols", icon: FileText, label: "Protocolos" },
   { to: "/programs", icon: Rocket, label: "Programas" },
   { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos" },
@@ -33,6 +34,7 @@ const nutritionistLinks = [
 const patientLinks = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/checklist", icon: CheckCircle2, label: "Checklist" },
+  { to: "/weekly-goals", icon: Target, label: "Metas" },
   { to: "/appointments", icon: Activity, label: "Agenda" },
   { to: "/chat", icon: MessageSquare, label: "Chat" },
   { to: "/meals", icon: UtensilsCrossed, label: "Refeições" },

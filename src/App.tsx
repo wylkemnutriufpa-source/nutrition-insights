@@ -35,6 +35,8 @@ import Notifications from "./pages/Notifications";
 import Reports from "./pages/Reports";
 import Chat from "./pages/Chat";
 import Appointments from "./pages/Appointments";
+import Landing from "./pages/Landing";
+import WeeklyGoals from "./pages/WeeklyGoals";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,6 +53,13 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) return <Navigate to="/auth" replace />;
+  return <>{children}</>;
+}
+
+function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (user) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
@@ -72,6 +81,7 @@ const App = () => (
         <AuthProvider>
           <DarkModeInit />
           <Routes>
+            <Route path="/landing" element={<PublicOnlyRoute><Landing /></PublicOnlyRoute>} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
@@ -101,6 +111,7 @@ const App = () => (
             <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
             <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
             <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
+            <Route path="/weekly-goals" element={<ProtectedRoute><WeeklyGoals /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
