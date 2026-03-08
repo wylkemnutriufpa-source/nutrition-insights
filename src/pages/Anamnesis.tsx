@@ -749,7 +749,19 @@ export default function Anamnesis() {
             <span className="text-sm text-muted-foreground">
               Pergunta {step + 1} de {questions.length}
             </span>
-            <span className="text-sm font-medium text-primary">{Math.round(progress)}%</span>
+            <div className="flex items-center gap-3">
+              {autoSaveStatus === "saving" && (
+                <span className="flex items-center gap-1 text-xs text-muted-foreground animate-pulse">
+                  <Loader2 className="w-3 h-3 animate-spin" /> Salvando...
+                </span>
+              )}
+              {autoSaveStatus === "saved" && (
+                <span className="flex items-center gap-1 text-xs text-success">
+                  <Save className="w-3 h-3" /> Salvo
+                </span>
+              )}
+              <span className="text-sm font-medium text-primary">{Math.round(progress)}%</span>
+            </div>
           </div>
           <Progress value={progress} className="h-2" />
         </div>
