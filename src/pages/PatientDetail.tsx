@@ -345,6 +345,11 @@ export default function PatientDetail() {
             </div>
           </TabsContent>
 
+          {/* AI Insights */}
+          <TabsContent value="ai-insights" className="mt-4">
+            <AnamnesisInsightsFull userId={patientId!} />
+          </TabsContent>
+
           {/* Timeline */}
           <TabsContent value="timeline" className="mt-4">
             <div className="flex justify-end mb-4">
