@@ -6,8 +6,8 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Sparkles, Check, Heart, Brain, Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { ChevronLeft, ChevronRight, Sparkles, Check, Heart, Brain, Loader2, UserCheck } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
 
 // ──── Question definitions ────
