@@ -17,6 +17,8 @@ import NotificationBell from "@/components/notifications/NotificationBell";
 const nutritionistLinks = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/patients", icon: Users, label: "Pacientes" },
+  { to: "/appointments", icon: Activity, label: "Agenda" },
+  { to: "/chat", icon: MessageSquare, label: "Chat" },
   { to: "/protocols", icon: FileText, label: "Protocolos" },
   { to: "/programs", icon: Rocket, label: "Programas" },
   { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos" },
