@@ -195,8 +195,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const links = isNutritionist ? nutritionistLinks : patientLinks;
 
   const toggleDark = () => {
+    const newDark = !dark;
     document.documentElement.classList.toggle("dark");
-    setDark(!dark);
+    localStorage.setItem("theme", newDark ? "dark" : "light");
+    setDark(newDark);
   };
 
   const initials = (profile?.full_name || "U")
