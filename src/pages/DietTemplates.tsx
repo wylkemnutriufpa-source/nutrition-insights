@@ -53,6 +53,16 @@ interface AnamnesisData {
   answers: Record<string, any>;
 }
 
+interface PhysicalAssessmentData {
+  calories_target: number | null;
+  protein_target: number | null;
+  carbs_target: number | null;
+  fat_target: number | null;
+  tdee: number | null;
+  bmr: number | null;
+  assessment_date: string;
+}
+
 const MEAL_ICONS: Record<string, React.ReactNode> = {
   breakfast: <Coffee className="w-4 h-4" />,
   morning_snack: <Apple className="w-4 h-4" />,
