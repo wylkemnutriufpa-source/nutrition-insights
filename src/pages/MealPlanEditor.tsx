@@ -505,11 +505,20 @@ export default function MealPlanEditor() {
 
             <div>
               <Label>Alimento / Preparação</Label>
-              <Input
+              <FoodAutocomplete
                 value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                placeholder="Ex: Arroz integral com frango grelhado"
-                autoFocus
+                onChange={(val) => setForm({ ...form, title: val })}
+                onSelect={(food: FoodItem) => {
+                  setForm({
+                    ...form,
+                    title: food.name,
+                    description: food.portion,
+                    calories_target: food.calories.toString(),
+                    protein_target: food.protein.toString(),
+                    carbs_target: food.carbs.toString(),
+                    fat_target: food.fat.toString(),
+                  });
+                }}
               />
             </div>
 
