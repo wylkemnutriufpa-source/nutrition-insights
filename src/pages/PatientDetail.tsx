@@ -17,7 +17,7 @@ import { AnamnesisInsightsFull } from "@/components/patient/AnamnesisInsightsCar
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
-  TrendingUp, Zap, Heart, Brain, BookOpen
+  TrendingUp, Zap, Heart, Brain, BookOpen, Scale
 } from "lucide-react";
 
 interface PatientProfile {
