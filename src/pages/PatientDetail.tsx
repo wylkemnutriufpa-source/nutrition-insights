@@ -414,7 +414,10 @@ export default function PatientDetail() {
 
           {/* Timeline */}
           <TabsContent value="timeline" className="mt-4">
-                </DialogTrigger>
+            <div className="flex justify-end mb-4">
+              <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="gap-1"><Plus className="w-4 h-4" /> Nota</Button>
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle className="font-display">Adicionar Nota</DialogTitle>
