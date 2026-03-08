@@ -230,6 +230,14 @@ export default function PatientDetail() {
             </p>
           </div>
           <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => navigate(`/anamnesis?patientId=${patientId}`)}
+            >
+              <Heart className="w-4 h-4" />
+              {anamnesis ? "Refazer Anamnese" : "Preencher Anamnese"}
+            </Button>
             <Dialog open={activateOpen} onOpenChange={setActivateOpen}>
               <DialogTrigger asChild>
                 <Button className="gradient-primary gap-2 shadow-glow">
