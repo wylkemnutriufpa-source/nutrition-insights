@@ -198,6 +198,43 @@ function PatientDashboardContent() {
         )}
       </motion.div>
 
+      {/* Next Appointment + Chat */}
+      <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="glass rounded-xl p-5">
+          <h2 className="font-display font-semibold flex items-center gap-2 mb-3">
+            <Calendar className="w-5 h-5 text-primary" /> Próxima Consulta
+          </h2>
+          {nextAppointment ? (
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-xl bg-primary/10 flex flex-col items-center justify-center flex-shrink-0">
+                <span className="text-lg font-bold text-primary">{new Date(nextAppointment.appointment_date).getDate()}</span>
+                <span className="text-[10px] text-muted-foreground uppercase">{new Date(nextAppointment.appointment_date).toLocaleDateString("pt-BR", { month: "short" })}</span>
+              </div>
+              <div>
+                <p className="font-medium text-sm">{nextAppointment.title}</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  {new Date(nextAppointment.appointment_date).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} • {nextAppointment.duration_minutes}min
+                </p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Nenhuma consulta agendada.</p>
+          )}
+          <Link to="/appointments" className="text-primary text-xs mt-3 flex items-center gap-1 hover:underline">
+            Ver agenda <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
+
+        <Link to="/chat" className="glass rounded-xl p-5 hover:border-primary/30 transition-colors">
+          <h2 className="font-display font-semibold flex items-center gap-2 mb-3">
+            💬 Chat
+            {unreadMessages > 0 && <span className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-full">{unreadMessages} nova{unreadMessages > 1 ? "s" : ""}</span>}
+          </h2>
+          <p className="text-sm text-muted-foreground">Converse com seu nutricionista em tempo real.</p>
+        </Link>
+      </motion.div>
+
       {/* Smart Plan Card */}
       <motion.div variants={item}>
         <SmartPlanCard />
