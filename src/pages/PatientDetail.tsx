@@ -282,8 +282,11 @@ export default function PatientDetail() {
         </div>
 
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="w-full justify-start bg-card border border-border">
+          <TabsList className="w-full justify-start bg-card border border-border overflow-x-auto">
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+            <TabsTrigger value="ai-insights">
+              <Brain className="w-3.5 h-3.5 mr-1" /> IA Insights
+            </TabsTrigger>
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
             <TabsTrigger value="protocols">Protocolos</TabsTrigger>
             <TabsTrigger value="radar">Radar Metabólico</TabsTrigger>
