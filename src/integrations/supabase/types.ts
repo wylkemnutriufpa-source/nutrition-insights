@@ -89,6 +89,66 @@ export type Database = {
         }
         Relationships: []
       }
+      checklist_tasks: {
+        Row: {
+          category: string
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          date: string
+          description: string | null
+          icon: string
+          id: string
+          patient_id: string
+          patient_protocol_id: string | null
+          protocol_task_id: string | null
+          title: string
+        }
+        Insert: {
+          category?: string
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          date?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          patient_id: string
+          patient_protocol_id?: string | null
+          protocol_task_id?: string | null
+          title: string
+        }
+        Update: {
+          category?: string
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          date?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          patient_id?: string
+          patient_protocol_id?: string | null
+          protocol_task_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_tasks_patient_protocol_id_fkey"
+            columns: ["patient_protocol_id"]
+            isOneToOne: false
+            referencedRelation: "patient_protocols"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_tasks_protocol_task_id_fkey"
+            columns: ["protocol_task_id"]
+            isOneToOne: false
+            referencedRelation: "protocol_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meal_plan_items: {
         Row: {
           calories_target: number | null
@@ -307,6 +367,86 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_protocols: {
+        Row: {
+          created_at: string
+          end_date: string | null
+          id: string
+          nutritionist_id: string
+          patient_id: string
+          protocol_id: string
+          schedule_criteria: Json | null
+          start_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          nutritionist_id: string
+          patient_id: string
+          protocol_id: string
+          schedule_criteria?: Json | null
+          start_date: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          nutritionist_id?: string
+          patient_id?: string
+          protocol_id?: string
+          schedule_criteria?: Json | null
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_protocols_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_timeline: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          patient_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          patient_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          patient_id?: string
+          title?: string
+        }
+        Relationships: []
+      }
       patient_tips: {
         Row: {
           category: string
@@ -441,6 +581,174 @@ export type Database = {
         }
         Relationships: []
       }
+      program_patients: {
+        Row: {
+          enrolled_at: string
+          id: string
+          patient_id: string
+          program_id: string
+          status: string
+        }
+        Insert: {
+          enrolled_at?: string
+          id?: string
+          patient_id: string
+          program_id: string
+          status?: string
+        }
+        Update: {
+          enrolled_at?: string
+          id?: string
+          patient_id?: string
+          program_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "program_patients_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      programs: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          max_patients: number | null
+          protocol_id: string | null
+          start_date: string
+          tag: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          max_patients?: number | null
+          protocol_id?: string | null
+          start_date: string
+          tag?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          max_patients?: number | null
+          protocol_id?: string | null
+          start_date?: string
+          tag?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "programs_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      protocol_tasks: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          frequency: string
+          icon: string
+          id: string
+          protocol_id: string
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          frequency?: string
+          icon?: string
+          id?: string
+          protocol_id: string
+          sort_order?: number
+          title: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          frequency?: string
+          icon?: string
+          id?: string
+          protocol_id?: string
+          sort_order?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "protocol_tasks_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      protocols: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string
+          description: string | null
+          duration_days: number
+          id: string
+          is_template: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          duration_days?: number
+          id?: string
+          is_template?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          duration_days?: number
+          id?: string
+          is_template?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_achievements: {
         Row: {
           achievement_id: string
@@ -542,6 +850,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      sync_protocol_checklist: {
+        Args: { _date?: string; _patient_protocol_id: string }
+        Returns: number
       }
     }
     Enums: {
