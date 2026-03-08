@@ -1,6 +1,8 @@
 # Checklist Consolidado — Nutrition Dashboard (P0 + P1 + P2)
 
-> Classificação: **Confirmado** = visto no código | **Validar** = precisa verificação manual | **Opcional** = hipótese/risco potencial
+> Classificação: **Confirmado** = visto no código | **Validar** = precisa verificação manual no repo backend | **N/A** = não aplicável
+>
+> ⚠️ O backend (FastAPI) está fora deste workspace. Itens P2 não podem ser verificados automaticamente — requerem inspeção manual no repositório do servidor.
 >
 > Última atualização: 2026-03-08
 
@@ -8,16 +10,16 @@
 
 ## 1. Confirmado no Código
 
-Itens verificados diretamente na base de código existente.
+Itens verificados diretamente na base de código (compartilhados em análise anterior).
 
 | # | Prioridade | Correção | Severidade | Impacto Real | Arquivo(s) | Status |
 |---|-----------|----------|-----------|-------------|-----------|--------|
-| P0-1 | P0 | Mover `logger` para o topo do arquivo | Crítica | `NameError` em runtime — endpoint `/analyze-meal` quebrado | `server.py` | Confirmado |
-| P0-2 | P0 | Fail-open → fail-closed no feature enforcement | Crítica | Supabase offline → qualquer usuário acessa features premium | `features.py` | Confirmado |
-| P0-3 | P0 | Remover `patient_id` e `user_type` do localStorage | Crítica | XSS pode roubar identidade/role do usuário | `AuthContext.js` + consumidores | Confirmado |
-| P0-4 | P0 | CORS: mover antes das rotas + restringir origens | Crítica | Qualquer origem pode fazer requests autenticados | `server.py` | Confirmado |
-| P1-5 | P1 | Rate limiting nos endpoints de IA | Alta | Abuso gera custo ilimitado com API de IA | `server.py`, `routes/ai_routes.py` | Confirmado |
-| P1-6 | P1 | TTL de 1h no cache JWKS + refresh on failure | Alta | Chaves rotacionadas não são detectadas; tokens inválidos aceitos | `auth.py` / `jwt_utils.py` | Confirmado |
+| P0-1 | P0 | Mover `logger` para o topo do arquivo | Crítica | `NameError` em runtime — endpoint `/analyze-meal` quebrado | `server.py` | ✅ Confirmado |
+| P0-2 | P0 | Fail-open → fail-closed no feature enforcement | Crítica | Supabase offline → qualquer usuário acessa features premium | `features.py` | ✅ Confirmado |
+| P0-3 | P0 | Remover `patient_id` e `user_type` do localStorage | Crítica | XSS pode roubar identidade/role do usuário | `AuthContext.js` + consumidores | ✅ Confirmado |
+| P0-4 | P0 | CORS: mover antes das rotas + restringir origens | Crítica | Qualquer origem pode fazer requests autenticados | `server.py` | ✅ Confirmado |
+| P1-5 | P1 | Rate limiting nos endpoints de IA | Alta | Abuso gera custo ilimitado com API de IA | `server.py`, `routes/ai_routes.py` | ✅ Confirmado |
+| P1-6 | P1 | TTL de 1h no cache JWKS + refresh on failure | Alta | Chaves rotacionadas não são detectadas; tokens inválidos aceitos | `auth.py` / `jwt_utils.py` | ✅ Confirmado |
 
 ### Validação P0
 
@@ -36,65 +38,78 @@ Itens verificados diretamente na base de código existente.
 
 ---
 
-## 2. Precisa Validação Manual
+## 2. Precisa Validação Manual (Backend Externo)
 
-Itens com alta probabilidade baseados na arquitetura, mas que precisam de inspeção no código real para confirmar.
+> ⚠️ **Estes itens não podem ser verificados neste workspace.**
+> O backend FastAPI está em repositório separado. Para cada item, execute o comando de verificação indicado no repo do servidor.
 
-| # | Prioridade | Achado | Severidade | Impacto Real | Arquivo(s) | Status |
-|---|-----------|--------|-----------|-------------|-----------|--------|
-| P2-1 | P2 | Endpoints de IA sem validação de input | Alta | Prompt injection, payload oversized (custo), stored XSS | `routes/ai_routes.py`, schemas | Validar |
-| P2-2 | P2 | Falta de autorização por role nos endpoints | Alta | Paciente acessa endpoints de nutricionista e vice-versa | `routes/*.py`, `auth.py` | Validar |
-| P2-3 | P2 | IDOR — acesso a recursos de outros usuários | Alta | Paciente A acessa dados de Paciente B alterando ID na URL | `routes/meal_routes.py`, `routes/patient_routes.py` | Validar |
-| P2-7 | P2 | Ausência de timeout nas chamadas à API de IA | Média | Request pendurado indefinidamente, DoS sob carga | Serviço de IA (`services/ai_service.py` ou similar) | Validar |
-| P2-8 | P2 | API key de IA possivelmente hardcoded ou em .env commitado | Alta | Acesso à API key → custo ilimitado para atacante | `server.py`, `services/ai_service.py`, `.env` | Validar |
+| # | Prioridade | Achado | Severidade | Como Verificar | Status |
+|---|-----------|--------|-----------|---------------|--------|
+| P2-8 | P2 | API key de IA possivelmente hardcoded | Alta | `grep -rn "sk-" . --include="*.py"` + verificar se `.env` está no `.gitignore` | 🔍 Validar no repo backend |
+| P2-3 | P2 | IDOR — acesso a recursos de outros usuários | Alta | Buscar endpoints com `patient_id` na URL e verificar se há check de ownership antes do query | 🔍 Validar no repo backend |
+| P2-2 | P2 | Falta de autorização por role | Alta | Verificar se `Depends(get_current_user)` é o único guard — buscar `Depends(` em `routes/*.py` | 🔍 Validar no repo backend |
+| P2-1 | P2 | Endpoints de IA sem validação de input | Alta | Verificar schemas Pydantic dos endpoints `/analyze-meal` e `/analyze-body` — buscar `max_length` | 🔍 Validar no repo backend |
+| P2-7 | P2 | Ausência de timeout nas chamadas à API de IA | Média | Buscar `httpx.AsyncClient(` ou `requests.post(` e verificar se `timeout=` está presente | 🔍 Validar no repo backend |
 
-### Validação P2 (manual)
+### Comandos de Verificação Rápida
 
-- [ ] Verificar se endpoints de IA têm Pydantic schemas com `max_length`
-- [ ] Verificar se `Depends(get_current_user)` valida role além de autenticação
-- [ ] Verificar se endpoints com `patient_id` na URL validam ownership
-- [ ] Verificar se chamadas à API de IA têm timeout explícito
-- [ ] Verificar se `.env` está no `.gitignore` e nenhum arquivo commitado contém `sk-`
-- [ ] Verificar se API key tem spending limit no painel do provider
+```bash
+# No repositório do backend, execute:
+
+# P2-8: API key exposure
+grep -rn "sk-" . --include="*.py"
+grep -rn "OPENAI_API_KEY" . --include="*.py"
+cat .gitignore | grep -i env
+
+# P2-3: IDOR
+grep -rn "patient_id" routes/ --include="*.py"
+# → Verificar se cada ocorrência tem check de ownership
+
+# P2-2: Role authorization
+grep -rn "Depends(get_current_user)" routes/ --include="*.py"
+# → Se for o único Depends, falta role check
+
+# P2-1: Input validation
+grep -rn "max_length\|Field(" models/ schemas/ --include="*.py"
+# → Se não houver resultados, falta validação
+
+# P2-7: Timeout
+grep -rn "timeout" services/ --include="*.py"
+# → Se não houver resultados, falta timeout
+```
 
 ---
 
 ## 3. Hipótese / Risco Potencial
 
-Itens baseados em padrões comuns de vulnerabilidade. Risco real depende da implementação específica.
+Itens de severidade média baseados em padrões comuns. Menor prioridade.
 
-| # | Prioridade | Achado | Severidade | Impacto Real | Arquivo(s) | Status |
-|---|-----------|--------|-----------|-------------|-----------|--------|
-| P2-4 | P2 | Respostas de IA retornadas sem sanitização | Média | Stored XSS se frontend usa `dangerouslySetInnerHTML` | `routes/ai_routes.py`, componentes React | Opcional |
-| P2-5 | P2 | Sem limite de tamanho/tipo no upload de imagens | Média | DoS por upload de 100MB+, arquivos não-imagem disfarçados | Endpoint de upload | Opcional |
-| P2-6 | P2 | Logs podem conter dados sensíveis de pacientes | Média | Violação LGPD/HIPAA se logs forem acessados por terceiros | `server.py`, middleware de logging | Opcional |
-
-### Validação Hipóteses
-
-- [ ] Verificar se frontend renderiza resposta de IA com `dangerouslySetInnerHTML`
-- [ ] Verificar se existe endpoint de upload e se tem validação de tamanho/tipo
-- [ ] Verificar se middleware de logging inclui body de requests sensíveis
+| # | Prioridade | Achado | Severidade | Como Verificar | Status |
+|---|-----------|--------|-----------|---------------|--------|
+| P2-4 | P2 | Respostas de IA sem sanitização | Média | Buscar `dangerouslySetInnerHTML` no frontend + verificar se backend strip HTML da resposta | 🔍 Validar |
+| P2-5 | P2 | Sem limite de upload de imagens | Média | Buscar endpoint de upload e verificar `MAX_FILE_SIZE` ou validação de content-type | 🔍 Validar |
+| P2-6 | P2 | Logs com dados sensíveis | Média | Verificar middleware de logging — buscar `logger.info(` com body ou PII | 🔍 Validar |
 
 ---
 
 ## Ordem de Prioridade Geral
 
-| Ordem | Item | Prioridade | Severidade | Classificação |
-|-------|------|-----------|-----------|---------------|
-| 1 | P0-1 Logger | P0 | Crítica | Confirmado |
-| 2 | P0-2 Fail-closed | P0 | Crítica | Confirmado |
-| 3 | P0-3 localStorage | P0 | Crítica | Confirmado |
-| 4 | P0-4 CORS | P0 | Crítica | Confirmado |
-| 5 | P1-5 Rate limiting | P1 | Alta | Confirmado |
-| 6 | P1-6 JWKS TTL | P1 | Alta | Confirmado |
-| 7 | P2-8 API key exposure | P2 | Alta | Validar |
-| 8 | P2-3 IDOR | P2 | Alta | Validar |
-| 9 | P2-2 Role authorization | P2 | Alta | Validar |
-| 10 | P2-1 Input validation IA | P2 | Alta | Validar |
-| 11 | P2-7 Timeout IA | P2 | Média | Validar |
-| 12 | P2-4 Sanitização resposta IA | P2 | Média | Opcional |
-| 13 | P2-5 Limite upload | P2 | Média | Opcional |
-| 14 | P2-6 Logs sensíveis | P2 | Média | Opcional |
+| Ordem | Item | Severidade | Status | Próximo Passo |
+|-------|------|-----------|--------|---------------|
+| 1 | P0-1 Logger | Crítica | ✅ Confirmado | Aplicar patch P0 |
+| 2 | P0-2 Fail-closed | Crítica | ✅ Confirmado | Aplicar patch P0 |
+| 3 | P0-3 localStorage | Crítica | ✅ Confirmado | Aplicar patch P0 |
+| 4 | P0-4 CORS | Crítica | ✅ Confirmado | Aplicar patch P0 |
+| 5 | P1-5 Rate limiting | Alta | ✅ Confirmado | Aplicar patch P1 |
+| 6 | P1-6 JWKS TTL | Alta | ✅ Confirmado | Aplicar patch P1 |
+| 7 | P2-8 API key | Alta | 🔍 Validar | Rodar `grep -rn "sk-"` no backend |
+| 8 | P2-3 IDOR | Alta | 🔍 Validar | Inspecionar endpoints com `patient_id` |
+| 9 | P2-2 Role auth | Alta | 🔍 Validar | Inspecionar `Depends(` nos routes |
+| 10 | P2-1 Input validation | Alta | 🔍 Validar | Verificar schemas Pydantic |
+| 11 | P2-7 Timeout IA | Média | 🔍 Validar | Buscar `timeout=` nas chamadas HTTP |
+| 12 | P2-4 Sanitização | Média | 🔍 Validar | Buscar `dangerouslySetInnerHTML` |
+| 13 | P2-5 Upload | Média | 🔍 Validar | Buscar endpoint de upload |
+| 14 | P2-6 Logs | Média | 🔍 Validar | Inspecionar middleware de logging |
 
 ---
 
