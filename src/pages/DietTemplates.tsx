@@ -480,16 +480,18 @@ export default function DietTemplates() {
                   </DialogTitle>
                 </DialogHeader>
 
-                {/* Anamnesis adjustment banner */}
-                {anamnesis && (
+                {/* Data source adjustment banner */}
+                {(anamnesis || physicalAssessment) && (
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/10 border border-primary/20">
                     <Sparkles className="w-5 h-5 text-primary shrink-0" />
                     <div className="text-sm">
-                      <p className="font-semibold text-primary">Personalizado pela anamnese</p>
+                      <p className="font-semibold text-primary">
+                        Personalizado pela {dataSource === "assessment" ? "Avaliação Física" : "Anamnese"}
+                      </p>
                       <p className="text-muted-foreground text-xs">
                         Calorias ajustadas de {previewTemplate.base_calories} → <span className="font-bold text-foreground">{getAdjustedCalories(previewTemplate)} kcal/dia</span>
-                        {anamnesis.computed_protein && (
-                          <> • P: {Math.round(Number(anamnesis.computed_protein))}g • C: {Math.round(Number(anamnesis.computed_carbs))}g • G: {Math.round(Number(anamnesis.computed_fat))}g</>
+                        {getEffectiveMacros().protein && (
+                          <> • P: {getEffectiveMacros().protein}g • C: {getEffectiveMacros().carbs}g • G: {getEffectiveMacros().fat}g</>
                         )}
                       </p>
                     </div>
