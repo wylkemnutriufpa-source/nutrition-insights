@@ -75,6 +75,54 @@ function PatientDashboardContent() {
   };
 
   return (
+    <>
+      {/* Anamnesis Reminder Modal */}
+      <Dialog open={showAnamnesisModal} onOpenChange={setShowAnamnesisModal}>
+        <DialogContent className="sm:max-w-md text-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center py-4"
+          >
+            <div className="w-20 h-20 rounded-full gradient-primary flex items-center justify-center mb-5 shadow-glow">
+              <ClipboardList className="w-10 h-10 text-primary-foreground" />
+            </div>
+            <h2 className="font-display text-xl font-bold mb-2">Preencha sua Anamnese!</h2>
+            <p className="text-muted-foreground text-sm max-w-sm mb-2">
+              Para que seu nutricionista possa criar um <span className="font-semibold text-primary">plano alimentar personalizado</span> e gerar <span className="font-semibold text-primary">dicas inteligentes</span> para você, é fundamental preencher a anamnese.
+            </p>
+            <div className="space-y-2 text-left w-full mt-3 mb-5">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
+                <Brain className="w-5 h-5 text-primary flex-shrink-0" />
+                <span className="text-sm">A IA analisa suas respostas e gera um plano personalizado</span>
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
+                <Heart className="w-5 h-5 text-primary flex-shrink-0" />
+                <span className="text-sm">Dicas de nutrição, sono, exercício e hidratação</span>
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
+                <Target className="w-5 h-5 text-primary flex-shrink-0" />
+                <span className="text-sm">Recomendações baseadas no seu perfil e objetivos</span>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">
+              ⚠️ Seu plano alimentar só será elaborado após o preenchimento da anamnese.
+            </p>
+            <div className="flex gap-3 w-full">
+              <Button variant="outline" className="flex-1" onClick={() => setShowAnamnesisModal(false)}>
+                Depois
+              </Button>
+              <Button
+                className="flex-1 gradient-primary shadow-glow gap-2"
+                onClick={() => { setShowAnamnesisModal(false); navigate("/anamnesis"); }}
+              >
+                <Sparkles className="w-4 h-4" /> Preencher Agora
+              </Button>
+            </div>
+          </motion.div>
+        </DialogContent>
+      </Dialog>
+
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
       <motion.div variants={item} className="flex items-center justify-between">
         <div>
