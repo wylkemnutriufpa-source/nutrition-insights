@@ -137,6 +137,15 @@ export default function Patients() {
               </DialogHeader>
               <form onSubmit={addPatient} className="space-y-4">
                 <div>
+                  <Label>Nome do paciente</Label>
+                  <Input
+                    value={patientName}
+                    onChange={(e) => setPatientName(e.target.value)}
+                    placeholder="Nome completo"
+                    required
+                  />
+                </div>
+                <div>
                   <Label>Email do paciente</Label>
                   <Input
                     type="email"
@@ -146,8 +155,22 @@ export default function Patients() {
                     required
                   />
                 </div>
+                <div>
+                  <Label>Senha inicial</Label>
+                  <Input
+                    type="password"
+                    value={patientPassword}
+                    onChange={(e) => setPatientPassword(e.target.value)}
+                    placeholder="Mínimo 6 caracteres"
+                    minLength={6}
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    O paciente poderá alterar a senha depois em Configurações.
+                  </p>
+                </div>
                 <Button type="submit" className="w-full gradient-primary" disabled={submitting}>
-                  {submitting ? "Adicionando..." : "Enviar Convite"}
+                  {submitting ? "Criando conta..." : "Cadastrar Paciente"}
                 </Button>
               </form>
             </DialogContent>
