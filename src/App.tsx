@@ -85,6 +85,12 @@ const App = () => (
             <Route path="/physical-assessment" element={<ProtectedRoute><PhysicalAssessment /></ProtectedRoute>} />
             <Route path="/anamnesis" element={<ProtectedRoute><Anamnesis /></ProtectedRoute>} />
             <Route path="/analyze" element={<ProtectedRoute><AnalyzeMeal /></ProtectedRoute>} />
+            <Route path="/feedbacks" element={<ProtectedRoute><Feedbacks /></ProtectedRoute>} />
+            <Route path="/global-tips" element={<ProtectedRoute><GlobalTips /></ProtectedRoute>} />
+            <Route path="/recipes" element={<ProtectedRoute><Recipes /></ProtectedRoute>} />
+            <Route path="/shopping-list" element={<ProtectedRoute><ShoppingList /></ProtectedRoute>} />
+            <Route path="/food-database" element={<ProtectedRoute><FoodDatabase /></ProtectedRoute>} />
+            <Route path="/body-analysis" element={<ProtectedRoute><BodyAnalysis /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
