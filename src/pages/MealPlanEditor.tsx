@@ -234,6 +234,128 @@ export default function MealPlanEditor() {
     };
   };
 
+  // Save current meal item as reusable
+  const handleSaveMeal = async () => {
+    if (!user || !form.title.trim()) return;
+    setSavingMeal(true);
+    const { error } = await supabase.from("saved_meals" as any).insert({
+      nutritionist_id: user.id,
+      title: form.title.trim(),
+      description: form.description.trim() || null,
+      meal_type: dialogMealType,
+      calories_target: form.calories_target ? parseInt(form.calories_target) : null,
+      protein_target: form.protein_target ? parseFloat(form.protein_target) : null,
+      carbs_target: form.carbs_target ? parseFloat(form.carbs_target) : null,
+      fat_target: form.fat_target ? parseFloat(form.fat_target) : null,
+    });
+    setSavingMeal(false);
+    if (error) toast.error("Erro ao salvar refeição: " + error.message);
+    else toast.success("Refeição salva para reutilização! ⭐");
+  };
+
+  // Load saved meals
+  const loadSavedMeals = async () => {
+    if (!user) return;
+    setLoadingSavedMeals(true);
+    const { data } = await supabase
+      .from("saved_meals" as any)
+      .select("*")
+      .eq("nutritionist_id", user.id)
+      .order("created_at", { ascending: false });
+    setSavedMeals(data || []);
+    setLoadingSavedMeals(false);
+  };
+
+  // Import saved meal into form
+  const importSavedMeal = (meal: any) => {
+    setForm({
+      title: meal.title,
+      description: meal.description || "",
+      calories_target: meal.calories_target?.toString() || "",
+      protein_target: meal.protein_target?.toString() || "",
+      carbs_target: meal.carbs_target?.toString() || "",
+      fat_target: meal.fat_target?.toString() || "",
+    });
+    setSavedMealsDialogOpen(false);
+    toast.success("Refeição importada!");
+  };
+
+  // Delete saved meal
+  const deleteSavedMeal = async (mealId: string) => {
+    await supabase.from("saved_meals" as any).delete().eq("id", mealId);
+    setSavedMeals((prev) => prev.filter((m) => m.id !== mealId));
+    toast.success("Refeição removida dos salvos");
+  };
+
+  // Save entire plan as template
+  const handleSavePlanTemplate = async () => {
+    if (!user || !plan || items.length === 0) return;
+    setSavingPlan(true);
+    const templateItems = items.map((i) => ({
+      title: i.title,
+      description: i.description,
+      meal_type: i.meal_type,
+      day_of_week: i.day_of_week,
+      calories_target: i.calories_target,
+      protein_target: i.protein_target,
+      carbs_target: i.carbs_target,
+      fat_target: i.fat_target,
+    }));
+    const { error } = await supabase.from("saved_plan_templates" as any).insert({
+      nutritionist_id: user.id,
+      title: plan.title + " (Modelo)",
+      description: `${items.length} itens • Salvo em ${new Date().toLocaleDateString("pt-BR")}`,
+      source_plan_id: plan.id,
+      items: templateItems,
+    });
+    setSavingPlan(false);
+    if (error) toast.error("Erro ao salvar modelo: " + error.message);
+    else toast.success("Plano salvo como modelo! 📋");
+  };
+
+  // Load saved plan templates
+  const loadSavedPlans = async () => {
+    if (!user) return;
+    setLoadingSavedPlans(true);
+    const { data } = await supabase
+      .from("saved_plan_templates" as any)
+      .select("*")
+      .eq("nutritionist_id", user.id)
+      .order("created_at", { ascending: false });
+    setSavedPlans(data || []);
+    setLoadingSavedPlans(false);
+  };
+
+  // Apply a saved plan template to current plan
+  const applySavedPlan = async (template: any) => {
+    if (!id) return;
+    const templateItems = (template.items as any[]).map((item: any) => ({
+      meal_plan_id: id,
+      title: item.title,
+      description: item.description,
+      meal_type: item.meal_type,
+      day_of_week: item.day_of_week,
+      calories_target: item.calories_target,
+      protein_target: item.protein_target ? Number(item.protein_target) : null,
+      carbs_target: item.carbs_target ? Number(item.carbs_target) : null,
+      fat_target: item.fat_target ? Number(item.fat_target) : null,
+    }));
+    const { error } = await supabase.from("meal_plan_items").insert(templateItems);
+    if (error) toast.error("Erro ao aplicar modelo: " + error.message);
+    else {
+      toast.success(`Modelo aplicado com ${templateItems.length} itens! 🎉`);
+      setSavedPlansDialogOpen(false);
+      fetchData();
+    }
+  };
+
+  // Delete saved plan template
+  const deleteSavedPlan = async (templateId: string) => {
+    await supabase.from("saved_plan_templates" as any).delete().eq("id", templateId);
+    setSavedPlans((prev) => prev.filter((p) => p.id !== templateId));
+    toast.success("Modelo removido");
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
