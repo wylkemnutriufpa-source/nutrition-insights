@@ -39,6 +39,9 @@ function PatientDashboardContent() {
   const [checklistTasks, setChecklistTasks] = useState<any[]>([]);
   const [anamnesis, setAnamnesis] = useState<any>(null);
   const [showAnamnesisModal, setShowAnamnesisModal] = useState(false);
+  const [nextAppointment, setNextAppointment] = useState<any>(null);
+  const [recentMeals, setRecentMeals] = useState<any[]>([]);
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -48,15 +51,18 @@ function PatientDashboardContent() {
       supabase.from("player_stats").select("*").eq("user_id", user.id).single(),
       supabase.from("checklist_tasks").select("*").eq("patient_id", user.id).eq("date", today).order("category"),
       supabase.from("patient_anamnesis").select("*").eq("user_id", user.id).eq("status", "completed").order("created_at", { ascending: false }).limit(1),
-    ]).then(([statsRes, checkRes, anamRes]) => {
+      supabase.from("patient_appointments").select("*").eq("patient_id", user.id).gte("appointment_date", new Date().toISOString()).order("appointment_date").limit(1),
+      supabase.from("meals").select("*").eq("user_id", user.id).order("logged_at", { ascending: false }).limit(3),
+      supabase.from("chat_messages").select("id", { count: "exact", head: true }).eq("receiver_id", user.id).eq("is_read", false),
+    ]).then(([statsRes, checkRes, anamRes, aptRes, mealsRes, msgRes]) => {
       setStats(statsRes.data);
       setChecklistTasks(checkRes.data || []);
       const anam = anamRes.data?.[0] || null;
       setAnamnesis(anam);
-      // Show modal if patient has no completed anamnesis
-      if (!anam) {
-        setShowAnamnesisModal(true);
-      }
+      if (!anam) setShowAnamnesisModal(true);
+      setNextAppointment(aptRes.data?.[0] || null);
+      setRecentMeals(mealsRes.data || []);
+      setUnreadMessages(msgRes.count || 0);
     });
   }, [user]);
 
