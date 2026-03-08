@@ -843,14 +843,32 @@ export default function Anamnesis() {
 
         {/* Navigation */}
         <div className="flex items-center justify-between mt-10">
-          <Button
-            variant="ghost"
-            onClick={() => setStep((s) => Math.max(0, s - 1))}
-            disabled={step === 0}
-            className="gap-1"
-          >
-            <ChevronLeft className="w-4 h-4" /> Voltar
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              onClick={() => setStep((s) => Math.max(0, s - 1))}
+              disabled={step === 0}
+              className="gap-1"
+            >
+              <ChevronLeft className="w-4 h-4" /> Voltar
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                await performAutoSave(answers);
+                toast.success("Rascunho salvo! Você pode continuar depois 💾");
+                if (isNutritionistMode && forPatientId) {
+                  navigate(`/patients/${forPatientId}`);
+                } else {
+                  navigate("/");
+                }
+              }}
+              className="gap-1.5 text-muted-foreground"
+            >
+              <Save className="w-4 h-4" /> Salvar e sair
+            </Button>
+          </div>
 
           {step < questions.length - 1 ? (
             <Button

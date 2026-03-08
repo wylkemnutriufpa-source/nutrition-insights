@@ -17,7 +17,7 @@ import { AnamnesisInsightsFull } from "@/components/patient/AnamnesisInsightsCar
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
-  TrendingUp, Zap, Heart, Brain, BookOpen
+  TrendingUp, Zap, Heart, Brain, BookOpen, Scale
 } from "lucide-react";
 
 interface PatientProfile {
@@ -233,6 +233,14 @@ export default function PatientDetail() {
             <Button
               variant="outline"
               className="gap-2"
+              onClick={() => navigate(`/physical-assessment?patientId=${patientId}`)}
+            >
+              <Activity className="w-4 h-4" />
+              Avaliação Física
+            </Button>
+            <Button
+              variant="outline"
+              className="gap-2"
               onClick={() => navigate(`/diet-templates?patientId=${patientId}`)}
             >
               <BookOpen className="w-4 h-4" />
@@ -303,6 +311,9 @@ export default function PatientDetail() {
             <TabsTrigger value="ai-insights">
               <Brain className="w-3.5 h-3.5 mr-1" /> IA Insights
             </TabsTrigger>
+            <TabsTrigger value="assessment">
+              <Activity className="w-3.5 h-3.5 mr-1" /> Avaliação Física
+            </TabsTrigger>
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
             <TabsTrigger value="protocols">Protocolos</TabsTrigger>
             <TabsTrigger value="radar">Radar Metabólico</TabsTrigger>
@@ -364,6 +375,23 @@ export default function PatientDetail() {
           {/* AI Insights */}
           <TabsContent value="ai-insights" className="mt-4">
             <AnamnesisInsightsFull userId={patientId!} />
+          </TabsContent>
+
+          {/* Physical Assessment */}
+          <TabsContent value="assessment" className="mt-4">
+            <div className="glass rounded-xl p-8 text-center">
+              <Scale className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+              <h3 className="font-display font-semibold text-lg mb-2">Avaliação Física Completa</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Medidas corporais, dobras cutâneas, composição corporal e gasto energético.
+              </p>
+              <Button
+                onClick={() => navigate(`/physical-assessment?patientId=${patientId}`)}
+                className="gradient-primary gap-2 shadow-glow"
+              >
+                <Activity className="w-4 h-4" /> Abrir Avaliação Física
+              </Button>
+            </div>
           </TabsContent>
 
           {/* Timeline */}
