@@ -14,6 +14,7 @@ import Challenges from "./pages/Challenges";
 import Patients from "./pages/Patients";
 import MealPlans from "./pages/MealPlans";
 import MealPlanEditor from "./pages/MealPlanEditor";
+import Anamnesis from "./pages/Anamnesis";
 import AnalyzeMeal from "./pages/AnalyzeMeal";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -62,6 +63,7 @@ const App = () => (
             <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
             <Route path="/meal-plans" element={<ProtectedRoute><MealPlans /></ProtectedRoute>} />
             <Route path="/meal-plans/:id" element={<ProtectedRoute><MealPlanEditor /></ProtectedRoute>} />
+            <Route path="/anamnesis" element={<ProtectedRoute><Anamnesis /></ProtectedRoute>} />
             <Route path="/analyze" element={<ProtectedRoute><AnalyzeMeal /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />

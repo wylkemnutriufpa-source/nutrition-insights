@@ -7,6 +7,7 @@ import StatsCard from "@/components/dashboard/StatsCard";
 import XPBar from "@/components/gamification/XPBar";
 import StreakCounter from "@/components/gamification/StreakCounter";
 import MealCard from "@/components/meals/MealCard";
+import SmartTips from "@/components/patient/SmartTips";
 import { UtensilsCrossed, Users, TrendingUp, Target, Sparkles, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -71,6 +72,11 @@ function PatientDashboardContent() {
         <StatsCard title="Nível" value={stats?.level || 1} icon={TrendingUp} />
         <StatsCard title="XP Total" value={stats?.total_xp || 0} icon={Target} />
         <StatsCard title="Streak" value={`${stats?.current_streak || 0}d`} icon={Target} />
+      </motion.div>
+
+      {/* Smart Tips */}
+      <motion.div variants={item}>
+        <SmartTips />
       </motion.div>
 
       {/* Recent meals */}

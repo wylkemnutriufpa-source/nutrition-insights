@@ -265,6 +265,116 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_anamnesis: {
+        Row: {
+          answers: Json
+          computed_carbs: number | null
+          computed_fat: number | null
+          computed_kcal_target: number | null
+          computed_protein: number | null
+          computed_tmb: number | null
+          created_at: string
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          computed_carbs?: number | null
+          computed_fat?: number | null
+          computed_kcal_target?: number | null
+          computed_protein?: number | null
+          computed_tmb?: number | null
+          created_at?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          computed_carbs?: number | null
+          computed_fat?: number | null
+          computed_kcal_target?: number | null
+          computed_protein?: number | null
+          computed_tmb?: number | null
+          created_at?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      patient_tips: {
+        Row: {
+          category: string
+          created_at: string
+          icon: string
+          id: string
+          is_read: boolean
+          tip: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          is_read?: boolean
+          tip: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          is_read?: boolean
+          tip?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      plan_schedules: {
+        Row: {
+          activate_at: string
+          created_at: string
+          criteria: Json | null
+          deactivate_at: string | null
+          id: string
+          meal_plan_id: string
+          status: string
+        }
+        Insert: {
+          activate_at: string
+          created_at?: string
+          criteria?: Json | null
+          deactivate_at?: string | null
+          id?: string
+          meal_plan_id: string
+          status?: string
+        }
+        Update: {
+          activate_at?: string
+          created_at?: string
+          criteria?: Json | null
+          deactivate_at?: string | null
+          id?: string
+          meal_plan_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_schedules_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       player_stats: {
         Row: {
           current_streak: number

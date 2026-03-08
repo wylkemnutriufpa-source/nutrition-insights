@@ -13,8 +13,9 @@ import { toast } from "sonner";
 import {
   ArrowLeft, Plus, Trash2, Copy, GripVertical, Utensils,
   Sun, Coffee, Apple, Sandwich, Moon, Cookie, Save, ChevronLeft, ChevronRight,
-  Flame, Beef, Wheat, Droplets, Leaf, PencilLine, X, Check
+  Flame, Beef, Wheat, Droplets, Leaf, PencilLine, X, Check, Sparkles, Loader2
 } from "lucide-react";
+import PlanScheduler from "@/components/plans/PlanScheduler";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -79,6 +80,7 @@ export default function MealPlanEditor() {
 
   // Copy state
   const [copySource, setCopySource] = useState<{ day: number; mealType: MealType } | null>(null);
+  const [generating, setGenerating] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!id || !user) return;
@@ -264,6 +266,29 @@ export default function MealPlanEditor() {
               </p>
             </div>
           </div>
+          <Button
+            onClick={async () => {
+              if (!plan) return;
+              setGenerating(true);
+              try {
+                const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
+                  body: { patient_id: plan.patient_id, meal_plan_id: plan.id },
+                });
+                if (error) throw error;
+                if (data?.error) throw new Error(data.error);
+                toast.success(`AI Plan gerou ${data.items_count} itens e ${data.tips_count} dicas! 🤖`);
+                fetchData();
+              } catch (e: any) {
+                toast.error(e.message || "Erro ao gerar plano");
+              }
+              setGenerating(false);
+            }}
+            disabled={generating}
+            className="gradient-primary gap-2 shadow-glow"
+          >
+            {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            {generating ? "Gerando..." : "AI Plan ✨"}
+          </Button>
         </div>
 
         {/* Grid */}
@@ -430,8 +455,11 @@ export default function MealPlanEditor() {
                         <Droplets className="w-3 h-3 text-blue-400" />
                         <span className="font-semibold">{t.fat.toFixed(0)}g</span>
                         <span className="text-muted-foreground">gord</span>
-                      </div>
-                    </div>
+        </div>
+
+        {/* Plan Scheduler */}
+        <PlanScheduler mealPlanId={plan.id} planTitle={plan.title} />
+      </div>
                     {/* Copy day button */}
                     <div className="mt-1 flex justify-center">
                       <button

@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   LayoutDashboard, Users, UtensilsCrossed, Trophy, Target,
-  Leaf, LogOut, Moon, Sun, ChevronRight, Sparkles, Settings
+  Leaf, LogOut, Moon, Sun, ChevronRight, Sparkles, Settings,
+  ClipboardCheck
 } from "lucide-react";
 import { useState } from "react";
 
@@ -19,6 +20,7 @@ const nutritionistLinks = [
 const patientLinks = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/meals", icon: UtensilsCrossed, label: "Refeições" },
+  { to: "/anamnesis", icon: ClipboardCheck, label: "Anamnese" },
   { to: "/achievements", icon: Trophy, label: "Conquistas" },
   { to: "/challenges", icon: Target, label: "Desafios" },
 ];
