@@ -25,6 +25,22 @@ const categories = [
   { value: "habit", label: "Hábito", icon: "✅" },
 ];
 
+interface WeeklyGoal {
+  id: string;
+  nutritionist_id: string;
+  patient_id: string;
+  title: string;
+  description: string | null;
+  target_value: number;
+  current_value: number;
+  unit: string;
+  category: string;
+  icon: string;
+  week_start: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export default function WeeklyGoals() {
   const { user, isNutritionist } = useAuth();
   const queryClient = useQueryClient();
@@ -53,23 +69,23 @@ export default function WeeklyGoals() {
     queryKey: ["weekly-goals", user?.id, isNutritionist],
     queryFn: async () => {
       if (!user) return [];
-      const query = (supabase as any).from("weekly_goals").select("*").gte("week_start", weekStartStr).order("created_at", { ascending: false });
+      let query = supabase.from("weekly_goals").select("*").gte("week_start", weekStartStr).order("created_at", { ascending: false });
       if (isNutritionist) {
-        query.eq("nutritionist_id", user.id);
+        query = query.eq("nutritionist_id", user.id);
       } else {
-        query.eq("patient_id", user.id);
+        query = query.eq("patient_id", user.id);
       }
       const { data } = await query;
-      return data || [];
+      return (data || []) as WeeklyGoal[];
     },
     enabled: !!user,
   });
 
   const createGoal = async () => {
-    if (!user || !form.title || (!isNutritionist && !selectedPatient)) return;
+    if (!user || !form.title || !selectedPatient) return;
     setSaving(true);
     const cat = categories.find(c => c.value === form.category);
-    const { error } = await (supabase as any).from("weekly_goals").insert({
+    const { error } = await supabase.from("weekly_goals").insert({
       nutritionist_id: user.id,
       patient_id: selectedPatient,
       title: form.title,
@@ -86,18 +102,18 @@ export default function WeeklyGoals() {
   };
 
   const incrementGoal = async (goalId: string, current: number) => {
-    await (supabase as any).from("weekly_goals").update({ current_value: current + 1, updated_at: new Date().toISOString() }).eq("id", goalId);
+    await supabase.from("weekly_goals").update({ current_value: current + 1, updated_at: new Date().toISOString() }).eq("id", goalId);
     queryClient.invalidateQueries({ queryKey: ["weekly-goals"] });
     toast.success("+1 progresso!");
   };
 
-  const completedGoals = goals.filter(g => (g as any).current_value >= (g as any).target_value).length;
+  const completedGoals = goals.filter((g) => g.current_value >= g.target_value).length;
   const overallProgress = goals.length > 0 ? Math.round((completedGoals / goals.length) * 100) : 0;
 
   return (
     <DashboardLayout>
       <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
-        <motion.div variants={item} className="flex items-center justify-between">
+        <motion.div variants={item} className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="font-display text-2xl font-bold flex items-center gap-2">
               <Target className="w-6 h-6 text-primary" /> Metas Semanais
@@ -160,7 +176,7 @@ export default function WeeklyGoals() {
           </motion.div>
         ) : (
           <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {goals.map((goal: any) => {
+            {goals.map((goal) => {
               const pct = Math.min(100, Math.round((goal.current_value / goal.target_value) * 100));
               const done = goal.current_value >= goal.target_value;
               return (
