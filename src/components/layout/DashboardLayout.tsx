@@ -33,6 +33,8 @@ const nutritionistLinks = [
 const patientLinks = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/checklist", icon: CheckCircle2, label: "Checklist" },
+  { to: "/appointments", icon: Activity, label: "Agenda" },
+  { to: "/chat", icon: MessageSquare, label: "Chat" },
   { to: "/meals", icon: UtensilsCrossed, label: "Refeições" },
   { to: "/recipes", icon: ChefHat, label: "Receitas" },
   { to: "/shopping-list", icon: ShoppingCart, label: "Compras" },
