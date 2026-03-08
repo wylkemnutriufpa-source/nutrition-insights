@@ -86,7 +86,7 @@ export default function WeeklyGoals() {
   };
 
   const incrementGoal = async (goalId: string, current: number) => {
-    await supabase.from("weekly_goals").update({ current_value: current + 1, updated_at: new Date().toISOString() }).eq("id", goalId);
+    await (supabase as any).from("weekly_goals").update({ current_value: current + 1, updated_at: new Date().toISOString() }).eq("id", goalId);
     queryClient.invalidateQueries({ queryKey: ["weekly-goals"] });
     toast.success("+1 progresso!");
   };
