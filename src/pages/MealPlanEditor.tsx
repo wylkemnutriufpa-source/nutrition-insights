@@ -404,6 +404,14 @@ export default function MealPlanEditor() {
             <Button
               variant="outline"
               size="sm"
+              onClick={() => navigate(`/diet-templates?patientId=${plan.patient_id}&mealPlanId=${plan.id}`)}
+              className="gap-1.5"
+            >
+              <BookOpen className="w-4 h-4" /> Modelos Pré-Prontos
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => { loadSavedPlans(); setSavedPlansDialogOpen(true); }}
               className="gap-1.5"
             >
