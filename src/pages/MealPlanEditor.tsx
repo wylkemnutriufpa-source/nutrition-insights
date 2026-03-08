@@ -14,7 +14,7 @@ import {
   ArrowLeft, Plus, Trash2, Copy, GripVertical, Utensils,
   Sun, Coffee, Apple, Sandwich, Moon, Cookie, Save, ChevronLeft, ChevronRight,
   Flame, Beef, Wheat, Droplets, Leaf, PencilLine, X, Check, Sparkles, Loader2,
-  Bookmark, BookmarkCheck, FolderDown, FolderUp
+  Bookmark, BookmarkCheck, FolderDown, FolderUp, BookOpen
 } from "lucide-react";
 import PlanScheduler from "@/components/plans/PlanScheduler";
 import FoodAutocomplete, { type FoodItem } from "@/components/meals/FoodAutocomplete";
@@ -401,6 +401,14 @@ export default function MealPlanEditor() {
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate(`/diet-templates?patientId=${plan.patient_id}&mealPlanId=${plan.id}`)}
+              className="gap-1.5"
+            >
+              <BookOpen className="w-4 h-4" /> Modelos Pré-Prontos
+            </Button>
             <Button
               variant="outline"
               size="sm"
