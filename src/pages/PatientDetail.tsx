@@ -377,6 +377,23 @@ export default function PatientDetail() {
             <AnamnesisInsightsFull userId={patientId!} />
           </TabsContent>
 
+          {/* Physical Assessment */}
+          <TabsContent value="assessment" className="mt-4">
+            <div className="glass rounded-xl p-8 text-center">
+              <Scale className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+              <h3 className="font-display font-semibold text-lg mb-2">Avaliação Física Completa</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Medidas corporais, dobras cutâneas, composição corporal e gasto energético.
+              </p>
+              <Button
+                onClick={() => navigate(`/physical-assessment?patientId=${patientId}`)}
+                className="gradient-primary gap-2 shadow-glow"
+              >
+                <Activity className="w-4 h-4" /> Abrir Avaliação Física
+              </Button>
+            </div>
+          </TabsContent>
+
           {/* Timeline */}
           <TabsContent value="timeline" className="mt-4">
             <div className="flex justify-end mb-4">
