@@ -58,40 +58,45 @@ export default function Patients() {
   const addPatient = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    if (!patientName.trim()) { toast.error("Informe o nome do paciente"); return; }
+    if (patientPassword.length < 6) { toast.error("Senha deve ter mínimo 6 caracteres"); return; }
     setSubmitting(true);
 
-    // Look up patient by email using secure DB function
-    const { data: patientId, error: lookupError } = await supabase
-      .rpc("find_patient_by_email", { _email: email.trim().toLowerCase() });
+    try {
+      // Create patient account via secure DB function
+      const { data: patientId, error: createError } = await supabase
+        .rpc("create_patient_account", {
+          _email: email.trim().toLowerCase(),
+          _full_name: patientName.trim(),
+          _password: patientPassword,
+        });
 
-    if (lookupError || !patientId) {
-      toast.error("Paciente não encontrado. Verifique se o email está correto e se a pessoa já se cadastrou como paciente.");
-      setSubmitting(false);
-      return;
-    }
+      if (createError) throw createError;
+      if (!patientId) throw new Error("Erro ao criar conta do paciente");
 
-    if (patientId === user.id) {
-      toast.error("Você não pode se adicionar como paciente.");
-      setSubmitting(false);
-      return;
-    }
+      // Link nutritionist to patient
+      const { error: linkError } = await supabase.from("nutritionist_patients").insert({
+        nutritionist_id: user.id,
+        patient_id: patientId,
+      });
 
-    const { error } = await supabase.from("nutritionist_patients").insert({
-      nutritionist_id: user.id,
-      patient_id: patientId,
-    });
-
-    if (error) {
-      if (error.code === "23505") {
-        toast.error("Este paciente já está na sua lista.");
+      if (linkError) {
+        if (linkError.code === "23505") {
+          toast.info("Paciente já está na sua lista.");
+        } else {
+          throw linkError;
+        }
       } else {
-        toast.error("Erro ao adicionar: " + error.message);
+        toast.success("Paciente cadastrado e vinculado! 🎉");
       }
-    } else {
-      toast.success("Paciente adicionado com sucesso! 🎉");
+
       setOpen(false);
       setEmail("");
+      setPatientName("");
+      setPatientPassword("");
       fetchPatients();
+    } catch (err: any) {
+      toast.error("Erro: " + (err.message || "Tente novamente"));
     }
     setSubmitting(false);
   };
