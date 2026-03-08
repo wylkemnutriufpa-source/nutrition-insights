@@ -16,6 +16,7 @@ import {
   Flame, Beef, Wheat, Droplets, Leaf, PencilLine, X, Check, Sparkles, Loader2
 } from "lucide-react";
 import PlanScheduler from "@/components/plans/PlanScheduler";
+import FoodAutocomplete, { type FoodItem } from "@/components/meals/FoodAutocomplete";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
 
