@@ -554,12 +554,12 @@ export default function Anamnesis() {
     return (
       <DashboardLayout>
         <div className="max-w-2xl mx-auto">
-          {analyzing ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex flex-col items-center justify-center min-h-[60vh] text-center"
-            >
+              {analyzing ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex flex-col items-center justify-center min-h-[60vh] text-center"
+                >
               <div className="relative mb-8">
                 <motion.div
                   animate={{ rotate: 360 }}
