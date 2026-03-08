@@ -53,7 +53,7 @@ export default function WeeklyGoals() {
     queryKey: ["weekly-goals", user?.id, isNutritionist],
     queryFn: async () => {
       if (!user) return [];
-      const query = supabase.from("weekly_goals").select("*").gte("week_start", weekStartStr).order("created_at", { ascending: false });
+      const query = (supabase as any).from("weekly_goals").select("*").gte("week_start", weekStartStr).order("created_at", { ascending: false });
       if (isNutritionist) {
         query.eq("nutritionist_id", user.id);
       } else {
