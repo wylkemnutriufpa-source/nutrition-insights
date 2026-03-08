@@ -211,6 +211,54 @@ export type Database = {
           },
         ]
       }
+      diet_templates: {
+        Row: {
+          base_calories: number
+          category: string
+          conditions: string[]
+          created_at: string
+          description: string | null
+          icon: string
+          id: string
+          is_active: boolean
+          macro_ratio: Json
+          meals: Json
+          name: string
+          slug: string
+          tags: string[]
+        }
+        Insert: {
+          base_calories?: number
+          category?: string
+          conditions?: string[]
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          macro_ratio?: Json
+          meals?: Json
+          name: string
+          slug: string
+          tags?: string[]
+        }
+        Update: {
+          base_calories?: number
+          category?: string
+          conditions?: string[]
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          macro_ratio?: Json
+          meals?: Json
+          name?: string
+          slug?: string
+          tags?: string[]
+        }
+        Relationships: []
+      }
       meal_plan_items: {
         Row: {
           calories_target: number | null
