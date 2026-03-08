@@ -396,7 +396,7 @@ export default function DietTemplates() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map((template) => {
               const adjustedCal = getAdjustedCalories(template);
-              const isAdjusted = anamnesis && adjustedCal !== template.base_calories;
+              const isAdjusted = (anamnesis || physicalAssessment) && adjustedCal !== template.base_calories;
               const totalTemplateCals = template.meals.reduce(
                 (s, m) => s + m.foods.reduce((fs, f) => fs + f.calories, 0),
                 0
