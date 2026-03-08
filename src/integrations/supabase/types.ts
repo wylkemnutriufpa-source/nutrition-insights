@@ -790,6 +790,83 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_meals: {
+        Row: {
+          calories_target: number | null
+          carbs_target: number | null
+          created_at: string
+          description: string | null
+          fat_target: number | null
+          id: string
+          meal_type: Database["public"]["Enums"]["meal_type"]
+          nutritionist_id: string
+          protein_target: number | null
+          title: string
+        }
+        Insert: {
+          calories_target?: number | null
+          carbs_target?: number | null
+          created_at?: string
+          description?: string | null
+          fat_target?: number | null
+          id?: string
+          meal_type?: Database["public"]["Enums"]["meal_type"]
+          nutritionist_id: string
+          protein_target?: number | null
+          title: string
+        }
+        Update: {
+          calories_target?: number | null
+          carbs_target?: number | null
+          created_at?: string
+          description?: string | null
+          fat_target?: number | null
+          id?: string
+          meal_type?: Database["public"]["Enums"]["meal_type"]
+          nutritionist_id?: string
+          protein_target?: number | null
+          title?: string
+        }
+        Relationships: []
+      }
+      saved_plan_templates: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          items: Json
+          nutritionist_id: string
+          source_plan_id: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          items?: Json
+          nutritionist_id: string
+          source_plan_id?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          items?: Json
+          nutritionist_id?: string
+          source_plan_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_plan_templates_source_plan_id_fkey"
+            columns: ["source_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_achievements: {
         Row: {
           achievement_id: string

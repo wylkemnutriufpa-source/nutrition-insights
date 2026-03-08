@@ -13,7 +13,8 @@ import { toast } from "sonner";
 import {
   ArrowLeft, Plus, Trash2, Copy, GripVertical, Utensils,
   Sun, Coffee, Apple, Sandwich, Moon, Cookie, Save, ChevronLeft, ChevronRight,
-  Flame, Beef, Wheat, Droplets, Leaf, PencilLine, X, Check, Sparkles, Loader2
+  Flame, Beef, Wheat, Droplets, Leaf, PencilLine, X, Check, Sparkles, Loader2,
+  Bookmark, BookmarkCheck, FolderDown, FolderUp
 } from "lucide-react";
 import PlanScheduler from "@/components/plans/PlanScheduler";
 import FoodAutocomplete, { type FoodItem } from "@/components/meals/FoodAutocomplete";
@@ -82,6 +83,16 @@ export default function MealPlanEditor() {
   // Copy state
   const [copySource, setCopySource] = useState<{ day: number; mealType: MealType } | null>(null);
   const [generating, setGenerating] = useState(false);
+
+  // Save/Import state
+  const [savingMeal, setSavingMeal] = useState(false);
+  const [savingPlan, setSavingPlan] = useState(false);
+  const [savedMealsDialogOpen, setSavedMealsDialogOpen] = useState(false);
+  const [savedMeals, setSavedMeals] = useState<any[]>([]);
+  const [loadingSavedMeals, setLoadingSavedMeals] = useState(false);
+  const [savedPlansDialogOpen, setSavedPlansDialogOpen] = useState(false);
+  const [savedPlans, setSavedPlans] = useState<any[]>([]);
+  const [loadingSavedPlans, setLoadingSavedPlans] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!id || !user) return;
@@ -223,6 +234,128 @@ export default function MealPlanEditor() {
     };
   };
 
+  // Save current meal item as reusable
+  const handleSaveMeal = async () => {
+    if (!user || !form.title.trim()) return;
+    setSavingMeal(true);
+    const { error } = await supabase.from("saved_meals" as any).insert({
+      nutritionist_id: user.id,
+      title: form.title.trim(),
+      description: form.description.trim() || null,
+      meal_type: dialogMealType,
+      calories_target: form.calories_target ? parseInt(form.calories_target) : null,
+      protein_target: form.protein_target ? parseFloat(form.protein_target) : null,
+      carbs_target: form.carbs_target ? parseFloat(form.carbs_target) : null,
+      fat_target: form.fat_target ? parseFloat(form.fat_target) : null,
+    });
+    setSavingMeal(false);
+    if (error) toast.error("Erro ao salvar refeição: " + error.message);
+    else toast.success("Refeição salva para reutilização! ⭐");
+  };
+
+  // Load saved meals
+  const loadSavedMeals = async () => {
+    if (!user) return;
+    setLoadingSavedMeals(true);
+    const { data } = await supabase
+      .from("saved_meals" as any)
+      .select("*")
+      .eq("nutritionist_id", user.id)
+      .order("created_at", { ascending: false });
+    setSavedMeals(data || []);
+    setLoadingSavedMeals(false);
+  };
+
+  // Import saved meal into form
+  const importSavedMeal = (meal: any) => {
+    setForm({
+      title: meal.title,
+      description: meal.description || "",
+      calories_target: meal.calories_target?.toString() || "",
+      protein_target: meal.protein_target?.toString() || "",
+      carbs_target: meal.carbs_target?.toString() || "",
+      fat_target: meal.fat_target?.toString() || "",
+    });
+    setSavedMealsDialogOpen(false);
+    toast.success("Refeição importada!");
+  };
+
+  // Delete saved meal
+  const deleteSavedMeal = async (mealId: string) => {
+    await supabase.from("saved_meals" as any).delete().eq("id", mealId);
+    setSavedMeals((prev) => prev.filter((m) => m.id !== mealId));
+    toast.success("Refeição removida dos salvos");
+  };
+
+  // Save entire plan as template
+  const handleSavePlanTemplate = async () => {
+    if (!user || !plan || items.length === 0) return;
+    setSavingPlan(true);
+    const templateItems = items.map((i) => ({
+      title: i.title,
+      description: i.description,
+      meal_type: i.meal_type,
+      day_of_week: i.day_of_week,
+      calories_target: i.calories_target,
+      protein_target: i.protein_target,
+      carbs_target: i.carbs_target,
+      fat_target: i.fat_target,
+    }));
+    const { error } = await supabase.from("saved_plan_templates" as any).insert({
+      nutritionist_id: user.id,
+      title: plan.title + " (Modelo)",
+      description: `${items.length} itens • Salvo em ${new Date().toLocaleDateString("pt-BR")}`,
+      source_plan_id: plan.id,
+      items: templateItems,
+    });
+    setSavingPlan(false);
+    if (error) toast.error("Erro ao salvar modelo: " + error.message);
+    else toast.success("Plano salvo como modelo! 📋");
+  };
+
+  // Load saved plan templates
+  const loadSavedPlans = async () => {
+    if (!user) return;
+    setLoadingSavedPlans(true);
+    const { data } = await supabase
+      .from("saved_plan_templates" as any)
+      .select("*")
+      .eq("nutritionist_id", user.id)
+      .order("created_at", { ascending: false });
+    setSavedPlans(data || []);
+    setLoadingSavedPlans(false);
+  };
+
+  // Apply a saved plan template to current plan
+  const applySavedPlan = async (template: any) => {
+    if (!id) return;
+    const templateItems = (template.items as any[]).map((item: any) => ({
+      meal_plan_id: id,
+      title: item.title,
+      description: item.description,
+      meal_type: item.meal_type,
+      day_of_week: item.day_of_week,
+      calories_target: item.calories_target,
+      protein_target: item.protein_target ? Number(item.protein_target) : null,
+      carbs_target: item.carbs_target ? Number(item.carbs_target) : null,
+      fat_target: item.fat_target ? Number(item.fat_target) : null,
+    }));
+    const { error } = await supabase.from("meal_plan_items").insert(templateItems);
+    if (error) toast.error("Erro ao aplicar modelo: " + error.message);
+    else {
+      toast.success(`Modelo aplicado com ${templateItems.length} itens! 🎉`);
+      setSavedPlansDialogOpen(false);
+      fetchData();
+    }
+  };
+
+  // Delete saved plan template
+  const deleteSavedPlan = async (templateId: string) => {
+    await supabase.from("saved_plan_templates" as any).delete().eq("id", templateId);
+    setSavedPlans((prev) => prev.filter((p) => p.id !== templateId));
+    toast.success("Modelo removido");
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -267,29 +400,49 @@ export default function MealPlanEditor() {
               </p>
             </div>
           </div>
-          <Button
-            onClick={async () => {
-              if (!plan) return;
-              setGenerating(true);
-              try {
-                const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
-                  body: { patient_id: plan.patient_id, meal_plan_id: plan.id },
-                });
-                if (error) throw error;
-                if (data?.error) throw new Error(data.error);
-                toast.success(`AI Plan gerou ${data.items_count} itens e ${data.tips_count} dicas! 🤖`);
-                fetchData();
-              } catch (e: any) {
-                toast.error(e.message || "Erro ao gerar plano");
-              }
-              setGenerating(false);
-            }}
-            disabled={generating}
-            className="gradient-primary gap-2 shadow-glow"
-          >
-            {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-            {generating ? "Gerando..." : "AI Plan ✨"}
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { loadSavedPlans(); setSavedPlansDialogOpen(true); }}
+              className="gap-1.5"
+            >
+              <FolderDown className="w-4 h-4" /> Importar Modelo
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSavePlanTemplate}
+              disabled={savingPlan || items.length === 0}
+              className="gap-1.5"
+            >
+              {savingPlan ? <Loader2 className="w-4 h-4 animate-spin" /> : <BookmarkCheck className="w-4 h-4" />}
+              Salvar Plano
+            </Button>
+            <Button
+              onClick={async () => {
+                if (!plan) return;
+                setGenerating(true);
+                try {
+                  const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
+                    body: { patient_id: plan.patient_id, meal_plan_id: plan.id },
+                  });
+                  if (error) throw error;
+                  if (data?.error) throw new Error(data.error);
+                  toast.success(`AI Plan gerou ${data.items_count} itens e ${data.tips_count} dicas! 🤖`);
+                  fetchData();
+                } catch (e: any) {
+                  toast.error(e.message || "Erro ao gerar plano");
+                }
+                setGenerating(false);
+              }}
+              disabled={generating}
+              className="gradient-primary gap-2 shadow-glow"
+            >
+              {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+              {generating ? "Gerando..." : "AI Plan ✨"}
+            </Button>
+          </div>
         </div>
 
         {/* Grid */}
@@ -582,6 +735,28 @@ export default function MealPlanEditor() {
               </div>
             </div>
 
+            {/* Save & Import meal buttons */}
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-1.5"
+                onClick={() => { loadSavedMeals(); setSavedMealsDialogOpen(true); }}
+              >
+                <FolderDown className="w-3.5 h-3.5" /> Importar Salva
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-1.5"
+                onClick={handleSaveMeal}
+                disabled={savingMeal || !form.title.trim()}
+              >
+                {savingMeal ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Bookmark className="w-3.5 h-3.5" />}
+                Salvar Refeição
+              </Button>
+            </div>
+
             <div className="flex gap-2">
               {editingItem && (
                 <Button
@@ -604,6 +779,107 @@ export default function MealPlanEditor() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Saved Meals Dialog */}
+      <Dialog open={savedMealsDialogOpen} onOpenChange={setSavedMealsDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              <Bookmark className="w-5 h-5 text-primary" /> Refeições Salvas
+            </DialogTitle>
+          </DialogHeader>
+          {loadingSavedMeals ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          ) : savedMeals.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Bookmark className="w-8 h-8 mx-auto mb-2 opacity-40" />
+              <p className="text-sm">Nenhuma refeição salva ainda.</p>
+              <p className="text-xs mt-1">Salve refeições ao adicionar itens ao plano.</p>
+            </div>
+          ) : (
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {savedMeals.map((meal) => (
+                <div
+                  key={meal.id}
+                  className="flex items-center gap-2 p-3 rounded-lg bg-secondary/40 hover:bg-secondary/60 transition-colors group cursor-pointer"
+                  onClick={() => importSavedMeal(meal)}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{meal.title}</p>
+                    {meal.description && (
+                      <p className="text-xs text-muted-foreground truncate">{meal.description}</p>
+                    )}
+                    <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
+                      {meal.calories_target && <span>{meal.calories_target} kcal</span>}
+                      {meal.protein_target && <span>{Number(meal.protein_target).toFixed(0)}g prot</span>}
+                      {meal.carbs_target && <span>{Number(meal.carbs_target).toFixed(0)}g carb</span>}
+                    </div>
+                  </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); deleteSavedMeal(meal.id); }}
+                    className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-destructive/10 transition-opacity"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Saved Plan Templates Dialog */}
+      <Dialog open={savedPlansDialogOpen} onOpenChange={setSavedPlansDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              <BookmarkCheck className="w-5 h-5 text-primary" /> Modelos de Plano Salvos
+            </DialogTitle>
+          </DialogHeader>
+          {loadingSavedPlans ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          ) : savedPlans.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <BookmarkCheck className="w-8 h-8 mx-auto mb-2 opacity-40" />
+              <p className="text-sm">Nenhum modelo salvo ainda.</p>
+              <p className="text-xs mt-1">Clique em "Salvar Plano" para criar um modelo reutilizável.</p>
+            </div>
+          ) : (
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {savedPlans.map((tpl) => {
+                const itemCount = Array.isArray(tpl.items) ? tpl.items.length : 0;
+                return (
+                  <div
+                    key={tpl.id}
+                    className="flex items-center gap-3 p-3 rounded-lg bg-secondary/40 hover:bg-secondary/60 transition-colors group cursor-pointer"
+                    onClick={() => applySavedPlan(tpl)}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{tpl.title}</p>
+                      {tpl.description && (
+                        <p className="text-xs text-muted-foreground truncate">{tpl.description}</p>
+                      )}
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        {itemCount} itens • {new Date(tpl.created_at).toLocaleDateString("pt-BR")}
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); deleteSavedPlan(tpl.id); }}
+                      className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-destructive/10 transition-opacity"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </DashboardLayout>
