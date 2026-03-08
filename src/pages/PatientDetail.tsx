@@ -402,12 +402,18 @@ export default function PatientDetail() {
             </div>
           </TabsContent>
 
+          {/* Agenda */}
+          <TabsContent value="agenda" className="mt-4">
+            <PatientAgenda patientId={patientId!} />
+          </TabsContent>
+
+          {/* Calculadoras */}
+          <TabsContent value="calculators" className="mt-4">
+            <PatientCalculators anamnesis={anamnesis} />
+          </TabsContent>
+
           {/* Timeline */}
           <TabsContent value="timeline" className="mt-4">
-            <div className="flex justify-end mb-4">
-              <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm" className="gap-1"><Plus className="w-4 h-4" /> Nota</Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
