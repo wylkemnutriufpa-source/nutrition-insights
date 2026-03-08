@@ -6,8 +6,9 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Sparkles, Check, Heart } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles, Check, Heart, Brain, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
 
 // ──── Question definitions ────
 interface Option {
@@ -108,6 +109,72 @@ const questions: Question[] = [
       { label: "Nenhum", emoji: "😴", value: "none" },
     ],
   },
+  // ──── NEW: Energy, Sleep, Digestion ────
+  {
+    id: "energy_level",
+    title: "Como está seu nível de energia?",
+    subtitle: "No geral, como você se sente ao longo do dia",
+    type: "single",
+    options: [
+      { label: "Muito baixo", emoji: "😩", value: "very_low" },
+      { label: "Baixo", emoji: "😔", value: "low" },
+      { label: "Normal", emoji: "😊", value: "normal" },
+      { label: "Alto", emoji: "⚡", value: "high" },
+    ],
+  },
+  {
+    id: "sleep_quality",
+    title: "Como é a qualidade do seu sono?",
+    subtitle: "Pense nas últimas semanas",
+    type: "single",
+    options: [
+      { label: "Péssima", emoji: "😵", value: "terrible" },
+      { label: "Ruim", emoji: "😴", value: "bad" },
+      { label: "Regular", emoji: "😐", value: "regular" },
+      { label: "Boa", emoji: "😌", value: "good" },
+      { label: "Excelente", emoji: "💤", value: "excellent" },
+    ],
+  },
+  {
+    id: "digestion",
+    title: "Como está sua digestão?",
+    subtitle: "Intestino, gases, inchaço...",
+    type: "single",
+    options: [
+      { label: "Muito ruim", emoji: "😣", value: "very_bad" },
+      { label: "Irregular", emoji: "🔄", value: "irregular" },
+      { label: "Normal", emoji: "👍", value: "normal" },
+      { label: "Excelente", emoji: "✨", value: "excellent" },
+    ],
+  },
+  {
+    id: "hunger_compulsion",
+    title: "Sente fome excessiva ou compulsão?",
+    subtitle: "Episódios de comer demais sem controle",
+    type: "single",
+    options: [
+      { label: "Sempre", emoji: "🍕", value: "always" },
+      { label: "Frequente", emoji: "😰", value: "frequent" },
+      { label: "Às vezes", emoji: "🤔", value: "sometimes" },
+      { label: "Raramente", emoji: "😌", value: "rarely" },
+      { label: "Nunca", emoji: "✅", value: "never" },
+    ],
+  },
+  // ──── NEW: Symptoms ────
+  {
+    id: "symptoms",
+    title: "Apresenta algum desses sintomas?",
+    subtitle: "Selecione todos que se aplicam",
+    type: "multi",
+    options: [
+      { label: "Inchaço", emoji: "🎈", value: "bloating" },
+      { label: "Fadiga", emoji: "😩", value: "fatigue" },
+      { label: "Dor de cabeça", emoji: "🤕", value: "headache" },
+      { label: "Ansiedade", emoji: "😰", value: "anxiety" },
+      { label: "Insônia", emoji: "🌙", value: "insomnia" },
+      { label: "Nenhum", emoji: "✅", value: "none" },
+    ],
+  },
   {
     id: "restrictions",
     title: "Tem alguma restrição alimentar?",
@@ -147,6 +214,40 @@ const questions: Question[] = [
       { label: "Colesterol alto", emoji: "🫀", value: "high_cholesterol" },
       { label: "Hipotireoidismo", emoji: "🦋", value: "hypothyroidism" },
       { label: "Nenhuma", emoji: "✅", value: "none" },
+    ],
+  },
+  // ──── NEW: Clinical history, meds, limitations, pregnancy ────
+  {
+    id: "clinical_history",
+    title: "Histórico clínico relevante?",
+    subtitle: "Cirurgias, internações, doenças passadas...",
+    type: "text",
+    placeholder: "Ex: Cirurgia bariátrica em 2020, gastrite crônica...",
+  },
+  {
+    id: "medications",
+    title: "Usa algum medicamento atualmente?",
+    subtitle: "Inclua suplementos também",
+    type: "text",
+    placeholder: "Ex: Puran T4, Metformina, Ômega 3...",
+  },
+  {
+    id: "physical_limitations",
+    title: "Tem alguma limitação física?",
+    subtitle: "Lesões, dores articulares, mobilidade...",
+    type: "text",
+    placeholder: "Ex: Hérnia lombar, tendinite no ombro...",
+  },
+  {
+    id: "pregnancy_status",
+    title: "Gestação ou pós-parto?",
+    subtitle: "Selecione se aplicável",
+    type: "single",
+    options: [
+      { label: "Não se aplica", emoji: "➖", value: "not_applicable" },
+      { label: "Gestante", emoji: "🤰", value: "pregnant" },
+      { label: "Pós-parto (<6m)", emoji: "👶", value: "postpartum_recent" },
+      { label: "Pós-parto (6m+)", emoji: "🍼", value: "postpartum_late" },
     ],
   },
   {
@@ -248,7 +349,7 @@ const questions: Question[] = [
   },
 ];
 
-// ──── Card components for each question type ────
+// ──── Card components ────
 function OptionCard({
   opt,
   selected,
@@ -285,19 +386,10 @@ function OptionCard({
 }
 
 function SliderInput({
-  value,
-  onChange,
-  min,
-  max,
-  step,
-  unit,
+  value, onChange, min, max, step, unit,
 }: {
-  value: number;
-  onChange: (v: number) => void;
-  min: number;
-  max: number;
-  step: number;
-  unit: string;
+  value: number; onChange: (v: number) => void;
+  min: number; max: number; step: number; unit: string;
 }) {
   return (
     <div className="w-full max-w-md mx-auto space-y-4">
@@ -306,11 +398,7 @@ function SliderInput({
         <span className="text-xl text-muted-foreground ml-2">{unit}</span>
       </div>
       <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
+        type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         className="w-full h-3 rounded-full appearance-none cursor-pointer accent-primary bg-muted"
       />
@@ -329,7 +417,9 @@ export default function Anamnesis() {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [aiResult, setAiResult] = useState<any>(null);
 
   const q = questions[step];
   const progress = ((step + 1) / questions.length) * 100;
@@ -392,24 +482,19 @@ export default function Anamnesis() {
     }
 
     const activityMultipliers: Record<string, number> = {
-      sedentary: 1.2,
-      light: 1.375,
-      moderate: 1.55,
-      intense: 1.725,
+      sedentary: 1.2, light: 1.375, moderate: 1.55, intense: 1.725,
     };
     const multiplier = activityMultipliers[answers.activity_level] || 1.375;
     let kcalTarget = Math.round(tmb * multiplier);
 
-    // Adjust based on goal
     if (answers.goal === "lose_weight") kcalTarget = Math.round(kcalTarget * 0.8);
     else if (answers.goal === "gain_muscle") kcalTarget = Math.round(kcalTarget * 1.15);
 
-    // Macro split
     const protein = Math.round((kcalTarget * 0.3) / 4);
     const carbs = Math.round((kcalTarget * 0.45) / 4);
     const fat = Math.round((kcalTarget * 0.25) / 9);
 
-    const { error } = await supabase.from("patient_anamnesis").insert({
+    const { data: anamData, error } = await supabase.from("patient_anamnesis").insert({
       user_id: user.id,
       answers,
       computed_tmb: Math.round(tmb),
@@ -418,35 +503,126 @@ export default function Anamnesis() {
       computed_carbs: carbs,
       computed_fat: fat,
       status: "completed",
-    });
+    }).select().single();
 
     if (error) {
       toast.error("Erro ao salvar: " + error.message);
-    } else {
-      toast.success("Anamnese concluída! 🎉");
-      setCompleted(true);
+      setSubmitting(false);
+      return;
     }
+
+    toast.success("Anamnese salva! Gerando análise inteligente... 🧠");
     setSubmitting(false);
+    setAnalyzing(true);
+
+    // Trigger AI analysis
+    try {
+      const { data: aiData, error: aiError } = await supabase.functions.invoke("analyze-anamnesis", {
+        body: { anamnesis_id: anamData.id },
+      });
+
+      if (aiError) throw aiError;
+      if (aiData?.error) throw new Error(aiData.error);
+
+      setAiResult(aiData);
+      toast.success(`Análise concluída! ${aiData.tips_count} dicas e ${aiData.recommendations_count} recomendações geradas! ✨`);
+    } catch (e: any) {
+      console.error("AI analysis error:", e);
+      toast.error("Anamnese salva, mas a análise de IA falhou: " + (e.message || "Erro desconhecido"));
+    }
+
+    setAnalyzing(false);
+    setCompleted(true);
   };
 
   if (completed) {
     return (
       <DashboardLayout>
-        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="w-24 h-24 rounded-full gradient-primary flex items-center justify-center mb-6 shadow-glow"
-          >
-            <Heart className="w-12 h-12 text-primary-foreground" />
-          </motion.div>
-          <h1 className="font-display text-3xl font-bold mb-2">Anamnese concluída!</h1>
-          <p className="text-muted-foreground mb-6 max-w-md">
-            Seu nutricionista receberá seus dados e criará um plano personalizado com base nas suas respostas.
-          </p>
-          <Button onClick={() => navigate("/")} className="gradient-primary shadow-glow">
-            Voltar ao Dashboard
-          </Button>
+        <div className="max-w-2xl mx-auto">
+          {analyzing ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center justify-center min-h-[60vh] text-center"
+            >
+              <div className="relative mb-8">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  className="w-24 h-24 rounded-full border-4 border-primary/20 border-t-primary"
+                />
+                <Brain className="w-10 h-10 text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+              </div>
+              <h2 className="font-display text-2xl font-bold mb-2">Analisando sua anamnese...</h2>
+              <p className="text-muted-foreground max-w-md">
+                Nossa IA está processando suas respostas para criar um plano personalizado com dicas,
+                recomendações e focos iniciais de tratamento.
+              </p>
+              <div className="flex items-center gap-2 mt-4 text-sm text-primary">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Processando com inteligência artificial...
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="space-y-6"
+            >
+              <div className="flex flex-col items-center text-center mb-6">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="w-24 h-24 rounded-full gradient-primary flex items-center justify-center mb-6 shadow-glow"
+                >
+                  <Heart className="w-12 h-12 text-primary-foreground" />
+                </motion.div>
+                <h1 className="font-display text-3xl font-bold mb-2">Anamnese Inteligente Concluída!</h1>
+                <p className="text-muted-foreground max-w-md">
+                  {aiResult
+                    ? `${aiResult.summary || "Sua análise foi gerada com sucesso."}`
+                    : "Seu nutricionista receberá seus dados e criará um plano personalizado."}
+                </p>
+              </div>
+
+              {/* Show smart plan card if AI was successful */}
+              <SmartPlanCard />
+
+              {/* AI Stats */}
+              {aiResult && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="grid grid-cols-3 gap-3"
+                >
+                  <div className="glass rounded-xl p-4 text-center">
+                    <span className="text-2xl">💡</span>
+                    <p className="font-display font-bold text-xl mt-1">{aiResult.tips_count}</p>
+                    <p className="text-xs text-muted-foreground">Dicas geradas</p>
+                  </div>
+                  <div className="glass rounded-xl p-4 text-center">
+                    <span className="text-2xl">🎯</span>
+                    <p className="font-display font-bold text-xl mt-1">{aiResult.recommendations_count}</p>
+                    <p className="text-xs text-muted-foreground">Recomendações</p>
+                  </div>
+                  <div className="glass rounded-xl p-4 text-center">
+                    <span className="text-2xl">
+                      {aiResult.risk_level === "high" ? "🔴" : aiResult.risk_level === "medium" ? "🟡" : "🟢"}
+                    </span>
+                    <p className="font-display font-bold text-xl mt-1 capitalize">
+                      {aiResult.risk_level === "high" ? "Alto" : aiResult.risk_level === "medium" ? "Médio" : "Baixo"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Nível atenção</p>
+                  </div>
+                </motion.div>
+              )}
+
+              <Button onClick={() => navigate("/")} className="w-full gradient-primary shadow-glow">
+                Voltar ao Dashboard
+              </Button>
+            </motion.div>
+          )}
         </div>
       </DashboardLayout>
     );
@@ -481,88 +657,59 @@ export default function Anamnesis() {
               <p className="text-muted-foreground">{q.subtitle}</p>
             </div>
 
-            {/* Single select */}
             {q.type === "single" && q.options && (
               <div className={`grid gap-3 ${q.options.length <= 3 ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2 sm:grid-cols-3"}`}>
                 {q.options.map((opt) => (
-                  <OptionCard
-                    key={opt.value}
-                    opt={opt}
-                    selected={answers[q.id] === opt.value}
-                    onClick={() => setAnswer(opt.value)}
-                  />
+                  <OptionCard key={opt.value} opt={opt} selected={answers[q.id] === opt.value} onClick={() => setAnswer(opt.value)} />
                 ))}
               </div>
             )}
 
-            {/* Multi select */}
             {q.type === "multi" && q.options && (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {q.options.map((opt) => (
-                  <OptionCard
-                    key={opt.value}
-                    opt={opt}
-                    selected={(answers[q.id] || []).includes(opt.value)}
-                    onClick={() => toggleMulti(opt.value)}
-                  />
+                  <OptionCard key={opt.value} opt={opt} selected={(answers[q.id] || []).includes(opt.value)} onClick={() => toggleMulti(opt.value)} />
                 ))}
               </div>
             )}
 
-            {/* Slider */}
             {q.type === "slider" && (
               <SliderInput
                 value={answers[q.id] ?? q.min ?? 1}
                 onChange={(v) => setAnswer(v)}
-                min={q.min || 0}
-                max={q.max || 100}
-                step={q.step || 1}
-                unit={q.unit || ""}
+                min={q.min || 0} max={q.max || 100} step={q.step || 1} unit={q.unit || ""}
               />
             )}
 
-            {/* Number input */}
             {q.type === "number" && (
               <div className="max-w-xs mx-auto space-y-2">
                 <div className="relative">
                   <input
-                    type="number"
-                    value={answers[q.id] || ""}
-                    onChange={(e) => setAnswer(e.target.value)}
-                    placeholder={q.placeholder}
-                    min={q.min}
-                    max={q.max}
+                    type="number" value={answers[q.id] || ""} onChange={(e) => setAnswer(e.target.value)}
+                    placeholder={q.placeholder} min={q.min} max={q.max}
                     className="w-full text-center text-4xl font-display font-bold bg-card border-2 border-border rounded-2xl px-6 py-4 focus:border-primary focus:outline-none transition-colors"
                   />
                   {q.unit && (
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">
-                      {q.unit}
-                    </span>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">{q.unit}</span>
                   )}
                 </div>
               </div>
             )}
 
-            {/* Text input */}
             {q.type === "text" && (
               <div className="max-w-md mx-auto">
                 <textarea
-                  value={answers[q.id] || ""}
-                  onChange={(e) => setAnswer(e.target.value)}
-                  placeholder={q.placeholder}
-                  rows={3}
+                  value={answers[q.id] || ""} onChange={(e) => setAnswer(e.target.value)}
+                  placeholder={q.placeholder} rows={3}
                   className="w-full bg-card border-2 border-border rounded-2xl px-4 py-3 focus:border-primary focus:outline-none transition-colors resize-none text-sm"
                 />
               </div>
             )}
 
-            {/* Time input */}
             {q.type === "time" && (
               <div className="max-w-xs mx-auto">
                 <input
-                  type="time"
-                  value={answers[q.id] || ""}
-                  onChange={(e) => setAnswer(e.target.value)}
+                  type="time" value={answers[q.id] || ""} onChange={(e) => setAnswer(e.target.value)}
                   className="w-full text-center text-4xl font-display font-bold bg-card border-2 border-border rounded-2xl px-6 py-4 focus:border-primary focus:outline-none transition-colors"
                 />
               </div>
@@ -596,7 +743,7 @@ export default function Anamnesis() {
               className="gradient-primary gap-2 shadow-glow"
             >
               <Sparkles className="w-4 h-4" />
-              {submitting ? "Finalizando..." : "Concluir Anamnese"}
+              {submitting ? "Salvando..." : "Concluir com IA ✨"}
             </Button>
           )}
         </div>
