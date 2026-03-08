@@ -6,8 +6,8 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Sparkles, Check, Heart, Brain, Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { ChevronLeft, ChevronRight, Sparkles, Check, Heart, Brain, Loader2, UserCheck } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
 
 // ──── Question definitions ────
@@ -412,31 +412,46 @@ function SliderInput({
 
 // ──── Main page ────
 export default function Anamnesis() {
-  const { user } = useAuth();
+  const { user, isNutritionist } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const forPatientId = searchParams.get("patientId");
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [submitting, setSubmitting] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [aiResult, setAiResult] = useState<any>(null);
+  const [patientName, setPatientName] = useState<string>("");
+
+  // The target user: either the patient themselves or the patient being filled by nutritionist
+  const targetUserId = forPatientId || user?.id;
+  const isNutritionistMode = isNutritionist && !!forPatientId;
 
   const q = questions[step];
   const progress = ((step + 1) / questions.length) * 100;
 
+  // Fetch patient name if nutritionist mode
+  useEffect(() => {
+    if (isNutritionistMode && forPatientId) {
+      supabase.from("profiles").select("full_name").eq("user_id", forPatientId).single()
+        .then(({ data }) => setPatientName(data?.full_name || "Paciente"));
+    }
+  }, [isNutritionistMode, forPatientId]);
+
   // Check if already completed
   useEffect(() => {
-    if (!user) return;
+    if (!targetUserId) return;
     supabase
       .from("patient_anamnesis")
       .select("id, status")
-      .eq("user_id", user.id)
+      .eq("user_id", targetUserId)
       .order("created_at", { ascending: false })
       .limit(1)
       .then(({ data }) => {
         if (data?.[0]?.status === "completed") setCompleted(true);
       });
-  }, [user]);
+  }, [targetUserId]);
 
   const setAnswer = (value: any) => {
     setAnswers((prev) => ({ ...prev, [q.id]: value }));
@@ -465,7 +480,7 @@ export default function Anamnesis() {
   };
 
   const handleSubmit = async () => {
-    if (!user) return;
+    if (!user || !targetUserId) return;
     setSubmitting(true);
 
     // Compute TMB (Harris-Benedict)
@@ -495,7 +510,7 @@ export default function Anamnesis() {
     const fat = Math.round((kcalTarget * 0.25) / 9);
 
     const { data: anamData, error } = await supabase.from("patient_anamnesis").insert({
-      user_id: user.id,
+      user_id: targetUserId,
       answers,
       computed_tmb: Math.round(tmb),
       computed_kcal_target: kcalTarget,
@@ -539,12 +554,12 @@ export default function Anamnesis() {
     return (
       <DashboardLayout>
         <div className="max-w-2xl mx-auto">
-          {analyzing ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex flex-col items-center justify-center min-h-[60vh] text-center"
-            >
+              {analyzing ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex flex-col items-center justify-center min-h-[60vh] text-center"
+                >
               <div className="relative mb-8">
                 <motion.div
                   animate={{ rotate: 360 }}
@@ -618,8 +633,8 @@ export default function Anamnesis() {
                 </motion.div>
               )}
 
-              <Button onClick={() => navigate("/")} className="w-full gradient-primary shadow-glow">
-                Voltar ao Dashboard
+              <Button onClick={() => navigate(isNutritionistMode ? `/patients/${forPatientId}` : "/")} className="w-full gradient-primary shadow-glow">
+                {isNutritionistMode ? "Voltar ao Paciente" : "Voltar ao Dashboard"}
               </Button>
             </motion.div>
           )}
@@ -631,6 +646,21 @@ export default function Anamnesis() {
   return (
     <DashboardLayout>
       <div className="max-w-2xl mx-auto">
+        {/* Nutritionist Mode Banner */}
+        {isNutritionistMode && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 rounded-xl bg-primary/10 border border-primary/20 flex items-center gap-3"
+          >
+            <UserCheck className="w-5 h-5 text-primary flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium">Modo Profissional — Preenchendo para: <span className="text-primary">{patientName}</span></p>
+              <p className="text-xs text-muted-foreground">Consulta presencial: preencha a anamnese com base nas respostas do paciente.</p>
+            </div>
+          </motion.div>
+        )}
+
         {/* Progress */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
