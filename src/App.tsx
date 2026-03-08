@@ -74,6 +74,7 @@ const App = () => (
             <Route path="/checklist" element={<ProtectedRoute><Checklist /></ProtectedRoute>} />
             <Route path="/meal-plans" element={<ProtectedRoute><MealPlans /></ProtectedRoute>} />
             <Route path="/meal-plans/:id" element={<ProtectedRoute><MealPlanEditor /></ProtectedRoute>} />
+            <Route path="/diet-templates" element={<ProtectedRoute><DietTemplates /></ProtectedRoute>} />
             <Route path="/anamnesis" element={<ProtectedRoute><Anamnesis /></ProtectedRoute>} />
             <Route path="/analyze" element={<ProtectedRoute><AnalyzeMeal /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
