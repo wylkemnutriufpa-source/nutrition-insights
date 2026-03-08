@@ -20,6 +20,7 @@ const nutritionistLinks = [
 const patientLinks = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/meals", icon: UtensilsCrossed, label: "Refeições" },
+  { to: "/anamnesis", icon: ClipboardCheck, label: "Anamnese" },
   { to: "/achievements", icon: Trophy, label: "Conquistas" },
   { to: "/challenges", icon: Target, label: "Desafios" },
 ];

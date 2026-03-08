@@ -74,6 +74,11 @@ function PatientDashboardContent() {
         <StatsCard title="Streak" value={`${stats?.current_streak || 0}d`} icon={Target} />
       </motion.div>
 
+      {/* Smart Tips */}
+      <motion.div variants={item}>
+        <SmartTips />
+      </motion.div>
+
       {/* Recent meals */}
       <motion.div variants={item}>
         <div className="flex items-center justify-between mb-4">

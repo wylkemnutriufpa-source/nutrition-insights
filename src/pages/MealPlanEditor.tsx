@@ -266,6 +266,29 @@ export default function MealPlanEditor() {
               </p>
             </div>
           </div>
+          <Button
+            onClick={async () => {
+              if (!plan) return;
+              setGenerating(true);
+              try {
+                const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
+                  body: { patient_id: plan.patient_id, meal_plan_id: plan.id },
+                });
+                if (error) throw error;
+                if (data?.error) throw new Error(data.error);
+                toast.success(`AI Plan gerou ${data.items_count} itens e ${data.tips_count} dicas! 🤖`);
+                fetchData();
+              } catch (e: any) {
+                toast.error(e.message || "Erro ao gerar plano");
+              }
+              setGenerating(false);
+            }}
+            disabled={generating}
+            className="gradient-primary gap-2 shadow-glow"
+          >
+            {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            {generating ? "Gerando..." : "AI Plan ✨"}
+          </Button>
         </div>
 
         {/* Grid */}
