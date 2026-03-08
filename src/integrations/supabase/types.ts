@@ -477,6 +477,54 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_appointments: {
+        Row: {
+          appointment_date: string
+          appointment_type: string
+          color: string | null
+          created_at: string
+          description: string | null
+          duration_minutes: number | null
+          id: string
+          nutritionist_id: string
+          patient_id: string
+          reminder_sent: boolean | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_date: string
+          appointment_type?: string
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          nutritionist_id: string
+          patient_id: string
+          reminder_sent?: boolean | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_date?: string
+          appointment_type?: string
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          nutritionist_id?: string
+          patient_id?: string
+          reminder_sent?: boolean | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       patient_protocols: {
         Row: {
           created_at: string

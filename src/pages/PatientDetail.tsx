@@ -14,10 +14,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import MetabolicRadar from "@/components/dashboard/MetabolicRadar";
 import { AnamnesisInsightsFull } from "@/components/patient/AnamnesisInsightsCard";
+import PatientCalculators from "@/components/patient/PatientCalculators";
+import PatientAgenda from "@/components/patient/PatientAgenda";
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
-  TrendingUp, Zap, Heart, Brain, BookOpen, Scale
+  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays
 } from "lucide-react";
 
 interface PatientProfile {
@@ -314,6 +316,12 @@ export default function PatientDetail() {
             <TabsTrigger value="assessment">
               <Activity className="w-3.5 h-3.5 mr-1" /> Avaliação Física
             </TabsTrigger>
+            <TabsTrigger value="agenda">
+              <CalendarDays className="w-3.5 h-3.5 mr-1" /> Agenda
+            </TabsTrigger>
+            <TabsTrigger value="calculators">
+              <Calculator className="w-3.5 h-3.5 mr-1" /> Calculadoras
+            </TabsTrigger>
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
             <TabsTrigger value="protocols">Protocolos</TabsTrigger>
             <TabsTrigger value="radar">Radar Metabólico</TabsTrigger>
@@ -392,6 +400,16 @@ export default function PatientDetail() {
                 <Activity className="w-4 h-4" /> Abrir Avaliação Física
               </Button>
             </div>
+          </TabsContent>
+
+          {/* Agenda */}
+          <TabsContent value="agenda" className="mt-4">
+            <PatientAgenda patientId={patientId!} />
+          </TabsContent>
+
+          {/* Calculadoras */}
+          <TabsContent value="calculators" className="mt-4">
+            <PatientCalculators anamnesis={anamnesis} />
           </TabsContent>
 
           {/* Timeline */}
