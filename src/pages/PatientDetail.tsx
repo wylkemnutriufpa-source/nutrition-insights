@@ -13,10 +13,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import MetabolicRadar from "@/components/dashboard/MetabolicRadar";
+import { AnamnesisInsightsFull } from "@/components/patient/AnamnesisInsightsCard";
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
-  TrendingUp, Zap, Heart
+  TrendingUp, Zap, Heart, Brain
 } from "lucide-react";
 
 interface PatientProfile {
@@ -281,8 +282,11 @@ export default function PatientDetail() {
         </div>
 
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="w-full justify-start bg-card border border-border">
+          <TabsList className="w-full justify-start bg-card border border-border overflow-x-auto">
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+            <TabsTrigger value="ai-insights">
+              <Brain className="w-3.5 h-3.5 mr-1" /> IA Insights
+            </TabsTrigger>
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
             <TabsTrigger value="protocols">Protocolos</TabsTrigger>
             <TabsTrigger value="radar">Radar Metabólico</TabsTrigger>
@@ -339,6 +343,11 @@ export default function PatientDetail() {
                 )}
               </div>
             </div>
+          </TabsContent>
+
+          {/* AI Insights */}
+          <TabsContent value="ai-insights" className="mt-4">
+            <AnamnesisInsightsFull userId={patientId!} />
           </TabsContent>
 
           {/* Timeline */}

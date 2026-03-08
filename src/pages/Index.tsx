@@ -7,6 +7,7 @@ import StatsCard from "@/components/dashboard/StatsCard";
 import XPBar from "@/components/gamification/XPBar";
 import StreakCounter from "@/components/gamification/StreakCounter";
 import SmartTips from "@/components/patient/SmartTips";
+import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
 import MetabolicRadar from "@/components/dashboard/MetabolicRadar";
 import {
   UtensilsCrossed, Users, TrendingUp, Target, Sparkles, Plus,
@@ -133,6 +134,11 @@ function PatientDashboardContent() {
             </div>
           </>
         )}
+      </motion.div>
+
+      {/* Smart Plan Card */}
+      <motion.div variants={item}>
+        <SmartPlanCard />
       </motion.div>
 
       {/* Radar + Tips side by side */}
