@@ -568,7 +568,7 @@ export default function Anamnesis() {
     const carbs = Math.round((kcalTarget * 0.45) / 4);
     const fat = Math.round((kcalTarget * 0.25) / 9);
 
-    const { data: anamData, error } = await supabase.from("patient_anamnesis").insert({
+    const payload = {
       user_id: targetUserId,
       answers,
       computed_tmb: Math.round(tmb),
@@ -577,12 +577,35 @@ export default function Anamnesis() {
       computed_carbs: carbs,
       computed_fat: fat,
       status: "completed",
-    }).select().single();
+    };
 
-    if (error) {
-      toast.error("Erro ao salvar: " + error.message);
-      setSubmitting(false);
-      return;
+    let anamData: any;
+    if (draftId) {
+      // Update existing draft to completed
+      const { data, error } = await supabase
+        .from("patient_anamnesis")
+        .update(payload)
+        .eq("id", draftId)
+        .select()
+        .single();
+      if (error) {
+        toast.error("Erro ao salvar: " + error.message);
+        setSubmitting(false);
+        return;
+      }
+      anamData = data;
+    } else {
+      const { data, error } = await supabase
+        .from("patient_anamnesis")
+        .insert(payload)
+        .select()
+        .single();
+      if (error) {
+        toast.error("Erro ao salvar: " + error.message);
+        setSubmitting(false);
+        return;
+      }
+      anamData = data;
     }
 
     toast.success("Anamnese salva! Gerando análise inteligente... 🧠");
