@@ -15,6 +15,10 @@ import {
   ArrowLeft, Save, Ruler, Activity, Flame, Target, TrendingDown,
   Calculator, Beef, Wheat, Droplets, Loader2, History, Zap, Scale, Heart
 } from "lucide-react";
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  ResponsiveContainer, Area, AreaChart
+} from "recharts";
 
 interface AnamnesisData {
   answers: Record<string, any>;
