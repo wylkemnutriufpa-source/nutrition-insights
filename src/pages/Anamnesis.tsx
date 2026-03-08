@@ -646,6 +646,21 @@ export default function Anamnesis() {
   return (
     <DashboardLayout>
       <div className="max-w-2xl mx-auto">
+        {/* Nutritionist Mode Banner */}
+        {isNutritionistMode && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 rounded-xl bg-primary/10 border border-primary/20 flex items-center gap-3"
+          >
+            <UserCheck className="w-5 h-5 text-primary flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium">Modo Profissional — Preenchendo para: <span className="text-primary">{patientName}</span></p>
+              <p className="text-xs text-muted-foreground">Consulta presencial: preencha a anamnese com base nas respostas do paciente.</p>
+            </div>
+          </motion.div>
+        )}
+
         {/* Progress */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
