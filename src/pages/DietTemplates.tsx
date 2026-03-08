@@ -53,6 +53,16 @@ interface AnamnesisData {
   answers: Record<string, any>;
 }
 
+interface PhysicalAssessmentData {
+  calories_target: number | null;
+  protein_target: number | null;
+  carbs_target: number | null;
+  fat_target: number | null;
+  tdee: number | null;
+  bmr: number | null;
+  assessment_date: string;
+}
+
 const MEAL_ICONS: Record<string, React.ReactNode> = {
   breakfast: <Coffee className="w-4 h-4" />,
   morning_snack: <Apple className="w-4 h-4" />,
@@ -96,6 +106,7 @@ export default function DietTemplates() {
 
   // Anamnesis data for personalization
   const [anamnesis, setAnamnesis] = useState<AnamnesisData | null>(null);
+  const [physicalAssessment, setPhysicalAssessment] = useState<PhysicalAssessmentData | null>(null);
   const [patientName, setPatientName] = useState("");
   const [applying, setApplying] = useState(false);
 
@@ -106,9 +117,22 @@ export default function DietTemplates() {
     fetchTemplates();
     if (patientId) {
       fetchAnamnesis();
+      fetchPhysicalAssessment();
       fetchPatientName();
     }
   }, [patientId]);
+
+  const fetchPhysicalAssessment = async () => {
+    if (!patientId) return;
+    const { data } = await supabase
+      .from("physical_assessments" as any)
+      .select("calories_target, protein_target, carbs_target, fat_target, tdee, bmr, assessment_date")
+      .eq("patient_id", patientId)
+      .order("assessment_date", { ascending: false })
+      .limit(1)
+      .single();
+    if (data) setPhysicalAssessment(data as any);
+  };
 
   const fetchTemplates = async () => {
     const { data } = await supabase
@@ -164,10 +188,25 @@ export default function DietTemplates() {
     return Array.from(cats);
   }, [templates]);
 
-  // Calculate adjusted macros based on anamnesis
+  // Physical assessment takes priority over anamnesis for calorie targets
+  const getEffectiveCalories = () => {
+    if (physicalAssessment?.calories_target) return Math.round(Number(physicalAssessment.calories_target));
+    if (anamnesis?.computed_kcal_target) return Math.round(Number(anamnesis.computed_kcal_target));
+    return null;
+  };
+
+  const getEffectiveMacros = () => ({
+    protein: physicalAssessment?.protein_target ? Math.round(Number(physicalAssessment.protein_target)) : (anamnesis?.computed_protein ? Math.round(Number(anamnesis.computed_protein)) : null),
+    carbs: physicalAssessment?.carbs_target ? Math.round(Number(physicalAssessment.carbs_target)) : (anamnesis?.computed_carbs ? Math.round(Number(anamnesis.computed_carbs)) : null),
+    fat: physicalAssessment?.fat_target ? Math.round(Number(physicalAssessment.fat_target)) : (anamnesis?.computed_fat ? Math.round(Number(anamnesis.computed_fat)) : null),
+  });
+
+  const dataSource = physicalAssessment?.calories_target ? "assessment" : "anamnesis";
+
   const getAdjustedCalories = (template: DietTemplate) => {
-    if (!anamnesis?.computed_kcal_target) return template.base_calories;
-    return Math.round(anamnesis.computed_kcal_target);
+    const effective = getEffectiveCalories();
+    if (!effective) return template.base_calories;
+    return effective;
   };
 
   const getCalorieMultiplier = (template: DietTemplate) => {
@@ -296,11 +335,15 @@ export default function DietTemplates() {
               </p>
             </div>
           </div>
-          {anamnesis && (
+          {(anamnesis || physicalAssessment) && (
             <div className="flex items-center gap-2 glass rounded-lg px-3 py-2">
               <Sparkles className="w-4 h-4 text-primary" />
               <span className="text-xs text-muted-foreground">
-                Anamnese detectada: <span className="font-semibold text-foreground">{Math.round(anamnesis.computed_kcal_target || 0)} kcal/dia</span>
+                {dataSource === "assessment" ? "Avaliação Física" : "Anamnese"}:{" "}
+                <span className="font-semibold text-foreground">{getEffectiveCalories()} kcal/dia</span>
+                {getEffectiveMacros().protein && (
+                  <span className="ml-1">• P:{getEffectiveMacros().protein}g C:{getEffectiveMacros().carbs}g G:{getEffectiveMacros().fat}g</span>
+                )}
               </span>
             </div>
           )}
@@ -353,7 +396,7 @@ export default function DietTemplates() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map((template) => {
               const adjustedCal = getAdjustedCalories(template);
-              const isAdjusted = anamnesis && adjustedCal !== template.base_calories;
+              const isAdjusted = (anamnesis || physicalAssessment) && adjustedCal !== template.base_calories;
               const totalTemplateCals = template.meals.reduce(
                 (s, m) => s + m.foods.reduce((fs, f) => fs + f.calories, 0),
                 0
@@ -437,16 +480,18 @@ export default function DietTemplates() {
                   </DialogTitle>
                 </DialogHeader>
 
-                {/* Anamnesis adjustment banner */}
-                {anamnesis && (
+                {/* Data source adjustment banner */}
+                {(anamnesis || physicalAssessment) && (
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/10 border border-primary/20">
                     <Sparkles className="w-5 h-5 text-primary shrink-0" />
                     <div className="text-sm">
-                      <p className="font-semibold text-primary">Personalizado pela anamnese</p>
+                      <p className="font-semibold text-primary">
+                        Personalizado pela {dataSource === "assessment" ? "Avaliação Física" : "Anamnese"}
+                      </p>
                       <p className="text-muted-foreground text-xs">
                         Calorias ajustadas de {previewTemplate.base_calories} → <span className="font-bold text-foreground">{getAdjustedCalories(previewTemplate)} kcal/dia</span>
-                        {anamnesis.computed_protein && (
-                          <> • P: {Math.round(Number(anamnesis.computed_protein))}g • C: {Math.round(Number(anamnesis.computed_carbs))}g • G: {Math.round(Number(anamnesis.computed_fat))}g</>
+                        {getEffectiveMacros().protein && (
+                          <> • P: {getEffectiveMacros().protein}g • C: {getEffectiveMacros().carbs}g • G: {getEffectiveMacros().fat}g</>
                         )}
                       </p>
                     </div>
