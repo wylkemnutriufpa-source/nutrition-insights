@@ -633,8 +633,8 @@ export default function Anamnesis() {
                 </motion.div>
               )}
 
-              <Button onClick={() => navigate("/")} className="w-full gradient-primary shadow-glow">
-                Voltar ao Dashboard
+              <Button onClick={() => navigate(isNutritionistMode ? `/patients/${forPatientId}` : "/")} className="w-full gradient-primary shadow-glow">
+                {isNutritionistMode ? "Voltar ao Paciente" : "Voltar ao Dashboard"}
               </Button>
             </motion.div>
           )}
