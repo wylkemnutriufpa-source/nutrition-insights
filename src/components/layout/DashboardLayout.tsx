@@ -8,9 +8,11 @@ import {
   LayoutDashboard, Users, UtensilsCrossed, Trophy, Target,
   Leaf, LogOut, Moon, Sun, ChevronRight, Sparkles, Settings,
   ClipboardCheck, FileText, Rocket, CheckCircle2, Activity,
-  MessageSquare, Lightbulb, ChefHat, ShoppingCart, Apple, Camera
+  MessageSquare, Lightbulb, ChefHat, ShoppingCart, Apple, Camera,
+  Palette, Bell, BarChart3
 } from "lucide-react";
 import { useState } from "react";
+import NotificationBell from "@/components/notifications/NotificationBell";
 
 const nutritionistLinks = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
