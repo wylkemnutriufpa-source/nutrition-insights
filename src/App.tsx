@@ -14,6 +14,7 @@ import Challenges from "./pages/Challenges";
 import Patients from "./pages/Patients";
 import MealPlans from "./pages/MealPlans";
 import MealPlanEditor from "./pages/MealPlanEditor";
+import Anamnesis from "./pages/Anamnesis";
 import AnalyzeMeal from "./pages/AnalyzeMeal";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
