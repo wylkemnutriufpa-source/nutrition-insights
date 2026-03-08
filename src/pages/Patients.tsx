@@ -25,6 +25,8 @@ export default function Patients() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
+  const [patientName, setPatientName] = useState("");
+  const [patientPassword, setPatientPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const fetchPatients = async () => {
