@@ -49,6 +49,7 @@ const TAGS = [
 
 export default function Programs() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [programs, setPrograms] = useState<Program[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
