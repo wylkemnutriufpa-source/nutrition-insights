@@ -47,6 +47,68 @@ export type Database = {
         }
         Relationships: []
       }
+      anamnesis_ai_insights: {
+        Row: {
+          ai_summary: string | null
+          anamnesis_id: string
+          behavior_focus: Json | null
+          created_at: string
+          id: string
+          main_pains: Json | null
+          metabolic_profile: string | null
+          movement_focus: Json | null
+          nutrition_focus: Json | null
+          personalized_tips: Json | null
+          primary_goal: string | null
+          raw_response: Json | null
+          risk_level: string
+          suggested_protocol: string | null
+          user_id: string
+        }
+        Insert: {
+          ai_summary?: string | null
+          anamnesis_id: string
+          behavior_focus?: Json | null
+          created_at?: string
+          id?: string
+          main_pains?: Json | null
+          metabolic_profile?: string | null
+          movement_focus?: Json | null
+          nutrition_focus?: Json | null
+          personalized_tips?: Json | null
+          primary_goal?: string | null
+          raw_response?: Json | null
+          risk_level?: string
+          suggested_protocol?: string | null
+          user_id: string
+        }
+        Update: {
+          ai_summary?: string | null
+          anamnesis_id?: string
+          behavior_focus?: Json | null
+          created_at?: string
+          id?: string
+          main_pains?: Json | null
+          metabolic_profile?: string | null
+          movement_focus?: Json | null
+          nutrition_focus?: Json | null
+          personalized_tips?: Json | null
+          primary_goal?: string | null
+          raw_response?: Json | null
+          risk_level?: string
+          suggested_protocol?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anamnesis_ai_insights_anamnesis_id_fkey"
+            columns: ["anamnesis_id"]
+            isOneToOne: false
+            referencedRelation: "patient_anamnesis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       challenges: {
         Row: {
           created_at: string
@@ -410,6 +472,53 @@ export type Database = {
             columns: ["protocol_id"]
             isOneToOne: false
             referencedRelation: "protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_recommendations: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          icon: string
+          id: string
+          insight_id: string | null
+          is_completed: boolean
+          priority: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          insight_id?: string | null
+          is_completed?: boolean
+          priority?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          insight_id?: string | null
+          is_completed?: boolean
+          priority?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_recommendations_insight_id_fkey"
+            columns: ["insight_id"]
+            isOneToOne: false
+            referencedRelation: "anamnesis_ai_insights"
             referencedColumns: ["id"]
           },
         ]
