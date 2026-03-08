@@ -69,7 +69,7 @@ export default function WeeklyGoals() {
     if (!user || !form.title || (!isNutritionist && !selectedPatient)) return;
     setSaving(true);
     const cat = categories.find(c => c.value === form.category);
-    const { error } = await supabase.from("weekly_goals").insert({
+    const { error } = await (supabase as any).from("weekly_goals").insert({
       nutritionist_id: user.id,
       patient_id: selectedPatient,
       title: form.title,
