@@ -58,11 +58,40 @@ export default function Patients() {
     if (!user) return;
     setSubmitting(true);
 
-    // Look up user by email - we need to find user in profiles
-    // Since we can't query auth.users directly, we'll use a workaround
-    toast.info("Funcionalidade de convite por email em breve. Use o ID do paciente por enquanto.");
+    // Look up patient by email using secure DB function
+    const { data: patientId, error: lookupError } = await supabase
+      .rpc("find_patient_by_email", { _email: email.trim().toLowerCase() });
+
+    if (lookupError || !patientId) {
+      toast.error("Paciente não encontrado. Verifique se o email está correto e se a pessoa já se cadastrou como paciente.");
+      setSubmitting(false);
+      return;
+    }
+
+    if (patientId === user.id) {
+      toast.error("Você não pode se adicionar como paciente.");
+      setSubmitting(false);
+      return;
+    }
+
+    const { error } = await supabase.from("nutritionist_patients").insert({
+      nutritionist_id: user.id,
+      patient_id: patientId,
+    });
+
+    if (error) {
+      if (error.code === "23505") {
+        toast.error("Este paciente já está na sua lista.");
+      } else {
+        toast.error("Erro ao adicionar: " + error.message);
+      }
+    } else {
+      toast.success("Paciente adicionado com sucesso! 🎉");
+      setOpen(false);
+      setEmail("");
+      fetchPatients();
+    }
     setSubmitting(false);
-    setOpen(false);
   };
 
   const toggleStatus = async (id: string, currentStatus: string) => {
