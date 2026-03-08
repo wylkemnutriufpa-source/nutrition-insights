@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { useEffect } from "react";
+import { Helmet, HelmetProvider } from "react-helmet-async";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
@@ -65,60 +66,74 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 
 function DarkModeInit() {
   useEffect(() => {
-    if (!localStorage.getItem("theme")) {
+    const stored = localStorage.getItem("theme");
+    if (stored === "dark" || (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
       document.documentElement.classList.add("dark");
+    } else if (stored === "light") {
+      document.documentElement.classList.remove("dark");
+    } else {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
     }
   }, []);
   return null;
 }
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <DarkModeInit />
-          <Routes>
-            <Route path="/landing" element={<PublicOnlyRoute><Landing /></PublicOnlyRoute>} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            <Route path="/meals" element={<ProtectedRoute><Meals /></ProtectedRoute>} />
-            <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
-            <Route path="/challenges" element={<ProtectedRoute><Challenges /></ProtectedRoute>} />
-            <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
-            <Route path="/patients/:patientId" element={<ProtectedRoute><PatientDetail /></ProtectedRoute>} />
-            <Route path="/protocols" element={<ProtectedRoute><Protocols /></ProtectedRoute>} />
-            <Route path="/programs" element={<ProtectedRoute><Programs /></ProtectedRoute>} />
-            <Route path="/programs/:programId" element={<ProtectedRoute><ProgramDetail /></ProtectedRoute>} />
-            <Route path="/checklist" element={<ProtectedRoute><Checklist /></ProtectedRoute>} />
-            <Route path="/meal-plans" element={<ProtectedRoute><MealPlans /></ProtectedRoute>} />
-            <Route path="/meal-plans/:id" element={<ProtectedRoute><MealPlanEditor /></ProtectedRoute>} />
-            <Route path="/diet-templates" element={<ProtectedRoute><DietTemplates /></ProtectedRoute>} />
-            <Route path="/physical-assessment" element={<ProtectedRoute><PhysicalAssessment /></ProtectedRoute>} />
-            <Route path="/anamnesis" element={<ProtectedRoute><Anamnesis /></ProtectedRoute>} />
-            <Route path="/analyze" element={<ProtectedRoute><AnalyzeMeal /></ProtectedRoute>} />
-            <Route path="/feedbacks" element={<ProtectedRoute><Feedbacks /></ProtectedRoute>} />
-            <Route path="/global-tips" element={<ProtectedRoute><GlobalTips /></ProtectedRoute>} />
-            <Route path="/recipes" element={<ProtectedRoute><Recipes /></ProtectedRoute>} />
-            <Route path="/shopping-list" element={<ProtectedRoute><ShoppingList /></ProtectedRoute>} />
-            <Route path="/food-database" element={<ProtectedRoute><FoodDatabase /></ProtectedRoute>} />
-            <Route path="/body-analysis" element={<ProtectedRoute><BodyAnalysis /></ProtectedRoute>} />
-            <Route path="/branding" element={<ProtectedRoute><Branding /></ProtectedRoute>} />
-            <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-            <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-            <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
-            <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
-            <Route path="/weekly-goals" element={<ProtectedRoute><WeeklyGoals /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Helmet>
+          <title>FitJourney — Plataforma para Nutricionistas</title>
+          <meta name="description" content="Plataforma completa para nutricionistas: planos alimentares, IA, gamificação, avaliações físicas e gestão de pacientes." />
+          <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+          <link rel="canonical" href="https://fitjourney.app" />
+        </Helmet>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <DarkModeInit />
+            <Routes>
+              <Route path="/landing" element={<PublicOnlyRoute><Landing /></PublicOnlyRoute>} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+              <Route path="/meals" element={<ProtectedRoute><Meals /></ProtectedRoute>} />
+              <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
+              <Route path="/challenges" element={<ProtectedRoute><Challenges /></ProtectedRoute>} />
+              <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
+              <Route path="/patients/:patientId" element={<ProtectedRoute><PatientDetail /></ProtectedRoute>} />
+              <Route path="/protocols" element={<ProtectedRoute><Protocols /></ProtectedRoute>} />
+              <Route path="/programs" element={<ProtectedRoute><Programs /></ProtectedRoute>} />
+              <Route path="/programs/:programId" element={<ProtectedRoute><ProgramDetail /></ProtectedRoute>} />
+              <Route path="/checklist" element={<ProtectedRoute><Checklist /></ProtectedRoute>} />
+              <Route path="/meal-plans" element={<ProtectedRoute><MealPlans /></ProtectedRoute>} />
+              <Route path="/meal-plans/:id" element={<ProtectedRoute><MealPlanEditor /></ProtectedRoute>} />
+              <Route path="/diet-templates" element={<ProtectedRoute><DietTemplates /></ProtectedRoute>} />
+              <Route path="/physical-assessment" element={<ProtectedRoute><PhysicalAssessment /></ProtectedRoute>} />
+              <Route path="/anamnesis" element={<ProtectedRoute><Anamnesis /></ProtectedRoute>} />
+              <Route path="/analyze" element={<ProtectedRoute><AnalyzeMeal /></ProtectedRoute>} />
+              <Route path="/feedbacks" element={<ProtectedRoute><Feedbacks /></ProtectedRoute>} />
+              <Route path="/global-tips" element={<ProtectedRoute><GlobalTips /></ProtectedRoute>} />
+              <Route path="/recipes" element={<ProtectedRoute><Recipes /></ProtectedRoute>} />
+              <Route path="/shopping-list" element={<ProtectedRoute><ShoppingList /></ProtectedRoute>} />
+              <Route path="/food-database" element={<ProtectedRoute><FoodDatabase /></ProtectedRoute>} />
+              <Route path="/body-analysis" element={<ProtectedRoute><BodyAnalysis /></ProtectedRoute>} />
+              <Route path="/branding" element={<ProtectedRoute><Branding /></ProtectedRoute>} />
+              <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+              <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+              <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+              <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
+              <Route path="/weekly-goals" element={<ProtectedRoute><WeeklyGoals /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </HelmetProvider>
 );
 
 export default App;

@@ -1725,6 +1725,54 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_goals: {
+        Row: {
+          category: string
+          created_at: string
+          current_value: number
+          description: string | null
+          icon: string
+          id: string
+          nutritionist_id: string
+          patient_id: string
+          target_value: number
+          title: string
+          unit: string
+          updated_at: string
+          week_start: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          current_value?: number
+          description?: string | null
+          icon?: string
+          id?: string
+          nutritionist_id: string
+          patient_id: string
+          target_value?: number
+          title: string
+          unit?: string
+          updated_at?: string
+          week_start?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          current_value?: number
+          description?: string | null
+          icon?: string
+          id?: string
+          nutritionist_id?: string
+          patient_id?: string
+          target_value?: number
+          title?: string
+          unit?: string
+          updated_at?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
