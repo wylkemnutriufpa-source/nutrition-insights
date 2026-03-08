@@ -311,6 +311,9 @@ export default function PatientDetail() {
             <TabsTrigger value="ai-insights">
               <Brain className="w-3.5 h-3.5 mr-1" /> IA Insights
             </TabsTrigger>
+            <TabsTrigger value="assessment">
+              <Activity className="w-3.5 h-3.5 mr-1" /> Avaliação Física
+            </TabsTrigger>
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
             <TabsTrigger value="protocols">Protocolos</TabsTrigger>
             <TabsTrigger value="radar">Radar Metabólico</TabsTrigger>
