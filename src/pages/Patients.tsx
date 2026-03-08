@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Users, Plus, Mail, UserCheck, UserX } from "lucide-react";
+import { Users, Plus, Mail, UserCheck, UserX, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface PatientInfo {
   id: string;
@@ -21,6 +22,7 @@ interface PatientInfo {
 
 export default function Patients() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [patients, setPatients] = useState<PatientInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -193,7 +195,8 @@ export default function Patients() {
               <motion.div
                 key={p.id}
                 whileHover={{ y: -2 }}
-                className="glass rounded-xl p-5 shadow-card"
+                className="glass rounded-xl p-5 shadow-card cursor-pointer"
+                onClick={() => navigate(`/patients/${p.patient_id}`)}
               >
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
@@ -209,12 +212,15 @@ export default function Patients() {
                       {p.status === "active" ? "Ativo" : "Inativo"}
                     </span>
                   </div>
-                  <button
-                    onClick={() => toggleStatus(p.id, p.status)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    {p.status === "active" ? <UserX className="w-5 h-5" /> : <UserCheck className="w-5 h-5" />}
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleStatus(p.id, p.status); }}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      {p.status === "active" ? <UserX className="w-5 h-5" /> : <UserCheck className="w-5 h-5" />}
+                    </button>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  </div>
                 </div>
               </motion.div>
             ))}
