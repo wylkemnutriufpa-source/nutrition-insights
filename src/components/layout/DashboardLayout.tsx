@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   LayoutDashboard, Users, UtensilsCrossed, Trophy, Target,
-  Leaf, LogOut, Moon, Sun, ChevronRight, Sparkles
+  Leaf, LogOut, Moon, Sun, ChevronRight, Sparkles, Settings
 } from "lucide-react";
 import { useState } from "react";
 
