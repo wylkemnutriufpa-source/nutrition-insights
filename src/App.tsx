@@ -24,6 +24,12 @@ import ProgramDetail from "./pages/ProgramDetail";
 import Checklist from "./pages/Checklist";
 import DietTemplates from "./pages/DietTemplates";
 import PhysicalAssessment from "./pages/PhysicalAssessment";
+import Feedbacks from "./pages/Feedbacks";
+import GlobalTips from "./pages/GlobalTips";
+import Recipes from "./pages/Recipes";
+import ShoppingList from "./pages/ShoppingList";
+import FoodDatabase from "./pages/FoodDatabase";
+import BodyAnalysis from "./pages/BodyAnalysis";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
