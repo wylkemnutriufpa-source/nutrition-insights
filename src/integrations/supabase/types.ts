@@ -892,6 +892,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_patient_enrolled_in_program: {
+        Args: { _program_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_program_owner: {
+        Args: { _program_id: string; _user_id: string }
+        Returns: boolean
+      }
       sync_protocol_checklist: {
         Args: { _date?: string; _patient_protocol_id: string }
         Returns: number
