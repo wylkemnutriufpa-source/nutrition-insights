@@ -20,6 +20,7 @@ import AnalyzeMeal from "./pages/AnalyzeMeal";
 import Settings from "./pages/Settings";
 import Protocols from "./pages/Protocols";
 import Programs from "./pages/Programs";
+import ProgramDetail from "./pages/ProgramDetail";
 import Checklist from "./pages/Checklist";
 import NotFound from "./pages/NotFound";
 
