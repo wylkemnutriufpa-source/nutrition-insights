@@ -22,8 +22,10 @@ const nutritionistLinks = [
   { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos" },
   { to: "/recipes", icon: ChefHat, label: "Receitas" },
   { to: "/food-database", icon: Apple, label: "Alimentos" },
+  { to: "/reports", icon: BarChart3, label: "Relatórios" },
   { to: "/global-tips", icon: Lightbulb, label: "Dicas" },
   { to: "/feedbacks", icon: MessageSquare, label: "Feedbacks" },
+  { to: "/branding", icon: Palette, label: "Branding" },
 ];
 
 const patientLinks = [
