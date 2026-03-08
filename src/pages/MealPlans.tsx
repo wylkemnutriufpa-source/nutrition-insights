@@ -9,13 +9,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ClipboardList, Plus, Calendar, ToggleLeft, ToggleRight } from "lucide-react";
+import { ClipboardList, Plus, Calendar, ToggleLeft, ToggleRight, PencilLine } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
 
 type MealPlan = Tables<"meal_plans">;
 
 export default function MealPlans() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [plans, setPlans] = useState<(MealPlan & { patient_name?: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -174,7 +176,8 @@ export default function MealPlans() {
               <motion.div
                 key={p.id}
                 whileHover={{ y: -2 }}
-                className="glass rounded-xl p-5 shadow-card"
+                className="glass rounded-xl p-5 shadow-card cursor-pointer"
+                onClick={() => navigate(`/meal-plans/${p.id}`)}
               >
                 <div className="flex items-start justify-between">
                   <div>
@@ -184,13 +187,23 @@ export default function MealPlans() {
                       <p className="text-xs text-muted-foreground mt-1">{p.description}</p>
                     )}
                   </div>
-                  <button onClick={() => toggleActive(p.id, p.is_active)}>
-                    {p.is_active ? (
-                      <ToggleRight className="w-6 h-6 text-success" />
-                    ) : (
-                      <ToggleLeft className="w-6 h-6 text-muted-foreground" />
-                    )}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={(e) => { e.stopPropagation(); navigate(`/meal-plans/${p.id}`); }}
+                    >
+                      <PencilLine className="w-4 h-4" />
+                    </Button>
+                    <button onClick={(e) => { e.stopPropagation(); toggleActive(p.id, p.is_active); }}>
+                      {p.is_active ? (
+                        <ToggleRight className="w-6 h-6 text-success" />
+                      ) : (
+                        <ToggleLeft className="w-6 h-6 text-muted-foreground" />
+                      )}
+                    </button>
+                  </div>
                 </div>
                 <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
