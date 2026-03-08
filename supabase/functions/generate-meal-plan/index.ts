@@ -371,6 +371,7 @@ serve(async (req) => {
         items_count: planItems.length,
         tips_count: tips.length,
         macros: { kcal, protein, carbs, fat },
+        data_source: dataSource,
         ai_personalized: !!aiInsights,
         insight_used: aiInsights ? {
           risk_level: aiInsights.risk_level,

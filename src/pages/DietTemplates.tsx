@@ -335,11 +335,15 @@ export default function DietTemplates() {
               </p>
             </div>
           </div>
-          {anamnesis && (
+          {(anamnesis || physicalAssessment) && (
             <div className="flex items-center gap-2 glass rounded-lg px-3 py-2">
               <Sparkles className="w-4 h-4 text-primary" />
               <span className="text-xs text-muted-foreground">
-                Anamnese detectada: <span className="font-semibold text-foreground">{Math.round(anamnesis.computed_kcal_target || 0)} kcal/dia</span>
+                {dataSource === "assessment" ? "Avaliação Física" : "Anamnese"}:{" "}
+                <span className="font-semibold text-foreground">{getEffectiveCalories()} kcal/dia</span>
+                {getEffectiveMacros().protein && (
+                  <span className="ml-1">• P:{getEffectiveMacros().protein}g C:{getEffectiveMacros().carbs}g G:{getEffectiveMacros().fat}g</span>
+                )}
               </span>
             </div>
           )}
