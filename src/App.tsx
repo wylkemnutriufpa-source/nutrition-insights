@@ -33,6 +33,8 @@ import BodyAnalysis from "./pages/BodyAnalysis";
 import Branding from "./pages/Branding";
 import Notifications from "./pages/Notifications";
 import Reports from "./pages/Reports";
+import Chat from "./pages/Chat";
+import Appointments from "./pages/Appointments";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -97,6 +99,8 @@ const App = () => (
             <Route path="/branding" element={<ProtectedRoute><Branding /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+            <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+            <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
