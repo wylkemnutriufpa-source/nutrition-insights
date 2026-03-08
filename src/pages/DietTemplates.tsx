@@ -106,6 +106,7 @@ export default function DietTemplates() {
 
   // Anamnesis data for personalization
   const [anamnesis, setAnamnesis] = useState<AnamnesisData | null>(null);
+  const [physicalAssessment, setPhysicalAssessment] = useState<PhysicalAssessmentData | null>(null);
   const [patientName, setPatientName] = useState("");
   const [applying, setApplying] = useState(false);
 
