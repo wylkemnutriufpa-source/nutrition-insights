@@ -480,7 +480,7 @@ export default function Anamnesis() {
   };
 
   const handleSubmit = async () => {
-    if (!user) return;
+    if (!user || !targetUserId) return;
     setSubmitting(true);
 
     // Compute TMB (Harris-Benedict)
