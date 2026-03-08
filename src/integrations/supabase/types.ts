@@ -109,6 +109,60 @@ export type Database = {
           },
         ]
       }
+      body_analyses: {
+        Row: {
+          ai_analysis: Json | null
+          analysis_date: string
+          assessor_id: string
+          back_image_url: string | null
+          body_fat_estimate: number | null
+          body_type: string | null
+          created_at: string
+          fat_distribution: Json | null
+          front_image_url: string | null
+          id: string
+          muscle_definition: number | null
+          notes: string | null
+          patient_id: string
+          progress_comparison: Json | null
+          side_image_url: string | null
+        }
+        Insert: {
+          ai_analysis?: Json | null
+          analysis_date?: string
+          assessor_id: string
+          back_image_url?: string | null
+          body_fat_estimate?: number | null
+          body_type?: string | null
+          created_at?: string
+          fat_distribution?: Json | null
+          front_image_url?: string | null
+          id?: string
+          muscle_definition?: number | null
+          notes?: string | null
+          patient_id: string
+          progress_comparison?: Json | null
+          side_image_url?: string | null
+        }
+        Update: {
+          ai_analysis?: Json | null
+          analysis_date?: string
+          assessor_id?: string
+          back_image_url?: string | null
+          body_fat_estimate?: number | null
+          body_type?: string | null
+          created_at?: string
+          fat_distribution?: Json | null
+          front_image_url?: string | null
+          id?: string
+          muscle_definition?: number | null
+          notes?: string | null
+          patient_id?: string
+          progress_comparison?: Json | null
+          side_image_url?: string | null
+        }
+        Relationships: []
+      }
       challenges: {
         Row: {
           created_at: string
@@ -256,6 +310,132 @@ export type Database = {
           name?: string
           slug?: string
           tags?: string[]
+        }
+        Relationships: []
+      }
+      feedbacks: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          is_anonymous: boolean | null
+          message: string
+          nutritionist_id: string
+          patient_id: string
+          responded_at: string | null
+          response: string | null
+          status: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean | null
+          message: string
+          nutritionist_id: string
+          patient_id: string
+          responded_at?: string | null
+          response?: string | null
+          status?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean | null
+          message?: string
+          nutritionist_id?: string
+          patient_id?: string
+          responded_at?: string | null
+          response?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      food_database: {
+        Row: {
+          calcium: number | null
+          calories: number
+          carbs: number
+          category: string
+          created_at: string
+          fat: number
+          fiber: number | null
+          id: string
+          iron: number | null
+          name: string
+          protein: number
+          serving_size: string | null
+          sodium: number | null
+          source: string | null
+        }
+        Insert: {
+          calcium?: number | null
+          calories?: number
+          carbs?: number
+          category?: string
+          created_at?: string
+          fat?: number
+          fiber?: number | null
+          id?: string
+          iron?: number | null
+          name: string
+          protein?: number
+          serving_size?: string | null
+          sodium?: number | null
+          source?: string | null
+        }
+        Update: {
+          calcium?: number | null
+          calories?: number
+          carbs?: number
+          category?: string
+          created_at?: string
+          fat?: number
+          fiber?: number | null
+          id?: string
+          iron?: number | null
+          name?: string
+          protein?: number
+          serving_size?: string | null
+          sodium?: number | null
+          source?: string | null
+        }
+        Relationships: []
+      }
+      global_tips: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          icon: string
+          id: string
+          is_published: boolean | null
+          nutritionist_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          content: string
+          created_at?: string
+          icon?: string
+          id?: string
+          is_published?: boolean | null
+          nutritionist_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          is_published?: boolean | null
+          nutritionist_id?: string
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -524,6 +704,35 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      patient_favorite_recipes: {
+        Row: {
+          created_at: string
+          id: string
+          patient_id: string
+          recipe_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          patient_id: string
+          recipe_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          patient_id?: string
+          recipe_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_favorite_recipes_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       patient_protocols: {
         Row: {
@@ -1139,6 +1348,78 @@ export type Database = {
         }
         Relationships: []
       }
+      recipes: {
+        Row: {
+          calories_per_serving: number | null
+          carbs_per_serving: number | null
+          category: string | null
+          cook_time_minutes: number | null
+          created_at: string
+          description: string | null
+          difficulty: string | null
+          fat_per_serving: number | null
+          id: string
+          image_url: string | null
+          ingredients: Json
+          instructions: Json
+          is_ai_generated: boolean | null
+          is_shared: boolean | null
+          nutritionist_id: string
+          prep_time_minutes: number | null
+          protein_per_serving: number | null
+          servings: number | null
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          calories_per_serving?: number | null
+          carbs_per_serving?: number | null
+          category?: string | null
+          cook_time_minutes?: number | null
+          created_at?: string
+          description?: string | null
+          difficulty?: string | null
+          fat_per_serving?: number | null
+          id?: string
+          image_url?: string | null
+          ingredients?: Json
+          instructions?: Json
+          is_ai_generated?: boolean | null
+          is_shared?: boolean | null
+          nutritionist_id: string
+          prep_time_minutes?: number | null
+          protein_per_serving?: number | null
+          servings?: number | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          calories_per_serving?: number | null
+          carbs_per_serving?: number | null
+          category?: string | null
+          cook_time_minutes?: number | null
+          created_at?: string
+          description?: string | null
+          difficulty?: string | null
+          fat_per_serving?: number | null
+          id?: string
+          image_url?: string | null
+          ingredients?: Json
+          instructions?: Json
+          is_ai_generated?: boolean | null
+          is_shared?: boolean | null
+          nutritionist_id?: string
+          prep_time_minutes?: number | null
+          protein_per_serving?: number | null
+          servings?: number | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       saved_meals: {
         Row: {
           calories_target: number | null
@@ -1210,6 +1491,47 @@ export type Database = {
           {
             foreignKeyName: "saved_plan_templates_source_plan_id_fkey"
             columns: ["source_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shopping_list_items: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          is_checked: boolean | null
+          item_name: string
+          meal_plan_id: string | null
+          patient_id: string
+          quantity: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_checked?: boolean | null
+          item_name: string
+          meal_plan_id?: string | null
+          patient_id: string
+          quantity?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_checked?: boolean | null
+          item_name?: string
+          meal_plan_id?: string | null
+          patient_id?: string
+          quantity?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shopping_list_items_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
             isOneToOne: false
             referencedRelation: "meal_plans"
             referencedColumns: ["id"]
