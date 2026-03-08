@@ -13,8 +13,9 @@ import { toast } from "sonner";
 import {
   ArrowLeft, Plus, Trash2, Copy, GripVertical, Utensils,
   Sun, Coffee, Apple, Sandwich, Moon, Cookie, Save, ChevronLeft, ChevronRight,
-  Flame, Beef, Wheat, Droplets, Leaf, PencilLine, X, Check
+  Flame, Beef, Wheat, Droplets, Leaf, PencilLine, X, Check, Sparkles, Loader2
 } from "lucide-react";
+import PlanScheduler from "@/components/plans/PlanScheduler";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
 
