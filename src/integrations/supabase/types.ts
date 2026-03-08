@@ -421,6 +421,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_patient_account: {
+        Args: { _email: string; _full_name: string; _password: string }
+        Returns: string
+      }
       find_patient_by_email: { Args: { _email: string }; Returns: string }
       has_role: {
         Args: {
