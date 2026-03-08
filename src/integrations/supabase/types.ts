@@ -163,6 +163,45 @@ export type Database = {
         }
         Relationships: []
       }
+      branding_settings: {
+        Row: {
+          accent_color: string | null
+          brand_name: string | null
+          created_at: string
+          custom_css: string | null
+          id: string
+          logo_url: string | null
+          nutritionist_id: string
+          primary_color: string | null
+          secondary_color: string | null
+          updated_at: string
+        }
+        Insert: {
+          accent_color?: string | null
+          brand_name?: string | null
+          created_at?: string
+          custom_css?: string | null
+          id?: string
+          logo_url?: string | null
+          nutritionist_id: string
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string
+        }
+        Update: {
+          accent_color?: string | null
+          brand_name?: string | null
+          created_at?: string
+          custom_css?: string | null
+          id?: string
+          logo_url?: string | null
+          nutritionist_id?: string
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       challenges: {
         Row: {
           created_at: string
@@ -585,6 +624,42 @@ export type Database = {
           title?: string
           user_id?: string
           xp_earned?: number
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          action_url: string | null
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          metadata: Json | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          action_url?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          metadata?: Json | null
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          action_url?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          metadata?: Json | null
+          title?: string
+          type?: string
+          user_id?: string
         }
         Relationships: []
       }
