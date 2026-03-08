@@ -455,8 +455,11 @@ export default function MealPlanEditor() {
                         <Droplets className="w-3 h-3 text-blue-400" />
                         <span className="font-semibold">{t.fat.toFixed(0)}g</span>
                         <span className="text-muted-foreground">gord</span>
-                      </div>
-                    </div>
+        </div>
+
+        {/* Plan Scheduler */}
+        <PlanScheduler mealPlanId={plan.id} planTitle={plan.title} />
+      </div>
                     {/* Copy day button */}
                     <div className="mt-1 flex justify-center">
                       <button
