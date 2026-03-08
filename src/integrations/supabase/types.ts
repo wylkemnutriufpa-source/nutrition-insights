@@ -634,6 +634,150 @@ export type Database = {
         }
         Relationships: []
       }
+      physical_assessments: {
+        Row: {
+          abdomen: number | null
+          abdominal_fold: number | null
+          activity_factor: number | null
+          assessment_date: string
+          assessor_id: string
+          bmi: number | null
+          bmr: number | null
+          body_fat_percentage: number | null
+          calories_target: number | null
+          carbs_target: number | null
+          chest: number | null
+          chest_fold: number | null
+          created_at: string
+          fat_mass: number | null
+          fat_target: number | null
+          goal_body_fat: number | null
+          goal_weight: number | null
+          height: number | null
+          hip: number | null
+          id: string
+          lean_mass: number | null
+          left_arm: number | null
+          left_calf: number | null
+          left_forearm: number | null
+          left_thigh: number | null
+          method: string | null
+          midaxillary_fold: number | null
+          neat: number | null
+          neck: number | null
+          notes: string | null
+          patient_id: string
+          protein_target: number | null
+          right_arm: number | null
+          right_calf: number | null
+          right_forearm: number | null
+          right_thigh: number | null
+          subscapular_fold: number | null
+          suprailiac_fold: number | null
+          tdee: number | null
+          thermic_effect: number | null
+          thigh_fold: number | null
+          triceps_fold: number | null
+          updated_at: string
+          waist: number | null
+          weight: number | null
+        }
+        Insert: {
+          abdomen?: number | null
+          abdominal_fold?: number | null
+          activity_factor?: number | null
+          assessment_date?: string
+          assessor_id: string
+          bmi?: number | null
+          bmr?: number | null
+          body_fat_percentage?: number | null
+          calories_target?: number | null
+          carbs_target?: number | null
+          chest?: number | null
+          chest_fold?: number | null
+          created_at?: string
+          fat_mass?: number | null
+          fat_target?: number | null
+          goal_body_fat?: number | null
+          goal_weight?: number | null
+          height?: number | null
+          hip?: number | null
+          id?: string
+          lean_mass?: number | null
+          left_arm?: number | null
+          left_calf?: number | null
+          left_forearm?: number | null
+          left_thigh?: number | null
+          method?: string | null
+          midaxillary_fold?: number | null
+          neat?: number | null
+          neck?: number | null
+          notes?: string | null
+          patient_id: string
+          protein_target?: number | null
+          right_arm?: number | null
+          right_calf?: number | null
+          right_forearm?: number | null
+          right_thigh?: number | null
+          subscapular_fold?: number | null
+          suprailiac_fold?: number | null
+          tdee?: number | null
+          thermic_effect?: number | null
+          thigh_fold?: number | null
+          triceps_fold?: number | null
+          updated_at?: string
+          waist?: number | null
+          weight?: number | null
+        }
+        Update: {
+          abdomen?: number | null
+          abdominal_fold?: number | null
+          activity_factor?: number | null
+          assessment_date?: string
+          assessor_id?: string
+          bmi?: number | null
+          bmr?: number | null
+          body_fat_percentage?: number | null
+          calories_target?: number | null
+          carbs_target?: number | null
+          chest?: number | null
+          chest_fold?: number | null
+          created_at?: string
+          fat_mass?: number | null
+          fat_target?: number | null
+          goal_body_fat?: number | null
+          goal_weight?: number | null
+          height?: number | null
+          hip?: number | null
+          id?: string
+          lean_mass?: number | null
+          left_arm?: number | null
+          left_calf?: number | null
+          left_forearm?: number | null
+          left_thigh?: number | null
+          method?: string | null
+          midaxillary_fold?: number | null
+          neat?: number | null
+          neck?: number | null
+          notes?: string | null
+          patient_id?: string
+          protein_target?: number | null
+          right_arm?: number | null
+          right_calf?: number | null
+          right_forearm?: number | null
+          right_thigh?: number | null
+          subscapular_fold?: number | null
+          suprailiac_fold?: number | null
+          tdee?: number | null
+          thermic_effect?: number | null
+          thigh_fold?: number | null
+          triceps_fold?: number | null
+          updated_at?: string
+          waist?: number | null
+          weight?: number | null
+        }
+        Relationships: []
+      }
       plan_schedules: {
         Row: {
           activate_at: string
