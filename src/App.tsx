@@ -30,6 +30,9 @@ import Recipes from "./pages/Recipes";
 import ShoppingList from "./pages/ShoppingList";
 import FoodDatabase from "./pages/FoodDatabase";
 import BodyAnalysis from "./pages/BodyAnalysis";
+import Branding from "./pages/Branding";
+import Notifications from "./pages/Notifications";
+import Reports from "./pages/Reports";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
