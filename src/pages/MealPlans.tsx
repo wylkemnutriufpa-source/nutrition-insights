@@ -176,7 +176,8 @@ export default function MealPlans() {
               <motion.div
                 key={p.id}
                 whileHover={{ y: -2 }}
-                className="glass rounded-xl p-5 shadow-card"
+                className="glass rounded-xl p-5 shadow-card cursor-pointer"
+                onClick={() => navigate(`/meal-plans/${p.id}`)}
               >
                 <div className="flex items-start justify-between">
                   <div>
@@ -186,13 +187,23 @@ export default function MealPlans() {
                       <p className="text-xs text-muted-foreground mt-1">{p.description}</p>
                     )}
                   </div>
-                  <button onClick={() => toggleActive(p.id, p.is_active)}>
-                    {p.is_active ? (
-                      <ToggleRight className="w-6 h-6 text-success" />
-                    ) : (
-                      <ToggleLeft className="w-6 h-6 text-muted-foreground" />
-                    )}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={(e) => { e.stopPropagation(); navigate(`/meal-plans/${p.id}`); }}
+                    >
+                      <PencilLine className="w-4 h-4" />
+                    </Button>
+                    <button onClick={(e) => { e.stopPropagation(); toggleActive(p.id, p.is_active); }}>
+                      {p.is_active ? (
+                        <ToggleRight className="w-6 h-6 text-success" />
+                      ) : (
+                        <ToggleLeft className="w-6 h-6 text-muted-foreground" />
+                      )}
+                    </button>
+                  </div>
                 </div>
                 <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
