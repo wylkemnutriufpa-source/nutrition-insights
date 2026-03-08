@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -9,10 +9,11 @@ import StreakCounter from "@/components/gamification/StreakCounter";
 import SmartTips from "@/components/patient/SmartTips";
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
 import MetabolicRadar from "@/components/dashboard/MetabolicRadar";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   UtensilsCrossed, Users, TrendingUp, Target, Sparkles, Plus,
   CheckCircle2, Circle, AlertTriangle, Activity, FileText, Rocket,
-  Calendar, ArrowRight, Clock
+  Calendar, ArrowRight, Clock, ClipboardList, Heart, Brain
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
