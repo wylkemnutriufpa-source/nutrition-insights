@@ -80,6 +80,7 @@ export default function MealPlanEditor() {
 
   // Copy state
   const [copySource, setCopySource] = useState<{ day: number; mealType: MealType } | null>(null);
+  const [generating, setGenerating] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!id || !user) return;
