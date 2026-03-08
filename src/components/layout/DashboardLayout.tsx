@@ -7,7 +7,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   LayoutDashboard, Users, UtensilsCrossed, Trophy, Target,
   Leaf, LogOut, Moon, Sun, ChevronRight, Sparkles, Settings,
-  ClipboardCheck, FileText, Rocket, CheckCircle2, Activity
+  ClipboardCheck, FileText, Rocket, CheckCircle2, Activity,
+  MessageSquare, Lightbulb, ChefHat, ShoppingCart, Apple, Camera
 } from "lucide-react";
 import { useState } from "react";
 
@@ -17,13 +18,22 @@ const nutritionistLinks = [
   { to: "/protocols", icon: FileText, label: "Protocolos" },
   { to: "/programs", icon: Rocket, label: "Programas" },
   { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos" },
+  { to: "/recipes", icon: ChefHat, label: "Receitas" },
+  { to: "/food-database", icon: Apple, label: "Alimentos" },
+  { to: "/global-tips", icon: Lightbulb, label: "Dicas" },
+  { to: "/feedbacks", icon: MessageSquare, label: "Feedbacks" },
 ];
 
 const patientLinks = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/checklist", icon: CheckCircle2, label: "Checklist" },
   { to: "/meals", icon: UtensilsCrossed, label: "Refeições" },
+  { to: "/recipes", icon: ChefHat, label: "Receitas" },
+  { to: "/shopping-list", icon: ShoppingCart, label: "Compras" },
   { to: "/anamnesis", icon: ClipboardCheck, label: "Anamnese" },
+  { to: "/food-database", icon: Apple, label: "Alimentos" },
+  { to: "/global-tips", icon: Lightbulb, label: "Dicas" },
+  { to: "/feedbacks", icon: MessageSquare, label: "Feedbacks" },
   { to: "/achievements", icon: Trophy, label: "Conquistas" },
   { to: "/challenges", icon: Target, label: "Desafios" },
 ];
