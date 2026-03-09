@@ -149,6 +149,7 @@ const App = () => (
               <Route path="/protocols" element={<NutritionistRoute><Protocols /></NutritionistRoute>} />
               <Route path="/programs" element={<NutritionistRoute><Programs /></NutritionistRoute>} />
               <Route path="/programs/:programId" element={<NutritionistRoute><ProgramDetail /></NutritionistRoute>} />
+              <Route path="/programs/:programId/biquini-branco" element={<NutritionistRoute><BiquiniBrancoDetail /></NutritionistRoute>} />
               <Route path="/meal-plans" element={<NutritionistRoute><MealPlans /></NutritionistRoute>} />
               <Route path="/meal-plans/:id" element={<NutritionistRoute><MealPlanEditor /></NutritionistRoute>} />
               <Route path="/diet-templates" element={<NutritionistRoute><DietTemplates /></NutritionistRoute>} />

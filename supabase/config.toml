@@ -35,3 +35,6 @@ verify_jwt = false
 
 [functions.clinical-insights]
 verify_jwt = false
+
+[functions.program-insights]
+verify_jwt = false
