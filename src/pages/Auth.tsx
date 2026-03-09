@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -276,6 +276,23 @@ export default function Auth() {
         <p className="text-center text-xs text-muted-foreground mt-6">
           É paciente? Peça ao seu nutricionista para criar seu acesso.
         </p>
+
+        {/* Biquíni Branco Banner */}
+        <Link to="/biquini-branco" className="block mt-4">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-pink-500/10 via-rose-500/10 to-orange-400/10 border border-pink-500/20 hover:border-pink-500/40 transition-colors cursor-pointer"
+          >
+            <span className="text-2xl">👙</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground">Projeto Biquíni Branco</p>
+              <p className="text-xs text-muted-foreground truncate">Transformação em 12 semanas — Conheça o programa →</p>
+            </div>
+            <ArrowRight className="w-4 h-4 text-pink-500 shrink-0" />
+          </motion.div>
+        </Link>
       </motion.div>
     </div>
   );
