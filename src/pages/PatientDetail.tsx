@@ -88,6 +88,23 @@ export default function PatientDetail() {
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteForm, setNoteForm] = useState({ title: "", description: "", event_type: "note" });
 
+  // Plan management
+  const [planOpen, setPlanOpen] = useState(false);
+  const [patientSubscription, setPatientSubscription] = useState<any>(null);
+  const [pricingPlans, setPricingPlans] = useState<any[]>([]);
+  const [planForm, setPlanForm] = useState({
+    plan_name: "",
+    started_at: new Date().toISOString().split("T")[0],
+    expires_at: "",
+  });
+
+  // Feedback scheduling
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackForm, setFeedbackForm] = useState({
+    days: "3",
+    message: "Como você está se sentindo com o plano alimentar? Gostaria de compartilhar seu progresso?",
+  });
+
   const fetchAll = useCallback(async () => {
     if (!patientId || !user) return;
     setLoading(true);
