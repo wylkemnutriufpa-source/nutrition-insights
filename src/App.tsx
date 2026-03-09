@@ -55,6 +55,7 @@ import Financial from "./pages/Financial";
 import WeeklyReport from "./pages/WeeklyReport";
 import Supplements from "./pages/Supplements";
 import Pricing from "./pages/Pricing";
+import PatientMealPlan from "./pages/PatientMealPlan";
 
 const queryClient = new QueryClient();
 
@@ -170,6 +171,7 @@ const App = () => (
               <Route path="/anamnesis" element={<ProtectedRoute><Anamnesis /></ProtectedRoute>} />
               <Route path="/analyze" element={<ProtectedRoute><AnalyzeMeal /></ProtectedRoute>} />
               <Route path="/shopping-list" element={<ProtectedRoute><ShoppingList /></ProtectedRoute>} />
+              <Route path="/my-diet" element={<ProtectedRoute><PatientMealPlan /></ProtectedRoute>} />
               <Route path="/autobot" element={<ProtectedRoute><AutoBot /></ProtectedRoute>} />
               <Route path="/journey" element={<ProtectedRoute><Journey /></ProtectedRoute>} />
               <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
