@@ -58,6 +58,8 @@ import Supplements from "./pages/Supplements";
 import Pricing from "./pages/Pricing";
 import PatientMealPlan from "./pages/PatientMealPlan";
 import BiquiniBrancoLanding from "./pages/BiquiniBrancoLanding";
+import Checkin from "./pages/Checkin";
+import CheckinPanel from "./pages/CheckinPanel";
 
 const queryClient = new QueryClient();
 
@@ -165,6 +167,7 @@ const App = () => (
               <Route path="/financial" element={<NutritionistRoute><Financial /></NutritionistRoute>} />
               <Route path="/global-tips" element={<NutritionistRoute><GlobalTips /></NutritionistRoute>} />
               <Route path="/automation" element={<NutritionistRoute><AutomationCenter /></NutritionistRoute>} />
+              <Route path="/checkin-panel" element={<NutritionistRoute><CheckinPanel /></NutritionistRoute>} />
 
               {/* Patient-only routes */}
               <Route path="/meals" element={<ProtectedRoute><Meals /></ProtectedRoute>} />
@@ -181,6 +184,7 @@ const App = () => (
               <Route path="/weight-calculator" element={<ProtectedRoute><WeightCalculator /></ProtectedRoute>} />
               <Route path="/water-calculator" element={<ProtectedRoute><WaterCalculator /></ProtectedRoute>} />
               <Route path="/health-quiz" element={<ProtectedRoute><HealthCheckQuiz /></ProtectedRoute>} />
+              <Route path="/checkin" element={<ProtectedRoute><Checkin /></ProtectedRoute>} />
 
               {/* Admin routes */}
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />

@@ -20,6 +20,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 const nutritionistLinks = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/patients", icon: Users, label: "Pacientes" },
+  { to: "/checkin-panel", icon: ClipboardCheck, label: "Check-ins" },
   { to: "/appointments", icon: Activity, label: "Agenda" },
   { to: "/chat", icon: MessageSquare, label: "Chat" },
   { to: "/weekly-goals", icon: Target, label: "Metas" },
@@ -40,6 +41,7 @@ const nutritionistLinks = [
 
 const patientLinks = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/checkin", icon: ClipboardCheck, label: "Check-in" },
   { to: "/checklist", icon: CheckCircle2, label: "Checklist" },
   { to: "/my-diet", icon: UtensilsCrossed, label: "Minha Dieta" },
   { to: "/weekly-goals", icon: Target, label: "Metas" },

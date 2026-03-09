@@ -20,6 +20,7 @@ import PatientAgenda from "@/components/patient/PatientAgenda";
 import BodyEvolutionCard from "@/components/patient/BodyEvolutionCard";
 import HealthScoreRing, { calculateHealthScore } from "@/components/dashboard/HealthScoreRing";
 import ConsultationCompare from "@/components/patient/ConsultationCompare";
+import PatientCheckinsTab from "@/components/patient/PatientCheckinsTab";
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
@@ -432,6 +433,9 @@ export default function PatientDetail() {
               <CreditCard className="w-3.5 h-3.5 mr-1" /> Plano
             </TabsTrigger>
             <TabsTrigger value="protocols">Protocolos</TabsTrigger>
+            <TabsTrigger value="checkins">
+              <MessageSquare className="w-3.5 h-3.5 mr-1" /> Check-ins
+            </TabsTrigger>
             <TabsTrigger value="radar">Radar Metabólico</TabsTrigger>
           </TabsList>
 
@@ -789,6 +793,11 @@ export default function PatientDetail() {
                 </div>
               ))
             )}
+          </TabsContent>
+
+          {/* Check-ins Tab */}
+          <TabsContent value="checkins" className="mt-4">
+            <PatientCheckinsTab patientId={patientId!} />
           </TabsContent>
 
           {/* Metabolic Radar */}
