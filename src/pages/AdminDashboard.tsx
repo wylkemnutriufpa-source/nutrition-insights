@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
-import { Shield, Users, UserCheck, Zap, Star, UserPlus } from "lucide-react";
+import { Shield, Users, UserCheck, Zap, Star, UserPlus, Settings, Globe, Palette } from "lucide-react";
 import { toast } from "sonner";
 
 interface AdminStats {
