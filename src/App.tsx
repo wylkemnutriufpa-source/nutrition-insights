@@ -185,6 +185,7 @@ const App = () => (
               <Route path="/admin/features" element={<AdminRoute><AdminFeatureControl /></AdminRoute>} />
               <Route path="/admin/testimonials" element={<AdminRoute><AdminTestimonials /></AdminRoute>} />
               <Route path="/admin/site-editor" element={<AdminRoute><AdminSiteEditor /></AdminRoute>} />
+              <Route path="/admin/resources" element={<AdminRoute><AdminResourceCenter /></AdminRoute>} />
 
               {/* Public pricing */}
               <Route path="/pricing" element={<Pricing />} />
