@@ -13,7 +13,6 @@ import {
   Palette, Bell, BarChart3, Menu, X, Shield, Zap, Star, Bot,
   Scale, Droplets, Heart, Calculator, TrendingUp, BookOpen, DollarSign
 } from "lucide-react";
-} from "lucide-react";
 import { useState } from "react";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { useIsMobile } from "@/hooks/use-mobile";
