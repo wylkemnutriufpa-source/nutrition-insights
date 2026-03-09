@@ -817,24 +817,30 @@ export type Database = {
       }
       nutritionist_patients: {
         Row: {
+          checkin_frequency: string | null
           created_at: string
           id: string
+          last_checkin_reminder: string | null
           notes: string | null
           nutritionist_id: string
           patient_id: string
           status: string
         }
         Insert: {
+          checkin_frequency?: string | null
           created_at?: string
           id?: string
+          last_checkin_reminder?: string | null
           notes?: string | null
           nutritionist_id: string
           patient_id: string
           status?: string
         }
         Update: {
+          checkin_frequency?: string | null
           created_at?: string
           id?: string
+          last_checkin_reminder?: string | null
           notes?: string | null
           nutritionist_id?: string
           patient_id?: string
@@ -931,6 +937,68 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      patient_checkins: {
+        Row: {
+          created_at: string
+          difficulty: string | null
+          feedback: string | null
+          id: string
+          nutri_action: string | null
+          nutri_notes: string | null
+          nutritionist_id: string
+          patient_id: string
+          photo_back_url: string | null
+          photo_front_url: string | null
+          photo_side_url: string | null
+          protocol_activated_id: string | null
+          reviewed_at: string | null
+          status: string
+          weight: number | null
+        }
+        Insert: {
+          created_at?: string
+          difficulty?: string | null
+          feedback?: string | null
+          id?: string
+          nutri_action?: string | null
+          nutri_notes?: string | null
+          nutritionist_id: string
+          patient_id: string
+          photo_back_url?: string | null
+          photo_front_url?: string | null
+          photo_side_url?: string | null
+          protocol_activated_id?: string | null
+          reviewed_at?: string | null
+          status?: string
+          weight?: number | null
+        }
+        Update: {
+          created_at?: string
+          difficulty?: string | null
+          feedback?: string | null
+          id?: string
+          nutri_action?: string | null
+          nutri_notes?: string | null
+          nutritionist_id?: string
+          patient_id?: string
+          photo_back_url?: string | null
+          photo_front_url?: string | null
+          photo_side_url?: string | null
+          protocol_activated_id?: string | null
+          reviewed_at?: string | null
+          status?: string
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_checkins_protocol_activated_id_fkey"
+            columns: ["protocol_activated_id"]
+            isOneToOne: false
+            referencedRelation: "protocols"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       patient_favorite_recipes: {
         Row: {
