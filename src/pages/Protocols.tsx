@@ -566,6 +566,43 @@ export default function Protocols() {
     fetchPatientProtocols();
   };
 
+  // ── Create protocol from template ──
+  const createFromTemplate = async (template: ProtocolTemplate) => {
+    if (!user) return;
+    setSubmitting(true);
+    const { data, error } = await supabase.from("protocols").insert({
+      title: template.title,
+      description: template.description,
+      category: template.category,
+      duration_days: template.duration_days,
+      created_by: user.id,
+    }).select().single();
+
+    if (error || !data) {
+      toast.error(error?.message || "Erro ao criar protocolo");
+      setSubmitting(false);
+      return;
+    }
+
+    // Insert all tasks
+    const taskInserts = template.tasks.map((t, i) => ({
+      protocol_id: data.id,
+      title: t.title,
+      icon: t.icon,
+      category: t.category,
+      frequency: t.frequency,
+      sort_order: i,
+    }));
+    await supabase.from("protocol_tasks").insert(taskInserts);
+
+    toast.success(`"${template.title}" criado com ${template.tasks.length} tarefas!`);
+    fetchProtocols();
+    setSelectedProtocol({ ...data, task_count: template.tasks.length });
+    fetchTasks(data.id);
+    setActiveTab("catalog");
+    setSubmitting(false);
+  };
+
   // Filter patient protocols for selected protocol
   const selectedProtocolPatients = patientProtocols.filter(
     (pp) => selectedProtocol && pp.protocol_id === selectedProtocol.id
