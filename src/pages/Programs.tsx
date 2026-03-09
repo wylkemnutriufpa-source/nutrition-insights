@@ -237,10 +237,10 @@ export default function Programs() {
                 </div>
                 <div>
                   <Label>Protocolo vinculado (opcional)</Label>
-                  <Select value={form.protocol_id} onValueChange={(v) => setForm({ ...form, protocol_id: v })}>
+                  <Select value={form.protocol_id || "none"} onValueChange={(v) => setForm({ ...form, protocol_id: v === "none" ? "" : v })}>
                     <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Nenhum</SelectItem>
+                      <SelectItem value="none">Nenhum</SelectItem>
                       {protocols.map((p) => (
                         <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
                       ))}
