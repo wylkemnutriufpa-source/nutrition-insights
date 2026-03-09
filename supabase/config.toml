@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.process-payment]
 verify_jwt = false
+
+[functions.clinical-insights]
+verify_jwt = false
