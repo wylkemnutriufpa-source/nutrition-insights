@@ -7,10 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Eye, EyeOff, Leaf, ArrowRight, Sparkles } from "lucide-react";
-import type { Database } from "@/integrations/supabase/types";
-
-type AppRole = Database["public"]["Enums"]["app_role"];
+import { Eye, EyeOff, Leaf, ArrowRight, Sparkles, Stethoscope, Users } from "lucide-react";
 
 type AuthMode = "login" | "signup" | "forgot";
 
@@ -20,7 +17,6 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState<AppRole>("patient");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -30,7 +26,9 @@ export default function Auth() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) {
-      toast.error(error.message);
+      toast.error(error.message === "Invalid login credentials" 
+        ? "Email ou senha incorretos" 
+        : error.message);
     } else {
       navigate("/");
     }
@@ -40,6 +38,10 @@ export default function Auth() {
     e.preventDefault();
     if (!fullName.trim()) {
       toast.error("Informe seu nome completo");
+      return;
+    }
+    if (password.length < 6) {
+      toast.error("A senha deve ter pelo menos 6 caracteres");
       return;
     }
     setLoading(true);
@@ -57,10 +59,11 @@ export default function Auth() {
       return;
     }
 
+    // Cadastro público é sempre de nutricionista
     if (data.user) {
       await supabase.from("user_roles").insert({
         user_id: data.user.id,
-        role,
+        role: "nutritionist",
       });
     }
 
@@ -104,17 +107,17 @@ export default function Auth() {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
-            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl gradient-primary shadow-glow mb-4"
+            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary shadow-lg mb-4"
           >
             <Leaf className="w-8 h-8 text-primary-foreground" />
           </motion.div>
           <h1 className="text-3xl font-bold font-display text-foreground">
-            Nutri<span className="text-gradient">Flow</span>
+            Nutri<span className="text-primary">Flow</span>
           </h1>
           <p className="text-muted-foreground mt-1">Nutrição inteligente & gamificada</p>
         </div>
 
-        <Card className="shadow-card border-border/50 glass">
+        <Card className="shadow-card border-border/50 bg-card/80 backdrop-blur-sm">
           <CardHeader className="pb-4">
             <div className="flex gap-1 p-1 rounded-lg bg-muted">
               {(["login", "signup"] as const).map((m) => (
@@ -155,7 +158,7 @@ export default function Auth() {
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full gradient-primary" disabled={loading}>
+                  <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "Enviando..." : "Enviar link de recuperação"}
                   </Button>
                   <button
@@ -175,6 +178,21 @@ export default function Auth() {
                   onSubmit={handleLogin}
                   className="space-y-4"
                 >
+                  {/* Role indicator for login */}
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border/50">
+                    <div className="flex gap-2">
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Stethoscope className="w-3.5 h-3.5" />
+                        <span>Nutricionista</span>
+                      </div>
+                      <span className="text-border">|</span>
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Users className="w-3.5 h-3.5" />
+                        <span>Paciente</span>
+                      </div>
+                    </div>
+                  </div>
+
                   <div>
                     <Label htmlFor="email">Email</Label>
                     <Input
@@ -213,7 +231,7 @@ export default function Auth() {
                   >
                     Esqueceu a senha?
                   </button>
-                  <Button type="submit" className="w-full gradient-primary" disabled={loading}>
+                  <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "Entrando..." : (
                       <span className="flex items-center gap-2">Entrar <ArrowRight className="w-4 h-4" /></span>
                     )}
@@ -228,18 +246,29 @@ export default function Auth() {
                   onSubmit={handleSignup}
                   className="space-y-4"
                 >
+                  {/* Info: signup is for nutritionists only */}
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                    <Stethoscope className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium">Cadastro para Nutricionistas</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Pacientes são cadastrados pelo seu nutricionista e recebem acesso automaticamente.
+                      </p>
+                    </div>
+                  </div>
+
                   <div>
                     <Label htmlFor="fullName">Nome completo</Label>
                     <Input
                       id="fullName"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Seu nome"
+                      placeholder="Dr(a). Seu Nome"
                       required
                     />
                   </div>
                   <div>
-                    <Label htmlFor="email2">Email</Label>
+                    <Label htmlFor="email2">Email profissional</Label>
                     <Input
                       id="email2"
                       type="email"
@@ -270,34 +299,10 @@ export default function Auth() {
                       </button>
                     </div>
                   </div>
-                  <div>
-                    <Label>Eu sou</Label>
-                    <div className="grid grid-cols-2 gap-3 mt-2">
-                      {([
-                        { value: "patient" as const, label: "Paciente", icon: "🍎", desc: "Registrar refeições" },
-                        { value: "nutritionist" as const, label: "Nutricionista", icon: "🩺", desc: "Gerenciar pacientes" },
-                      ]).map((opt) => (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => setRole(opt.value)}
-                          className={`p-3 rounded-lg border-2 text-left transition-all ${
-                            role === opt.value
-                              ? "border-primary bg-primary/5"
-                              : "border-border hover:border-primary/30"
-                          }`}
-                        >
-                          <span className="text-xl">{opt.icon}</span>
-                          <p className="font-medium text-sm mt-1">{opt.label}</p>
-                          <p className="text-xs text-muted-foreground">{opt.desc}</p>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <Button type="submit" className="w-full gradient-primary" disabled={loading}>
+                  <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "Criando conta..." : (
                       <span className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4" /> Criar conta
+                        <Sparkles className="w-4 h-4" /> Criar Conta Profissional
                       </span>
                     )}
                   </Button>
@@ -306,6 +311,11 @@ export default function Auth() {
             </AnimatePresence>
           </CardContent>
         </Card>
+
+        {/* Footer note */}
+        <p className="text-center text-xs text-muted-foreground mt-6">
+          É paciente? Peça ao seu nutricionista para criar seu acesso.
+        </p>
       </motion.div>
     </div>
   );
