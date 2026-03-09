@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
-import { Shield, Users, UserCheck, Zap, Star, UserPlus, Settings, Globe, Palette } from "lucide-react";
+import { Shield, Users, UserCheck, Zap, Star, UserPlus, Settings, Globe, Palette, Eye } from "lucide-react";
 import { toast } from "sonner";
 
 interface AdminStats {
@@ -167,6 +167,15 @@ export default function AdminDashboard() {
                   <div>
                     <p className="font-display font-semibold">Depoimentos</p>
                     <p className="text-sm text-muted-foreground">Moderar depoimentos dos pacientes</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => window.open("/landing", "_blank")}>
+                <CardContent className="flex items-center gap-4 py-6">
+                  <Eye className="w-8 h-8 text-info" />
+                  <div>
+                    <p className="font-display font-semibold">Ver Landing Page</p>
+                    <p className="text-sm text-muted-foreground">Visualizar a página pública do site</p>
                   </div>
                 </CardContent>
               </Card>

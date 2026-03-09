@@ -128,7 +128,7 @@ const App = () => (
           <AuthProvider>
             <DarkModeInit />
             <Routes>
-              <Route path="/landing" element={<PublicOnlyRoute><Landing /></PublicOnlyRoute>} />
+              <Route path="/landing" element={<Landing />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
