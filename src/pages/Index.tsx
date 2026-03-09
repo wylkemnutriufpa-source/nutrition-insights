@@ -10,6 +10,7 @@ import SmartTips from "@/components/patient/SmartTips";
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
 import MetabolicRadar from "@/components/dashboard/MetabolicRadar";
 import SubscriptionCard from "@/components/patient/SubscriptionCard";
+import PushNotificationBanner from "@/components/notifications/PushNotificationBanner";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   UtensilsCrossed, Users, TrendingUp, Target, Sparkles, Plus,
