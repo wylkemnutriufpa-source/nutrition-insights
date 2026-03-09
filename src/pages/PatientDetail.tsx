@@ -17,6 +17,7 @@ import { AnamnesisInsightsFull } from "@/components/patient/AnamnesisInsightsCar
 import PatientCalculators from "@/components/patient/PatientCalculators";
 import PatientAgenda from "@/components/patient/PatientAgenda";
 import BodyEvolutionCard from "@/components/patient/BodyEvolutionCard";
+import HealthScoreRing, { calculateHealthScore } from "@/components/dashboard/HealthScoreRing";
 import ConsultationCompare from "@/components/patient/ConsultationCompare";
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
