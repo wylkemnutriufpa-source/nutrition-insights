@@ -138,6 +138,18 @@ export default function PatientDetail() {
       setPatientProtocols(enriched);
     }
 
+    setPatientSubscription(subRes.data?.[0] || null);
+    setPricingPlans(plansRes.data || []);
+
+    // Pre-fill plan form if subscription exists
+    if (subRes.data?.[0]) {
+      setPlanForm({
+        plan_name: subRes.data[0].plan_name,
+        started_at: subRes.data[0].started_at?.split("T")[0] || "",
+        expires_at: subRes.data[0].expires_at?.split("T")[0] || "",
+      });
+    }
+
     setLoading(false);
   }, [patientId, user]);
 
