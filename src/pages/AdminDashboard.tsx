@@ -142,31 +142,45 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
 
+            {/* Main CTA: Central de Recursos */}
+            <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow border-primary/30 bg-primary/5" onClick={() => navigate("/admin/resources")}>
+              <CardContent className="flex items-center gap-4 py-8">
+                <div className="w-14 h-14 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
+                  <Settings className="w-7 h-7 text-primary-foreground" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-display font-bold text-lg">Central de Recursos</p>
+                  <p className="text-sm text-muted-foreground">Controle total: Landing Page, Branding, Features, Depoimentos, Usuários — tudo em um só lugar</p>
+                </div>
+                <Globe className="w-6 h-6 text-primary" />
+              </CardContent>
+            </Card>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/site-editor")}>
+              <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/resources")}>
                 <CardContent className="flex items-center gap-4 py-6">
                   <Settings className="w-8 h-8 text-primary" />
                   <div>
                     <p className="font-display font-semibold">Editor do Site</p>
-                    <p className="text-sm text-muted-foreground">Landing page, branding, logo, cores, textos</p>
+                    <p className="text-sm text-muted-foreground">Landing page, branding, textos</p>
                   </div>
                 </CardContent>
               </Card>
-              <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/features")}>
+              <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/resources")}>
                 <CardContent className="flex items-center gap-4 py-6">
                   <Zap className="w-8 h-8 text-warning" />
                   <div>
                     <p className="font-display font-semibold">Feature Flags</p>
-                    <p className="text-sm text-muted-foreground">Controlar funcionalidades por nutricionista</p>
+                    <p className="text-sm text-muted-foreground">Controlar funcionalidades</p>
                   </div>
                 </CardContent>
               </Card>
-              <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/testimonials")}>
+              <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/resources")}>
                 <CardContent className="flex items-center gap-4 py-6">
                   <Star className="w-8 h-8 text-accent" />
                   <div>
                     <p className="font-display font-semibold">Depoimentos</p>
-                    <p className="text-sm text-muted-foreground">Moderar depoimentos dos pacientes</p>
+                    <p className="text-sm text-muted-foreground">Moderar depoimentos</p>
                   </div>
                 </CardContent>
               </Card>
@@ -175,7 +189,7 @@ export default function AdminDashboard() {
                   <Eye className="w-8 h-8 text-info" />
                   <div>
                     <p className="font-display font-semibold">Ver Landing Page</p>
-                    <p className="text-sm text-muted-foreground">Visualizar a página pública do site</p>
+                    <p className="text-sm text-muted-foreground">Visualizar página pública</p>
                   </div>
                 </CardContent>
               </Card>

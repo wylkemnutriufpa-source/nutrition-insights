@@ -64,6 +64,7 @@ const patientLinks = [
 
 const adminLinks = [
   { to: "/admin", icon: Shield, label: "Painel Admin" },
+  { to: "/admin/resources", icon: LayoutDashboard, label: "Central de Recursos" },
   { to: "/admin/features", icon: Zap, label: "Feature Flags" },
   { to: "/admin/testimonials", icon: Star, label: "Depoimentos" },
   { to: "/patients", icon: Users, label: "Pacientes" },
