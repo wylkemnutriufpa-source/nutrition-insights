@@ -9,6 +9,7 @@ import StreakCounter from "@/components/gamification/StreakCounter";
 import SmartTips from "@/components/patient/SmartTips";
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
 import MetabolicRadar from "@/components/dashboard/MetabolicRadar";
+import SubscriptionCard from "@/components/patient/SubscriptionCard";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   UtensilsCrossed, Users, TrendingUp, Target, Sparkles, Plus,
