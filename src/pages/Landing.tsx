@@ -116,8 +116,8 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       <Helmet>
-        <title>NutriFlow — Plataforma de Nutrição com IA e Gamificação</title>
-        <meta name="description" content="Gerencie pacientes, crie planos alimentares com IA, engaje com gamificação. A plataforma #1 para nutricionistas modernos." />
+        <title>{metaTitle}</title>
+        <meta name="description" content={metaDescription} />
       </Helmet>
 
       {/* ══════════ NAV ══════════ */}
