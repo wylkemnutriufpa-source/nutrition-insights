@@ -55,6 +55,7 @@ import Financial from "./pages/Financial";
 import WeeklyReport from "./pages/WeeklyReport";
 import Supplements from "./pages/Supplements";
 import Pricing from "./pages/Pricing";
+import PatientMealPlan from "./pages/PatientMealPlan";
 
 const queryClient = new QueryClient();
 
