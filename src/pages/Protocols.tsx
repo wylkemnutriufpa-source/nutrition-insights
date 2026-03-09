@@ -667,8 +667,9 @@ export default function Protocols() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-2 w-fit">
-            <TabsTrigger value="catalog" className="gap-2"><FileText className="w-4 h-4" /> Catálogo</TabsTrigger>
+          <TabsList className="grid grid-cols-3 w-fit">
+            <TabsTrigger value="templates" className="gap-2">🧬 Templates</TabsTrigger>
+            <TabsTrigger value="catalog" className="gap-2"><FileText className="w-4 h-4" /> Meus Protocolos</TabsTrigger>
             <TabsTrigger value="active" className="gap-2"><Users className="w-4 h-4" /> Pacientes Ativos</TabsTrigger>
           </TabsList>
 
