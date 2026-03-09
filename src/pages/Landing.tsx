@@ -173,7 +173,7 @@ export default function Landing() {
           <motion.div variants={stagger} initial="hidden" animate="show" className="max-w-5xl mx-auto text-center">
             <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-primary/20 bg-primary/5 text-primary text-sm font-semibold mb-8 shadow-glow">
               <Sparkles className="w-4 h-4" />
-              Plataforma #1 para Nutricionistas Modernos
+              {heroBadge}
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
             </motion.div>
 
