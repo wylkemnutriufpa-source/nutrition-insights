@@ -97,6 +97,21 @@ export default function Landing() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const { data: siteData } = useSiteSettings();
+  const s = siteData?.map;
+
+  const brandName = getSetting(s, "brand_name", "NutriFlow");
+  const heroTitle = getSetting(s, "hero_title", "Transforme seu consultório com IA e Gamificação");
+  const heroSubtitle = getSetting(s, "hero_subtitle", "Gerencie pacientes, crie planos alimentares personalizados com IA, e engaje seus clientes com gamificação — tudo em uma plataforma completa e intuitiva.");
+  const heroCta = getSetting(s, "hero_cta_text", "Começar Gratuitamente");
+  const heroBadge = getSetting(s, "hero_badge_text", "Plataforma #1 para Nutricionistas Modernos");
+  const stats = getSetting(s, "stats", defaultStats);
+  const plans = getSetting(s, "pricing_plans", defaultPlans);
+  const testimonials = getSetting(s, "testimonials_landing", defaultTestimonials);
+  const faqs = getSetting(s, "faqs", defaultFaqs);
+  const metaTitle = getSetting(s, "meta_title", "NutriFlow — Plataforma de Nutrição com IA e Gamificação");
+  const metaDescription = getSetting(s, "meta_description", "Gerencie pacientes, crie planos alimentares com IA, engaje com gamificação. A plataforma #1 para nutricionistas modernos.");
+  const footerText = getSetting(s, "footer_text", "Plataforma completa para nutricionistas modernos.");
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
