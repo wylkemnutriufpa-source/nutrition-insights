@@ -50,6 +50,7 @@ import AutoBot from "./pages/AutoBot";
 import Journey from "./pages/Journey";
 import Library from "./pages/Library";
 import Financial from "./pages/Financial";
+import WeeklyReport from "./pages/WeeklyReport";
 
 const queryClient = new QueryClient();
 
