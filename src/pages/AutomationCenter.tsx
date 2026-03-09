@@ -23,6 +23,11 @@ const TRIGGER_TYPES = [
   { value: "checklist.low_detected", label: "Baixa aderência ao checklist" },
   { value: "patient.inactive", label: "Paciente inativo" },
   { value: "plan.stale", label: "Plano alimentar desatualizado" },
+  { value: "weekly_goal.missed", label: "Meta semanal não atingida" },
+  { value: "supplement.not_logged", label: "Suplemento não registrado" },
+  { value: "checkin.overdue", label: "Check-in atrasado" },
+  { value: "weight.plateau", label: "Platô de peso detectado" },
+  { value: "meal.skipped", label: "Refeição não registrada" },
 ];
 
 const ACTION_TYPES = [
