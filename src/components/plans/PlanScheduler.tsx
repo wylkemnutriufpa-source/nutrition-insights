@@ -162,9 +162,10 @@ export default function PlanScheduler({ mealPlanId, planTitle }: PlanSchedulerPr
   };
 
   const updateCriteria = (scheduleId: string, newCriteria: ScheduleCriteria) => {
+    const criteriaJson = JSON.parse(JSON.stringify(newCriteria));
     supabase
       .from("plan_schedules")
-      .update({ criteria: newCriteria })
+      .update({ criteria: criteriaJson })
       .eq("id", scheduleId)
       .then(() => {
         fetchSchedules();
