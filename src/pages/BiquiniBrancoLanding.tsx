@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Helmet } from "react-helmet-async";
 import {
-  Sparkles, ArrowRight, CheckCircle2, Flame, Heart, Scale,
+  Sparkles, ArrowRight, ArrowLeft, CheckCircle2, Flame, Heart, Scale,
   Target, Trophy, Zap, Star, ChevronDown, Users, Calendar
 } from "lucide-react";
 
