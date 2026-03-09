@@ -21,10 +21,11 @@ import BodyEvolutionCard from "@/components/patient/BodyEvolutionCard";
 import HealthScoreRing, { calculateHealthScore } from "@/components/dashboard/HealthScoreRing";
 import ConsultationCompare from "@/components/patient/ConsultationCompare";
 import PatientCheckinsTab from "@/components/patient/PatientCheckinsTab";
+import PlanScheduler from "@/components/plans/PlanScheduler";
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
-  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send
+  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed
 } from "lucide-react";
 
 interface PatientProfile {
