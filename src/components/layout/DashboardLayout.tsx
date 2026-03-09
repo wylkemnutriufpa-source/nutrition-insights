@@ -50,6 +50,7 @@ const patientLinks = [
   { to: "/shopping-list", icon: ShoppingCart, label: "Compras" },
   { to: "/journey", icon: TrendingUp, label: "Jornada" },
   { to: "/library", icon: BookOpen, label: "Biblioteca" },
+  { to: "/supplements", icon: Pill, label: "Suplementos" },
   { to: "/anamnesis", icon: ClipboardCheck, label: "Anamnese" },
   { to: "/food-database", icon: Apple, label: "Alimentos" },
   { to: "/weight-calculator", icon: Scale, label: "Peso Ideal" },
