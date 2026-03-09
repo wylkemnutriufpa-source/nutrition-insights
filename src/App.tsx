@@ -22,6 +22,7 @@ import Settings from "./pages/Settings";
 import Protocols from "./pages/Protocols";
 import Programs from "./pages/Programs";
 import ProgramDetail from "./pages/ProgramDetail";
+import BiquiniBrancoDetail from "./pages/BiquiniBrancoDetail";
 import Checklist from "./pages/Checklist";
 import DietTemplates from "./pages/DietTemplates";
 import PhysicalAssessment from "./pages/PhysicalAssessment";
