@@ -330,7 +330,7 @@ export default function Protocols() {
   const [taskForm, setTaskForm] = useState({ title: "", description: "", category: "habit", frequency: "daily", icon: "✅" });
   const [submitting, setSubmitting] = useState(false);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("catalog");
+  const [activeTab, setActiveTab] = useState("templates");
 
   // Patient assignment state
   const [assignOpen, setAssignOpen] = useState(false);
