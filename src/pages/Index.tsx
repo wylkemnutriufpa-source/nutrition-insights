@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,15 +13,22 @@ import SubscriptionCard from "@/components/patient/SubscriptionCard";
 import PatientEvolutionSummary from "@/components/patient/PatientEvolutionSummary";
 import PushNotificationBanner from "@/components/notifications/PushNotificationBanner";
 import HealthAlertsBanner from "@/components/patient/HealthAlertsBanner";
+import AIInsightsPanel from "@/components/dashboard/AIInsightsPanel";
+import AttentionPatientsPanel from "@/components/dashboard/AttentionPatientsPanel";
+import PatientEvolutionCharts from "@/components/dashboard/PatientEvolutionCharts";
+import RiskPanel from "@/components/dashboard/RiskPanel";
+import HealthScoreRing, { calculateHealthScore } from "@/components/dashboard/HealthScoreRing";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   UtensilsCrossed, Users, TrendingUp, Target, Sparkles, Plus,
   CheckCircle2, Circle, AlertTriangle, Activity, FileText, Rocket,
-  Calendar, ArrowRight, Clock, ClipboardList, Heart, Brain
+  Calendar, ArrowRight, Clock, ClipboardList, Heart, Brain,
+  BarChart3, Shield, ChefHat, MessageSquare, Bot, Pill
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 
 type PlayerStats = Tables<"player_stats">;
