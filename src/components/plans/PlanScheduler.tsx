@@ -102,7 +102,7 @@ export default function PlanScheduler({ mealPlanId, planTitle }: PlanSchedulerPr
       meal_plan_id: mealPlanId,
       activate_at: form.activate_at,
       deactivate_at: form.deactivate_at || null,
-      criteria: form.criteria,
+      criteria: form.criteria as unknown as Record<string, unknown>,
       status: "scheduled",
     });
 
