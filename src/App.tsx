@@ -129,51 +129,57 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-              <Route path="/meals" element={<ProtectedRoute><Meals /></ProtectedRoute>} />
-              <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
-              <Route path="/challenges" element={<ProtectedRoute><Challenges /></ProtectedRoute>} />
-              <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
-              <Route path="/patients/:patientId" element={<ProtectedRoute><PatientDetail /></ProtectedRoute>} />
-              <Route path="/protocols" element={<ProtectedRoute><Protocols /></ProtectedRoute>} />
-              <Route path="/programs" element={<ProtectedRoute><Programs /></ProtectedRoute>} />
-              <Route path="/programs/:programId" element={<ProtectedRoute><ProgramDetail /></ProtectedRoute>} />
-              <Route path="/checklist" element={<ProtectedRoute><Checklist /></ProtectedRoute>} />
-              <Route path="/meal-plans" element={<ProtectedRoute><MealPlans /></ProtectedRoute>} />
-              <Route path="/meal-plans/:id" element={<ProtectedRoute><MealPlanEditor /></ProtectedRoute>} />
-              <Route path="/diet-templates" element={<ProtectedRoute><DietTemplates /></ProtectedRoute>} />
-              <Route path="/physical-assessment" element={<ProtectedRoute><PhysicalAssessment /></ProtectedRoute>} />
-              <Route path="/anamnesis" element={<ProtectedRoute><Anamnesis /></ProtectedRoute>} />
-              <Route path="/analyze" element={<ProtectedRoute><AnalyzeMeal /></ProtectedRoute>} />
-              <Route path="/feedbacks" element={<ProtectedRoute><Feedbacks /></ProtectedRoute>} />
-              <Route path="/global-tips" element={<ProtectedRoute><GlobalTips /></ProtectedRoute>} />
-              <Route path="/recipes" element={<ProtectedRoute><Recipes /></ProtectedRoute>} />
-              <Route path="/shopping-list" element={<ProtectedRoute><ShoppingList /></ProtectedRoute>} />
-              <Route path="/food-database" element={<ProtectedRoute><FoodDatabase /></ProtectedRoute>} />
-              <Route path="/body-analysis" element={<ProtectedRoute><BodyAnalysis /></ProtectedRoute>} />
-              <Route path="/branding" element={<ProtectedRoute><Branding /></ProtectedRoute>} />
-              <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-              <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+              
+              {/* Shared routes (both roles) */}
               <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
               <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
               <Route path="/weekly-goals" element={<ProtectedRoute><WeeklyGoals /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              {/* Admin routes */}
-              <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-              <Route path="/admin/features" element={<ProtectedRoute><AdminFeatureControl /></ProtectedRoute>} />
-              <Route path="/admin/testimonials" element={<ProtectedRoute><AdminTestimonials /></ProtectedRoute>} />
-              {/* Automation */}
-              <Route path="/automation" element={<ProtectedRoute><AutomationCenter /></ProtectedRoute>} />
-              {/* Calculators */}
-              <Route path="/weight-calculator" element={<ProtectedRoute><WeightCalculator /></ProtectedRoute>} />
-              <Route path="/water-calculator" element={<ProtectedRoute><WaterCalculator /></ProtectedRoute>} />
-              <Route path="/health-quiz" element={<ProtectedRoute><HealthCheckQuiz /></ProtectedRoute>} />
-              {/* Lote 2 */}
+              <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+              <Route path="/food-database" element={<ProtectedRoute><FoodDatabase /></ProtectedRoute>} />
+              <Route path="/recipes" element={<ProtectedRoute><Recipes /></ProtectedRoute>} />
+              <Route path="/feedbacks" element={<ProtectedRoute><Feedbacks /></ProtectedRoute>} />
+              <Route path="/supplements" element={<ProtectedRoute><Supplements /></ProtectedRoute>} />
+
+              {/* Nutritionist-only routes */}
+              <Route path="/patients" element={<NutritionistRoute><Patients /></NutritionistRoute>} />
+              <Route path="/patients/:patientId" element={<NutritionistRoute><PatientDetail /></NutritionistRoute>} />
+              <Route path="/protocols" element={<NutritionistRoute><Protocols /></NutritionistRoute>} />
+              <Route path="/programs" element={<NutritionistRoute><Programs /></NutritionistRoute>} />
+              <Route path="/programs/:programId" element={<NutritionistRoute><ProgramDetail /></NutritionistRoute>} />
+              <Route path="/meal-plans" element={<NutritionistRoute><MealPlans /></NutritionistRoute>} />
+              <Route path="/meal-plans/:id" element={<NutritionistRoute><MealPlanEditor /></NutritionistRoute>} />
+              <Route path="/diet-templates" element={<NutritionistRoute><DietTemplates /></NutritionistRoute>} />
+              <Route path="/physical-assessment" element={<NutritionistRoute><PhysicalAssessment /></NutritionistRoute>} />
+              <Route path="/body-analysis" element={<NutritionistRoute><BodyAnalysis /></NutritionistRoute>} />
+              <Route path="/branding" element={<NutritionistRoute><Branding /></NutritionistRoute>} />
+              <Route path="/reports" element={<NutritionistRoute><Reports /></NutritionistRoute>} />
+              <Route path="/weekly-report" element={<NutritionistRoute><WeeklyReport /></NutritionistRoute>} />
+              <Route path="/financial" element={<NutritionistRoute><Financial /></NutritionistRoute>} />
+              <Route path="/global-tips" element={<NutritionistRoute><GlobalTips /></NutritionistRoute>} />
+              <Route path="/automation" element={<NutritionistRoute><AutomationCenter /></NutritionistRoute>} />
+
+              {/* Patient-only routes */}
+              <Route path="/meals" element={<ProtectedRoute><Meals /></ProtectedRoute>} />
+              <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
+              <Route path="/challenges" element={<ProtectedRoute><Challenges /></ProtectedRoute>} />
+              <Route path="/checklist" element={<ProtectedRoute><Checklist /></ProtectedRoute>} />
+              <Route path="/anamnesis" element={<ProtectedRoute><Anamnesis /></ProtectedRoute>} />
+              <Route path="/analyze" element={<ProtectedRoute><AnalyzeMeal /></ProtectedRoute>} />
+              <Route path="/shopping-list" element={<ProtectedRoute><ShoppingList /></ProtectedRoute>} />
               <Route path="/autobot" element={<ProtectedRoute><AutoBot /></ProtectedRoute>} />
               <Route path="/journey" element={<ProtectedRoute><Journey /></ProtectedRoute>} />
               <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
-              <Route path="/financial" element={<ProtectedRoute><Financial /></ProtectedRoute>} />
-              <Route path="/weekly-report" element={<ProtectedRoute><WeeklyReport /></ProtectedRoute>} />
-              <Route path="/supplements" element={<ProtectedRoute><Supplements /></ProtectedRoute>} />
+              <Route path="/weight-calculator" element={<ProtectedRoute><WeightCalculator /></ProtectedRoute>} />
+              <Route path="/water-calculator" element={<ProtectedRoute><WaterCalculator /></ProtectedRoute>} />
+              <Route path="/health-quiz" element={<ProtectedRoute><HealthCheckQuiz /></ProtectedRoute>} />
+
+              {/* Admin routes */}
+              <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+              <Route path="/admin/features" element={<AdminRoute><AdminFeatureControl /></AdminRoute>} />
+              <Route path="/admin/testimonials" element={<AdminRoute><AdminTestimonials /></AdminRoute>} />
+
+              {/* Public pricing */}
               <Route path="/pricing" element={<Pricing />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
