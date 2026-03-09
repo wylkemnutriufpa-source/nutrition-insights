@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
+import { useSiteSettings, getSetting } from "@/hooks/useSiteSettings";
 import {
   Sparkles, Users, Brain, Shield, BarChart3, Utensils, CheckCircle2,
   ArrowRight, Star, Zap, Heart, ChevronRight, Bot, Pill, Camera,
