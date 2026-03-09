@@ -167,6 +167,7 @@ const App = () => (
               <Route path="/financial" element={<NutritionistRoute><Financial /></NutritionistRoute>} />
               <Route path="/global-tips" element={<NutritionistRoute><GlobalTips /></NutritionistRoute>} />
               <Route path="/automation" element={<NutritionistRoute><AutomationCenter /></NutritionistRoute>} />
+              <Route path="/checkin-panel" element={<NutritionistRoute><CheckinPanel /></NutritionistRoute>} />
 
               {/* Patient-only routes */}
               <Route path="/meals" element={<ProtectedRoute><Meals /></ProtectedRoute>} />
