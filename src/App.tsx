@@ -57,6 +57,7 @@ import WeeklyReport from "./pages/WeeklyReport";
 import Supplements from "./pages/Supplements";
 import Pricing from "./pages/Pricing";
 import PatientMealPlan from "./pages/PatientMealPlan";
+import BiquiniBrancoLanding from "./pages/BiquiniBrancoLanding";
 
 const queryClient = new QueryClient();
 
