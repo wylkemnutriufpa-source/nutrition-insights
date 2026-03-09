@@ -795,6 +795,11 @@ export default function PatientDetail() {
             )}
           </TabsContent>
 
+          {/* Check-ins Tab */}
+          <TabsContent value="checkins" className="mt-4">
+            <PatientCheckinsTab patientId={patientId!} />
+          </TabsContent>
+
           {/* Metabolic Radar */}
           <TabsContent value="radar" className="mt-4">
             <MetabolicRadar anamnesis={anamnesis} />
