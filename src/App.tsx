@@ -44,6 +44,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminFeatureControl from "./pages/AdminFeatureControl";
 import AdminTestimonials from "./pages/AdminTestimonials";
 import AdminSiteEditor from "./pages/AdminSiteEditor";
+import AdminResourceCenter from "./pages/AdminResourceCenter";
 import AutomationCenter from "./pages/AutomationCenter";
 import WeightCalculator from "./pages/WeightCalculator";
 import WaterCalculator from "./pages/WaterCalculator";
