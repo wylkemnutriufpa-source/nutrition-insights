@@ -71,6 +71,254 @@ const CATEGORIES = [
 
 const TASK_ICONS = ["✅", "💧", "🏃", "🥗", "💊", "😴", "🧘", "📝", "⏰", "🍎", "🫖", "🚫", "🌿", "🧊"];
 
+interface ProtocolTemplate {
+  title: string;
+  description: string;
+  category: string;
+  duration_days: number;
+  icon: string;
+  tasks: { title: string; icon: string; category: string; frequency: string }[];
+}
+
+const PROTOCOL_TEMPLATES: ProtocolTemplate[] = [
+  {
+    title: "Protocolo Detox",
+    description: "Protocolo de desintoxicação com foco em eliminar toxinas, melhorar função hepática e renovar a energia do organismo.",
+    category: "nutrition", duration_days: 14, icon: "🍃",
+    tasks: [
+      { title: "Tomar água morna com limão em jejum", icon: "🍋", category: "habit", frequency: "daily" },
+      { title: "Consumir 2L de água ao longo do dia", icon: "💧", category: "hydration", frequency: "daily" },
+      { title: "Suco verde detox (couve, gengibre, maçã)", icon: "🥬", category: "nutrition", frequency: "daily" },
+      { title: "Evitar alimentos ultraprocessados", icon: "🚫", category: "nutrition", frequency: "daily" },
+      { title: "Chá de dente-de-leão ou cardo-mariano", icon: "🫖", category: "habit", frequency: "daily" },
+      { title: "Jantar leve até 19h", icon: "🥗", category: "nutrition", frequency: "daily" },
+    ],
+  },
+  {
+    title: "Protocolo de Caldos",
+    description: "Caldos nutritivos para regeneração intestinal, fortalecimento imunológico e aporte de colágeno e minerais.",
+    category: "nutrition", duration_days: 7, icon: "🍲",
+    tasks: [
+      { title: "Caldo de ossos no café da manhã", icon: "🍖", category: "nutrition", frequency: "daily" },
+      { title: "Caldo de legumes no almoço (entrada)", icon: "🥕", category: "nutrition", frequency: "daily" },
+      { title: "Caldo anti-inflamatório (cúrcuma + gengibre)", icon: "🫖", category: "nutrition", frequency: "daily" },
+      { title: "Evitar laticínios durante o protocolo", icon: "🚫", category: "nutrition", frequency: "daily" },
+      { title: "Registrar sintomas digestivos", icon: "📝", category: "habit", frequency: "daily" },
+    ],
+  },
+  {
+    title: "Protocolo de Hidratação",
+    description: "Restabelecer níveis ideais de hidratação celular com estratégias práticas e mensuráveis.",
+    category: "hydration", duration_days: 21, icon: "💧",
+    tasks: [
+      { title: "Beber 500ml de água ao acordar", icon: "💧", category: "hydration", frequency: "daily" },
+      { title: "Meta: 35ml/kg de peso corporal por dia", icon: "🎯", category: "hydration", frequency: "daily" },
+      { title: "Água de coco ou isotônico natural pós-treino", icon: "🥥", category: "hydration", frequency: "daily" },
+      { title: "Chá de hibisco ou hortelã à tarde", icon: "🫖", category: "hydration", frequency: "daily" },
+      { title: "Observar cor da urina (meta: amarelo claro)", icon: "📝", category: "habit", frequency: "daily" },
+      { title: "Reduzir café a 2 xícaras/dia", icon: "☕", category: "habit", frequency: "daily" },
+    ],
+  },
+  {
+    title: "Protocolo Pós-Festas",
+    description: "Recuperação nutricional após período de excessos alimentares. Foco em desinchar, desintoxicar e retomar rotina.",
+    category: "nutrition", duration_days: 5, icon: "🎉",
+    tasks: [
+      { title: "Jejum intermitente leve (14h)", icon: "⏰", category: "nutrition", frequency: "daily" },
+      { title: "Eliminar açúcar e álcool", icon: "🚫", category: "nutrition", frequency: "daily" },
+      { title: "Sopa de legumes no jantar", icon: "🥣", category: "nutrition", frequency: "daily" },
+      { title: "Chá diurético (cavalinha/hibisco)", icon: "🫖", category: "habit", frequency: "daily" },
+      { title: "Caminhada de 30 min", icon: "🚶", category: "fitness", frequency: "daily" },
+      { title: "Dormir pelo menos 8h", icon: "😴", category: "sleep", frequency: "daily" },
+    ],
+  },
+  {
+    title: "Protocolo de Ressaca",
+    description: "Reposição de nutrientes, hidratação intensa e alívio de sintomas após consumo excessivo de álcool.",
+    category: "wellness", duration_days: 3, icon: "🤕",
+    tasks: [
+      { title: "Hidratação intensa: água + eletrólitos", icon: "💧", category: "hydration", frequency: "daily" },
+      { title: "Vitamina C (1g) + complexo B", icon: "💊", category: "habit", frequency: "daily" },
+      { title: "Refeição leve rica em potássio (banana, batata)", icon: "🍌", category: "nutrition", frequency: "daily" },
+      { title: "Evitar cafeína e frituras", icon: "🚫", category: "nutrition", frequency: "daily" },
+      { title: "Caldo de legumes com gengibre", icon: "🍲", category: "nutrition", frequency: "daily" },
+      { title: "Repouso ativo: alongamento leve", icon: "🧘", category: "fitness", frequency: "daily" },
+    ],
+  },
+  {
+    title: "Protocolo Anti-Inchaço",
+    description: "Redução de retenção hídrica e inchaço através de estratégias alimentares anti-inflamatórias e drenantes.",
+    category: "nutrition", duration_days: 10, icon: "🫧",
+    tasks: [
+      { title: "Reduzir sódio para < 2g/dia", icon: "🧂", category: "nutrition", frequency: "daily" },
+      { title: "Chá de cavalinha + dente-de-leão", icon: "🫖", category: "habit", frequency: "daily" },
+      { title: "Consumir alimentos ricos em potássio", icon: "🍌", category: "nutrition", frequency: "daily" },
+      { title: "Evitar glúten e laticínios", icon: "🚫", category: "nutrition", frequency: "daily" },
+      { title: "Drenagem linfática ou escovação a seco", icon: "✨", category: "wellness", frequency: "daily" },
+      { title: "Beber 2.5L de água/dia", icon: "💧", category: "hydration", frequency: "daily" },
+    ],
+  },
+  {
+    title: "Protocolo Antidepressão",
+    description: "Suporte nutricional para saúde mental: alimentos precursores de serotonina, magnésio, ômega-3 e hábitos de bem-estar.",
+    category: "mindset", duration_days: 30, icon: "🌈",
+    tasks: [
+      { title: "Alimentos ricos em triptofano (banana, aveia, cacau)", icon: "🍫", category: "nutrition", frequency: "daily" },
+      { title: "Suplementar magnésio (300mg)", icon: "💊", category: "habit", frequency: "daily" },
+      { title: "Ômega-3 (peixes ou suplemento)", icon: "🐟", category: "nutrition", frequency: "daily" },
+      { title: "Exposição ao sol por 15 min pela manhã", icon: "☀️", category: "wellness", frequency: "daily" },
+      { title: "Exercício físico moderado (30 min)", icon: "🏃", category: "fitness", frequency: "daily" },
+      { title: "Meditação ou respiração guiada (10 min)", icon: "🧘", category: "mindset", frequency: "daily" },
+      { title: "Evitar açúcar refinado e ultraprocessados", icon: "🚫", category: "nutrition", frequency: "daily" },
+    ],
+  },
+  {
+    title: "Protocolo Antiparasitário",
+    description: "Eliminação de parasitas intestinais com fitoterapia, alimentação funcional e higiene alimentar.",
+    category: "nutrition", duration_days: 21, icon: "🛡️",
+    tasks: [
+      { title: "Semente de abóbora em jejum", icon: "🎃", category: "nutrition", frequency: "daily" },
+      { title: "Chá de alho + cravo (fitoterápico)", icon: "🧄", category: "habit", frequency: "daily" },
+      { title: "Óleo de coco extra virgem (1 colher)", icon: "🥥", category: "nutrition", frequency: "daily" },
+      { title: "Evitar açúcar (alimenta parasitas)", icon: "🚫", category: "nutrition", frequency: "daily" },
+      { title: "Consumir alimentos ricos em fibras", icon: "🥦", category: "nutrition", frequency: "daily" },
+      { title: "Probiótico diário", icon: "💊", category: "habit", frequency: "daily" },
+    ],
+  },
+  {
+    title: "Protocolo Saúde da Mulher",
+    description: "Equilíbrio hormonal feminino com foco em ciclo menstrual, fertilidade e bem-estar geral da mulher.",
+    category: "wellness", duration_days: 30, icon: "🌸",
+    tasks: [
+      { title: "Sementes de linhaça/girassol (seed cycling)", icon: "🌻", category: "nutrition", frequency: "daily" },
+      { title: "Alimentos ricos em ferro e B12", icon: "🥩", category: "nutrition", frequency: "daily" },
+      { title: "Chá de camomila ou vitex", icon: "🫖", category: "habit", frequency: "daily" },
+      { title: "Vitamina D3 + K2", icon: "💊", category: "habit", frequency: "daily" },
+      { title: "Atividade física adaptada ao ciclo", icon: "🏃", category: "fitness", frequency: "daily" },
+      { title: "Registrar sintomas do ciclo", icon: "📝", category: "habit", frequency: "daily" },
+      { title: "Reduzir xenoestrogênios (plásticos, cosméticos)", icon: "🚫", category: "wellness", frequency: "daily" },
+    ],
+  },
+  {
+    title: "Protocolo Gastrite",
+    description: "Recuperação da mucosa gástrica com dieta anti-inflamatória, alimentos protetores e eliminação de irritantes.",
+    category: "nutrition", duration_days: 21, icon: "🩺",
+    tasks: [
+      { title: "Comer devagar e mastigar bem (20 min)", icon: "⏰", category: "habit", frequency: "daily" },
+      { title: "Evitar café, álcool e pimenta", icon: "🚫", category: "nutrition", frequency: "daily" },
+      { title: "Suco de batata ou gel de aloe vera em jejum", icon: "🥔", category: "nutrition", frequency: "daily" },
+      { title: "Refeições pequenas a cada 3h", icon: "🍽️", category: "nutrition", frequency: "daily" },
+      { title: "Chá de espinheira santa ou camomila", icon: "🫖", category: "habit", frequency: "daily" },
+      { title: "Glutamina (5g) antes de dormir", icon: "💊", category: "habit", frequency: "daily" },
+    ],
+  },
+  {
+    title: "Protocolo Férias",
+    description: "Manter equilíbrio nutricional durante viagens e férias sem restrições extremas, com foco em consciência alimentar.",
+    category: "wellness", duration_days: 14, icon: "🏖️",
+    tasks: [
+      { title: "Começar o dia com proteína + fibra", icon: "🥚", category: "nutrition", frequency: "daily" },
+      { title: "Hidratar-se antes de cada refeição", icon: "💧", category: "hydration", frequency: "daily" },
+      { title: "Regra 80/20: 80% saudável, 20% flexível", icon: "⚖️", category: "mindset", frequency: "daily" },
+      { title: "Caminhar pelo menos 30 min/dia", icon: "🚶", category: "fitness", frequency: "daily" },
+      { title: "Registrar refeições (sem culpa)", icon: "📝", category: "habit", frequency: "daily" },
+      { title: "Priorizar frutas locais como sobremesa", icon: "🍉", category: "nutrition", frequency: "daily" },
+    ],
+  },
+  {
+    title: "Protocolo Festas de Final de Ano",
+    description: "Estratégias para aproveitar as festas de Natal e Réveillon mantendo saúde e sem culpa alimentar.",
+    category: "nutrition", duration_days: 15, icon: "🎄",
+    tasks: [
+      { title: "Refeição leve antes de eventos sociais", icon: "🥗", category: "nutrition", frequency: "daily" },
+      { title: "Alternar bebida alcoólica com água", icon: "💧", category: "hydration", frequency: "daily" },
+      { title: "Priorizar proteínas magras nas ceias", icon: "🍗", category: "nutrition", frequency: "daily" },
+      { title: "Sobremesa consciente: 1 porção pequena", icon: "🍰", category: "mindset", frequency: "daily" },
+      { title: "Manhã seguinte: suco verde + hidratação", icon: "🥬", category: "nutrition", frequency: "daily" },
+      { title: "Manter treinos mesmo em dias de festa", icon: "🏃", category: "fitness", frequency: "daily" },
+    ],
+  },
+  {
+    title: "Protocolo para Melhorar TPM",
+    description: "Redução dos sintomas de tensão pré-menstrual com nutrição anti-inflamatória, suplementação e hábitos.",
+    category: "wellness", duration_days: 14, icon: "🌙",
+    tasks: [
+      { title: "Magnésio quelado (200-400mg)", icon: "💊", category: "habit", frequency: "daily" },
+      { title: "Vitamina B6 (50mg)", icon: "💊", category: "habit", frequency: "daily" },
+      { title: "Reduzir sal e cafeína", icon: "🚫", category: "nutrition", frequency: "daily" },
+      { title: "Consumir chocolate 70%+ cacau (20g)", icon: "🍫", category: "nutrition", frequency: "daily" },
+      { title: "Chá de gengibre + canela", icon: "🫖", category: "habit", frequency: "daily" },
+      { title: "Yoga ou alongamento suave", icon: "🧘", category: "fitness", frequency: "daily" },
+      { title: "Diário de humor e sintomas", icon: "📝", category: "mindset", frequency: "daily" },
+    ],
+  },
+  {
+    title: "Protocolo Anti-Inflamatório",
+    description: "Redução de inflamação crônica com alimentação rica em antioxidantes, ômega-3 e especiarias funcionais.",
+    category: "nutrition", duration_days: 30, icon: "🔥",
+    tasks: [
+      { title: "Cúrcuma + pimenta-do-reino diariamente", icon: "🌿", category: "nutrition", frequency: "daily" },
+      { title: "Ômega-3 (peixes 3x/semana ou suplemento)", icon: "🐟", category: "nutrition", frequency: "daily" },
+      { title: "5 porções de vegetais coloridos", icon: "🥦", category: "nutrition", frequency: "daily" },
+      { title: "Eliminar açúcar refinado e frituras", icon: "🚫", category: "nutrition", frequency: "daily" },
+      { title: "Chá verde ou matcha", icon: "🍵", category: "habit", frequency: "daily" },
+      { title: "Dormir 7-8h por noite", icon: "😴", category: "sleep", frequency: "daily" },
+    ],
+  },
+  {
+    title: "Protocolo Imunidade",
+    description: "Fortalecimento do sistema imunológico com nutrientes-chave, probióticos e hábitos protetores.",
+    category: "wellness", duration_days: 21, icon: "🛡️",
+    tasks: [
+      { title: "Vitamina C (1g/dia) + Zinco (15mg)", icon: "💊", category: "habit", frequency: "daily" },
+      { title: "Vitamina D3 (2000 UI)", icon: "☀️", category: "habit", frequency: "daily" },
+      { title: "Probiótico ou alimentos fermentados", icon: "🥛", category: "nutrition", frequency: "daily" },
+      { title: "Própolis ou mel com limão", icon: "🍯", category: "habit", frequency: "daily" },
+      { title: "Sono reparador (7-8h)", icon: "😴", category: "sleep", frequency: "daily" },
+      { title: "Reduzir estresse: técnica de respiração", icon: "🧘", category: "mindset", frequency: "daily" },
+    ],
+  },
+  {
+    title: "Protocolo Sono Reparador",
+    description: "Melhorar qualidade do sono com higiene do sono, nutrição noturna e suplementação estratégica.",
+    category: "sleep", duration_days: 21, icon: "😴",
+    tasks: [
+      { title: "Última refeição 3h antes de dormir", icon: "🍽️", category: "nutrition", frequency: "daily" },
+      { title: "Chá de camomila ou maracujá às 20h", icon: "🫖", category: "habit", frequency: "daily" },
+      { title: "Magnésio glicina (300mg) antes de dormir", icon: "💊", category: "habit", frequency: "daily" },
+      { title: "Desligar telas 1h antes de dormir", icon: "📵", category: "habit", frequency: "daily" },
+      { title: "Quarto escuro e fresco (18-22°C)", icon: "🌙", category: "habit", frequency: "daily" },
+      { title: "Horário fixo para dormir e acordar", icon: "⏰", category: "habit", frequency: "daily" },
+    ],
+  },
+  {
+    title: "Protocolo Intestino Saudável",
+    description: "Restauração da saúde intestinal com probióticos, prebióticos, glutamina e eliminação de irritantes.",
+    category: "nutrition", duration_days: 30, icon: "🦠",
+    tasks: [
+      { title: "Probiótico diário (manhã)", icon: "💊", category: "habit", frequency: "daily" },
+      { title: "Prebióticos: banana verde, alho, cebola", icon: "🧅", category: "nutrition", frequency: "daily" },
+      { title: "Glutamina 5g em jejum", icon: "💊", category: "habit", frequency: "daily" },
+      { title: "Eliminar glúten e laticínios por 21 dias", icon: "🚫", category: "nutrition", frequency: "daily" },
+      { title: "Alimentos fermentados (kombucha, kefir)", icon: "🥛", category: "nutrition", frequency: "daily" },
+      { title: "Mastigar 30x cada garfada", icon: "⏰", category: "habit", frequency: "daily" },
+    ],
+  },
+  {
+    title: "Protocolo Low Carb Terapêutico",
+    description: "Redução estratégica de carboidratos para controle glicêmico, emagrecimento e melhora metabólica.",
+    category: "nutrition", duration_days: 30, icon: "📉",
+    tasks: [
+      { title: "Carboidratos < 100g/dia", icon: "🎯", category: "nutrition", frequency: "daily" },
+      { title: "Priorizar gorduras boas (abacate, azeite, castanhas)", icon: "🥑", category: "nutrition", frequency: "daily" },
+      { title: "Proteína em todas as refeições", icon: "🥩", category: "nutrition", frequency: "daily" },
+      { title: "Registrar macros no app", icon: "📝", category: "habit", frequency: "daily" },
+      { title: "Beber 2.5L de água/dia", icon: "💧", category: "hydration", frequency: "daily" },
+      { title: "Monitorar energia e disposição", icon: "📝", category: "mindset", frequency: "daily" },
+    ],
+  },
+];
+
 export default function Protocols() {
   const { user } = useAuth();
   const [protocols, setProtocols] = useState<Protocol[]>([]);
@@ -82,7 +330,7 @@ export default function Protocols() {
   const [taskForm, setTaskForm] = useState({ title: "", description: "", category: "habit", frequency: "daily", icon: "✅" });
   const [submitting, setSubmitting] = useState(false);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("catalog");
+  const [activeTab, setActiveTab] = useState("templates");
 
   // Patient assignment state
   const [assignOpen, setAssignOpen] = useState(false);
@@ -318,6 +566,43 @@ export default function Protocols() {
     fetchPatientProtocols();
   };
 
+  // ── Create protocol from template ──
+  const createFromTemplate = async (template: ProtocolTemplate) => {
+    if (!user) return;
+    setSubmitting(true);
+    const { data, error } = await supabase.from("protocols").insert({
+      title: template.title,
+      description: template.description,
+      category: template.category,
+      duration_days: template.duration_days,
+      created_by: user.id,
+    }).select().single();
+
+    if (error || !data) {
+      toast.error(error?.message || "Erro ao criar protocolo");
+      setSubmitting(false);
+      return;
+    }
+
+    // Insert all tasks
+    const taskInserts = template.tasks.map((t, i) => ({
+      protocol_id: data.id,
+      title: t.title,
+      icon: t.icon,
+      category: t.category,
+      frequency: t.frequency,
+      sort_order: i,
+    }));
+    await supabase.from("protocol_tasks").insert(taskInserts);
+
+    toast.success(`"${template.title}" criado com ${template.tasks.length} tarefas!`);
+    fetchProtocols();
+    setSelectedProtocol({ ...data, task_count: template.tasks.length });
+    fetchTasks(data.id);
+    setActiveTab("catalog");
+    setSubmitting(false);
+  };
+
   // Filter patient protocols for selected protocol
   const selectedProtocolPatients = patientProtocols.filter(
     (pp) => selectedProtocol && pp.protocol_id === selectedProtocol.id
@@ -382,10 +667,56 @@ export default function Protocols() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-2 w-fit">
-            <TabsTrigger value="catalog" className="gap-2"><FileText className="w-4 h-4" /> Catálogo</TabsTrigger>
+          <TabsList className="grid grid-cols-3 w-fit">
+            <TabsTrigger value="templates" className="gap-2">🧬 Templates</TabsTrigger>
+            <TabsTrigger value="catalog" className="gap-2"><FileText className="w-4 h-4" /> Meus Protocolos</TabsTrigger>
             <TabsTrigger value="active" className="gap-2"><Users className="w-4 h-4" /> Pacientes Ativos</TabsTrigger>
           </TabsList>
+
+          {/* ── TEMPLATES TAB ── */}
+          <TabsContent value="templates" className="mt-4">
+            <div className="mb-4">
+              <p className="text-muted-foreground text-sm">
+                Selecione um template para criar automaticamente o protocolo com todas as tarefas pré-configuradas.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {PROTOCOL_TEMPLATES.map((template, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.03 }}
+                  className="glass rounded-xl p-5 hover:border-primary/40 transition-all group cursor-pointer flex flex-col"
+                  onClick={() => !submitting && createFromTemplate(template)}
+                >
+                  <div className="text-3xl mb-3">{template.icon}</div>
+                  <h3 className="font-display font-semibold text-sm mb-1">{template.title}</h3>
+                  <p className="text-muted-foreground text-xs line-clamp-2 flex-1 mb-3">{template.description}</p>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto">
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" /> {template.duration_days}d
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <ListChecks className="w-3 h-3" /> {template.tasks.length} tarefas
+                    </span>
+                    <span className="ml-auto">
+                      {CATEGORIES.find(c => c.value === template.category)?.label}
+                    </span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full mt-3 gap-2 group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                    disabled={submitting}
+                    onClick={(e) => { e.stopPropagation(); createFromTemplate(template); }}
+                  >
+                    <Plus className="w-3 h-3" /> Usar Template
+                  </Button>
+                </motion.div>
+              ))}
+            </div>
+          </TabsContent>
 
           {/* ── CATALOG TAB ── */}
           <TabsContent value="catalog" className="mt-4">
