@@ -10,6 +10,7 @@ import SmartTips from "@/components/patient/SmartTips";
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
 import MetabolicRadar from "@/components/dashboard/MetabolicRadar";
 import SubscriptionCard from "@/components/patient/SubscriptionCard";
+import PatientEvolutionSummary from "@/components/patient/PatientEvolutionSummary";
 import PushNotificationBanner from "@/components/notifications/PushNotificationBanner";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
@@ -238,6 +239,11 @@ function PatientDashboardContent() {
           </h2>
           <p className="text-sm text-muted-foreground">Converse com seu nutricionista em tempo real.</p>
         </Link>
+      </motion.div>
+
+      {/* Patient Evolution Summary */}
+      <motion.div variants={item}>
+        <PatientEvolutionSummary />
       </motion.div>
 
       {/* Subscription Card */}
