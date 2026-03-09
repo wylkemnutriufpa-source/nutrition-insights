@@ -4,8 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
-import { Shield, Users, UserCheck, Zap, Star, Activity, Settings } from "lucide-react";
+import { Shield, Users, UserCheck, Zap, Star, UserPlus } from "lucide-react";
+import { toast } from "sonner";
 
 interface AdminStats {
   totalNutritionists: number;
@@ -26,6 +28,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<AdminStats>({ totalNutritionists: 0, totalPatients: 0, totalMeals: 0, totalProtocols: 0 });
   const [nutritionists, setNutritionists] = useState<NutritionistInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [promoteEmail, setPromoteEmail] = useState("");
 
   useEffect(() => {
     if (!user) return;
@@ -60,6 +63,21 @@ export default function AdminDashboard() {
     };
     fetchStats();
   }, [user]);
+
+  const handlePromoteToAdmin = async () => {
+    if (!promoteEmail.trim()) {
+      toast.error("Digite um email válido");
+      return;
+    }
+    try {
+      const { data, error } = await supabase.rpc("promote_to_admin", { _user_email: promoteEmail });
+      if (error) throw error;
+      toast.success(`Usuário ${promoteEmail} promovido a admin com sucesso!`);
+      setPromoteEmail("");
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao promover usuário");
+    }
+  };
 
   const statCards = [
     { label: "Nutricionistas", value: stats.totalNutritionists, icon: UserCheck, color: "text-primary" },
@@ -98,6 +116,31 @@ export default function AdminDashboard() {
                 </Card>
               ))}
             </div>
+
+            <Card className="glass shadow-card">
+              <CardHeader>
+                <CardTitle className="font-display text-lg flex items-center gap-2">
+                  <UserPlus className="w-5 h-5" />
+                  Promover Usuário a Admin
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex gap-2">
+                  <Input
+                    type="email"
+                    placeholder="email@exemplo.com"
+                    value={promoteEmail}
+                    onChange={(e) => setPromoteEmail(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button onClick={handlePromoteToAdmin} className="shrink-0">
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Promover
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">Digite o email do usuário que deseja promover a administrador</p>
+              </CardContent>
+            </Card>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/features")}>
