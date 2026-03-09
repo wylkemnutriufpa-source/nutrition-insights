@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -17,6 +17,7 @@ import { AnamnesisInsightsFull } from "@/components/patient/AnamnesisInsightsCar
 import PatientCalculators from "@/components/patient/PatientCalculators";
 import PatientAgenda from "@/components/patient/PatientAgenda";
 import BodyEvolutionCard from "@/components/patient/BodyEvolutionCard";
+import HealthScoreRing, { calculateHealthScore } from "@/components/dashboard/HealthScoreRing";
 import ConsultationCompare from "@/components/patient/ConsultationCompare";
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
@@ -217,7 +218,7 @@ export default function PatientDetail() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap">
           <Button variant="ghost" size="icon" onClick={() => navigate("/patients")}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -226,13 +227,25 @@ export default function PatientDetail() {
               {(profile?.full_name || "P")[0].toUpperCase()}
             </span>
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <h1 className="font-display text-2xl font-bold">{profile?.full_name || "Paciente"}</h1>
             <p className="text-sm text-muted-foreground">
               Checklist hoje: {checklistStats.completed}/{checklistStats.total} tarefas •
               {patientProtocols.filter(p => p.status === "active").length} protocolos ativos
             </p>
           </div>
+          <HealthScoreRing
+            score={calculateHealthScore({
+              hasAnamnesis: anamnesis?.status === "completed",
+              checklistCompletion: checklistStats.total > 0 ? Math.round((checklistStats.completed / checklistStats.total) * 100) : 0,
+              mealsLogged: 0,
+              weightEntries: 0,
+              currentStreak: 0,
+              daysAsPatient: 30,
+            })}
+            label="Health Score"
+            size="md"
+          />
           <div className="flex gap-2 flex-wrap">
             <Button
               variant="outline"
