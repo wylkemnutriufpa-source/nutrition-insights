@@ -28,6 +28,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<AdminStats>({ totalNutritionists: 0, totalPatients: 0, totalMeals: 0, totalProtocols: 0 });
   const [nutritionists, setNutritionists] = useState<NutritionistInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [promoteEmail, setPromoteEmail] = useState("");
 
   useEffect(() => {
     if (!user) return;
