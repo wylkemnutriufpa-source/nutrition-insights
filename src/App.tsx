@@ -52,6 +52,7 @@ import Library from "./pages/Library";
 import Financial from "./pages/Financial";
 import WeeklyReport from "./pages/WeeklyReport";
 import Supplements from "./pages/Supplements";
+import Pricing from "./pages/Pricing";
 
 const queryClient = new QueryClient();
 
@@ -157,6 +158,7 @@ const App = () => (
               <Route path="/financial" element={<ProtectedRoute><Financial /></ProtectedRoute>} />
               <Route path="/weekly-report" element={<ProtectedRoute><WeeklyReport /></ProtectedRoute>} />
               <Route path="/supplements" element={<ProtectedRoute><Supplements /></ProtectedRoute>} />
+              <Route path="/pricing" element={<Pricing />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>
