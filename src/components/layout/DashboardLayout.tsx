@@ -31,6 +31,7 @@ const nutritionistLinks = [
   { to: "/recipes", icon: ChefHat, label: "Receitas" },
   { to: "/food-database", icon: Apple, label: "Alimentos" },
   { to: "/reports", icon: BarChart3, label: "Relatórios" },
+  { to: "/financial", icon: DollarSign, label: "Financeiro" },
   { to: "/global-tips", icon: Lightbulb, label: "Dicas" },
   { to: "/feedbacks", icon: MessageSquare, label: "Feedbacks" },
   { to: "/branding", icon: Palette, label: "Branding" },
