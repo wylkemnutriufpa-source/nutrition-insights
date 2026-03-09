@@ -64,6 +64,21 @@ export default function AdminDashboard() {
     fetchStats();
   }, [user]);
 
+  const handlePromoteToAdmin = async () => {
+    if (!promoteEmail.trim()) {
+      toast.error("Digite um email válido");
+      return;
+    }
+    try {
+      const { data, error } = await supabase.rpc("promote_to_admin", { _user_email: promoteEmail });
+      if (error) throw error;
+      toast.success(`Usuário ${promoteEmail} promovido a admin com sucesso!`);
+      setPromoteEmail("");
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao promover usuário");
+    }
+  };
+
   const statCards = [
     { label: "Nutricionistas", value: stats.totalNutritionists, icon: UserCheck, color: "text-primary" },
     { label: "Pacientes", value: stats.totalPatients, icon: Users, color: "text-info" },
