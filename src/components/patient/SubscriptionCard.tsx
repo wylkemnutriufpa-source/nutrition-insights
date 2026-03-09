@@ -11,7 +11,7 @@ interface Subscription {
   status: string;
   started_at: string;
   expires_at: string | null;
-  features: Record<string, any> | null;
+  features: unknown;
 }
 
 export default function SubscriptionCard() {
