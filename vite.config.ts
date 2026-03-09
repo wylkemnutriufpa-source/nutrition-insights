@@ -22,10 +22,12 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         navigateFallbackDenylist: [/^\/~oauth/],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        // Import push notification handler into the generated SW
+        importScripts: ["/sw-push.js"],
       },
       manifest: {
-        name: "NutriFlow — Nutrição Inteligente",
-        short_name: "NutriFlow",
+        name: "FitJourney — Nutrição Inteligente",
+        short_name: "FitJourney",
         description: "Plataforma de nutrição com gamificação e IA",
         theme_color: "#10b981",
         background_color: "#0d0d1a",
