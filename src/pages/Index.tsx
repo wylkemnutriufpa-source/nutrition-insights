@@ -236,6 +236,11 @@ function PatientDashboardContent() {
         </Link>
       </motion.div>
 
+      {/* Subscription Card */}
+      <motion.div variants={item}>
+        <SubscriptionCard />
+      </motion.div>
+
       {/* Smart Plan Card */}
       <motion.div variants={item}>
         <SmartPlanCard />
