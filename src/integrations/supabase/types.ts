@@ -2138,6 +2138,44 @@ export type Database = {
         }
         Relationships: []
       }
+      supplement_logs: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          notes: string | null
+          patient_id: string
+          supplement_id: string
+          taken_at: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          patient_id: string
+          supplement_id: string
+          taken_at?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          supplement_id?: string
+          taken_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplement_logs_supplement_id_fkey"
+            columns: ["supplement_id"]
+            isOneToOne: false
+            referencedRelation: "patient_supplements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       testimonials: {
         Row: {
           content: string
