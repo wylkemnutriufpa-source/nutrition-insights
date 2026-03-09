@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
-  LayoutDashboard, Users, UtensilsCrossed, Trophy, Target,
+  LayoutDashboard, Users, UtensilsCrossed, Trophy, Target, FileBarChart,
   Leaf, LogOut, Moon, Sun, ChevronRight, Sparkles, Settings,
   ClipboardCheck, FileText, Rocket, CheckCircle2, Activity,
   MessageSquare, Lightbulb, ChefHat, ShoppingCart, Apple, Camera,
@@ -30,6 +30,7 @@ const nutritionistLinks = [
   { to: "/recipes", icon: ChefHat, label: "Receitas" },
   { to: "/food-database", icon: Apple, label: "Alimentos" },
   { to: "/reports", icon: BarChart3, label: "Relatórios" },
+  { to: "/weekly-report", icon: FileBarChart, label: "Relatório Semanal" },
   { to: "/financial", icon: DollarSign, label: "Financeiro" },
   { to: "/global-tips", icon: Lightbulb, label: "Dicas" },
   { to: "/feedbacks", icon: MessageSquare, label: "Feedbacks" },

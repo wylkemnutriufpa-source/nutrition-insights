@@ -9,6 +9,7 @@ import StreakCounter from "@/components/gamification/StreakCounter";
 import SmartTips from "@/components/patient/SmartTips";
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
 import MetabolicRadar from "@/components/dashboard/MetabolicRadar";
+import SubscriptionCard from "@/components/patient/SubscriptionCard";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   UtensilsCrossed, Users, TrendingUp, Target, Sparkles, Plus,
@@ -233,6 +234,11 @@ function PatientDashboardContent() {
           </h2>
           <p className="text-sm text-muted-foreground">Converse com seu nutricionista em tempo real.</p>
         </Link>
+      </motion.div>
+
+      {/* Subscription Card */}
+      <motion.div variants={item}>
+        <SubscriptionCard />
       </motion.div>
 
       {/* Smart Plan Card */}

@@ -50,6 +50,7 @@ import AutoBot from "./pages/AutoBot";
 import Journey from "./pages/Journey";
 import Library from "./pages/Library";
 import Financial from "./pages/Financial";
+import WeeklyReport from "./pages/WeeklyReport";
 
 const queryClient = new QueryClient();
 
@@ -153,6 +154,7 @@ const App = () => (
               <Route path="/journey" element={<ProtectedRoute><Journey /></ProtectedRoute>} />
               <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
               <Route path="/financial" element={<ProtectedRoute><Financial /></ProtectedRoute>} />
+              <Route path="/weekly-report" element={<ProtectedRoute><WeeklyReport /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>
