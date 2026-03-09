@@ -626,6 +626,11 @@ export default function PhysicalAssessment() {
             </div>
           </TabsContent>
 
+          {/* Comparison between consultations */}
+          <TabsContent value="compare" className="space-y-4 mt-4">
+            {patientId && <ConsultationCompare patientId={patientId} />}
+          </TabsContent>
+
           {/* History */}
           <TabsContent value="history" className="space-y-4 mt-4">
             <div className="glass rounded-xl p-5">
