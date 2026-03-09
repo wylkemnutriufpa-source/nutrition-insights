@@ -604,7 +604,7 @@ export default function Landing() {
                 <span className="font-display font-bold text-lg">{brandName}</span>
               </div>
               <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">
-                Plataforma de nutrição inteligente com IA e gamificação. Transforme seu consultório e engaje seus pacientes como nunca.
+                {footerText}
               </p>
             </div>
             <div>
