@@ -817,6 +817,79 @@ export default function PatientDetail() {
             <PatientCheckinsTab patientId={patientId!} />
           </TabsContent>
 
+          {/* Meal Plans Tab with Scheduler */}
+          <TabsContent value="meal-plans" className="mt-4 space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-xl font-bold flex items-center gap-2">
+                <UtensilsCrossed className="w-6 h-6 text-primary" /> Planos Alimentares
+              </h2>
+              <Button
+                onClick={() => navigate(`/meal-plans?patientId=${patientId}`)}
+                className="gradient-primary gap-2 shadow-glow"
+              >
+                <Plus className="w-4 h-4" /> Criar Plano
+              </Button>
+            </div>
+
+            {mealPlans.length === 0 ? (
+              <div className="glass rounded-xl p-12 text-center">
+                <UtensilsCrossed className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+                <h3 className="font-display text-lg font-semibold mb-2">Nenhum plano alimentar</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Crie um plano alimentar para este paciente e programe sua ativação com critérios inteligentes.
+                </p>
+                <Button onClick={() => navigate(`/meal-plans?patientId=${patientId}`)} className="gradient-primary">
+                  <Plus className="w-4 h-4 mr-2" /> Criar Primeiro Plano
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {mealPlans.map((plan) => (
+                  <motion.div
+                    key={plan.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="glass rounded-xl overflow-hidden"
+                  >
+                    {/* Plan Header */}
+                    <div className="p-5 border-b border-border">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-3 h-3 rounded-full ${plan.is_active ? "bg-success animate-pulse" : "bg-muted-foreground"}`} />
+                          <div>
+                            <h3 className="font-display font-semibold">{plan.title}</h3>
+                            <p className="text-xs text-muted-foreground">
+                              {plan.is_active ? "Ativo" : "Inativo"} •
+                              Início: {new Date(plan.start_date).toLocaleDateString("pt-BR")}
+                              {plan.end_date && ` • Fim: ${new Date(plan.end_date).toLocaleDateString("pt-BR")}`}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => navigate(`/meal-plan/${plan.id}`)}
+                          >
+                            <FileText className="w-3.5 h-3.5 mr-1" /> Ver Plano
+                          </Button>
+                        </div>
+                      </div>
+                      {plan.description && (
+                        <p className="text-sm text-muted-foreground mt-2">{plan.description}</p>
+                      )}
+                    </div>
+
+                    {/* Plan Scheduler */}
+                    <div className="p-5 bg-secondary/20">
+                      <PlanScheduler mealPlanId={plan.id} planTitle={plan.title} />
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
           {/* Metabolic Radar */}
           <TabsContent value="radar" className="mt-4">
             <MetabolicRadar anamnesis={anamnesis} />
