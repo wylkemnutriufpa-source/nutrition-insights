@@ -56,6 +56,16 @@ interface Anamnesis {
   created_at: string;
 }
 
+interface MealPlan {
+  id: string;
+  title: string;
+  description: string | null;
+  is_active: boolean;
+  start_date: string;
+  end_date: string | null;
+  created_at: string;
+}
+
 interface PatientProtocol {
   id: string;
   protocol_id: string;
