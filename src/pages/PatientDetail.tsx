@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,7 +23,7 @@ import ConsultationCompare from "@/components/patient/ConsultationCompare";
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
-  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays
+  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send
 } from "lucide-react";
 
 interface PatientProfile {
@@ -88,17 +89,36 @@ export default function PatientDetail() {
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteForm, setNoteForm] = useState({ title: "", description: "", event_type: "note" });
 
+  // Plan management
+  const [planOpen, setPlanOpen] = useState(false);
+  const [patientSubscription, setPatientSubscription] = useState<any>(null);
+  const [pricingPlans, setPricingPlans] = useState<any[]>([]);
+  const [planForm, setPlanForm] = useState({
+    plan_name: "",
+    started_at: new Date().toISOString().split("T")[0],
+    expires_at: "",
+  });
+
+  // Feedback scheduling
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackForm, setFeedbackForm] = useState({
+    days: "3",
+    message: "Como você está se sentindo com o plano alimentar? Gostaria de compartilhar seu progresso?",
+  });
+
   const fetchAll = useCallback(async () => {
     if (!patientId || !user) return;
     setLoading(true);
 
-    const [profileRes, timelineRes, anamnesisRes, ppRes, protocolsRes, checkRes] = await Promise.all([
+    const [profileRes, timelineRes, anamnesisRes, ppRes, protocolsRes, checkRes, subRes, plansRes] = await Promise.all([
       supabase.from("profiles").select("full_name, avatar_url, phone").eq("user_id", patientId).single(),
       supabase.from("patient_timeline").select("*").eq("patient_id", patientId).order("created_at", { ascending: false }).limit(50),
       supabase.from("patient_anamnesis").select("*").eq("user_id", patientId).order("created_at", { ascending: false }).limit(1),
       supabase.from("patient_protocols").select("*").eq("patient_id", patientId).eq("nutritionist_id", user.id).order("created_at", { ascending: false }),
       supabase.from("protocols").select("id, title").eq("created_by", user.id),
       supabase.from("checklist_tasks").select("id, completed").eq("patient_id", patientId).eq("date", new Date().toISOString().split("T")[0]),
+      supabase.from("subscriptions").select("*").eq("user_id", patientId).order("created_at", { ascending: false }).limit(1),
+      supabase.from("pricing_plans").select("*").eq("is_active", true).order("sort_order"),
     ]);
 
     setProfile(profileRes.data);
@@ -117,6 +137,18 @@ export default function PatientDetail() {
         protocol_title: protocolsRes.data?.find((p: any) => p.id === pp.protocol_id)?.title || "Protocolo",
       }));
       setPatientProtocols(enriched);
+    }
+
+    setPatientSubscription(subRes.data?.[0] || null);
+    setPricingPlans(plansRes.data || []);
+
+    // Pre-fill plan form if subscription exists
+    if (subRes.data?.[0]) {
+      setPlanForm({
+        plan_name: subRes.data[0].plan_name,
+        started_at: subRes.data[0].started_at?.split("T")[0] || "",
+        expires_at: subRes.data[0].expires_at?.split("T")[0] || "",
+      });
     }
 
     setLoading(false);
@@ -182,6 +214,64 @@ export default function PatientDetail() {
   const syncChecklist = async (ppId: string) => {
     const { data } = await supabase.rpc("sync_protocol_checklist", { _patient_protocol_id: ppId });
     toast.success(`${data || 0} tarefas sincronizadas para hoje!`);
+  };
+
+  const savePlan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !patientId) return;
+
+    if (patientSubscription) {
+      const { error } = await supabase.from("subscriptions").update({
+        plan_name: planForm.plan_name,
+        started_at: planForm.started_at,
+        expires_at: planForm.expires_at || null,
+      }).eq("id", patientSubscription.id);
+      if (error) { toast.error(error.message); return; }
+      toast.success("Plano atualizado!");
+    } else {
+      const { error } = await supabase.from("subscriptions").insert({
+        user_id: patientId,
+        plan_name: planForm.plan_name,
+        started_at: planForm.started_at,
+        expires_at: planForm.expires_at || null,
+        status: "active",
+      });
+      if (error) { toast.error(error.message); return; }
+      toast.success("Plano atribuído!");
+    }
+    setPlanOpen(false);
+    fetchAll();
+  };
+
+  const scheduleFeedback = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !patientId) return;
+
+    const scheduledDate = new Date();
+    scheduledDate.setDate(scheduledDate.getDate() + parseInt(feedbackForm.days));
+
+    const { error } = await supabase.from("notifications").insert({
+      user_id: patientId,
+      title: "📋 Feedback solicitado",
+      message: feedbackForm.message,
+      type: "feedback",
+      action_url: "/feedbacks",
+      metadata: { scheduled_by: user.id, scheduled_for: scheduledDate.toISOString() },
+    });
+
+    if (error) { toast.error(error.message); return; }
+
+    await supabase.from("patient_timeline").insert({
+      patient_id: patientId,
+      event_type: "note",
+      title: `Feedback agendado para ${scheduledDate.toLocaleDateString("pt-BR")}`,
+      description: feedbackForm.message,
+      created_by: user.id,
+    });
+
+    toast.success(`Feedback agendado para daqui ${feedbackForm.days} dias!`);
+    setFeedbackOpen(false);
+    fetchAll();
   };
 
   if (loading) {
@@ -338,6 +428,9 @@ export default function PatientDetail() {
               <Calculator className="w-3.5 h-3.5 mr-1" /> Calculadoras
             </TabsTrigger>
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
+            <TabsTrigger value="plan">
+              <CreditCard className="w-3.5 h-3.5 mr-1" /> Plano
+            </TabsTrigger>
             <TabsTrigger value="protocols">Protocolos</TabsTrigger>
             <TabsTrigger value="radar">Radar Metabólico</TabsTrigger>
           </TabsList>
@@ -506,6 +599,165 @@ export default function PatientDetail() {
                 })}
               </div>
             )}
+          </TabsContent>
+
+          {/* Plan Management */}
+          <TabsContent value="plan" className="mt-4 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Current Plan */}
+              <div className="glass rounded-xl p-5">
+                <h3 className="font-display font-semibold flex items-center gap-2 mb-4">
+                  <CreditCard className="w-5 h-5 text-primary" /> Plano Atual
+                </h3>
+                {patientSubscription ? (
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Plano</span>
+                      <span className="font-medium text-sm">{patientSubscription.plan_name}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Status</span>
+                      <Badge className={
+                        patientSubscription.status === "active" ? "bg-emerald-500/10 text-emerald-500" :
+                        patientSubscription.status === "expired" ? "bg-red-500/10 text-red-500" :
+                        "bg-muted text-muted-foreground"
+                      }>
+                        {patientSubscription.status === "active" ? "Ativo" :
+                         patientSubscription.status === "expired" ? "Expirado" :
+                         patientSubscription.status === "trial" ? "Trial" : patientSubscription.status}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Início</span>
+                      <span className="text-sm">{new Date(patientSubscription.started_at).toLocaleDateString("pt-BR")}</span>
+                    </div>
+                    {patientSubscription.expires_at && (
+                      <>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">Vencimento</span>
+                          <span className="text-sm">{new Date(patientSubscription.expires_at).toLocaleDateString("pt-BR")}</span>
+                        </div>
+                        {(() => {
+                          const days = Math.ceil((new Date(patientSubscription.expires_at).getTime() - Date.now()) / 86400000);
+                          if (days > 0 && days <= 7) {
+                            return (
+                              <div className="p-3 rounded-lg bg-warning/10 border border-warning/20 flex items-center gap-2">
+                                <AlertTriangle className="w-4 h-4 text-warning" />
+                                <span className="text-xs text-warning font-medium">Mensalidade vence em {days} dia{days > 1 ? "s" : ""}!</span>
+                              </div>
+                            );
+                          }
+                          if (days <= 0) {
+                            return (
+                              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 flex items-center gap-2">
+                                <AlertTriangle className="w-4 h-4 text-destructive" />
+                                <span className="text-xs text-destructive font-medium">Mensalidade vencida!</span>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </>
+                    )}
+                    <Button size="sm" variant="outline" className="w-full mt-2" onClick={() => setPlanOpen(true)}>
+                      Editar Plano
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <CreditCard className="w-10 h-10 text-muted-foreground/50 mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground mb-3">Nenhum plano atribuído</p>
+                    <Button size="sm" className="gradient-primary" onClick={() => setPlanOpen(true)}>
+                      <Plus className="w-4 h-4 mr-1" /> Atribuir Plano
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Feedback Scheduling */}
+              <div className="glass rounded-xl p-5">
+                <h3 className="font-display font-semibold flex items-center gap-2 mb-4">
+                  <Send className="w-5 h-5 text-primary" /> Agendar Feedback
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Envie um lembrete para o paciente dar feedback sobre o acompanhamento.
+                </p>
+                <form onSubmit={scheduleFeedback} className="space-y-3">
+                  <div>
+                    <Label>Enviar daqui a (dias)</Label>
+                    <Select value={feedbackForm.days} onValueChange={(v) => setFeedbackForm({ ...feedbackForm, days: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 dia</SelectItem>
+                        <SelectItem value="2">2 dias</SelectItem>
+                        <SelectItem value="3">3 dias</SelectItem>
+                        <SelectItem value="5">5 dias</SelectItem>
+                        <SelectItem value="7">7 dias</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Mensagem</Label>
+                    <Textarea
+                      value={feedbackForm.message}
+                      onChange={(e) => setFeedbackForm({ ...feedbackForm, message: e.target.value })}
+                      rows={3}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full gradient-primary gap-2">
+                    <Send className="w-4 h-4" /> Agendar Feedback
+                  </Button>
+                </form>
+              </div>
+            </div>
+
+            {/* Plan Edit Dialog */}
+            <Dialog open={planOpen} onOpenChange={setPlanOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle className="font-display">
+                    {patientSubscription ? "Editar Plano" : "Atribuir Plano"}
+                  </DialogTitle>
+                </DialogHeader>
+                <form onSubmit={savePlan} className="space-y-4">
+                  <div>
+                    <Label>Plano</Label>
+                    {pricingPlans.length > 0 ? (
+                      <Select value={planForm.plan_name} onValueChange={(v) => setPlanForm({ ...planForm, plan_name: v })}>
+                        <SelectTrigger><SelectValue placeholder="Selecione um plano..." /></SelectTrigger>
+                        <SelectContent>
+                          {pricingPlans.map((p) => (
+                            <SelectItem key={p.id} value={p.name}>
+                              {p.name} — R$ {Number(p.price_monthly).toFixed(2)}/mês
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input
+                        value={planForm.plan_name}
+                        onChange={(e) => setPlanForm({ ...planForm, plan_name: e.target.value })}
+                        placeholder="Nome do plano"
+                        required
+                      />
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>Data Início</Label>
+                      <Input type="date" value={planForm.started_at} onChange={(e) => setPlanForm({ ...planForm, started_at: e.target.value })} required />
+                    </div>
+                    <div>
+                      <Label>Data Fim</Label>
+                      <Input type="date" value={planForm.expires_at} onChange={(e) => setPlanForm({ ...planForm, expires_at: e.target.value })} />
+                    </div>
+                  </div>
+                  <Button type="submit" className="w-full gradient-primary" disabled={!planForm.plan_name}>
+                    {patientSubscription ? "Atualizar Plano" : "Atribuir Plano"}
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
           </TabsContent>
 
           {/* Protocols */}
