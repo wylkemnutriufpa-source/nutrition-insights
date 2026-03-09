@@ -136,6 +136,7 @@ function PatientDashboardContent() {
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
       {/* Push notification banner */}
       <PushNotificationBanner />
+      <HealthAlertsBanner />
 
       <motion.div variants={item} className="flex items-center justify-between">
         <div>
