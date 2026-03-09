@@ -178,7 +178,7 @@ export default function Landing() {
             </motion.div>
 
             <motion.h1 variants={fadeUp} className="font-display text-4xl sm:text-5xl md:text-7xl font-bold leading-[1.1] mb-6 tracking-tight">
-              Transforme seu consultório com{" "}
+              {heroTitle.split("IA e Gamificação")[0]}
               <span className="relative">
                 <span className="text-gradient">IA e Gamificação</span>
                 <svg className="absolute -bottom-2 left-0 w-full h-3 text-primary/30" viewBox="0 0 300 12" fill="none"><path d="M2 10C50 4 100 2 150 4C200 6 250 2 298 8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /></svg>
@@ -186,8 +186,7 @@ export default function Landing() {
             </motion.h1>
 
             <motion.p variants={fadeUp} className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-              Gerencie pacientes, crie planos alimentares personalizados com IA, e engaje seus clientes
-              com gamificação — tudo em uma plataforma completa e intuitiva.
+              {heroSubtitle}
             </motion.p>
 
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
