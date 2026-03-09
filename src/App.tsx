@@ -39,6 +39,13 @@ import Appointments from "./pages/Appointments";
 import Landing from "./pages/Landing";
 import WeeklyGoals from "./pages/WeeklyGoals";
 import NotFound from "./pages/NotFound";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminFeatureControl from "./pages/AdminFeatureControl";
+import AdminTestimonials from "./pages/AdminTestimonials";
+import AutomationCenter from "./pages/AutomationCenter";
+import WeightCalculator from "./pages/WeightCalculator";
+import WaterCalculator from "./pages/WaterCalculator";
+import HealthCheckQuiz from "./pages/HealthCheckQuiz";
 
 const queryClient = new QueryClient();
 
@@ -127,6 +134,16 @@ const App = () => (
               <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
               <Route path="/weekly-goals" element={<ProtectedRoute><WeeklyGoals /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              {/* Admin routes */}
+              <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+              <Route path="/admin/features" element={<ProtectedRoute><AdminFeatureControl /></ProtectedRoute>} />
+              <Route path="/admin/testimonials" element={<ProtectedRoute><AdminTestimonials /></ProtectedRoute>} />
+              {/* Automation */}
+              <Route path="/automation" element={<ProtectedRoute><AutomationCenter /></ProtectedRoute>} />
+              {/* Calculators */}
+              <Route path="/weight-calculator" element={<ProtectedRoute><WeightCalculator /></ProtectedRoute>} />
+              <Route path="/water-calculator" element={<ProtectedRoute><WaterCalculator /></ProtectedRoute>} />
+              <Route path="/health-quiz" element={<ProtectedRoute><HealthCheckQuiz /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>

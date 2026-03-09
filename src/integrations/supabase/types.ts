@@ -109,6 +109,92 @@ export type Database = {
           },
         ]
       }
+      automation_rules: {
+        Row: {
+          actions: Json
+          conditions: Json
+          cooldown_hours: number
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          nutritionist_id: string
+          trigger_type: string
+          updated_at: string
+        }
+        Insert: {
+          actions?: Json
+          conditions?: Json
+          cooldown_hours?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          nutritionist_id: string
+          trigger_type?: string
+          updated_at?: string
+        }
+        Update: {
+          actions?: Json
+          conditions?: Json
+          cooldown_hours?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          nutritionist_id?: string
+          trigger_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      automation_runs: {
+        Row: {
+          actions_executed: Json | null
+          error_message: string | null
+          executed_at: string
+          id: string
+          nutritionist_id: string
+          patient_id: string | null
+          rule_id: string | null
+          status: string
+          trigger_data: Json | null
+        }
+        Insert: {
+          actions_executed?: Json | null
+          error_message?: string | null
+          executed_at?: string
+          id?: string
+          nutritionist_id: string
+          patient_id?: string | null
+          rule_id?: string | null
+          status?: string
+          trigger_data?: Json | null
+        }
+        Update: {
+          actions_executed?: Json | null
+          error_message?: string | null
+          executed_at?: string
+          id?: string
+          nutritionist_id?: string
+          patient_id?: string | null
+          rule_id?: string | null
+          status?: string
+          trigger_data?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_runs_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "automation_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       body_analyses: {
         Row: {
           ai_analysis: Json | null
@@ -1211,6 +1297,33 @@ export type Database = {
         }
         Relationships: []
       }
+      professional_feature_usage: {
+        Row: {
+          created_at: string
+          feature_name: string
+          id: string
+          nutritionist_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          feature_name: string
+          id?: string
+          nutritionist_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          feature_name?: string
+          id?: string
+          nutritionist_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1640,6 +1753,81 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          features: Json | null
+          id: string
+          max_patients: number | null
+          plan_name: string
+          started_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          features?: Json | null
+          id?: string
+          max_patients?: number | null
+          plan_name?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          features?: Json | null
+          id?: string
+          max_patients?: number | null
+          plan_name?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      testimonials: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_anonymous: boolean
+          nutritionist_id: string | null
+          patient_id: string
+          rating: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          nutritionist_id?: string | null
+          patient_id: string
+          rating?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          nutritionist_id?: string | null
+          patient_id?: string
+          rating?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_achievements: {
         Row: {
           achievement_id: string
@@ -1811,7 +1999,7 @@ export type Database = {
         | "xp_milestone"
         | "consistency"
         | "variety"
-      app_role: "nutritionist" | "patient"
+      app_role: "nutritionist" | "patient" | "admin"
       challenge_status: "active" | "completed" | "expired"
       meal_type:
         | "breakfast"
@@ -1955,7 +2143,7 @@ export const Constants = {
         "consistency",
         "variety",
       ],
-      app_role: ["nutritionist", "patient"],
+      app_role: ["nutritionist", "patient", "admin"],
       challenge_status: ["active", "completed", "expired"],
       meal_type: [
         "breakfast",

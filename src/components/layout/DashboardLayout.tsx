@@ -10,7 +10,8 @@ import {
   Leaf, LogOut, Moon, Sun, ChevronRight, Sparkles, Settings,
   ClipboardCheck, FileText, Rocket, CheckCircle2, Activity,
   MessageSquare, Lightbulb, ChefHat, ShoppingCart, Apple, Camera,
-  Palette, Bell, BarChart3, Menu, X
+  Palette, Bell, BarChart3, Menu, X, Shield, Zap, Star, Bot,
+  Scale, Droplets, Heart, Calculator
 } from "lucide-react";
 import { useState } from "react";
 import NotificationBell from "@/components/notifications/NotificationBell";
@@ -24,6 +25,7 @@ const nutritionistLinks = [
   { to: "/weekly-goals", icon: Target, label: "Metas" },
   { to: "/protocols", icon: FileText, label: "Protocolos" },
   { to: "/programs", icon: Rocket, label: "Programas" },
+  { to: "/automation", icon: Bot, label: "Automação" },
   { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos" },
   { to: "/recipes", icon: ChefHat, label: "Receitas" },
   { to: "/food-database", icon: Apple, label: "Alimentos" },
@@ -44,10 +46,26 @@ const patientLinks = [
   { to: "/shopping-list", icon: ShoppingCart, label: "Compras" },
   { to: "/anamnesis", icon: ClipboardCheck, label: "Anamnese" },
   { to: "/food-database", icon: Apple, label: "Alimentos" },
+  { to: "/weight-calculator", icon: Scale, label: "Peso Ideal" },
+  { to: "/water-calculator", icon: Droplets, label: "Hidratação" },
+  { to: "/health-quiz", icon: Heart, label: "Health Check" },
   { to: "/global-tips", icon: Lightbulb, label: "Dicas" },
   { to: "/feedbacks", icon: MessageSquare, label: "Feedbacks" },
   { to: "/achievements", icon: Trophy, label: "Conquistas" },
   { to: "/challenges", icon: Target, label: "Desafios" },
+];
+
+const adminLinks = [
+  { to: "/admin", icon: Shield, label: "Painel Admin" },
+  { to: "/admin/features", icon: Zap, label: "Feature Flags" },
+  { to: "/admin/testimonials", icon: Star, label: "Depoimentos" },
+  { to: "/patients", icon: Users, label: "Pacientes" },
+  { to: "/appointments", icon: Activity, label: "Agenda" },
+  { to: "/automation", icon: Bot, label: "Automação" },
+  { to: "/reports", icon: BarChart3, label: "Relatórios" },
+  { to: "/food-database", icon: Apple, label: "Alimentos" },
+  { to: "/branding", icon: Palette, label: "Branding" },
+  { to: "/settings", icon: Settings, label: "Configurações" },
 ];
 
 function SidebarContent({
@@ -175,7 +193,7 @@ function SidebarContent({
 }
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { profile, isNutritionist, signOut } = useAuth();
+  const { profile, isNutritionist, isAdmin, signOut } = useAuth();
   const location = useLocation();
   const isMobile = useIsMobile();
   const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
@@ -192,7 +210,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     setMobileOpen(false);
   }, [location.pathname]);
 
-  const links = isNutritionist ? nutritionistLinks : patientLinks;
+  const links = isAdmin ? adminLinks : isNutritionist ? nutritionistLinks : patientLinks;
 
   const toggleDark = () => {
     const newDark = !dark;
@@ -269,7 +287,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         className="flex-1 transition-all duration-200"
         style={{ marginLeft: collapsed ? 72 : 260 }}
       >
-        <div className="fixed top-0 right-0 z-40 p-3" style={{ left: collapsed ? 72 : 260 }}>
+        <div
+          className="fixed top-0 right-0 z-40 p-3 transition-[left] duration-200"
+          style={{ left: collapsed ? 72 : 260 }}
+        >
           <div className="flex justify-end">
             <NotificationBell />
           </div>

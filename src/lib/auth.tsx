@@ -21,6 +21,7 @@ interface AuthContextType {
   loading: boolean;
   isNutritionist: boolean;
   isPatient: boolean;
+  isAdmin: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -109,6 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         isNutritionist: roles.includes("nutritionist"),
         isPatient: roles.includes("patient"),
+        isAdmin: (roles as string[]).includes("admin"),
         signOut,
         refreshProfile,
       }}
