@@ -20,6 +20,7 @@ import PatientAgenda from "@/components/patient/PatientAgenda";
 import BodyEvolutionCard from "@/components/patient/BodyEvolutionCard";
 import HealthScoreRing, { calculateHealthScore } from "@/components/dashboard/HealthScoreRing";
 import ConsultationCompare from "@/components/patient/ConsultationCompare";
+import PatientCheckinsTab from "@/components/patient/PatientCheckinsTab";
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
