@@ -275,142 +275,340 @@ function PatientDashboardContent() {
   );
 }
 
-// ──── Nutritionist Dashboard ────
+// ──── Nutritionist Dashboard 2.0 ────
 function NutritionistDashboardContent() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [patientCount, setPatientCount] = useState(0);
   const [protocolCount, setProtocolCount] = useState(0);
   const [programCount, setProgramCount] = useState(0);
-  const [riskPatients, setRiskPatients] = useState<{ id: string; name: string; risks: string[] }[]>([]);
+  const [mealPlanCount, setMealPlanCount] = useState(0);
+  const [appointmentsToday, setAppointmentsToday] = useState(0);
+  const [unreadChats, setUnreadChats] = useState(0);
+
+  // AI-powered
+  const [aiInsights, setAiInsights] = useState<any[]>([]);
+  const [attentionPatients, setAttentionPatients] = useState<any[]>([]);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiSummary, setAiSummary] = useState<any>(null);
+
+  // Risk & scores
+  const [riskPatients, setRiskPatients] = useState<{ id: string; name: string; score: number; risks: string[] }[]>([]);
+  
+  // Evolution
+  const [evolutionPeriod, setEvolutionPeriod] = useState(7);
+  const [evolutionData, setEvolutionData] = useState({ avgWeight: null as number | null, avgAdherence: 0, totalCheckins: 0, avgScore: 0 });
+
+  // Recent timeline
   const [recentTimeline, setRecentTimeline] = useState<any[]>([]);
 
-  useEffect(() => {
+  const fetchDashboard = useCallback(async () => {
     if (!user) return;
 
-    // Counts
-    supabase.from("nutritionist_patients").select("id, patient_id", { count: "exact" })
-      .eq("nutritionist_id", user.id).eq("status", "active")
-      .then(async ({ count, data }) => {
-        setPatientCount(count || 0);
+    const today = new Date().toISOString().split("T")[0];
+    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
 
-        // Check risk factors for patients
-        if (data) {
-          const riskyPatients: typeof riskPatients = [];
-          for (const p of data.slice(0, 20)) {
-            const { data: anam } = await supabase.from("patient_anamnesis")
-              .select("answers").eq("user_id", p.patient_id).limit(1);
-            const { data: profile } = await supabase.from("profiles")
-              .select("full_name").eq("user_id", p.patient_id).single();
+    // Parallel fetches for counts
+    const [patientsRes, protocolsRes, programsRes, plansRes, aptsRes, chatsRes] = await Promise.all([
+      supabase.from("nutritionist_patients").select("id, patient_id", { count: "exact" }).eq("nutritionist_id", user.id).eq("status", "active"),
+      supabase.from("protocols").select("id", { count: "exact" }).eq("created_by", user.id),
+      supabase.from("programs").select("id", { count: "exact" }).eq("created_by", user.id).eq("is_active", true),
+      supabase.from("meal_plans").select("id", { count: "exact" }).eq("nutritionist_id", user.id).eq("is_active", true),
+      supabase.from("patient_appointments").select("id", { count: "exact" }).eq("nutritionist_id", user.id).gte("appointment_date", todayStart.toISOString()).lte("appointment_date", todayEnd.toISOString()),
+      supabase.from("chat_messages").select("id", { count: "exact", head: true }).eq("receiver_id", user.id).eq("is_read", false),
+    ]);
 
-            if (anam?.[0]?.answers) {
-              const a = anam[0].answers as Record<string, any>;
-              const risks: string[] = [];
-              if (a.health_conditions?.some((c: string) => c !== "none")) risks.push("Condição de saúde");
-              if (a.activity_level === "sedentary") risks.push("Sedentário");
-              if (a.feeling === "terrible" || a.feeling === "bad") risks.push("Insatisfeito");
-              if (risks.length > 0) {
-                riskyPatients.push({ id: p.patient_id, name: profile?.full_name || "Paciente", risks });
-              }
-            }
-          }
-          setRiskPatients(riskyPatients);
+    setPatientCount(patientsRes.count || 0);
+    setProtocolCount(protocolsRes.count || 0);
+    setProgramCount(programsRes.count || 0);
+    setMealPlanCount(plansRes.count || 0);
+    setAppointmentsToday(aptsRes.count || 0);
+    setUnreadChats(chatsRes.count || 0);
+
+    // Process patients for health scores & risk panel
+    const patientIds = patientsRes.data?.map(p => p.patient_id) || [];
+    if (patientIds.length > 0) {
+      const patientDataForAI: any[] = [];
+      const riskList: typeof riskPatients = [];
+      let totalScore = 0;
+      let totalWeight = 0;
+      let weightCount = 0;
+      let totalCheckins = 0;
+      let totalAdherence = 0;
+      let adherenceCount = 0;
+
+      const periodDate = new Date(Date.now() - evolutionPeriod * 86400000).toISOString();
+
+      for (const pid of patientIds.slice(0, 30)) {
+        const [profileRes, anamRes, statsRes, checkRes, mealsRes, assessRes] = await Promise.all([
+          supabase.from("profiles").select("full_name").eq("user_id", pid).single(),
+          supabase.from("patient_anamnesis").select("answers, status").eq("user_id", pid).order("created_at", { ascending: false }).limit(1),
+          supabase.from("player_stats").select("*").eq("user_id", pid).single(),
+          supabase.from("checklist_tasks").select("id, completed").eq("patient_id", pid).gte("date", periodDate.split("T")[0]),
+          supabase.from("meals").select("id").eq("user_id", pid).gte("logged_at", periodDate),
+          supabase.from("physical_assessments").select("weight").eq("patient_id", pid).order("assessment_date", { ascending: false }).limit(1),
+        ]);
+
+        const name = profileRes.data?.full_name || "Paciente";
+        const anam = anamRes.data?.[0];
+        const stats = statsRes.data;
+        const checkTotal = checkRes.data?.length || 0;
+        const checkCompleted = checkRes.data?.filter((t: any) => t.completed).length || 0;
+        const checkCompletion = checkTotal > 0 ? Math.round((checkCompleted / checkTotal) * 100) : 0;
+        const mealCount = mealsRes.data?.length || 0;
+        const weight = assessRes.data?.[0]?.weight;
+
+        // Calculate health score
+        const score = calculateHealthScore({
+          hasAnamnesis: anam?.status === "completed",
+          checklistCompletion: checkCompletion,
+          mealsLogged: mealCount,
+          weightEntries: weight ? 1 : 0,
+          currentStreak: stats?.current_streak || 0,
+          daysAsPatient: 30,
+        });
+
+        totalScore += score;
+        totalCheckins += mealCount + checkCompleted;
+        if (checkTotal > 0) { totalAdherence += checkCompletion; adherenceCount++; }
+        if (weight) { totalWeight += Number(weight); weightCount++; }
+
+        // Determine risks
+        const risks: string[] = [];
+        if (anam?.answers) {
+          const a = anam.answers as Record<string, any>;
+          if (a.health_conditions?.some((c: string) => c !== "none")) risks.push("Condição de saúde");
+          if (a.activity_level === "sedentary") risks.push("Sedentário");
+          if (a.feeling === "terrible" || a.feeling === "bad") risks.push("Insatisfeito");
+          if (a.sleep_quality === "bad" || a.sleep_quality === "terrible") risks.push("Sono ruim");
         }
+        if (checkCompletion < 30 && checkTotal > 0) risks.push("Baixa adesão");
+        if (mealCount === 0) risks.push("Sem registros");
+        if (stats?.current_streak === 0 && stats?.meals_logged > 5) risks.push("Perdeu streak");
+
+        riskList.push({ id: pid, name, score, risks });
+
+        // Prepare data for AI
+        patientDataForAI.push({
+          patient_id: pid,
+          name,
+          score,
+          anamnesis_status: anam?.status || "pending",
+          anamnesis_answers: anam?.answers ? {
+            activity_level: (anam.answers as any).activity_level,
+            feeling: (anam.answers as any).feeling,
+            sleep_quality: (anam.answers as any).sleep_quality,
+            health_conditions: (anam.answers as any).health_conditions,
+            goal: (anam.answers as any).goal,
+          } : null,
+          checklist_completion: checkCompletion,
+          meals_last_period: mealCount,
+          streak: stats?.current_streak || 0,
+          level: stats?.level || 1,
+          risks,
+        });
+      }
+
+      // Sort by score (lowest first = most at risk)
+      riskList.sort((a, b) => a.score - b.score);
+      setRiskPatients(riskList);
+
+      // Evolution data
+      setEvolutionData({
+        avgWeight: weightCount > 0 ? totalWeight / weightCount : null,
+        avgAdherence: adherenceCount > 0 ? Math.round(totalAdherence / adherenceCount) : 0,
+        totalCheckins,
+        avgScore: patientIds.length > 0 ? Math.round(totalScore / Math.min(patientIds.length, 30)) : 0,
       });
 
-    supabase.from("protocols").select("id", { count: "exact" }).eq("created_by", user.id)
-      .then(({ count }) => setProtocolCount(count || 0));
+      // Fetch AI insights (non-blocking)
+      if (patientDataForAI.length > 0) {
+        fetchAIInsights(patientDataForAI);
+      }
+    }
+  }, [user, evolutionPeriod]);
 
-    supabase.from("programs").select("id", { count: "exact" }).eq("created_by", user.id).eq("is_active", true)
-      .then(({ count }) => setProgramCount(count || 0));
-  }, [user]);
+  const fetchAIInsights = async (patientData: any[]) => {
+    setAiLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("clinical-insights", {
+        body: { patients: patientData },
+      });
+
+      if (error) throw error;
+      if (data) {
+        setAiInsights(data.insights || []);
+        setAttentionPatients(data.attention_needed || []);
+        setAiSummary(data.summary || null);
+      }
+    } catch (err) {
+      console.error("AI insights error:", err);
+      // Generate fallback local insights
+      const localInsights = generateLocalInsights(patientData);
+      setAiInsights(localInsights.insights);
+      setAttentionPatients(localInsights.attention);
+    }
+    setAiLoading(false);
+  };
+
+  useEffect(() => { fetchDashboard(); }, [fetchDashboard]);
 
   return (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+      {/* Header */}
       <motion.div variants={item} className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold">Dashboard Profissional</h1>
-          <p className="text-muted-foreground text-sm">Visão geral dos seus pacientes e programas</p>
+          <h1 className="font-display text-2xl md:text-3xl font-bold">Dashboard Clínico</h1>
+          <p className="text-muted-foreground text-sm">Painel inteligente · {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}</p>
         </div>
         <div className="flex gap-2">
           <Link to="/patients">
-            <Button className="gradient-primary gap-2">
+            <Button className="gradient-primary shadow-glow gap-2">
               <Plus className="w-4 h-4" /> Novo Paciente
             </Button>
           </Link>
         </div>
       </motion.div>
 
-      {/* Stats */}
-      <motion.div variants={item} className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatsCard title="Pacientes Ativos" value={patientCount} icon={Users} gradient />
+      {/* Stats Row */}
+      <motion.div variants={item} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <StatsCard title="Pacientes" value={patientCount} icon={Users} gradient />
+        <StatsCard title="Consultas Hoje" value={appointmentsToday} icon={Calendar} />
+        <StatsCard title="Planos Ativos" value={mealPlanCount} icon={UtensilsCrossed} />
         <StatsCard title="Protocolos" value={protocolCount} icon={FileText} />
-        <StatsCard title="Programas Ativos" value={programCount} icon={Rocket} />
-        <StatsCard title="Alertas" value={riskPatients.length} icon={AlertTriangle} />
+        <StatsCard title="Programas" value={programCount} icon={Rocket} />
+        <div className="glass rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:border-primary/30 transition-all" onClick={() => navigate("/chat")}>
+          <MessageSquare className="w-5 h-5 text-primary" />
+          <div>
+            <p className="text-xs text-muted-foreground">Chat</p>
+            <p className="font-display font-bold text-lg">{unreadChats > 0 ? unreadChats : "—"}</p>
+          </div>
+          {unreadChats > 0 && <span className="w-2 h-2 rounded-full bg-primary animate-pulse ml-auto" />}
+        </div>
       </motion.div>
 
-      {/* Risk Panel */}
-      <motion.div variants={item} className="glass rounded-xl p-5">
-        <h2 className="font-display font-semibold flex items-center gap-2 mb-4">
-          <AlertTriangle className="w-5 h-5 text-warning" /> Painel de Risco
-        </h2>
-        {riskPatients.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhum paciente em risco identificado. ✅</p>
-        ) : (
-          <div className="space-y-2">
-            {riskPatients.map((p) => (
-              <div
+      {/* AI Summary Banner */}
+      {aiSummary && (
+        <motion.div variants={item} className="glass rounded-xl p-4 border-primary/20 flex items-center gap-4 flex-wrap">
+          <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
+            <Brain className="w-5 h-5 text-primary-foreground" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold">Resumo da IA</p>
+            <p className="text-xs text-muted-foreground">{aiSummary.total_analyzed} pacientes analisados · {aiSummary.high_risk_count} em risco alto · Principal preocupação: {aiSummary.top_concern}</p>
+          </div>
+          {aiSummary.avg_adherence_estimate && (
+            <div className="text-center px-4">
+              <p className="font-display text-xl font-bold text-primary">{aiSummary.avg_adherence_estimate}%</p>
+              <p className="text-[10px] text-muted-foreground">Adesão estimada</p>
+            </div>
+          )}
+        </motion.div>
+      )}
+
+      {/* Main Grid: Attention + Insights + Risk */}
+      <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <AttentionPatientsPanel patients={attentionPatients} loading={aiLoading} />
+        <AIInsightsPanel insights={aiInsights} loading={aiLoading} />
+        <RiskPanel patients={riskPatients} />
+      </motion.div>
+
+      {/* Evolution Charts */}
+      <motion.div variants={item}>
+        <PatientEvolutionCharts
+          data={evolutionData}
+          activePeriod={evolutionPeriod}
+          onPeriodChange={(days) => setEvolutionPeriod(days)}
+        />
+      </motion.div>
+
+      {/* Patient Health Scores Overview */}
+      {riskPatients.length > 0 && (
+        <motion.div variants={item} className="glass rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Heart className="w-4 h-4 text-primary" />
+            </div>
+            <div>
+              <h2 className="font-display font-semibold">Health Score dos Pacientes</h2>
+              <p className="text-xs text-muted-foreground">Score de 0-100 baseado em adesão, registros e consistência</p>
+            </div>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-2">
+            {riskPatients.slice(0, 8).map((p, i) => (
+              <motion.div
                 key={p.id}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: i * 0.05 }}
                 onClick={() => navigate(`/patients/${p.id}`)}
-                className="flex items-center gap-4 p-3 rounded-lg bg-card border border-border hover:border-warning/30 cursor-pointer transition-all"
+                className="flex flex-col items-center gap-1 min-w-[80px] cursor-pointer hover:opacity-80 transition-opacity"
               >
-                <div className="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center">
-                  <span className="font-bold text-warning">{p.name[0]}</span>
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-sm">{p.name}</p>
-                  <div className="flex gap-2 mt-0.5">
-                    {p.risks.map((r, i) => (
-                      <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-warning/10 text-warning">{r}</span>
-                    ))}
-                  </div>
-                </div>
-                <ArrowRight className="w-4 h-4 text-muted-foreground" />
-              </div>
+                <HealthScoreRing score={p.score} size="sm" />
+                <p className="text-xs font-medium truncate max-w-[80px] text-center">{p.name.split(" ")[0]}</p>
+              </motion.div>
             ))}
           </div>
-        )}
-      </motion.div>
+        </motion.div>
+      )}
 
-      {/* Quick Actions */}
-      <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Link to="/protocols" className="glass rounded-xl p-5 hover:border-primary/30 transition-all group">
-          <FileText className="w-8 h-8 text-primary mb-3" />
-          <h3 className="font-display font-semibold">Protocolos</h3>
-          <p className="text-sm text-muted-foreground mt-1">Crie e gerencie protocolos de atendimento</p>
-          <span className="text-primary text-sm mt-2 flex items-center gap-1 group-hover:gap-2 transition-all">
-            Acessar <ArrowRight className="w-3 h-3" />
-          </span>
-        </Link>
-        <Link to="/programs" className="glass rounded-xl p-5 hover:border-primary/30 transition-all group">
-          <Rocket className="w-8 h-8 text-accent mb-3" />
-          <h3 className="font-display font-semibold">Programas</h3>
-          <p className="text-sm text-muted-foreground mt-1">Projetos como "Biquíni Branco" e desafios</p>
-          <span className="text-primary text-sm mt-2 flex items-center gap-1 group-hover:gap-2 transition-all">
-            Acessar <ArrowRight className="w-3 h-3" />
-          </span>
-        </Link>
-        <Link to="/meal-plans" className="glass rounded-xl p-5 hover:border-primary/30 transition-all group">
-          <UtensilsCrossed className="w-8 h-8 text-success mb-3" />
-          <h3 className="font-display font-semibold">Planos Alimentares</h3>
-          <p className="text-sm text-muted-foreground mt-1">Monte e ajuste planos para seus pacientes</p>
-          <span className="text-primary text-sm mt-2 flex items-center gap-1 group-hover:gap-2 transition-all">
-            Acessar <ArrowRight className="w-3 h-3" />
-          </span>
-        </Link>
+      {/* Quick Actions Grid */}
+      <motion.div variants={item} className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { to: "/protocols", icon: FileText, label: "Protocolos", desc: "Criar e gerenciar", color: "text-primary" },
+          { to: "/programs", icon: Rocket, label: "Programas", desc: "Projetos em grupo", color: "text-accent" },
+          { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos", desc: "Alimentares", color: "text-success" },
+          { to: "/supplements", icon: Pill, label: "Suplementos", desc: "Prescrever", color: "text-info" },
+          { to: "/recipes", icon: ChefHat, label: "Receitas", desc: "Criar e compartilhar", color: "text-warning" },
+          { to: "/automation", icon: Bot, label: "Automação", desc: "Regras inteligentes", color: "text-primary" },
+          { to: "/reports", icon: BarChart3, label: "Relatórios", desc: "Gerar com IA", color: "text-accent" },
+          { to: "/appointments", icon: Calendar, label: "Agenda", desc: `${appointmentsToday} hoje`, color: "text-info" },
+        ].map((action) => (
+          <Link key={action.to} to={action.to} className="glass rounded-xl p-4 hover:border-primary/30 transition-all group">
+            <action.icon className={`w-6 h-6 ${action.color} mb-2 group-hover:scale-110 transition-transform`} />
+            <p className="font-display font-semibold text-sm">{action.label}</p>
+            <p className="text-[10px] text-muted-foreground">{action.desc}</p>
+          </Link>
+        ))}
       </motion.div>
     </motion.div>
   );
+}
+
+// Local fallback insights when AI is unavailable
+function generateLocalInsights(patients: any[]) {
+  const insights: any[] = [];
+  const attention: any[] = [];
+
+  const lowAdherence = patients.filter(p => p.checklist_completion < 30 && p.checklist_completion >= 0);
+  const noMeals = patients.filter(p => p.meals_last_period === 0);
+  const badSleep = patients.filter(p => p.anamnesis_answers?.sleep_quality === "bad" || p.anamnesis_answers?.sleep_quality === "terrible");
+  const sedentary = patients.filter(p => p.anamnesis_answers?.activity_level === "sedentary");
+  const lostStreak = patients.filter(p => p.streak === 0 && p.score > 20);
+
+  if (lowAdherence.length > 0) {
+    insights.push({ title: "Baixa adesão ao checklist", description: `${lowAdherence.length} paciente(s) com menos de 30% de adesão ao checklist.`, category: "adherence", severity: "warning", affected_count: lowAdherence.length });
+    lowAdherence.forEach(p => attention.push({ patient_id: p.patient_id, patient_name: p.name, reason: "Baixa adesão ao checklist", priority: "high" }));
+  }
+  if (noMeals.length > 0) {
+    insights.push({ title: "Sem registros alimentares", description: `${noMeals.length} paciente(s) não registraram refeições recentemente.`, category: "nutrition", severity: "critical", affected_count: noMeals.length });
+    noMeals.forEach(p => attention.push({ patient_id: p.patient_id, patient_name: p.name, reason: "Ausência de registros alimentares", priority: "high" }));
+  }
+  if (badSleep.length > 0) {
+    insights.push({ title: "Qualidade de sono ruim", description: `${badSleep.length} paciente(s) relataram sono ruim na anamnese.`, category: "sleep", severity: "warning", affected_count: badSleep.length });
+  }
+  if (sedentary.length > 0) {
+    insights.push({ title: "Pacientes sedentários", description: `${sedentary.length} paciente(s) com nível sedentário de atividade.`, category: "metabolism", severity: "info", affected_count: sedentary.length });
+  }
+  if (lostStreak.length > 0) {
+    insights.push({ title: "Streaks perdidos", description: `${lostStreak.length} paciente(s) perderam seus streaks de consistência.`, category: "adherence", severity: "warning", affected_count: lostStreak.length });
+  }
+  if (insights.length === 0) {
+    insights.push({ title: "Tudo em ordem!", description: "Seus pacientes estão com boa adesão e progresso.", category: "progress", severity: "info" });
+  }
+
+  return { insights, attention };
 }
 
 export default function Index() {
