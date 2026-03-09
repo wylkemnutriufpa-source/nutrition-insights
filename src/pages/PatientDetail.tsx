@@ -16,6 +16,8 @@ import MetabolicRadar from "@/components/dashboard/MetabolicRadar";
 import { AnamnesisInsightsFull } from "@/components/patient/AnamnesisInsightsCard";
 import PatientCalculators from "@/components/patient/PatientCalculators";
 import PatientAgenda from "@/components/patient/PatientAgenda";
+import BodyEvolutionCard from "@/components/patient/BodyEvolutionCard";
+import ConsultationCompare from "@/components/patient/ConsultationCompare";
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
@@ -385,20 +387,24 @@ export default function PatientDetail() {
             <AnamnesisInsightsFull userId={patientId!} />
           </TabsContent>
 
-          {/* Physical Assessment */}
-          <TabsContent value="assessment" className="mt-4">
-            <div className="glass rounded-xl p-8 text-center">
-              <Scale className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-              <h3 className="font-display font-semibold text-lg mb-2">Avaliação Física Completa</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Medidas corporais, dobras cutâneas, composição corporal e gasto energético.
-              </p>
+          {/* Physical Assessment - Now with full evolution */}
+          <TabsContent value="assessment" className="mt-4 space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-xl font-bold flex items-center gap-2">
+                <Activity className="w-6 h-6 text-primary" /> Evolução Física
+              </h2>
               <Button
                 onClick={() => navigate(`/physical-assessment?patientId=${patientId}`)}
                 className="gradient-primary gap-2 shadow-glow"
               >
-                <Activity className="w-4 h-4" /> Abrir Avaliação Física
+                <Scale className="w-4 h-4" /> Nova Avaliação
               </Button>
+            </div>
+            <BodyEvolutionCard patientId={patientId!} />
+            
+            <div className="border-t border-border pt-6">
+              <h3 className="font-display text-lg font-semibold mb-4">Comparativo entre Consultas</h3>
+              <ConsultationCompare patientId={patientId!} />
             </div>
           </TabsContent>
 
