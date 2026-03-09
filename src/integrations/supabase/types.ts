@@ -1136,6 +1136,62 @@ export type Database = {
         }
         Relationships: []
       }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          gateway: Database["public"]["Enums"]["payment_gateway"]
+          gateway_payment_id: string | null
+          id: string
+          metadata: Json | null
+          paid_at: string | null
+          payment_method: string | null
+          status: string
+          subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          gateway: Database["public"]["Enums"]["payment_gateway"]
+          gateway_payment_id?: string | null
+          id?: string
+          metadata?: Json | null
+          paid_at?: string | null
+          payment_method?: string | null
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          gateway?: Database["public"]["Enums"]["payment_gateway"]
+          gateway_payment_id?: string | null
+          id?: string
+          metadata?: Json | null
+          paid_at?: string | null
+          payment_method?: string | null
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       physical_assessments: {
         Row: {
           abdomen: number | null
@@ -1351,6 +1407,57 @@ export type Database = {
           total_xp?: number
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      pricing_plans: {
+        Row: {
+          created_at: string
+          currency: string
+          description: string | null
+          features: Json
+          id: string
+          is_active: boolean
+          is_featured: boolean
+          max_patients: number | null
+          name: string
+          price_monthly: number
+          price_yearly: number | null
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          is_featured?: boolean
+          max_patients?: number | null
+          name: string
+          price_monthly?: number
+          price_yearly?: number | null
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          is_featured?: boolean
+          max_patients?: number | null
+          name?: string
+          price_monthly?: number
+          price_yearly?: number | null
+          slug?: string
+          sort_order?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -2096,6 +2203,12 @@ export type Database = {
         | "afternoon_snack"
         | "dinner"
         | "evening_snack"
+      payment_gateway:
+        | "stripe"
+        | "mercado_pago"
+        | "pagseguro"
+        | "pix"
+        | "manual"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2241,6 +2354,7 @@ export const Constants = {
         "dinner",
         "evening_snack",
       ],
+      payment_gateway: ["stripe", "mercado_pago", "pagseguro", "pix", "manual"],
     },
   },
 } as const
