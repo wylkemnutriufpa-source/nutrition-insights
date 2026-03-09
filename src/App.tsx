@@ -131,6 +131,7 @@ const App = () => (
             <DarkModeInit />
             <Routes>
               <Route path="/landing" element={<Landing />} />
+              <Route path="/biquini-branco" element={<BiquiniBrancoLanding />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
