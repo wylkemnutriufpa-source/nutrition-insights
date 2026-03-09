@@ -170,6 +170,15 @@ export default function AdminDashboard() {
                   </div>
                 </CardContent>
               </Card>
+              <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => window.open("/landing", "_blank")}>
+                <CardContent className="flex items-center gap-4 py-6">
+                  <Eye className="w-8 h-8 text-info" />
+                  <div>
+                    <p className="font-display font-semibold">Ver Landing Page</p>
+                    <p className="text-sm text-muted-foreground">Visualizar a página pública do site</p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
             <Card className="glass shadow-card">
