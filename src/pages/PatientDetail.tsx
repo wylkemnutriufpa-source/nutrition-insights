@@ -600,6 +600,165 @@ export default function PatientDetail() {
             )}
           </TabsContent>
 
+          {/* Plan Management */}
+          <TabsContent value="plan" className="mt-4 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Current Plan */}
+              <div className="glass rounded-xl p-5">
+                <h3 className="font-display font-semibold flex items-center gap-2 mb-4">
+                  <CreditCard className="w-5 h-5 text-primary" /> Plano Atual
+                </h3>
+                {patientSubscription ? (
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Plano</span>
+                      <span className="font-medium text-sm">{patientSubscription.plan_name}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Status</span>
+                      <Badge className={
+                        patientSubscription.status === "active" ? "bg-emerald-500/10 text-emerald-500" :
+                        patientSubscription.status === "expired" ? "bg-red-500/10 text-red-500" :
+                        "bg-muted text-muted-foreground"
+                      }>
+                        {patientSubscription.status === "active" ? "Ativo" :
+                         patientSubscription.status === "expired" ? "Expirado" :
+                         patientSubscription.status === "trial" ? "Trial" : patientSubscription.status}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Início</span>
+                      <span className="text-sm">{new Date(patientSubscription.started_at).toLocaleDateString("pt-BR")}</span>
+                    </div>
+                    {patientSubscription.expires_at && (
+                      <>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">Vencimento</span>
+                          <span className="text-sm">{new Date(patientSubscription.expires_at).toLocaleDateString("pt-BR")}</span>
+                        </div>
+                        {(() => {
+                          const days = Math.ceil((new Date(patientSubscription.expires_at).getTime() - Date.now()) / 86400000);
+                          if (days > 0 && days <= 7) {
+                            return (
+                              <div className="p-3 rounded-lg bg-warning/10 border border-warning/20 flex items-center gap-2">
+                                <AlertTriangle className="w-4 h-4 text-warning" />
+                                <span className="text-xs text-warning font-medium">Mensalidade vence em {days} dia{days > 1 ? "s" : ""}!</span>
+                              </div>
+                            );
+                          }
+                          if (days <= 0) {
+                            return (
+                              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 flex items-center gap-2">
+                                <AlertTriangle className="w-4 h-4 text-destructive" />
+                                <span className="text-xs text-destructive font-medium">Mensalidade vencida!</span>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </>
+                    )}
+                    <Button size="sm" variant="outline" className="w-full mt-2" onClick={() => setPlanOpen(true)}>
+                      Editar Plano
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <CreditCard className="w-10 h-10 text-muted-foreground/50 mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground mb-3">Nenhum plano atribuído</p>
+                    <Button size="sm" className="gradient-primary" onClick={() => setPlanOpen(true)}>
+                      <Plus className="w-4 h-4 mr-1" /> Atribuir Plano
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Feedback Scheduling */}
+              <div className="glass rounded-xl p-5">
+                <h3 className="font-display font-semibold flex items-center gap-2 mb-4">
+                  <Send className="w-5 h-5 text-primary" /> Agendar Feedback
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Envie um lembrete para o paciente dar feedback sobre o acompanhamento.
+                </p>
+                <form onSubmit={scheduleFeedback} className="space-y-3">
+                  <div>
+                    <Label>Enviar daqui a (dias)</Label>
+                    <Select value={feedbackForm.days} onValueChange={(v) => setFeedbackForm({ ...feedbackForm, days: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 dia</SelectItem>
+                        <SelectItem value="2">2 dias</SelectItem>
+                        <SelectItem value="3">3 dias</SelectItem>
+                        <SelectItem value="5">5 dias</SelectItem>
+                        <SelectItem value="7">7 dias</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Mensagem</Label>
+                    <Textarea
+                      value={feedbackForm.message}
+                      onChange={(e) => setFeedbackForm({ ...feedbackForm, message: e.target.value })}
+                      rows={3}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full gradient-primary gap-2">
+                    <Send className="w-4 h-4" /> Agendar Feedback
+                  </Button>
+                </form>
+              </div>
+            </div>
+
+            {/* Plan Edit Dialog */}
+            <Dialog open={planOpen} onOpenChange={setPlanOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle className="font-display">
+                    {patientSubscription ? "Editar Plano" : "Atribuir Plano"}
+                  </DialogTitle>
+                </DialogHeader>
+                <form onSubmit={savePlan} className="space-y-4">
+                  <div>
+                    <Label>Plano</Label>
+                    {pricingPlans.length > 0 ? (
+                      <Select value={planForm.plan_name} onValueChange={(v) => setPlanForm({ ...planForm, plan_name: v })}>
+                        <SelectTrigger><SelectValue placeholder="Selecione um plano..." /></SelectTrigger>
+                        <SelectContent>
+                          {pricingPlans.map((p) => (
+                            <SelectItem key={p.id} value={p.name}>
+                              {p.name} — R$ {Number(p.price_monthly).toFixed(2)}/mês
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input
+                        value={planForm.plan_name}
+                        onChange={(e) => setPlanForm({ ...planForm, plan_name: e.target.value })}
+                        placeholder="Nome do plano"
+                        required
+                      />
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>Data Início</Label>
+                      <Input type="date" value={planForm.started_at} onChange={(e) => setPlanForm({ ...planForm, started_at: e.target.value })} required />
+                    </div>
+                    <div>
+                      <Label>Data Fim</Label>
+                      <Input type="date" value={planForm.expires_at} onChange={(e) => setPlanForm({ ...planForm, expires_at: e.target.value })} />
+                    </div>
+                  </div>
+                  <Button type="submit" className="w-full gradient-primary" disabled={!planForm.plan_name}>
+                    {patientSubscription ? "Atualizar Plano" : "Atribuir Plano"}
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </TabsContent>
+
           {/* Protocols */}
           <TabsContent value="protocols" className="mt-4 space-y-3">
             {patientProtocols.length === 0 ? (
