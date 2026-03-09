@@ -39,14 +39,14 @@ const howItWorks = [
   { step: "04", title: "Acompanhe com IA", desc: "A IA analisa evolução, gera relatórios e sugere ajustes automaticamente.", icon: Brain },
 ];
 
-const testimonials = [
+const defaultTestimonials = [
   { name: "Dra. Ana Costa", role: "Nutricionista Esportiva", text: "O NutriFlow revolucionou meu atendimento. A IA me economiza 3h por dia e meus pacientes adoram a gamificação!", rating: 5, avatar: "AC" },
   { name: "Dr. Carlos Silva", role: "Nutricionista Clínico", text: "Meus pacientes nunca foram tão engajados. A adesão ao tratamento subiu 60% com os streaks e desafios.", rating: 5, avatar: "CS" },
   { name: "Dra. Mariana Luz", role: "Nutricionista Funcional", text: "Relatórios profissionais com 1 clique, análise corporal por IA, chat integrado. Tudo que eu precisava em um só lugar.", rating: 5, avatar: "ML" },
   { name: "Dr. Rafael Mendes", role: "Nutricionista Comportamental", text: "O AutoBot responde meus pacientes 24/7 sobre dúvidas de nutrição. É como ter um assistente que nunca dorme.", rating: 5, avatar: "RM" },
 ];
 
-const plans = [
+const defaultPlans = [
   {
     name: "Starter", price: "Grátis", period: "para sempre", popular: false,
     features: ["Até 5 pacientes", "Planos alimentares", "Checklist de hábitos", "Chat básico", "Banco de alimentos TACO"],
@@ -64,7 +64,7 @@ const plans = [
   },
 ];
 
-const faqs = [
+const defaultFaqs = [
   { q: "Preciso instalar alguma coisa?", a: "Não! NutriFlow é 100% web e PWA. Funciona no navegador e pode ser instalado como app no celular." },
   { q: "Meus pacientes precisam pagar?", a: "Não. Apenas o profissional paga pelo plano. Pacientes acessam gratuitamente com login próprio." },
   { q: "A IA substitui o nutricionista?", a: "Jamais! A IA é sua assistente — analisa dados, gera sugestões e economiza tempo. Todas as decisões clínicas são suas." },
@@ -73,7 +73,7 @@ const faqs = [
   { q: "Tem suporte?", a: "Sim! Chat in-app e email para todos. Suporte prioritário para planos Pro e Clínica." },
 ];
 
-const stats = [
+const defaultStats = [
   { value: "500+", label: "Nutricionistas" },
   { value: "10k+", label: "Pacientes ativos" },
   { value: "60%", label: "Mais adesão" },
