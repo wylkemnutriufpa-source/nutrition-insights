@@ -601,7 +601,7 @@ export default function Landing() {
                 <div className="w-8 h-8 rounded-xl gradient-primary flex items-center justify-center">
                   <Sparkles className="w-4 h-4 text-primary-foreground" />
                 </div>
-                <span className="font-display font-bold text-lg">NutriFlow</span>
+                <span className="font-display font-bold text-lg">{brandName}</span>
               </div>
               <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">
                 Plataforma de nutrição inteligente com IA e gamificação. Transforme seu consultório e engaje seus pacientes como nunca.
