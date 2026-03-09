@@ -98,13 +98,14 @@ export default function PlanScheduler({ mealPlanId, planTitle }: PlanSchedulerPr
     if (!form.activate_at) return;
     setSubmitting(true);
 
-    const { error } = await supabase.from("plan_schedules").insert({
+    const criteriaJson = JSON.parse(JSON.stringify(form.criteria));
+    const { error } = await supabase.from("plan_schedules").insert([{
       meal_plan_id: mealPlanId,
       activate_at: form.activate_at,
       deactivate_at: form.deactivate_at || null,
-      criteria: form.criteria as unknown as Record<string, unknown>,
+      criteria: criteriaJson,
       status: "scheduled",
-    });
+    }]);
 
     if (error) {
       toast.error("Erro: " + error.message);
