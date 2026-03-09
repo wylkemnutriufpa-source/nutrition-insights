@@ -1986,6 +1986,7 @@ export type Database = {
         Args: { _program_id: string; _user_id: string }
         Returns: boolean
       }
+      promote_to_admin: { Args: { _user_email: string }; Returns: string }
       sync_protocol_checklist: {
         Args: { _date?: string; _patient_protocol_id: string }
         Returns: number
