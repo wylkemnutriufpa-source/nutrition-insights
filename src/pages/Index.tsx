@@ -132,6 +132,9 @@ function PatientDashboardContent() {
       </Dialog>
 
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+      {/* Push notification banner */}
+      <PushNotificationBanner />
+
       <motion.div variants={item} className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold">Meu Dashboard</h1>
