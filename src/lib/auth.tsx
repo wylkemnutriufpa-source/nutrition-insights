@@ -58,6 +58,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Auto sign-out on tab close if "remember me" was unchecked
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (sessionStorage.getItem("fitjourney_session_only") === "true") {
+        supabase.auth.signOut();
+        sessionStorage.removeItem("fitjourney_session_only");
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, []);
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
