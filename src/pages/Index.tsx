@@ -12,6 +12,7 @@ import MetabolicRadar from "@/components/dashboard/MetabolicRadar";
 import SubscriptionCard from "@/components/patient/SubscriptionCard";
 import PatientEvolutionSummary from "@/components/patient/PatientEvolutionSummary";
 import PushNotificationBanner from "@/components/notifications/PushNotificationBanner";
+import HealthAlertsBanner from "@/components/patient/HealthAlertsBanner";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   UtensilsCrossed, Users, TrendingUp, Target, Sparkles, Plus,
