@@ -58,6 +58,8 @@ import Supplements from "./pages/Supplements";
 import Pricing from "./pages/Pricing";
 import PatientMealPlan from "./pages/PatientMealPlan";
 import BiquiniBrancoLanding from "./pages/BiquiniBrancoLanding";
+import Checkin from "./pages/Checkin";
+import CheckinPanel from "./pages/CheckinPanel";
 
 const queryClient = new QueryClient();
 
