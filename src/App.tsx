@@ -51,6 +51,7 @@ import Journey from "./pages/Journey";
 import Library from "./pages/Library";
 import Financial from "./pages/Financial";
 import WeeklyReport from "./pages/WeeklyReport";
+import Supplements from "./pages/Supplements";
 
 const queryClient = new QueryClient();
 
