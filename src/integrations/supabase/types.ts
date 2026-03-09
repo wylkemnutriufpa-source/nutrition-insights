@@ -1811,7 +1811,7 @@ export type Database = {
         | "xp_milestone"
         | "consistency"
         | "variety"
-      app_role: "nutritionist" | "patient"
+      app_role: "nutritionist" | "patient" | "admin"
       challenge_status: "active" | "completed" | "expired"
       meal_type:
         | "breakfast"
@@ -1955,7 +1955,7 @@ export const Constants = {
         "consistency",
         "variety",
       ],
-      app_role: ["nutritionist", "patient"],
+      app_role: ["nutritionist", "patient", "admin"],
       challenge_status: ["active", "completed", "expired"],
       meal_type: [
         "breakfast",
