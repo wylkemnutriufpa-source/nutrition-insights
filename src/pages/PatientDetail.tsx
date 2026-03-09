@@ -85,6 +85,7 @@ export default function PatientDetail() {
   const [anamnesis, setAnamnesis] = useState<Anamnesis | null>(null);
   const [patientProtocols, setPatientProtocols] = useState<PatientProtocol[]>([]);
   const [protocols, setProtocols] = useState<any[]>([]);
+  const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
   const [checklistStats, setChecklistStats] = useState({ total: 0, completed: 0 });
   const [loading, setLoading] = useState(true);
 
