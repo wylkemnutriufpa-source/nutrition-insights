@@ -15,16 +15,17 @@ export function useSiteSettings() {
   return useQuery({
     queryKey: ["site-settings"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("site_settings" as any)
+      const { data, error } = await (supabase as any)
+        .from("site_settings")
         .select("*")
         .order("category");
       if (error) throw error;
+      const rows = (data || []) as SiteSetting[];
       const map: Record<string, any> = {};
-      (data as any[])?.forEach((s: any) => {
+      rows.forEach((s) => {
         map[s.setting_key] = s.setting_value;
       });
-      return { raw: data as SiteSetting[], map };
+      return { raw: rows, map };
     },
     staleTime: 1000 * 60 * 5,
   });
