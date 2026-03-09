@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Helmet } from "react-helmet-async";
 import {
-  Sparkles, ArrowRight, CheckCircle2, Flame, Heart, Scale,
+  Sparkles, ArrowRight, ArrowLeft, CheckCircle2, Flame, Heart, Scale,
   Target, Trophy, Zap, Star, ChevronDown, Users, Calendar
 } from "lucide-react";
 
@@ -33,6 +33,8 @@ const testimonials = [
 ];
 
 export default function BiquiniBrancoLanding() {
+  const navigate = useNavigate();
+
   return (
     <>
       <Helmet>
@@ -44,7 +46,10 @@ export default function BiquiniBrancoLanding() {
         {/* Nav */}
         <nav className="fixed top-0 inset-x-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
           <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="shrink-0">
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
               <span className="text-2xl">👙</span>
               <span className="font-bold text-lg tracking-tight">Biquíni Branco</span>
             </div>
