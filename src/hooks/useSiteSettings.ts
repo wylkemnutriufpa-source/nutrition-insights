@@ -49,9 +49,9 @@ export function useUpdateSiteSetting() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ key, value }: { key: string; value: any }) => {
-      const { error } = await supabase
-        .from("site_settings" as any)
-        .update({ setting_value: value, updated_at: new Date().toISOString() } as any)
+      const { error } = await (supabase as any)
+        .from("site_settings")
+        .update({ setting_value: value, updated_at: new Date().toISOString() })
         .eq("setting_key", key);
       if (error) throw error;
     },
