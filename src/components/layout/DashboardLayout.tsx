@@ -11,7 +11,8 @@ import {
   ClipboardCheck, FileText, Rocket, CheckCircle2, Activity,
   MessageSquare, Lightbulb, ChefHat, ShoppingCart, Apple, Camera,
   Palette, Bell, BarChart3, Menu, X, Shield, Zap, Star, Bot,
-  Scale, Droplets, Heart, Calculator
+  Scale, Droplets, Heart, Calculator, TrendingUp, BookOpen, DollarSign
+} from "lucide-react";
 } from "lucide-react";
 import { useState } from "react";
 import NotificationBell from "@/components/notifications/NotificationBell";
