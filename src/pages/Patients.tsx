@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Users, Plus, Mail, UserCheck, UserX, ChevronRight } from "lucide-react";
+import { Users, Plus, Mail, UserCheck, UserX, ChevronRight, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface PatientInfo {
@@ -18,6 +18,37 @@ interface PatientInfo {
   notes: string | null;
   created_at: string;
   profile?: { full_name: string; avatar_url: string | null } | null;
+  priorityScore?: number;
+}
+
+function computeScore(stats: any, checklistData: any): number {
+  let score = 0;
+  // Checklist adherence (40%)
+  if (checklistData) {
+    const total = checklistData.total || 0;
+    const completed = checklistData.completed || 0;
+    score += total > 0 ? Math.round((completed / total) * 40) : 20;
+  }
+  // Login / activity (20%)
+  if (stats?.last_meal_date) {
+    const daysSince = Math.floor((Date.now() - new Date(stats.last_meal_date).getTime()) / 86400000);
+    score += daysSince <= 1 ? 20 : daysSince <= 3 ? 15 : daysSince <= 7 ? 10 : 5;
+  }
+  // XP & engagement (20%)
+  if (stats?.total_xp) {
+    score += stats.total_xp > 500 ? 20 : stats.total_xp > 100 ? 15 : 10;
+  }
+  // Streak (20%)
+  if (stats?.current_streak) {
+    score += stats.current_streak >= 7 ? 20 : stats.current_streak >= 3 ? 15 : stats.current_streak >= 1 ? 10 : 5;
+  }
+  return Math.min(100, Math.max(0, score));
+}
+
+function scoreBadge(score: number) {
+  if (score >= 70) return { label: `${score}`, bg: "bg-success/10 text-success" };
+  if (score >= 40) return { label: `${score}`, bg: "bg-warning/10 text-warning" };
+  return { label: `${score}`, bg: "bg-destructive/10 text-destructive" };
 }
 
 export default function Patients() {
@@ -30,6 +61,7 @@ export default function Patients() {
   const [patientName, setPatientName] = useState("");
   const [patientPassword, setPatientPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [search, setSearch] = useState("");
 
   const fetchPatients = async () => {
     if (!user) return;
@@ -40,16 +72,32 @@ export default function Patients() {
       .order("created_at", { ascending: false });
 
     if (data) {
-      const enriched = await Promise.all(
-        data.map(async (p) => {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("full_name, avatar_url")
-            .eq("user_id", p.patient_id)
-            .single();
-          return { ...p, profile };
-        })
-      );
+      const patientIds = data.map(p => p.patient_id);
+
+      // Batch fetch profiles, stats, and checklist
+      const [profilesRes, statsRes, checklistRes] = await Promise.all([
+        Promise.all(patientIds.map(id =>
+          supabase.from("profiles").select("full_name, avatar_url").eq("user_id", id).single()
+        )),
+        Promise.all(patientIds.map(id =>
+          supabase.from("player_stats").select("last_meal_date, total_xp, current_streak").eq("user_id", id).single()
+        )),
+        Promise.all(patientIds.map(id =>
+          supabase.from("checklist_tasks").select("id, completed").eq("patient_id", id).eq("date", new Date().toISOString().split("T")[0])
+        )),
+      ]);
+
+      const enriched = data.map((p, i) => ({
+        ...p,
+        profile: profilesRes[i]?.data,
+        priorityScore: computeScore(
+          statsRes[i]?.data,
+          { total: checklistRes[i]?.data?.length || 0, completed: checklistRes[i]?.data?.filter(t => t.completed).length || 0 }
+        ),
+      }));
+
+      // Sort by priority score (lowest first = needs more attention)
+      enriched.sort((a, b) => (a.priorityScore || 0) - (b.priorityScore || 0));
       setPatients(enriched);
     }
     setLoading(false);
@@ -65,7 +113,6 @@ export default function Patients() {
     setSubmitting(true);
 
     try {
-      // Create patient account via secure DB function
       const { data: patientId, error: createError } = await supabase
         .rpc("create_patient_account", {
           _email: email.trim().toLowerCase(),
@@ -76,7 +123,6 @@ export default function Patients() {
       if (createError) throw createError;
       if (!patientId) throw new Error("Erro ao criar conta do paciente");
 
-      // Link nutritionist to patient
       const { error: linkError } = await supabase.from("nutritionist_patients").insert({
         nutritionist_id: user.id,
         patient_id: patientId,
@@ -117,10 +163,14 @@ export default function Patients() {
     }
   };
 
+  const filtered = search
+    ? patients.filter(p => p.profile?.full_name?.toLowerCase().includes(search.toLowerCase()))
+    : patients;
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="font-display text-2xl font-bold flex items-center gap-2">
               <Users className="w-7 h-7 text-primary" /> Pacientes
@@ -179,51 +229,70 @@ export default function Patients() {
           </Dialog>
         </div>
 
+        {/* Search */}
+        <div className="relative max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar paciente..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
         {loading ? (
           <div className="flex items-center justify-center h-40">
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
-        ) : patients.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div className="glass rounded-xl p-12 text-center">
             <Users className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-            <h3 className="font-display font-semibold text-lg mb-1">Nenhum paciente</h3>
-            <p className="text-muted-foreground">Adicione seu primeiro paciente para começar.</p>
+            <h3 className="font-display font-semibold text-lg mb-1">{search ? "Nenhum resultado" : "Nenhum paciente"}</h3>
+            <p className="text-muted-foreground">{search ? "Tente outro termo" : "Adicione seu primeiro paciente para começar."}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {patients.map((p) => (
-              <motion.div
-                key={p.id}
-                whileHover={{ y: -2 }}
-                className="glass rounded-xl p-5 shadow-card cursor-pointer"
-                onClick={() => navigate(`/patients/${p.patient_id}`)}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-lg font-bold text-primary">
-                      {(p.profile?.full_name || "P")[0].toUpperCase()}
-                    </span>
+            {filtered.map((p) => {
+              const badge = scoreBadge(p.priorityScore || 0);
+              return (
+                <motion.div
+                  key={p.id}
+                  whileHover={{ y: -2 }}
+                  className="glass rounded-xl p-5 shadow-card cursor-pointer"
+                  onClick={() => navigate(`/patients/${p.patient_id}`)}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-lg font-bold text-primary">
+                        {(p.profile?.full_name || "P")[0].toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-display font-semibold">{p.profile?.full_name || "Paciente"}</h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${
+                          p.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
+                        }`}>
+                          {p.status === "active" ? "Ativo" : "Inativo"}
+                        </span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${badge.bg}`}>
+                          🎯 {badge.label}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleStatus(p.id, p.status); }}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        {p.status === "active" ? <UserX className="w-5 h-5" /> : <UserCheck className="w-5 h-5" />}
+                      </button>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-display font-semibold">{p.profile?.full_name || "Paciente"}</h3>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      p.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
-                    }`}>
-                      {p.status === "active" ? "Ativo" : "Inativo"}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); toggleStatus(p.id, p.status); }}
-                      className="text-muted-foreground hover:text-foreground"
-                    >
-                      {p.status === "active" ? <UserX className="w-5 h-5" /> : <UserCheck className="w-5 h-5" />}
-                    </button>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </div>
