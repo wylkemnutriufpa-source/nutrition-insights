@@ -32,6 +32,7 @@ const nutritionistLinks = [
   { to: "/reports", icon: BarChart3, label: "Relatórios" },
   { to: "/weekly-report", icon: FileBarChart, label: "Relatório Semanal" },
   { to: "/financial", icon: DollarSign, label: "Financeiro" },
+  { to: "/supplements", icon: Pill, label: "Suplementação" },
   { to: "/global-tips", icon: Lightbulb, label: "Dicas" },
   { to: "/feedbacks", icon: MessageSquare, label: "Feedbacks" },
   { to: "/branding", icon: Palette, label: "Branding" },
