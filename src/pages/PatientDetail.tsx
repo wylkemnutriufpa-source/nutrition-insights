@@ -16,6 +16,8 @@ import MetabolicRadar from "@/components/dashboard/MetabolicRadar";
 import { AnamnesisInsightsFull } from "@/components/patient/AnamnesisInsightsCard";
 import PatientCalculators from "@/components/patient/PatientCalculators";
 import PatientAgenda from "@/components/patient/PatientAgenda";
+import BodyEvolutionCard from "@/components/patient/BodyEvolutionCard";
+import ConsultationCompare from "@/components/patient/ConsultationCompare";
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
