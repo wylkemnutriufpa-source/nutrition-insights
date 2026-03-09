@@ -1518,24 +1518,96 @@ export type Database = {
         }
         Relationships: []
       }
+      program_patient_progress: {
+        Row: {
+          adherence_score: number | null
+          created_at: string
+          habits_completed: number | null
+          habits_total: number | null
+          hip: number | null
+          id: string
+          notes: string | null
+          patient_id: string
+          phase_id: string | null
+          program_id: string
+          recorded_at: string
+          waist: number | null
+          week_number: number
+          weight: number | null
+        }
+        Insert: {
+          adherence_score?: number | null
+          created_at?: string
+          habits_completed?: number | null
+          habits_total?: number | null
+          hip?: number | null
+          id?: string
+          notes?: string | null
+          patient_id: string
+          phase_id?: string | null
+          program_id: string
+          recorded_at?: string
+          waist?: number | null
+          week_number?: number
+          weight?: number | null
+        }
+        Update: {
+          adherence_score?: number | null
+          created_at?: string
+          habits_completed?: number | null
+          habits_total?: number | null
+          hip?: number | null
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          phase_id?: string | null
+          program_id?: string
+          recorded_at?: string
+          waist?: number | null
+          week_number?: number
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "program_patient_progress_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "program_phases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "program_patient_progress_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       program_patients: {
         Row: {
+          current_phase: number | null
           enrolled_at: string
           id: string
+          joined_at: string | null
           patient_id: string
           program_id: string
           status: string
         }
         Insert: {
+          current_phase?: number | null
           enrolled_at?: string
           id?: string
+          joined_at?: string | null
           patient_id: string
           program_id: string
           status?: string
         }
         Update: {
+          current_phase?: number | null
           enrolled_at?: string
           id?: string
+          joined_at?: string | null
           patient_id?: string
           program_id?: string
           status?: string
@@ -1543,6 +1615,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "program_patients_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      program_phases: {
+        Row: {
+          created_at: string
+          duration_weeks: number
+          habits: Json | null
+          id: string
+          nutrition_tips: Json | null
+          objective: string | null
+          phase_number: number
+          program_id: string
+          progress_indicators: Json | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          duration_weeks?: number
+          habits?: Json | null
+          id?: string
+          nutrition_tips?: Json | null
+          objective?: string | null
+          phase_number?: number
+          program_id: string
+          progress_indicators?: Json | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          duration_weeks?: number
+          habits?: Json | null
+          id?: string
+          nutrition_tips?: Json | null
+          objective?: string | null
+          phase_number?: number
+          program_id?: string
+          progress_indicators?: Json | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "program_phases_program_id_fkey"
             columns: ["program_id"]
             isOneToOne: false
             referencedRelation: "programs"
