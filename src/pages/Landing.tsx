@@ -192,7 +192,7 @@ export default function Landing() {
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
               <Link to="/auth">
                 <Button size="lg" className="gradient-primary shadow-glow gap-2 text-base px-10 h-13 font-semibold hover:scale-105 transition-transform">
-                  Começar Gratuitamente <ArrowRight className="w-4 h-4" />
+                  {heroCta} <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
               <a href="#features">
