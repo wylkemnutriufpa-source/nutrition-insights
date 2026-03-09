@@ -222,7 +222,7 @@ export default function Pricing() {
               }`}>
                 {plan.is_featured && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className="gradient-primary text-primary-foreground shadow-glow">
+                    <Badge className="bg-primary text-primary-foreground shadow-glow">
                       Mais Popular
                     </Badge>
                   </div>
