@@ -169,15 +169,19 @@ function NutritionistSupplementsView() {
   const fetchData = async () => {
     if (!user) return;
     const [patientsRes, supplRes] = await Promise.all([
-      supabase.from("nutritionist_patients").select("id, patient_id, profiles!nutritionist_patients_patient_id_fkey(full_name)").eq("nutritionist_id", user.id).eq("status", "active"),
+      supabase.from("nutritionist_patients").select("id, patient_id").eq("nutritionist_id", user.id).eq("status", "active"),
       supabase.from("patient_supplements").select("*").eq("nutritionist_id", user.id).order("created_at", { ascending: false }),
     ]);
 
-    // Flatten profiles
-    const pats = (patientsRes.data || []).map((p: any) => ({
+    const patientIds = (patientsRes.data || []).map((p: any) => p.patient_id);
+    const profilesRes = await Promise.all(
+      patientIds.map(id => supabase.from("profiles").select("full_name").eq("user_id", id).single())
+    );
+
+    const pats = (patientsRes.data || []).map((p: any, i: number) => ({
       id: p.id,
       patient_id: p.patient_id,
-      profile: Array.isArray(p.profiles) ? p.profiles[0] : p.profiles,
+      profile: profilesRes[i]?.data || null,
     }));
     setPatients(pats);
 
