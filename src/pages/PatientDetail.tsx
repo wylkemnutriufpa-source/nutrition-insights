@@ -427,6 +427,9 @@ export default function PatientDetail() {
               <Calculator className="w-3.5 h-3.5 mr-1" /> Calculadoras
             </TabsTrigger>
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
+            <TabsTrigger value="plan">
+              <CreditCard className="w-3.5 h-3.5 mr-1" /> Plano
+            </TabsTrigger>
             <TabsTrigger value="protocols">Protocolos</TabsTrigger>
             <TabsTrigger value="radar">Radar Metabólico</TabsTrigger>
           </TabsList>
