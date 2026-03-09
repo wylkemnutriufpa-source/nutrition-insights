@@ -11,7 +11,7 @@ import {
   ClipboardCheck, FileText, Rocket, CheckCircle2, Activity,
   MessageSquare, Lightbulb, ChefHat, ShoppingCart, Apple, Camera,
   Palette, Bell, BarChart3, Menu, X, Shield, Zap, Star, Bot,
-  Scale, Droplets, Heart, Calculator
+  Scale, Droplets, Heart, Calculator, TrendingUp, BookOpen, DollarSign
 } from "lucide-react";
 import { useState } from "react";
 import NotificationBell from "@/components/notifications/NotificationBell";
@@ -30,6 +30,7 @@ const nutritionistLinks = [
   { to: "/recipes", icon: ChefHat, label: "Receitas" },
   { to: "/food-database", icon: Apple, label: "Alimentos" },
   { to: "/reports", icon: BarChart3, label: "Relatórios" },
+  { to: "/financial", icon: DollarSign, label: "Financeiro" },
   { to: "/global-tips", icon: Lightbulb, label: "Dicas" },
   { to: "/feedbacks", icon: MessageSquare, label: "Feedbacks" },
   { to: "/branding", icon: Palette, label: "Branding" },
@@ -41,9 +42,12 @@ const patientLinks = [
   { to: "/weekly-goals", icon: Target, label: "Metas" },
   { to: "/appointments", icon: Activity, label: "Agenda" },
   { to: "/chat", icon: MessageSquare, label: "Chat" },
+  { to: "/autobot", icon: Bot, label: "AutoBot IA" },
   { to: "/meals", icon: UtensilsCrossed, label: "Refeições" },
   { to: "/recipes", icon: ChefHat, label: "Receitas" },
   { to: "/shopping-list", icon: ShoppingCart, label: "Compras" },
+  { to: "/journey", icon: TrendingUp, label: "Jornada" },
+  { to: "/library", icon: BookOpen, label: "Biblioteca" },
   { to: "/anamnesis", icon: ClipboardCheck, label: "Anamnese" },
   { to: "/food-database", icon: Apple, label: "Alimentos" },
   { to: "/weight-calculator", icon: Scale, label: "Peso Ideal" },

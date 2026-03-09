@@ -46,6 +46,10 @@ import AutomationCenter from "./pages/AutomationCenter";
 import WeightCalculator from "./pages/WeightCalculator";
 import WaterCalculator from "./pages/WaterCalculator";
 import HealthCheckQuiz from "./pages/HealthCheckQuiz";
+import AutoBot from "./pages/AutoBot";
+import Journey from "./pages/Journey";
+import Library from "./pages/Library";
+import Financial from "./pages/Financial";
 
 const queryClient = new QueryClient();
 
@@ -144,6 +148,11 @@ const App = () => (
               <Route path="/weight-calculator" element={<ProtectedRoute><WeightCalculator /></ProtectedRoute>} />
               <Route path="/water-calculator" element={<ProtectedRoute><WaterCalculator /></ProtectedRoute>} />
               <Route path="/health-quiz" element={<ProtectedRoute><HealthCheckQuiz /></ProtectedRoute>} />
+              {/* Lote 2 */}
+              <Route path="/autobot" element={<ProtectedRoute><AutoBot /></ProtectedRoute>} />
+              <Route path="/journey" element={<ProtectedRoute><Journey /></ProtectedRoute>} />
+              <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
+              <Route path="/financial" element={<ProtectedRoute><Financial /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>
