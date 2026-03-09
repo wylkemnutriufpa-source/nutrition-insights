@@ -22,6 +22,7 @@ import Settings from "./pages/Settings";
 import Protocols from "./pages/Protocols";
 import Programs from "./pages/Programs";
 import ProgramDetail from "./pages/ProgramDetail";
+import BiquiniBrancoDetail from "./pages/BiquiniBrancoDetail";
 import Checklist from "./pages/Checklist";
 import DietTemplates from "./pages/DietTemplates";
 import PhysicalAssessment from "./pages/PhysicalAssessment";
@@ -148,6 +149,7 @@ const App = () => (
               <Route path="/protocols" element={<NutritionistRoute><Protocols /></NutritionistRoute>} />
               <Route path="/programs" element={<NutritionistRoute><Programs /></NutritionistRoute>} />
               <Route path="/programs/:programId" element={<NutritionistRoute><ProgramDetail /></NutritionistRoute>} />
+              <Route path="/programs/:programId/biquini-branco" element={<NutritionistRoute><BiquiniBrancoDetail /></NutritionistRoute>} />
               <Route path="/meal-plans" element={<NutritionistRoute><MealPlans /></NutritionistRoute>} />
               <Route path="/meal-plans/:id" element={<NutritionistRoute><MealPlanEditor /></NutritionistRoute>} />
               <Route path="/diet-templates" element={<NutritionistRoute><DietTemplates /></NutritionistRoute>} />

@@ -269,14 +269,16 @@ export default function Programs() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {programs.map((p) => {
               const daysProgress = getDaysProgress(p.start_date, p.end_date);
+              const isBiquini = p.title.toLowerCase().includes("biqu") || p.title.toLowerCase().includes("bikini");
+              const targetRoute = isBiquini ? `/programs/${p.id}/biquini-branco` : `/programs/${p.id}`;
               return (
-                <motion.div key={p.id} whileHover={{ y: -2 }} className="glass rounded-xl overflow-hidden shadow-card cursor-pointer" onClick={() => navigate(`/programs/${p.id}`)}>
+                <motion.div key={p.id} whileHover={{ y: -2 }} className={`glass rounded-xl overflow-hidden shadow-card cursor-pointer ${isBiquini ? "ring-2 ring-pink-500/30" : ""}`} onClick={() => navigate(targetRoute)}>
                   {/* Header with gradient */}
-                  <div className="gradient-primary p-4 text-primary-foreground relative">
+                  <div className={`${isBiquini ? "bg-gradient-to-r from-pink-500 via-rose-500 to-orange-400" : "gradient-primary"} p-4 text-primary-foreground relative`}>
                     <div className="flex items-start justify-between">
                       <div>
-                        <Badge className={`${TAG_COLORS[p.tag] || TAG_COLORS.general} border-0 mb-2`}>
-                          {TAGS.find(t => t.value === p.tag)?.label || p.tag}
+                        <Badge className={`${isBiquini ? "bg-white/20 text-white border-0" : TAG_COLORS[p.tag] || TAG_COLORS.general + " border-0"} mb-2`}>
+                          {isBiquini ? "👙 Premium" : TAGS.find(t => t.value === p.tag)?.label || p.tag}
                         </Badge>
                         <h3 className="font-display font-bold text-lg">{p.title}</h3>
                       </div>
