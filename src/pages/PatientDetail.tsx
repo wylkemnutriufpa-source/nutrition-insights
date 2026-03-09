@@ -215,6 +215,64 @@ export default function PatientDetail() {
     toast.success(`${data || 0} tarefas sincronizadas para hoje!`);
   };
 
+  const savePlan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !patientId) return;
+
+    if (patientSubscription) {
+      const { error } = await supabase.from("subscriptions").update({
+        plan_name: planForm.plan_name,
+        started_at: planForm.started_at,
+        expires_at: planForm.expires_at || null,
+      }).eq("id", patientSubscription.id);
+      if (error) { toast.error(error.message); return; }
+      toast.success("Plano atualizado!");
+    } else {
+      const { error } = await supabase.from("subscriptions").insert({
+        user_id: patientId,
+        plan_name: planForm.plan_name,
+        started_at: planForm.started_at,
+        expires_at: planForm.expires_at || null,
+        status: "active",
+      });
+      if (error) { toast.error(error.message); return; }
+      toast.success("Plano atribuído!");
+    }
+    setPlanOpen(false);
+    fetchAll();
+  };
+
+  const scheduleFeedback = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !patientId) return;
+
+    const scheduledDate = new Date();
+    scheduledDate.setDate(scheduledDate.getDate() + parseInt(feedbackForm.days));
+
+    const { error } = await supabase.from("notifications").insert({
+      user_id: patientId,
+      title: "📋 Feedback solicitado",
+      message: feedbackForm.message,
+      type: "feedback",
+      action_url: "/feedbacks",
+      metadata: { scheduled_by: user.id, scheduled_for: scheduledDate.toISOString() },
+    });
+
+    if (error) { toast.error(error.message); return; }
+
+    await supabase.from("patient_timeline").insert({
+      patient_id: patientId,
+      event_type: "note",
+      title: `Feedback agendado para ${scheduledDate.toLocaleDateString("pt-BR")}`,
+      description: feedbackForm.message,
+      created_by: user.id,
+    });
+
+    toast.success(`Feedback agendado para daqui ${feedbackForm.days} dias!`);
+    setFeedbackOpen(false);
+    fetchAll();
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
