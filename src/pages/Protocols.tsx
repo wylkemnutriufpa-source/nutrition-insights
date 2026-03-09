@@ -673,6 +673,51 @@ export default function Protocols() {
             <TabsTrigger value="active" className="gap-2"><Users className="w-4 h-4" /> Pacientes Ativos</TabsTrigger>
           </TabsList>
 
+          {/* ── TEMPLATES TAB ── */}
+          <TabsContent value="templates" className="mt-4">
+            <div className="mb-4">
+              <p className="text-muted-foreground text-sm">
+                Selecione um template para criar automaticamente o protocolo com todas as tarefas pré-configuradas.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {PROTOCOL_TEMPLATES.map((template, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.03 }}
+                  className="glass rounded-xl p-5 hover:border-primary/40 transition-all group cursor-pointer flex flex-col"
+                  onClick={() => !submitting && createFromTemplate(template)}
+                >
+                  <div className="text-3xl mb-3">{template.icon}</div>
+                  <h3 className="font-display font-semibold text-sm mb-1">{template.title}</h3>
+                  <p className="text-muted-foreground text-xs line-clamp-2 flex-1 mb-3">{template.description}</p>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto">
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" /> {template.duration_days}d
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <ListChecks className="w-3 h-3" /> {template.tasks.length} tarefas
+                    </span>
+                    <span className="ml-auto">
+                      {CATEGORIES.find(c => c.value === template.category)?.label}
+                    </span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full mt-3 gap-2 group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                    disabled={submitting}
+                    onClick={(e) => { e.stopPropagation(); createFromTemplate(template); }}
+                  >
+                    <Plus className="w-3 h-3" /> Usar Template
+                  </Button>
+                </motion.div>
+              ))}
+            </div>
+          </TabsContent>
+
           {/* ── CATALOG TAB ── */}
           <TabsContent value="catalog" className="mt-4">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
