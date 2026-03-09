@@ -9,10 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { User, Lock, Save } from "lucide-react";
+import { User, Lock, Save, Bell, BellOff } from "lucide-react";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 export default function Settings() {
   const { user, profile, refreshProfile } = useAuth();
+  const { permission, isSubscribed, isSupported, loading: pushLoading, subscribe, unsubscribe } = usePushNotifications();
   const [fullName, setFullName] = useState(profile?.full_name || "");
   const [phone, setPhone] = useState(profile?.phone || "");
   const [savingProfile, setSavingProfile] = useState(false);
@@ -149,6 +151,51 @@ export default function Settings() {
             </form>
           </CardContent>
         </Card>
+
+        {/* Push Notifications */}
+        {isSupported && (
+          <Card className="glass border-border">
+            <CardHeader>
+              <CardTitle className="font-display flex items-center gap-2">
+                <Bell className="w-5 h-5 text-primary" /> Notificações Push
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/30">
+                <div>
+                  <p className="font-medium text-sm">Notificações push</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {permission === "denied"
+                      ? "Bloqueado nas configurações do navegador"
+                      : isSubscribed
+                      ? "Ativadas — você receberá alertas em tempo real"
+                      : "Receba alertas de metas, checklist e mensagens"}
+                  </p>
+                </div>
+                {permission !== "denied" ? (
+                  <Button
+                    variant={isSubscribed ? "outline" : "default"}
+                    className={isSubscribed ? "" : "gradient-primary shadow-glow"}
+                    onClick={isSubscribed ? unsubscribe : subscribe}
+                    disabled={pushLoading}
+                    size="sm"
+                    gap-2
+                  >
+                    {isSubscribed ? <BellOff className="w-4 h-4 mr-1" /> : <Bell className="w-4 h-4 mr-1" />}
+                    {pushLoading ? "..." : isSubscribed ? "Desativar" : "Ativar"}
+                  </Button>
+                ) : (
+                  <span className="text-xs text-destructive font-medium">Bloqueado</span>
+                )}
+              </div>
+              {permission === "denied" && (
+                <p className="text-xs text-muted-foreground">
+                  Para reativar, vá em Configurações do navegador → Site settings → Notifications e desbloqueie este site.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </motion.div>
     </DashboardLayout>
   );

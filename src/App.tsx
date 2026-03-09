@@ -51,6 +51,7 @@ import Journey from "./pages/Journey";
 import Library from "./pages/Library";
 import Financial from "./pages/Financial";
 import WeeklyReport from "./pages/WeeklyReport";
+import Supplements from "./pages/Supplements";
 
 const queryClient = new QueryClient();
 
@@ -155,6 +156,7 @@ const App = () => (
               <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
               <Route path="/financial" element={<ProtectedRoute><Financial /></ProtectedRoute>} />
               <Route path="/weekly-report" element={<ProtectedRoute><WeeklyReport /></ProtectedRoute>} />
+              <Route path="/supplements" element={<ProtectedRoute><Supplements /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>

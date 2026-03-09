@@ -10,6 +10,7 @@ import SmartTips from "@/components/patient/SmartTips";
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
 import MetabolicRadar from "@/components/dashboard/MetabolicRadar";
 import SubscriptionCard from "@/components/patient/SubscriptionCard";
+import PushNotificationBanner from "@/components/notifications/PushNotificationBanner";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   UtensilsCrossed, Users, TrendingUp, Target, Sparkles, Plus,
@@ -131,6 +132,9 @@ function PatientDashboardContent() {
       </Dialog>
 
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+      {/* Push notification banner */}
+      <PushNotificationBanner />
+
       <motion.div variants={item} className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold">Meu Dashboard</h1>
