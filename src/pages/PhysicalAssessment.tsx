@@ -13,8 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import {
   ArrowLeft, Save, Ruler, Activity, Flame, Target, TrendingDown,
-  Calculator, Beef, Wheat, Droplets, Loader2, History, Zap, Scale, Heart
+  Calculator, Beef, Wheat, Droplets, Loader2, History, Zap, Scale, Heart, GitCompare
 } from "lucide-react";
+import ConsultationCompare from "@/components/patient/ConsultationCompare";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, Area, AreaChart
