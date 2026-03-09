@@ -155,6 +155,7 @@ export default function PatientDetail() {
 
     setPatientSubscription(subRes.data?.[0] || null);
     setPricingPlans(plansRes.data || []);
+    setMealPlans(mealPlansRes.data || []);
 
     // Pre-fill plan form if subscription exists
     if (subRes.data?.[0]) {
