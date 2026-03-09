@@ -450,6 +450,9 @@ export default function PatientDetail() {
             <TabsTrigger value="checkins">
               <MessageSquare className="w-3.5 h-3.5 mr-1" /> Check-ins
             </TabsTrigger>
+            <TabsTrigger value="meal-plans">
+              <UtensilsCrossed className="w-3.5 h-3.5 mr-1" /> Planos Alimentares
+            </TabsTrigger>
             <TabsTrigger value="radar">Radar Metabólico</TabsTrigger>
           </TabsList>
 
