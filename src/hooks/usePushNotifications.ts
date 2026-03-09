@@ -111,7 +111,7 @@ export function usePushNotifications() {
   const sendLocalNotification = useCallback((title: string, body: string, icon = "/pwa-192x192.png") => {
     if (!isSupported || Notification.permission !== "granted") return;
     navigator.serviceWorker.ready.then(reg => {
-      reg.showNotification(title, { body, icon, badge: "/pwa-192x192.png", vibrate: [200, 100, 200] });
+      reg.showNotification(title, { body, icon, badge: "/pwa-192x192.png" });
     });
   }, []);
 
