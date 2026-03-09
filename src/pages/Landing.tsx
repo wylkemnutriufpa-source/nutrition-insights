@@ -626,7 +626,7 @@ export default function Landing() {
             </div>
           </div>
           <div className="border-t border-border/30 pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-            <p>© {new Date().getFullYear()} NutriFlow. Todos os direitos reservados.</p>
+            <p>© {new Date().getFullYear()} {brandName}. Todos os direitos reservados.</p>
             <p className="flex items-center gap-1.5">Feito com <Heart className="w-3.5 h-3.5 text-destructive fill-destructive" /> no Brasil</p>
           </div>
         </div>
