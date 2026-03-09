@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
-  LayoutDashboard, Users, UtensilsCrossed, Trophy, Target,
+  LayoutDashboard, Users, UtensilsCrossed, Trophy, Target, FileBarChart,
   Leaf, LogOut, Moon, Sun, ChevronRight, Sparkles, Settings,
   ClipboardCheck, FileText, Rocket, CheckCircle2, Activity,
   MessageSquare, Lightbulb, ChefHat, ShoppingCart, Apple, Camera,
