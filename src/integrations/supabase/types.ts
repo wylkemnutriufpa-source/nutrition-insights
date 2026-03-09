@@ -2389,6 +2389,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_nutritionist_account: {
+        Args: { _email: string; _full_name: string; _password: string }
+        Returns: string
+      }
       create_patient_account: {
         Args: { _email: string; _full_name: string; _password: string }
         Returns: string
