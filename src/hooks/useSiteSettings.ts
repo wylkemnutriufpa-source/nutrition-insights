@@ -35,12 +35,12 @@ export function useSiteSettingsRaw() {
   return useQuery({
     queryKey: ["site-settings-raw"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("site_settings" as any)
+      const { data, error } = await (supabase as any)
+        .from("site_settings")
         .select("*")
         .order("category");
       if (error) throw error;
-      return data as unknown as SiteSetting[];
+      return (data || []) as SiteSetting[];
     },
   });
 }
