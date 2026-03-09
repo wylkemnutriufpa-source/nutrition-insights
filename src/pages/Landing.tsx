@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
+import { useSiteSettings, getSetting } from "@/hooks/useSiteSettings";
 import {
   Sparkles, Users, Brain, Shield, BarChart3, Utensils, CheckCircle2,
   ArrowRight, Star, Zap, Heart, ChevronRight, Bot, Pill, Camera,
@@ -38,14 +39,14 @@ const howItWorks = [
   { step: "04", title: "Acompanhe com IA", desc: "A IA analisa evolução, gera relatórios e sugere ajustes automaticamente.", icon: Brain },
 ];
 
-const testimonials = [
+const defaultTestimonials = [
   { name: "Dra. Ana Costa", role: "Nutricionista Esportiva", text: "O NutriFlow revolucionou meu atendimento. A IA me economiza 3h por dia e meus pacientes adoram a gamificação!", rating: 5, avatar: "AC" },
   { name: "Dr. Carlos Silva", role: "Nutricionista Clínico", text: "Meus pacientes nunca foram tão engajados. A adesão ao tratamento subiu 60% com os streaks e desafios.", rating: 5, avatar: "CS" },
   { name: "Dra. Mariana Luz", role: "Nutricionista Funcional", text: "Relatórios profissionais com 1 clique, análise corporal por IA, chat integrado. Tudo que eu precisava em um só lugar.", rating: 5, avatar: "ML" },
   { name: "Dr. Rafael Mendes", role: "Nutricionista Comportamental", text: "O AutoBot responde meus pacientes 24/7 sobre dúvidas de nutrição. É como ter um assistente que nunca dorme.", rating: 5, avatar: "RM" },
 ];
 
-const plans = [
+const defaultPlans = [
   {
     name: "Starter", price: "Grátis", period: "para sempre", popular: false,
     features: ["Até 5 pacientes", "Planos alimentares", "Checklist de hábitos", "Chat básico", "Banco de alimentos TACO"],
@@ -63,7 +64,7 @@ const plans = [
   },
 ];
 
-const faqs = [
+const defaultFaqs = [
   { q: "Preciso instalar alguma coisa?", a: "Não! NutriFlow é 100% web e PWA. Funciona no navegador e pode ser instalado como app no celular." },
   { q: "Meus pacientes precisam pagar?", a: "Não. Apenas o profissional paga pelo plano. Pacientes acessam gratuitamente com login próprio." },
   { q: "A IA substitui o nutricionista?", a: "Jamais! A IA é sua assistente — analisa dados, gera sugestões e economiza tempo. Todas as decisões clínicas são suas." },
@@ -72,7 +73,7 @@ const faqs = [
   { q: "Tem suporte?", a: "Sim! Chat in-app e email para todos. Suporte prioritário para planos Pro e Clínica." },
 ];
 
-const stats = [
+const defaultStats = [
   { value: "500+", label: "Nutricionistas" },
   { value: "10k+", label: "Pacientes ativos" },
   { value: "60%", label: "Mais adesão" },
@@ -96,12 +97,27 @@ export default function Landing() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const { data: siteData } = useSiteSettings();
+  const s = siteData?.map;
+
+  const brandName = getSetting(s, "brand_name", "NutriFlow");
+  const heroTitle = getSetting(s, "hero_title", "Transforme seu consultório com IA e Gamificação");
+  const heroSubtitle = getSetting(s, "hero_subtitle", "Gerencie pacientes, crie planos alimentares personalizados com IA, e engaje seus clientes com gamificação — tudo em uma plataforma completa e intuitiva.");
+  const heroCta = getSetting(s, "hero_cta_text", "Começar Gratuitamente");
+  const heroBadge = getSetting(s, "hero_badge_text", "Plataforma #1 para Nutricionistas Modernos");
+  const stats = getSetting(s, "stats", defaultStats);
+  const plans = getSetting(s, "pricing_plans", defaultPlans);
+  const testimonials = getSetting(s, "testimonials_landing", defaultTestimonials);
+  const faqs = getSetting(s, "faqs", defaultFaqs);
+  const metaTitle = getSetting(s, "meta_title", "NutriFlow — Plataforma de Nutrição com IA e Gamificação");
+  const metaDescription = getSetting(s, "meta_description", "Gerencie pacientes, crie planos alimentares com IA, engaje com gamificação. A plataforma #1 para nutricionistas modernos.");
+  const footerText = getSetting(s, "footer_text", "Plataforma completa para nutricionistas modernos.");
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       <Helmet>
-        <title>NutriFlow — Plataforma de Nutrição com IA e Gamificação</title>
-        <meta name="description" content="Gerencie pacientes, crie planos alimentares com IA, engaje com gamificação. A plataforma #1 para nutricionistas modernos." />
+        <title>{metaTitle}</title>
+        <meta name="description" content={metaDescription} />
       </Helmet>
 
       {/* ══════════ NAV ══════════ */}
@@ -111,7 +127,7 @@ export default function Landing() {
             <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-glow group-hover:scale-110 transition-transform">
               <Sparkles className="w-4.5 h-4.5 text-primary-foreground" />
             </div>
-            <span className="font-display font-bold text-xl tracking-tight">NutriFlow</span>
+            <span className="font-display font-bold text-xl tracking-tight">{brandName}</span>
           </Link>
 
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
@@ -157,12 +173,12 @@ export default function Landing() {
           <motion.div variants={stagger} initial="hidden" animate="show" className="max-w-5xl mx-auto text-center">
             <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-primary/20 bg-primary/5 text-primary text-sm font-semibold mb-8 shadow-glow">
               <Sparkles className="w-4 h-4" />
-              Plataforma #1 para Nutricionistas Modernos
+              {heroBadge}
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
             </motion.div>
 
             <motion.h1 variants={fadeUp} className="font-display text-4xl sm:text-5xl md:text-7xl font-bold leading-[1.1] mb-6 tracking-tight">
-              Transforme seu consultório com{" "}
+              {heroTitle.split("IA e Gamificação")[0]}
               <span className="relative">
                 <span className="text-gradient">IA e Gamificação</span>
                 <svg className="absolute -bottom-2 left-0 w-full h-3 text-primary/30" viewBox="0 0 300 12" fill="none"><path d="M2 10C50 4 100 2 150 4C200 6 250 2 298 8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /></svg>
@@ -170,14 +186,13 @@ export default function Landing() {
             </motion.h1>
 
             <motion.p variants={fadeUp} className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-              Gerencie pacientes, crie planos alimentares personalizados com IA, e engaje seus clientes
-              com gamificação — tudo em uma plataforma completa e intuitiva.
+              {heroSubtitle}
             </motion.p>
 
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
               <Link to="/auth">
                 <Button size="lg" className="gradient-primary shadow-glow gap-2 text-base px-10 h-13 font-semibold hover:scale-105 transition-transform">
-                  Começar Gratuitamente <ArrowRight className="w-4 h-4" />
+                  {heroCta} <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
               <a href="#features">
@@ -586,10 +601,10 @@ export default function Landing() {
                 <div className="w-8 h-8 rounded-xl gradient-primary flex items-center justify-center">
                   <Sparkles className="w-4 h-4 text-primary-foreground" />
                 </div>
-                <span className="font-display font-bold text-lg">NutriFlow</span>
+                <span className="font-display font-bold text-lg">{brandName}</span>
               </div>
               <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">
-                Plataforma de nutrição inteligente com IA e gamificação. Transforme seu consultório e engaje seus pacientes como nunca.
+                {footerText}
               </p>
             </div>
             <div>
@@ -611,7 +626,7 @@ export default function Landing() {
             </div>
           </div>
           <div className="border-t border-border/30 pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-            <p>© {new Date().getFullYear()} NutriFlow. Todos os direitos reservados.</p>
+            <p>© {new Date().getFullYear()} {brandName}. Todos os direitos reservados.</p>
             <p className="flex items-center gap-1.5">Feito com <Heart className="w-3.5 h-3.5 text-destructive fill-destructive" /> no Brasil</p>
           </div>
         </div>

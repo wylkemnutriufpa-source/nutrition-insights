@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
-import { Shield, Users, UserCheck, Zap, Star, UserPlus } from "lucide-react";
+import { Shield, Users, UserCheck, Zap, Star, UserPlus, Settings, Globe, Palette } from "lucide-react";
 import { toast } from "sonner";
 
 interface AdminStats {
@@ -142,7 +142,16 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/site-editor")}>
+                <CardContent className="flex items-center gap-4 py-6">
+                  <Settings className="w-8 h-8 text-primary" />
+                  <div>
+                    <p className="font-display font-semibold">Editor do Site</p>
+                    <p className="text-sm text-muted-foreground">Landing page, branding, logo, cores, textos</p>
+                  </div>
+                </CardContent>
+              </Card>
               <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/features")}>
                 <CardContent className="flex items-center gap-4 py-6">
                   <Zap className="w-8 h-8 text-warning" />
