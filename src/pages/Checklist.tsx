@@ -1,12 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { CheckCircle2, Circle, Flame, Trophy, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { CheckCircle2, Circle, Flame, Trophy, Calendar, ChevronLeft, ChevronRight, Plus, Pencil, Trash2, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import confetti from "@/lib/confetti";
 
 interface ChecklistTask {
@@ -20,13 +23,46 @@ interface ChecklistTask {
   date: string;
 }
 
+const DEFAULT_TASKS = [
+  { title: "Ingerir frutas do dia", icon: "🍎", category: "nutrition", description: "Consuma ao menos 2 porções de frutas variadas" },
+  { title: "Praticar exercício físico", icon: "🏃", category: "exercise", description: "30-60 min de atividade física moderada" },
+  { title: "Seguir o plano alimentar", icon: "🥗", category: "nutrition", description: "Faça todas as refeições conforme o plano" },
+  { title: "Ingerir água na quantidade certa", icon: "💧", category: "hydration", description: "Beba pelo menos 2L de água ao longo do dia" },
+  { title: "Dormir 1h mais cedo que o habitual", icon: "😴", category: "habit", description: "Melhore sua higiene do sono gradualmente" },
+  { title: "Tomar sol por 15 minutos", icon: "☀️", category: "habit", description: "Vitamina D natural — prefira manhã cedo" },
+  { title: "Tomar os suplementos prescritos", icon: "💊", category: "supplement", description: "No horário indicado pelo nutricionista" },
+  { title: "Registrar as refeições no app", icon: "📝", category: "habit", description: "Acompanhe sua evolução diariamente" },
+  { title: "Evitar açúcar e ultraprocessados", icon: "🚫", category: "nutrition", description: "Prefira alimentos naturais e integrais" },
+  { title: "Fazer 5 min de respiração ou meditação", icon: "🧘", category: "mindset", description: "Reduz cortisol e melhora foco" },
+  { title: "Incluir vegetais no almoço e jantar", icon: "🥦", category: "nutrition", description: "Mínimo 1 porção em cada refeição principal" },
+  { title: "Caminhar ao menos 6.000 passos", icon: "🚶", category: "exercise", description: "Use o celular para contar os passos" },
+  { title: "Evitar telas 1h antes de dormir", icon: "📵", category: "habit", description: "Melhora a qualidade do sono" },
+  { title: "Fazer alongamento matinal (5 min)", icon: "🤸", category: "exercise", description: "Acordar o corpo com gentileza" },
+  { title: "Comer devagar e sem pressa", icon: "⏳", category: "habit", description: "Mastigue bem e preste atenção na comida" },
+];
+
+const CATEGORY_ICONS = ["🍎", "🏃", "🥗", "💧", "😴", "☀️", "💊", "📝", "🚫", "🧘", "🥦", "🚶", "📵", "🤸", "⏳", "✅", "🎯", "💪", "🧠", "🫖"];
+const CATEGORIES = [
+  { value: "habit", label: "🔄 Hábito" },
+  { value: "nutrition", label: "🥗 Nutrição" },
+  { value: "exercise", label: "💪 Exercício" },
+  { value: "supplement", label: "💊 Suplemento" },
+  { value: "mindset", label: "🧠 Mindset" },
+  { value: "hydration", label: "💧 Hidratação" },
+];
+
 export default function Checklist() {
   const { user } = useAuth();
   const [tasks, setTasks] = useState<ChecklistTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [editingTask, setEditingTask] = useState<ChecklistTask | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
+  const [form, setForm] = useState({ title: "", icon: "✅", category: "habit", description: "" });
+  const [saving, setSaving] = useState(false);
+  const [seeding, setSeeding] = useState(false);
 
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     const { data } = await supabase
@@ -38,9 +74,37 @@ export default function Checklist() {
       .order("created_at");
     setTasks(data || []);
     setLoading(false);
-  };
+  }, [user, date]);
 
-  useEffect(() => { fetchTasks(); }, [user, date]);
+  useEffect(() => { fetchTasks(); }, [fetchTasks]);
+
+  // Auto-seed default tasks if empty today
+  useEffect(() => {
+    const isToday = date === new Date().toISOString().split("T")[0];
+    if (!loading && tasks.length === 0 && isToday && user && !seeding) {
+      seedDefaultTasks();
+    }
+  }, [loading, tasks.length, date, user]);
+
+  const seedDefaultTasks = async () => {
+    if (!user) return;
+    setSeeding(true);
+    const inserts = DEFAULT_TASKS.map(t => ({
+      patient_id: user.id,
+      title: t.title,
+      icon: t.icon,
+      category: t.category,
+      description: t.description,
+      date,
+      completed: false,
+    }));
+    const { error } = await supabase.from("checklist_tasks").insert(inserts);
+    if (!error) {
+      toast.success("✅ 15 tarefas diárias criadas para hoje!");
+      fetchTasks();
+    }
+    setSeeding(false);
+  };
 
   // Realtime subscription
   useEffect(() => {
@@ -55,7 +119,7 @@ export default function Checklist() {
       }, () => fetchTasks())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [user, date]);
+  }, [user, fetchTasks]);
 
   const toggleTask = async (task: ChecklistTask) => {
     const newCompleted = !task.completed;
@@ -69,13 +133,12 @@ export default function Checklist() {
 
     if (error) { toast.error(error.message); return; }
 
-    // Check if all done
     const updated = tasks.map((t) => t.id === task.id ? { ...t, completed: newCompleted } : t);
     setTasks(updated);
+
     if (newCompleted && updated.every((t) => t.completed)) {
       confetti();
       toast.success("🎉 Todas as tarefas concluídas! +50 XP");
-      // Update player stats
       const { data: stats } = await supabase.from("player_stats").select("*").eq("user_id", user!.id).single();
       if (stats) {
         await supabase.from("player_stats").update({
@@ -83,6 +146,15 @@ export default function Checklist() {
           level: Math.floor((stats.total_xp + 50) / 100) + 1,
         }).eq("user_id", user!.id);
       }
+      // Send adherence notification
+      const completedCount = updated.filter(t => t.completed).length;
+      const pct = Math.round((completedCount / updated.length) * 100);
+      await supabase.from("notifications").insert({
+        user_id: user!.id,
+        title: "🎉 Dia completo!",
+        message: `Parabéns! Você completou ${pct}% das suas tarefas hoje. Continue assim!`,
+        type: "success",
+      });
     } else if (newCompleted) {
       toast.success(`${task.icon} Tarefa concluída! +10 XP`);
       const { data: stats } = await supabase.from("player_stats").select("*").eq("user_id", user!.id).single();
@@ -95,6 +167,48 @@ export default function Checklist() {
     }
   };
 
+  const handleSaveTask = async () => {
+    if (!user || !form.title.trim()) return;
+    setSaving(true);
+    if (editingTask) {
+      const { error } = await supabase.from("checklist_tasks")
+        .update({ title: form.title, icon: form.icon, category: form.category, description: form.description || null })
+        .eq("id", editingTask.id);
+      if (error) toast.error(error.message);
+      else toast.success("Tarefa atualizada!");
+    } else {
+      const { error } = await supabase.from("checklist_tasks").insert({
+        patient_id: user.id,
+        title: form.title,
+        icon: form.icon,
+        category: form.category,
+        description: form.description || null,
+        date,
+        completed: false,
+      });
+      if (error) toast.error(error.message);
+      else toast.success("Tarefa adicionada!");
+    }
+    setSaving(false);
+    setAddOpen(false);
+    setEditingTask(null);
+    setForm({ title: "", icon: "✅", category: "habit", description: "" });
+    fetchTasks();
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    await supabase.from("checklist_tasks").delete().eq("id", taskId);
+    setTasks(prev => prev.filter(t => t.id !== taskId));
+    toast.success("Tarefa removida");
+  };
+
+  const openEdit = (task: ChecklistTask, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingTask(task);
+    setForm({ title: task.title, icon: task.icon, category: task.category, description: task.description || "" });
+    setAddOpen(true);
+  };
+
   const completedCount = tasks.filter((t) => t.completed).length;
   const progress = tasks.length > 0 ? (completedCount / tasks.length) * 100 : 0;
   const isToday = date === new Date().toISOString().split("T")[0];
@@ -105,7 +219,6 @@ export default function Checklist() {
     setDate(d.toISOString().split("T")[0]);
   };
 
-  // Group by category
   const grouped = tasks.reduce((acc, t) => {
     if (!acc[t.category]) acc[t.category] = [];
     acc[t.category].push(t);
@@ -118,75 +231,83 @@ export default function Checklist() {
     exercise: "💪 Exercício",
     supplement: "💊 Suplementos",
     mindset: "🧠 Mindset",
+    hydration: "💧 Hidratação",
   };
 
   return (
     <DashboardLayout>
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
-        <div className="text-center">
-          <h1 className="font-display text-2xl font-bold">Checklist Diário</h1>
-          <div className="flex items-center justify-center gap-4 mt-2">
-            <Button variant="ghost" size="icon" onClick={() => changeDate(-1)}>
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-primary" />
-              <span className="font-medium">
-                {isToday ? "Hoje" : new Date(date + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "short" })}
-              </span>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-display text-2xl font-bold">Checklist Diário</h1>
+            <div className="flex items-center gap-4 mt-1">
+              <Button variant="ghost" size="icon" onClick={() => changeDate(-1)}>
+                <ChevronLeft className="w-5 h-5" />
+              </Button>
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-primary" />
+                <span className="font-medium text-sm">
+                  {isToday ? "Hoje" : new Date(date + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "short" })}
+                </span>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => changeDate(1)} disabled={isToday}>
+                <ChevronRight className="w-5 h-5" />
+              </Button>
             </div>
-            <Button variant="ghost" size="icon" onClick={() => changeDate(1)} disabled={isToday}>
-              <ChevronRight className="w-5 h-5" />
-            </Button>
           </div>
+          <Button
+            className="gradient-primary gap-2 shadow-glow"
+            onClick={() => { setEditingTask(null); setForm({ title: "", icon: "✅", category: "habit", description: "" }); setAddOpen(true); }}
+          >
+            <Plus className="w-4 h-4" /> Nova Tarefa
+          </Button>
         </div>
 
         {/* Progress */}
-        <motion.div
-          className="glass rounded-2xl p-5"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
+        <motion.div className="glass rounded-2xl p-5" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Flame className="w-5 h-5 text-primary" />
-              <span className="font-display font-semibold">Progresso</span>
+              <span className="font-display font-semibold">Progresso do Dia</span>
             </div>
-            <span className="text-sm font-medium text-primary">{completedCount}/{tasks.length}</span>
+            <span className="text-sm font-bold text-primary">{Math.round(progress)}% • {completedCount}/{tasks.length}</span>
           </div>
           <Progress value={progress} className="h-3" />
           {progress === 100 && tasks.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex items-center gap-2 mt-3 text-success text-sm font-medium"
-            >
+            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="flex items-center gap-2 mt-3 text-primary text-sm font-medium">
               <Trophy className="w-4 h-4" /> Dia completo! 🎉
             </motion.div>
           )}
         </motion.div>
 
         {/* Tasks */}
-        {loading ? (
-          <div className="flex items-center justify-center h-40">
+        {loading || seeding ? (
+          <div className="flex flex-col items-center justify-center h-40 gap-3">
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            {seeding && <p className="text-sm text-muted-foreground">Criando tarefas padrão...</p>}
           </div>
         ) : tasks.length === 0 ? (
           <div className="glass rounded-2xl p-12 text-center">
             <CheckCircle2 className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-            <h3 className="font-display font-semibold text-lg mb-1">Nenhuma tarefa para hoje</h3>
-            <p className="text-muted-foreground text-sm">
-              Seu nutricionista precisa ativar um protocolo para gerar suas tarefas.
-            </p>
+            <h3 className="font-display font-semibold text-lg mb-1">Nenhuma tarefa para este dia</h3>
+            <p className="text-muted-foreground text-sm mb-4">Adicione tarefas manualmente ou selecione "hoje" para carregar as tarefas padrão.</p>
+            <Button variant="outline" onClick={() => { setDate(new Date().toISOString().split("T")[0]); }} className="gap-2">
+              <Calendar className="w-4 h-4" /> Ir para Hoje
+            </Button>
           </div>
         ) : (
           <div className="space-y-6">
             {Object.entries(grouped).map(([category, categoryTasks]) => (
               <div key={category}>
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">
-                  {categoryLabels[category] || category}
-                </h3>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-muted-foreground">
+                    {categoryLabels[category] || category}
+                  </h3>
+                  <span className="text-xs text-muted-foreground">
+                    {categoryTasks.filter(t => t.completed).length}/{categoryTasks.length}
+                  </span>
+                </div>
                 <div className="space-y-2">
                   <AnimatePresence>
                     {categoryTasks.map((task) => (
@@ -195,32 +316,55 @@ export default function Checklist() {
                         layout
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className={`glass rounded-xl p-4 flex items-center gap-4 cursor-pointer transition-all ${
-                          task.completed ? "opacity-60" : "hover:border-primary/30"
+                        className={`glass rounded-xl p-4 flex items-center gap-4 transition-all ${
+                          task.completed ? "opacity-60 bg-primary/5 border-primary/20" : "hover:border-primary/30"
                         }`}
-                        onClick={() => toggleTask(task)}
                       >
-                        <motion.div whileTap={{ scale: 0.8 }}>
+                        {/* Toggle */}
+                        <motion.button
+                          whileTap={{ scale: 0.8 }}
+                          onClick={() => toggleTask(task)}
+                          className="flex-shrink-0"
+                        >
                           {task.completed ? (
-                            <CheckCircle2 className="w-6 h-6 text-success" />
+                            <CheckCircle2 className="w-6 h-6 text-primary" />
                           ) : (
                             <Circle className="w-6 h-6 text-muted-foreground" />
                           )}
-                        </motion.div>
-                        <span className="text-xl">{task.icon}</span>
-                        <div className="flex-1">
+                        </motion.button>
+
+                        <button className="text-xl flex-shrink-0" onClick={() => toggleTask(task)}>{task.icon}</button>
+
+                        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => toggleTask(task)}>
                           <p className={`font-medium text-sm ${task.completed ? "line-through text-muted-foreground" : ""}`}>
                             {task.title}
                           </p>
                           {task.description && (
-                            <p className="text-xs text-muted-foreground">{task.description}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{task.description}</p>
                           )}
                         </div>
+
                         {task.completed && task.completed_at && (
-                          <span className="text-[10px] text-muted-foreground">
+                          <span className="text-[10px] text-primary">
                             {new Date(task.completed_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                           </span>
                         )}
+
+                        {/* Edit/Delete */}
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <button
+                            className="p-1 rounded hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
+                            onClick={(e) => openEdit(task, e)}
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                            onClick={(e) => { e.stopPropagation(); handleDeleteTask(task.id); }}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </motion.div>
                     ))}
                   </AnimatePresence>
@@ -229,6 +373,64 @@ export default function Checklist() {
             ))}
           </div>
         )}
+
+        {/* Add/Edit Dialog */}
+        <Dialog open={addOpen} onOpenChange={setAddOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="font-display">{editingTask ? "Editar Tarefa" : "Nova Tarefa"}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-1 block">Título *</label>
+                <Input
+                  value={form.title}
+                  onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
+                  placeholder="Ex: Beber 2L de água"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Descrição</label>
+                <Input
+                  value={form.description}
+                  onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
+                  placeholder="Detalhe opcional..."
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Ícone</label>
+                  <Select value={form.icon} onValueChange={v => setForm(p => ({ ...p, icon: v }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORY_ICONS.map(ic => (
+                        <SelectItem key={ic} value={ic}>{ic}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Categoria</label>
+                  <Select value={form.category} onValueChange={v => setForm(p => ({ ...p, category: v }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map(c => (
+                        <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <Button className="w-full gradient-primary" onClick={handleSaveTask} disabled={saving || !form.title.trim()}>
+                {saving ? "Salvando..." : editingTask ? "Salvar Alterações" : "Adicionar Tarefa"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
