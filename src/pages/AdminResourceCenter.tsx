@@ -620,6 +620,12 @@ function UsersTab() {
   const [loading, setLoading] = useState(true);
   const [promoteEmail, setPromoteEmail] = useState("");
 
+  // Create nutritionist form
+  const [nutEmail, setNutEmail] = useState("");
+  const [nutName, setNutName] = useState("");
+  const [nutPassword, setNutPassword] = useState("");
+  const [creating, setCreating] = useState(false);
+
   useEffect(() => {
     if (!user) return;
     const fetchData = async () => {
@@ -644,14 +650,78 @@ function UsersTab() {
     else { toast.success(`Usuário promovido a admin!`); setPromoteEmail(""); }
   };
 
+  const handleCreateNutritionist = async () => {
+    if (!nutEmail.trim() || !nutName.trim() || !nutPassword.trim()) {
+      toast.error("Preencha todos os campos");
+      return;
+    }
+    if (nutPassword.length < 6) {
+      toast.error("A senha deve ter pelo menos 6 caracteres");
+      return;
+    }
+    setCreating(true);
+    const { data, error } = await supabase.rpc("create_nutritionist_account", {
+      _email: nutEmail.trim(),
+      _full_name: nutName.trim(),
+      _password: nutPassword.trim(),
+    });
+    setCreating(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Nutricionista criado com sucesso!");
+      setNutEmail("");
+      setNutName("");
+      setNutPassword("");
+      // Refresh list
+      const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", data).single();
+      setNutritionists(prev => [...prev, { user_id: data, full_name: profile?.full_name || nutName, patientCount: 0 }]);
+    }
+  };
+
   if (loading) return <LoadingSpinner />;
 
   return (
     <div className="space-y-6">
+      {/* Create Nutritionist */}
       <Card className="glass shadow-card">
         <CardHeader>
           <CardTitle className="font-display text-lg flex items-center gap-2">
-            <UserPlus className="w-5 h-5" /> Promover a Admin
+            <UserPlus className="w-5 h-5 text-primary" /> Cadastrar Nutricionista
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            Apenas administradores podem criar contas de nutricionistas. O profissional receberá acesso imediato.
+          </p>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="nutName">Nome completo</Label>
+              <Input id="nutName" placeholder="Dr(a). Nome" value={nutName} onChange={(e) => setNutName(e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="nutEmail">Email profissional</Label>
+              <Input id="nutEmail" type="email" placeholder="email@exemplo.com" value={nutEmail} onChange={(e) => setNutEmail(e.target.value)} />
+            </div>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3 items-end">
+            <div>
+              <Label htmlFor="nutPassword">Senha inicial</Label>
+              <Input id="nutPassword" type="password" placeholder="Mínimo 6 caracteres" value={nutPassword} onChange={(e) => setNutPassword(e.target.value)} />
+            </div>
+            <Button onClick={handleCreateNutritionist} disabled={creating} className="gap-1.5">
+              <UserPlus className="w-4 h-4" />
+              {creating ? "Criando..." : "Criar Nutricionista"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Promote to Admin */}
+      <Card className="glass shadow-card">
+        <CardHeader>
+          <CardTitle className="font-display text-lg flex items-center gap-2">
+            <Shield className="w-5 h-5" /> Promover a Admin
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -663,9 +733,10 @@ function UsersTab() {
         </CardContent>
       </Card>
 
+      {/* Nutritionists List */}
       <Card className="glass shadow-card">
         <CardHeader>
-          <CardTitle className="font-display text-lg">Nutricionistas</CardTitle>
+          <CardTitle className="font-display text-lg">Nutricionistas ({nutritionists.length})</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {nutritionists.length === 0 ? (
