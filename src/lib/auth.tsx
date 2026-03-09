@@ -21,6 +21,7 @@ interface AuthContextType {
   loading: boolean;
   isNutritionist: boolean;
   isPatient: boolean;
+  isAdmin: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
