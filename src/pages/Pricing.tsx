@@ -275,7 +275,7 @@ export default function Pricing() {
 
                 <CardFooter>
                   <Button
-                    className={`w-full gap-2 ${plan.is_featured ? "gradient-primary text-primary-foreground shadow-glow" : ""}`}
+                    className={`w-full gap-2 ${plan.is_featured ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-glow" : ""}`}
                     variant={plan.is_featured ? "default" : "outline"}
                     size="lg"
                     disabled={processingPlan === plan.id}
