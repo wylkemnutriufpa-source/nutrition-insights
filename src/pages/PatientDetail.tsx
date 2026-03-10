@@ -316,6 +316,17 @@ export default function PatientDetail() {
     fetchAll();
   };
 
+  const togglePatientStatus = async () => {
+    if (!npId) return;
+    setTogglingStatus(true);
+    const newStatus = patientStatus === "active" ? "inactive" : "active";
+    const { error } = await supabase.from("nutritionist_patients").update({ status: newStatus }).eq("id", npId);
+    if (error) { toast.error(error.message); setTogglingStatus(false); return; }
+    setPatientStatus(newStatus);
+    toast.success(newStatus === "active" ? "Paciente ativado!" : "Paciente desativado!");
+    setTogglingStatus(false);
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
