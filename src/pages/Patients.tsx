@@ -33,6 +33,7 @@ interface PatientInfo {
   stats?: { last_meal_date?: string; total_xp?: number; current_streak?: number } | null;
   checklistAdherence?: number;
   programs?: { id: string; title: string }[];
+  prestigePlan?: PrestigePlan | null;
 }
 
 interface ProgramInfo {
