@@ -104,6 +104,7 @@ export default function PatientDetail() {
 
   // Plan management
   const [planOpen, setPlanOpen] = useState(false);
+  const [openSection, setOpenSection] = useState<string | null>(null);
   const [patientSubscription, setPatientSubscription] = useState<any>(null);
   const [pricingPlans, setPricingPlans] = useState<any[]>([]);
   const [planForm, setPlanForm] = useState({
@@ -442,8 +443,6 @@ export default function PatientDetail() {
             { key: "meal-plans", label: "Planos Alimentares", icon: UtensilsCrossed, color: "from-success/20 to-success/5", iconColor: "text-success" },
             { key: "radar", label: "Radar Metabólico", icon: TrendingUp, color: "from-destructive/20 to-destructive/5", iconColor: "text-destructive" },
           ];
-
-          const [openSection, setOpenSection] = useState<string | null>(null);
 
           return (
             <>
