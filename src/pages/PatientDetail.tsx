@@ -911,25 +911,26 @@ export default function PatientDetail() {
                       </DialogHeader>
                       <form onSubmit={savePlan} className="space-y-4">
                         <div>
-                          <Label>Plano</Label>
-                          {pricingPlans.length > 0 ? (
-                            <Select value={planForm.plan_name} onValueChange={(v) => setPlanForm({ ...planForm, plan_name: v })}>
-                              <SelectTrigger><SelectValue placeholder="Selecione um plano..." /></SelectTrigger>
-                              <SelectContent>
-                                {pricingPlans.map((p) => (
-                                  <SelectItem key={p.id} value={p.name}>{p.name} — R$ {Number(p.price_monthly).toFixed(2)}/mês</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          ) : (
-                            <Input value={planForm.plan_name} onChange={(e) => setPlanForm({ ...planForm, plan_name: e.target.value })} placeholder="Nome do plano" required />
-                          )}
-                        </div>
-                        <div>
                           <Label className="flex items-center gap-2">
                             <Crown className="w-4 h-4 text-accent" /> Prestígio
                           </Label>
-                          <Select value={selectedPrestigePlanId} onValueChange={setSelectedPrestigePlanId}>
+                          <Select value={selectedPrestigePlanId} onValueChange={(id) => {
+                            setSelectedPrestigePlanId(id);
+                            const pp = prestigePlans.find(p => p.id === id);
+                            if (pp) {
+                              // Auto-set plan name and price based on current duration
+                              const dur = planForm.plan_name;
+                              const priceMap: Record<string, number | null> = {
+                                "Mensal": pp.price_monthly,
+                                "Trimestral": pp.price_quarterly,
+                                "Semestral": pp.price_semiannual,
+                                "Anual": pp.price_annual,
+                              };
+                              if (!["Mensal", "Trimestral", "Semestral", "Anual"].includes(dur)) {
+                                setPlanForm(f => ({ ...f, plan_name: "Mensal" }));
+                              }
+                            }
+                          }}>
                             <SelectTrigger>
                               <SelectValue placeholder="Selecione o nível de prestígio..." />
                             </SelectTrigger>
@@ -951,8 +952,54 @@ export default function PatientDetail() {
                             </div>
                           )}
                         </div>
+                        <div>
+                          <Label>Duração do Plano</Label>
+                          <Select value={planForm.plan_name} onValueChange={(v) => {
+                            setPlanForm({ ...planForm, plan_name: v });
+                            // Auto-calculate end date
+                            if (planForm.started_at) {
+                              const start = new Date(planForm.started_at);
+                              const monthsMap: Record<string, number> = { "Mensal": 1, "Trimestral": 3, "Semestral": 6, "Anual": 12 };
+                              const months = monthsMap[v];
+                              if (months) {
+                                const end = new Date(start);
+                                end.setMonth(end.getMonth() + months);
+                                setPlanForm(f => ({ ...f, plan_name: v, expires_at: end.toISOString().split("T")[0] }));
+                              }
+                            }
+                          }}>
+                            <SelectTrigger><SelectValue placeholder="Selecione a duração..." /></SelectTrigger>
+                            <SelectContent>
+                              {(() => {
+                                const sp = prestigePlans.find(p => p.id === selectedPrestigePlanId);
+                                const durations = [
+                                  { key: "Mensal", label: "Mensal", price: sp?.price_monthly },
+                                  { key: "Trimestral", label: "Trimestral", price: sp?.price_quarterly },
+                                  { key: "Semestral", label: "Semestral", price: sp?.price_semiannual },
+                                  { key: "Anual", label: "Anual", price: sp?.price_annual },
+                                ];
+                                return durations.map(d => (
+                                  <SelectItem key={d.key} value={d.key}>
+                                    {d.label}{d.price != null ? ` — R$ ${Number(d.price).toFixed(2)}` : ""}
+                                  </SelectItem>
+                                ));
+                              })()}
+                            </SelectContent>
+                          </Select>
+                        </div>
                         <div className="grid grid-cols-2 gap-3">
-                          <div><Label>Data Início</Label><Input type="date" value={planForm.started_at} onChange={(e) => setPlanForm({ ...planForm, started_at: e.target.value })} required /></div>
+                          <div><Label>Data Início</Label><Input type="date" value={planForm.started_at} onChange={(e) => {
+                            const newStart = e.target.value;
+                            setPlanForm(f => ({ ...f, started_at: newStart }));
+                            // Recalculate end date
+                            const monthsMap: Record<string, number> = { "Mensal": 1, "Trimestral": 3, "Semestral": 6, "Anual": 12 };
+                            const months = monthsMap[planForm.plan_name];
+                            if (months && newStart) {
+                              const end = new Date(newStart);
+                              end.setMonth(end.getMonth() + months);
+                              setPlanForm(f => ({ ...f, started_at: newStart, expires_at: end.toISOString().split("T")[0] }));
+                            }
+                          }} required /></div>
                           <div><Label>Data Fim</Label><Input type="date" value={planForm.expires_at} onChange={(e) => setPlanForm({ ...planForm, expires_at: e.target.value })} /></div>
                         </div>
                         <Button type="submit" className="w-full gradient-primary" disabled={!planForm.plan_name}>
