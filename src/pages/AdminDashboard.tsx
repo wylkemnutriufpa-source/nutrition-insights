@@ -699,6 +699,7 @@ export default function AdminDashboard() {
               <TabsTrigger value="professionals"><Users className="w-3.5 h-3.5 mr-1" /> Profissionais</TabsTrigger>
               <TabsTrigger value="plans"><CreditCard className="w-3.5 h-3.5 mr-1" /> Planos</TabsTrigger>
               <TabsTrigger value="features"><Zap className="w-3.5 h-3.5 mr-1" /> Feature Flags</TabsTrigger>
+              <TabsTrigger value="reports"><FileText className="w-3.5 h-3.5 mr-1" /> Relatórios</TabsTrigger>
               <TabsTrigger value="admin"><Crown className="w-3.5 h-3.5 mr-1" /> Admin</TabsTrigger>
             </TabsList>
 
