@@ -513,10 +513,10 @@ export default function PhysicalAssessment() {
                 />
               </div>
             </div>
-          </TabsContent>
+          </div>
 
           {/* Energy Expenditure */}
-          <TabsContent value="energy" className="space-y-4 mt-4">
+          <div className="space-y-4">
             <div className="glass rounded-xl p-5">
               <h3 className="font-display font-semibold mb-4 flex items-center gap-2">
                 <Calculator className="w-5 h-5 text-primary" /> Gasto Energético Total (GET)
