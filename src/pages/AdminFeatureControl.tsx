@@ -177,7 +177,7 @@ export default function AdminFeatureControl() {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {nutritionists.map(n => {
-                    const count = Object.values(n.features).filter(Boolean).length;
+                    const count = Object.values(n.features).filter(s => s === "enabled").length;
                     const isSelected = selectedNut === n.user_id;
                     return (
                       <button
