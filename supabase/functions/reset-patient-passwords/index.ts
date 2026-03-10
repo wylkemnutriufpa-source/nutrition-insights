@@ -16,15 +16,17 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Verify caller is admin
-    const authHeader = req.headers.get("Authorization")!;
-    const token = authHeader.replace("Bearer ", "");
-    const { data: { user } } = await supabase.auth.getUser(token);
-    if (!user) throw new Error("Não autenticado");
+    // Verify caller is admin or service role
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader && !authHeader.includes("service_role")) {
+      const token = authHeader.replace("Bearer ", "");
+      const { data: { user } } = await supabase.auth.getUser(token);
+      if (!user) throw new Error("Não autenticado");
 
-    const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
-    const { data: isNutri } = await supabase.rpc("has_role", { _user_id: user.id, _role: "nutritionist" });
-    if (!isAdmin && !isNutri) throw new Error("Sem permissão");
+      const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
+      const { data: isNutri } = await supabase.rpc("has_role", { _user_id: user.id, _role: "nutritionist" });
+      if (!isAdmin && !isNutri) throw new Error("Sem permissão");
+    }
 
     const defaultPassword = "123456";
 
