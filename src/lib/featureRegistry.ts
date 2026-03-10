@@ -53,6 +53,8 @@ export const FEATURE_REGISTRY: FeatureDefinition[] = [
   { name: "physical_assessment", label: "Avaliação Física", description: "Registro completo de avaliações antropométricas", icon: Dumbbell, category: "Gestão de Pacientes", defaultTier: "basic" },
   { name: "supplements", label: "Suplementos", description: "Prescrição e gestão de suplementos", icon: Pill, category: "Gestão de Pacientes", defaultTier: "basic" },
   { name: "checkin_panel", label: "Painel de Check-ins", description: "Revisão de check-ins dos pacientes", icon: ClipboardCheck, category: "Gestão de Pacientes", defaultTier: "basic" },
+  { name: "import_patients", label: "Importação de Pacientes", description: "Importação em massa de pacientes via CSV", icon: UserPlus, category: "Gestão de Pacientes", defaultTier: "basic" },
+  { name: "document_upload", label: "Upload de Documentos", description: "Upload e gestão de documentos do paciente (PDFs, exames, laudos)", icon: FileUp, category: "Gestão de Pacientes", defaultTier: "basic" },
 
   // Comunicação
   { name: "chat", label: "Chat", description: "Comunicação direta com pacientes via chat", icon: MessageSquare, category: "Comunicação", defaultTier: "basic" },
