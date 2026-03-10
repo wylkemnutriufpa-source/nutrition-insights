@@ -83,6 +83,10 @@ export default function BodyAnalysis() {
       toast.error("Selecione pelo menos uma foto.");
       return;
     }
+    if (!aiUsage.allowed) {
+      toast.error(aiUsage.nextAvailableLabel || "Limite de análises corporais atingido");
+      return;
+    }
 
     setUploading(true);
     const [frontUrl, sideUrl, backUrl] = await Promise.all([
