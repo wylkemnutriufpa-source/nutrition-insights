@@ -657,23 +657,23 @@ export default function Patients() {
             <TabsContent value="ativos">
               <PatientGrid patients={activePatientsList} navigate={navigate}
                 toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
-                setAssignDialogOpen={setAssignDialogOpen} search={search}
-                emptyMessage="Nenhum paciente ativo" />
+                setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
+                search={search} emptyMessage="Nenhum paciente ativo" />
             </TabsContent>
 
             <TabsContent value="inativos">
               <PatientGrid patients={inactivePatientsList} navigate={navigate}
                 toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
-                setAssignDialogOpen={setAssignDialogOpen} search={search}
-                emptyMessage="Nenhum paciente inativo" />
+                setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
+                search={search} emptyMessage="Nenhum paciente inativo" />
             </TabsContent>
 
             {programs.map(prog => (
               <TabsContent key={prog.id} value={`prog-${prog.id}`}>
                 <PatientGrid patients={programPatientLists.get(prog.id) || []} navigate={navigate}
                   toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
-                  setAssignDialogOpen={setAssignDialogOpen} search={search}
-                  emptyMessage={`Nenhum paciente no programa "${prog.title}"`} />
+                  setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
+                  search={search} emptyMessage={`Nenhum paciente no programa "${prog.title}"`} />
               </TabsContent>
             ))}
           </Tabs>
