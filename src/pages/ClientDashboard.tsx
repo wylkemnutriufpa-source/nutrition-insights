@@ -10,6 +10,7 @@ import {
   Rocket, CalendarDays, Bell, TrendingUp, CheckCircle2,
   UtensilsCrossed, Trophy, Target
 } from "lucide-react";
+import RankingWidget from "@/components/prestige/RankingWidget";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -144,6 +145,8 @@ export default function ClientDashboard() {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {/* Ranking Widget */}
+          <RankingWidget />
           <Link to="/checklist">
             <Card className="hover:border-primary/30 transition-colors cursor-pointer">
               <CardContent className="p-4">

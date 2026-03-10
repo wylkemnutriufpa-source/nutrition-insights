@@ -1247,6 +1247,68 @@ export type Database = {
           },
         ]
       }
+      patient_points: {
+        Row: {
+          action_key: string
+          earned_at: string
+          id: string
+          metadata: Json | null
+          patient_id: string
+          points: number
+        }
+        Insert: {
+          action_key: string
+          earned_at?: string
+          id?: string
+          metadata?: Json | null
+          patient_id: string
+          points: number
+        }
+        Update: {
+          action_key?: string
+          earned_at?: string
+          id?: string
+          metadata?: Json | null
+          patient_id?: string
+          points?: number
+        }
+        Relationships: []
+      }
+      patient_prestige: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          id: string
+          is_active: boolean
+          patient_id: string
+          plan_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          is_active?: boolean
+          patient_id: string
+          plan_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          is_active?: boolean
+          patient_id?: string
+          plan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_prestige_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "prestige_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_protocols: {
         Row: {
           created_at: string
@@ -1293,6 +1355,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      patient_ranking_cache: {
+        Row: {
+          avatar_url: string | null
+          badge_icon: string | null
+          crown_enabled: boolean | null
+          display_name: string
+          patient_id: string
+          plan_color: string | null
+          plan_slug: string | null
+          rank_position: number | null
+          total_points: number
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          badge_icon?: string | null
+          crown_enabled?: boolean | null
+          display_name?: string
+          patient_id: string
+          plan_color?: string | null
+          plan_slug?: string | null
+          rank_position?: number | null
+          total_points?: number
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          badge_icon?: string | null
+          crown_enabled?: boolean | null
+          display_name?: string
+          patient_id?: string
+          plan_color?: string | null
+          plan_slug?: string | null
+          rank_position?: number | null
+          total_points?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       patient_recommendations: {
         Row: {
@@ -1803,6 +1904,72 @@ export type Database = {
         }
         Relationships: []
       }
+      prestige_plans: {
+        Row: {
+          ai_usage_multiplier: number
+          badge_icon: string
+          badge_label: string
+          color: string
+          created_at: string
+          crown_enabled: boolean
+          display_order: number
+          effect_type: string
+          features: Json
+          id: string
+          is_active: boolean
+          name: string
+          price_annual: number | null
+          price_monthly: number
+          price_quarterly: number | null
+          price_semiannual: number | null
+          ranking_highlight: boolean
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          ai_usage_multiplier?: number
+          badge_icon?: string
+          badge_label?: string
+          color?: string
+          created_at?: string
+          crown_enabled?: boolean
+          display_order?: number
+          effect_type?: string
+          features?: Json
+          id?: string
+          is_active?: boolean
+          name: string
+          price_annual?: number | null
+          price_monthly?: number
+          price_quarterly?: number | null
+          price_semiannual?: number | null
+          ranking_highlight?: boolean
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          ai_usage_multiplier?: number
+          badge_icon?: string
+          badge_label?: string
+          color?: string
+          created_at?: string
+          crown_enabled?: boolean
+          display_order?: number
+          effect_type?: string
+          features?: Json
+          id?: string
+          is_active?: boolean
+          name?: string
+          price_annual?: number | null
+          price_monthly?: number
+          price_quarterly?: number | null
+          price_semiannual?: number | null
+          ranking_highlight?: boolean
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pricing_plans: {
         Row: {
           created_at: string
@@ -1929,6 +2096,8 @@ export type Database = {
           full_name: string
           id: string
           phone: string | null
+          ranking_nickname: string | null
+          show_in_ranking: boolean
           updated_at: string
           user_id: string
         }
@@ -1938,6 +2107,8 @@ export type Database = {
           full_name?: string
           id?: string
           phone?: string | null
+          ranking_nickname?: string | null
+          show_in_ranking?: boolean
           updated_at?: string
           user_id: string
         }
@@ -1947,6 +2118,8 @@ export type Database = {
           full_name?: string
           id?: string
           phone?: string | null
+          ranking_nickname?: string | null
+          show_in_ranking?: boolean
           updated_at?: string
           user_id?: string
         }
@@ -2343,6 +2516,39 @@ export type Database = {
           p256dh?: string
           user_agent?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      ranking_point_rules: {
+        Row: {
+          action_key: string
+          action_label: string
+          created_at: string
+          daily_limit: number | null
+          icon: string
+          id: string
+          is_active: boolean
+          points: number
+        }
+        Insert: {
+          action_key: string
+          action_label: string
+          created_at?: string
+          daily_limit?: number | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          points?: number
+        }
+        Update: {
+          action_key?: string
+          action_label?: string
+          created_at?: string
+          daily_limit?: number | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          points?: number
         }
         Relationships: []
       }
@@ -2820,6 +3026,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      award_points: {
+        Args: { _action_key: string; _metadata?: Json; _patient_id: string }
+        Returns: Json
+      }
       check_ai_usage: {
         Args: { _feature_key: string; _plan_tier?: string; _user_id: string }
         Returns: Json
@@ -2861,6 +3071,7 @@ export type Database = {
         Args: { _feature_key: string; _plan_tier?: string; _user_id: string }
         Returns: Json
       }
+      refresh_ranking_cache: { Args: never; Returns: undefined }
       reset_professional_password: {
         Args: { _new_password: string; _user_id: string }
         Returns: undefined

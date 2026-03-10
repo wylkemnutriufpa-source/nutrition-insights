@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { User, Lock, Save, Bell, BellOff } from "lucide-react";
+import { User, Lock, Save, Bell, BellOff, Trophy, Eye } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 export default function Settings() {
@@ -23,6 +24,21 @@ export default function Settings() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
+
+  // Ranking privacy
+  const [showInRanking, setShowInRanking] = useState(false);
+  const [rankingNickname, setRankingNickname] = useState("");
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("show_in_ranking, ranking_nickname").eq("user_id", user.id).single()
+      .then(({ data }) => {
+        if (data) {
+          setShowInRanking(data.show_in_ranking || false);
+          setRankingNickname(data.ranking_nickname || "");
+        }
+      });
+  }, [user]);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,6 +127,55 @@ export default function Settings() {
                 {savingProfile ? "Salvando..." : "Salvar Perfil"}
               </Button>
             </form>
+          </CardContent>
+        </Card>
+
+        {/* Ranking Privacy */}
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle className="font-display flex items-center gap-2">
+              <Eye className="w-5 h-5 text-primary" /> Privacidade do Ranking
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30">
+              <div>
+                <p className="font-medium text-sm">Aparecer no ranking público</p>
+                <p className="text-xs text-muted-foreground">Mostrar seu nome completo no ranking global</p>
+              </div>
+              <Switch
+                checked={showInRanking}
+                onCheckedChange={async (v) => {
+                  setShowInRanking(v);
+                  await supabase.from("profiles").update({ show_in_ranking: v }).eq("user_id", user!.id);
+                  toast.success(v ? "Visível no ranking!" : "Oculto do ranking público");
+                }}
+              />
+            </div>
+            <div>
+              <Label>Apelido no ranking (quando nome oculto)</Label>
+              <div className="flex gap-2 mt-1">
+                <Input
+                  value={rankingNickname}
+                  onChange={(e) => setRankingNickname(e.target.value)}
+                  placeholder="Ex: FitWarrior123"
+                  maxLength={20}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    await supabase.from("profiles").update({ ranking_nickname: rankingNickname }).eq("user_id", user!.id);
+                    toast.success("Apelido atualizado!");
+                  }}
+                >
+                  <Save className="w-4 h-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Se desativado, seu nome aparecerá como "{fullName ? fullName[0] + '***' : 'P***'}"
+              </p>
+            </div>
           </CardContent>
         </Card>
 
