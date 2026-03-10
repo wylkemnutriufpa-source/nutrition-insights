@@ -41,6 +41,38 @@ interface ProgramInfo {
   title: string;
 }
 
+// ─── Recent patients tracking via localStorage ───
+const RECENT_KEY = "fitjourney_recent_patients";
+const MAX_RECENT = 50;
+
+function getRecentPatients(): Record<string, { count: number; lastSeen: number }> {
+  try {
+    return JSON.parse(localStorage.getItem(RECENT_KEY) || "{}");
+  } catch { return {}; }
+}
+
+function trackPatientView(patientId: string) {
+  const recent = getRecentPatients();
+  const entry = recent[patientId] || { count: 0, lastSeen: 0 };
+  entry.count += 1;
+  entry.lastSeen = Date.now();
+  recent[patientId] = entry;
+  // Keep only top N
+  const sorted = Object.entries(recent).sort((a, b) => b[1].lastSeen - a[1].lastSeen).slice(0, MAX_RECENT);
+  localStorage.setItem(RECENT_KEY, JSON.stringify(Object.fromEntries(sorted)));
+}
+
+function getRecentScore(patientId: string): number {
+  const recent = getRecentPatients();
+  const entry = recent[patientId];
+  if (!entry) return 0;
+  const hoursSince = (Date.now() - entry.lastSeen) / 3600000;
+  // Decay: recent views worth more, count adds weight
+  const recency = Math.max(0, 100 - hoursSince * 2); // decays over ~50 hours
+  const frequency = Math.min(entry.count * 10, 50);
+  return recency + frequency;
+}
+
 function computeScore(stats: any, checklistData: any): number {
   let score = 0;
   if (checklistData) {
