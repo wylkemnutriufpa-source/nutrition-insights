@@ -147,17 +147,19 @@ export default function Financial() {
   const balance = incomeTotal - expenseTotal;
 
   const statusColors: Record<string, string> = {
-    active: "bg-emerald-500/10 text-emerald-500",
-    expired: "bg-red-500/10 text-red-500",
+    paid: "bg-emerald-500/10 text-emerald-500",
+    approved: "bg-emerald-500/10 text-emerald-500",
+    pending: "bg-amber-500/10 text-amber-500",
+    failed: "bg-destructive/10 text-destructive",
     cancelled: "bg-muted text-muted-foreground",
-    trial: "bg-blue-500/10 text-blue-500",
   };
 
   const statusLabels: Record<string, string> = {
-    active: "Ativo",
-    expired: "Expirado",
+    paid: "Pago",
+    approved: "Aprovado",
+    pending: "Pendente",
+    failed: "Falhou",
     cancelled: "Cancelado",
-    trial: "Trial",
   };
 
   return (
