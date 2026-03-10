@@ -389,7 +389,7 @@ export default function Landing() {
                   <div className="w-3 h-3 rounded-full bg-destructive/60" />
                   <div className="w-3 h-3 rounded-full bg-warning/60" />
                   <div className="w-3 h-3 rounded-full bg-success/60" />
-                  <span className="ml-2 text-xs text-muted-foreground font-mono">nutriflow.app/dashboard</span>
+                  <span className="ml-2 text-xs text-muted-foreground font-mono">fitjourney.app/dashboard</span>
                 </div>
                 <div className="space-y-3">
                   <div className="flex gap-3">
