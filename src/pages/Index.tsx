@@ -541,10 +541,22 @@ function NutritionistDashboardContent() {
         >
           <BarChart3 className="w-4 h-4" /> Analytics
         </button>
+        <button
+          onClick={() => setActiveTab("strategy")}
+          className={`flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-md transition-all ${
+            activeTab === "strategy"
+              ? "bg-card shadow-sm text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Brain className="w-4 h-4" /> IA Estratégica
+        </button>
       </div>
 
       {activeTab === "analytics" ? (
         <AnalyticsDashboard />
+      ) : activeTab === "strategy" ? (
+        <AIStrategyCenter />
       ) : (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
       {/* ── Header ── */}
