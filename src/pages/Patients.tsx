@@ -264,10 +264,13 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
         </div>
       )}
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+        <div className="relative w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
           <span className="text-lg font-bold text-primary">
             {displayName[0].toUpperCase()}
           </span>
+          {isOnline && (
+            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-success border-2 border-card animate-pulse" title="Online agora" />
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
