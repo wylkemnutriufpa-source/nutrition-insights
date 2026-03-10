@@ -83,10 +83,10 @@ export default function Auth() {
             className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary shadow-lg mb-4">
             <Leaf className="w-8 h-8 text-primary-foreground" />
           </motion.div>
-          <h1 className="text-3xl font-bold font-display text-foreground">
-            Nutri<span className="text-primary">Flow</span>
+          <h1 className="text-3xl font-bold font-display">
+            <span className="bg-gradient-to-r from-primary via-emerald-400 to-teal-300 bg-clip-text text-transparent">Fit</span><span className="bg-gradient-to-r from-teal-300 via-cyan-400 to-primary bg-clip-text text-transparent">Journey</span>
           </h1>
-          <p className="text-muted-foreground mt-1">Nutrição inteligente & gamificada</p>
+          <p className="text-muted-foreground mt-1">Sua jornada fitness inteligente & gamificada</p>
         </div>
 
         <Card className="shadow-card border-border/50 bg-card/80 backdrop-blur-sm">
