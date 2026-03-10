@@ -465,7 +465,7 @@ function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssign
   );
 }
 
-function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, search, emptyMessage, layout }: {
+function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, search, emptyMessage, layout, allPrestigePlans = [] }: {
   patients: PatientInfo[]; navigate: any;
   toggleStatus: (id: string, status: string) => void;
   setAssignTarget: (p: PatientInfo) => void;
@@ -475,6 +475,7 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
   search: string;
   emptyMessage: string;
   layout: "grid" | "list";
+  allPrestigePlans?: PrestigePlan[];
 }) {
   if (patients.length === 0) {
     return (
