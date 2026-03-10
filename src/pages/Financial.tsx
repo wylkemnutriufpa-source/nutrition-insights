@@ -522,10 +522,10 @@ export default function Financial() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="font-display">
-              {txForm.type === "income" ? "Nova Receita" : "Nova Despesa"}
+              {txForm.id ? "Editar Transação" : (txForm.type === "income" ? "Nova Receita" : "Nova Despesa")}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={addTransaction} className="space-y-4">
+          <form onSubmit={saveTransaction} className="space-y-4">
             <div>
               <Label>Tipo</Label>
               <Select value={txForm.type} onValueChange={(v) => setTxForm({ ...txForm, type: v as "income" | "expense" })}>
