@@ -172,9 +172,12 @@ export default function BodyAnalysis() {
               <p className="text-sm text-muted-foreground">{analyses.length} análise{analyses.length !== 1 ? "s" : ""} registrada{analyses.length !== 1 ? "s" : ""}</p>
             </div>
           </div>
-          <Button onClick={() => setNewDialogOpen(true)} className="gradient-primary gap-2">
-            <Camera className="w-4 h-4" /> Nova Análise
-          </Button>
+          <div className="flex items-center gap-3">
+            <AIUsageBadge status={aiUsage} />
+            <Button onClick={() => setNewDialogOpen(true)} disabled={!aiUsage.allowed} className="gradient-primary gap-2">
+              <Camera className="w-4 h-4" /> Nova Análise
+            </Button>
+          </div>
         </div>
 
         {analyzing && (
