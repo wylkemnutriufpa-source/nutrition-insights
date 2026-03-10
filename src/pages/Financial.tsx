@@ -206,8 +206,8 @@ export default function Financial() {
                     <CreditCard className="w-6 h-6 text-emerald-500" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold font-display">{totalActive}</p>
-                    <p className="text-sm text-muted-foreground">Assinaturas Ativas</p>
+                    <p className="text-2xl font-bold font-display">{totalPaid}</p>
+                    <p className="text-sm text-muted-foreground">Pagamentos Confirmados</p>
                   </div>
                 </CardContent>
               </Card>
