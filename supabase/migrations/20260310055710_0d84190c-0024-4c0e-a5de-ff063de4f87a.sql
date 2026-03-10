@@ -1,0 +1,1 @@
+ALTER TABLE public.nutritionist_patients ADD COLUMN IF NOT EXISTS expires_at date DEFAULT NULL;

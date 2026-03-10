@@ -870,6 +870,7 @@ export type Database = {
         Row: {
           checkin_frequency: string | null
           created_at: string
+          expires_at: string | null
           id: string
           last_checkin_reminder: string | null
           notes: string | null
@@ -880,6 +881,7 @@ export type Database = {
         Insert: {
           checkin_frequency?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
           last_checkin_reminder?: string | null
           notes?: string | null
@@ -890,6 +892,7 @@ export type Database = {
         Update: {
           checkin_frequency?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
           last_checkin_reminder?: string | null
           notes?: string | null
