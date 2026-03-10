@@ -426,19 +426,10 @@ export default function PhysicalAssessment() {
           </motion.div>
         </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="body" className="w-full">
-          <TabsList className="w-full justify-start bg-card border border-border overflow-x-auto">
-            <TabsTrigger value="body"><Ruler className="w-3.5 h-3.5 mr-1" /> Medidas Corporais</TabsTrigger>
-            <TabsTrigger value="folds"><TrendingDown className="w-3.5 h-3.5 mr-1" /> Dobras Cutâneas</TabsTrigger>
-            <TabsTrigger value="energy"><Calculator className="w-3.5 h-3.5 mr-1" /> Gasto Energético</TabsTrigger>
-            <TabsTrigger value="compare"><GitCompare className="w-3.5 h-3.5 mr-1" /> Comparativo</TabsTrigger>
-            <TabsTrigger value="history"><History className="w-3.5 h-3.5 mr-1" /> Histórico</TabsTrigger>
-            <TabsTrigger value="docs"><Upload className="w-3.5 h-3.5 mr-1" /> Documentos</TabsTrigger>
-          </TabsList>
-
+        {/* Sections */}
+        <div className="space-y-6">
           {/* Body Measurements */}
-          <TabsContent value="body" className="space-y-4 mt-4">
+          <div className="space-y-4">
             <div className="glass rounded-xl p-5">
               <h3 className="font-display font-semibold mb-4 flex items-center gap-2">
                 <Scale className="w-5 h-5 text-primary" /> Dados Básicos
