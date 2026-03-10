@@ -807,10 +807,10 @@ export default function PhysicalAssessment() {
                 </>
               )}
             </div>
-          </TabsContent>
+          </div>
 
-          {/* Documents Tab */}
-          <TabsContent value="docs" className="mt-4">
+          {/* Documents */}
+          <div>
             <div className="glass rounded-xl p-5">
               <h3 className="font-display font-semibold mb-4 flex items-center gap-2">
                 📎 Documentos da Avaliação Física
