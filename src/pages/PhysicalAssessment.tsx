@@ -817,6 +817,25 @@ export default function PhysicalAssessment() {
               )}
             </div>
           </TabsContent>
+
+          {/* Documents Tab */}
+          <TabsContent value="docs" className="mt-4">
+            <div className="glass rounded-xl p-5">
+              <h3 className="font-display font-semibold mb-4 flex items-center gap-2">
+                📎 Documentos da Avaliação Física
+              </h3>
+              {patientId && user && (
+                <DocumentUpload
+                  patientId={patientId}
+                  nutritionistId={user.id}
+                  documentType="assessment"
+                  referenceId={form.id}
+                  documents={assessmentDocs}
+                  onUploadComplete={fetchAssessmentDocs}
+                />
+              )}
+            </div>
+          </TabsContent>
         </Tabs>
       </div>
     </DashboardLayout>
