@@ -44,6 +44,7 @@ export const FEATURE_REGISTRY: FeatureDefinition[] = [
   { name: "nutrition_copilot", label: "Nutrition Copilot", description: "Assistente clínico IA com fila de prioridade, alertas, padrões comportamentais e feed de inteligência", icon: Brain, category: "IA & Automação", defaultTier: "premium", addedVersion: "3.0" },
   { name: "churn_prediction", label: "Predição de Abandono", description: "Detecta pacientes em risco de abandonar o programa com score de churn e ações sugeridas", icon: Activity, category: "IA & Automação", defaultTier: "premium", addedVersion: "3.0" },
   { name: "adherence_gamification", label: "Gamificação de Adesão", description: "Sistema de streak, pontos por tarefa, badges de conquistas e mensagens motivacionais IA para pacientes", icon: Trophy, category: "IA & Automação", defaultTier: "premium", addedVersion: "3.0" },
+  { name: "ranking_global", label: "Ranking Global", description: "Ranking competitivo de engajamento entre pacientes com categorias, períodos e badges de prestígio", icon: Trophy, category: "IA & Automação", defaultTier: "premium", addedVersion: "3.5" },
 
   // Gestão de Pacientes
   { name: "patients", label: "Gestão de Pacientes", description: "Cadastro e acompanhamento de pacientes", icon: Users, category: "Gestão de Pacientes", defaultTier: "basic" },
