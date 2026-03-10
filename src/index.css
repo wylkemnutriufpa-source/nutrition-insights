@@ -155,6 +155,7 @@
     -webkit-text-fill-color: transparent;
     filter: drop-shadow(0 2px 8px rgba(255,215,0,0.4));
   }
+}
 
 @layer utilities {
   .glass {

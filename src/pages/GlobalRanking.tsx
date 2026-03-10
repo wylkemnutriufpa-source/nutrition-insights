@@ -671,7 +671,18 @@ export default function GlobalRanking() {
                           </div>
 
                           <p className="text-sm font-bold mt-0.5 text-center truncate max-w-[110px]"
-                            style={{ color: entry.plan_color || undefined }}>
+                            style={{
+                              background: idx === 0
+                                ? "linear-gradient(180deg, #B8860B, #FFD700 30%, #FFFACD 55%, #FFD700 80%, #B8860B)"
+                                : idx === 1
+                                ? "linear-gradient(180deg, #808080, #C0C0C0 30%, #E8E8E8 55%, #C0C0C0 80%, #808080)"
+                                : "linear-gradient(180deg, #8B5E3C, #CD7F32 30%, #E8A96C 55%, #CD7F32 80%, #8B5E3C)",
+                              WebkitBackgroundClip: "text",
+                              WebkitTextFillColor: "transparent",
+                              filter: idx === 0
+                                ? "drop-shadow(0 2px 6px rgba(255,215,0,0.4))"
+                                : "drop-shadow(0 1px 3px rgba(0,0,0,0.2))",
+                            }}>
                             {entry.display_name}
                           </p>
 
