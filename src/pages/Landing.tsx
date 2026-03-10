@@ -119,6 +119,29 @@ export default function Landing() {
       <Helmet>
         <title>{metaTitle}</title>
         <meta name="description" content={metaDescription} />
+        <meta property="og:title" content={metaTitle} />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://fijourney.lovable.app" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={metaTitle} />
+        <meta name="twitter:description" content={metaDescription} />
+        <link rel="canonical" href="https://fijourney.lovable.app" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "FitJourney",
+          "applicationCategory": "HealthApplication",
+          "operatingSystem": "Web",
+          "description": metaDescription,
+          "url": "https://fijourney.lovable.app",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "BRL",
+            "description": "Trial gratuito de 7 dias"
+          }
+        })}</script>
       </Helmet>
 
       {/* ══════════ NAV ══════════ */}
