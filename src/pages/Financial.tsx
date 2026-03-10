@@ -147,6 +147,47 @@ export default function Financial() {
   const expenseTotal = transactions.filter((t) => t.type === "expense").reduce((sum, t) => sum + t.amount, 0);
   const balance = incomeTotal - expenseTotal;
 
+  // Chart data: monthly income vs expense (last 6 months)
+  const monthlyData = useMemo(() => {
+    const months: Record<string, { month: string; receitas: number; despesas: number }> = {};
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const label = d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" });
+      months[key] = { month: label, receitas: 0, despesas: 0 };
+    }
+    transactions.forEach((tx) => {
+      const key = tx.date.substring(0, 7);
+      if (months[key]) {
+        if (tx.type === "income") months[key].receitas += tx.amount;
+        else months[key].despesas += tx.amount;
+      }
+    });
+    return Object.values(months);
+  }, [transactions]);
+
+  // Category breakdown for pie chart
+  const categoryData = useMemo(() => {
+    const cats: Record<string, number> = {};
+    transactions.forEach((tx) => {
+      const cat = tx.category || (tx.type === "income" ? "Receita geral" : "Despesa geral");
+      cats[cat] = (cats[cat] || 0) + tx.amount;
+    });
+    return Object.entries(cats).map(([name, value]) => ({ name, value }));
+  }, [transactions]);
+
+  // Payment status breakdown
+  const paymentStatusData = useMemo(() => {
+    const statuses: Record<string, number> = {};
+    payments.forEach((p) => {
+      const label = statusLabels[p.status] || p.status;
+      statuses[label] = (statuses[label] || 0) + 1;
+    });
+    return Object.entries(statuses).map(([name, value]) => ({ name, value }));
+  }, [payments]);
+
+  const PIE_COLORS = ["hsl(160, 84%, 39%)", "hsl(45, 93%, 47%)", "hsl(0, 84%, 60%)", "hsl(200, 80%, 50%)", "hsl(280, 70%, 50%)"];
   const statusColors: Record<string, string> = {
     paid: "bg-emerald-500/10 text-emerald-500",
     approved: "bg-emerald-500/10 text-emerald-500",
