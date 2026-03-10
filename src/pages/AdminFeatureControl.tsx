@@ -128,7 +128,8 @@ export default function AdminFeatureControl() {
     return cats;
   }, [filteredFeatures]);
 
-  const enabledCount = selectedNutData ? Object.values(selectedNutData.features).filter(Boolean).length : 0;
+  const enabledCount = selectedNutData ? Object.values(selectedNutData.features).filter(s => s === "enabled").length : 0;
+  const comingSoonCount = selectedNutData ? Object.values(selectedNutData.features).filter(s => s === "coming_soon").length : 0;
   const totalCount = ALL_FEATURES.length;
 
   return (
