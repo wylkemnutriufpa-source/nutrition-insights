@@ -25,6 +25,21 @@ export default function Settings() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
 
+  // Ranking privacy
+  const [showInRanking, setShowInRanking] = useState(false);
+  const [rankingNickname, setRankingNickname] = useState("");
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("show_in_ranking, ranking_nickname").eq("user_id", user.id).single()
+      .then(({ data }) => {
+        if (data) {
+          setShowInRanking(data.show_in_ranking || false);
+          setRankingNickname(data.ranking_nickname || "");
+        }
+      });
+  }, [user]);
+
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
