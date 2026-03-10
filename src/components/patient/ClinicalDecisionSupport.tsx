@@ -72,14 +72,15 @@ export default function ClinicalDecisionSupport({ patientId, nutritionistId }: P
         ? Math.floor((Date.now() - new Date(lastCheckin.created_at).getTime()) / 86400000)
         : 999;
 
+      const answers = anamnesis?.answers as Record<string, any> | null;
       const patientData = {
         name: profileRes.data?.full_name || "Paciente",
         anamnesis: anamnesis ? {
-          goal: anamnesis.answers?.goal,
-          activityLevel: anamnesis.answers?.activity_level,
-          healthConditions: anamnesis.answers?.health_conditions,
-          feeling: anamnesis.answers?.feeling,
-          waterIntake: anamnesis.answers?.water_intake,
+          goal: answers?.goal,
+          activityLevel: answers?.activity_level,
+          healthConditions: answers?.health_conditions,
+          feeling: answers?.feeling,
+          waterIntake: answers?.water_intake,
           tmb: anamnesis.computed_tmb,
           kcalTarget: anamnesis.computed_kcal_target,
           protein: anamnesis.computed_protein,
