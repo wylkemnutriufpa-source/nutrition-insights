@@ -11,6 +11,7 @@ import {
   UtensilsCrossed, Trophy, Target
 } from "lucide-react";
 import RankingWidget from "@/components/prestige/RankingWidget";
+import ExplorerProgressWidget from "@/components/dashboard/ExplorerProgressWidget";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
