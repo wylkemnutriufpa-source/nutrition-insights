@@ -915,22 +915,28 @@ export default function PatientDetail() {
                         <div>
                           <Label>Plano</Label>
                           <Select value={planForm.plan_name} onValueChange={(v) => {
-                            setPlanForm({ ...planForm, plan_name: v });
                             // Auto-calculate end date
-                            if (planForm.started_at) {
-                              const start = new Date(planForm.started_at);
-                              const monthsMap: Record<string, number> = { "Mensal": 1, "Trimestral": 3, "Semestral": 6, "Anual": 12 };
-                              const months = monthsMap[v];
-                              if (months) {
-                                const end = new Date(start);
-                                end.setMonth(end.getMonth() + months);
-                                setPlanForm(f => ({ ...f, plan_name: v, expires_at: end.toISOString().split("T")[0] }));
+                            const monthsMap: Record<string, number> = { "Mensal": 1, "Trimestral": 3, "Semestral": 6, "Anual": 12 };
+                            const months = monthsMap[v];
+                            let newExpires = planForm.expires_at;
+                            if (months && planForm.started_at) {
+                              const end = new Date(planForm.started_at);
+                              end.setMonth(end.getMonth() + months);
+                              newExpires = end.toISOString().split("T")[0];
+                            }
+                            // Auto-fill value from prestige plan prices
+                            let autoValue = planForm.value;
+                            const pid = selectedPrestigePlanId || currentPrestigePlan?.id || (prestigePlans.length > 0 ? prestigePlans[0].id : "");
+                            if (pid) {
+                              if (!selectedPrestigePlanId) setSelectedPrestigePlanId(pid);
+                              const sp = prestigePlans.find(p => p.id === pid);
+                              if (sp) {
+                                const priceMap: Record<string, number | null> = { "Mensal": sp.price_monthly, "Trimestral": sp.price_quarterly, "Semestral": sp.price_semiannual, "Anual": sp.price_annual };
+                                const price = priceMap[v];
+                                if (price != null) autoValue = String(price);
                               }
                             }
-                            // Auto-select prestige based on current patient's prestige or first available
-                            if (!selectedPrestigePlanId && prestigePlans.length > 0) {
-                              setSelectedPrestigePlanId(currentPrestigePlan?.id || prestigePlans[0].id);
-                            }
+                            setPlanForm(f => ({ ...f, plan_name: v, expires_at: newExpires, value: autoValue }));
                           }}>
                             <SelectTrigger><SelectValue placeholder="Selecione o plano..." /></SelectTrigger>
                             <SelectContent>
@@ -940,19 +946,22 @@ export default function PatientDetail() {
                               <SelectItem value="Anual">Anual</SelectItem>
                             </SelectContent>
                           </Select>
-                          {planForm.plan_name && selectedPrestigePlanId && (() => {
+                        </div>
+                        <div>
+                          <Label>Valor (R$)</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="Ex: 150.00"
+                            value={planForm.value}
+                            onChange={(e) => setPlanForm({ ...planForm, value: e.target.value })}
+                          />
+                          {selectedPrestigePlanId && (() => {
                             const sp = prestigePlans.find(p => p.id === selectedPrestigePlanId);
-                            if (!sp) return null;
-                            const priceMap: Record<string, number | null> = {
-                              "Mensal": sp.price_monthly,
-                              "Trimestral": sp.price_quarterly,
-                              "Semestral": sp.price_semiannual,
-                              "Anual": sp.price_annual,
-                            };
-                            const price = priceMap[planForm.plan_name];
-                            return price != null ? (
+                            return sp ? (
                               <p className="text-xs text-muted-foreground mt-1">
-                                Valor: <span className="font-semibold text-foreground">R$ {Number(price).toFixed(2)}</span> • Prestígio: <span style={{ color: sp.color }} className="font-semibold">{sp.badge_icon} {sp.name}</span>
+                                Prestígio: <span style={{ color: sp.color }} className="font-semibold">{sp.badge_icon} {sp.name}</span>
                               </p>
                             ) : null;
                           })()}
