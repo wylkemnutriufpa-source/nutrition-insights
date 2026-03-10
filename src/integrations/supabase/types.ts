@@ -47,6 +47,60 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_usage_limits: {
+        Row: {
+          created_at: string
+          feature_key: string
+          id: string
+          max_uses: number
+          period_days: number
+          period_type: string
+          plan_tier: string
+        }
+        Insert: {
+          created_at?: string
+          feature_key: string
+          id?: string
+          max_uses?: number
+          period_days?: number
+          period_type?: string
+          plan_tier?: string
+        }
+        Update: {
+          created_at?: string
+          feature_key?: string
+          id?: string
+          max_uses?: number
+          period_days?: number
+          period_type?: string
+          plan_tier?: string
+        }
+        Relationships: []
+      }
+      ai_usage_tracking: {
+        Row: {
+          feature_key: string
+          id: string
+          metadata: Json | null
+          used_at: string
+          user_id: string
+        }
+        Insert: {
+          feature_key: string
+          id?: string
+          metadata?: Json | null
+          used_at?: string
+          user_id: string
+        }
+        Update: {
+          feature_key?: string
+          id?: string
+          metadata?: Json | null
+          used_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       anamnesis_ai_insights: {
         Row: {
           ai_summary: string | null
@@ -2766,6 +2820,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_ai_usage: {
+        Args: { _feature_key: string; _plan_tier?: string; _user_id: string }
+        Returns: Json
+      }
       create_nutritionist_account: {
         Args: { _email: string; _full_name: string; _password: string }
         Returns: string
@@ -2799,6 +2857,10 @@ export type Database = {
         }[]
       }
       promote_to_admin: { Args: { _user_email: string }; Returns: string }
+      record_ai_usage: {
+        Args: { _feature_key: string; _plan_tier?: string; _user_id: string }
+        Returns: Json
+      }
       reset_professional_password: {
         Args: { _new_password: string; _user_id: string }
         Returns: undefined
