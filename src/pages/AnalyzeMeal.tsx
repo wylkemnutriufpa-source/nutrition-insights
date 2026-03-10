@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { Sparkles, Upload, Loader2, Brain, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { Database } from "@/integrations/supabase/types";
+import { useAIUsage } from "@/hooks/useAIUsage";
+import AIUsageBadge from "@/components/common/AIUsageBadge";
 
 type MealType = Database["public"]["Enums"]["meal_type"];
 
@@ -36,6 +38,7 @@ interface AnalysisResult {
 
 export default function AnalyzeMeal() {
   const { user } = useAuth();
+  const aiUsage = useAIUsage("analyze_meal");
   const [description, setDescription] = useState("");
   const [mealType, setMealType] = useState<MealType>("lunch");
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -55,6 +58,10 @@ export default function AnalyzeMeal() {
   const analyze = async () => {
     if (!description.trim() && !imageFile) {
       toast.error("Descreva a refeição ou envie uma foto");
+      return;
+    }
+    if (!aiUsage.allowed) {
+      toast.error(aiUsage.nextAvailableLabel || "Limite de análises atingido");
       return;
     }
     setAnalyzing(true);
@@ -78,6 +85,8 @@ export default function AnalyzeMeal() {
 
       if (error) throw error;
 
+      // Record AI usage
+      await aiUsage.recordUsage();
       setResult({
         title: data.title || description.slice(0, 50),
         calories: data.calories || 0,
@@ -173,11 +182,14 @@ export default function AnalyzeMeal() {
           <Link to="/">
             <Button variant="ghost" size="icon"><ArrowLeft className="w-5 h-5" /></Button>
           </Link>
-          <div>
-            <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-              <Brain className="w-7 h-7 text-primary" /> Análise por IA
-            </h1>
-            <p className="text-muted-foreground text-sm">Descreva ou fotografe sua refeição</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="font-display text-2xl font-bold flex items-center gap-2">
+                <Brain className="w-7 h-7 text-primary" /> Análise por IA
+              </h1>
+              <p className="text-muted-foreground text-sm">Descreva ou fotografe sua refeição</p>
+            </div>
+            <AIUsageBadge status={aiUsage} />
           </div>
         </div>
 
@@ -232,7 +244,7 @@ export default function AnalyzeMeal() {
               <Button
                 onClick={analyze}
                 className="w-full gradient-primary shadow-glow gap-2"
-                disabled={analyzing}
+                disabled={analyzing || !aiUsage.allowed}
                 size="lg"
               >
                 {analyzing ? (

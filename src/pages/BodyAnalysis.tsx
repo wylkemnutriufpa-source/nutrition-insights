@@ -16,6 +16,8 @@ import {
   Camera, Upload, Sparkles, ArrowLeft, Calendar, TrendingUp,
   User as UserIcon, Activity
 } from "lucide-react";
+import { useAIUsage } from "@/hooks/useAIUsage";
+import AIUsageBadge from "@/components/common/AIUsageBadge";
 
 interface BodyAnalysisRecord {
   id: string;
@@ -39,6 +41,7 @@ export default function BodyAnalysis() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const patientId = searchParams.get("patientId") || user?.id;
+  const aiUsage = useAIUsage("body_comparison");
 
   const [analyses, setAnalyses] = useState<BodyAnalysisRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,6 +83,10 @@ export default function BodyAnalysis() {
       toast.error("Selecione pelo menos uma foto.");
       return;
     }
+    if (!aiUsage.allowed) {
+      toast.error(aiUsage.nextAvailableLabel || "Limite de análises corporais atingido");
+      return;
+    }
 
     setUploading(true);
     const [frontUrl, sideUrl, backUrl] = await Promise.all([
@@ -119,6 +126,7 @@ export default function BodyAnalysis() {
 
       if (aiError) throw aiError;
       toast.success("Análise corporal concluída! 🎉");
+      await aiUsage.recordUsage();
     } catch (e: any) {
       toast.error("Fotos salvas, mas análise IA falhou: " + (e.message || "Tente novamente"));
     }
@@ -164,9 +172,12 @@ export default function BodyAnalysis() {
               <p className="text-sm text-muted-foreground">{analyses.length} análise{analyses.length !== 1 ? "s" : ""} registrada{analyses.length !== 1 ? "s" : ""}</p>
             </div>
           </div>
-          <Button onClick={() => setNewDialogOpen(true)} className="gradient-primary gap-2">
-            <Camera className="w-4 h-4" /> Nova Análise
-          </Button>
+          <div className="flex items-center gap-3">
+            <AIUsageBadge status={aiUsage} />
+            <Button onClick={() => setNewDialogOpen(true)} disabled={!aiUsage.allowed} className="gradient-primary gap-2">
+              <Camera className="w-4 h-4" /> Nova Análise
+            </Button>
+          </div>
         </div>
 
         {analyzing && (
