@@ -698,8 +698,8 @@ export default function ClinicalIntelligence() {
                 ) : (
                   <div className="text-center py-8 text-sm text-muted-foreground">
                     <Brain className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                    <p>Clique em "Gerar Análise IA" para obter insights automáticos</p>
-                    <p className="text-xs mt-1">baseados nos dados agregados e filtros aplicados.</p>
+                     <p>Clique em "Gerar Resumo" para obter insights automáticos</p>
+                     <p className="text-xs mt-1">baseados nos dados agregados e filtros aplicados (sem custo de IA).</p>
                   </div>
                 )}
               </CardContent>
