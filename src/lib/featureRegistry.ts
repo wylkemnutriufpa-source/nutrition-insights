@@ -75,6 +75,20 @@ export const FEATURE_REGISTRY: FeatureDefinition[] = [
   { name: "financial", label: "Financeiro", description: "Painel financeiro completo com gráficos", icon: DollarSign, category: "Relatórios & Financeiro", defaultTier: "premium" },
   { name: "system_usage_gamification", label: "Gamificação de Uso", description: "Painel de progresso de exploração do sistema com dicas e níveis", icon: Trophy, category: "Relatórios & Financeiro", defaultTier: "premium", addedVersion: "2.5" },
   { name: "progress_simulation", label: "Simulação de Progresso", description: "Projeção de evolução do paciente baseada em adesão atual vs otimizada", icon: Activity, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "3.0" },
+  { name: "clinical_intelligence", label: "Inteligência Clínica", description: "Dashboard de inteligência clínica com insights avançados", icon: Activity, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "3.0" },
+  { name: "ai_strategy_center", label: "IA Estratégica", description: "Centro estratégico com diagnóstico da clínica, oportunidades e plano de ação semanal", icon: Brain, category: "IA & Automação", defaultTier: "premium", addedVersion: "3.5" },
+  { name: "clinical_decision_support", label: "Suporte à Decisão Clínica", description: "Alertas e recomendações clínicas baseadas em dados do paciente", icon: Heart, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "3.0" },
+  { name: "public_profile", label: "Perfil Público", description: "Página pública do nutricionista com bio, programas e captação de leads", icon: Users, category: "Crescimento", defaultTier: "premium", addedVersion: "3.5" },
+  { name: "program_landing", label: "Landing de Programas", description: "Páginas públicas de programas para captação de pacientes", icon: Target, category: "Crescimento", defaultTier: "premium", addedVersion: "3.5" },
+  { name: "patient_referrals", label: "Indicações de Pacientes", description: "Sistema de indicação com links rastreáveis para pacientes compartilharem", icon: UserPlus, category: "Crescimento", defaultTier: "premium", addedVersion: "3.5" },
+  { name: "lead_generation", label: "Captação de Leads", description: "Formulário de captação de leads integrado às páginas públicas", icon: Upload, category: "Crescimento", defaultTier: "premium", addedVersion: "3.5" },
+  { name: "growth_dashboard", label: "Dashboard de Crescimento", description: "Métricas de crescimento da rede: profissionais, pacientes, leads e indicações", icon: BarChart3, category: "Crescimento", defaultTier: "premium", addedVersion: "3.5" },
+  { name: "weekly_goals", label: "Metas Semanais", description: "Definição e acompanhamento de metas semanais", icon: Target, category: "Gestão de Pacientes", defaultTier: "basic" },
+  { name: "patient_checkin", label: "Check-in do Paciente", description: "Formulário de check-in semanal com peso, fotos e feedback", icon: ClipboardCheck, category: "Gestão de Pacientes", defaultTier: "basic" },
+  { name: "patient_journey", label: "Jornada do Paciente", description: "Timeline visual da jornada e conquistas do paciente", icon: Heart, category: "Gestão de Pacientes", defaultTier: "basic" },
+  { name: "health_quiz", label: "Quiz de Saúde", description: "Questionário interativo de avaliação de saúde", icon: Heart, category: "Ferramentas", defaultTier: "basic" },
+  { name: "weight_calculator", label: "Calculadora de Peso", description: "Calculadora de peso ideal e composição corporal", icon: Dumbbell, category: "Ferramentas", defaultTier: "basic" },
+  { name: "water_calculator", label: "Calculadora de Água", description: "Cálculo de necessidade hídrica diária", icon: Heart, category: "Ferramentas", defaultTier: "basic" },
 ];
 
 /** Retorna os nomes de todas as features registradas */
