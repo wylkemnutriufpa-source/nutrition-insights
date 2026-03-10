@@ -312,7 +312,11 @@ export default function Patients() {
     const { error } = await supabase.from("nutritionist_patients").update({ status: newStatus }).eq("id", id);
     if (error) toast.error("Erro ao atualizar status");
     else {
-      toast.success(`Paciente ${newStatus === "active" ? "ativado" : "desativado"}`);
+      toast.success(
+        newStatus === "active"
+          ? "Paciente ativado — dados incluídos nas métricas"
+          : "Paciente desativado — excluído das métricas e leituras de IA"
+      );
       fetchPatients();
     }
   };
