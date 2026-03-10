@@ -11,10 +11,11 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Shield, Users, UserCheck, Zap, Star, UserPlus, Settings, Globe,
   Eye, BarChart3, DollarSign, CreditCard, Crown, Loader2,
-  Search, ToggleLeft, Trash2, Ban, CheckCircle2, Plus
+  Search, ToggleLeft, Trash2, Ban, CheckCircle2, Plus, FileText, Download, Sparkles
 } from "lucide-react";
 import { toast } from "sonner";
 import { FEATURE_REGISTRY, getFeaturesByCategory } from "@/lib/featureRegistry";
@@ -414,6 +415,106 @@ function PlatformFeatureFlags() {
   );
 }
 
+// ─── Admin Reports / Export Panel ───
+function AdminReportsPanel({ professionals }: { professionals: ProfessionalInfo[] }) {
+  const [selectedProfessional, setSelectedProfessional] = useState("");
+  const [selectedPatient, setSelectedPatient] = useState("");
+  const [patients, setPatients] = useState<{ user_id: string; full_name: string }[]>([]);
+  const [generating, setGenerating] = useState(false);
+  const [loadingPatients, setLoadingPatients] = useState(false);
+
+  const fetchPatients = async (nutId: string) => {
+    setLoadingPatients(true);
+    setSelectedPatient("");
+    const { data: links } = await supabase.from("nutritionist_patients")
+      .select("patient_id").eq("nutritionist_id", nutId).eq("status", "active");
+    if (!links?.length) { setPatients([]); setLoadingPatients(false); return; }
+    const ids = links.map(l => l.patient_id);
+    const { data: profiles } = await supabase.from("profiles")
+      .select("user_id, full_name").in("user_id", ids);
+    setPatients(profiles || []);
+    setLoadingPatients(false);
+  };
+
+  const generateReport = async () => {
+    if (!selectedPatient || !selectedProfessional) return;
+    setGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-report", {
+        body: { patient_id: selectedPatient, nutritionist_id: selectedProfessional, report_type: "complete" },
+      });
+      if (error) throw error;
+      const blob = new Blob([data.html], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const win = window.open(url, "_blank");
+      if (win) win.onload = () => setTimeout(() => win.print(), 500);
+      toast.success(`Relatório de ${data.patient_name} gerado!`);
+    } catch (e: any) {
+      toast.error("Erro: " + (e.message || "Tente novamente"));
+    }
+    setGenerating(false);
+  };
+
+  return (
+    <div className="space-y-4 max-w-2xl">
+      <Card className="glass shadow-card">
+        <CardHeader>
+          <CardTitle className="font-display text-base flex items-center gap-2">
+            <FileText className="w-5 h-5 text-primary" /> Exportar Relatório de Paciente
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label className="text-xs">Profissional</Label>
+            <Select value={selectedProfessional} onValueChange={(v) => { setSelectedProfessional(v); fetchPatients(v); }}>
+              <SelectTrigger><SelectValue placeholder="Selecione um profissional" /></SelectTrigger>
+              <SelectContent>
+                {professionals.map(p => (
+                  <SelectItem key={p.user_id} value={p.user_id}>{p.full_name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label className="text-xs">Paciente</Label>
+            <Select value={selectedPatient} onValueChange={setSelectedPatient} disabled={!selectedProfessional || loadingPatients}>
+              <SelectTrigger><SelectValue placeholder={loadingPatients ? "Carregando..." : "Selecione um paciente"} /></SelectTrigger>
+              <SelectContent>
+                {patients.map(p => (
+                  <SelectItem key={p.user_id} value={p.user_id}>{p.full_name || "Sem nome"}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="bg-muted/50 rounded-lg p-4 text-sm space-y-2">
+            <h4 className="font-medium">O relatório inclui:</h4>
+            <ul className="space-y-1 text-muted-foreground">
+              <li className="flex items-center gap-2"><Sparkles className="w-3.5 h-3.5 text-primary" /> Resumo executivo gerado por IA</li>
+              <li className="flex items-center gap-2">📐 Última avaliação física</li>
+              <li className="flex items-center gap-2">📈 Evolução (peso, IMC, % gordura)</li>
+              <li className="flex items-center gap-2">🍽️ Plano alimentar ativo</li>
+              <li className="flex items-center gap-2">🍎 Refeições recentes com score IA</li>
+              <li className="flex items-center gap-2">📊 Análises corporais</li>
+            </ul>
+          </div>
+
+          <Button onClick={generateReport} className="w-full gap-2" disabled={!selectedPatient || generating}>
+            {generating ? <><Loader2 className="w-4 h-4 animate-spin" /> Gerando...</> : <><Download className="w-4 h-4" /> Gerar e Imprimir (PDF)</>}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card className="glass shadow-card">
+        <CardContent className="py-6 text-center text-sm text-muted-foreground">
+          <p>💡 O relatório abre em nova aba pronto para impressão. Use <strong>Ctrl+P</strong> → <strong>Salvar como PDF</strong> para exportar.</p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 // ─── Create Professional Dialog ───
 function CreateProfessionalDialog({
   open, onOpenChange, onCreated
@@ -598,6 +699,7 @@ export default function AdminDashboard() {
               <TabsTrigger value="professionals"><Users className="w-3.5 h-3.5 mr-1" /> Profissionais</TabsTrigger>
               <TabsTrigger value="plans"><CreditCard className="w-3.5 h-3.5 mr-1" /> Planos</TabsTrigger>
               <TabsTrigger value="features"><Zap className="w-3.5 h-3.5 mr-1" /> Feature Flags</TabsTrigger>
+              <TabsTrigger value="reports"><FileText className="w-3.5 h-3.5 mr-1" /> Relatórios</TabsTrigger>
               <TabsTrigger value="admin"><Crown className="w-3.5 h-3.5 mr-1" /> Admin</TabsTrigger>
             </TabsList>
 
@@ -659,6 +761,11 @@ export default function AdminDashboard() {
             {/* ─── Feature Flags ─── */}
             <TabsContent value="features" className="mt-4">
               <PlatformFeatureFlags />
+            </TabsContent>
+
+            {/* ─── Reports ─── */}
+            <TabsContent value="reports" className="mt-4">
+              <AdminReportsPanel professionals={professionals} />
             </TabsContent>
 
             {/* ─── Admin Tools ─── */}
