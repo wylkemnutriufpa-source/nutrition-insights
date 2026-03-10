@@ -486,6 +486,7 @@ export default function Patients() {
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [assignTarget, setAssignTarget] = useState<PatientInfo | null>(null);
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [layout, setLayout] = useState<"grid" | "list">("grid");
 
   const fetchPatients = async () => {
     if (!user) return;
