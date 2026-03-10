@@ -49,9 +49,9 @@ const defaultTestimonials = [
 
 const defaultPlans = [
   {
-    name: "Starter", price: "Grátis", period: "para sempre", popular: false,
+    name: "Starter", price: "Grátis", period: "7 dias", popular: false,
     features: ["Até 5 pacientes", "Planos alimentares", "Checklist de hábitos", "Chat básico", "Banco de alimentos TACO"],
-    cta: "Começar Grátis",
+    cta: "Testar 7 Dias Grátis",
   },
   {
     name: "Pro", price: "R$ 97", period: "/mês", popular: true,
