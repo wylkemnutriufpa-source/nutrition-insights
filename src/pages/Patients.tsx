@@ -235,7 +235,10 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
           </span>
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-display font-semibold truncate">{displayName}</h3>
+          <div className="flex items-center gap-1.5">
+            <h3 className="font-display font-semibold truncate" style={p.prestigePlan?.crown_enabled ? { color: p.prestigePlan.color } : undefined}>{displayName}</h3>
+            {p.prestigePlan && <PrestigeBadge plan={p.prestigePlan} size="sm" showLabel={false} />}
+          </div>
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
             <span className={`text-xs px-2 py-0.5 rounded-full ${
               p.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
