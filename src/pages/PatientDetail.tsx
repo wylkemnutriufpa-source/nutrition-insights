@@ -28,7 +28,7 @@ import DocumentUpload from "@/components/common/DocumentUpload";
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
-  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload
+  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power
 } from "lucide-react";
 
 interface PatientProfile {
@@ -94,6 +94,9 @@ export default function PatientDetail() {
   const [mealPlanDocs, setMealPlanDocs] = useState<any[]>([]);
   const [assessmentDocs, setAssessmentDocs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [patientStatus, setPatientStatus] = useState<string>("active");
+  const [npId, setNpId] = useState<string | null>(null);
+  const [togglingStatus, setTogglingStatus] = useState(false);
 
   // Activation dialog
   const [activateOpen, setActivateOpen] = useState(false);
@@ -130,7 +133,7 @@ export default function PatientDetail() {
     if (!patientId || !user) return;
     setLoading(true);
 
-    const [profileRes, timelineRes, anamnesisRes, ppRes, protocolsRes, checkRes, subRes, plansRes, mealPlansRes, recipesRes] = await Promise.all([
+    const [profileRes, timelineRes, anamnesisRes, ppRes, protocolsRes, checkRes, subRes, plansRes, mealPlansRes, recipesRes, npRes] = await Promise.all([
       supabase.from("profiles").select("full_name, avatar_url, phone").eq("user_id", patientId).single(),
       supabase.from("patient_timeline").select("*").eq("patient_id", patientId).order("created_at", { ascending: false }).limit(50),
       supabase.from("patient_anamnesis").select("*").eq("user_id", patientId).order("created_at", { ascending: false }).limit(1),
@@ -141,7 +144,13 @@ export default function PatientDetail() {
       supabase.from("pricing_plans").select("*").eq("is_active", true).order("sort_order"),
       supabase.from("meal_plans").select("*").eq("patient_id", patientId).eq("nutritionist_id", user.id).order("created_at", { ascending: false }),
       supabase.from("recipes").select("*").eq("nutritionist_id", user.id).eq("is_shared", true).order("created_at", { ascending: false }),
+      supabase.from("nutritionist_patients").select("id, status").eq("patient_id", patientId).eq("nutritionist_id", user.id).limit(1).single(),
     ]);
+
+    if (npRes.data) {
+      setPatientStatus(npRes.data.status);
+      setNpId(npRes.data.id);
+    }
 
     setProfile(profileRes.data);
     setTimeline(timelineRes.data || []);
@@ -307,6 +316,17 @@ export default function PatientDetail() {
     fetchAll();
   };
 
+  const togglePatientStatus = async () => {
+    if (!npId) return;
+    setTogglingStatus(true);
+    const newStatus = patientStatus === "active" ? "inactive" : "active";
+    const { error } = await supabase.from("nutritionist_patients").update({ status: newStatus }).eq("id", npId);
+    if (error) { toast.error(error.message); setTogglingStatus(false); return; }
+    setPatientStatus(newStatus);
+    toast.success(newStatus === "active" ? "Paciente ativado!" : "Paciente desativado!");
+    setTogglingStatus(false);
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -353,7 +373,12 @@ export default function PatientDetail() {
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="font-display text-2xl font-bold">{profile?.full_name || "Paciente"}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="font-display text-2xl font-bold">{profile?.full_name || "Paciente"}</h1>
+              <Badge variant={patientStatus === "active" ? "default" : "secondary"}>
+                {patientStatus === "active" ? "Ativo" : "Inativo"}
+              </Badge>
+            </div>
             <p className="text-sm text-muted-foreground">
               Checklist hoje: {checklistStats.completed}/{checklistStats.total} tarefas •
               {patientProtocols.filter(p => p.status === "active").length} protocolos ativos
@@ -372,6 +397,15 @@ export default function PatientDetail() {
             size="md"
           />
           <div className="flex gap-2 flex-wrap">
+            <Button
+              variant={patientStatus === "active" ? "outline" : "default"}
+              className="gap-2"
+              onClick={togglePatientStatus}
+              disabled={togglingStatus}
+            >
+              <Power className="w-4 h-4" />
+              {patientStatus === "active" ? "Desativar" : "Ativar"}
+            </Button>
             <Button
               variant="outline"
               className="gap-2"
