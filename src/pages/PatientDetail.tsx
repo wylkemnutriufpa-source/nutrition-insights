@@ -373,7 +373,12 @@ export default function PatientDetail() {
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="font-display text-2xl font-bold">{profile?.full_name || "Paciente"}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="font-display text-2xl font-bold">{profile?.full_name || "Paciente"}</h1>
+              <Badge variant={patientStatus === "active" ? "default" : "secondary"}>
+                {patientStatus === "active" ? "Ativo" : "Inativo"}
+              </Badge>
+            </div>
             <p className="text-sm text-muted-foreground">
               Checklist hoje: {checklistStats.completed}/{checklistStats.total} tarefas •
               {patientProtocols.filter(p => p.status === "active").length} protocolos ativos
