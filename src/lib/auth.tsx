@@ -109,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let initialSessionHandled = false;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         // Skip if getSession already handled the initial load
         if (event === "INITIAL_SESSION" && initialSessionHandled) return;
@@ -157,7 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => authSubscription.unsubscribe();
   }, []);
 
   const signOut = async () => {
