@@ -267,8 +267,15 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
       {hasPrograms && (
         <div className="flex flex-wrap gap-1 mb-3">
           {p.programs!.map(pg => (
-            <Badge key={pg.id} variant="outline" className="text-xs gap-1">
+            <Badge key={pg.id} variant="outline" className="text-xs gap-1 pr-1">
               <Target className="w-3 h-3" /> {pg.title}
+              <button
+                onClick={(e) => { e.stopPropagation(); removeFromProgram(p.patient_id, pg.id, pg.title); }}
+                className="ml-0.5 hover:bg-destructive/20 rounded-full p-0.5 transition-colors"
+                title={`Remover de ${pg.title}`}
+              >
+                <X className="w-3 h-3 text-destructive" />
+              </button>
             </Badge>
           ))}
         </div>
