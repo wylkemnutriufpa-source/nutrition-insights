@@ -339,6 +339,14 @@ export default function Protocols() {
   const [assignForm, setAssignForm] = useState({ patient_id: "", start_date: new Date().toISOString().split("T")[0], duration: "" });
   const [patientProtocols, setPatientProtocols] = useState<PatientProtocol[]>([]);
 
+  // Edit protocol state
+  const [editingProtocol, setEditingProtocol] = useState(false);
+  const [editForm, setEditForm] = useState({ title: "", description: "", category: "", duration_days: "" });
+
+  // Edit task state
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [editTaskForm, setEditTaskForm] = useState({ title: "", description: "", category: "", frequency: "", icon: "" });
+
   // ── Fetch protocols ──
   const fetchProtocols = useCallback(async () => {
     if (!user) return;
