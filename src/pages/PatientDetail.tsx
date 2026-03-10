@@ -201,6 +201,7 @@ export default function PatientDetail() {
         plan_name: subRes.data[0].plan_name,
         started_at: subRes.data[0].started_at?.split("T")[0] || "",
         expires_at: subRes.data[0].expires_at?.split("T")[0] || "",
+        value: "",
       });
     }
 
