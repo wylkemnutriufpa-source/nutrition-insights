@@ -10,6 +10,7 @@ import {
   Target, MessageSquare, FileText, Rocket, ClipboardCheck, ChefHat,
   Palette, DollarSign, Play, ArrowDown, Menu, X, BookOpen, TrendingUp
 } from "lucide-react";
+import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 
 /* ─── animation variants ─── */
 const fadeUp = { hidden: { opacity: 0, y: 30 }, show: { opacity: 1, y: 0, transition: { duration: 0.6 } } };
