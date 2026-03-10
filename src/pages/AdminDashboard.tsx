@@ -18,6 +18,7 @@ import {
   Search, ToggleLeft, Trash2, Ban, CheckCircle2, Plus, FileText, Download, Sparkles
 } from "lucide-react";
 import { toast } from "sonner";
+import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
 import { FEATURE_REGISTRY, getFeaturesByCategory, type FeatureTier } from "@/lib/featureRegistry";
 
 // ─── Types ───
