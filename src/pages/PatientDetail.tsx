@@ -30,8 +30,11 @@ import ClinicalDecisionSupport from "@/components/patient/ClinicalDecisionSuppor
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
-  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope
+  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope, Crown
 } from "lucide-react";
+import PrestigeBadge from "@/components/prestige/PrestigeBadge";
+import PrestigeName from "@/components/prestige/PrestigeName";
+import type { PrestigePlan } from "@/hooks/usePrestige";
 
 interface PatientProfile {
   full_name: string;
@@ -124,6 +127,11 @@ export default function PatientDetail() {
     expires_at: "",
   });
 
+  // Prestige
+  const [prestigePlans, setPrestigePlans] = useState<PrestigePlan[]>([]);
+  const [selectedPrestigePlanId, setSelectedPrestigePlanId] = useState<string>("");
+  const [currentPrestigePlan, setCurrentPrestigePlan] = useState<PrestigePlan | null>(null);
+
   // Feedback scheduling
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackForm, setFeedbackForm] = useState({
@@ -193,6 +201,37 @@ export default function PatientDetail() {
         started_at: subRes.data[0].started_at?.split("T")[0] || "",
         expires_at: subRes.data[0].expires_at?.split("T")[0] || "",
       });
+    }
+
+    // Load prestige plans and current prestige
+    const [prestigePlansRes, patientPrestigeRes] = await Promise.all([
+      supabase.from("prestige_plans").select("*").eq("is_active", true).order("display_order"),
+      supabase.from("patient_prestige").select("*, prestige_plans(*)").eq("patient_id", patientId!).eq("is_active", true).maybeSingle(),
+    ]);
+    const pPlans = (prestigePlansRes.data || []).map((d: any) => ({
+      id: d.id, name: d.name, slug: d.slug, display_order: d.display_order, color: d.color,
+      badge_icon: d.badge_icon, badge_label: d.badge_label, crown_enabled: d.crown_enabled,
+      effect_type: d.effect_type, ranking_highlight: d.ranking_highlight,
+      ai_usage_multiplier: d.ai_usage_multiplier, features: d.features || [],
+      price_monthly: d.price_monthly, price_quarterly: d.price_quarterly,
+      price_semiannual: d.price_semiannual, price_annual: d.price_annual,
+    })) as PrestigePlan[];
+    setPrestigePlans(pPlans);
+
+    if (patientPrestigeRes.data?.prestige_plans) {
+      const pp = patientPrestigeRes.data.prestige_plans as any;
+      setCurrentPrestigePlan({
+        id: pp.id, name: pp.name, slug: pp.slug, display_order: pp.display_order, color: pp.color,
+        badge_icon: pp.badge_icon, badge_label: pp.badge_label, crown_enabled: pp.crown_enabled,
+        effect_type: pp.effect_type, ranking_highlight: pp.ranking_highlight,
+        ai_usage_multiplier: pp.ai_usage_multiplier, features: pp.features || [],
+        price_monthly: pp.price_monthly, price_quarterly: pp.price_quarterly,
+        price_semiannual: pp.price_semiannual, price_annual: pp.price_annual,
+      });
+      setSelectedPrestigePlanId(pp.id);
+    } else {
+      setCurrentPrestigePlan(null);
+      setSelectedPrestigePlanId("");
     }
 
     setLoading(false);
@@ -283,6 +322,25 @@ export default function PatientDetail() {
       if (error) { toast.error(error.message); return; }
       toast.success("Plano atribuído!");
     }
+
+    // Sync prestige plan
+    if (selectedPrestigePlanId) {
+      // Upsert: delete existing then insert
+      await supabase.from("patient_prestige").delete().eq("patient_id", patientId);
+      const { error: prestigeErr } = await supabase.from("patient_prestige").insert({
+        patient_id: patientId,
+        plan_id: selectedPrestigePlanId,
+        assigned_by: user.id,
+        is_active: true,
+      });
+      if (prestigeErr) {
+        console.error("Prestige assignment error:", prestigeErr);
+      } else {
+        const selectedPlan = prestigePlans.find(p => p.id === selectedPrestigePlanId);
+        toast.success(`Prestígio ${selectedPlan?.name || ''} aplicado! ${selectedPlan?.badge_icon || ''}`, { duration: 3000 });
+      }
+    }
+
     setPlanOpen(false);
     fetchAll();
   };
@@ -383,11 +441,16 @@ export default function PatientDetail() {
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h1 className="font-display text-2xl font-bold">{profile?.full_name || "Paciente"}</h1>
+            <div className="flex items-center gap-2 flex-wrap">
+              {currentPrestigePlan ? (
+                <PrestigeName name={profile?.full_name || "Paciente"} plan={currentPrestigePlan} className="font-display text-2xl font-bold" />
+              ) : (
+                <h1 className="font-display text-2xl font-bold">{profile?.full_name || "Paciente"}</h1>
+              )}
               <Badge variant={patientStatus === "active" ? "default" : "secondary"}>
                 {patientStatus === "active" ? "Ativo" : "Inativo"}
               </Badge>
+              {currentPrestigePlan && <PrestigeBadge plan={currentPrestigePlan} size="sm" />}
             </div>
             <p className="text-sm text-muted-foreground">
               Checklist hoje: {checklistStats.completed}/{checklistStats.total} tarefas •
@@ -860,6 +923,32 @@ export default function PatientDetail() {
                             </Select>
                           ) : (
                             <Input value={planForm.plan_name} onChange={(e) => setPlanForm({ ...planForm, plan_name: e.target.value })} placeholder="Nome do plano" required />
+                          )}
+                        </div>
+                        <div>
+                          <Label className="flex items-center gap-2">
+                            <Crown className="w-4 h-4 text-accent" /> Prestígio
+                          </Label>
+                          <Select value={selectedPrestigePlanId} onValueChange={setSelectedPrestigePlanId}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o nível de prestígio..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {prestigePlans.map((pp) => (
+                                <SelectItem key={pp.id} value={pp.id}>
+                                  <span className="flex items-center gap-2">
+                                    <span>{pp.badge_icon}</span>
+                                    <span style={{ color: pp.color }}>{pp.name}</span>
+                                    {pp.crown_enabled && <Crown className="w-3 h-3" style={{ color: pp.color }} />}
+                                  </span>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {selectedPrestigePlanId && (
+                            <div className="mt-2">
+                              <PrestigeBadge plan={prestigePlans.find(p => p.id === selectedPrestigePlanId) || null} size="md" />
+                            </div>
                           )}
                         </div>
                         <div className="grid grid-cols-2 gap-3">

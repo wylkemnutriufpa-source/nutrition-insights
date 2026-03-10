@@ -4,6 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard, Calendar, CheckCircle2, AlertCircle, Clock } from "lucide-react";
+import PrestigeBadge from "@/components/prestige/PrestigeBadge";
+import PrestigeName from "@/components/prestige/PrestigeName";
+import { usePrestige } from "@/hooks/usePrestige";
 
 interface Subscription {
   id: string;
@@ -16,6 +19,7 @@ interface Subscription {
 
 export default function SubscriptionCard() {
   const { user } = useAuth();
+  const { prestige, loading: prestigeLoading } = usePrestige();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -77,19 +81,32 @@ export default function SubscriptionCard() {
 
   return (
     <Card className="glass shadow-card overflow-hidden">
-      <div className="h-1 gradient-primary" />
+      <div
+        className="h-1"
+        style={prestige.plan ? { background: `linear-gradient(90deg, ${prestige.plan.color}, ${prestige.plan.color}80)` } : undefined}
+      >
+        {!prestige.plan && <div className="h-full gradient-primary" />}
+      </div>
       <CardContent className="py-5">
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center shadow-glow shrink-0">
-            <CreditCard className="w-6 h-6 text-primary-foreground" />
+          <div
+            className="w-12 h-12 rounded-xl flex items-center justify-center shadow-glow shrink-0"
+            style={prestige.plan ? { background: `${prestige.plan.color}20`, border: `2px solid ${prestige.plan.color}` } : undefined}
+          >
+            {prestige.plan ? (
+              <span className="text-xl">{prestige.plan.badge_icon}</span>
+            ) : (
+              <CreditCard className="w-6 h-6 text-primary-foreground" />
+            )}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
               <h3 className="font-display font-semibold">{subscription.plan_name}</h3>
               <Badge variant="outline" className={`text-[10px] ${config.color}`}>
                 <StatusIcon className="w-3 h-3 mr-1" />
                 {config.label}
               </Badge>
+              {prestige.plan && <PrestigeBadge plan={prestige.plan} size="sm" />}
             </div>
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
