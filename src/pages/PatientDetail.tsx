@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
@@ -28,7 +29,7 @@ import DocumentUpload from "@/components/common/DocumentUpload";
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
-  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power
+  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2
 } from "lucide-react";
 
 interface PatientProfile {
@@ -327,6 +328,14 @@ export default function PatientDetail() {
     setTogglingStatus(false);
   };
 
+  const deletePatient = async () => {
+    if (!npId || !user) return;
+    const { error } = await supabase.from("nutritionist_patients").delete().eq("id", npId);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Paciente removido com sucesso!");
+    navigate("/patients");
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -406,6 +415,27 @@ export default function PatientDetail() {
               <Power className="w-4 h-4" />
               {patientStatus === "active" ? "Desativar" : "Ativar"}
             </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" className="gap-2">
+                  <Trash2 className="w-4 h-4" /> Excluir
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Excluir paciente?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta ação irá remover o vínculo com este paciente. Os dados do paciente não serão apagados, mas ele deixará de aparecer na sua lista.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={deletePatient} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Confirmar Exclusão
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <Button
               variant="outline"
               className="gap-2"
