@@ -91,6 +91,8 @@ export default function PatientDetail() {
   const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
   const [recipes, setRecipes] = useState<any[]>([]);
   const [checklistStats, setChecklistStats] = useState({ total: 0, completed: 0 });
+  const [mealPlanDocs, setMealPlanDocs] = useState<any[]>([]);
+  const [assessmentDocs, setAssessmentDocs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Activation dialog
