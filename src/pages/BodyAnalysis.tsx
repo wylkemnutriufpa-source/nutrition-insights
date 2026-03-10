@@ -126,6 +126,7 @@ export default function BodyAnalysis() {
 
       if (aiError) throw aiError;
       toast.success("Análise corporal concluída! 🎉");
+      await aiUsage.recordUsage();
     } catch (e: any) {
       toast.error("Fotos salvas, mas análise IA falhou: " + (e.message || "Tente novamente"));
     }
