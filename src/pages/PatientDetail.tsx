@@ -427,474 +427,467 @@ export default function PatientDetail() {
           </div>
         </div>
 
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="w-full justify-start bg-card border border-border overflow-x-auto">
-            <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-            <TabsTrigger value="ai-insights">
-              <Brain className="w-3.5 h-3.5 mr-1" /> IA Insights
-            </TabsTrigger>
-            <TabsTrigger value="assessment">
-              <Activity className="w-3.5 h-3.5 mr-1" /> Avaliação Física
-            </TabsTrigger>
-            <TabsTrigger value="agenda">
-              <CalendarDays className="w-3.5 h-3.5 mr-1" /> Agenda
-            </TabsTrigger>
-            <TabsTrigger value="calculators">
-              <Calculator className="w-3.5 h-3.5 mr-1" /> Calculadoras
-            </TabsTrigger>
-            <TabsTrigger value="timeline">Timeline</TabsTrigger>
-            <TabsTrigger value="plan">
-              <CreditCard className="w-3.5 h-3.5 mr-1" /> Plano
-            </TabsTrigger>
-            <TabsTrigger value="protocols">Protocolos</TabsTrigger>
-            <TabsTrigger value="checkins">
-              <MessageSquare className="w-3.5 h-3.5 mr-1" /> Check-ins
-            </TabsTrigger>
-            <TabsTrigger value="meal-plans">
-              <UtensilsCrossed className="w-3.5 h-3.5 mr-1" /> Planos Alimentares
-            </TabsTrigger>
-            <TabsTrigger value="radar">Radar Metabólico</TabsTrigger>
-          </TabsList>
+        {/* Section Cards Grid */}
+        {(() => {
+          const sections = [
+            { key: "overview", label: "Visão Geral", icon: AlertTriangle, color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
+            { key: "ai-insights", label: "IA Insights", icon: Brain, color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
+            { key: "assessment", label: "Avaliação Física", icon: Activity, color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
+            { key: "agenda", label: "Agenda", icon: CalendarDays, color: "from-info/20 to-info/5", iconColor: "text-info" },
+            { key: "calculators", label: "Calculadoras", icon: Calculator, color: "from-success/20 to-success/5", iconColor: "text-success" },
+            { key: "timeline", label: "Timeline", icon: Clock, color: "from-muted-foreground/20 to-muted-foreground/5", iconColor: "text-muted-foreground" },
+            { key: "plan", label: "Plano", icon: CreditCard, color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
+            { key: "protocols", label: "Protocolos", icon: FileText, color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
+            { key: "checkins", label: "Check-ins", icon: MessageSquare, color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
+            { key: "meal-plans", label: "Planos Alimentares", icon: UtensilsCrossed, color: "from-success/20 to-success/5", iconColor: "text-success" },
+            { key: "radar", label: "Radar Metabólico", icon: TrendingUp, color: "from-destructive/20 to-destructive/5", iconColor: "text-destructive" },
+          ];
 
-          {/* Overview */}
-          <TabsContent value="overview" className="space-y-4 mt-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Risk Panel */}
-              <div className="glass rounded-xl p-5 md:col-span-2">
-                <h3 className="font-display font-semibold flex items-center gap-2 mb-3">
-                  <AlertTriangle className="w-5 h-5 text-warning" /> Diagnóstico Inteligente
-                </h3>
-                {riskFactors.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Sem fatores de risco identificados. ✅</p>
-                ) : (
-                  <div className="space-y-2">
-                    {riskFactors.map((rf, i) => (
-                      <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
-                        <div className={`w-3 h-3 rounded-full ${
-                          rf.level === "high" ? "bg-destructive" : rf.level === "medium" ? "bg-warning" : "bg-success"
-                        }`} />
-                        <span className="text-sm font-medium">{rf.label}</span>
-                        <span className={`ml-auto text-xs px-2 py-0.5 rounded-full ${
-                          rf.level === "high" ? "bg-destructive/10 text-destructive" :
-                          rf.level === "medium" ? "bg-warning/10 text-warning" : "bg-success/10 text-success"
-                        }`}>
-                          {rf.level === "high" ? "Alto" : rf.level === "medium" ? "Médio" : "Baixo"}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+          const [openSection, setOpenSection] = useState<string | null>(null);
 
-              {/* Anamnesis Summary */}
-              <div className="glass rounded-xl p-5">
-                <h3 className="font-display font-semibold flex items-center gap-2 mb-3">
-                  <Heart className="w-5 h-5 text-primary" /> Anamnese
-                </h3>
-                {anamnesis ? (
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between"><span className="text-muted-foreground">TMB</span><span className="font-medium">{anamnesis.computed_tmb} kcal</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Meta calórica</span><span className="font-medium">{anamnesis.computed_kcal_target} kcal</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Proteína</span><span className="font-medium">{anamnesis.computed_protein}g</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Carboidratos</span><span className="font-medium">{anamnesis.computed_carbs}g</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Gorduras</span><span className="font-medium">{anamnesis.computed_fat}g</span></div>
-                    <div className="pt-2 border-t border-border">
-                      <span className="text-xs text-muted-foreground">Objetivo: {anamnesis.answers?.goal || "—"}</span>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">Anamnese não preenchida.</p>
-                )}
-              </div>
-            </div>
-          </TabsContent>
-
-          {/* AI Insights */}
-          <TabsContent value="ai-insights" className="mt-4">
-            <AnamnesisInsightsFull userId={patientId!} />
-          </TabsContent>
-
-          {/* Physical Assessment - Now with full evolution */}
-          <TabsContent value="assessment" className="mt-4 space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="font-display text-xl font-bold flex items-center gap-2">
-                <Activity className="w-6 h-6 text-primary" /> Evolução Física
-              </h2>
-              <Button
-                onClick={() => navigate(`/physical-assessment?patientId=${patientId}`)}
-                className="gradient-primary gap-2 shadow-glow"
-              >
-                <Scale className="w-4 h-4" /> Nova Avaliação
-              </Button>
-            </div>
-            <BodyEvolutionCard patientId={patientId!} />
-            
-            <div className="border-t border-border pt-6">
-              <h3 className="font-display text-lg font-semibold mb-4">Comparativo entre Consultas</h3>
-              <ConsultationCompare patientId={patientId!} />
-            </div>
-          </TabsContent>
-
-          {/* Agenda */}
-          <TabsContent value="agenda" className="mt-4">
-            <PatientAgenda patientId={patientId!} />
-          </TabsContent>
-
-          {/* Calculadoras */}
-          <TabsContent value="calculators" className="mt-4">
-            <PatientCalculators anamnesis={anamnesis} />
-          </TabsContent>
-
-          {/* Timeline */}
-          <TabsContent value="timeline" className="mt-4">
-            <div className="flex justify-end mb-4">
-              <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm" className="gap-1"><Plus className="w-4 h-4" /> Nota</Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle className="font-display">Adicionar Nota</DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={addTimelineNote} className="space-y-4">
-                    <div>
-                      <Label>Tipo</Label>
-                      <Select value={noteForm.event_type} onValueChange={(v) => setNoteForm({ ...noteForm, event_type: v })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="note">📝 Nota</SelectItem>
-                          <SelectItem value="alert">⚠️ Alerta</SelectItem>
-                          <SelectItem value="measurement">📏 Medição</SelectItem>
-                          <SelectItem value="achievement">🏆 Conquista</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>Título</Label>
-                      <Input value={noteForm.title} onChange={(e) => setNoteForm({ ...noteForm, title: e.target.value })} required />
-                    </div>
-                    <div>
-                      <Label>Descrição</Label>
-                      <Textarea value={noteForm.description} onChange={(e) => setNoteForm({ ...noteForm, description: e.target.value })} />
-                    </div>
-                    <Button type="submit" className="w-full gradient-primary">Salvar</Button>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            </div>
-
-            {timeline.length === 0 ? (
-              <div className="glass rounded-xl p-12 text-center">
-                <Clock className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                <p className="text-muted-foreground">Nenhum evento na timeline.</p>
-              </div>
-            ) : (
-              <div className="relative pl-8 space-y-4">
-                <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-border" />
-                {timeline.map((event) => {
-                  const config = eventTypeConfig[event.event_type] || eventTypeConfig.note;
-                  const Icon = config.icon;
+          return (
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {sections.map((s) => {
+                  const Icon = s.icon;
                   return (
-                    <motion.div
-                      key={event.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="relative"
+                    <motion.button
+                      key={s.key}
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => setOpenSection(s.key)}
+                      className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border border-border bg-gradient-to-br ${s.color} hover:shadow-md transition-all group cursor-pointer text-center`}
                     >
-                      <div className={`absolute -left-5 w-6 h-6 rounded-full bg-card border-2 border-border flex items-center justify-center`}>
-                        <Icon className={`w-3 h-3 ${config.color}`} />
+                      <div className="w-10 h-10 rounded-xl bg-card shadow-sm flex items-center justify-center group-hover:shadow-md transition-shadow">
+                        <Icon className={`w-5 h-5 ${s.iconColor}`} />
                       </div>
-                      <div className="glass rounded-xl p-4 ml-4">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium text-sm">{event.title}</h4>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(event.created_at).toLocaleDateString("pt-BR")}
-                          </span>
-                        </div>
-                        {event.description && (
-                          <p className="text-xs text-muted-foreground mt-1">{event.description}</p>
-                        )}
-                      </div>
-                    </motion.div>
+                      <span className="text-xs font-medium text-foreground">{s.label}</span>
+                      <Maximize2 className="absolute top-2 right-2 w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </motion.button>
                   );
                 })}
               </div>
-            )}
-          </TabsContent>
 
-          {/* Plan Management */}
-          <TabsContent value="plan" className="mt-4 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Current Plan */}
-              <div className="glass rounded-xl p-5">
-                <h3 className="font-display font-semibold flex items-center gap-2 mb-4">
-                  <CreditCard className="w-5 h-5 text-primary" /> Plano Atual
-                </h3>
-                {patientSubscription ? (
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Plano</span>
-                      <span className="font-medium text-sm">{patientSubscription.plan_name}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Status</span>
-                      <Badge className={
-                        patientSubscription.status === "active" ? "bg-emerald-500/10 text-emerald-500" :
-                        patientSubscription.status === "expired" ? "bg-red-500/10 text-red-500" :
-                        "bg-muted text-muted-foreground"
-                      }>
-                        {patientSubscription.status === "active" ? "Ativo" :
-                         patientSubscription.status === "expired" ? "Expirado" :
-                         patientSubscription.status === "trial" ? "Trial" : patientSubscription.status}
-                      </Badge>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Início</span>
-                      <span className="text-sm">{new Date(patientSubscription.started_at).toLocaleDateString("pt-BR")}</span>
-                    </div>
-                    {patientSubscription.expires_at && (
-                      <>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-muted-foreground">Vencimento</span>
-                          <span className="text-sm">{new Date(patientSubscription.expires_at).toLocaleDateString("pt-BR")}</span>
-                        </div>
-                        {(() => {
-                          const days = Math.ceil((new Date(patientSubscription.expires_at).getTime() - Date.now()) / 86400000);
-                          if (days > 0 && days <= 7) {
-                            return (
-                              <div className="p-3 rounded-lg bg-warning/10 border border-warning/20 flex items-center gap-2">
-                                <AlertTriangle className="w-4 h-4 text-warning" />
-                                <span className="text-xs text-warning font-medium">Mensalidade vence em {days} dia{days > 1 ? "s" : ""}!</span>
-                              </div>
-                            );
-                          }
-                          if (days <= 0) {
-                            return (
-                              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 flex items-center gap-2">
-                                <AlertTriangle className="w-4 h-4 text-destructive" />
-                                <span className="text-xs text-destructive font-medium">Mensalidade vencida!</span>
-                              </div>
-                            );
-                          }
-                          return null;
-                        })()}
-                      </>
-                    )}
-                    <Button size="sm" variant="outline" className="w-full mt-2" onClick={() => setPlanOpen(true)}>
-                      Editar Plano
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="text-center py-4">
-                    <CreditCard className="w-10 h-10 text-muted-foreground/50 mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground mb-3">Nenhum plano atribuído</p>
-                    <Button size="sm" className="gradient-primary" onClick={() => setPlanOpen(true)}>
-                      <Plus className="w-4 h-4 mr-1" /> Atribuir Plano
-                    </Button>
-                  </div>
-                )}
-              </div>
-
-              {/* Feedback Scheduling */}
-              <div className="glass rounded-xl p-5">
-                <h3 className="font-display font-semibold flex items-center gap-2 mb-4">
-                  <Send className="w-5 h-5 text-primary" /> Agendar Feedback
-                </h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Envie um lembrete para o paciente dar feedback sobre o acompanhamento.
-                </p>
-                <form onSubmit={scheduleFeedback} className="space-y-3">
-                  <div>
-                    <Label>Enviar daqui a (dias)</Label>
-                    <Select value={feedbackForm.days} onValueChange={(v) => setFeedbackForm({ ...feedbackForm, days: v })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">1 dia</SelectItem>
-                        <SelectItem value="2">2 dias</SelectItem>
-                        <SelectItem value="3">3 dias</SelectItem>
-                        <SelectItem value="5">5 dias</SelectItem>
-                        <SelectItem value="7">7 dias</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Mensagem</Label>
-                    <Textarea
-                      value={feedbackForm.message}
-                      onChange={(e) => setFeedbackForm({ ...feedbackForm, message: e.target.value })}
-                      rows={3}
-                    />
-                  </div>
-                  <Button type="submit" className="w-full gradient-primary gap-2">
-                    <Send className="w-4 h-4" /> Agendar Feedback
-                  </Button>
-                </form>
-              </div>
-            </div>
-
-            {/* Plan Edit Dialog */}
-            <Dialog open={planOpen} onOpenChange={setPlanOpen}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle className="font-display">
-                    {patientSubscription ? "Editar Plano" : "Atribuir Plano"}
-                  </DialogTitle>
-                </DialogHeader>
-                <form onSubmit={savePlan} className="space-y-4">
-                  <div>
-                    <Label>Plano</Label>
-                    {pricingPlans.length > 0 ? (
-                      <Select value={planForm.plan_name} onValueChange={(v) => setPlanForm({ ...planForm, plan_name: v })}>
-                        <SelectTrigger><SelectValue placeholder="Selecione um plano..." /></SelectTrigger>
-                        <SelectContent>
-                          {pricingPlans.map((p) => (
-                            <SelectItem key={p.id} value={p.name}>
-                              {p.name} — R$ {Number(p.price_monthly).toFixed(2)}/mês
-                            </SelectItem>
+              {/* Overview Modal */}
+              <Dialog open={openSection === "overview"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display">Visão Geral</DialogTitle></DialogHeader>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="glass rounded-xl p-5 md:col-span-2">
+                      <h3 className="font-display font-semibold flex items-center gap-2 mb-3">
+                        <AlertTriangle className="w-5 h-5 text-warning" /> Diagnóstico Inteligente
+                      </h3>
+                      {riskFactors.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">Sem fatores de risco identificados. ✅</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {riskFactors.map((rf, i) => (
+                            <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
+                              <div className={`w-3 h-3 rounded-full ${
+                                rf.level === "high" ? "bg-destructive" : rf.level === "medium" ? "bg-warning" : "bg-success"
+                              }`} />
+                              <span className="text-sm font-medium">{rf.label}</span>
+                              <span className={`ml-auto text-xs px-2 py-0.5 rounded-full ${
+                                rf.level === "high" ? "bg-destructive/10 text-destructive" :
+                                rf.level === "medium" ? "bg-warning/10 text-warning" : "bg-success/10 text-success"
+                              }`}>
+                                {rf.level === "high" ? "Alto" : rf.level === "medium" ? "Médio" : "Baixo"}
+                              </span>
+                            </div>
                           ))}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <Input
-                        value={planForm.plan_name}
-                        onChange={(e) => setPlanForm({ ...planForm, plan_name: e.target.value })}
-                        placeholder="Nome do plano"
-                        required
-                      />
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label>Data Início</Label>
-                      <Input type="date" value={planForm.started_at} onChange={(e) => setPlanForm({ ...planForm, started_at: e.target.value })} required />
-                    </div>
-                    <div>
-                      <Label>Data Fim</Label>
-                      <Input type="date" value={planForm.expires_at} onChange={(e) => setPlanForm({ ...planForm, expires_at: e.target.value })} />
-                    </div>
-                  </div>
-                  <Button type="submit" className="w-full gradient-primary" disabled={!planForm.plan_name}>
-                    {patientSubscription ? "Atualizar Plano" : "Atribuir Plano"}
-                  </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </TabsContent>
-
-          {/* Protocols */}
-          <TabsContent value="protocols" className="mt-4 space-y-3">
-            {patientProtocols.length === 0 ? (
-              <div className="glass rounded-xl p-8 text-center">
-                <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                <p className="text-muted-foreground">Nenhum protocolo ativado.</p>
-              </div>
-            ) : (
-              patientProtocols.map((pp) => (
-                <div key={pp.id} className="glass rounded-xl p-4 flex items-center gap-4">
-                  <div className={`w-3 h-3 rounded-full ${
-                    pp.status === "active" ? "bg-success" : pp.status === "scheduled" ? "bg-warning" : "bg-muted-foreground"
-                  }`} />
-                  <div className="flex-1">
-                    <h4 className="font-medium text-sm">{pp.protocol_title}</h4>
-                    <p className="text-xs text-muted-foreground">
-                      {pp.status === "active" ? "Ativo" : pp.status === "scheduled" ? "Programado" : pp.status} •
-                      Início: {new Date(pp.start_date).toLocaleDateString("pt-BR")}
-                      {pp.end_date && ` • Fim: ${new Date(pp.end_date).toLocaleDateString("pt-BR")}`}
-                    </p>
-                  </div>
-                  {pp.status === "active" && (
-                    <Button size="sm" variant="outline" onClick={() => syncChecklist(pp.id)} className="gap-1">
-                      <Zap className="w-3 h-3" /> Sync
-                    </Button>
-                  )}
-                </div>
-              ))
-            )}
-          </TabsContent>
-
-          {/* Check-ins Tab */}
-          <TabsContent value="checkins" className="mt-4">
-            <PatientCheckinsTab patientId={patientId!} />
-          </TabsContent>
-
-          {/* Meal Plans Tab with Scheduler */}
-          <TabsContent value="meal-plans" className="mt-4 space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="font-display text-xl font-bold flex items-center gap-2">
-                <UtensilsCrossed className="w-6 h-6 text-primary" /> Planos Alimentares
-              </h2>
-              <Button
-                onClick={() => navigate(`/meal-plans?patientId=${patientId}`)}
-                className="gradient-primary gap-2 shadow-glow"
-              >
-                <Plus className="w-4 h-4" /> Criar Plano
-              </Button>
-            </div>
-
-            {mealPlans.length === 0 ? (
-              <div className="glass rounded-xl p-12 text-center">
-                <UtensilsCrossed className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
-                <h3 className="font-display text-lg font-semibold mb-2">Nenhum plano alimentar</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Crie um plano alimentar para este paciente e programe sua ativação com critérios inteligentes.
-                </p>
-                <Button onClick={() => navigate(`/meal-plans?patientId=${patientId}`)} className="gradient-primary">
-                  <Plus className="w-4 h-4 mr-2" /> Criar Primeiro Plano
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {mealPlans.map((plan) => (
-                  <motion.div
-                    key={plan.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="glass rounded-xl overflow-hidden"
-                  >
-                    {/* Plan Header */}
-                    <div className="p-5 border-b border-border">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-3 h-3 rounded-full ${plan.is_active ? "bg-success animate-pulse" : "bg-muted-foreground"}`} />
-                          <div>
-                            <h3 className="font-display font-semibold">{plan.title}</h3>
-                            <p className="text-xs text-muted-foreground">
-                              {plan.is_active ? "Ativo" : "Inativo"} •
-                              Início: {new Date(plan.start_date).toLocaleDateString("pt-BR")}
-                              {plan.end_date && ` • Fim: ${new Date(plan.end_date).toLocaleDateString("pt-BR")}`}
-                            </p>
-                          </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => navigate(`/meal-plan/${plan.id}`)}
-                          >
-                            <FileText className="w-3.5 h-3.5 mr-1" /> Ver Plano
-                          </Button>
-                        </div>
-                      </div>
-                      {plan.description && (
-                        <p className="text-sm text-muted-foreground mt-2">{plan.description}</p>
                       )}
                     </div>
-
-                    {/* Plan Scheduler */}
-                    <div className="p-5 bg-secondary/20">
-                      <PlanScheduler mealPlanId={plan.id} planTitle={plan.title} />
+                    <div className="glass rounded-xl p-5">
+                      <h3 className="font-display font-semibold flex items-center gap-2 mb-3">
+                        <Heart className="w-5 h-5 text-primary" /> Anamnese
+                      </h3>
+                      {anamnesis ? (
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between"><span className="text-muted-foreground">TMB</span><span className="font-medium">{anamnesis.computed_tmb} kcal</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Meta calórica</span><span className="font-medium">{anamnesis.computed_kcal_target} kcal</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Proteína</span><span className="font-medium">{anamnesis.computed_protein}g</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Carboidratos</span><span className="font-medium">{anamnesis.computed_carbs}g</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Gorduras</span><span className="font-medium">{anamnesis.computed_fat}g</span></div>
+                          <div className="pt-2 border-t border-border">
+                            <span className="text-xs text-muted-foreground">Objetivo: {anamnesis.answers?.goal || "—"}</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">Anamnese não preenchida.</p>
+                      )}
                     </div>
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </TabsContent>
+                  </div>
+                </DialogContent>
+              </Dialog>
 
-          {/* Metabolic Radar */}
-          <TabsContent value="radar" className="mt-4">
-            <MetabolicRadar anamnesis={anamnesis} />
-          </TabsContent>
-        </Tabs>
+              {/* AI Insights Modal */}
+              <Dialog open={openSection === "ai-insights"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display">IA Insights</DialogTitle></DialogHeader>
+                  <AnamnesisInsightsFull userId={patientId!} />
+                </DialogContent>
+              </Dialog>
+
+              {/* Assessment Modal */}
+              <Dialog open={openSection === "assessment"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display">Avaliação Física</DialogTitle></DialogHeader>
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <h2 className="font-display text-xl font-bold flex items-center gap-2">
+                        <Activity className="w-6 h-6 text-primary" /> Evolução Física
+                      </h2>
+                      <Button
+                        onClick={() => { setOpenSection(null); navigate(`/physical-assessment?patientId=${patientId}`); }}
+                        className="gradient-primary gap-2 shadow-glow"
+                      >
+                        <Scale className="w-4 h-4" /> Nova Avaliação
+                      </Button>
+                    </div>
+                    <BodyEvolutionCard patientId={patientId!} />
+                    <div className="border-t border-border pt-6">
+                      <h3 className="font-display text-lg font-semibold mb-4">Comparativo entre Consultas</h3>
+                      <ConsultationCompare patientId={patientId!} />
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* Agenda Modal */}
+              <Dialog open={openSection === "agenda"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display">Agenda</DialogTitle></DialogHeader>
+                  <PatientAgenda patientId={patientId!} />
+                </DialogContent>
+              </Dialog>
+
+              {/* Calculators Modal */}
+              <Dialog open={openSection === "calculators"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display">Calculadoras</DialogTitle></DialogHeader>
+                  <PatientCalculators anamnesis={anamnesis} />
+                </DialogContent>
+              </Dialog>
+
+              {/* Timeline Modal */}
+              <Dialog open={openSection === "timeline"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display">Timeline</DialogTitle></DialogHeader>
+                  <div className="space-y-4">
+                    <div className="flex justify-end">
+                      <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
+                        <DialogTrigger asChild>
+                          <Button size="sm" className="gap-1"><Plus className="w-4 h-4" /> Nota</Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle className="font-display">Adicionar Nota</DialogTitle>
+                          </DialogHeader>
+                          <form onSubmit={addTimelineNote} className="space-y-4">
+                            <div>
+                              <Label>Tipo</Label>
+                              <Select value={noteForm.event_type} onValueChange={(v) => setNoteForm({ ...noteForm, event_type: v })}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="note">📝 Nota</SelectItem>
+                                  <SelectItem value="alert">⚠️ Alerta</SelectItem>
+                                  <SelectItem value="measurement">📏 Medição</SelectItem>
+                                  <SelectItem value="achievement">🏆 Conquista</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div>
+                              <Label>Título</Label>
+                              <Input value={noteForm.title} onChange={(e) => setNoteForm({ ...noteForm, title: e.target.value })} required />
+                            </div>
+                            <div>
+                              <Label>Descrição</Label>
+                              <Textarea value={noteForm.description} onChange={(e) => setNoteForm({ ...noteForm, description: e.target.value })} />
+                            </div>
+                            <Button type="submit" className="w-full gradient-primary">Salvar</Button>
+                          </form>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                    {timeline.length === 0 ? (
+                      <div className="glass rounded-xl p-12 text-center">
+                        <Clock className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+                        <p className="text-muted-foreground">Nenhum evento na timeline.</p>
+                      </div>
+                    ) : (
+                      <div className="relative pl-8 space-y-4">
+                        <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-border" />
+                        {timeline.map((event) => {
+                          const config = eventTypeConfig[event.event_type] || eventTypeConfig.note;
+                          const Icon = config.icon;
+                          return (
+                            <motion.div key={event.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="relative">
+                              <div className="absolute -left-5 w-6 h-6 rounded-full bg-card border-2 border-border flex items-center justify-center">
+                                <Icon className={`w-3 h-3 ${config.color}`} />
+                              </div>
+                              <div className="glass rounded-xl p-4 ml-4">
+                                <div className="flex items-center justify-between">
+                                  <h4 className="font-medium text-sm">{event.title}</h4>
+                                  <span className="text-xs text-muted-foreground">{new Date(event.created_at).toLocaleDateString("pt-BR")}</span>
+                                </div>
+                                {event.description && <p className="text-xs text-muted-foreground mt-1">{event.description}</p>}
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* Plan Modal */}
+              <Dialog open={openSection === "plan"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display">Plano</DialogTitle></DialogHeader>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="glass rounded-xl p-5">
+                      <h3 className="font-display font-semibold flex items-center gap-2 mb-4">
+                        <CreditCard className="w-5 h-5 text-primary" /> Plano Atual
+                      </h3>
+                      {patientSubscription ? (
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">Plano</span>
+                            <span className="font-medium text-sm">{patientSubscription.plan_name}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">Status</span>
+                            <Badge className={
+                              patientSubscription.status === "active" ? "bg-emerald-500/10 text-emerald-500" :
+                              patientSubscription.status === "expired" ? "bg-red-500/10 text-red-500" :
+                              "bg-muted text-muted-foreground"
+                            }>
+                              {patientSubscription.status === "active" ? "Ativo" :
+                               patientSubscription.status === "expired" ? "Expirado" :
+                               patientSubscription.status === "trial" ? "Trial" : patientSubscription.status}
+                            </Badge>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">Início</span>
+                            <span className="text-sm">{new Date(patientSubscription.started_at).toLocaleDateString("pt-BR")}</span>
+                          </div>
+                          {patientSubscription.expires_at && (
+                            <>
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm text-muted-foreground">Vencimento</span>
+                                <span className="text-sm">{new Date(patientSubscription.expires_at).toLocaleDateString("pt-BR")}</span>
+                              </div>
+                              {(() => {
+                                const days = Math.ceil((new Date(patientSubscription.expires_at).getTime() - Date.now()) / 86400000);
+                                if (days > 0 && days <= 7) {
+                                  return (
+                                    <div className="p-3 rounded-lg bg-warning/10 border border-warning/20 flex items-center gap-2">
+                                      <AlertTriangle className="w-4 h-4 text-warning" />
+                                      <span className="text-xs text-warning font-medium">Mensalidade vence em {days} dia{days > 1 ? "s" : ""}!</span>
+                                    </div>
+                                  );
+                                }
+                                if (days <= 0) {
+                                  return (
+                                    <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 flex items-center gap-2">
+                                      <AlertTriangle className="w-4 h-4 text-destructive" />
+                                      <span className="text-xs text-destructive font-medium">Mensalidade vencida!</span>
+                                    </div>
+                                  );
+                                }
+                                return null;
+                              })()}
+                            </>
+                          )}
+                          <Button size="sm" variant="outline" className="w-full mt-2" onClick={() => setPlanOpen(true)}>
+                            Editar Plano
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="text-center py-4">
+                          <CreditCard className="w-10 h-10 text-muted-foreground/50 mx-auto mb-2" />
+                          <p className="text-sm text-muted-foreground mb-3">Nenhum plano atribuído</p>
+                          <Button size="sm" className="gradient-primary" onClick={() => setPlanOpen(true)}>
+                            <Plus className="w-4 h-4 mr-1" /> Atribuir Plano
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    <div className="glass rounded-xl p-5">
+                      <h3 className="font-display font-semibold flex items-center gap-2 mb-4">
+                        <Send className="w-5 h-5 text-primary" /> Agendar Feedback
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-4">Envie um lembrete para o paciente dar feedback sobre o acompanhamento.</p>
+                      <form onSubmit={scheduleFeedback} className="space-y-3">
+                        <div>
+                          <Label>Enviar daqui a (dias)</Label>
+                          <Select value={feedbackForm.days} onValueChange={(v) => setFeedbackForm({ ...feedbackForm, days: v })}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="1">1 dia</SelectItem>
+                              <SelectItem value="2">2 dias</SelectItem>
+                              <SelectItem value="3">3 dias</SelectItem>
+                              <SelectItem value="5">5 dias</SelectItem>
+                              <SelectItem value="7">7 dias</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label>Mensagem</Label>
+                          <Textarea value={feedbackForm.message} onChange={(e) => setFeedbackForm({ ...feedbackForm, message: e.target.value })} rows={3} />
+                        </div>
+                        <Button type="submit" className="w-full gradient-primary gap-2">
+                          <Send className="w-4 h-4" /> Agendar Feedback
+                        </Button>
+                      </form>
+                    </div>
+                  </div>
+                  <Dialog open={planOpen} onOpenChange={setPlanOpen}>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle className="font-display">{patientSubscription ? "Editar Plano" : "Atribuir Plano"}</DialogTitle>
+                      </DialogHeader>
+                      <form onSubmit={savePlan} className="space-y-4">
+                        <div>
+                          <Label>Plano</Label>
+                          {pricingPlans.length > 0 ? (
+                            <Select value={planForm.plan_name} onValueChange={(v) => setPlanForm({ ...planForm, plan_name: v })}>
+                              <SelectTrigger><SelectValue placeholder="Selecione um plano..." /></SelectTrigger>
+                              <SelectContent>
+                                {pricingPlans.map((p) => (
+                                  <SelectItem key={p.id} value={p.name}>{p.name} — R$ {Number(p.price_monthly).toFixed(2)}/mês</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <Input value={planForm.plan_name} onChange={(e) => setPlanForm({ ...planForm, plan_name: e.target.value })} placeholder="Nome do plano" required />
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div><Label>Data Início</Label><Input type="date" value={planForm.started_at} onChange={(e) => setPlanForm({ ...planForm, started_at: e.target.value })} required /></div>
+                          <div><Label>Data Fim</Label><Input type="date" value={planForm.expires_at} onChange={(e) => setPlanForm({ ...planForm, expires_at: e.target.value })} /></div>
+                        </div>
+                        <Button type="submit" className="w-full gradient-primary" disabled={!planForm.plan_name}>
+                          {patientSubscription ? "Atualizar Plano" : "Atribuir Plano"}
+                        </Button>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                </DialogContent>
+              </Dialog>
+
+              {/* Protocols Modal */}
+              <Dialog open={openSection === "protocols"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display">Protocolos</DialogTitle></DialogHeader>
+                  <div className="space-y-3">
+                    {patientProtocols.length === 0 ? (
+                      <div className="glass rounded-xl p-8 text-center">
+                        <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+                        <p className="text-muted-foreground">Nenhum protocolo ativado.</p>
+                      </div>
+                    ) : (
+                      patientProtocols.map((pp) => (
+                        <div key={pp.id} className="glass rounded-xl p-4 flex items-center gap-4">
+                          <div className={`w-3 h-3 rounded-full ${
+                            pp.status === "active" ? "bg-success" : pp.status === "scheduled" ? "bg-warning" : "bg-muted-foreground"
+                          }`} />
+                          <div className="flex-1">
+                            <h4 className="font-medium text-sm">{pp.protocol_title}</h4>
+                            <p className="text-xs text-muted-foreground">
+                              {pp.status === "active" ? "Ativo" : pp.status === "scheduled" ? "Programado" : pp.status} •
+                              Início: {new Date(pp.start_date).toLocaleDateString("pt-BR")}
+                              {pp.end_date && ` • Fim: ${new Date(pp.end_date).toLocaleDateString("pt-BR")}`}
+                            </p>
+                          </div>
+                          {pp.status === "active" && (
+                            <Button size="sm" variant="outline" onClick={() => syncChecklist(pp.id)} className="gap-1">
+                              <Zap className="w-3 h-3" /> Sync
+                            </Button>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* Checkins Modal */}
+              <Dialog open={openSection === "checkins"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display">Check-ins</DialogTitle></DialogHeader>
+                  <PatientCheckinsTab patientId={patientId!} />
+                </DialogContent>
+              </Dialog>
+
+              {/* Meal Plans Modal */}
+              <Dialog open={openSection === "meal-plans"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display">Planos Alimentares</DialogTitle></DialogHeader>
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-end">
+                      <Button
+                        onClick={() => { setOpenSection(null); navigate(`/meal-plans?patientId=${patientId}`); }}
+                        className="gradient-primary gap-2 shadow-glow"
+                      >
+                        <Plus className="w-4 h-4" /> Criar Plano
+                      </Button>
+                    </div>
+                    {mealPlans.length === 0 ? (
+                      <div className="glass rounded-xl p-12 text-center">
+                        <UtensilsCrossed className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+                        <h3 className="font-display text-lg font-semibold mb-2">Nenhum plano alimentar</h3>
+                        <p className="text-sm text-muted-foreground mb-4">Crie um plano alimentar para este paciente.</p>
+                        <Button onClick={() => { setOpenSection(null); navigate(`/meal-plans?patientId=${patientId}`); }} className="gradient-primary">
+                          <Plus className="w-4 h-4 mr-2" /> Criar Primeiro Plano
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {mealPlans.map((plan) => (
+                          <motion.div key={plan.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl overflow-hidden">
+                            <div className="p-5 border-b border-border">
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                  <div className={`w-3 h-3 rounded-full ${plan.is_active ? "bg-success animate-pulse" : "bg-muted-foreground"}`} />
+                                  <div>
+                                    <h3 className="font-display font-semibold">{plan.title}</h3>
+                                    <p className="text-xs text-muted-foreground">
+                                      {plan.is_active ? "Ativo" : "Inativo"} •
+                                      Início: {new Date(plan.start_date).toLocaleDateString("pt-BR")}
+                                      {plan.end_date && ` • Fim: ${new Date(plan.end_date).toLocaleDateString("pt-BR")}`}
+                                    </p>
+                                  </div>
+                                </div>
+                                <Button size="sm" variant="outline" onClick={() => { setOpenSection(null); navigate(`/meal-plan/${plan.id}`); }}>
+                                  <FileText className="w-3.5 h-3.5 mr-1" /> Ver Plano
+                                </Button>
+                              </div>
+                              {plan.description && <p className="text-sm text-muted-foreground mt-2">{plan.description}</p>}
+                            </div>
+                            <div className="p-5 bg-secondary/20">
+                              <PlanScheduler mealPlanId={plan.id} planTitle={plan.title} />
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* Radar Modal */}
+              <Dialog open={openSection === "radar"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display">Radar Metabólico</DialogTitle></DialogHeader>
+                  <MetabolicRadar anamnesis={anamnesis} />
+                </DialogContent>
+              </Dialog>
+            </>
+          );
+        })()}
       </div>
     </DashboardLayout>
   );
