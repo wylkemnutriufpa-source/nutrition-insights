@@ -64,6 +64,7 @@ export const FEATURE_REGISTRY: FeatureDefinition[] = [
   // Relatórios & Financeiro
   { name: "reports", label: "Relatórios", description: "Geração de relatórios detalhados", icon: BarChart3, category: "Relatórios & Financeiro" },
   { name: "financial", label: "Financeiro", description: "Painel financeiro completo com gráficos", icon: DollarSign, category: "Relatórios & Financeiro" },
+  { name: "system_usage_gamification", label: "Gamificação de Uso", description: "Painel de progresso de exploração do sistema com dicas e níveis", icon: Trophy, category: "Relatórios & Financeiro", addedVersion: "2.5" },
 ];
 
 /** Retorna os nomes de todas as features registradas */
