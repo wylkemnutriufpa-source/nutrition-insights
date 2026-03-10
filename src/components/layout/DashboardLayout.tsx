@@ -345,6 +345,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen flex bg-background">
+      <CommandPalette />
+      <OnboardingWizard />
       {/* Desktop Sidebar */}
       <motion.aside
         initial={false}
