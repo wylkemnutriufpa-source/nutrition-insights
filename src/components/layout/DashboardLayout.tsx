@@ -290,16 +290,25 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <SidebarContent {...sidebarProps} collapsed={false} onLinkClick={() => setMobileOpen(false)} />
               </SheetContent>
             </Sheet>
-            <div className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center shadow-glow">
                 <Leaf className="w-4 h-4 text-primary-foreground" />
               </div>
               <span className="font-display font-bold text-sm">
                 Fit<span className="text-gradient">Journey</span>
               </span>
-            </div>
+            </Link>
           </div>
-          <NotificationBell />
+          <div className="flex items-center gap-1">
+            {location.pathname !== "/" && (
+              <Link to="/">
+                <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <LayoutDashboard className="w-4 h-4" />
+                </Button>
+              </Link>
+            )}
+            <NotificationBell />
+          </div>
         </div>
 
         {/* Main content */}
