@@ -34,7 +34,7 @@ const features = [
 ];
 
 const howItWorks = [
-  { step: "01", title: "Crie sua conta", desc: "Cadastro gratuito em 30 segundos. Sem cartão de crédito.", icon: Sparkles },
+  { step: "01", title: "Crie sua conta", desc: "Teste grátis por 7 dias. Sem cartão de crédito.", icon: Sparkles },
   { step: "02", title: "Cadastre pacientes", desc: "Adicione pacientes com 1 clique. Eles recebem acesso automaticamente.", icon: Users },
   { step: "03", title: "Configure protocolos", desc: "Crie planos alimentares, protocolos e metas personalizadas.", icon: ClipboardCheck },
   { step: "04", title: "Acompanhe com IA", desc: "A IA analisa evolução, gera relatórios e sugere ajustes automaticamente.", icon: Brain },
