@@ -115,8 +115,29 @@ export default function MealPlanEditor() {
       setPatientName(profile?.full_name || "Paciente");
     }
     setItems(itemsData || []);
+
+    // Fetch documents
+    const { data: docs } = await supabase
+      .from("patient_documents" as any)
+      .select("*")
+      .eq("meal_plan_id", id)
+      .eq("document_type", "meal_plan")
+      .order("created_at", { ascending: false });
+    setPlanDocs(docs || []);
+
     setLoading(false);
   }, [id, user]);
+
+  const fetchDocs = async () => {
+    if (!id) return;
+    const { data } = await supabase
+      .from("patient_documents" as any)
+      .select("*")
+      .eq("meal_plan_id", id)
+      .eq("document_type", "meal_plan")
+      .order("created_at", { ascending: false });
+    setPlanDocs(data || []);
+  };
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
