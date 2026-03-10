@@ -201,7 +201,7 @@ const App = () => (
               <Route path="/clinical-intelligence" element={<NutritionistRoute><ClinicalIntelligence /></NutritionistRoute>} />
               <Route path="/weekly-report" element={<NutritionistRoute><WeeklyReport /></NutritionistRoute>} />
               <Route path="/financial" element={<NutritionistRoute><Financial /></NutritionistRoute>} />
-              <Route path="/global-tips" element={<NutritionistRoute><GlobalTips /></NutritionistRoute>} />
+              <Route path="/global-tips" element={<ProtectedRoute><GlobalTips /></ProtectedRoute>} />
               <Route path="/automation" element={<NutritionistRoute><AutomationCenter /></NutritionistRoute>} />
               <Route path="/checkin-panel" element={<NutritionistRoute><CheckinPanel /></NutritionistRoute>} />
 
