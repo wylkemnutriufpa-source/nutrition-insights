@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import {
   ArrowLeft, Save, Ruler, Activity, Flame, Target, TrendingDown,
-  Calculator, Beef, Wheat, Droplets, Loader2, History, Zap, Scale, Heart, GitCompare
+  Calculator, Beef, Wheat, Droplets, Loader2, History, Zap, Scale, Heart, GitCompare, Upload
 } from "lucide-react";
 import ConsultationCompare from "@/components/patient/ConsultationCompare";
 import DocumentUpload from "@/components/common/DocumentUpload";
