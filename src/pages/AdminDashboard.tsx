@@ -848,6 +848,24 @@ export default function AdminDashboard() {
                     </div>
                   </CardContent>
                 </Card>
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/ranking")}>
+                  <CardContent className="flex items-center gap-4 py-6">
+                    <Crown className="w-8 h-8 text-yellow-400" />
+                    <div>
+                      <p className="font-display font-semibold">Ranking Global</p>
+                      <p className="text-sm text-muted-foreground">Engajamento dos pacientes</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/prestige")}>
+                  <CardContent className="flex items-center gap-4 py-6">
+                    <Sparkles className="w-8 h-8 text-purple-400" />
+                    <div>
+                      <p className="font-display font-semibold">Planos Prestígio</p>
+                      <p className="text-sm text-muted-foreground">Gerenciar tiers de pacientes</p>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </TabsContent>
 
