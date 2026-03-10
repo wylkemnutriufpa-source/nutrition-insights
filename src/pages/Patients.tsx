@@ -554,6 +554,7 @@ export default function Patients() {
   const [bulkLoading, setBulkLoading] = useState(false);
   const [layout, setLayout] = useState<"grid" | "list">("grid");
   const [prestigeFilter, setPrestigeFilter] = useState<string>("all");
+  const [onlineFilter, setOnlineFilter] = useState(false);
   const [prestigePlansList, setPrestigePlansList] = useState<PrestigePlan[]>([]);
   const { onlineUsers } = useOnlinePatients();
   const onlineSet = useMemo(() => new Set(onlineUsers.map(u => u.user_id)), [onlineUsers]);
