@@ -632,11 +632,12 @@ export default function PhysicalAssessment() {
                 />
               </div>
             </div>
-          </TabsContent>
+          </div>
 
           {/* Comparison between consultations */}
-          <TabsContent value="compare" className="space-y-4 mt-4">
+          <div className="space-y-4">
             {patientId && <ConsultationCompare patientId={patientId} />}
+          </div>
           </TabsContent>
 
           {/* History */}
