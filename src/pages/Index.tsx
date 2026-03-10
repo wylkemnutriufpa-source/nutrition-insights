@@ -257,7 +257,9 @@ function PatientDashboardContent() {
 
       {/* Patient Evolution Summary */}
       <motion.div variants={item}>
-        <PatientEvolutionSummary />
+        <ExpandablePanel title="Evolução do Paciente">
+          <PatientEvolutionSummary />
+        </ExpandablePanel>
       </motion.div>
 
       {/* Subscription Card */}
