@@ -110,7 +110,7 @@ export default function Landing() {
   const plans = getSetting(s, "pricing_plans", defaultPlans);
   const testimonials = getSetting(s, "testimonials_landing", defaultTestimonials);
   const faqs = getSetting(s, "faqs", defaultFaqs);
-  const metaTitle = getSetting(s, "meta_title", "NutriFlow — Plataforma de Nutrição com IA e Gamificação");
+  const metaTitle = getSetting(s, "meta_title", "FitJourney — Plataforma de Nutrição com IA e Gamificação");
   const metaDescription = getSetting(s, "meta_description", "Gerencie pacientes, crie planos alimentares com IA, engaje com gamificação. A plataforma #1 para nutricionistas modernos.");
   const footerText = getSetting(s, "footer_text", "Plataforma completa para nutricionistas modernos.");
 
