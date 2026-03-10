@@ -170,8 +170,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isNutritionist: roles.includes("nutritionist"),
         isPatient: roles.includes("patient"),
         isAdmin: (roles as string[]).includes("admin"),
+        subscription,
         signOut,
         refreshProfile,
+        checkSubscription,
       }}
     >
       {children}
