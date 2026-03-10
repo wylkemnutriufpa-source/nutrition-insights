@@ -268,9 +268,10 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
           <span className="text-lg font-bold text-primary">
             {displayName[0].toUpperCase()}
           </span>
-          {isOnline && (
-            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-success border-2 border-card animate-pulse" title="Online agora" />
-          )}
+          <span
+            className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-card animate-pulse ${isOnline ? 'bg-success' : 'bg-destructive'}`}
+            title={isOnline ? 'Online agora' : 'Offline'}
+          />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
