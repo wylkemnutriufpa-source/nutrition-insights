@@ -23,6 +23,7 @@ interface PatientInfo {
   status: string;
   notes: string | null;
   created_at: string;
+  expires_at?: string | null;
   email?: string;
   profile?: { full_name: string; avatar_url: string | null } | null;
   priorityScore?: number;
