@@ -26,10 +26,11 @@ import PatientChecklistView from "@/components/patient/PatientChecklistView";
 import SmartAlertsBanner from "@/components/patient/SmartAlertsBanner";
 import PlanScheduler from "@/components/plans/PlanScheduler";
 import DocumentUpload from "@/components/common/DocumentUpload";
+import ClinicalDecisionSupport from "@/components/patient/ClinicalDecisionSupport";
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
-  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2
+  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope
 } from "lucide-react";
 
 interface PatientProfile {
@@ -526,6 +527,7 @@ export default function PatientDetail() {
             { key: "meal-plans", label: "Planos Alimentares", icon: UtensilsCrossed, color: "from-success/20 to-success/5", iconColor: "text-success" },
             { key: "radar", label: "Radar Metabólico", icon: TrendingUp, color: "from-destructive/20 to-destructive/5", iconColor: "text-destructive" },
             { key: "recipes", label: "Receitas", icon: ChefHat, color: "from-primary/20 to-accent/5", iconColor: "text-primary" },
+            { key: "clinical-decision", label: "Decisão Clínica", icon: Stethoscope, color: "from-destructive/20 to-primary/5", iconColor: "text-destructive" },
           ];
 
           return (
@@ -1028,6 +1030,14 @@ export default function PatientDetail() {
                       ))}
                     </div>
                   )}
+                </DialogContent>
+              </Dialog>
+
+              {/* Clinical Decision Support Modal */}
+              <Dialog open={openSection === "clinical-decision"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display">Suporte à Decisão Clínica</DialogTitle></DialogHeader>
+                  <ClinicalDecisionSupport patientId={patientId!} nutritionistId={user!.id} />
                 </DialogContent>
               </Dialog>
             </>
