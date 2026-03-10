@@ -328,6 +328,8 @@ export default function PatientDetail() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {/* Smart Alerts */}
+        <SmartAlertsBanner patientId={patientId!} onAction={(action) => setOpenSection(action)} />
         {/* Header */}
         <div className="flex items-center gap-4 flex-wrap">
           <Button variant="ghost" size="icon" onClick={() => navigate("/patients")}>
