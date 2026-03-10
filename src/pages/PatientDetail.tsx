@@ -445,6 +445,7 @@ export default function PatientDetail() {
             { key: "checkins", label: "Check-ins", icon: MessageSquare, color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
             { key: "meal-plans", label: "Planos Alimentares", icon: UtensilsCrossed, color: "from-success/20 to-success/5", iconColor: "text-success" },
             { key: "radar", label: "Radar Metabólico", icon: TrendingUp, color: "from-destructive/20 to-destructive/5", iconColor: "text-destructive" },
+            { key: "recipes", label: "Receitas", icon: ChefHat, color: "from-primary/20 to-accent/5", iconColor: "text-primary" },
           ];
 
           return (
