@@ -66,7 +66,7 @@ const defaultPlans = [
 ];
 
 const defaultFaqs = [
-  { q: "Preciso instalar alguma coisa?", a: "Não! NutriFlow é 100% web e PWA. Funciona no navegador e pode ser instalado como app no celular." },
+  { q: "Preciso instalar alguma coisa?", a: "Não! FitJourney é 100% web e PWA. Funciona no navegador e pode ser instalado como app no celular." },
   { q: "Meus pacientes precisam pagar?", a: "Não. Apenas o profissional paga pelo plano. Pacientes acessam gratuitamente com login próprio." },
   { q: "A IA substitui o nutricionista?", a: "Jamais! A IA é sua assistente — analisa dados, gera sugestões e economiza tempo. Todas as decisões clínicas são suas." },
   { q: "Meus dados estão seguros?", a: "Sim. Usamos criptografia de ponta, autenticação robusta e Row-Level Security. Cada paciente só acessa seus próprios dados." },
