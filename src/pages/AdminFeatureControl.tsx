@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { FEATURE_REGISTRY, getFeaturesByCategory, type FeatureDefinition } from "@/lib/featureRegistry";
+import AIUsageLimitsEditor from "@/components/admin/AIUsageLimitsEditor";
 import {
   Zap, Users, Utensils, BarChart3, MessageSquare,
   Crown, Search, Shield, Sparkles, Clock
