@@ -102,31 +102,96 @@ function CategoryBar({ label, icon: Icon, points, maxPoints, color }: {
 }
 
 export default function GlobalRanking() {
-  const { user } = useAuth();
+  const { user, isNutritionist, isAdmin, isPatient } = useAuth();
+  const navigate = useNavigate();
   const { plans: allPrestigePlans } = usePrestige();
   const [period, setPeriod] = useState<Period>("monthly");
   const [ranking, setRanking] = useState<RankEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [hasPremium, setHasPremium] = useState<boolean | null>(null);
+  const [nutritionistId, setNutritionistId] = useState<string | null>(null);
+
+  // Check premium access for nutritionists
+  useEffect(() => {
+    if (!user) return;
+    if (isAdmin) {
+      setHasPremium(true);
+      return;
+    }
+    if (isPatient) {
+      // Patients: find their nutritionist and check if they have premium
+      supabase
+        .from("nutritionist_patients")
+        .select("nutritionist_id")
+        .eq("patient_id", user.id)
+        .eq("status", "active")
+        .limit(1)
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            setNutritionistId(data.nutritionist_id);
+            // Check if nutritionist has premium
+            checkNutritionistPremium(data.nutritionist_id);
+          } else {
+            setHasPremium(false);
+          }
+        });
+      return;
+    }
+    if (isNutritionist) {
+      setNutritionistId(user.id);
+      checkNutritionistPremium(user.id);
+    }
+  }, [user, isAdmin, isPatient, isNutritionist]);
+
+  async function checkNutritionistPremium(nutId: string) {
+    // Check professional_feature_usage for ranking_global
+    const { data: featureRow } = await supabase
+      .from("professional_feature_usage" as any)
+      .select("status")
+      .eq("nutritionist_id", nutId)
+      .eq("feature_name", "ranking_global")
+      .maybeSingle();
+
+    if (featureRow && (featureRow as any).status === "enabled") {
+      setHasPremium(true);
+      return;
+    }
+
+    // Check if their pricing plan is premium-tier
+    const { data: profile } = await supabase
+      .from("professional_profiles")
+      .select("plan_id, pricing_plans:plan_id(slug)")
+      .eq("user_id", nutId)
+      .maybeSingle();
+
+    const planSlug = (profile as any)?.pricing_plans?.slug;
+    const isPremiumPlan = planSlug === "premium" || planSlug === "enterprise" || planSlug === "pro";
+    setHasPremium(isPremiumPlan);
+  }
 
   const loadRanking = useCallback(async (p: Period) => {
     setLoading(true);
-    const { data, error } = await supabase.rpc("get_ranking_by_period", {
-      _period: p,
-      _limit: 20,
-    });
+    const params: any = { _period: p, _limit: 20 };
+    // Scope to nutritionist's patients (admins see all)
+    if (nutritionistId && !isAdmin) {
+      params._nutritionist_id = nutritionistId;
+    }
+    const { data, error } = await supabase.rpc("get_ranking_by_period", params);
     if (!error && data) {
       setRanking(data as RankEntry[]);
     }
     setLoading(false);
-  }, []);
+  }, [nutritionistId, isAdmin]);
 
   useEffect(() => {
-    loadRanking(period);
-    // Auto-refresh every 30 minutes
-    const interval = setInterval(() => loadRanking(period), 30 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [period, loadRanking]);
+    if (hasPremium) {
+      loadRanking(period);
+      const interval = setInterval(() => loadRanking(period), 30 * 60 * 1000);
+      return () => clearInterval(interval);
+    }
+  }, [period, loadRanking, hasPremium]);
 
   const myRank = ranking.find((r) => r.patient_id === user?.id);
   const podium = ranking.slice(0, 3);
@@ -136,6 +201,61 @@ export default function GlobalRanking() {
     ...ranking.map(r => Math.max(r.points_checklist, r.points_meals, r.points_training, r.points_checkin, r.points_other)),
     1
   );
+
+  // Premium gate - show upgrade prompt
+  if (hasPremium === false) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-lg mx-auto py-20 text-center space-y-6">
+          <div className="w-20 h-20 rounded-full bg-warning/10 flex items-center justify-center mx-auto">
+            <Lock className="w-10 h-10 text-warning" />
+          </div>
+          <h1 className="font-display text-2xl font-bold">Ranking Global — Premium</h1>
+          <p className="text-muted-foreground">
+            O Ranking Global é uma funcionalidade exclusiva do plano <strong>Premium</strong>. 
+            Engaje seus pacientes com competição saudável e gamificação avançada.
+          </p>
+          <Card className="text-left border-warning/30 bg-warning/5">
+            <CardContent className="p-5 space-y-3">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Crown className="w-5 h-5 text-warning" /> O que o Premium inclui:
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                <div className="flex items-center gap-2"><Trophy className="w-4 h-4 text-warning" /> Ranking Global de Pacientes</div>
+                <div className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-primary" /> Todas as features de IA</div>
+                <div className="flex items-center gap-2"><Rocket className="w-4 h-4 text-primary" /> Programas Personalizados</div>
+                <div className="flex items-center gap-2"><Bot className="w-4 h-4 text-primary" /> Automações Inteligentes</div>
+                <div className="flex items-center gap-2"><Palette className="w-4 h-4 text-primary" /> Branding Personalizado</div>
+                <div className="flex items-center gap-2"><BarChart3 className="w-4 h-4 text-primary" /> Inteligência Clínica</div>
+                <div className="flex items-center gap-2"><Users className="w-4 h-4 text-primary" /> Perfil Público & Leads</div>
+                <div className="flex items-center gap-2"><Zap className="w-4 h-4 text-primary" /> Limites de IA expandidos</div>
+              </div>
+            </CardContent>
+          </Card>
+          {isNutritionist && (
+            <Button onClick={() => navigate("/pricing")} className="gap-2">
+              <Crown className="w-4 h-4" /> Ver Planos Premium
+            </Button>
+          )}
+          {isPatient && (
+            <p className="text-xs text-muted-foreground">
+              Peça ao seu nutricionista para ativar o plano Premium para acessar o ranking.
+            </p>
+          )}
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (hasPremium === null) {
+    return (
+      <DashboardLayout>
+        <div className="flex justify-center py-20">
+          <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
