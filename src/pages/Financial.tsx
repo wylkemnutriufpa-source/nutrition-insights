@@ -228,13 +228,23 @@ export default function Financial() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
-            <DollarSign className="w-5 h-5 text-primary-foreground" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
+              <DollarSign className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="font-display text-2xl font-bold">Financeiro</h1>
+              <p className="text-sm text-muted-foreground">Gestão de planos, receitas e despesas</p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-display text-2xl font-bold">Financeiro</h1>
-            <p className="text-sm text-muted-foreground">Gestão de planos, receitas e despesas</p>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => { setTxForm({ ...defaultTxForm, type: "expense" }); setTxOpen(true); }} className="gap-1">
+              <ArrowDownCircle className="w-4 h-4" /> Despesa
+            </Button>
+            <Button size="sm" onClick={() => { setTxForm({ ...defaultTxForm, type: "income" }); setTxOpen(true); }} className="gap-1 gradient-primary">
+              <Plus className="w-4 h-4" /> Receita
+            </Button>
           </div>
         </div>
 
