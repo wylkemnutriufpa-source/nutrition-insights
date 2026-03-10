@@ -434,6 +434,7 @@ export default function PhysicalAssessment() {
             <TabsTrigger value="energy"><Calculator className="w-3.5 h-3.5 mr-1" /> Gasto Energético</TabsTrigger>
             <TabsTrigger value="compare"><GitCompare className="w-3.5 h-3.5 mr-1" /> Comparativo</TabsTrigger>
             <TabsTrigger value="history"><History className="w-3.5 h-3.5 mr-1" /> Histórico</TabsTrigger>
+            <TabsTrigger value="docs"><Upload className="w-3.5 h-3.5 mr-1" /> Documentos</TabsTrigger>
           </TabsList>
 
           {/* Body Measurements */}
