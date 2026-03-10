@@ -723,6 +723,11 @@ function NutritionistDashboardContent() {
         </motion.div>
       )}
 
+      {/* ── System Usage Gamification ── */}
+      <motion.div variants={item}>
+        <SystemUsageCard />
+      </motion.div>
+
       {/* ── 9️⃣ Module Shortcut Grid ── */}
       <motion.div variants={item}>
         <h2 className="font-display font-semibold text-sm text-muted-foreground uppercase tracking-wider mb-3">Módulos</h2>
