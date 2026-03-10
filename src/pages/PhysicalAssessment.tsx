@@ -826,8 +826,8 @@ export default function PhysicalAssessment() {
                 />
               )}
             </div>
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
       </div>
     </DashboardLayout>
   );
