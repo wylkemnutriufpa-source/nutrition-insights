@@ -36,6 +36,7 @@ export const FEATURE_REGISTRY: FeatureDefinition[] = [
   { name: "ai_body_analysis", label: "Análise Corporal IA", description: "Análise de composição corporal por fotos com IA", icon: Camera, category: "IA & Automação" },
   { name: "ai_anamnesis", label: "Anamnese Inteligente", description: "Insights automáticos de anamnese com IA", icon: Brain, category: "IA & Automação" },
   { name: "weekly_report_ai", label: "Relatório Semanal IA", description: "Geração automática de relatórios semanais", icon: FileText, category: "IA & Automação" },
+  { name: "behavioral_analysis", label: "Análise Comportamental IA", description: "Detecta padrões de adesão e dispara automações de suporte personalizado", icon: Activity, category: "IA & Automação", addedVersion: "2.5" },
 
   // Gestão de Pacientes
   { name: "patients", label: "Gestão de Pacientes", description: "Cadastro e acompanhamento de pacientes", icon: Users, category: "Gestão de Pacientes" },
