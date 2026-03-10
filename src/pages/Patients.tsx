@@ -269,7 +269,7 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <h3 className="font-display font-semibold truncate" style={p.prestigePlan?.crown_enabled ? { color: p.prestigePlan.color } : undefined}>{displayName}</h3>
-            {p.prestigePlan && <PrestigeBadge plan={p.prestigePlan} size="sm" showLabel={false} />}
+            {p.prestigePlan && <PrestigeBadge plan={p.prestigePlan} allPlans={prestigePlansList} size="sm" showLabel={false} />}
           </div>
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
             <span className={`text-xs px-2 py-0.5 rounded-full ${
