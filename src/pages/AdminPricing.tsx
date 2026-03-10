@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -51,13 +51,15 @@ export default function AdminPricing() {
   const [pointRules, setPointRules] = useState<PointRule[]>([]);
   const [saving, setSaving] = useState(false);
   const [newFeature, setNewFeature] = useState<Record<string, string>>({});
+  const [payments, setPayments] = useState<any[]>([]);
 
-  useEffect(() => {
+  const fetchAll = () => {
     Promise.all([
       supabase.from("prestige_plans").select("*").order("display_order"),
       supabase.from("pricing_plans").select("*").order("sort_order"),
       supabase.from("ranking_point_rules").select("*").order("action_key"),
-    ]).then(([pr, pp, ru]) => {
+      supabase.from("payments").select("amount, status, gateway, created_at").order("created_at", { ascending: false }).limit(500),
+    ]).then(([pr, pp, ru, pay]) => {
       setPrestigePlans(pr.data || []);
       setPricingPlans(
         (pp.data || []).map((p: any) => ({
@@ -66,12 +68,63 @@ export default function AdminPricing() {
         }))
       );
       setPointRules((ru.data as PointRule[]) || []);
+      setPayments(pay.data || []);
     });
-  }, []);
+  };
+
+  useEffect(() => { fetchAll(); }, []);
+
+  // Financial summary
+  const financialSummary = useMemo(() => {
+    const paid = payments.filter(p => p.status === "paid");
+    const totalRevenue = paid.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    const thisMonth = paid.filter(p => {
+      const d = new Date(p.created_at);
+      const now = new Date();
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    });
+    const monthlyRevenue = thisMonth.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    return { totalRevenue, monthlyRevenue, totalPayments: paid.length };
+  }, [payments]);
 
   // ─── Prestige Plans (Pacientes) ───
   const updatePrestige = (id: string, field: string, value: any) =>
     setPrestigePlans((prev) => prev.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
+
+  const addNewPrestigePlan = async () => {
+    const slug = `prestige-${Date.now()}`;
+    const { data, error } = await supabase
+      .from("prestige_plans")
+      .insert({
+        name: "Novo Plano",
+        slug,
+        color: "#6366f1",
+        badge_icon: "⭐",
+        badge_label: "Novo",
+        display_order: prestigePlans.length + 1,
+        price_monthly: 0,
+      })
+      .select()
+      .single();
+    if (error) {
+      toast.error("Erro ao criar plano: " + error.message);
+      return;
+    }
+    if (data) {
+      setPrestigePlans((prev) => [...prev, data]);
+      toast.success("Novo plano de paciente criado!");
+    }
+  };
+
+  const deletePrestigePlan = async (id: string) => {
+    if (!confirm("Excluir este plano de paciente?")) return;
+    const { error } = await supabase.from("prestige_plans").delete().eq("id", id);
+    if (error) toast.error(error.message);
+    else {
+      setPrestigePlans((prev) => prev.filter((p) => p.id !== id));
+      toast.success("Plano removido!");
+    }
+  };
 
   const savePrestigePlans = async () => {
     setSaving(true);
@@ -192,6 +245,32 @@ export default function AdminPricing() {
           </p>
         </div>
 
+        {/* Financial Summary */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Card className="glass shadow-card">
+            <CardContent className="py-4 text-center">
+              <p className="text-2xl font-bold font-display text-primary">
+                R$ {financialSummary.monthlyRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+              </p>
+              <p className="text-[11px] text-muted-foreground">Receita do Mês</p>
+            </CardContent>
+          </Card>
+          <Card className="glass shadow-card">
+            <CardContent className="py-4 text-center">
+              <p className="text-2xl font-bold font-display text-accent">
+                R$ {financialSummary.totalRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+              </p>
+              <p className="text-[11px] text-muted-foreground">Receita Total</p>
+            </CardContent>
+          </Card>
+          <Card className="glass shadow-card">
+            <CardContent className="py-4 text-center">
+              <p className="text-2xl font-bold font-display">{financialSummary.totalPayments}</p>
+              <p className="text-[11px] text-muted-foreground">Pagamentos Recebidos</p>
+            </CardContent>
+          </Card>
+        </div>
+
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="grid grid-cols-3 w-full max-w-lg">
             <TabsTrigger value="patients" className="gap-1.5">
@@ -211,9 +290,14 @@ export default function AdminPricing() {
               <h2 className="font-display font-semibold flex items-center gap-2">
                 <Users className="w-5 h-5" /> Planos de Prestígio (Pacientes)
               </h2>
-              <Badge variant="outline" className="text-xs">
-                {prestigePlans.length} planos
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">
+                  {prestigePlans.length} planos
+                </Badge>
+                <Button variant="outline" size="sm" onClick={addNewPrestigePlan} className="gap-1.5">
+                  <Plus className="w-4 h-4" /> Novo Plano
+                </Button>
+              </div>
             </div>
 
             {prestigePlans.map((plan) => (
@@ -226,7 +310,12 @@ export default function AdminPricing() {
                         <span style={{ color: plan.color }}>{plan.name}</span>
                         {plan.crown_enabled && <Crown className="w-4 h-4" style={{ color: plan.color }} />}
                       </div>
-                      <span className="text-xs text-muted-foreground">Ordem: {plan.display_order}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">Ordem: {plan.display_order}</span>
+                        <Button variant="ghost" size="sm" onClick={() => deletePrestigePlan(plan.id)} className="text-destructive hover:text-destructive h-7 w-7 p-0">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">

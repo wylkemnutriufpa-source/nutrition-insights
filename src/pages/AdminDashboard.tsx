@@ -841,7 +841,7 @@ export default function AdminDashboard() {
                   <CardContent className="flex items-center gap-4 py-6">
                     <Users className="w-8 h-8 text-primary" />
                     <div>
-                      <p className="font-display font-semibold">Gestão de Profissionais</p>
+                      <p className="font-display font-semibold">Gestão de Planos Profissionais</p>
                       <p className="text-sm text-muted-foreground">Cadastro, planos e status</p>
                     </div>
                   </CardContent>
