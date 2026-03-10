@@ -13,6 +13,14 @@ interface Profile {
   phone: string | null;
 }
 
+interface SubscriptionState {
+  subscribed: boolean;
+  subscription_tier: string | null;
+  subscription_end: string | null;
+  is_trial: boolean;
+  trial_end: string | null;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -22,8 +30,10 @@ interface AuthContextType {
   isNutritionist: boolean;
   isPatient: boolean;
   isAdmin: boolean;
+  subscription: SubscriptionState;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  checkSubscription: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
