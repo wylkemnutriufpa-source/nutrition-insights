@@ -269,7 +269,7 @@ export default function AdminFeatureControl() {
                   {/* Feature categories */}
                   {Object.entries(filteredCategories).map(([category, features]) => {
                     const CatIcon = CATEGORY_ICONS[category] || Zap;
-                    const activeInCat = features.filter(f => selectedNutData.features[f.name]).length;
+                    const activeInCat = features.filter(f => selectedNutData.features[f.name] === "enabled").length;
                     return (
                       <Card key={category} className="glass shadow-card">
                         <CardHeader className="pb-3">
@@ -282,43 +282,64 @@ export default function AdminFeatureControl() {
                               {activeInCat}/{features.length}
                             </Badge>
                           </div>
-                          <CardDescription className="text-xs">
-                            {activeInCat === features.length ? "Todas ativas" : `${features.length - activeInCat} desativada(s)`}
-                          </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-2">
                           {features.map(f => {
-                            const isEnabled = selectedNutData.features[f.name] ?? true;
+                            const status: FeatureStatus = selectedNutData.features[f.name] ?? "enabled";
                             return (
                               <div
                                 key={f.name}
                                 className={`flex items-center justify-between py-2.5 px-3 rounded-lg transition-colors ${
-                                  isEnabled ? "bg-muted/30" : "bg-destructive/5 border border-destructive/10"
+                                  status === "enabled" ? "bg-muted/30" : status === "coming_soon" ? "bg-info/5 border border-info/10" : "bg-destructive/5 border border-destructive/10"
                                 }`}
                               >
                                 <div className="flex items-center gap-3">
                                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                                    isEnabled ? "bg-primary/10" : "bg-muted"
+                                    status === "enabled" ? "bg-primary/10" : status === "coming_soon" ? "bg-info/10" : "bg-muted"
                                   }`}>
-                                    <f.icon className={`w-4 h-4 ${isEnabled ? "text-primary" : "text-muted-foreground"}`} />
+                                    <f.icon className={`w-4 h-4 ${status === "enabled" ? "text-primary" : status === "coming_soon" ? "text-info" : "text-muted-foreground"}`} />
                                   </div>
                                   <div>
                                     <div className="flex items-center gap-2">
                                       <p className="text-sm font-medium">{f.label}</p>
-                                      {!isEnabled && (
-                                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-500/30 text-amber-500">
+                                      {status === "disabled" && (
+                                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-warning/30 text-warning">
                                           <Crown className="w-2.5 h-2.5 mr-0.5" />
                                           Premium
+                                        </Badge>
+                                      )}
+                                      {status === "coming_soon" && (
+                                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-info/30 text-info">
+                                          <Clock className="w-2.5 h-2.5 mr-0.5" />
+                                          Em Breve
                                         </Badge>
                                       )}
                                     </div>
                                     <p className="text-xs text-muted-foreground">{f.description}</p>
                                   </div>
                                 </div>
-                                <Switch
-                                  checked={isEnabled}
-                                  onCheckedChange={(checked) => toggleFeature(selectedNutData.user_id, f.name, checked)}
-                                />
+                                <div className="flex items-center gap-1.5 flex-shrink-0">
+                                  {(["enabled", "disabled", "coming_soon"] as FeatureStatus[]).map(s => {
+                                    const labels: Record<FeatureStatus, string> = { enabled: "✓", disabled: "💎", coming_soon: "🕐" };
+                                    const titles: Record<FeatureStatus, string> = { enabled: "Ativa", disabled: "Premium", coming_soon: "Em Breve" };
+                                    const active = status === s;
+                                    const colors: Record<FeatureStatus, string> = {
+                                      enabled: active ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground hover:bg-primary/20",
+                                      disabled: active ? "bg-warning text-warning-foreground" : "bg-muted/50 text-muted-foreground hover:bg-warning/20",
+                                      coming_soon: active ? "bg-info text-info-foreground" : "bg-muted/50 text-muted-foreground hover:bg-info/20",
+                                    };
+                                    return (
+                                      <button
+                                        key={s}
+                                        title={titles[s]}
+                                        onClick={() => setFeatureStatus(selectedNutData.user_id, f.name, s)}
+                                        className={`w-8 h-8 rounded-md text-xs font-bold transition-all ${colors[s]}`}
+                                      >
+                                        {labels[s]}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
                               </div>
                             );
                           })}
