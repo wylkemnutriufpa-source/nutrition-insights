@@ -485,7 +485,7 @@ function NutritionistDashboardContent() {
         avgWeight: weightCount > 0 ? totalWeight / weightCount : null,
         avgAdherence: adherenceCount > 0 ? Math.round(totalAdherence / adherenceCount) : 0,
         totalCheckins,
-        avgScore: patientIds.length > 0 ? Math.round(totalScore / Math.min(patientIds.length, 30)) : 0,
+        avgScore: patientIds2.length > 0 ? Math.round(totalScore / Math.min(patientIds2.length, 30)) : 0,
       });
 
       if (patientDataForAI.length > 0) {
