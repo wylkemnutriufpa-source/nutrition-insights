@@ -848,128 +848,169 @@ export default function Protocols() {
                   <div className="space-y-4">
                     {/* Header */}
                     <div className="glass rounded-xl p-5">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1">
-                          <h2 className="font-display text-lg font-bold">{selectedProtocol.title}</h2>
-                          {selectedProtocol.description && (
-                            <p className="text-sm text-muted-foreground mt-1">{selectedProtocol.description}</p>
-                          )}
-                          <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                            <span>{CATEGORIES.find(c => c.value === selectedProtocol.category)?.label}</span>
-                            <span>{selectedProtocol.duration_days} dias</span>
-                            <span className="flex items-center gap-1">
-                              <Users className="w-3 h-3" />
-                              {selectedProtocolPatients.filter(p => p.status === "active").length} pacientes ativos
-                            </span>
+                      {editingProtocol ? (
+                        /* ── Edit Protocol Form ── */
+                        <div className="space-y-3">
+                          <div>
+                            <Label>Nome</Label>
+                            <Input value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} />
+                          </div>
+                          <div>
+                            <Label>Descrição</Label>
+                            <Textarea value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} rows={2} />
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <Label>Categoria</Label>
+                              <Select value={editForm.category} onValueChange={(v) => setEditForm({ ...editForm, category: v })}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  {CATEGORIES.map((c) => (<SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div>
+                              <Label>Duração (dias)</Label>
+                              <Input type="number" value={editForm.duration_days} onChange={(e) => setEditForm({ ...editForm, duration_days: e.target.value })} min={1} />
+                            </div>
+                          </div>
+                          <div className="flex gap-2 justify-end">
+                            <Button size="sm" variant="outline" onClick={() => setEditingProtocol(false)} className="gap-1">
+                              <X className="w-3 h-3" /> Cancelar
+                            </Button>
+                            <Button size="sm" className="gradient-primary gap-1" onClick={handleSaveProtocol} disabled={submitting}>
+                              <Save className="w-3 h-3" /> {submitting ? "Salvando..." : "Salvar"}
+                            </Button>
                           </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
-                            <DialogTrigger asChild>
-                              <Button size="sm" variant="outline" className="gap-1">
-                                <UserPlus className="w-4 h-4" /> Aplicar
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle className="font-display">Aplicar Protocolo ao Paciente</DialogTitle>
-                              </DialogHeader>
-                              <form onSubmit={handleAssignProtocol} className="space-y-4">
-                                <div className="glass rounded-lg p-3">
-                                  <p className="font-medium text-sm">{selectedProtocol.title}</p>
-                                  <p className="text-xs text-muted-foreground">{selectedProtocol.duration_days} dias · {tasks.length} tarefas</p>
-                                </div>
-                                <div>
-                                  <Label>Paciente</Label>
-                                  <Select value={assignForm.patient_id} onValueChange={(v) => setAssignForm({ ...assignForm, patient_id: v })}>
-                                    <SelectTrigger><SelectValue placeholder="Selecione o paciente" /></SelectTrigger>
-                                    <SelectContent>
-                                      {patients.map((p) => (
-                                        <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>
+                      ) : (
+                        /* ── View Protocol Header ── */
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1">
+                            <h2 className="font-display text-lg font-bold">{selectedProtocol.title}</h2>
+                            {selectedProtocol.description && (
+                              <p className="text-sm text-muted-foreground mt-1">{selectedProtocol.description}</p>
+                            )}
+                            <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                              <span>{CATEGORIES.find(c => c.value === selectedProtocol.category)?.label}</span>
+                              <span>{selectedProtocol.duration_days} dias</span>
+                              <span className="flex items-center gap-1">
+                                <Users className="w-3 h-3" />
+                                {selectedProtocolPatients.filter(p => p.status === "active").length} pacientes ativos
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline" className="gap-1" onClick={startEditProtocol}>
+                              <Pencil className="w-4 h-4" /> Editar
+                            </Button>
+                            <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
+                              <DialogTrigger asChild>
+                                <Button size="sm" variant="outline" className="gap-1">
+                                  <UserPlus className="w-4 h-4" /> Aplicar
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle className="font-display">Aplicar Protocolo ao Paciente</DialogTitle>
+                                </DialogHeader>
+                                <form onSubmit={handleAssignProtocol} className="space-y-4">
+                                  <div className="glass rounded-lg p-3">
+                                    <p className="font-medium text-sm">{selectedProtocol.title}</p>
+                                    <p className="text-xs text-muted-foreground">{selectedProtocol.duration_days} dias · {tasks.length} tarefas</p>
+                                  </div>
+                                  <div>
+                                    <Label>Paciente</Label>
+                                    <Select value={assignForm.patient_id} onValueChange={(v) => setAssignForm({ ...assignForm, patient_id: v })}>
+                                      <SelectTrigger><SelectValue placeholder="Selecione o paciente" /></SelectTrigger>
+                                      <SelectContent>
+                                        {patients.map((p) => (
+                                          <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                      <Label>Início</Label>
+                                      <Input type="date" value={assignForm.start_date} onChange={(e) => setAssignForm({ ...assignForm, start_date: e.target.value })} />
+                                    </div>
+                                    <div>
+                                      <Label>Duração (dias)</Label>
+                                      <Input type="number" value={assignForm.duration} onChange={(e) => setAssignForm({ ...assignForm, duration: e.target.value })} placeholder={String(selectedProtocol.duration_days)} min={1} />
+                                    </div>
+                                  </div>
+                                  <Button type="submit" className="w-full gradient-primary" disabled={submitting || !assignForm.patient_id}>
+                                    {submitting ? "Ativando..." : "Ativar Protocolo"}
+                                  </Button>
+                                </form>
+                              </DialogContent>
+                            </Dialog>
+                            <Dialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen}>
+                              <DialogTrigger asChild>
+                                <Button size="sm" className="gradient-primary gap-1">
+                                  <Plus className="w-4 h-4" /> Tarefa
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle className="font-display">Adicionar Tarefa</DialogTitle>
+                                </DialogHeader>
+                                <form onSubmit={handleAddTask} className="space-y-4">
+                                  <div>
+                                    <Label>Ícone</Label>
+                                    <div className="flex gap-2 flex-wrap mt-1">
+                                      {TASK_ICONS.map((icon) => (
+                                        <button key={icon} type="button" onClick={() => setTaskForm({ ...taskForm, icon })}
+                                          className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg border-2 transition-all ${
+                                            taskForm.icon === icon ? "border-primary bg-primary/10" : "border-border"
+                                          }`}
+                                        >{icon}</button>
                                       ))}
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div>
-                                    <Label>Início</Label>
-                                    <Input type="date" value={assignForm.start_date} onChange={(e) => setAssignForm({ ...assignForm, start_date: e.target.value })} />
+                                    </div>
                                   </div>
                                   <div>
-                                    <Label>Duração (dias)</Label>
-                                    <Input type="number" value={assignForm.duration} onChange={(e) => setAssignForm({ ...assignForm, duration: e.target.value })} placeholder={String(selectedProtocol.duration_days)} min={1} />
-                                  </div>
-                                </div>
-                                <Button type="submit" className="w-full gradient-primary" disabled={submitting || !assignForm.patient_id}>
-                                  {submitting ? "Ativando..." : "Ativar Protocolo"}
-                                </Button>
-                              </form>
-                            </DialogContent>
-                          </Dialog>
-                          <Dialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen}>
-                            <DialogTrigger asChild>
-                              <Button size="sm" className="gradient-primary gap-1">
-                                <Plus className="w-4 h-4" /> Tarefa
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle className="font-display">Adicionar Tarefa</DialogTitle>
-                              </DialogHeader>
-                              <form onSubmit={handleAddTask} className="space-y-4">
-                                <div>
-                                  <Label>Ícone</Label>
-                                  <div className="flex gap-2 flex-wrap mt-1">
-                                    {TASK_ICONS.map((icon) => (
-                                      <button key={icon} type="button" onClick={() => setTaskForm({ ...taskForm, icon })}
-                                        className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg border-2 transition-all ${
-                                          taskForm.icon === icon ? "border-primary bg-primary/10" : "border-border"
-                                        }`}
-                                      >{icon}</button>
-                                    ))}
-                                  </div>
-                                </div>
-                                <div>
-                                  <Label>Título da tarefa</Label>
-                                  <Input value={taskForm.title} onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })} placeholder="Ex: Beber 2L de água" required />
-                                </div>
-                                <div>
-                                  <Label>Descrição (opcional)</Label>
-                                  <Textarea value={taskForm.description} onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })} />
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div>
-                                    <Label>Categoria</Label>
-                                    <Select value={taskForm.category} onValueChange={(v) => setTaskForm({ ...taskForm, category: v })}>
-                                      <SelectTrigger><SelectValue /></SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="habit">Hábito</SelectItem>
-                                        <SelectItem value="nutrition">Nutrição</SelectItem>
-                                        <SelectItem value="exercise">Exercício</SelectItem>
-                                        <SelectItem value="supplement">Suplemento</SelectItem>
-                                        <SelectItem value="mindset">Mindset</SelectItem>
-                                      </SelectContent>
-                                    </Select>
+                                    <Label>Título da tarefa</Label>
+                                    <Input value={taskForm.title} onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })} placeholder="Ex: Beber 2L de água" required />
                                   </div>
                                   <div>
-                                    <Label>Frequência</Label>
-                                    <Select value={taskForm.frequency} onValueChange={(v) => setTaskForm({ ...taskForm, frequency: v })}>
-                                      <SelectTrigger><SelectValue /></SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="daily">Diária</SelectItem>
-                                        <SelectItem value="weekly">Semanal</SelectItem>
-                                      </SelectContent>
-                                    </Select>
+                                    <Label>Descrição (opcional)</Label>
+                                    <Textarea value={taskForm.description} onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })} />
                                   </div>
-                                </div>
-                                <Button type="submit" className="w-full gradient-primary" disabled={submitting}>
-                                  {submitting ? "Adicionando..." : "Adicionar Tarefa"}
-                                </Button>
-                              </form>
-                            </DialogContent>
-                          </Dialog>
+                                  <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                      <Label>Categoria</Label>
+                                      <Select value={taskForm.category} onValueChange={(v) => setTaskForm({ ...taskForm, category: v })}>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="habit">Hábito</SelectItem>
+                                          <SelectItem value="nutrition">Nutrição</SelectItem>
+                                          <SelectItem value="exercise">Exercício</SelectItem>
+                                          <SelectItem value="supplement">Suplemento</SelectItem>
+                                          <SelectItem value="mindset">Mindset</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <div>
+                                      <Label>Frequência</Label>
+                                      <Select value={taskForm.frequency} onValueChange={(v) => setTaskForm({ ...taskForm, frequency: v })}>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="daily">Diária</SelectItem>
+                                          <SelectItem value="weekly">Semanal</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  </div>
+                                  <Button type="submit" className="w-full gradient-primary" disabled={submitting}>
+                                    {submitting ? "Adicionando..." : "Adicionar Tarefa"}
+                                  </Button>
+                                </form>
+                              </DialogContent>
+                            </Dialog>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
 
                     {/* Patients using this protocol */}
