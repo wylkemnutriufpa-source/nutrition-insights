@@ -72,6 +72,7 @@ export default function MealPlanEditor() {
   const [patientName, setPatientName] = useState("");
   const [items, setItems] = useState<MealPlanItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [planDocs, setPlanDocs] = useState<any[]>([]);
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
