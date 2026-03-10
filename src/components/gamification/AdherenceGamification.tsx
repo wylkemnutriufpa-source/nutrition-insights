@@ -98,7 +98,7 @@ export function WeeklyProgressBar({ userId }: { userId: string }) {
             const total = data?.length || 0;
             const done = data?.filter((t: any) => t.completed).length || 0;
             days[6 - i] = { day: dayLabel, pct: total > 0 ? Math.round((done / total) * 100) : 0 };
-          })
+          }) as unknown as Promise<void>
       );
     }
 
