@@ -450,7 +450,7 @@ export default function PatientDetail() {
               <Badge variant={patientStatus === "active" ? "default" : "secondary"}>
                 {patientStatus === "active" ? "Ativo" : "Inativo"}
               </Badge>
-              {currentPrestigePlan && <PrestigeBadge plan={currentPrestigePlan} size="sm" />}
+              {currentPrestigePlan && <PrestigeBadge plan={currentPrestigePlan} allPlans={prestigePlans} size="sm" />}
             </div>
             <p className="text-sm text-muted-foreground">
               Checklist hoje: {checklistStats.completed}/{checklistStats.total} tarefas •
@@ -947,7 +947,7 @@ export default function PatientDetail() {
                           </Select>
                           {selectedPrestigePlanId && (
                             <div className="mt-2">
-                              <PrestigeBadge plan={prestigePlans.find(p => p.id === selectedPrestigePlanId) || null} size="md" />
+                              <PrestigeBadge plan={prestigePlans.find(p => p.id === selectedPrestigePlanId) || null} allPlans={prestigePlans} size="md" />
                             </div>
                           )}
                         </div>

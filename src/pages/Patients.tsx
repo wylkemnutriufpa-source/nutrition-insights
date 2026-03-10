@@ -232,13 +232,14 @@ function AssignProgramDialog({
   );
 }
 
-function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry }: {
+function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, allPrestigePlans = [] }: {
   p: PatientInfo; idx: number; navigate: any;
   toggleStatus: (id: string, status: string) => void;
   setAssignTarget: (p: PatientInfo) => void;
   setAssignDialogOpen: (v: boolean) => void;
   removeFromProgram: (patientId: string, programId: string, programTitle: string) => void;
   onUpdateExpiry: (id: string, date: string | null) => void;
+  allPrestigePlans?: PrestigePlan[];
 }) {
   const isInactive = p.status !== "active";
   const score = p.priorityScore || 0;
@@ -269,7 +270,7 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <h3 className="font-display font-semibold truncate" style={p.prestigePlan?.crown_enabled ? { color: p.prestigePlan.color } : undefined}>{displayName}</h3>
-            {p.prestigePlan && <PrestigeBadge plan={p.prestigePlan} size="sm" showLabel={false} />}
+            {p.prestigePlan && <PrestigeBadge plan={p.prestigePlan} allPlans={allPrestigePlans} size="sm" showLabel={false} />}
           </div>
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
             <span className={`text-xs px-2 py-0.5 rounded-full ${
@@ -383,13 +384,14 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
   );
 }
 
-function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry }: {
+function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, allPrestigePlans = [] }: {
   p: PatientInfo; idx: number; navigate: any;
   toggleStatus: (id: string, status: string) => void;
   setAssignTarget: (p: PatientInfo) => void;
   setAssignDialogOpen: (v: boolean) => void;
   removeFromProgram: (patientId: string, programId: string, programTitle: string) => void;
   onUpdateExpiry: (id: string, date: string | null) => void;
+  allPrestigePlans?: PrestigePlan[];
 }) {
   const isInactive = p.status !== "active";
   const score = p.priorityScore || 0;
@@ -410,7 +412,7 @@ function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssign
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
           <p className="font-semibold text-sm truncate" style={p.prestigePlan?.crown_enabled ? { color: p.prestigePlan.color } : undefined}>{displayName}</p>
-          {p.prestigePlan && <PrestigeBadge plan={p.prestigePlan} size="sm" showLabel={false} />}
+          {p.prestigePlan && <PrestigeBadge plan={p.prestigePlan} allPlans={allPrestigePlans} size="sm" showLabel={false} />}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
@@ -463,7 +465,7 @@ function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssign
   );
 }
 
-function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, search, emptyMessage, layout }: {
+function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, search, emptyMessage, layout, allPrestigePlans = [] }: {
   patients: PatientInfo[]; navigate: any;
   toggleStatus: (id: string, status: string) => void;
   setAssignTarget: (p: PatientInfo) => void;
@@ -473,6 +475,7 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
   search: string;
   emptyMessage: string;
   layout: "grid" | "list";
+  allPrestigePlans?: PrestigePlan[];
 }) {
   if (patients.length === 0) {
     return (
@@ -491,7 +494,7 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
           <PatientRow key={p.id} p={p} idx={idx} navigate={navigate}
             toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
             setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
-            onUpdateExpiry={onUpdateExpiry} />
+            onUpdateExpiry={onUpdateExpiry} allPrestigePlans={allPrestigePlans} />
         ))}
       </div>
     );
@@ -503,7 +506,7 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
         <PatientCard key={p.id} p={p} idx={idx} navigate={navigate}
           toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
           setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
-          onUpdateExpiry={onUpdateExpiry} />
+          onUpdateExpiry={onUpdateExpiry} allPrestigePlans={allPrestigePlans} />
       ))}
     </div>
   );
@@ -960,7 +963,7 @@ export default function Patients() {
                 toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
                 setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
                 onUpdateExpiry={updateExpiry}
-                search={search} emptyMessage="Nenhum paciente ativo" layout={layout} />
+                search={search} emptyMessage="Nenhum paciente ativo" layout={layout} allPrestigePlans={prestigePlansList} />
             </TabsContent>
 
             <TabsContent value="inativos">
@@ -968,7 +971,7 @@ export default function Patients() {
                 toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
                 setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
                 onUpdateExpiry={updateExpiry}
-                search={search} emptyMessage="Nenhum paciente inativo" layout={layout} />
+                search={search} emptyMessage="Nenhum paciente inativo" layout={layout} allPrestigePlans={prestigePlansList} />
             </TabsContent>
 
             {programs.map(prog => (
@@ -977,7 +980,7 @@ export default function Patients() {
                   toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
                   setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
                   onUpdateExpiry={updateExpiry}
-                  search={search} emptyMessage={`Nenhum paciente no programa "${prog.title}"`} layout={layout} />
+                  search={search} emptyMessage={`Nenhum paciente no programa "${prog.title}"`} layout={layout} allPrestigePlans={prestigePlansList} />
               </TabsContent>
             ))}
           </Tabs>
