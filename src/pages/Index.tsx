@@ -19,6 +19,7 @@ import PatientEvolutionCharts from "@/components/dashboard/PatientEvolutionChart
 import RiskPanel from "@/components/dashboard/RiskPanel";
 import HealthScoreRing, { calculateHealthScore } from "@/components/dashboard/HealthScoreRing";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import ExpandablePanel from "@/components/common/ExpandablePanel";
 import {
   UtensilsCrossed, Users, TrendingUp, Target, Sparkles, Plus,
   CheckCircle2, Circle, AlertTriangle, Activity, FileText, Rocket,
