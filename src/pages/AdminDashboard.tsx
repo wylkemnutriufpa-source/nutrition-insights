@@ -763,6 +763,11 @@ export default function AdminDashboard() {
               <PlatformFeatureFlags />
             </TabsContent>
 
+            {/* ─── Reports ─── */}
+            <TabsContent value="reports" className="mt-4">
+              <AdminReportsPanel professionals={professionals} />
+            </TabsContent>
+
             {/* ─── Admin Tools ─── */}
             <TabsContent value="admin" className="mt-4 space-y-4">
               <Card className="glass shadow-card">
