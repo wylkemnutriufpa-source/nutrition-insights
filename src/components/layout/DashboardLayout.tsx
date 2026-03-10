@@ -120,6 +120,35 @@ function SidebarContent({
       <nav className="flex-1 px-3 mt-4 space-y-1 overflow-y-auto">
         {links.map((link) => {
           const active = location.pathname === link.to;
+          const hasColor = 'color' in link && !isNutritionist;
+          const linkColor = (link as any).color as string | undefined;
+          const linkIconColor = (link as any).iconColor as string | undefined;
+
+          if (hasColor && !collapsed) {
+            return (
+              <Link
+                key={link.to}
+                to={link.to}
+                onClick={onLinkClick}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group border ${
+                  active
+                    ? `bg-gradient-to-r ${linkColor} border-primary/20 shadow-sm`
+                    : "border-transparent hover:border-border hover:bg-muted/50"
+                }`}
+              >
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${
+                  active
+                    ? "bg-card shadow-sm"
+                    : "bg-muted/50 group-hover:bg-card group-hover:shadow-sm"
+                }`}>
+                  <link.icon className={`w-4 h-4 ${active ? linkIconColor : "text-muted-foreground group-hover:" + (linkIconColor || "text-primary")}`} />
+                </div>
+                <span className={`text-sm font-medium ${active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}>{link.label}</span>
+                {active && <ChevronRight className="w-4 h-4 ml-auto text-primary" />}
+              </Link>
+            );
+          }
+
           return (
             <Link
               key={link.to}
@@ -142,7 +171,7 @@ function SidebarContent({
           <Link
             to="/analyze"
             onClick={onLinkClick}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg gradient-primary text-primary-foreground mt-4 shadow-glow"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl gradient-primary text-primary-foreground mt-4 shadow-glow"
           >
             <Sparkles className="w-5 h-5 flex-shrink-0" />
             {!collapsed && <span className="text-sm font-medium">Analisar com IA</span>}
