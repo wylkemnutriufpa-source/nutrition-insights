@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +39,38 @@ interface PatientInfo {
 interface ProgramInfo {
   id: string;
   title: string;
+}
+
+// ─── Recent patients tracking via localStorage ───
+const RECENT_KEY = "fitjourney_recent_patients";
+const MAX_RECENT = 50;
+
+function getRecentPatients(): Record<string, { count: number; lastSeen: number }> {
+  try {
+    return JSON.parse(localStorage.getItem(RECENT_KEY) || "{}");
+  } catch { return {}; }
+}
+
+function trackPatientView(patientId: string) {
+  const recent = getRecentPatients();
+  const entry = recent[patientId] || { count: 0, lastSeen: 0 };
+  entry.count += 1;
+  entry.lastSeen = Date.now();
+  recent[patientId] = entry;
+  // Keep only top N
+  const sorted = Object.entries(recent).sort((a, b) => b[1].lastSeen - a[1].lastSeen).slice(0, MAX_RECENT);
+  localStorage.setItem(RECENT_KEY, JSON.stringify(Object.fromEntries(sorted)));
+}
+
+function getRecentScore(patientId: string): number {
+  const recent = getRecentPatients();
+  const entry = recent[patientId];
+  if (!entry) return 0;
+  const hoursSince = (Date.now() - entry.lastSeen) / 3600000;
+  // Decay: recent views worth more, count adds weight
+  const recency = Math.max(0, 100 - hoursSince * 2); // decays over ~50 hours
+  const frequency = Math.min(entry.count * 10, 50);
+  return recency + frequency;
 }
 
 function computeScore(stats: any, checklistData: any): number {
@@ -221,7 +253,7 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
       transition={{ delay: idx * 0.04 }}
       whileHover={{ y: -2 }}
       className={`glass rounded-xl p-5 shadow-card cursor-pointer ring-2 ${isInactive ? "ring-muted/30 opacity-60" : tier.ring} transition-all relative`}
-      onClick={() => navigate(`/patients/${p.patient_id}`)}
+      onClick={() => navigate(p.patient_id)}
     >
       {isInactive && (
         <div className="absolute top-2 right-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
@@ -370,7 +402,7 @@ function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssign
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: idx * 0.03 }}
       className={`glass rounded-lg px-4 py-3 cursor-pointer flex items-center gap-3 hover:bg-accent/5 transition-all ${isInactive ? "opacity-60" : ""}`}
-      onClick={() => navigate(`/patients/${p.patient_id}`)}
+      onClick={() => navigate(p.patient_id)}
     >
       <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
         <span className="text-sm font-bold text-primary">{displayName[0].toUpperCase()}</span>
@@ -479,7 +511,12 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
 
 export default function Patients() {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const nav = useNavigate();
+  const navigateToPatient = useCallback((patientId: string) => {
+    trackPatientView(patientId);
+    nav(`/patients/${patientId}`);
+  }, [nav]);
+  const navigate = useCallback((path: string) => nav(path), [nav]);
   const [patients, setPatients] = useState<PatientInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -587,7 +624,16 @@ export default function Patients() {
         };
       });
 
-      enriched.sort((a, b) => (a.priorityScore || 0) - (b.priorityScore || 0));
+      // Sort: recently viewed first, then by priority score
+      enriched.sort((a, b) => {
+        const recentA = getRecentScore(a.patient_id);
+        const recentB = getRecentScore(b.patient_id);
+        // If either has significant recent activity, prioritize that
+        if (recentA > 10 || recentB > 10) {
+          if (Math.abs(recentA - recentB) > 5) return recentB - recentA;
+        }
+        return (a.priorityScore || 0) - (b.priorityScore || 0);
+      });
       setPatients(enriched);
     }
     setLoading(false);
@@ -910,7 +956,7 @@ export default function Patients() {
             </TabsList>
 
             <TabsContent value="ativos">
-              <PatientGrid patients={activePatientsList} navigate={navigate}
+              <PatientGrid patients={activePatientsList} navigate={navigateToPatient}
                 toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
                 setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
                 onUpdateExpiry={updateExpiry}
@@ -918,7 +964,7 @@ export default function Patients() {
             </TabsContent>
 
             <TabsContent value="inativos">
-              <PatientGrid patients={inactivePatientsList} navigate={navigate}
+              <PatientGrid patients={inactivePatientsList} navigate={navigateToPatient}
                 toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
                 setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
                 onUpdateExpiry={updateExpiry}
@@ -927,7 +973,7 @@ export default function Patients() {
 
             {programs.map(prog => (
               <TabsContent key={prog.id} value={`prog-${prog.id}`}>
-                <PatientGrid patients={programPatientLists.get(prog.id) || []} navigate={navigate}
+                <PatientGrid patients={programPatientLists.get(prog.id) || []} navigate={navigateToPatient}
                   toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
                   setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
                   onUpdateExpiry={updateExpiry}
