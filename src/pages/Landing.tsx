@@ -224,7 +224,7 @@ export default function Landing() {
             </motion.div>
 
             <motion.p variants={fadeUp} className="text-xs text-muted-foreground mb-16">
-              ✅ Grátis para começar · Sem cartão de crédito · Setup em 30 segundos
+              ✅ 7 dias grátis · Sem cartão de crédito · Setup em 30 segundos
             </motion.p>
 
             {/* Stats */}
