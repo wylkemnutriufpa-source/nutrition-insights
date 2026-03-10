@@ -536,7 +536,17 @@ export default function Patients() {
     }
   };
 
-  // Derive filtered lists based on active tab
+  const updateExpiry = async (id: string, date: string | null) => {
+    const { error } = await supabase.from("nutritionist_patients")
+      .update({ expires_at: date || null } as any)
+      .eq("id", id);
+    if (error) toast.error("Erro ao atualizar vencimento");
+    else {
+      toast.success(date ? `Vencimento definido: ${new Date(date).toLocaleDateString("pt-BR")}` : "Vencimento removido");
+      fetchPatients();
+    }
+  };
+
   const searchFilter = (p: PatientInfo) =>
     !search || p.profile?.full_name?.toLowerCase().includes(search.toLowerCase());
 
