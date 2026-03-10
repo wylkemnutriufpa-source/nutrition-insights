@@ -24,31 +24,45 @@ interface ChecklistTask {
 }
 
 const DEFAULT_TASKS = [
-  { title: "Ingerir frutas do dia", icon: "🍎", category: "nutrition", description: "Consuma ao menos 2 porções de frutas variadas" },
-  { title: "Praticar exercício físico", icon: "🏃", category: "exercise", description: "30-60 min de atividade física moderada" },
-  { title: "Seguir o plano alimentar", icon: "🥗", category: "nutrition", description: "Faça todas as refeições conforme o plano" },
-  { title: "Ingerir água na quantidade certa", icon: "💧", category: "hydration", description: "Beba pelo menos 2L de água ao longo do dia" },
-  { title: "Dormir 1h mais cedo que o habitual", icon: "😴", category: "habit", description: "Melhore sua higiene do sono gradualmente" },
-  { title: "Tomar sol por 15 minutos", icon: "☀️", category: "habit", description: "Vitamina D natural — prefira manhã cedo" },
-  { title: "Tomar os suplementos prescritos", icon: "💊", category: "supplement", description: "No horário indicado pelo nutricionista" },
-  { title: "Registrar as refeições no app", icon: "📝", category: "habit", description: "Acompanhe sua evolução diariamente" },
-  { title: "Evitar açúcar e ultraprocessados", icon: "🚫", category: "nutrition", description: "Prefira alimentos naturais e integrais" },
-  { title: "Fazer 5 min de respiração ou meditação", icon: "🧘", category: "mindset", description: "Reduz cortisol e melhora foco" },
-  { title: "Incluir vegetais no almoço e jantar", icon: "🥦", category: "nutrition", description: "Mínimo 1 porção em cada refeição principal" },
-  { title: "Caminhar ao menos 6.000 passos", icon: "🚶", category: "exercise", description: "Use o celular para contar os passos" },
-  { title: "Evitar telas 1h antes de dormir", icon: "📵", category: "habit", description: "Melhora a qualidade do sono" },
-  { title: "Fazer alongamento matinal (5 min)", icon: "🤸", category: "exercise", description: "Acordar o corpo com gentileza" },
-  { title: "Comer devagar e sem pressa", icon: "⏳", category: "habit", description: "Mastigue bem e preste atenção na comida" },
+  // Nutrição
+  { title: "Seguir café da manhã do plano", icon: "☕", category: "nutrition", description: "Café da manhã conforme plano alimentar" },
+  { title: "Seguir almoço do plano", icon: "🥗", category: "nutrition", description: "Almoço conforme plano alimentar" },
+  { title: "Seguir jantar do plano", icon: "🍽️", category: "nutrition", description: "Jantar conforme plano alimentar" },
+  { title: "Evitar ultraprocessados hoje", icon: "🚫", category: "nutrition", description: "Preferir alimentos naturais e integrais" },
+  { title: "Consumir proteína suficiente", icon: "🥩", category: "nutrition", description: "Atingir meta proteica nas refeições" },
+  // Hidratação
+  { title: "Beber pelo menos 2L de água", icon: "💧", category: "hydration", description: "Distribuir ao longo do dia" },
+  // Qualidade Alimentar
+  { title: "Comer frutas hoje", icon: "🍎", category: "food_quality", description: "Ao menos 2 porções de frutas variadas" },
+  { title: "Comer vegetais ou salada hoje", icon: "🥦", category: "food_quality", description: "Incluir em almoço e/ou jantar" },
+  // Movimento
+  { title: "Praticar atividade física ou caminhar", icon: "🏃", category: "movement", description: "30-60 min de atividade moderada" },
+  // Comportamento Alimentar
+  { title: "Evitar beliscar fora do plano", icon: "🍪", category: "eating_behavior", description: "Respeitar intervalos entre refeições" },
+  { title: "Respeitar sinais de fome e saciedade", icon: "⏳", category: "eating_behavior", description: "Comer devagar e prestar atenção ao corpo" },
+  // Estilo de Vida
+  { title: "Dormir pelo menos 7 horas", icon: "😴", category: "lifestyle", description: "Priorizar qualidade do sono" },
+  // Monitoramento
+  { title: "Registrar peso ou progresso", icon: "📊", category: "monitoring", description: "Quando necessário, anotar evolução" },
+  { title: "Registrar nível de energia hoje", icon: "⚡", category: "monitoring", description: "Como se sentiu ao longo do dia" },
+  // Consistência
+  { title: "Alcançar pelo menos 80% de aderência", icon: "🎯", category: "consistency", description: "Meta diária de consistência no plano" },
 ];
 
-const CATEGORY_ICONS = ["🍎", "🏃", "🥗", "💧", "😴", "☀️", "💊", "📝", "🚫", "🧘", "🥦", "🚶", "📵", "🤸", "⏳", "✅", "🎯", "💪", "🧠", "🫖"];
+const CATEGORY_ICONS = ["☕", "🥗", "🍽️", "🚫", "🥩", "💧", "🍎", "🥦", "🏃", "🍪", "⏳", "😴", "📊", "⚡", "🎯", "✅", "💪", "🧠", "🫖", "📝"];
 const CATEGORIES = [
-  { value: "habit", label: "🔄 Hábito" },
   { value: "nutrition", label: "🥗 Nutrição" },
+  { value: "hydration", label: "💧 Hidratação" },
+  { value: "food_quality", label: "🍎 Qualidade Alimentar" },
+  { value: "movement", label: "🏃 Movimento" },
+  { value: "eating_behavior", label: "⏳ Comportamento Alimentar" },
+  { value: "lifestyle", label: "😴 Estilo de Vida" },
+  { value: "monitoring", label: "📊 Monitoramento" },
+  { value: "consistency", label: "🎯 Consistência" },
+  { value: "habit", label: "🔄 Hábito" },
   { value: "exercise", label: "💪 Exercício" },
   { value: "supplement", label: "💊 Suplemento" },
   { value: "mindset", label: "🧠 Mindset" },
-  { value: "hydration", label: "💧 Hidratação" },
 ];
 
 export default function Checklist() {
@@ -226,13 +240,27 @@ export default function Checklist() {
   }, {} as Record<string, ChecklistTask[]>);
 
   const categoryLabels: Record<string, string> = {
-    habit: "🔄 Hábitos",
     nutrition: "🥗 Nutrição",
+    hydration: "💧 Hidratação",
+    food_quality: "🍎 Qualidade Alimentar",
+    movement: "🏃 Movimento",
+    eating_behavior: "⏳ Comportamento Alimentar",
+    lifestyle: "😴 Estilo de Vida",
+    monitoring: "📊 Monitoramento",
+    consistency: "🎯 Consistência",
+    habit: "🔄 Hábitos",
     exercise: "💪 Exercício",
     supplement: "💊 Suplementos",
     mindset: "🧠 Mindset",
-    hydration: "💧 Hidratação",
   };
+
+  // Define category display order
+  const categoryOrder = ["nutrition", "hydration", "food_quality", "movement", "eating_behavior", "lifestyle", "monitoring", "consistency", "habit", "exercise", "supplement", "mindset"];
+  const sortedCategories = Object.entries(grouped).sort(([a], [b]) => {
+    const ia = categoryOrder.indexOf(a);
+    const ib = categoryOrder.indexOf(b);
+    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+  });
 
   return (
     <DashboardLayout>
@@ -298,7 +326,7 @@ export default function Checklist() {
           </div>
         ) : (
           <div className="space-y-6">
-            {Object.entries(grouped).map(([category, categoryTasks]) => (
+            {sortedCategories.map(([category, categoryTasks]) => (
               <div key={category}>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-sm font-semibold text-muted-foreground">
