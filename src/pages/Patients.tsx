@@ -194,6 +194,142 @@ function AssignProgramDialog({
   );
 }
 
+function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen }: {
+  p: PatientInfo; idx: number; navigate: any;
+  toggleStatus: (id: string, status: string) => void;
+  setAssignTarget: (p: PatientInfo) => void;
+  setAssignDialogOpen: (v: boolean) => void;
+}) {
+  const isInactive = p.status !== "active";
+  const score = p.priorityScore || 0;
+  const tier = getScoreTier(score);
+  const hasPrograms = p.programs && p.programs.length > 0;
+  const displayName = p.profile?.full_name || p.email || "Paciente";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: idx * 0.04 }}
+      whileHover={{ y: -2 }}
+      className={`glass rounded-xl p-5 shadow-card cursor-pointer ring-2 ${isInactive ? "ring-muted/30 opacity-60" : tier.ring} transition-all relative`}
+      onClick={() => navigate(`/patients/${p.patient_id}`)}
+    >
+      {isInactive && (
+        <div className="absolute top-2 right-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+          Fora das métricas
+        </div>
+      )}
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+          <span className="text-lg font-bold text-primary">
+            {displayName[0].toUpperCase()}
+          </span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-display font-semibold truncate">{displayName}</h3>
+          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+            <span className={`text-xs px-2 py-0.5 rounded-full ${
+              p.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
+            }`}>
+              {p.status === "active" ? "Ativo" : "Inativo"}
+            </span>
+            {hasPrograms && (
+              <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary flex items-center gap-1">
+                <Target className="w-3 h-3" /> {p.programs!.length} programa{p.programs!.length > 1 ? "s" : ""}
+              </span>
+            )}
+            {p.stats?.current_streak ? (
+              <span className="text-xs text-muted-foreground">🔥 {p.stats.current_streak}d</span>
+            ) : null}
+          </div>
+        </div>
+        <ScoreRing score={score} />
+        <div className="flex items-center gap-1">
+          <button
+            onClick={(e) => { e.stopPropagation(); setAssignTarget(p); setAssignDialogOpen(true); }}
+            className="text-muted-foreground hover:text-primary p-1" title="Adicionar a programa"
+          >
+            <Target className="w-4 h-4" />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); toggleStatus(p.id, p.status); }}
+            className="text-muted-foreground hover:text-foreground p-1" title={p.status === "active" ? "Desativar" : "Ativar"}
+          >
+            {p.status === "active" ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+          </button>
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </div>
+      </div>
+
+      {hasPrograms && (
+        <div className="flex flex-wrap gap-1 mb-3">
+          {p.programs!.map(pg => (
+            <Badge key={pg.id} variant="outline" className="text-xs gap-1">
+              <Target className="w-3 h-3" /> {pg.title}
+            </Badge>
+          ))}
+        </div>
+      )}
+
+      <ScoreBar score={score} label="Engajamento" />
+
+      <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-border/50">
+        <div className="text-center">
+          <p className="text-xs text-muted-foreground">Checklist</p>
+          <p className={`text-sm font-bold ${
+            (p.checklistAdherence || 0) >= 70 ? "text-success" :
+            (p.checklistAdherence || 0) >= 40 ? "text-warning" : "text-destructive"
+          }`}>{p.checklistAdherence ?? "—"}%</p>
+        </div>
+        <div className="text-center">
+          <p className="text-xs text-muted-foreground">Refeições</p>
+          <p className="text-sm font-bold">
+            {p.stats?.last_meal_date
+              ? (() => {
+                  const d = Math.floor((Date.now() - new Date(p.stats!.last_meal_date!).getTime()) / 86400000);
+                  return d === 0 ? "Hoje" : d === 1 ? "Ontem" : `${d}d`;
+                })()
+              : "—"}
+          </p>
+        </div>
+        <div className="text-center">
+          <p className="text-xs text-muted-foreground">Streak</p>
+          <p className="text-sm font-bold">{p.stats?.current_streak ?? "—"}🔥</p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, search, emptyMessage }: {
+  patients: PatientInfo[]; navigate: any;
+  toggleStatus: (id: string, status: string) => void;
+  setAssignTarget: (p: PatientInfo) => void;
+  setAssignDialogOpen: (v: boolean) => void;
+  search: string;
+  emptyMessage: string;
+}) {
+  if (patients.length === 0) {
+    return (
+      <div className="glass rounded-xl p-12 text-center">
+        <Users className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+        <h3 className="font-display font-semibold text-lg mb-1">{search ? "Nenhum resultado" : emptyMessage}</h3>
+        <p className="text-muted-foreground">{search ? "Tente outro termo" : ""}</p>
+      </div>
+    );
+  }
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {patients.map((p, idx) => (
+        <PatientCard key={p.id} p={p} idx={idx} navigate={navigate}
+          toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
+          setAssignDialogOpen={setAssignDialogOpen} />
+      ))}
+    </div>
+  );
+}
+
 export default function Patients() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -206,7 +342,7 @@ export default function Patients() {
   const [submitting, setSubmitting] = useState(false);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "critical" | "medium" | "good">("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [activeTab, setActiveTab] = useState("ativos");
   const [programFilter, setProgramFilter] = useState<"all" | "enrolled" | "not_enrolled">("all");
   const [programs, setPrograms] = useState<ProgramInfo[]>([]);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
@@ -221,7 +357,6 @@ export default function Patients() {
       .eq("nutritionist_id", user.id)
       .order("created_at", { ascending: false });
 
-    // Fetch programs created by this nutritionist
     const { data: progs } = await supabase.from("programs")
       .select("id, title").eq("created_by", user.id).eq("is_active", true);
     setPrograms(progs || []);
@@ -229,7 +364,8 @@ export default function Patients() {
     if (data) {
       const patientIds = data.map(p => p.patient_id);
 
-      const [profilesRes, statsRes, checklistRes, enrollmentsRes] = await Promise.all([
+      // Also fetch emails for fallback names
+      const [profilesRes, statsRes, checklistRes, enrollmentsRes, emailsRes] = await Promise.all([
         Promise.all(patientIds.map(id =>
           supabase.from("profiles").select("full_name, avatar_url").eq("user_id", id).single()
         )),
@@ -239,14 +375,15 @@ export default function Patients() {
         Promise.all(patientIds.map(id =>
           supabase.from("checklist_tasks").select("id, completed").eq("patient_id", id).eq("date", new Date().toISOString().split("T")[0])
         )),
-        // Fetch program enrollments for all patients
         supabase.from("program_patients")
           .select("patient_id, program_id, programs(id, title)")
           .eq("status", "active")
           .in("patient_id", patientIds),
+        // Use RPC to get emails as fallback — but we can't query auth.users
+        // Instead we'll just rely on profiles, and show patient_id as last resort
+        Promise.resolve(null),
       ]);
 
-      // Build enrollment map
       const enrollmentMap = new Map<string, { id: string; title: string }[]>();
       (enrollmentsRes.data || []).forEach((e: any) => {
         const list = enrollmentMap.get(e.patient_id) || [];
@@ -259,9 +396,10 @@ export default function Patients() {
         const total = checkTasks.length;
         const completed = checkTasks.filter(t => t.completed).length;
         const adherence = total > 0 ? Math.round((completed / total) * 100) : 0;
+        const profile = profilesRes[i]?.data;
         return {
           ...p,
-          profile: profilesRes[i]?.data,
+          profile: profile && profile.full_name ? profile : { full_name: "Paciente sem nome", avatar_url: null },
           stats: statsRes[i]?.data,
           checklistAdherence: adherence,
           priorityScore: computeScore(statsRes[i]?.data, { total, completed }),
@@ -340,29 +478,45 @@ export default function Patients() {
     setBulkLoading(false);
   };
 
-  const filteredPatients = patients.filter(p => {
-    const matchSearch = !search || p.profile?.full_name?.toLowerCase().includes(search.toLowerCase());
-    const score = p.priorityScore || 0;
-    // Score filter only applies to active patients; inactive always pass score filter
-    const isInactive = p.status !== "active";
-    const matchScore =
-      filter === "all" ? true :
-      isInactive ? true :
-      filter === "critical" ? score < 40 :
-      filter === "medium" ? score >= 40 && score < 70 :
-      score >= 70;
-    const matchStatus =
-      statusFilter === "all" ? true :
-      statusFilter === "active" ? p.status === "active" :
-      p.status !== "active";
-    const matchProgram =
-      programFilter === "all" ? true :
-      programFilter === "enrolled" ? (p.programs && p.programs.length > 0) :
-      (!p.programs || p.programs.length === 0);
-    return matchSearch && matchScore && matchStatus && matchProgram;
-  });
+  // Derive filtered lists based on active tab
+  const searchFilter = (p: PatientInfo) =>
+    !search || p.profile?.full_name?.toLowerCase().includes(search.toLowerCase());
 
-  // Only count active patients in score metrics
+  const scoreFilter = (p: PatientInfo) => {
+    const score = p.priorityScore || 0;
+    const isInactive = p.status !== "active";
+    if (filter === "all") return true;
+    if (isInactive) return true;
+    if (filter === "critical") return score < 40;
+    if (filter === "medium") return score >= 40 && score < 70;
+    return score >= 70;
+  };
+
+  const activePatientsList = useMemo(() =>
+    patients.filter(p => p.status === "active" && searchFilter(p) && scoreFilter(p)),
+    [patients, search, filter]
+  );
+
+  const inactivePatientsList = useMemo(() =>
+    patients.filter(p => p.status !== "active" && searchFilter(p)),
+    [patients, search]
+  );
+
+  const allFiltered = useMemo(() =>
+    patients.filter(p => searchFilter(p) && scoreFilter(p)),
+    [patients, search, filter]
+  );
+
+  const programPatientLists = useMemo(() => {
+    const map = new Map<string, PatientInfo[]>();
+    programs.forEach(prog => {
+      map.set(prog.id, patients.filter(p =>
+        p.programs?.some(pp => pp.id === prog.id) && searchFilter(p)
+      ));
+    });
+    return map;
+  }, [patients, programs, search]);
+
   const activePatients = patients.filter(p => p.status === "active");
   const counts = {
     all: patients.length,
@@ -388,11 +542,10 @@ export default function Patients() {
               <Users className="w-7 h-7 text-primary" /> Pacientes
             </h1>
             <p className="text-muted-foreground text-sm">
-              {activePatients.length} ativos nas métricas · {patients.length - activePatients.length} excluídos · ordenados por prioridade
+              {activePatients.length} ativos · {patients.length - activePatients.length} inativos · ordenados por prioridade
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {/* Bulk actions */}
             <Button variant="outline" size="sm" onClick={() => bulkToggle("active")} disabled={bulkLoading} className="gap-1.5 text-xs">
               <ToggleRight className="w-3.5 h-3.5" /> Ativar Todos
             </Button>
@@ -446,148 +599,61 @@ export default function Patients() {
           ))}
         </div>
 
-        {/* Filters row */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Buscar paciente..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
-          </div>
-          <Select value={statusFilter} onValueChange={(v: any) => setStatusFilter(v)}>
-            <SelectTrigger className="w-[130px]"><SelectValue placeholder="Status" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="active">Ativos</SelectItem>
-              <SelectItem value="inactive">Inativos</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={programFilter} onValueChange={(v: any) => setProgramFilter(v)}>
-            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Programa" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="enrolled">Em programa</SelectItem>
-              <SelectItem value="not_enrolled">Sem programa</SelectItem>
-            </SelectContent>
-          </Select>
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input placeholder="Buscar paciente..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
         </div>
 
+        {/* Tabs: Ativos / Inativos / Programas */}
         {loading ? (
           <div className="flex items-center justify-center h-40">
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
-        ) : filteredPatients.length === 0 ? (
-          <div className="glass rounded-xl p-12 text-center">
-            <Users className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-            <h3 className="font-display font-semibold text-lg mb-1">{search ? "Nenhum resultado" : "Nenhum paciente"}</h3>
-            <p className="text-muted-foreground">{search ? "Tente outro termo" : "Adicione seu primeiro paciente para começar."}</p>
-          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredPatients.map((p, idx) => {
-              const isInactive = p.status !== "active";
-              const score = p.priorityScore || 0;
-              const tier = getScoreTier(score);
-              const hasPrograms = p.programs && p.programs.length > 0;
-              return (
-                <motion.div
-                  key={p.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.04 }}
-                  whileHover={{ y: -2 }}
-                  className={`glass rounded-xl p-5 shadow-card cursor-pointer ring-2 ${isInactive ? "ring-muted/30 opacity-60" : tier.ring} transition-all relative`}
-                  onClick={() => navigate(`/patients/${p.patient_id}`)}
-                >
-                  {isInactive && (
-                    <div className="absolute top-2 right-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                      Fora das métricas
-                    </div>
-                  )}
-                  {/* Top row */}
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <span className="text-lg font-bold text-primary">
-                        {(p.profile?.full_name || "P")[0].toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-display font-semibold truncate">{p.profile?.full_name || "Paciente"}</h3>
-                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${
-                          p.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
-                        }`}>
-                          {p.status === "active" ? "Ativo" : "Inativo"}
-                        </span>
-                        {hasPrograms && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary flex items-center gap-1">
-                            <Target className="w-3 h-3" /> {p.programs!.length} programa{p.programs!.length > 1 ? "s" : ""}
-                          </span>
-                        )}
-                        {p.stats?.current_streak ? (
-                          <span className="text-xs text-muted-foreground">🔥 {p.stats.current_streak}d</span>
-                        ) : null}
-                      </div>
-                    </div>
-                    <ScoreRing score={score} />
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setAssignTarget(p); setAssignDialogOpen(true); }}
-                        className="text-muted-foreground hover:text-primary p-1" title="Adicionar a programa"
-                      >
-                        <Target className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); toggleStatus(p.id, p.status); }}
-                        className="text-muted-foreground hover:text-foreground p-1" title={p.status === "active" ? "Desativar" : "Ativar"}
-                      >
-                        {p.status === "active" ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
-                      </button>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                  </div>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            <TabsList className="flex flex-wrap h-auto gap-1">
+              <TabsTrigger value="ativos" className="gap-1.5">
+                <UserCheck className="w-3.5 h-3.5" /> Ativos
+                <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{activePatientsList.length}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="inativos" className="gap-1.5">
+                <UserX className="w-3.5 h-3.5" /> Inativos
+                <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{inactivePatientsList.length}</Badge>
+              </TabsTrigger>
+              {programs.map(prog => (
+                <TabsTrigger key={prog.id} value={`prog-${prog.id}`} className="gap-1.5">
+                  <Target className="w-3.5 h-3.5" /> {prog.title}
+                  <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+                    {programPatientLists.get(prog.id)?.length || 0}
+                  </Badge>
+                </TabsTrigger>
+              ))}
+            </TabsList>
 
-                  {/* Program badges */}
-                  {hasPrograms && (
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {p.programs!.map(pg => (
-                        <Badge key={pg.id} variant="outline" className="text-xs gap-1">
-                          <Target className="w-3 h-3" /> {pg.title}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
+            <TabsContent value="ativos">
+              <PatientGrid patients={activePatientsList} navigate={navigate}
+                toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
+                setAssignDialogOpen={setAssignDialogOpen} search={search}
+                emptyMessage="Nenhum paciente ativo" />
+            </TabsContent>
 
-                  {/* Score bar */}
-                  <ScoreBar score={score} label="Engajamento" />
+            <TabsContent value="inativos">
+              <PatientGrid patients={inactivePatientsList} navigate={navigate}
+                toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
+                setAssignDialogOpen={setAssignDialogOpen} search={search}
+                emptyMessage="Nenhum paciente inativo" />
+            </TabsContent>
 
-                  {/* Mini stats row */}
-                  <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-border/50">
-                    <div className="text-center">
-                      <p className="text-xs text-muted-foreground">Checklist</p>
-                      <p className={`text-sm font-bold ${
-                        (p.checklistAdherence || 0) >= 70 ? "text-success" :
-                        (p.checklistAdherence || 0) >= 40 ? "text-warning" : "text-destructive"
-                      }`}>{p.checklistAdherence ?? "—"}%</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-xs text-muted-foreground">Refeições</p>
-                      <p className="text-sm font-bold">
-                        {p.stats?.last_meal_date
-                          ? (() => {
-                              const d = Math.floor((Date.now() - new Date(p.stats!.last_meal_date!).getTime()) / 86400000);
-                              return d === 0 ? "Hoje" : d === 1 ? "Ontem" : `${d}d`;
-                            })()
-                          : "—"}
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-xs text-muted-foreground">Streak</p>
-                      <p className="text-sm font-bold">{p.stats?.current_streak ?? "—"}🔥</p>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+            {programs.map(prog => (
+              <TabsContent key={prog.id} value={`prog-${prog.id}`}>
+                <PatientGrid patients={programPatientLists.get(prog.id) || []} navigate={navigate}
+                  toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
+                  setAssignDialogOpen={setAssignDialogOpen} search={search}
+                  emptyMessage={`Nenhum paciente no programa "${prog.title}"`} />
+              </TabsContent>
+            ))}
+          </Tabs>
         )}
       </div>
 
