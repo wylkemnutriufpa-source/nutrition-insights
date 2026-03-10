@@ -824,7 +824,7 @@ export default function Patients() {
                 toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
                 setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
                 onUpdateExpiry={updateExpiry}
-                search={search} emptyMessage="Nenhum paciente inativo" />
+                search={search} emptyMessage="Nenhum paciente inativo" layout={layout} />
             </TabsContent>
 
             {programs.map(prog => (
