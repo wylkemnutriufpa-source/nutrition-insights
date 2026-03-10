@@ -125,6 +125,7 @@ export default function PatientDetail() {
     plan_name: "",
     started_at: new Date().toISOString().split("T")[0],
     expires_at: "",
+    value: "",
   });
 
   // Prestige
