@@ -336,9 +336,12 @@ export default function GlobalRanking() {
                               {entry.display_name}
                             </p>
                             {entry.plan_slug && (
-                              <span className="text-xs text-muted-foreground">
-                                {entry.badge_icon} {PLAN_LABELS[entry.plan_slug] || entry.plan_slug}
-                              </span>
+                              <PrestigeBadge
+                                plan={allPrestigePlans.find(p => p.slug === entry.plan_slug) || null}
+                                allPlans={allPrestigePlans}
+                                size="sm"
+                                clickable
+                              />
                             )}
                           </div>
                           <span className="text-sm font-bold">
