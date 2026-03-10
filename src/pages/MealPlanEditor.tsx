@@ -657,11 +657,8 @@ export default function MealPlanEditor() {
                         <Droplets className="w-3 h-3 text-blue-400" />
                         <span className="font-semibold">{t.fat.toFixed(0)}g</span>
                         <span className="text-muted-foreground">gord</span>
-        </div>
-
-        {/* Plan Scheduler */}
-        <PlanScheduler mealPlanId={plan.id} planTitle={plan.title} />
-      </div>
+                      </div>
+                    </div>
                     {/* Copy day button */}
                     <div className="mt-1 flex justify-center">
                       <button
@@ -686,6 +683,9 @@ export default function MealPlanEditor() {
             </div>
           </div>
         </div>
+
+        {/* Plan Scheduler */}
+        <PlanScheduler mealPlanId={plan.id} planTitle={plan.title} />
       </div>
 
       {/* Add/Edit Item Dialog */}
