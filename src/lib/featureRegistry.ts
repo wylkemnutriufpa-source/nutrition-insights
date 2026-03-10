@@ -9,7 +9,7 @@ import {
   Users, Utensils, ClipboardCheck, Target, Dumbbell, Pill,
   MessageSquare, Calendar, Bell, BookOpen,
   ShoppingCart, Heart,
-  BarChart3, DollarSign, Activity,
+  BarChart3, DollarSign, Activity, Trophy,
 } from "lucide-react";
 
 export interface FeatureDefinition {
