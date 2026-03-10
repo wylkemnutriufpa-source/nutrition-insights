@@ -1289,7 +1289,14 @@ export type Database = {
           id: string
           metadata: Json | null
           patient_id: string
+          period_day: string | null
+          period_month: string | null
+          period_week: string | null
+          period_year: number | null
           points: number
+          professional_id: string | null
+          source_id: string | null
+          source_type: string | null
         }
         Insert: {
           action_key: string
@@ -1297,7 +1304,14 @@ export type Database = {
           id?: string
           metadata?: Json | null
           patient_id: string
+          period_day?: string | null
+          period_month?: string | null
+          period_week?: string | null
+          period_year?: number | null
           points: number
+          professional_id?: string | null
+          source_id?: string | null
+          source_type?: string | null
         }
         Update: {
           action_key?: string
@@ -1305,7 +1319,14 @@ export type Database = {
           id?: string
           metadata?: Json | null
           patient_id?: string
+          period_day?: string | null
+          period_month?: string | null
+          period_week?: string | null
+          period_year?: number | null
           points?: number
+          professional_id?: string | null
+          source_id?: string | null
+          source_type?: string | null
         }
         Relationships: []
       }
@@ -2587,6 +2608,57 @@ export type Database = {
         }
         Relationships: []
       }
+      ranking_snapshots: {
+        Row: {
+          created_at: string
+          id: string
+          patient_id: string
+          period_type: string
+          plan_slug: string | null
+          points_checkin: number | null
+          points_checklist: number | null
+          points_meals: number | null
+          points_other: number | null
+          points_protocols: number | null
+          points_training: number | null
+          rank_position: number | null
+          snapshot_date: string
+          total_points: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          patient_id: string
+          period_type?: string
+          plan_slug?: string | null
+          points_checkin?: number | null
+          points_checklist?: number | null
+          points_meals?: number | null
+          points_other?: number | null
+          points_protocols?: number | null
+          points_training?: number | null
+          rank_position?: number | null
+          snapshot_date?: string
+          total_points?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          patient_id?: string
+          period_type?: string
+          plan_slug?: string | null
+          points_checkin?: number | null
+          points_checklist?: number | null
+          points_meals?: number | null
+          points_other?: number | null
+          points_protocols?: number | null
+          points_training?: number | null
+          rank_position?: number | null
+          snapshot_date?: string
+          total_points?: number
+        }
+        Relationships: []
+      }
       recipes: {
         Row: {
           calories_per_serving: number | null
@@ -3082,10 +3154,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      award_points: {
-        Args: { _action_key: string; _metadata?: Json; _patient_id: string }
-        Returns: Json
-      }
+      award_points:
+        | {
+            Args: { _action_key: string; _metadata?: Json; _patient_id: string }
+            Returns: Json
+          }
+        | {
+            Args: {
+              _action_key: string
+              _metadata?: Json
+              _patient_id: string
+              _professional_id?: string
+              _source_id?: string
+              _source_type?: string
+            }
+            Returns: Json
+          }
       check_ai_usage: {
         Args: { _feature_key: string; _plan_tier?: string; _user_id: string }
         Returns: Json
@@ -3147,6 +3231,10 @@ export type Database = {
         Returns: Json
       }
       refresh_ranking_cache: { Args: never; Returns: undefined }
+      refresh_ranking_snapshots: {
+        Args: { _period_type?: string }
+        Returns: undefined
+      }
       reset_professional_password: {
         Args: { _new_password: string; _user_id: string }
         Returns: undefined
