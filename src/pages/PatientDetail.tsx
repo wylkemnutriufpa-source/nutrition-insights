@@ -25,7 +25,7 @@ import PlanScheduler from "@/components/plans/PlanScheduler";
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
-  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2
+  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat
 } from "lucide-react";
 
 interface PatientProfile {
@@ -86,6 +86,7 @@ export default function PatientDetail() {
   const [patientProtocols, setPatientProtocols] = useState<PatientProtocol[]>([]);
   const [protocols, setProtocols] = useState<any[]>([]);
   const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
+  const [recipes, setRecipes] = useState<any[]>([]);
   const [checklistStats, setChecklistStats] = useState({ total: 0, completed: 0 });
   const [loading, setLoading] = useState(true);
 
@@ -124,7 +125,7 @@ export default function PatientDetail() {
     if (!patientId || !user) return;
     setLoading(true);
 
-    const [profileRes, timelineRes, anamnesisRes, ppRes, protocolsRes, checkRes, subRes, plansRes, mealPlansRes] = await Promise.all([
+    const [profileRes, timelineRes, anamnesisRes, ppRes, protocolsRes, checkRes, subRes, plansRes, mealPlansRes, recipesRes] = await Promise.all([
       supabase.from("profiles").select("full_name, avatar_url, phone").eq("user_id", patientId).single(),
       supabase.from("patient_timeline").select("*").eq("patient_id", patientId).order("created_at", { ascending: false }).limit(50),
       supabase.from("patient_anamnesis").select("*").eq("user_id", patientId).order("created_at", { ascending: false }).limit(1),
@@ -134,6 +135,7 @@ export default function PatientDetail() {
       supabase.from("subscriptions").select("*").eq("user_id", patientId).order("created_at", { ascending: false }).limit(1),
       supabase.from("pricing_plans").select("*").eq("is_active", true).order("sort_order"),
       supabase.from("meal_plans").select("*").eq("patient_id", patientId).eq("nutritionist_id", user.id).order("created_at", { ascending: false }),
+      supabase.from("recipes").select("*").eq("nutritionist_id", user.id).eq("is_shared", true).order("created_at", { ascending: false }),
     ]);
 
     setProfile(profileRes.data);
@@ -157,6 +159,7 @@ export default function PatientDetail() {
     setPatientSubscription(subRes.data?.[0] || null);
     setPricingPlans(plansRes.data || []);
     setMealPlans(mealPlansRes.data || []);
+    setRecipes(recipesRes.data || []);
 
     // Pre-fill plan form if subscription exists
     if (subRes.data?.[0]) {
@@ -442,6 +445,7 @@ export default function PatientDetail() {
             { key: "checkins", label: "Check-ins", icon: MessageSquare, color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
             { key: "meal-plans", label: "Planos Alimentares", icon: UtensilsCrossed, color: "from-success/20 to-success/5", iconColor: "text-success" },
             { key: "radar", label: "Radar Metabólico", icon: TrendingUp, color: "from-destructive/20 to-destructive/5", iconColor: "text-destructive" },
+            { key: "recipes", label: "Receitas", icon: ChefHat, color: "from-primary/20 to-accent/5", iconColor: "text-primary" },
           ];
 
           return (
@@ -882,6 +886,44 @@ export default function PatientDetail() {
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Radar Metabólico</DialogTitle></DialogHeader>
                   <MetabolicRadar anamnesis={anamnesis} />
+                </DialogContent>
+              </Dialog>
+
+              {/* Recipes Modal */}
+              <Dialog open={openSection === "recipes"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display">Receitas Compartilhadas</DialogTitle></DialogHeader>
+                  {recipes.length === 0 ? (
+                    <div className="text-center py-10 text-muted-foreground">
+                      <ChefHat className="w-12 h-12 mx-auto mb-3 opacity-40" />
+                      <p className="text-sm">Nenhuma receita compartilhada ainda.</p>
+                      <p className="text-xs mt-1">Compartilhe receitas na seção Receitas do painel.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {recipes.map((recipe) => (
+                        <div key={recipe.id} className="rounded-xl border border-border bg-card p-4 hover:shadow-md transition-shadow">
+                          {recipe.image_url && (
+                            <img src={recipe.image_url} alt={recipe.title} className="w-full h-32 object-cover rounded-lg mb-3" />
+                          )}
+                          <h4 className="font-semibold text-sm">{recipe.title}</h4>
+                          {recipe.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{recipe.description}</p>}
+                          <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
+                            {recipe.calories_per_serving && <span>{recipe.calories_per_serving} kcal</span>}
+                            {recipe.prep_time_minutes && <span>{recipe.prep_time_minutes} min preparo</span>}
+                            {recipe.difficulty && <Badge variant="secondary" className="text-[10px]">{recipe.difficulty}</Badge>}
+                          </div>
+                          {recipe.tags?.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {recipe.tags.map((tag: string) => (
+                                <Badge key={tag} variant="outline" className="text-[10px]">{tag}</Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </DialogContent>
               </Dialog>
             </>
