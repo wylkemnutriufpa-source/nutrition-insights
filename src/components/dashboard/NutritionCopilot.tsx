@@ -201,6 +201,14 @@ function AIRecommendations({ patients, insights }: { patients: CopilotPatient[];
   const recommendations = useMemo(() => {
     const recs: { text: string; icon: any; action: string; route: string }[] = [];
 
+    // Churn-aware recommendations
+    const churnResults = calculateChurnRisk(patients);
+    const highChurn = churnResults.filter(r => r.level === "high");
+    const modChurn = churnResults.filter(r => r.level === "moderate");
+
+    if (highChurn.length > 0) recs.push({ text: `${highChurn.length} paciente(s) em alto risco de abandono — enviar mensagem motivacional e agendar consulta urgente`, icon: AlertTriangle, action: "Ver risco", route: "/patients" });
+    if (modChurn.length > 0) recs.push({ text: `${modChurn.length} paciente(s) com risco moderado de abandono — revisar plano e reforçar engajamento`, icon: TrendingDown, action: "Ver pacientes", route: "/patients" });
+
     const lowAdherence = patients.filter(p => (p.checklistCompletion ?? p.score) < 40);
     const inactive = patients.filter(p => {
       if (!p.lastActivity) return true;
@@ -220,7 +228,7 @@ function AIRecommendations({ patients, insights }: { patients: CopilotPatient[];
 
     if (recs.length === 0) recs.push({ text: "Todos os pacientes estão com boa evolução. Continue o acompanhamento!", icon: Target, action: "Dashboard", route: "/" });
 
-    return recs.slice(0, 5);
+    return recs.slice(0, 6);
   }, [patients, insights]);
 
   const navigate = useNavigate();
