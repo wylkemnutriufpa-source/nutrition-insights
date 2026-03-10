@@ -136,7 +136,30 @@ export default function ImportPatients() {
     }
   };
 
-  const selectedPatients = allPatients.filter((p, i) => selectedIndices.has(i) && p.active && p.email);
+  // Select/deselect all importable patients within the current filtered view
+  const toggleAllFiltered = () => {
+    const importableFiltered = filteredPatients.filter(p => p.email && p.name.trim());
+    const importableFilteredIndices = importableFiltered.map(p => allPatients.indexOf(p));
+    const allSelected = importableFilteredIndices.every(i => selectedIndices.has(i));
+
+    setSelectedIndices(prev => {
+      const next = new Set(prev);
+      if (allSelected) {
+        importableFilteredIndices.forEach(i => next.delete(i));
+      } else {
+        importableFilteredIndices.forEach(i => next.add(i));
+      }
+      return next;
+    });
+  };
+
+  const selectedPatients = allPatients.filter((p, i) => selectedIndices.has(i) && p.email && p.name.trim());
+
+  const filteredImportableCount = filteredPatients.filter(p => p.email && p.name.trim()).length;
+  const filteredSelectedCount = filteredPatients.filter(p => {
+    const idx = allPatients.indexOf(p);
+    return selectedIndices.has(idx) && p.email && p.name.trim();
+  }).length;
 
   const handleImport = async () => {
     if (!user || selectedPatients.length === 0) return;
