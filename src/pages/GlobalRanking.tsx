@@ -549,8 +549,8 @@ export default function GlobalRanking() {
         {/* ── Header ── */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-              <Trophy className="w-7 h-7 text-yellow-400" /> Ranking Global
+            <h1 className="font-display text-2xl font-bold metallic-gold flex items-center gap-2">
+              <Trophy className="w-7 h-7 text-yellow-400 drop-shadow-[0_0_8px_rgba(255,215,0,0.5)]" /> Ranking Global
             </h1>
             <p className="text-muted-foreground text-sm">
               Competição de engajamento — Top 20 • {PERIOD_LABELS[period]}
