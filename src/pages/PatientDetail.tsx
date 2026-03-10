@@ -94,6 +94,9 @@ export default function PatientDetail() {
   const [mealPlanDocs, setMealPlanDocs] = useState<any[]>([]);
   const [assessmentDocs, setAssessmentDocs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [patientStatus, setPatientStatus] = useState<string>("active");
+  const [npId, setNpId] = useState<string | null>(null);
+  const [togglingStatus, setTogglingStatus] = useState(false);
 
   // Activation dialog
   const [activateOpen, setActivateOpen] = useState(false);
