@@ -879,12 +879,23 @@ export default function Patients() {
           ))}
         </div>
 
-        {/* Search + Layout Toggle */}
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input placeholder="Buscar paciente..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
           </div>
+          <button
+            onClick={() => setOnlineFilter(!onlineFilter)}
+            className={`inline-flex items-center gap-1.5 px-3 rounded-lg text-xs font-medium transition-all border ${
+              onlineFilter
+                ? "border-success bg-success/10 text-success"
+                : "border-border bg-card text-muted-foreground hover:text-foreground"
+            }`}
+            title="Filtrar online"
+          >
+            <span className={`w-2 h-2 rounded-full ${onlineFilter ? 'bg-success animate-pulse' : 'bg-muted-foreground'}`} />
+            Online ({onlineSet.size})
+          </button>
           <div className="flex rounded-lg border border-border overflow-hidden">
             <button
               onClick={() => setLayout("grid")}
