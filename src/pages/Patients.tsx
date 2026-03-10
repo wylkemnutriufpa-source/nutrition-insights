@@ -345,7 +345,84 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
   );
 }
 
-function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, search, emptyMessage }: {
+function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry }: {
+  p: PatientInfo; idx: number; navigate: any;
+  toggleStatus: (id: string, status: string) => void;
+  setAssignTarget: (p: PatientInfo) => void;
+  setAssignDialogOpen: (v: boolean) => void;
+  removeFromProgram: (patientId: string, programId: string, programTitle: string) => void;
+  onUpdateExpiry: (id: string, date: string | null) => void;
+}) {
+  const isInactive = p.status !== "active";
+  const score = p.priorityScore || 0;
+  const tier = getScoreTier(score);
+  const displayName = p.profile?.full_name || p.email || "Paciente";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -8 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: idx * 0.03 }}
+      className={`glass rounded-lg px-4 py-3 cursor-pointer flex items-center gap-3 hover:bg-accent/5 transition-all ${isInactive ? "opacity-60" : ""}`}
+      onClick={() => navigate(`/patients/${p.patient_id}`)}
+    >
+      <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+        <span className="text-sm font-bold text-primary">{displayName[0].toUpperCase()}</span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold text-sm truncate">{displayName}</p>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+            p.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
+          }`}>
+            {p.status === "active"
+              ? p.expires_at
+                ? (() => {
+                    const exp = new Date(p.expires_at);
+                    const diffDays = Math.ceil((exp.getTime() - Date.now()) / 86400000);
+                    const formatted = exp.toLocaleDateString("pt-BR");
+                    if (diffDays < 0) return `Vencido ${formatted}`;
+                    if (diffDays <= 7) return `Ativo até ${formatted} ⚠️`;
+                    return `Ativo até ${formatted}`;
+                  })()
+                : "Ativo"
+              : "Inativo"
+            }
+          </span>
+          {p.programs && p.programs.length > 0 && (
+            <span className="text-[10px] text-muted-foreground">{p.programs.length} prog.</span>
+          )}
+        </div>
+      </div>
+      <div className="hidden sm:flex items-center gap-4 text-xs text-muted-foreground">
+        <div className="text-center w-14">
+          <p className="text-[10px]">Checklist</p>
+          <p className={`font-bold ${(p.checklistAdherence || 0) >= 70 ? "text-success" : (p.checklistAdherence || 0) >= 40 ? "text-warning" : "text-destructive"}`}>
+            {p.checklistAdherence ?? "—"}%
+          </p>
+        </div>
+        <div className="text-center w-14">
+          <p className="text-[10px]">Streak</p>
+          <p className="font-bold">{p.stats?.current_streak ?? "—"}🔥</p>
+        </div>
+      </div>
+      <ScoreRing score={score} />
+      <div className="flex items-center gap-1">
+        <button onClick={(e) => { e.stopPropagation(); setAssignTarget(p); setAssignDialogOpen(true); }}
+          className="text-muted-foreground hover:text-primary p-1" title="Adicionar a programa">
+          <Target className="w-4 h-4" />
+        </button>
+        <button onClick={(e) => { e.stopPropagation(); toggleStatus(p.id, p.status); }}
+          className="text-muted-foreground hover:text-foreground p-1" title={p.status === "active" ? "Desativar" : "Ativar"}>
+          {p.status === "active" ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+        </button>
+        <ChevronRight className="w-4 h-4 text-muted-foreground" />
+      </div>
+    </motion.div>
+  );
+}
+
+function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, search, emptyMessage, layout }: {
   patients: PatientInfo[]; navigate: any;
   toggleStatus: (id: string, status: string) => void;
   setAssignTarget: (p: PatientInfo) => void;
@@ -354,6 +431,7 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
   onUpdateExpiry: (id: string, date: string | null) => void;
   search: string;
   emptyMessage: string;
+  layout: "grid" | "list";
 }) {
   if (patients.length === 0) {
     return (
@@ -364,6 +442,20 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
       </div>
     );
   }
+
+  if (layout === "list") {
+    return (
+      <div className="space-y-2">
+        {patients.map((p, idx) => (
+          <PatientRow key={p.id} p={p} idx={idx} navigate={navigate}
+            toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
+            setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
+            onUpdateExpiry={onUpdateExpiry} />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {patients.map((p, idx) => (
