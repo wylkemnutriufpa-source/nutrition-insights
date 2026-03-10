@@ -177,6 +177,7 @@ const App = () => (
               <Route path="/body-analysis" element={<NutritionistRoute><BodyAnalysis /></NutritionistRoute>} />
               <Route path="/branding" element={<NutritionistRoute><Branding /></NutritionistRoute>} />
               <Route path="/reports" element={<NutritionistRoute><Reports /></NutritionistRoute>} />
+              <Route path="/clinical-intelligence" element={<NutritionistRoute><ClinicalIntelligence /></NutritionistRoute>} />
               <Route path="/weekly-report" element={<NutritionistRoute><WeeklyReport /></NutritionistRoute>} />
               <Route path="/financial" element={<NutritionistRoute><Financial /></NutritionistRoute>} />
               <Route path="/global-tips" element={<NutritionistRoute><GlobalTips /></NutritionistRoute>} />
