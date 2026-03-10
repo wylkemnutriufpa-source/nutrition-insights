@@ -14,9 +14,11 @@ import { toast } from "sonner";
 import {
   Users, Plus, UserCheck, UserX, ChevronRight, Search,
   TrendingUp, TrendingDown, Minus, Target, Loader2, ToggleLeft, ToggleRight, X, CalendarDays,
-  LayoutGrid, List
+  LayoutGrid, List, Crown
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import PrestigeBadge from "@/components/prestige/PrestigeBadge";
+import type { PrestigePlan } from "@/hooks/usePrestige";
 
 interface PatientInfo {
   id: string;
@@ -31,6 +33,7 @@ interface PatientInfo {
   stats?: { last_meal_date?: string; total_xp?: number; current_streak?: number } | null;
   checklistAdherence?: number;
   programs?: { id: string; title: string }[];
+  prestigePlan?: PrestigePlan | null;
 }
 
 interface ProgramInfo {
@@ -232,7 +235,10 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
           </span>
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-display font-semibold truncate">{displayName}</h3>
+          <div className="flex items-center gap-1.5">
+            <h3 className="font-display font-semibold truncate" style={p.prestigePlan?.crown_enabled ? { color: p.prestigePlan.color } : undefined}>{displayName}</h3>
+            {p.prestigePlan && <PrestigeBadge plan={p.prestigePlan} size="sm" showLabel={false} />}
+          </div>
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
             <span className={`text-xs px-2 py-0.5 rounded-full ${
               p.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
@@ -370,7 +376,10 @@ function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssign
         <span className="text-sm font-bold text-primary">{displayName[0].toUpperCase()}</span>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-sm truncate">{displayName}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="font-semibold text-sm truncate" style={p.prestigePlan?.crown_enabled ? { color: p.prestigePlan.color } : undefined}>{displayName}</p>
+          {p.prestigePlan && <PrestigeBadge plan={p.prestigePlan} size="sm" showLabel={false} />}
+        </div>
         <div className="flex items-center gap-2 flex-wrap">
           <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
             p.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
@@ -487,6 +496,8 @@ export default function Patients() {
   const [assignTarget, setAssignTarget] = useState<PatientInfo | null>(null);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [layout, setLayout] = useState<"grid" | "list">("grid");
+  const [prestigeFilter, setPrestigeFilter] = useState<string>("all");
+  const [prestigePlansList, setPrestigePlansList] = useState<PrestigePlan[]>([]);
 
   const fetchPatients = async () => {
     if (!user) return;
@@ -503,8 +514,7 @@ export default function Patients() {
     if (data) {
       const patientIds = data.map(p => p.patient_id);
 
-      // Also fetch emails for fallback names
-      const [profilesRes, statsRes, checklistRes, enrollmentsRes, emailsRes] = await Promise.all([
+      const [profilesRes, statsRes, checklistRes, enrollmentsRes, emailsRes, prestigeRes, pPlansRes] = await Promise.all([
         Promise.all(patientIds.map(id =>
           supabase.from("profiles").select("full_name, avatar_url").eq("user_id", id).single()
         )),
@@ -518,10 +528,40 @@ export default function Patients() {
           .select("patient_id, program_id, programs(id, title)")
           .eq("status", "active")
           .in("patient_id", patientIds),
-        // Use RPC to get emails as fallback — but we can't query auth.users
-        // Instead we'll just rely on profiles, and show patient_id as last resort
         Promise.resolve(null),
+        supabase.from("patient_prestige")
+          .select("patient_id, plan_id, prestige_plans(*)")
+          .eq("is_active", true)
+          .in("patient_id", patientIds),
+        supabase.from("prestige_plans").select("*").eq("is_active", true).order("display_order"),
       ]);
+
+      // Store prestige plans list for filter tabs
+      const ppList = (pPlansRes.data || []).map((d: any) => ({
+        id: d.id, name: d.name, slug: d.slug, display_order: d.display_order, color: d.color,
+        badge_icon: d.badge_icon, badge_label: d.badge_label, crown_enabled: d.crown_enabled,
+        effect_type: d.effect_type, ranking_highlight: d.ranking_highlight,
+        ai_usage_multiplier: d.ai_usage_multiplier, features: d.features || [],
+        price_monthly: d.price_monthly, price_quarterly: d.price_quarterly,
+        price_semiannual: d.price_semiannual, price_annual: d.price_annual,
+      })) as PrestigePlan[];
+      setPrestigePlansList(ppList);
+
+      // Build prestige map
+      const prestigeMap = new Map<string, PrestigePlan>();
+      (prestigeRes.data || []).forEach((pp: any) => {
+        if (pp.prestige_plans) {
+          const d = pp.prestige_plans;
+          prestigeMap.set(pp.patient_id, {
+            id: d.id, name: d.name, slug: d.slug, display_order: d.display_order, color: d.color,
+            badge_icon: d.badge_icon, badge_label: d.badge_label, crown_enabled: d.crown_enabled,
+            effect_type: d.effect_type, ranking_highlight: d.ranking_highlight,
+            ai_usage_multiplier: d.ai_usage_multiplier, features: d.features || [],
+            price_monthly: d.price_monthly, price_quarterly: d.price_quarterly,
+            price_semiannual: d.price_semiannual, price_annual: d.price_annual,
+          });
+        }
+      });
 
       const enrollmentMap = new Map<string, { id: string; title: string }[]>();
       (enrollmentsRes.data || []).forEach((e: any) => {
@@ -543,6 +583,7 @@ export default function Patients() {
           checklistAdherence: adherence,
           priorityScore: computeScore(statsRes[i]?.data, { total, completed }),
           programs: enrollmentMap.get(p.patient_id) || [],
+          prestigePlan: prestigeMap.get(p.patient_id) || null,
         };
       });
 
@@ -654,14 +695,20 @@ export default function Patients() {
     return score >= 70;
   };
 
+  const prestigeFilterFn = (p: PatientInfo) => {
+    if (prestigeFilter === "all") return true;
+    if (prestigeFilter === "none") return !p.prestigePlan;
+    return p.prestigePlan?.slug === prestigeFilter;
+  };
+
   const activePatientsList = useMemo(() =>
-    patients.filter(p => p.status === "active" && searchFilter(p) && scoreFilter(p)),
-    [patients, search, filter]
+    patients.filter(p => p.status === "active" && searchFilter(p) && scoreFilter(p) && prestigeFilterFn(p)),
+    [patients, search, filter, prestigeFilter]
   );
 
   const inactivePatientsList = useMemo(() =>
-    patients.filter(p => p.status !== "active" && searchFilter(p)),
-    [patients, search]
+    patients.filter(p => p.status !== "active" && searchFilter(p) && prestigeFilterFn(p)),
+    [patients, search, prestigeFilter]
   );
 
   const allFiltered = useMemo(() =>
@@ -784,6 +831,57 @@ export default function Patients() {
             </button>
           </div>
         </div>
+
+        {/* Prestige Filter Buttons */}
+        {prestigePlansList.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setPrestigeFilter("all")}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
+                prestigeFilter === "all"
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border bg-card text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Crown className="w-3.5 h-3.5" /> Todos os planos
+            </button>
+            {prestigePlansList.map((pp) => {
+              const count = patients.filter(p => p.prestigePlan?.slug === pp.slug).length;
+              return (
+                <button
+                  key={pp.slug}
+                  onClick={() => setPrestigeFilter(prestigeFilter === pp.slug ? "all" : pp.slug)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
+                    prestigeFilter === pp.slug
+                      ? "shadow-md"
+                      : "bg-card hover:opacity-80"
+                  }`}
+                  style={{
+                    borderColor: prestigeFilter === pp.slug ? pp.color : undefined,
+                    backgroundColor: prestigeFilter === pp.slug ? pp.color + "15" : undefined,
+                    color: prestigeFilter === pp.slug ? pp.color : undefined,
+                  }}
+                >
+                  <span>{pp.badge_icon}</span>
+                  {pp.name}
+                  {pp.crown_enabled && <Crown className="w-3 h-3" style={{ color: pp.color }} />}
+                  <span className="ml-0.5 opacity-70">{count}</span>
+                </button>
+              );
+            })}
+            <button
+              onClick={() => setPrestigeFilter(prestigeFilter === "none" ? "all" : "none")}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
+                prestigeFilter === "none"
+                  ? "border-muted-foreground bg-muted text-foreground"
+                  : "border-border bg-card text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Sem plano
+              <span className="opacity-70">{patients.filter(p => !p.prestigePlan).length}</span>
+            </button>
+          </div>
+        )}
 
         {/* Tabs: Ativos / Inativos / Programas */}
         {loading ? (
