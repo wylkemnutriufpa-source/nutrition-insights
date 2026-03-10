@@ -816,7 +816,7 @@ export default function Patients() {
                 toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
                 setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
                 onUpdateExpiry={updateExpiry}
-                search={search} emptyMessage="Nenhum paciente ativo" />
+                search={search} emptyMessage="Nenhum paciente ativo" layout={layout} />
             </TabsContent>
 
             <TabsContent value="inativos">
