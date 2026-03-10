@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Crown, Trophy, TrendingUp, Flame, Utensils, Dumbbell, ClipboardCheck, CheckCircle2, Sparkles, Lock, Rocket, Bot, Palette, BarChart3, Users, Zap } from "lucide-react";
 import PrestigeBadge from "@/components/prestige/PrestigeBadge";
+import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
 
 type Period = "daily" | "weekly" | "monthly" | "annual";
 
@@ -267,9 +268,12 @@ export default function GlobalRanking() {
               Competição saudável de engajamento — Top 20
             </p>
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Flame className="w-3.5 h-3.5 text-orange-400" />
-            Atualiza a cada 30min
+          <div className="flex items-center gap-3">
+            <OnlinePatientsWidget variant="badge" />
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Flame className="w-3.5 h-3.5 text-orange-400" />
+              30min
+            </div>
           </div>
         </div>
 
