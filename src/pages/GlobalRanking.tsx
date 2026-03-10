@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Crown, Trophy, TrendingUp, Flame, Utensils, Dumbbell, ClipboardCheck, CheckCircle2, Sparkles, Lock, Rocket, Bot, Palette, BarChart3, Users, Zap } from "lucide-react";
 import PrestigeBadge from "@/components/prestige/PrestigeBadge";
+import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
 
 type Period = "daily" | "weekly" | "monthly" | "annual";
 
