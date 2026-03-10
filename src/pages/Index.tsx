@@ -537,37 +537,17 @@ function NutritionistDashboardContent() {
         <DailyMetricCard label="Check-ins Pendentes" value={pendingCheckins} icon={ClipboardList} color="destructive" pulse={pendingCheckins > 0} onClick={() => navigate("/checkin-panel")} />
       </motion.div>
 
-      {/* ── 3️⃣ AI Daily Briefing ── */}
+      {/* ── 3️⃣ AI Daily Briefing (expandable) ── */}
       <motion.div variants={item}>
-        <div className="rounded-xl border border-primary/20 bg-gradient-to-r from-primary/5 via-card to-accent/5 p-5">
-          <div className="flex items-start gap-4">
-            <div className="w-11 h-11 rounded-xl gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
-              <Brain className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <h2 className="font-display font-bold text-base">Briefing Diário da IA</h2>
-                {aiLoading && <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary animate-pulse">Analisando...</span>}
-              </div>
-              {aiSummary ? (
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  <span className="text-foreground font-medium">{aiSummary.high_risk_count || 0} paciente{(aiSummary.high_risk_count || 0) !== 1 ? "s" : ""} requer{(aiSummary.high_risk_count || 0) === 1 ? "" : "em"} atenção hoje.</span>
-                  {" "}{pendingCheckins > 0 ? `${pendingCheckins} check-in${pendingCheckins > 1 ? "s" : ""} pendente${pendingCheckins > 1 ? "s" : ""}. ` : "Todos os check-ins em dia. "}
-                  {appointmentsToday > 0 ? `${appointmentsToday} consulta${appointmentsToday > 1 ? "s" : ""} agendada${appointmentsToday > 1 ? "s" : ""}.` : "Nenhuma consulta hoje."}
-                  {aiSummary.top_concern ? ` Principal preocupação: ${aiSummary.top_concern}.` : ""}
-                </p>
-              ) : !aiLoading ? (
-                <p className="text-sm text-muted-foreground">Cadastre pacientes com anamnese para ativar o briefing inteligente.</p>
-              ) : null}
-            </div>
-            {aiSummary?.avg_adherence_estimate && (
-              <div className="text-center px-3 flex-shrink-0 hidden sm:block">
-                <p className="font-display text-2xl font-bold text-primary">{aiSummary.avg_adherence_estimate}%</p>
-                <p className="text-[10px] text-muted-foreground">Adesão geral</p>
-              </div>
-            )}
-          </div>
-        </div>
+        <BriefingExpandable
+          aiSummary={aiSummary}
+          aiLoading={aiLoading}
+          aiInsights={aiInsights}
+          attentionPatients={attentionPatients}
+          pendingCheckins={pendingCheckins}
+          appointmentsToday={appointmentsToday}
+          riskPatients={riskPatients}
+        />
       </motion.div>
 
       {/* ── Nutrition Copilot ── */}
