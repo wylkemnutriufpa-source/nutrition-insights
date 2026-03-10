@@ -511,6 +511,75 @@ export default function Protocols() {
     toast.success("Protocolo removido");
   };
 
+  // ── Edit protocol ──
+  const startEditProtocol = () => {
+    if (!selectedProtocol) return;
+    setEditForm({
+      title: selectedProtocol.title,
+      description: selectedProtocol.description || "",
+      category: selectedProtocol.category,
+      duration_days: String(selectedProtocol.duration_days),
+    });
+    setEditingProtocol(true);
+  };
+
+  const handleSaveProtocol = async () => {
+    if (!selectedProtocol) return;
+    setSubmitting(true);
+    const { error } = await supabase.from("protocols").update({
+      title: editForm.title,
+      description: editForm.description || null,
+      category: editForm.category,
+      duration_days: parseInt(editForm.duration_days) || 30,
+    }).eq("id", selectedProtocol.id);
+
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Protocolo atualizado!");
+      setSelectedProtocol({
+        ...selectedProtocol,
+        title: editForm.title,
+        description: editForm.description || null,
+        category: editForm.category,
+        duration_days: parseInt(editForm.duration_days) || 30,
+      });
+      setEditingProtocol(false);
+      fetchProtocols();
+    }
+    setSubmitting(false);
+  };
+
+  // ── Edit task ──
+  const startEditTask = (task: ProtocolTask) => {
+    setEditingTaskId(task.id);
+    setEditTaskForm({
+      title: task.title,
+      description: task.description || "",
+      category: task.category,
+      frequency: task.frequency,
+      icon: task.icon,
+    });
+  };
+
+  const handleSaveTask = async (taskId: string) => {
+    setSubmitting(true);
+    const { error } = await supabase.from("protocol_tasks").update({
+      title: editTaskForm.title,
+      description: editTaskForm.description || null,
+      category: editTaskForm.category,
+      frequency: editTaskForm.frequency,
+      icon: editTaskForm.icon,
+    }).eq("id", taskId);
+
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Tarefa atualizada!");
+      setEditingTaskId(null);
+      if (selectedProtocol) fetchTasks(selectedProtocol.id);
+    }
+    setSubmitting(false);
+  };
+
   // ── Assign protocol to patient ──
   const handleAssignProtocol = async (e: React.FormEvent) => {
     e.preventDefault();
