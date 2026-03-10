@@ -6,6 +6,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import StatsCard from "@/components/dashboard/StatsCard";
 import XPBar from "@/components/gamification/XPBar";
 import StreakCounter from "@/components/gamification/StreakCounter";
+import { DailyScoreCard, WeeklyProgressBar, AIMotivationCard } from "@/components/gamification/AdherenceGamification";
 import SmartTips from "@/components/patient/SmartTips";
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
 import MetabolicRadar from "@/components/dashboard/MetabolicRadar";
@@ -164,10 +165,21 @@ function PatientDashboardContent() {
         </div>
       </motion.div>
 
+      {/* AI Motivation */}
+      <motion.div variants={item}>
+        <AIMotivationCard streak={stats?.current_streak || 0} checklistProgress={checklistProgress} />
+      </motion.div>
+
       {/* Gamification */}
       <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <ExpandablePanel title="XP"><XPBar totalXp={stats?.total_xp || 0} level={stats?.level || 1} /></ExpandablePanel>
         <ExpandablePanel title="Streak"><StreakCounter current={stats?.current_streak || 0} longest={stats?.longest_streak || 0} /></ExpandablePanel>
+      </motion.div>
+
+      {/* Daily Score + Weekly Progress */}
+      <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <DailyScoreCard tasks={checklistTasks.map(t => ({ category: t.category, completed: t.completed }))} />
+        {user && <WeeklyProgressBar userId={user.id} />}
       </motion.div>
 
       {/* Quick Stats */}
