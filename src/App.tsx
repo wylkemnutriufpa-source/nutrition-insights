@@ -74,6 +74,7 @@ import AdminPrestige from "./pages/AdminPrestige";
 import AdminPricing from "./pages/AdminPricing";
 import AdminPatientFeatures from "./pages/AdminPatientFeatures";
 import UserGuide from "./pages/UserGuide";
+import ProfessionalGuide from "./pages/ProfessionalGuide";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
