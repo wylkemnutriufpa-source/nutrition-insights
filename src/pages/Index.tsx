@@ -286,7 +286,7 @@ function PatientDashboardContent() {
   );
 }
 
-// ──── Nutritionist Dashboard 2.0 ────
+// ──── Nutritionist Dashboard 3.0 — Clinical Command Center ────
 function NutritionistDashboardContent() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -295,6 +295,7 @@ function NutritionistDashboardContent() {
   const [programCount, setProgramCount] = useState(0);
   const [mealPlanCount, setMealPlanCount] = useState(0);
   const [appointmentsToday, setAppointmentsToday] = useState(0);
+  const [pendingCheckins, setPendingCheckins] = useState(0);
   const [unreadChats, setUnreadChats] = useState(0);
 
   // AI-powered
@@ -304,14 +305,17 @@ function NutritionistDashboardContent() {
   const [aiSummary, setAiSummary] = useState<any>(null);
 
   // Risk & scores
-  const [riskPatients, setRiskPatients] = useState<{ id: string; name: string; score: number; risks: string[] }[]>([]);
-  
+  const [riskPatients, setRiskPatients] = useState<{ id: string; name: string; score: number; risks: string[]; lastActivity?: string }[]>([]);
+
   // Evolution
   const [evolutionPeriod, setEvolutionPeriod] = useState(7);
   const [evolutionData, setEvolutionData] = useState({ avgWeight: null as number | null, avgAdherence: 0, totalCheckins: 0, avgScore: 0 });
 
   // Recent timeline
   const [recentTimeline, setRecentTimeline] = useState<any[]>([]);
+
+  // Program performance
+  const [programPerformance, setProgramPerformance] = useState<{ id: string; title: string; patientCount: number; avgAdherence: number }[]>([]);
 
   const fetchDashboard = useCallback(async () => {
     if (!user) return;
@@ -320,14 +324,16 @@ function NutritionistDashboardContent() {
     const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
     const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
 
-    // Parallel fetches for counts
-    const [patientsRes, protocolsRes, programsRes, plansRes, aptsRes, chatsRes] = await Promise.all([
+    const [patientsRes, protocolsRes, programsRes, plansRes, aptsRes, chatsRes, pendingRes, timelineRes, programsListRes] = await Promise.all([
       supabase.from("nutritionist_patients").select("id, patient_id", { count: "exact" }).eq("nutritionist_id", user.id).eq("status", "active"),
       supabase.from("protocols").select("id", { count: "exact" }).eq("created_by", user.id),
       supabase.from("programs").select("id", { count: "exact" }).eq("created_by", user.id).eq("is_active", true),
       supabase.from("meal_plans").select("id", { count: "exact" }).eq("nutritionist_id", user.id).eq("is_active", true),
       supabase.from("patient_appointments").select("id", { count: "exact" }).eq("nutritionist_id", user.id).gte("appointment_date", todayStart.toISOString()).lte("appointment_date", todayEnd.toISOString()),
       supabase.from("chat_messages").select("id", { count: "exact", head: true }).eq("receiver_id", user.id).eq("is_read", false),
+      supabase.from("patient_checkins").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id).eq("status", "pending"),
+      supabase.from("patient_timeline").select("*").order("created_at", { ascending: false }).limit(10),
+      supabase.from("programs").select("id, title").eq("created_by", user.id).eq("is_active", true).limit(5),
     ]);
 
     setPatientCount(patientsRes.count || 0);
@@ -336,6 +342,21 @@ function NutritionistDashboardContent() {
     setMealPlanCount(plansRes.count || 0);
     setAppointmentsToday(aptsRes.count || 0);
     setUnreadChats(chatsRes.count || 0);
+    setPendingCheckins(pendingRes.count || 0);
+    setRecentTimeline(timelineRes.data || []);
+
+    // Program performance
+    if (programsListRes.data && programsListRes.data.length > 0) {
+      const perfList: typeof programPerformance = [];
+      for (const prog of programsListRes.data) {
+        const { count } = await supabase.from("program_patients").select("id", { count: "exact", head: true }).eq("program_id", prog.id).eq("status", "active");
+        const { data: progressData } = await supabase.from("program_patient_progress").select("adherence_score").eq("program_id", prog.id);
+        const scores = (progressData || []).filter(p => p.adherence_score != null).map(p => p.adherence_score as number);
+        const avgAdh = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+        perfList.push({ id: prog.id, title: prog.title, patientCount: count || 0, avgAdherence: avgAdh });
+      }
+      setProgramPerformance(perfList);
+    }
 
     // Process patients for health scores & risk panel
     const patientIds = patientsRes.data?.map(p => p.patient_id) || [];
@@ -357,8 +378,8 @@ function NutritionistDashboardContent() {
           supabase.from("patient_anamnesis").select("answers, status").eq("user_id", pid).order("created_at", { ascending: false }).limit(1),
           supabase.from("player_stats").select("*").eq("user_id", pid).single(),
           supabase.from("checklist_tasks").select("id, completed").eq("patient_id", pid).gte("date", periodDate.split("T")[0]),
-          supabase.from("meals").select("id").eq("user_id", pid).gte("logged_at", periodDate),
-          supabase.from("physical_assessments").select("weight").eq("patient_id", pid).order("assessment_date", { ascending: false }).limit(1),
+          supabase.from("meals").select("id, logged_at").eq("user_id", pid).gte("logged_at", periodDate),
+          supabase.from("physical_assessments").select("weight, assessment_date").eq("patient_id", pid).order("assessment_date", { ascending: false }).limit(1),
         ]);
 
         const name = profileRes.data?.full_name || "Paciente";
@@ -369,8 +390,9 @@ function NutritionistDashboardContent() {
         const checkCompletion = checkTotal > 0 ? Math.round((checkCompleted / checkTotal) * 100) : 0;
         const mealCount = mealsRes.data?.length || 0;
         const weight = assessRes.data?.[0]?.weight;
+        const lastMeal = mealsRes.data?.[0]?.logged_at;
+        const lastAssess = assessRes.data?.[0]?.assessment_date;
 
-        // Calculate health score
         const score = calculateHealthScore({
           hasAnamnesis: anam?.status === "completed",
           checklistCompletion: checkCompletion,
@@ -385,7 +407,6 @@ function NutritionistDashboardContent() {
         if (checkTotal > 0) { totalAdherence += checkCompletion; adherenceCount++; }
         if (weight) { totalWeight += Number(weight); weightCount++; }
 
-        // Determine risks
         const risks: string[] = [];
         if (anam?.answers) {
           const a = anam.answers as Record<string, any>;
@@ -398,13 +419,11 @@ function NutritionistDashboardContent() {
         if (mealCount === 0) risks.push("Sem registros");
         if (stats?.current_streak === 0 && stats?.meals_logged > 5) risks.push("Perdeu streak");
 
-        riskList.push({ id: pid, name, score, risks });
+        const lastActivity = lastMeal || lastAssess || undefined;
+        riskList.push({ id: pid, name, score, risks, lastActivity });
 
-        // Prepare data for AI
         patientDataForAI.push({
-          patient_id: pid,
-          name,
-          score,
+          patient_id: pid, name, score,
           anamnesis_status: anam?.status || "pending",
           anamnesis_answers: anam?.answers ? {
             activity_level: (anam.answers as any).activity_level,
@@ -421,11 +440,9 @@ function NutritionistDashboardContent() {
         });
       }
 
-      // Sort by score (lowest first = most at risk)
       riskList.sort((a, b) => a.score - b.score);
       setRiskPatients(riskList);
 
-      // Evolution data
       setEvolutionData({
         avgWeight: weightCount > 0 ? totalWeight / weightCount : null,
         avgAdherence: adherenceCount > 0 ? Math.round(totalAdherence / adherenceCount) : 0,
@@ -433,7 +450,6 @@ function NutritionistDashboardContent() {
         avgScore: patientIds.length > 0 ? Math.round(totalScore / Math.min(patientIds.length, 30)) : 0,
       });
 
-      // Fetch AI insights (non-blocking)
       if (patientDataForAI.length > 0) {
         fetchAIInsights(patientDataForAI);
       }
@@ -446,7 +462,6 @@ function NutritionistDashboardContent() {
       const { data, error } = await supabase.functions.invoke("clinical-insights", {
         body: { patients: patientData },
       });
-
       if (error) throw error;
       if (data) {
         setAiInsights(data.insights || []);
@@ -455,7 +470,6 @@ function NutritionistDashboardContent() {
       }
     } catch (err) {
       console.error("AI insights error:", err);
-      // Generate fallback local insights
       const localInsights = generateLocalInsights(patientData);
       setAiInsights(localInsights.insights);
       setAttentionPatients(localInsights.attention);
@@ -465,82 +479,204 @@ function NutritionistDashboardContent() {
 
   useEffect(() => { fetchDashboard(); }, [fetchDashboard]);
 
+  const quickActions = [
+    { label: "Novo Paciente", icon: Users, to: "/patients", color: "bg-primary/10 text-primary hover:bg-primary/20" },
+    { label: "Nova Consulta", icon: Calendar, to: "/appointments", color: "bg-info/10 text-info hover:bg-info/20" },
+    { label: "Criar Programa", icon: Rocket, to: "/programs", color: "bg-accent/10 text-accent hover:bg-accent/20" },
+    { label: "Criar Protocolo", icon: FileText, to: "/protocols", color: "bg-warning/10 text-warning hover:bg-warning/20" },
+  ];
+
+  const timelineEventIcons: Record<string, { icon: any; color: string }> = {
+    checkin: { icon: CheckCircle2, color: "text-success" },
+    program: { icon: Rocket, color: "text-accent" },
+    appointment: { icon: Calendar, color: "text-info" },
+    assessment: { icon: Activity, color: "text-primary" },
+    note: { icon: FileText, color: "text-muted-foreground" },
+  };
+
   return (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
-      {/* Header */}
-      <motion.div variants={item} className="flex items-center justify-between">
+      {/* ── Header ── */}
+      <motion.div variants={item} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl md:text-3xl font-bold">Dashboard Clínico</h1>
-          <p className="text-muted-foreground text-sm">Painel inteligente · {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}</p>
+          <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight">Dashboard Clínico</h1>
+          <p className="text-muted-foreground text-sm mt-0.5">
+            {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })} · Central de Comando
+          </p>
         </div>
-        <div className="flex gap-2">
-          <Link to="/patients">
-            <Button className="gradient-primary shadow-glow gap-2">
-              <Plus className="w-4 h-4" /> Novo Paciente
+        {unreadChats > 0 && (
+          <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate("/chat")}>
+            <MessageSquare className="w-4 h-4" />
+            {unreadChats} mensagem{unreadChats > 1 ? "s" : ""}
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+          </Button>
+        )}
+      </motion.div>
+
+      {/* ── 2️⃣ Action Shortcuts ── */}
+      <motion.div variants={item} className="flex flex-wrap gap-2">
+        {quickActions.map((a) => (
+          <Link key={a.to} to={a.to}>
+            <Button variant="outline" size="sm" className={`gap-2 rounded-full border-none transition-colors ${a.color}`}>
+              <a.icon className="w-4 h-4" />
+              {a.label}
             </Button>
           </Link>
-        </div>
+        ))}
       </motion.div>
 
-      {/* Stats Row */}
-      <motion.div variants={item} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <StatsCard title="Pacientes" value={patientCount} icon={Users} gradient />
-        <StatsCard title="Consultas Hoje" value={appointmentsToday} icon={Calendar} />
-        <StatsCard title="Planos Ativos" value={mealPlanCount} icon={UtensilsCrossed} />
-        <StatsCard title="Protocolos" value={protocolCount} icon={FileText} />
-        <StatsCard title="Programas" value={programCount} icon={Rocket} />
-        <div className="glass rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:border-primary/30 transition-all" onClick={() => navigate("/chat")}>
-          <MessageSquare className="w-5 h-5 text-primary" />
-          <div>
-            <p className="text-xs text-muted-foreground">Chat</p>
-            <p className="font-display font-bold text-lg">{unreadChats > 0 ? unreadChats : "—"}</p>
-          </div>
-          {unreadChats > 0 && <span className="w-2 h-2 rounded-full bg-primary animate-pulse ml-auto" />}
-        </div>
+      {/* ── 1️⃣ Daily Overview Cards ── */}
+      <motion.div variants={item} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <DailyMetricCard label="Pacientes" value={patientCount} icon={Users} color="primary" onClick={() => navigate("/patients")} />
+        <DailyMetricCard label="Consultas Hoje" value={appointmentsToday} icon={Calendar} color="info" onClick={() => navigate("/appointments")} />
+        <DailyMetricCard label="Programas Ativos" value={programCount} icon={Rocket} color="accent" onClick={() => navigate("/programs")} />
+        <DailyMetricCard label="Protocolos" value={protocolCount} icon={FileText} color="warning" onClick={() => navigate("/protocols")} />
+        <DailyMetricCard label="Check-ins Pendentes" value={pendingCheckins} icon={ClipboardList} color="destructive" pulse={pendingCheckins > 0} onClick={() => navigate("/checkin-panel")} />
       </motion.div>
 
-      {/* AI Summary Banner */}
-      {aiSummary && (
-        <motion.div variants={item}>
-          <ExpandablePanel title="Resumo da IA">
-            <div className="glass rounded-xl p-4 border-primary/20 flex items-center gap-4 flex-wrap">
-              <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
-                <Brain className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold">Resumo da IA</p>
-                <p className="text-xs text-muted-foreground">{aiSummary.total_analyzed} pacientes analisados · {aiSummary.high_risk_count} em risco alto · Principal preocupação: {aiSummary.top_concern}</p>
-              </div>
-              {aiSummary.avg_adherence_estimate && (
-                <div className="text-center px-4">
-                  <p className="font-display text-xl font-bold text-primary">{aiSummary.avg_adherence_estimate}%</p>
-                  <p className="text-[10px] text-muted-foreground">Adesão estimada</p>
-                </div>
-              )}
+      {/* ── 3️⃣ AI Daily Briefing ── */}
+      <motion.div variants={item}>
+        <div className="rounded-xl border border-primary/20 bg-gradient-to-r from-primary/5 via-card to-accent/5 p-5">
+          <div className="flex items-start gap-4">
+            <div className="w-11 h-11 rounded-xl gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
+              <Brain className="w-5 h-5 text-primary-foreground" />
             </div>
-          </ExpandablePanel>
-        </motion.div>
-      )}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h2 className="font-display font-bold text-base">Briefing Diário da IA</h2>
+                {aiLoading && <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary animate-pulse">Analisando...</span>}
+              </div>
+              {aiSummary ? (
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  <span className="text-foreground font-medium">{aiSummary.high_risk_count || 0} paciente{(aiSummary.high_risk_count || 0) !== 1 ? "s" : ""} requer{(aiSummary.high_risk_count || 0) === 1 ? "" : "em"} atenção hoje.</span>
+                  {" "}{pendingCheckins > 0 ? `${pendingCheckins} check-in${pendingCheckins > 1 ? "s" : ""} pendente${pendingCheckins > 1 ? "s" : ""}. ` : "Todos os check-ins em dia. "}
+                  {appointmentsToday > 0 ? `${appointmentsToday} consulta${appointmentsToday > 1 ? "s" : ""} agendada${appointmentsToday > 1 ? "s" : ""}.` : "Nenhuma consulta hoje."}
+                  {aiSummary.top_concern ? ` Principal preocupação: ${aiSummary.top_concern}.` : ""}
+                </p>
+              ) : !aiLoading ? (
+                <p className="text-sm text-muted-foreground">Cadastre pacientes com anamnese para ativar o briefing inteligente.</p>
+              ) : null}
+            </div>
+            {aiSummary?.avg_adherence_estimate && (
+              <div className="text-center px-3 flex-shrink-0 hidden sm:block">
+                <p className="font-display text-2xl font-bold text-primary">{aiSummary.avg_adherence_estimate}%</p>
+                <p className="text-[10px] text-muted-foreground">Adesão geral</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </motion.div>
 
-      {/* Main Grid: Attention + Insights + Risk */}
+      {/* ── Main Grid: Attention + Insights + Risk ── */}
       <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <ExpandablePanel title="Precisam de Atenção"><AttentionPatientsPanel patients={attentionPatients} loading={aiLoading} /></ExpandablePanel>
         <ExpandablePanel title="Insights da IA"><AIInsightsPanel insights={aiInsights} loading={aiLoading} /></ExpandablePanel>
         <ExpandablePanel title="Painel de Risco"><RiskPanel patients={riskPatients} /></ExpandablePanel>
       </motion.div>
 
-      {/* Evolution Charts */}
+      {/* ── 5️⃣ Activity Feed + 7️⃣ Program Performance ── */}
+      <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Activity Feed */}
+        <div className="glass rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-info/10 flex items-center justify-center">
+              <Activity className="w-4 h-4 text-info" />
+            </div>
+            <div>
+              <h2 className="font-display font-semibold">Atividade Recente</h2>
+              <p className="text-xs text-muted-foreground">Últimos eventos dos pacientes</p>
+            </div>
+          </div>
+          {recentTimeline.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">Nenhuma atividade registrada.</p>
+          ) : (
+            <div className="space-y-1 max-h-64 overflow-y-auto pr-1">
+              {recentTimeline.slice(0, 8).map((ev, i) => {
+                const conf = timelineEventIcons[ev.event_type] || timelineEventIcons.note;
+                const Icon = conf.icon;
+                return (
+                  <motion.div
+                    key={ev.id}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                    className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-muted/30 transition-colors"
+                  >
+                    <div className="w-7 h-7 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Icon className={`w-3.5 h-3.5 ${conf.color}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{ev.title}</p>
+                      {ev.description && <p className="text-xs text-muted-foreground truncate">{ev.description}</p>}
+                    </div>
+                    <span className="text-[10px] text-muted-foreground flex-shrink-0 mt-1">
+                      {new Date(ev.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
+                    </span>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Program Performance */}
+        <div className="glass rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+              <Rocket className="w-4 h-4 text-accent" />
+            </div>
+            <div>
+              <h2 className="font-display font-semibold">Performance dos Programas</h2>
+              <p className="text-xs text-muted-foreground">{programPerformance.length} programa{programPerformance.length !== 1 ? "s" : ""} ativo{programPerformance.length !== 1 ? "s" : ""}</p>
+            </div>
+          </div>
+          {programPerformance.length === 0 ? (
+            <div className="text-center py-6">
+              <p className="text-sm text-muted-foreground">Crie programas para acompanhar a performance.</p>
+              <Link to="/programs">
+                <Button variant="outline" size="sm" className="mt-3 gap-2"><Plus className="w-4 h-4" />Criar Programa</Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {programPerformance.map((prog, i) => (
+                <motion.div
+                  key={prog.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.06 }}
+                  onClick={() => navigate(`/programs/${prog.id}`)}
+                  className="p-3 rounded-lg bg-muted/20 border border-border/50 cursor-pointer hover:border-primary/30 transition-all"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-semibold truncate">{prog.title}</p>
+                    <span className="text-xs text-muted-foreground flex-shrink-0">{prog.patientCount} pacientes</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Progress value={prog.avgAdherence} className="h-2 flex-1" />
+                    <span className={`text-xs font-bold ${prog.avgAdherence >= 70 ? "text-success" : prog.avgAdherence >= 40 ? "text-warning" : "text-destructive"}`}>
+                      {prog.avgAdherence}%
+                    </span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+      </motion.div>
+
+      {/* ── 6️⃣ Evolution Analytics ── */}
       <motion.div variants={item}>
         <ExpandablePanel title="Evolução Geral">
           <PatientEvolutionCharts
             data={evolutionData}
             activePeriod={evolutionPeriod}
-            onPeriodChange={(days) => { setEvolutionPeriod(days); }}
+            onPeriodChange={(days) => setEvolutionPeriod(days)}
           />
         </ExpandablePanel>
       </motion.div>
 
-      {/* Patient Health Scores Overview */}
+      {/* ── Health Score Overview ── */}
       {riskPatients.length > 0 && (
         <motion.div variants={item}>
           <ExpandablePanel title="Health Score dos Pacientes">
@@ -550,17 +686,17 @@ function NutritionistDashboardContent() {
                   <Heart className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <h2 className="font-display font-semibold">Health Score dos Pacientes</h2>
-                  <p className="text-xs text-muted-foreground">Score de 0-100 baseado em adesão, registros e consistência</p>
+                  <h2 className="font-display font-semibold">Health Score</h2>
+                  <p className="text-xs text-muted-foreground">Score 0-100 · adesão, registros e consistência</p>
                 </div>
               </div>
               <div className="flex gap-4 overflow-x-auto pb-2">
-                {riskPatients.slice(0, 8).map((p, i) => (
+                {riskPatients.slice(0, 10).map((p, i) => (
                   <motion.div
                     key={p.id}
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.05 }}
+                    transition={{ delay: i * 0.04 }}
                     onClick={(e) => { e.stopPropagation(); navigate(`/patients/${p.id}`); }}
                     className="flex flex-col items-center gap-1 min-w-[80px] cursor-pointer hover:opacity-80 transition-opacity"
                   >
@@ -574,25 +710,56 @@ function NutritionistDashboardContent() {
         </motion.div>
       )}
 
-      {/* Quick Actions Grid */}
-      <motion.div variants={item} className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { to: "/protocols", icon: FileText, label: "Protocolos", desc: "Criar e gerenciar", color: "text-primary" },
-          { to: "/programs", icon: Rocket, label: "Programas", desc: "Projetos em grupo", color: "text-accent" },
-          { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos", desc: "Alimentares", color: "text-success" },
-          { to: "/supplements", icon: Pill, label: "Suplementos", desc: "Prescrever", color: "text-info" },
-          { to: "/recipes", icon: ChefHat, label: "Receitas", desc: "Criar e compartilhar", color: "text-warning" },
-          { to: "/automation", icon: Bot, label: "Automação", desc: "Regras inteligentes", color: "text-primary" },
-          { to: "/reports", icon: BarChart3, label: "Relatórios", desc: "Gerar com IA", color: "text-accent" },
-          { to: "/appointments", icon: Calendar, label: "Agenda", desc: `${appointmentsToday} hoje`, color: "text-info" },
-        ].map((action) => (
-          <Link key={action.to} to={action.to} className="glass rounded-xl p-4 hover:border-primary/30 transition-all group">
-            <action.icon className={`w-6 h-6 ${action.color} mb-2 group-hover:scale-110 transition-transform`} />
-            <p className="font-display font-semibold text-sm">{action.label}</p>
-            <p className="text-[10px] text-muted-foreground">{action.desc}</p>
-          </Link>
-        ))}
+      {/* ── 9️⃣ Module Shortcut Grid ── */}
+      <motion.div variants={item}>
+        <h2 className="font-display font-semibold text-sm text-muted-foreground uppercase tracking-wider mb-3">Módulos</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { to: "/protocols", icon: Shield, label: "Protocolos", color: "text-primary", bg: "bg-primary/10" },
+            { to: "/programs", icon: Rocket, label: "Programas", color: "text-accent", bg: "bg-accent/10" },
+            { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos", color: "text-success", bg: "bg-success/10" },
+            { to: "/recipes", icon: ChefHat, label: "Receitas", color: "text-warning", bg: "bg-warning/10" },
+            { to: "/automation", icon: Bot, label: "Automação", color: "text-info", bg: "bg-info/10" },
+            { to: "/reports", icon: BarChart3, label: "Relatórios", color: "text-primary", bg: "bg-primary/10" },
+            { to: "/appointments", icon: Calendar, label: "Agenda", color: "text-accent", bg: "bg-accent/10" },
+            { to: "/supplements", icon: Pill, label: "Suplementos", color: "text-warning", bg: "bg-warning/10" },
+          ].map((mod) => (
+            <Link key={mod.to} to={mod.to}>
+              <motion.div
+                whileHover={{ y: -3, scale: 1.02 }}
+                className="glass rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:border-primary/20 transition-all h-[72px]"
+              >
+                <div className={`w-10 h-10 rounded-lg ${mod.bg} flex items-center justify-center flex-shrink-0`}>
+                  <mod.icon className={`w-5 h-5 ${mod.color}`} />
+                </div>
+                <p className="font-display font-semibold text-sm">{mod.label}</p>
+              </motion.div>
+            </Link>
+          ))}
+        </div>
       </motion.div>
+    </motion.div>
+  );
+}
+
+// ── Daily Metric Card ──
+function DailyMetricCard({ label, value, icon: Icon, color, pulse, onClick }: {
+  label: string; value: number; icon: any; color: string; pulse?: boolean; onClick?: () => void;
+}) {
+  return (
+    <motion.div
+      whileHover={{ y: -3, scale: 1.02 }}
+      onClick={onClick}
+      className={`glass rounded-xl p-4 cursor-pointer hover:border-${color}/30 transition-all`}
+    >
+      <div className="flex items-center justify-between mb-2">
+        <div className={`w-9 h-9 rounded-lg bg-${color}/10 flex items-center justify-center`}>
+          <Icon className={`w-4.5 h-4.5 text-${color}`} />
+        </div>
+        {pulse && value > 0 && <span className={`w-2.5 h-2.5 rounded-full bg-${color} animate-pulse`} />}
+      </div>
+      <p className="font-display font-bold text-2xl">{value}</p>
+      <p className="text-[11px] text-muted-foreground font-medium">{label}</p>
     </motion.div>
   );
 }
