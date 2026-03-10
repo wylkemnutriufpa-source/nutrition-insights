@@ -140,6 +140,7 @@ function NutritionistRecipes() {
       });
       if (error) throw error;
       toast.success("Receita gerada com IA! 🤖");
+      await aiUsage.recordUsage();
       setAiDialogOpen(false); setAiPrompt(""); fetchRecipes();
     } catch (e: any) {
       toast.error("Erro ao gerar: " + (e.message || "Tente novamente"));
