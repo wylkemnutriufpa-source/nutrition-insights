@@ -398,6 +398,15 @@ export default function PatientDetail() {
           />
           <div className="flex gap-2 flex-wrap">
             <Button
+              variant={patientStatus === "active" ? "outline" : "default"}
+              className="gap-2"
+              onClick={togglePatientStatus}
+              disabled={togglingStatus}
+            >
+              <Power className="w-4 h-4" />
+              {patientStatus === "active" ? "Desativar" : "Ativar"}
+            </Button>
+            <Button
               variant="outline"
               className="gap-2"
               onClick={() => navigate(`/physical-assessment?patientId=${patientId}`)}
