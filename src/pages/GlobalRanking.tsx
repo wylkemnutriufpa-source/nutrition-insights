@@ -90,13 +90,15 @@ function MedalIcon({ position, size = 40 }: { position: number; size?: number })
     <motion.div
       className="relative inline-flex"
       animate={{
+        rotateY: [0, 360],
         filter: [
           `drop-shadow(0 0 ${position === 0 ? 8 : 4}px ${c.glow})`,
           `drop-shadow(0 0 ${position === 0 ? 14 : 8}px ${c.glow})`,
           `drop-shadow(0 0 ${position === 0 ? 8 : 4}px ${c.glow})`,
         ],
       }}
-      transition={{ duration: position === 0 ? 2 : 3, repeat: Infinity, ease: "easeInOut" }}
+      transition={{ rotateY: { duration: position === 0 ? 6 : 8, repeat: Infinity, ease: "linear" }, filter: { duration: position === 0 ? 2 : 3, repeat: Infinity, ease: "easeInOut" } }}
+      style={{ perspective: 600 }}
     >
       <svg width={size} height={svgH} viewBox={`0 0 ${size} ${svgH}`}>
         <defs>
