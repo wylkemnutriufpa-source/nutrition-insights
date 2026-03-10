@@ -1079,24 +1079,93 @@ export default function Protocols() {
                         <AnimatePresence>
                           {tasks.map((task) => (
                             <motion.div key={task.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, x: -20 }} className="glass rounded-xl p-4 flex items-center gap-3"
+                              exit={{ opacity: 0, x: -20 }} className="glass rounded-xl p-4"
                             >
-                              <span className="text-xl">{task.icon}</span>
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-sm">{task.title}</p>
-                                {task.description && <p className="text-xs text-muted-foreground truncate">{task.description}</p>}
-                                <div className="flex items-center gap-2 mt-1">
-                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary">{task.category}</span>
-                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                                    {task.frequency === "daily" ? "Diária" : "Semanal"}
-                                  </span>
+                              {editingTaskId === task.id ? (
+                                /* ── Edit Task Inline ── */
+                                <div className="space-y-3">
+                                  <div>
+                                    <Label className="text-xs">Ícone</Label>
+                                    <div className="flex gap-1.5 flex-wrap mt-1">
+                                      {TASK_ICONS.map((icon) => (
+                                        <button key={icon} type="button" onClick={() => setEditTaskForm({ ...editTaskForm, icon })}
+                                          className={`w-8 h-8 rounded-md flex items-center justify-center text-sm border transition-all ${
+                                            editTaskForm.icon === icon ? "border-primary bg-primary/10" : "border-border"
+                                          }`}
+                                        >{icon}</button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <Label className="text-xs">Título</Label>
+                                    <Input value={editTaskForm.title} onChange={(e) => setEditTaskForm({ ...editTaskForm, title: e.target.value })} className="h-8 text-sm" />
+                                  </div>
+                                  <div>
+                                    <Label className="text-xs">Descrição</Label>
+                                    <Input value={editTaskForm.description} onChange={(e) => setEditTaskForm({ ...editTaskForm, description: e.target.value })} className="h-8 text-sm" placeholder="Opcional" />
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                      <Label className="text-xs">Categoria</Label>
+                                      <Select value={editTaskForm.category} onValueChange={(v) => setEditTaskForm({ ...editTaskForm, category: v })}>
+                                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="habit">Hábito</SelectItem>
+                                          <SelectItem value="nutrition">Nutrição</SelectItem>
+                                          <SelectItem value="exercise">Exercício</SelectItem>
+                                          <SelectItem value="supplement">Suplemento</SelectItem>
+                                          <SelectItem value="mindset">Mindset</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <div>
+                                      <Label className="text-xs">Frequência</Label>
+                                      <Select value={editTaskForm.frequency} onValueChange={(v) => setEditTaskForm({ ...editTaskForm, frequency: v })}>
+                                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="daily">Diária</SelectItem>
+                                          <SelectItem value="weekly">Semanal</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-2 justify-end">
+                                    <Button size="sm" variant="outline" onClick={() => setEditingTaskId(null)} className="h-7 text-xs gap-1">
+                                      <X className="w-3 h-3" /> Cancelar
+                                    </Button>
+                                    <Button size="sm" className="h-7 text-xs gradient-primary gap-1" onClick={() => handleSaveTask(task.id)} disabled={submitting}>
+                                      <Save className="w-3 h-3" /> Salvar
+                                    </Button>
+                                  </div>
                                 </div>
-                              </div>
-                              <button onClick={() => deleteTask(task.id)}
-                                className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
+                              ) : (
+                                /* ── View Task ── */
+                                <div className="flex items-center gap-3">
+                                  <span className="text-xl">{task.icon}</span>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-sm">{task.title}</p>
+                                    {task.description && <p className="text-xs text-muted-foreground truncate">{task.description}</p>}
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary">{task.category}</span>
+                                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                                        {task.frequency === "daily" ? "Diária" : "Semanal"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <button onClick={() => startEditTask(task)}
+                                    className="p-1.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary"
+                                    title="Editar tarefa"
+                                  >
+                                    <Pencil className="w-4 h-4" />
+                                  </button>
+                                  <button onClick={() => deleteTask(task.id)}
+                                    className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                                    title="Remover tarefa"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              )}
                             </motion.div>
                           ))}
                         </AnimatePresence>
