@@ -266,7 +266,12 @@ export default function AdminPricing() {
                         <span style={{ color: plan.color }}>{plan.name}</span>
                         {plan.crown_enabled && <Crown className="w-4 h-4" style={{ color: plan.color }} />}
                       </div>
-                      <span className="text-xs text-muted-foreground">Ordem: {plan.display_order}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">Ordem: {plan.display_order}</span>
+                        <Button variant="ghost" size="sm" onClick={() => deletePrestigePlan(plan.id)} className="text-destructive hover:text-destructive h-7 w-7 p-0">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
