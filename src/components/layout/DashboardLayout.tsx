@@ -161,15 +161,18 @@ function SidebarContent({
                 key={link.to}
                 to={link.to}
                 onClick={onLinkClick}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all group ${
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all group
+                  hover:translate-x-1 hover:scale-[1.02] active:scale-[0.98]
+                  ${
                   active
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
+                style={{ transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)" }}
               >
-                <link.icon className={`w-4 h-4 flex-shrink-0 ${active ? "text-primary" : ""}`} />
+                <link.icon className={`w-4 h-4 flex-shrink-0 ${active ? "text-primary animate-pulse" : "group-hover:scale-110 transition-transform"}`} />
                 {!collapsed && <span className="text-xs font-medium">{link.label}</span>}
-                {active && !collapsed && <ChevronRight className="w-3.5 h-3.5 ml-auto text-primary" />}
+                {active && !collapsed && <ChevronRight className="w-3.5 h-3.5 ml-auto text-primary animate-bounce" />}
               </Link>
             );
           })}
