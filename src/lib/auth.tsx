@@ -38,12 +38,21 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const defaultSubscription: SubscriptionState = {
+  subscribed: false,
+  subscription_tier: null,
+  subscription_end: null,
+  is_trial: false,
+  trial_end: null,
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const [subscription, setSubscription] = useState<SubscriptionState>(defaultSubscription);
 
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
