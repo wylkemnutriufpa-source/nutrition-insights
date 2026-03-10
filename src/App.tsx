@@ -204,6 +204,7 @@ const App = () => (
               <Route path="/weekly-report" element={<NutritionistRoute><WeeklyReport /></NutritionistRoute>} />
               <Route path="/financial" element={<NutritionistRoute><Financial /></NutritionistRoute>} />
               <Route path="/global-tips" element={<ProtectedRoute><GlobalTips /></ProtectedRoute>} />
+              <Route path="/professional-guide" element={<NutritionistRoute><ProfessionalGuide /></NutritionistRoute>} />
               <Route path="/automation" element={<NutritionistRoute><AutomationCenter /></NutritionistRoute>} />
               <Route path="/checkin-panel" element={<NutritionistRoute><CheckinPanel /></NutritionistRoute>} />
 
