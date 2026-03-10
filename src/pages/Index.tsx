@@ -271,7 +271,9 @@ function PatientDashboardContent() {
 
       {/* Smart Plan Card */}
       <motion.div variants={item}>
-        <SmartPlanCard />
+        <ExpandablePanel title="Plano Inteligente">
+          <SmartPlanCard />
+        </ExpandablePanel>
       </motion.div>
 
       {/* Radar + Tips side by side */}
