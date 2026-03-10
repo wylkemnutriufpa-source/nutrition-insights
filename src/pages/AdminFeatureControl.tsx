@@ -96,9 +96,9 @@ export default function AdminFeatureControl() {
     toast.success(`${featureName} ${labels[status]}`);
   };
 
-  const toggleAllForNut = async (nutId: string, enabled: boolean) => {
+  const setAllForNut = async (nutId: string, status: FeatureStatus) => {
     for (const f of ALL_FEATURES) {
-      await toggleFeature(nutId, f.name, enabled);
+      await setFeatureStatus(nutId, f.name, status);
     }
   };
 
