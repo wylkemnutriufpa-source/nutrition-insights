@@ -125,7 +125,36 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Space Grotesk', system-ui, sans-serif;
   }
-}
+
+  /* Metallic 3D effect on all page-level titles */
+  h1.font-display {
+    background: linear-gradient(180deg, hsl(220 25% 18%) 0%, hsl(220 15% 40%) 35%, hsl(220 20% 60%) 55%, hsl(220 10% 75%) 70%, hsl(220 15% 35%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.12));
+  }
+
+  .dark h1.font-display {
+    background: linear-gradient(180deg, hsl(220 10% 65%) 0%, hsl(220 15% 82%) 35%, hsl(0 0% 95%) 55%, hsl(220 15% 80%) 70%, hsl(220 10% 60%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  }
+
+  /* Golden metallic for ranking */
+  h1.font-display.metallic-gold {
+    background: linear-gradient(180deg, #8B6914 0%, #D4A017 20%, #FFD700 40%, #FFFACD 55%, #FFD700 70%, #B8860B 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 6px rgba(255,215,0,0.35));
+  }
+
+  .dark h1.font-display.metallic-gold {
+    background: linear-gradient(180deg, #B8860B 0%, #FFD700 25%, #FFFACD 50%, #FFD700 75%, #B8860B 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 8px rgba(255,215,0,0.4));
+  }
 
 @layer utilities {
   .glass {
