@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 const ALL_FEATURES = FEATURE_REGISTRY;
-const CATEGORY_ICONS: Record<string, typeof Brain> = {
+const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   "IA & Automação": Sparkles,
   "Gestão de Pacientes": Users,
   "Comunicação": MessageSquare,
