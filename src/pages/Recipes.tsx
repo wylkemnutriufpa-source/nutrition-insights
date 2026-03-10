@@ -154,13 +154,14 @@ function NutritionistRecipes() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="font-display text-2xl font-bold">Receitas</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setAiDialogOpen(true)} className="gap-2"><Sparkles className="w-4 h-4" /> Gerar com IA</Button>
-          <Button onClick={openNew} className="gradient-primary gap-2"><Plus className="w-4 h-4" /> Nova Receita</Button>
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <h1 className="font-display text-2xl font-bold">Receitas</h1>
+          <div className="flex items-center gap-2">
+            <AIUsageBadge status={aiUsage} />
+            <Button variant="outline" onClick={() => setAiDialogOpen(true)} disabled={!aiUsage.allowed} className="gap-2"><Sparkles className="w-4 h-4" /> Gerar com IA</Button>
+            <Button onClick={openNew} className="gradient-primary gap-2"><Plus className="w-4 h-4" /> Nova Receita</Button>
+          </div>
         </div>
-      </div>
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
