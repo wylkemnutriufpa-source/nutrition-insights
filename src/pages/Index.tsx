@@ -21,6 +21,8 @@ import RiskPanel from "@/components/dashboard/RiskPanel";
 import HealthScoreRing, { calculateHealthScore } from "@/components/dashboard/HealthScoreRing";
 import AdherenceAnalytics from "@/components/dashboard/AdherenceAnalytics";
 import DashboardAdvancedCharts from "@/components/dashboard/DashboardAdvancedCharts";
+import AnalyticsDashboard from "@/components/dashboard/AnalyticsDashboard";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import SystemUsageCard from "@/components/dashboard/SystemUsageCard";
 import NutritionCopilot from "@/components/dashboard/NutritionCopilot";
