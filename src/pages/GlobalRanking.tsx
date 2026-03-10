@@ -58,28 +58,163 @@ const CATEGORY_CONFIG = [
   { key: "points_other", label: "Outros", icon: Sparkles, color: "#ec4899" },
 ] as const;
 
-// ─── Medal SVG ─────────────────────────────────────────────
+// ─── Premium Metallic Medal SVG ─────────────────────────────
 function MedalIcon({ position, size = 40 }: { position: number; size?: number }) {
-  const colors = [
-    { outer: "#FFD700", inner: "#FFC107", text: "#8B6914", ribbon: "#E53935", glow: "rgba(255,215,0,0.4)" },
-    { outer: "#C0C0C0", inner: "#B0BEC5", text: "#546E7A", ribbon: "#E53935", glow: "rgba(192,192,192,0.4)" },
-    { outer: "#CD7F32", inner: "#D4905C", text: "#6D4C2F", ribbon: "#E53935", glow: "rgba(205,127,50,0.4)" },
+  const configs = [
+    {
+      id: "gold", label: "1",
+      base: "#D4A017", light: "#FFE066", mid: "#FFD700", dark: "#B8860B", deepDark: "#8B6914",
+      shine: "#FFFACD", ribbon1: "#C62828", ribbon2: "#E53935", ribbonShine: "#EF5350",
+      glow: "rgba(255,215,0,0.55)", starColor: "#FFF8DC",
+    },
+    {
+      id: "silver", label: "2",
+      base: "#8E8E8E", light: "#E8E8E8", mid: "#C0C0C0", dark: "#808080", deepDark: "#505050",
+      shine: "#F5F5F5", ribbon1: "#1565C0", ribbon2: "#1E88E5", ribbonShine: "#42A5F5",
+      glow: "rgba(192,192,192,0.5)", starColor: "#F0F0F0",
+    },
+    {
+      id: "bronze", label: "3",
+      base: "#8B5E3C", light: "#E8A96C", mid: "#CD7F32", dark: "#8B5E3C", deepDark: "#5D3A1A",
+      shine: "#F0C8A0", ribbon1: "#2E7D32", ribbon2: "#43A047", ribbonShine: "#66BB6A",
+      glow: "rgba(205,127,50,0.5)", starColor: "#FAEBD7",
+    },
   ];
-  const c = colors[position] || colors[2];
-  const r = size / 2;
+  const c = configs[position] || configs[2];
+  const cx = size / 2;
+  const cy = size / 2;
+  const uid = `medal-${c.id}-${size}`;
+  const svgH = size + 16;
+
   return (
-    <svg width={size} height={size + 12} viewBox={`0 0 ${size} ${size + 12}`}>
-      <polygon points={`${r - 6},${size - 4} ${r - 12},${size + 10} ${r - 2},${size + 4}`} fill={c.ribbon} />
-      <polygon points={`${r + 6},${size - 4} ${r + 12},${size + 10} ${r + 2},${size + 4}`} fill={c.ribbon} />
-      <circle cx={r} cy={r} r={r} fill={c.glow} />
-      <circle cx={r} cy={r} r={r - 2} fill={c.outer} stroke={c.inner} strokeWidth="2" />
-      <circle cx={r} cy={r} r={r - 6} fill="none" stroke={c.inner} strokeWidth="1" opacity="0.5" />
-      <path d={`M${r - 8},${r + 6} Q${r - 12},${r} ${r - 8},${r - 6}`} fill="none" stroke={c.inner} strokeWidth="1.5" opacity="0.6" />
-      <path d={`M${r + 8},${r + 6} Q${r + 12},${r} ${r + 8},${r - 6}`} fill="none" stroke={c.inner} strokeWidth="1.5" opacity="0.6" />
-      <text x={r} y={r + 5} textAnchor="middle" fontSize={size * 0.38} fontWeight="bold" fill={c.text}>
-        {position + 1}
-      </text>
-    </svg>
+    <motion.div
+      className="relative inline-flex"
+      animate={{
+        filter: [
+          `drop-shadow(0 0 ${position === 0 ? 8 : 4}px ${c.glow})`,
+          `drop-shadow(0 0 ${position === 0 ? 14 : 8}px ${c.glow})`,
+          `drop-shadow(0 0 ${position === 0 ? 8 : 4}px ${c.glow})`,
+        ],
+      }}
+      transition={{ duration: position === 0 ? 2 : 3, repeat: Infinity, ease: "easeInOut" }}
+    >
+      <svg width={size} height={svgH} viewBox={`0 0 ${size} ${svgH}`}>
+        <defs>
+          {/* Metallic radial gradient */}
+          <radialGradient id={`${uid}-body`} cx="35%" cy="30%" r="65%">
+            <stop offset="0%" stopColor={c.shine} />
+            <stop offset="25%" stopColor={c.light} />
+            <stop offset="55%" stopColor={c.mid} />
+            <stop offset="80%" stopColor={c.dark} />
+            <stop offset="100%" stopColor={c.deepDark} />
+          </radialGradient>
+          {/* Ring metallic gradient */}
+          <linearGradient id={`${uid}-ring`} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={c.light} />
+            <stop offset="30%" stopColor={c.dark} />
+            <stop offset="60%" stopColor={c.light} />
+            <stop offset="100%" stopColor={c.dark} />
+          </linearGradient>
+          {/* Inner ring gradient */}
+          <linearGradient id={`${uid}-inner`} x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={c.dark} />
+            <stop offset="50%" stopColor={c.light} />
+            <stop offset="100%" stopColor={c.dark} />
+          </linearGradient>
+          {/* Ribbon gradient */}
+          <linearGradient id={`${uid}-ribbon`} x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={c.ribbonShine} />
+            <stop offset="40%" stopColor={c.ribbon2} />
+            <stop offset="100%" stopColor={c.ribbon1} />
+          </linearGradient>
+          {/* Specular highlight */}
+          <radialGradient id={`${uid}-spec`} cx="38%" cy="28%" r="30%">
+            <stop offset="0%" stopColor="white" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="white" stopOpacity="0" />
+          </radialGradient>
+          {/* Edge shadow */}
+          <radialGradient id={`${uid}-shadow`} cx="50%" cy="50%" r="50%">
+            <stop offset="80%" stopColor="transparent" />
+            <stop offset="100%" stopColor={c.deepDark} stopOpacity="0.4" />
+          </radialGradient>
+        </defs>
+
+        {/* Ribbons */}
+        <polygon points={`${cx - 5},${size - 6} ${cx - 14},${svgH} ${cx - 3},${size + 2}`} fill={`url(#${uid}-ribbon)`} />
+        <polygon points={`${cx + 5},${size - 6} ${cx + 14},${svgH} ${cx + 3},${size + 2}`} fill={`url(#${uid}-ribbon)`} />
+        {/* Ribbon highlights */}
+        <line x1={cx - 9} y1={size - 2} x2={cx - 12} y2={svgH - 2} stroke={c.ribbonShine} strokeWidth="0.6" opacity="0.5" />
+        <line x1={cx + 9} y1={size - 2} x2={cx + 12} y2={svgH - 2} stroke={c.ribbonShine} strokeWidth="0.6" opacity="0.5" />
+
+        {/* Outer metallic ring */}
+        <circle cx={cx} cy={cy} r={cx - 1} fill={`url(#${uid}-ring)`} />
+        {/* Main medal body */}
+        <circle cx={cx} cy={cy} r={cx - 3} fill={`url(#${uid}-body)`} />
+        {/* Edge shadow overlay */}
+        <circle cx={cx} cy={cy} r={cx - 3} fill={`url(#${uid}-shadow)`} />
+        {/* Inner decorative ring */}
+        <circle cx={cx} cy={cy} r={cx - 6} fill="none" stroke={`url(#${uid}-inner)`} strokeWidth="1.2" opacity="0.7" />
+        {/* Inner decorative ring 2 */}
+        <circle cx={cx} cy={cy} r={cx - 8} fill="none" stroke={c.light} strokeWidth="0.4" opacity="0.35" />
+
+        {/* Star decorations for gold */}
+        {position === 0 && (
+          <>
+            {[0, 72, 144, 216, 288].map((angle, i) => {
+              const rad = (angle * Math.PI) / 180;
+              const sr = cx - 7;
+              const sx = cx + Math.cos(rad) * sr;
+              const sy = cy + Math.sin(rad) * sr;
+              return (
+                <circle key={i} cx={sx} cy={sy} r={1} fill={c.starColor} opacity="0.6" />
+              );
+            })}
+          </>
+        )}
+
+        {/* Laurel leaf accents */}
+        {position <= 2 && (
+          <>
+            <path d={`M${cx - 9},${cy + 7} Q${cx - 14},${cy} ${cx - 9},${cy - 7}`} fill="none" stroke={c.light} strokeWidth="1" opacity="0.4" />
+            <path d={`M${cx + 9},${cy + 7} Q${cx + 14},${cy} ${cx + 9},${cy - 7}`} fill="none" stroke={c.light} strokeWidth="1" opacity="0.4" />
+          </>
+        )}
+
+        {/* Specular highlight */}
+        <circle cx={cx} cy={cy} r={cx - 3} fill={`url(#${uid}-spec)`} />
+        {/* Small extra glint */}
+        <ellipse cx={cx - size * 0.12} cy={cy - size * 0.15} rx={size * 0.06} ry={size * 0.03} fill="white" opacity="0.45" transform={`rotate(-25 ${cx - size * 0.12} ${cy - size * 0.15})`} />
+
+        {/* Number */}
+        <text x={cx} y={cy + size * 0.13} textAnchor="middle" fontSize={size * 0.36} fontWeight="800" fill={c.deepDark} style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+          {c.label}
+        </text>
+        {/* Number highlight layer */}
+        <text x={cx} y={cy + size * 0.13} textAnchor="middle" fontSize={size * 0.36} fontWeight="800" fill={c.light} opacity="0.25" dy="-0.5" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+          {c.label}
+        </text>
+      </svg>
+
+      {/* Animated rotating shine overlay */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none overflow-hidden rounded-full"
+        style={{ width: size, height: size }}
+      >
+        <motion.div
+          className="absolute"
+          style={{
+            width: size * 0.3,
+            height: size * 1.5,
+            background: `linear-gradient(90deg, transparent, ${c.shine}40, transparent)`,
+            top: -size * 0.25,
+            left: -size * 0.3,
+            transform: "rotate(25deg)",
+          }}
+          animate={{ left: [-size * 0.3, size * 1.3] }}
+          transition={{ duration: position === 0 ? 2.5 : 3.5, repeat: Infinity, repeatDelay: position === 0 ? 1.5 : 3, ease: "easeInOut" }}
+        />
+      </motion.div>
+    </motion.div>
   );
 }
 
