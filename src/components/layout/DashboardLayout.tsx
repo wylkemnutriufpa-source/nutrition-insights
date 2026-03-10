@@ -42,6 +42,7 @@ const nutritionistLinks = [
   { to: "/supplements", icon: Pill, label: "Suplementação" },
   { to: "/global-tips", icon: Lightbulb, label: "Dicas" },
   { to: "/professional-guide", icon: Compass, label: "Guia do Profissional" },
+  { to: "/user-guide", icon: BookOpen, label: "Guia do Paciente" },
   { to: "/feedbacks", icon: MessageSquare, label: "Feedbacks" },
   { to: "/branding", icon: Palette, label: "Branding" },
 ];
@@ -88,6 +89,7 @@ const adminLinks = [
   { to: "/branding", icon: Palette, label: "Branding" },
   { to: "/global-tips", icon: Lightbulb, label: "Dicas" },
   { to: "/professional-guide", icon: Compass, label: "Guia do Profissional" },
+  { to: "/user-guide", icon: BookOpen, label: "Guia do Paciente" },
   { to: "/admin/pricing", icon: DollarSign, label: "Planos & Preços" },
   { to: "/admin/patient-features", icon: Crown, label: "Features Paciente" },
 ];
