@@ -211,54 +211,60 @@ export default function AdminFeatureControl() {
             <div className="lg:col-span-3 space-y-4">
               {selectedNutData && (
                 <>
-                  {/* Stats bar */}
-                  <div className="grid grid-cols-3 gap-3">
-                    <Card className="glass shadow-card">
-                      <CardContent className="p-4 text-center">
-                        <p className="text-2xl font-bold text-primary">{enabledCount}</p>
-                        <p className="text-xs text-muted-foreground">Ativas</p>
-                      </CardContent>
-                    </Card>
-                    <Card className="glass shadow-card">
-                      <CardContent className="p-4 text-center">
-                        <p className="text-2xl font-bold text-destructive">{totalCount - enabledCount}</p>
-                        <p className="text-xs text-muted-foreground">Desativadas</p>
-                      </CardContent>
-                    </Card>
-                    <Card className="glass shadow-card">
-                      <CardContent className="p-4 text-center">
-                        <p className="text-2xl font-bold text-amber-500">{Object.keys(categories).length}</p>
-                        <p className="text-xs text-muted-foreground">Categorias</p>
-                      </CardContent>
-                    </Card>
-                  </div>
+                   {/* Stats bar */}
+                   <div className="grid grid-cols-4 gap-3">
+                     <Card className="glass shadow-card">
+                       <CardContent className="p-4 text-center">
+                         <p className="text-2xl font-bold text-primary">{enabledCount}</p>
+                         <p className="text-xs text-muted-foreground">Ativas</p>
+                       </CardContent>
+                     </Card>
+                     <Card className="glass shadow-card">
+                       <CardContent className="p-4 text-center">
+                         <p className="text-2xl font-bold text-destructive">{totalCount - enabledCount - comingSoonCount}</p>
+                         <p className="text-xs text-muted-foreground">Premium</p>
+                       </CardContent>
+                     </Card>
+                     <Card className="glass shadow-card">
+                       <CardContent className="p-4 text-center">
+                         <p className="text-2xl font-bold text-info">{comingSoonCount}</p>
+                         <p className="text-xs text-muted-foreground">Em Breve</p>
+                       </CardContent>
+                     </Card>
+                     <Card className="glass shadow-card">
+                       <CardContent className="p-4 text-center">
+                         <p className="text-2xl font-bold text-warning">{Object.keys(categories).length}</p>
+                         <p className="text-xs text-muted-foreground">Categorias</p>
+                       </CardContent>
+                     </Card>
+                   </div>
 
-                  {/* Search and bulk actions */}
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Buscar feature..."
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        className="pl-9"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => toggleAllForNut(selectedNutData.user_id, true)}
-                        className="px-3 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
-                      >
-                        Ativar Todas
-                      </button>
-                      <button
-                        onClick={() => toggleAllForNut(selectedNutData.user_id, false)}
-                        className="px-3 py-2 rounded-lg bg-destructive/10 text-destructive text-sm font-medium hover:bg-destructive/20 transition-colors"
-                      >
-                        Desativar Todas
-                      </button>
-                    </div>
-                  </div>
+                   {/* Search and bulk actions */}
+                   <div className="flex flex-col sm:flex-row gap-3">
+                     <div className="relative flex-1">
+                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                       <Input
+                         placeholder="Buscar feature..."
+                         value={search}
+                         onChange={e => setSearch(e.target.value)}
+                         className="pl-9"
+                       />
+                     </div>
+                     <div className="flex gap-2">
+                       <button
+                         onClick={() => setAllForNut(selectedNutData.user_id, "enabled")}
+                         className="px-3 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
+                       >
+                         Ativar Todas
+                       </button>
+                       <button
+                         onClick={() => setAllForNut(selectedNutData.user_id, "disabled")}
+                         className="px-3 py-2 rounded-lg bg-destructive/10 text-destructive text-sm font-medium hover:bg-destructive/20 transition-colors"
+                       >
+                         Desativar Todas
+                       </button>
+                     </div>
+                   </div>
 
                   {/* Feature categories */}
                   {Object.entries(filteredCategories).map(([category, features]) => {
