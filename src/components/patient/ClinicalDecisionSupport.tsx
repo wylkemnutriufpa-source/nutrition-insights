@@ -110,7 +110,7 @@ export default function ClinicalDecisionSupport({ patientId, nutritionistId }: P
       };
 
       const { data, error } = await supabase.functions.invoke("clinical-decision-support", {
-        body: { patientData },
+        body: { patientData, useCopilot },
       });
 
       if (error) throw error;
