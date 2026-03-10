@@ -236,8 +236,39 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
             <span className={`text-xs px-2 py-0.5 rounded-full ${
               p.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
             }`}>
-              {p.status === "active" ? "Ativo" : "Inativo"}
+              {p.status === "active" 
+                ? p.expires_at 
+                  ? (() => {
+                      const exp = new Date(p.expires_at);
+                      const now = new Date();
+                      const diffDays = Math.ceil((exp.getTime() - now.getTime()) / 86400000);
+                      const formatted = exp.toLocaleDateString("pt-BR");
+                      if (diffDays < 0) return `Vencido ${formatted}`;
+                      if (diffDays <= 7) return `Ativo até ${formatted} ⚠️`;
+                      return `Ativo até ${formatted}`;
+                    })()
+                  : "Ativo"
+                : "Inativo"
+              }
             </span>
+            {p.status === "active" && p.expires_at && (() => {
+              const diffDays = Math.ceil((new Date(p.expires_at).getTime() - Date.now()) / 86400000);
+              if (diffDays < 0) return <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive font-medium">Vencido</span>;
+              if (diffDays <= 7) return <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-warning/10 text-warning font-medium">{diffDays}d restantes</span>;
+              return null;
+            })()}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                const current = p.expires_at || "";
+                const input = prompt("Data de vencimento (AAAA-MM-DD):", current);
+                if (input === null) return;
+                onUpdateExpiry(p.id, input || null);
+              }}
+              className="text-muted-foreground hover:text-primary p-0.5" title="Definir vencimento"
+            >
+              <CalendarDays className="w-3 h-3" />
+            </button>
             {hasPrograms && (
               <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary flex items-center gap-1">
                 <Target className="w-3 h-3" /> {p.programs!.length} programa{p.programs!.length > 1 ? "s" : ""}
