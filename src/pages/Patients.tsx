@@ -554,7 +554,8 @@ export default function Patients() {
   const [layout, setLayout] = useState<"grid" | "list">("grid");
   const [prestigeFilter, setPrestigeFilter] = useState<string>("all");
   const [prestigePlansList, setPrestigePlansList] = useState<PrestigePlan[]>([]);
-
+  const { onlineUsers } = useOnlinePatients();
+  const onlineSet = useMemo(() => new Set(onlineUsers.map(u => u.user_id)), [onlineUsers]);
   const fetchPatients = async () => {
     if (!user) return;
     const { data } = await supabase
