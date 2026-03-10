@@ -290,16 +290,25 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <SidebarContent {...sidebarProps} collapsed={false} onLinkClick={() => setMobileOpen(false)} />
               </SheetContent>
             </Sheet>
-            <div className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center shadow-glow">
                 <Leaf className="w-4 h-4 text-primary-foreground" />
               </div>
               <span className="font-display font-bold text-sm">
                 Fit<span className="text-gradient">Journey</span>
               </span>
-            </div>
+            </Link>
           </div>
-          <NotificationBell />
+          <div className="flex items-center gap-1">
+            {location.pathname !== "/" && (
+              <Link to="/">
+                <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <LayoutDashboard className="w-4 h-4" />
+                </Button>
+              </Link>
+            )}
+            <NotificationBell />
+          </div>
         </div>
 
         {/* Main content */}
@@ -333,7 +342,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           className="fixed top-0 right-0 z-40 p-3 transition-[left] duration-200"
           style={{ left: collapsed ? 72 : 260 }}
         >
-          <div className="flex justify-end">
+          <div className="flex items-center justify-end gap-1">
+            {location.pathname !== "/" && (
+              <Link to="/">
+                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span className="text-xs hidden sm:inline">Dashboard</span>
+                </Button>
+              </Link>
+            )}
             <NotificationBell />
           </div>
         </div>
