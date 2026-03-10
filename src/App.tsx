@@ -69,6 +69,8 @@ import PublicProgram from "./pages/PublicProgram";
 import GrowthDashboard from "./pages/GrowthDashboard";
 import MyPublicProfile from "./pages/MyPublicProfile";
 import MyReferrals from "./pages/MyReferrals";
+import GlobalRanking from "./pages/GlobalRanking";
+import AdminPrestige from "./pages/AdminPrestige";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {

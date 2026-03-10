@@ -18,6 +18,7 @@ interface RankEntry {
   crown_enabled: boolean | null;
   badge_icon: string | null;
   rank_position: number | null;
+  ranking_highlight?: boolean;
 }
 
 export default function GlobalRanking() {
