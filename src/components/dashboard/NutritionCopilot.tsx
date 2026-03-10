@@ -498,6 +498,11 @@ function AIFeed({ patients, insights }: { patients: CopilotPatient[]; insights: 
     const lostStreak = patients.filter(p => p.risks.includes("Perdeu streak"));
     if (lostStreak.length > 0) items.push({ text: `${lostStreak.length} paciente(s) perderam streak de consistência`, icon: Flame, time: "Recente", color: "text-warning" });
 
+    // Churn feed events
+    const churnResults = calculateChurnRisk(patients);
+    const churnHigh = churnResults.filter(r => r.level === "high");
+    if (churnHigh.length > 0) items.push({ text: `${churnHigh.length} paciente(s) em alto risco de abandono detectado`, icon: AlertTriangle, time: "Agora", color: "text-destructive" });
+
     insights.forEach(ins => {
       items.push({ text: ins.title + (ins.affected_count ? ` (${ins.affected_count} pacientes)` : ""), icon: Brain, time: "IA", color: "text-primary" });
     });
