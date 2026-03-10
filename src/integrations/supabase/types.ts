@@ -632,6 +632,7 @@ export type Database = {
       }
       meal_item_completions: {
         Row: {
+          adherence_status: string
           completed: boolean
           completed_at: string | null
           created_at: string
@@ -642,6 +643,7 @@ export type Database = {
           patient_id: string
         }
         Insert: {
+          adherence_status?: string
           completed?: boolean
           completed_at?: string | null
           created_at?: string
@@ -652,6 +654,7 @@ export type Database = {
           patient_id: string
         }
         Update: {
+          adherence_status?: string
           completed?: boolean
           completed_at?: string | null
           created_at?: string
