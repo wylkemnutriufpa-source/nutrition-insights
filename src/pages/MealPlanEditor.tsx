@@ -17,6 +17,7 @@ import {
   Bookmark, BookmarkCheck, FolderDown, FolderUp, BookOpen
 } from "lucide-react";
 import PlanScheduler from "@/components/plans/PlanScheduler";
+import DocumentUpload from "@/components/common/DocumentUpload";
 import FoodAutocomplete, { type FoodItem } from "@/components/meals/FoodAutocomplete";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
