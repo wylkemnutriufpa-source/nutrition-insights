@@ -246,9 +246,14 @@ export default function AdminPricing() {
               <h2 className="font-display font-semibold flex items-center gap-2">
                 <Users className="w-5 h-5" /> Planos de Prestígio (Pacientes)
               </h2>
-              <Badge variant="outline" className="text-xs">
-                {prestigePlans.length} planos
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">
+                  {prestigePlans.length} planos
+                </Badge>
+                <Button variant="outline" size="sm" onClick={addNewPrestigePlan} className="gap-1.5">
+                  <Plus className="w-4 h-4" /> Novo Plano
+                </Button>
+              </div>
             </div>
 
             {prestigePlans.map((plan) => (
