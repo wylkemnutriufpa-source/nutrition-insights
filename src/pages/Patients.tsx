@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PrestigeBadge from "@/components/prestige/PrestigeBadge";
+import { useOnlinePatients } from "@/hooks/useOnlinePatients";
 import type { PrestigePlan } from "@/hooks/usePrestige";
 
 interface PatientInfo {
@@ -232,7 +233,7 @@ function AssignProgramDialog({
   );
 }
 
-function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, allPrestigePlans = [] }: {
+function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, allPrestigePlans = [], isOnline = false }: {
   p: PatientInfo; idx: number; navigate: any;
   toggleStatus: (id: string, status: string) => void;
   setAssignTarget: (p: PatientInfo) => void;
@@ -240,6 +241,7 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
   removeFromProgram: (patientId: string, programId: string, programTitle: string) => void;
   onUpdateExpiry: (id: string, date: string | null) => void;
   allPrestigePlans?: PrestigePlan[];
+  isOnline?: boolean;
 }) {
   const isInactive = p.status !== "active";
   const score = p.priorityScore || 0;
@@ -262,10 +264,13 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
         </div>
       )}
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+        <div className="relative w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
           <span className="text-lg font-bold text-primary">
             {displayName[0].toUpperCase()}
           </span>
+          {isOnline && (
+            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-success border-2 border-card animate-pulse" title="Online agora" />
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
@@ -465,7 +470,7 @@ function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssign
   );
 }
 
-function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, search, emptyMessage, layout, allPrestigePlans = [] }: {
+function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, search, emptyMessage, layout, allPrestigePlans = [], onlineSet }: {
   patients: PatientInfo[]; navigate: any;
   toggleStatus: (id: string, status: string) => void;
   setAssignTarget: (p: PatientInfo) => void;
@@ -476,8 +481,18 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
   emptyMessage: string;
   layout: "grid" | "list";
   allPrestigePlans?: PrestigePlan[];
+  onlineSet?: Set<string>;
 }) {
-  if (patients.length === 0) {
+  // Sort online patients first
+  const sorted = onlineSet && onlineSet.size > 0
+    ? [...patients].sort((a, b) => {
+        const aOn = onlineSet.has(a.patient_id) ? 1 : 0;
+        const bOn = onlineSet.has(b.patient_id) ? 1 : 0;
+        return bOn - aOn;
+      })
+    : patients;
+
+  if (sorted.length === 0) {
     return (
       <div className="glass rounded-xl p-12 text-center">
         <Users className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
@@ -490,7 +505,7 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
   if (layout === "list") {
     return (
       <div className="space-y-2">
-        {patients.map((p, idx) => (
+        {sorted.map((p, idx) => (
           <PatientRow key={p.id} p={p} idx={idx} navigate={navigate}
             toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
             setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
@@ -502,11 +517,12 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {patients.map((p, idx) => (
+      {sorted.map((p, idx) => (
         <PatientCard key={p.id} p={p} idx={idx} navigate={navigate}
           toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
           setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
-          onUpdateExpiry={onUpdateExpiry} allPrestigePlans={allPrestigePlans} />
+          onUpdateExpiry={onUpdateExpiry} allPrestigePlans={allPrestigePlans}
+          isOnline={onlineSet?.has(p.patient_id)} />
       ))}
     </div>
   );
@@ -538,7 +554,8 @@ export default function Patients() {
   const [layout, setLayout] = useState<"grid" | "list">("grid");
   const [prestigeFilter, setPrestigeFilter] = useState<string>("all");
   const [prestigePlansList, setPrestigePlansList] = useState<PrestigePlan[]>([]);
-
+  const { onlineUsers } = useOnlinePatients();
+  const onlineSet = useMemo(() => new Set(onlineUsers.map(u => u.user_id)), [onlineUsers]);
   const fetchPatients = async () => {
     if (!user) return;
     const { data } = await supabase
@@ -963,7 +980,7 @@ export default function Patients() {
                 toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
                 setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
                 onUpdateExpiry={updateExpiry}
-                search={search} emptyMessage="Nenhum paciente ativo" layout={layout} allPrestigePlans={prestigePlansList} />
+                search={search} emptyMessage="Nenhum paciente ativo" layout={layout} allPrestigePlans={prestigePlansList} onlineSet={onlineSet} />
             </TabsContent>
 
             <TabsContent value="inativos">
@@ -971,7 +988,7 @@ export default function Patients() {
                 toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
                 setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
                 onUpdateExpiry={updateExpiry}
-                search={search} emptyMessage="Nenhum paciente inativo" layout={layout} allPrestigePlans={prestigePlansList} />
+                search={search} emptyMessage="Nenhum paciente inativo" layout={layout} allPrestigePlans={prestigePlansList} onlineSet={onlineSet} />
             </TabsContent>
 
             {programs.map(prog => (
@@ -980,7 +997,7 @@ export default function Patients() {
                   toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
                   setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
                   onUpdateExpiry={updateExpiry}
-                  search={search} emptyMessage={`Nenhum paciente no programa "${prog.title}"`} layout={layout} allPrestigePlans={prestigePlansList} />
+                  search={search} emptyMessage={`Nenhum paciente no programa "${prog.title}"`} layout={layout} allPrestigePlans={prestigePlansList} onlineSet={onlineSet} />
               </TabsContent>
             ))}
           </Tabs>
