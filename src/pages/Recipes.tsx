@@ -14,6 +14,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { ChefHat, Plus, Pencil, Trash2, Clock, Users, Heart, Sparkles, Search, Share2 } from "lucide-react";
+import { useAIUsage } from "@/hooks/useAIUsage";
+import AIUsageBadge from "@/components/common/AIUsageBadge";
 
 interface Recipe {
   id: string;
