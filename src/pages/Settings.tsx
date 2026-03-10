@@ -130,6 +130,55 @@ export default function Settings() {
           </CardContent>
         </Card>
 
+        {/* Ranking Privacy */}
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle className="font-display flex items-center gap-2">
+              <Eye className="w-5 h-5 text-primary" /> Privacidade do Ranking
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30">
+              <div>
+                <p className="font-medium text-sm">Aparecer no ranking público</p>
+                <p className="text-xs text-muted-foreground">Mostrar seu nome completo no ranking global</p>
+              </div>
+              <Switch
+                checked={showInRanking}
+                onCheckedChange={async (v) => {
+                  setShowInRanking(v);
+                  await supabase.from("profiles").update({ show_in_ranking: v }).eq("user_id", user!.id);
+                  toast.success(v ? "Visível no ranking!" : "Oculto do ranking público");
+                }}
+              />
+            </div>
+            <div>
+              <Label>Apelido no ranking (quando nome oculto)</Label>
+              <div className="flex gap-2 mt-1">
+                <Input
+                  value={rankingNickname}
+                  onChange={(e) => setRankingNickname(e.target.value)}
+                  placeholder="Ex: FitWarrior123"
+                  maxLength={20}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    await supabase.from("profiles").update({ ranking_nickname: rankingNickname }).eq("user_id", user!.id);
+                    toast.success("Apelido atualizado!");
+                  }}
+                >
+                  <Save className="w-4 h-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Se desativado, seu nome aparecerá como "{fullName ? fullName[0] + '***' : 'P***'}"
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Change Password */}
         <Card className="shadow-card">
           <CardHeader>

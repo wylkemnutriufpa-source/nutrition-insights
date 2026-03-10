@@ -10,6 +10,7 @@ import {
   Rocket, CalendarDays, Bell, TrendingUp, CheckCircle2,
   UtensilsCrossed, Trophy, Target
 } from "lucide-react";
+import RankingWidget from "@/components/prestige/RankingWidget";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
