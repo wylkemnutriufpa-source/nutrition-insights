@@ -24,10 +24,11 @@ import PatientCheckinsTab from "@/components/patient/PatientCheckinsTab";
 import PatientChecklistView from "@/components/patient/PatientChecklistView";
 import SmartAlertsBanner from "@/components/patient/SmartAlertsBanner";
 import PlanScheduler from "@/components/plans/PlanScheduler";
+import DocumentUpload from "@/components/common/DocumentUpload";
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
-  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat
+  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload
 } from "lucide-react";
 
 interface PatientProfile {
@@ -90,6 +91,8 @@ export default function PatientDetail() {
   const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
   const [recipes, setRecipes] = useState<any[]>([]);
   const [checklistStats, setChecklistStats] = useState({ total: 0, completed: 0 });
+  const [mealPlanDocs, setMealPlanDocs] = useState<any[]>([]);
+  const [assessmentDocs, setAssessmentDocs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Activation dialog
@@ -162,6 +165,15 @@ export default function PatientDetail() {
     setPricingPlans(plansRes.data || []);
     setMealPlans(mealPlansRes.data || []);
     setRecipes(recipesRes.data || []);
+
+    // Fetch documents for this patient
+    const { data: docs } = await supabase.from("patient_documents")
+      .select("*")
+      .eq("patient_id", patientId!)
+      .eq("nutritionist_id", user!.id)
+      .order("created_at", { ascending: false });
+    setMealPlanDocs((docs || []).filter((d: any) => d.document_type === "meal_plan"));
+    setAssessmentDocs((docs || []).filter((d: any) => d.document_type === "assessment"));
 
     // Pre-fill plan form if subscription exists
     if (subRes.data?.[0]) {
@@ -557,6 +569,18 @@ export default function PatientDetail() {
                       <h3 className="font-display text-lg font-semibold mb-4">Comparativo entre Consultas</h3>
                       <ConsultationCompare patientId={patientId!} />
                     </div>
+                    <div className="border-t border-border pt-6">
+                      <h3 className="font-display text-lg font-semibold mb-4 flex items-center gap-2">
+                        <Upload className="w-5 h-5 text-accent" /> Documentos da Avaliação
+                      </h3>
+                      <DocumentUpload
+                        patientId={patientId!}
+                        nutritionistId={user!.id}
+                        documentType="assessment"
+                        documents={assessmentDocs}
+                        onUploadComplete={fetchAll}
+                      />
+                    </div>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -881,6 +905,18 @@ export default function PatientDetail() {
                         ))}
                       </div>
                     )}
+                    <div className="border-t border-border pt-6">
+                      <h3 className="font-display text-lg font-semibold mb-4 flex items-center gap-2">
+                        <Upload className="w-5 h-5 text-success" /> Documentos do Plano Alimentar
+                      </h3>
+                      <DocumentUpload
+                        patientId={patientId!}
+                        nutritionistId={user!.id}
+                        documentType="meal_plan"
+                        documents={mealPlanDocs}
+                        onUploadComplete={fetchAll}
+                      />
+                    </div>
                   </div>
                 </DialogContent>
               </Dialog>
