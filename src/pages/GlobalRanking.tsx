@@ -243,8 +243,24 @@ function CategoryBar({ label, icon: Icon, points, maxPoints, color }: {
   );
 }
 
-// ─── Stacked Bar Chart (Top 10) ────────────────────────────
+// ─── Metallic color configs for bars ───────────────────────
+const METALLIC_COLORS = {
+  Checklist: { base: "#22c55e", light: "#6ee7a0", dark: "#15803d", shine: "#bbf7d0" },
+  Refeições: { base: "#3b82f6", light: "#93c5fd", dark: "#1d4ed8", shine: "#dbeafe" },
+  Treino: { base: "#f59e0b", light: "#fcd34d", dark: "#b45309", shine: "#fef3c7" },
+  "Check-in": { base: "#8b5cf6", light: "#c4b5fd", dark: "#6d28d9", shine: "#ede9fe" },
+  Outros: { base: "#ec4899", light: "#f9a8d4", dark: "#be185d", shine: "#fce7f3" },
+} as const;
+
+// ─── Animated Stacked Bar Chart (Top 10) ───────────────────
 function TopPlayersChart({ ranking }: { ranking: RankEntry[] }) {
+  const [animKey, setAnimKey] = useState(0);
+  const [hoveredBar, setHoveredBar] = useState<number | null>(null);
+
+  useEffect(() => {
+    setAnimKey((k) => k + 1);
+  }, [ranking]);
+
   const data = ranking.slice(0, 10).map((r) => ({
     name: r.display_name.length > 10 ? r.display_name.slice(0, 10) + "…" : r.display_name,
     Checklist: r.points_checklist,
@@ -254,25 +270,77 @@ function TopPlayersChart({ ranking }: { ranking: RankEntry[] }) {
     Outros: r.points_other,
   }));
   if (data.length === 0) return null;
+
+  const barKeys = ["Checklist", "Refeições", "Treino", "Check-in", "Outros"] as const;
+
   return (
-    <Card className="border-border/50 bg-card/80 backdrop-blur">
-      <CardHeader className="pb-2">
+    <Card className="border-border/50 bg-card/80 backdrop-blur overflow-hidden relative">
+      {/* Subtle metallic shimmer overlay */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: "linear-gradient(135deg, transparent 30%, hsla(0,0%,100%,0.03) 50%, transparent 70%)",
+        }}
+        animate={{ x: ["-100%", "100%"] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", repeatDelay: 2 }}
+      />
+      <CardHeader className="pb-2 relative z-10">
         <CardTitle className="text-sm flex items-center gap-2">
-          <BarChart3 className="w-4 h-4 text-primary" /> Distribuição de Pontos — Top 10
+          <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}>
+            <BarChart3 className="w-4 h-4 text-primary" />
+          </motion.div>
+          Distribuição de Pontos — Top 10
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-0">
-        <ResponsiveContainer width="100%" height={220}>
-          <BarChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+      <CardContent className="pt-0 relative z-10">
+        <ResponsiveContainer width="100%" height={240}>
+          <BarChart
+            data={data}
+            margin={{ top: 5, right: 5, left: -20, bottom: 5 }}
+            onMouseMove={(state: any) => {
+              if (state?.activeTooltipIndex !== undefined) setHoveredBar(state.activeTooltipIndex);
+            }}
+            onMouseLeave={() => setHoveredBar(null)}
+          >
+            <defs>
+              {barKeys.map((key) => {
+                const mc = METALLIC_COLORS[key];
+                return (
+                  <linearGradient key={key} id={`metallic-${key}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={mc.shine} stopOpacity={0.9} />
+                    <stop offset="15%" stopColor={mc.light} stopOpacity={0.85} />
+                    <stop offset="50%" stopColor={mc.base} />
+                    <stop offset="85%" stopColor={mc.dark} stopOpacity={0.9} />
+                    <stop offset="100%" stopColor={mc.dark} />
+                  </linearGradient>
+                );
+              })}
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
             <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
             <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
             <Legend wrapperStyle={{ fontSize: 10 }} />
-            <Bar dataKey="Checklist" stackId="a" fill="#22c55e" radius={[0, 0, 0, 0]} />
-            <Bar dataKey="Refeições" stackId="a" fill="#3b82f6" />
-            <Bar dataKey="Treino" stackId="a" fill="#f59e0b" />
-            <Bar dataKey="Check-in" stackId="a" fill="#8b5cf6" />
-            <Bar dataKey="Outros" stackId="a" fill="#ec4899" radius={[3, 3, 0, 0]} />
+            {barKeys.map((key, ki) => (
+              <Bar
+                key={`${key}-${animKey}`}
+                dataKey={key}
+                stackId="a"
+                fill={`url(#metallic-${key})`}
+                radius={ki === barKeys.length - 1 ? [3, 3, 0, 0] : [0, 0, 0, 0]}
+                animationBegin={ki * 150}
+                animationDuration={800}
+                animationEasing="ease-out"
+              >
+                {data.map((_, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fillOpacity={hoveredBar !== null && hoveredBar !== index ? 0.4 : 1}
+                    stroke={hoveredBar === index ? METALLIC_COLORS[key].shine : "transparent"}
+                    strokeWidth={hoveredBar === index ? 1 : 0}
+                  />
+                ))}
+              </Bar>
+            ))}
           </BarChart>
         </ResponsiveContainer>
       </CardContent>
