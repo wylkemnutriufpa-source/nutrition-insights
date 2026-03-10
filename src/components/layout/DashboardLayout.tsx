@@ -75,7 +75,6 @@ const adminLinks = [
   { to: "/reports", icon: BarChart3, label: "Relatórios" },
   { to: "/food-database", icon: Apple, label: "Alimentos" },
   { to: "/branding", icon: Palette, label: "Branding" },
-  { to: "/settings", icon: Settings, label: "Configurações" },
 ];
 
 function SidebarContent({
