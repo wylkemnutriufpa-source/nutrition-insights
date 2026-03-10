@@ -171,7 +171,7 @@ const App = () => (
               <Route path="/biquini-branco" element={<BiquiniBrancoLanding />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+              <Route path="/" element={<RootRoute />} />
               
               {/* Shared routes (both roles) */}
               <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
