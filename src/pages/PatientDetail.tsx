@@ -30,8 +30,11 @@ import ClinicalDecisionSupport from "@/components/patient/ClinicalDecisionSuppor
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
-  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope
+  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope, Crown
 } from "lucide-react";
+import PrestigeBadge from "@/components/prestige/PrestigeBadge";
+import PrestigeName from "@/components/prestige/PrestigeName";
+import type { PrestigePlan } from "@/hooks/usePrestige";
 
 interface PatientProfile {
   full_name: string;
