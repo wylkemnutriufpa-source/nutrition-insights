@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { calculateChurnRisk } from "./ChurnRiskPanel";
 import {
   Brain, AlertTriangle, TrendingDown, Clock, Users, Calendar,
   ArrowRight, MessageSquare, UserCheck, FileText, Shield, Zap,
@@ -200,6 +201,14 @@ function AIRecommendations({ patients, insights }: { patients: CopilotPatient[];
   const recommendations = useMemo(() => {
     const recs: { text: string; icon: any; action: string; route: string }[] = [];
 
+    // Churn-aware recommendations
+    const churnResults = calculateChurnRisk(patients);
+    const highChurn = churnResults.filter(r => r.level === "high");
+    const modChurn = churnResults.filter(r => r.level === "moderate");
+
+    if (highChurn.length > 0) recs.push({ text: `${highChurn.length} paciente(s) em alto risco de abandono — enviar mensagem motivacional e agendar consulta urgente`, icon: AlertTriangle, action: "Ver risco", route: "/patients" });
+    if (modChurn.length > 0) recs.push({ text: `${modChurn.length} paciente(s) com risco moderado de abandono — revisar plano e reforçar engajamento`, icon: TrendingDown, action: "Ver pacientes", route: "/patients" });
+
     const lowAdherence = patients.filter(p => (p.checklistCompletion ?? p.score) < 40);
     const inactive = patients.filter(p => {
       if (!p.lastActivity) return true;
@@ -219,7 +228,7 @@ function AIRecommendations({ patients, insights }: { patients: CopilotPatient[];
 
     if (recs.length === 0) recs.push({ text: "Todos os pacientes estão com boa evolução. Continue o acompanhamento!", icon: Target, action: "Dashboard", route: "/" });
 
-    return recs.slice(0, 5);
+    return recs.slice(0, 6);
   }, [patients, insights]);
 
   const navigate = useNavigate();
@@ -250,17 +259,18 @@ function SmartMetrics({ patients, avgAdherence, appointmentsToday, pendingChecki
   patients: CopilotPatient[]; avgAdherence: number; appointmentsToday: number; pendingCheckins: number;
 }) {
   const highRisk = patients.filter(p => p.score < 30).length;
+  const churnResults = useMemo(() => calculateChurnRisk(patients), [patients]);
+  const churnHigh = churnResults.filter(r => r.level === "high").length;
   const inactive = patients.filter(p => {
     if (!p.lastActivity) return true;
     return Math.floor((Date.now() - new Date(p.lastActivity).getTime()) / 86400000) >= 3;
   }).length;
-  const needFollowUp = patients.filter(p => p.score < 50).length;
 
   const metrics = [
     { label: "Alto Risco", value: highRisk, color: "text-destructive", bg: "bg-destructive/10" },
+    { label: "Risco Abandono", value: churnHigh, color: churnHigh > 0 ? "text-destructive" : "text-success", bg: churnHigh > 0 ? "bg-destructive/10" : "bg-success/10" },
     { label: "Inativos", value: inactive, color: "text-warning", bg: "bg-warning/10" },
     { label: "Adesão Média", value: `${avgAdherence}%`, color: avgAdherence >= 60 ? "text-success" : "text-warning", bg: avgAdherence >= 60 ? "bg-success/10" : "bg-warning/10" },
-    { label: "Follow-up", value: needFollowUp, color: "text-info", bg: "bg-info/10" },
     { label: "Consultas Hoje", value: appointmentsToday, color: "text-primary", bg: "bg-primary/10" },
   ];
 
@@ -487,6 +497,11 @@ function AIFeed({ patients, insights }: { patients: CopilotPatient[]; insights: 
 
     const lostStreak = patients.filter(p => p.risks.includes("Perdeu streak"));
     if (lostStreak.length > 0) items.push({ text: `${lostStreak.length} paciente(s) perderam streak de consistência`, icon: Flame, time: "Recente", color: "text-warning" });
+
+    // Churn feed events
+    const churnResults = calculateChurnRisk(patients);
+    const churnHigh = churnResults.filter(r => r.level === "high");
+    if (churnHigh.length > 0) items.push({ text: `${churnHigh.length} paciente(s) em alto risco de abandono detectado`, icon: AlertTriangle, time: "Agora", color: "text-destructive" });
 
     insights.forEach(ins => {
       items.push({ text: ins.title + (ins.affected_count ? ` (${ins.affected_count} pacientes)` : ""), icon: Brain, time: "IA", color: "text-primary" });
