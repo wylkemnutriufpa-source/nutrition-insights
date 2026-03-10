@@ -4,10 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Brain, AlertTriangle, TrendingDown, Zap, RefreshCw,
   Loader2, Flame, Target, Shield, Activity, Heart,
-  ChevronDown, ChevronUp, Stethoscope, Lightbulb, FileText
+  ChevronDown, ChevronUp, Stethoscope, Lightbulb, FileText, Sparkles
 } from "lucide-react";
 import { toast } from "sonner";
 
