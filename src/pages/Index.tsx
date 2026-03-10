@@ -24,6 +24,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import SystemUsageCard from "@/components/dashboard/SystemUsageCard";
 import NutritionCopilot from "@/components/dashboard/NutritionCopilot";
 import ChurnRiskPanel from "@/components/dashboard/ChurnRiskPanel";
+import PatientProgressSimulation from "@/components/dashboard/PatientProgressSimulation";
 import ExpandablePanel from "@/components/common/ExpandablePanel";
 import {
   UtensilsCrossed, Users, TrendingUp, Target, Sparkles, Plus,
