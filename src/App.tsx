@@ -72,6 +72,7 @@ import MyReferrals from "./pages/MyReferrals";
 import GlobalRanking from "./pages/GlobalRanking";
 import AdminPrestige from "./pages/AdminPrestige";
 import AdminPricing from "./pages/AdminPricing";
+import AdminPatientFeatures from "./pages/AdminPatientFeatures";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
