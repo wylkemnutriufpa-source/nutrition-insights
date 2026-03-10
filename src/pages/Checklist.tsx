@@ -310,12 +310,25 @@ export default function Checklist() {
               </Button>
             </div>
           </div>
-          <Button
-            className="gradient-primary gap-2 shadow-glow"
-            onClick={() => { setEditingTask(null); setForm({ title: "", icon: "✅", category: "habit", description: "" }); setAddOpen(true); }}
-          >
-            <Plus className="w-4 h-4" /> Nova Tarefa
-          </Button>
+          <div className="flex items-center gap-2">
+            {isToday && tasks.length > 0 && tasks.length < 15 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetToDefaults}
+                disabled={resetting}
+                className="gap-1 text-xs"
+              >
+                {resetting ? "Resetando..." : "🔄 Resetar Padrão"}
+              </Button>
+            )}
+            <Button
+              className="gradient-primary gap-2 shadow-glow"
+              onClick={() => { setEditingTask(null); setForm({ title: "", icon: "✅", category: "habit", description: "" }); setAddOpen(true); }}
+            >
+              <Plus className="w-4 h-4" /> Nova Tarefa
+            </Button>
+          </div>
         </div>
 
         {/* Progress */}
