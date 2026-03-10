@@ -290,6 +290,9 @@ export default function ClientDashboard() {
             </CardContent>
           </Card>
 
+          {/* Explorer Progress */}
+          <ExplorerProgressWidget />
+
           {/* Smart Tips */}
           <Card>
             <CardHeader className="pb-3">
