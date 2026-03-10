@@ -101,6 +101,7 @@ function CategoryBar({ label, icon: Icon, points, maxPoints, color }: {
 
 export default function GlobalRanking() {
   const { user } = useAuth();
+  const { plans: allPrestigePlans } = usePrestige();
   const [period, setPeriod] = useState<Period>("monthly");
   const [ranking, setRanking] = useState<RankEntry[]>([]);
   const [loading, setLoading] = useState(true);
