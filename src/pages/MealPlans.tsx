@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { ClipboardList, Plus, Calendar, ToggleLeft, ToggleRight, PencilLine } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
 
 type MealPlan = Tables<"meal_plans">;
@@ -18,13 +18,15 @@ type MealPlan = Tables<"meal_plans">;
 export default function MealPlans() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const preselectedPatientId = searchParams.get("patientId") || "";
   const [plans, setPlans] = useState<(MealPlan & { patient_name?: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     title: "",
     description: "",
-    patient_id: "",
+    patient_id: preselectedPatientId,
     start_date: new Date().toISOString().split("T")[0],
   });
   const [submitting, setSubmitting] = useState(false);
@@ -78,6 +80,11 @@ export default function MealPlans() {
 
   useEffect(() => { fetchPlans(); fetchPatients(); }, [user]);
 
+  // Auto-open dialog when coming from patient profile
+  useEffect(() => {
+    if (preselectedPatientId) setOpen(true);
+  }, [preselectedPatientId]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !form.patient_id) return;
@@ -126,20 +133,29 @@ export default function MealPlans() {
                 <DialogTitle className="font-display">Criar Plano Alimentar</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <Label>Paciente</Label>
-                  <select
-                    value={form.patient_id}
-                    onChange={(e) => setForm({ ...form, patient_id: e.target.value })}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    required
-                  >
-                    <option value="">Selecione...</option>
-                    {patients.map((p) => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
-                </div>
+                {preselectedPatientId ? (
+                  <div>
+                    <Label>Paciente</Label>
+                    <div className="w-full rounded-md border border-input bg-muted/50 px-3 py-2 text-sm">
+                      {patients.find(p => p.id === preselectedPatientId)?.name || "Paciente selecionado"}
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <Label>Paciente</Label>
+                    <select
+                      value={form.patient_id}
+                      onChange={(e) => setForm({ ...form, patient_id: e.target.value })}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      required
+                    >
+                      <option value="">Selecione...</option>
+                      {patients.map((p) => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div>
                   <Label>Título</Label>
                   <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Ex: Plano de emagrecimento" required />
