@@ -278,8 +278,8 @@ function PatientDashboardContent() {
 
       {/* Radar + Tips side by side */}
       <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <MetabolicRadar anamnesis={anamnesis} />
-        <SmartTips />
+        <ExpandablePanel title="Radar Metabólico"><MetabolicRadar anamnesis={anamnesis} /></ExpandablePanel>
+        <ExpandablePanel title="Dicas Inteligentes"><SmartTips /></ExpandablePanel>
       </motion.div>
     </motion.div>
     </>
