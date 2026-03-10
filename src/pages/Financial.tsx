@@ -628,7 +628,6 @@ function TransactionList({
                   <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => onDelete(tx.id)}>
                     <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
                   </Button>
-                  </Button>
                 </div>
               </div>
             ))}
