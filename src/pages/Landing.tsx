@@ -307,7 +307,7 @@ export default function Landing() {
         <div className="max-w-5xl mx-auto">
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp} className="text-center mb-10">
             <h3 className="font-display text-2xl md:text-3xl font-bold mb-2">+27 funcionalidades integradas</h3>
-            <p className="text-muted-foreground">Tudo incluso. Sem módulos extras para comprar.</p>
+            <p className="text-muted-foreground">Acesso completo a todas as funcionalidades no plano <span className="text-primary font-semibold">Premium</span>.</p>
           </motion.div>
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={stagger} className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {allFeaturesList.map((f) => (
