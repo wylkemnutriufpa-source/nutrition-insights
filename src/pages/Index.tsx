@@ -175,43 +175,47 @@ function PatientDashboardContent() {
       </motion.div>
 
       {/* Today's Checklist */}
-      <motion.div variants={item} className="glass rounded-xl p-5">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display font-semibold flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-primary" /> Checklist de Hoje
-          </h2>
-          <Link to="/checklist" className="text-sm text-primary hover:underline flex items-center gap-1">
-            Ver tudo <ArrowRight className="w-3 h-3" />
-          </Link>
-        </div>
-        {checklistTasks.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhuma tarefa para hoje. Aguarde seu protocolo!</p>
-        ) : (
-          <>
-            <Progress value={checklistProgress} className="h-2 mb-3" />
-            <div className="space-y-2">
-              {checklistTasks.slice(0, 5).map((task) => (
-                <div
-                  key={task.id}
-                  onClick={() => toggleTask(task)}
-                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
-                    task.completed ? "bg-success/5 opacity-60" : "bg-card hover:bg-muted"
-                  }`}
-                >
-                  {task.completed ? (
-                    <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0" />
-                  ) : (
-                    <Circle className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                  )}
-                  <span className="text-lg">{task.icon}</span>
-                  <span className={`text-sm ${task.completed ? "line-through text-muted-foreground" : "font-medium"}`}>
-                    {task.title}
-                  </span>
-                </div>
-              ))}
+      <motion.div variants={item}>
+        <ExpandablePanel title="Checklist de Hoje">
+          <div className="glass rounded-xl p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-display font-semibold flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-primary" /> Checklist de Hoje
+              </h2>
+              <Link to="/checklist" className="text-sm text-primary hover:underline flex items-center gap-1">
+                Ver tudo <ArrowRight className="w-3 h-3" />
+              </Link>
             </div>
-          </>
-        )}
+            {checklistTasks.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhuma tarefa para hoje. Aguarde seu protocolo!</p>
+            ) : (
+              <>
+                <Progress value={checklistProgress} className="h-2 mb-3" />
+                <div className="space-y-2">
+                  {checklistTasks.slice(0, 5).map((task) => (
+                    <div
+                      key={task.id}
+                      onClick={(e) => { e.stopPropagation(); toggleTask(task); }}
+                      className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
+                        task.completed ? "bg-success/5 opacity-60" : "bg-card hover:bg-muted"
+                      }`}
+                    >
+                      {task.completed ? (
+                        <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0" />
+                      ) : (
+                        <Circle className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                      )}
+                      <span className="text-lg">{task.icon}</span>
+                      <span className={`text-sm ${task.completed ? "line-through text-muted-foreground" : "font-medium"}`}>
+                        {task.title}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </ExpandablePanel>
       </motion.div>
 
       {/* Next Appointment + Chat */}
