@@ -12,6 +12,8 @@ import {
   BarChart3, DollarSign, Activity, Trophy,
 } from "lucide-react";
 
+export type FeatureTier = "basic" | "premium" | "coming_soon";
+
 export interface FeatureDefinition {
   /** Chave única da feature (slug) */
   name: string;
@@ -23,6 +25,8 @@ export interface FeatureDefinition {
   icon: React.ComponentType<{ className?: string }>;
   /** Categoria para agrupamento */
   category: string;
+  /** Tier padrão: basic (todos), premium (só plano premium), coming_soon */
+  defaultTier?: FeatureTier;
   /** Versão em que foi adicionada (para badge "Nova") */
   addedVersion?: string;
 }
