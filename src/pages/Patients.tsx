@@ -232,13 +232,14 @@ function AssignProgramDialog({
   );
 }
 
-function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry }: {
+function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, allPrestigePlans = [] }: {
   p: PatientInfo; idx: number; navigate: any;
   toggleStatus: (id: string, status: string) => void;
   setAssignTarget: (p: PatientInfo) => void;
   setAssignDialogOpen: (v: boolean) => void;
   removeFromProgram: (patientId: string, programId: string, programTitle: string) => void;
   onUpdateExpiry: (id: string, date: string | null) => void;
+  allPrestigePlans?: PrestigePlan[];
 }) {
   const isInactive = p.status !== "active";
   const score = p.priorityScore || 0;
