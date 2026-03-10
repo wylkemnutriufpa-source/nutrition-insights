@@ -203,6 +203,37 @@ export default function PatientDetail() {
       });
     }
 
+    // Load prestige plans and current prestige
+    const [prestigePlansRes, patientPrestigeRes] = await Promise.all([
+      supabase.from("prestige_plans").select("*").eq("is_active", true).order("display_order"),
+      supabase.from("patient_prestige").select("*, prestige_plans(*)").eq("patient_id", patientId!).eq("is_active", true).maybeSingle(),
+    ]);
+    const pPlans = (prestigePlansRes.data || []).map((d: any) => ({
+      id: d.id, name: d.name, slug: d.slug, display_order: d.display_order, color: d.color,
+      badge_icon: d.badge_icon, badge_label: d.badge_label, crown_enabled: d.crown_enabled,
+      effect_type: d.effect_type, ranking_highlight: d.ranking_highlight,
+      ai_usage_multiplier: d.ai_usage_multiplier, features: d.features || [],
+      price_monthly: d.price_monthly, price_quarterly: d.price_quarterly,
+      price_semiannual: d.price_semiannual, price_annual: d.price_annual,
+    })) as PrestigePlan[];
+    setPrestigePlans(pPlans);
+
+    if (patientPrestigeRes.data?.prestige_plans) {
+      const pp = patientPrestigeRes.data.prestige_plans as any;
+      setCurrentPrestigePlan({
+        id: pp.id, name: pp.name, slug: pp.slug, display_order: pp.display_order, color: pp.color,
+        badge_icon: pp.badge_icon, badge_label: pp.badge_label, crown_enabled: pp.crown_enabled,
+        effect_type: pp.effect_type, ranking_highlight: pp.ranking_highlight,
+        ai_usage_multiplier: pp.ai_usage_multiplier, features: pp.features || [],
+        price_monthly: pp.price_monthly, price_quarterly: pp.price_quarterly,
+        price_semiannual: pp.price_semiannual, price_annual: pp.price_annual,
+      });
+      setSelectedPrestigePlanId(pp.id);
+    } else {
+      setCurrentPrestigePlan(null);
+      setSelectedPrestigePlanId("");
+    }
+
     setLoading(false);
   }, [patientId, user]);
 
