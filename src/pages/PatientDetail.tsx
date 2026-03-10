@@ -127,6 +127,11 @@ export default function PatientDetail() {
     expires_at: "",
   });
 
+  // Prestige
+  const [prestigePlans, setPrestigePlans] = useState<PrestigePlan[]>([]);
+  const [selectedPrestigePlanId, setSelectedPrestigePlanId] = useState<string>("");
+  const [currentPrestigePlan, setCurrentPrestigePlan] = useState<PrestigePlan | null>(null);
+
   // Feedback scheduling
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackForm, setFeedbackForm] = useState({
