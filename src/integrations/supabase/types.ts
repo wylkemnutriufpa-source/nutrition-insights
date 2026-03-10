@@ -1592,6 +1592,30 @@ export type Database = {
           },
         ]
       }
+      platform_feature_tiers: {
+        Row: {
+          feature_name: string
+          id: string
+          tier: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          feature_name: string
+          id?: string
+          tier?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          feature_name?: string
+          id?: string
+          tier?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       player_stats: {
         Row: {
           current_streak: number
