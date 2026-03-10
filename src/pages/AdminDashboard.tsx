@@ -11,10 +11,11 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Shield, Users, UserCheck, Zap, Star, UserPlus, Settings, Globe,
   Eye, BarChart3, DollarSign, CreditCard, Crown, Loader2,
-  Search, ToggleLeft, Trash2, Ban, CheckCircle2, Plus
+  Search, ToggleLeft, Trash2, Ban, CheckCircle2, Plus, FileText, Download, Sparkles
 } from "lucide-react";
 import { toast } from "sonner";
 import { FEATURE_REGISTRY, getFeaturesByCategory } from "@/lib/featureRegistry";
