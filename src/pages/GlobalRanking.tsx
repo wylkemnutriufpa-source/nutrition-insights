@@ -178,9 +178,12 @@ export default function GlobalRanking() {
                   <p className="font-display font-bold text-lg">{myRank.total_points} pontos</p>
                 </div>
                 {myRank.plan_slug && (
-                  <Badge variant="outline" style={{ borderColor: myRank.plan_color || undefined, color: myRank.plan_color || undefined }}>
-                    {myRank.badge_icon} {PLAN_LABELS[myRank.plan_slug] || myRank.plan_slug}
-                  </Badge>
+                  <PrestigeBadge
+                    plan={allPrestigePlans.find(p => p.slug === myRank.plan_slug) || null}
+                    allPlans={allPrestigePlans}
+                    size="sm"
+                    clickable
+                  />
                 )}
                 <TrendingUp className="w-5 h-5 text-primary" />
               </CardContent>
