@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Sparkles, Check, Heart, Brain, Loader2, UserCheck, Save } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
+import { generateAnamnesisTips, Tip } from "@/utils/dynamicTips";
 
 // ──── Question definitions ────
 interface Option {
@@ -364,11 +365,10 @@ function OptionCard({
       whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.97 }}
       onClick={onClick}
-      className={`relative flex flex-col items-center gap-2 p-5 rounded-2xl border-2 transition-all ${
-        selected
+      className={`relative flex flex-col items-center gap-2 p-5 rounded-2xl border-2 transition-all ${selected
           ? "border-primary bg-primary/10 shadow-glow"
           : "border-border bg-card hover:border-primary/40"
-      }`}
+        }`}
     >
       {selected && (
         <motion.div
@@ -612,20 +612,68 @@ export default function Anamnesis() {
     setSubmitting(false);
     setAnalyzing(true);
 
-    // Trigger AI analysis
+    // Rule-Based Diagnosis (Replacing unreliable Edge Function)
     try {
-      const { data: aiData, error: aiError } = await supabase.functions.invoke("analyze-anamnesis", {
-        body: { anamnesis_id: anamData.id },
+      const tips = generateAnamnesisTips(anamData, patientName || "Paciente");
+
+      // Map tips to focus areas for the UI
+      const nutritionFocus = tips.filter(t => t.category === 'health' || t.category === 'restriction').map(t => t.title);
+      const behaviorFocus = tips.filter(t => t.category === 'lifestyle').map(t => t.title);
+      const movementFocus = tips.filter(t => t.category === 'activity').map(t => t.title);
+      const mainPains = tips.filter(t => t.priority === 'high').map(t => t.title);
+
+      const aiSummary = tips.length > 0
+        ? `Com base nas suas respostas, identificamos ${tips.length} pontos de atenção. Seu plano focará em ${tips[0].title.toLowerCase()} e melhoria geral da saúde.`
+        : "Análise concluída com sucesso. Seu plano será focado em hábitos saudáveis e equilíbrio nutricional.";
+
+      const insightsPayload = {
+        user_id: targetUserId,
+        risk_level: tips.some(t => t.priority === 'high') ? "medium" : "low",
+        primary_goal: answers.goal === "lose_weight" ? "Emagrecimento" : answers.goal === "gain_muscle" ? "Hipertrofia" : "Saúde Geral",
+        metabolic_profile: `TMB calculada: ${Math.round(tmb)} kcal. Meta diária: ${kcalTarget} kcal.`,
+        main_pains: mainPains,
+        nutrition_focus: nutritionFocus.length > 0 ? nutritionFocus : ["Equilíbrio de macronutrientes"],
+        behavior_focus: behaviorFocus.length > 0 ? behaviorFocus : ["Consistência na dieta"],
+        movement_focus: movementFocus.length > 0 ? movementFocus : ["Atividade física regular"],
+        suggested_protocol: answers.goal === "lose_weight" ? "Protocolo Hipocalórico" : "Protocolo Normocalórico",
+        personalized_tips: tips.map(t => ({ tip: t.content, category: t.category, icon: t.icon })),
+        ai_summary: aiSummary
+      };
+
+      // Save insights
+      const { error: insightError } = await supabase
+        .from("anamnesis_ai_insights" as any)
+        .insert(insightsPayload);
+
+      if (insightError) throw insightError;
+
+      // Save recommendations
+      const recommendations = tips.map(t => ({
+        user_id: targetUserId,
+        category: t.category === 'health' ? 'nutrition' : t.category === 'lifestyle' ? 'behavior' : 'exercise',
+        title: t.title,
+        description: t.content,
+        priority: t.priority,
+        icon: t.icon,
+        is_completed: false
+      }));
+
+      if (recommendations.length > 0) {
+        await supabase.from("patient_recommendations" as any).insert(recommendations);
+      }
+
+      setAiResult({
+        summary: aiSummary,
+        tips_count: tips.length,
+        recommendations_count: recommendations.length,
+        risk_level: insightsPayload.risk_level
       });
 
-      if (aiError) throw aiError;
-      if (aiData?.error) throw new Error(aiData.error);
-
-      setAiResult(aiData);
-      toast.success(`Análise concluída! ${aiData.tips_count} dicas e ${aiData.recommendations_count} recomendações geradas! ✨`);
+      toast.success(`Análise concluída! ${tips.length} dicas geradas! ✨`);
     } catch (e: any) {
-      console.error("AI analysis error:", e);
-      toast.error("Anamnese salva, mas a análise de IA falhou: " + (e.message || "Erro desconhecido"));
+      console.error("Diagnosis error:", e);
+      // Even if diagnosis fails, we proceed so the user doesn't get stuck
+      toast.info("Anamnese salva com sucesso.");
     }
 
     setAnalyzing(false);
@@ -636,12 +684,12 @@ export default function Anamnesis() {
     return (
       <DashboardLayout>
         <div className="max-w-2xl mx-auto">
-              {analyzing ? (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex flex-col items-center justify-center min-h-[60vh] text-center"
-                >
+          {analyzing ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center justify-center min-h-[60vh] text-center"
+            >
               <div className="relative mb-8">
                 <motion.div
                   animate={{ rotate: 360 }}

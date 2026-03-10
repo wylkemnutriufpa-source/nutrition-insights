@@ -17,7 +17,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, isToday, addMonths, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar as CalIcon, Plus, Clock, User, ChevronLeft, ChevronRight, Video, MapPin, Phone } from "lucide-react";
+import { Calendar as CalIcon, Plus, Clock, User, ChevronLeft, ChevronRight, Video, MapPin, Phone, Pencil, Trash2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface Appointment {
@@ -54,6 +54,7 @@ export default function Appointments() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({
     title: "", description: "", patient_id: "", appointment_type: "consultation",
     date: "", time: "09:00", duration_minutes: "60", color: "#10b981",
@@ -128,6 +129,55 @@ export default function Appointments() {
     toast.success("Status atualizado!");
   };
 
+  const editMutation = useMutation({
+    mutationFn: async () => {
+      if (!user || !editingId) throw new Error("No user/id");
+      const dateTime = new Date(`${form.date}T${form.time}`).toISOString();
+      const { error } = await supabase.from("patient_appointments").update({
+        title: form.title,
+        description: form.description || null,
+        appointment_date: dateTime,
+        duration_minutes: Number(form.duration_minutes) || 60,
+        appointment_type: form.appointment_type,
+        color: form.color,
+      }).eq("id", editingId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Consulta atualizada!");
+      setDialogOpen(false);
+      setEditingId(null);
+      queryClient.invalidateQueries({ queryKey: ["appointments"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      if (!confirm("Excluir esta consulta?")) throw new Error("cancelled");
+      const { error } = await supabase.from("patient_appointments").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Consulta excluída!"); queryClient.invalidateQueries({ queryKey: ["appointments"] }); },
+    onError: (e: any) => { if (e.message !== "cancelled") toast.error(e.message); },
+  });
+
+  const openEdit = (a: Appointment) => {
+    setEditingId(a.id);
+    const d = new Date(a.appointment_date);
+    setForm({
+      title: a.title,
+      description: a.description || "",
+      patient_id: a.patient_id,
+      appointment_type: a.appointment_type,
+      date: format(d, "yyyy-MM-dd"),
+      time: format(d, "HH:mm"),
+      duration_minutes: String(a.duration_minutes),
+      color: a.color || "#10b981",
+    });
+    setDialogOpen(true);
+  };
+
   const days = eachDayOfInterval({ start: startOfMonth(currentMonth), end: endOfMonth(currentMonth) });
   const dayAppointments = (date: Date) => appointments.filter(a => isSameDay(new Date(a.appointment_date), date));
   const selectedDayApps = selectedDate ? dayAppointments(selectedDate) : [];
@@ -149,11 +199,14 @@ export default function Appointments() {
               {appointments.filter(a => a.status !== "cancelled" && a.status !== "completed").length} consultas pendentes este mês
             </p>
           </div>
-          {isNutritionist && (
-            <Button onClick={() => { setForm({ ...form, date: format(new Date(), "yyyy-MM-dd") }); setDialogOpen(true); }} className="gradient-primary gap-2">
-              <Plus className="w-4 h-4" /> Nova Consulta
-            </Button>
-          )}
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setCurrentMonth(new Date())} className="text-xs">Hoje</Button>
+            {isNutritionist && (
+              <Button onClick={() => { setEditingId(null); setForm({ ...form, date: format(new Date(), "yyyy-MM-dd") }); setDialogOpen(true); }} className="gradient-primary gap-2">
+                <Plus className="w-4 h-4" /> Nova Consulta
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -246,7 +299,14 @@ export default function Appointments() {
                             </span>
                             <Badge className={cn("text-[10px]", status.cls)}>{status.label}</Badge>
                           </div>
+                          {a.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{a.description}</p>}
                         </div>
+                        {isNutritionist && (
+                          <div className="flex flex-col gap-1">
+                            <button onClick={() => openEdit(a)} className="p-1 text-gray-400 hover:text-primary transition-colors rounded"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg></button>
+                            <button onClick={() => deleteMutation.mutate(a.id)} className="p-1 text-gray-400 hover:text-red-500 transition-colors rounded"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4h6v2" /></svg></button>
+                          </div>
+                        )}
                       </div>
                       {isNutritionist && a.status !== "completed" && a.status !== "cancelled" && (
                         <div className="flex gap-1 mt-2">
@@ -263,20 +323,22 @@ export default function Appointments() {
           </div>
         </div>
 
-        {/* New appointment dialog */}
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        {/* New/Edit appointment dialog */}
+        <Dialog open={dialogOpen} onOpenChange={(v) => { setDialogOpen(v); if (!v) setEditingId(null); }}>
           <DialogContent className="max-w-md">
-            <DialogHeader><DialogTitle className="font-display">Nova Consulta</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="font-display">{editingId ? "Editar Consulta" : "Nova Consulta"}</DialogTitle></DialogHeader>
             <div className="space-y-3">
-              <div>
-                <Label>Paciente</Label>
-                <Select value={form.patient_id} onValueChange={v => setForm({ ...form, patient_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>
-                    {patients.map(p => <SelectItem key={p.user_id} value={p.user_id}>{p.full_name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
+              {!editingId && (
+                <div>
+                  <Label>Paciente</Label>
+                  <Select value={form.patient_id} onValueChange={v => setForm({ ...form, patient_id: v })}>
+                    <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                    <SelectContent>
+                      {patients.map(p => <SelectItem key={p.user_id} value={p.user_id}>{p.full_name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div><Label>Título</Label><Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="Ex: Consulta de retorno" /></div>
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Data</Label><Input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} /></div>
@@ -293,7 +355,7 @@ export default function Appointments() {
                 </div>
                 <div><Label>Duração (min)</Label><Input type="number" value={form.duration_minutes} onChange={e => setForm({ ...form, duration_minutes: e.target.value })} /></div>
               </div>
-              <div><Label>Descrição</Label><Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2} placeholder="Observações..." /></div>
+              <div><Label>Descrição / Notas</Label><Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2} placeholder="Observações sobre a consulta..." /></div>
               <div>
                 <Label>Cor</Label>
                 <div className="flex gap-2 mt-1">
@@ -304,8 +366,12 @@ export default function Appointments() {
                   ))}
                 </div>
               </div>
-              <Button onClick={() => createMutation.mutate()} className="w-full gradient-primary" disabled={!form.patient_id || !form.date || createMutation.isPending}>
-                {createMutation.isPending ? "Agendando..." : "Agendar Consulta"}
+              <Button
+                onClick={() => editingId ? editMutation.mutate() : createMutation.mutate()}
+                className="w-full gradient-primary"
+                disabled={(!editingId && !form.patient_id) || !form.date || createMutation.isPending || editMutation.isPending}
+              >
+                {(createMutation.isPending || editMutation.isPending) ? "Salvando..." : editingId ? "Salvar Alterações" : "Agendar Consulta"}
               </Button>
             </div>
           </DialogContent>

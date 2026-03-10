@@ -10,8 +10,18 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { DollarSign, Users, TrendingUp, Plus, CreditCard, ArrowUpCircle, ArrowDownCircle, Trash2, AlertTriangle } from "lucide-react";
+import { DollarSign, Users, TrendingUp, Plus, CreditCard, ArrowUpCircle, ArrowDownCircle, Trash2, AlertTriangle, Pencil, Filter } from "lucide-react";
 import { toast } from "sonner";
+
+const CATEGORIES = {
+  income: ['Mensalidade', 'Consulta avulsa', 'Plano trimestral', 'Plano semestral', 'Plano anual', 'Outro'],
+  expense: ['Aluguel', 'Material', 'Software', 'Cursos', 'Marketing', 'Transporte', 'Alimentação', 'Outro'],
+};
+
+const MONTHS_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+const formatBRL = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
+
 
 interface PatientSub {
   id: string;
@@ -38,6 +48,10 @@ export default function Financial() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [txOpen, setTxOpen] = useState(false);
+  const [editingTx, setEditingTx] = useState<Transaction | null>(null);
+  const now = new Date();
+  const [filterMonth, setFilterMonth] = useState(now.getMonth());
+  const [filterYear] = useState(now.getFullYear());
   const [txForm, setTxForm] = useState({
     type: "income" as "income" | "expense",
     description: "",
@@ -101,24 +115,39 @@ export default function Financial() {
     e.preventDefault();
     if (!user) return;
 
-    const { error } = await supabase.from("financial_transactions").insert({
-      nutritionist_id: user.id,
-      type: txForm.type,
-      description: txForm.description,
-      amount: parseFloat(txForm.amount),
-      date: txForm.date,
-      category: txForm.category || null,
-    });
-
-    if (error) {
-      toast.error(error.message);
-      return;
+    if (editingTx) {
+      // Update existing
+      const { error } = await supabase.from("financial_transactions").update({
+        type: txForm.type,
+        description: txForm.description,
+        amount: parseFloat(txForm.amount),
+        date: txForm.date,
+        category: txForm.category || null,
+      }).eq("id", editingTx.id);
+      if (error) { toast.error(error.message); return; }
+      toast.success("Transação atualizada!");
+    } else {
+      const { error } = await supabase.from("financial_transactions").insert({
+        nutritionist_id: user.id,
+        type: txForm.type,
+        description: txForm.description,
+        amount: parseFloat(txForm.amount),
+        date: txForm.date,
+        category: txForm.category || null,
+      });
+      if (error) { toast.error(error.message); return; }
+      toast.success("Transação adicionada!");
     }
-
-    toast.success("Transação adicionada!");
     setTxOpen(false);
+    setEditingTx(null);
     setTxForm({ type: "income", description: "", amount: "", date: new Date().toISOString().split("T")[0], category: "" });
     fetchData();
+  };
+
+  const openEdit = (tx: Transaction) => {
+    setEditingTx(tx);
+    setTxForm({ type: tx.type, description: tx.description, amount: String(tx.amount), date: tx.date, category: tx.category || "" });
+    setTxOpen(true);
   };
 
   const deleteTransaction = async (id: string) => {
@@ -133,6 +162,12 @@ export default function Financial() {
   const activeSubs = subs.filter((s) => s.status === "active");
   const totalActive = activeSubs.length;
 
+  // Filter by selected month
+  const filteredTx = transactions.filter(t => {
+    const d = new Date(t.date);
+    return d.getMonth() === filterMonth && d.getFullYear() === filterYear;
+  });
+
   // Subs expiring in 7 days
   const expiringAlert = subs.filter((s) => {
     if (!s.expiresAt || s.status !== "active") return false;
@@ -140,8 +175,8 @@ export default function Financial() {
     return days > 0 && days <= 7;
   });
 
-  const incomeTotal = transactions.filter((t) => t.type === "income").reduce((sum, t) => sum + t.amount, 0);
-  const expenseTotal = transactions.filter((t) => t.type === "expense").reduce((sum, t) => sum + t.amount, 0);
+  const incomeTotal = filteredTx.filter((t) => t.type === "income").reduce((sum, t) => sum + t.amount, 0);
+  const expenseTotal = filteredTx.filter((t) => t.type === "expense").reduce((sum, t) => sum + t.amount, 0);
   const balance = incomeTotal - expenseTotal;
 
   const statusColors: Record<string, string> = {
@@ -161,13 +196,26 @@ export default function Financial() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
-            <DollarSign className="w-5 h-5 text-primary-foreground" />
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
+              <DollarSign className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="font-display text-2xl font-bold">Financeiro</h1>
+              <p className="text-sm text-muted-foreground">Gestão de planos, receitas e despesas</p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-display text-2xl font-bold">Financeiro</h1>
-            <p className="text-sm text-muted-foreground">Gestão de planos, receitas e despesas</p>
+          {/* Month filter */}
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            <Select value={String(filterMonth)} onValueChange={v => setFilterMonth(Number(v))}>
+              <SelectTrigger className="w-36 h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {MONTHS_PT.map((m, i) => <SelectItem key={i} value={String(i)}>{m}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <span className="text-xs text-muted-foreground">{filterYear}</span>
           </div>
         </div>
 
@@ -216,10 +264,8 @@ export default function Financial() {
                     <ArrowUpCircle className="w-6 h-6 text-emerald-500" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold font-display text-emerald-500">
-                      R$ {incomeTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                    </p>
-                    <p className="text-sm text-muted-foreground">Receitas</p>
+                    <p className="text-2xl font-bold font-display text-emerald-500">{formatBRL(incomeTotal)}</p>
+                    <p className="text-sm text-muted-foreground">Receitas ({MONTHS_PT[filterMonth]})</p>
                   </div>
                 </CardContent>
               </Card>
@@ -229,10 +275,8 @@ export default function Financial() {
                     <ArrowDownCircle className="w-6 h-6 text-red-500" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold font-display text-red-500">
-                      R$ {expenseTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                    </p>
-                    <p className="text-sm text-muted-foreground">Despesas</p>
+                    <p className="text-2xl font-bold font-display text-red-500">{formatBRL(expenseTotal)}</p>
+                    <p className="text-sm text-muted-foreground">Despesas ({MONTHS_PT[filterMonth]})</p>
                   </div>
                 </CardContent>
               </Card>
@@ -242,10 +286,8 @@ export default function Financial() {
                     <TrendingUp className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <p className={`text-2xl font-bold font-display ${balance >= 0 ? "text-emerald-500" : "text-red-500"}`}>
-                      R$ {balance.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                    </p>
-                    <p className="text-sm text-muted-foreground">Saldo</p>
+                    <p className={`text-2xl font-bold font-display ${balance >= 0 ? "text-emerald-500" : "text-red-500"}`}>{formatBRL(balance)}</p>
+                    <p className="text-sm text-muted-foreground">Saldo do Mês</p>
                   </div>
                 </CardContent>
               </Card>
@@ -320,20 +362,22 @@ export default function Financial() {
               {/* Income Tab */}
               <TabsContent value="income" className="mt-4">
                 <TransactionList
-                  transactions={transactions.filter((t) => t.type === "income")}
+                  transactions={filteredTx.filter((t) => t.type === "income")}
                   type="income"
-                  onAdd={() => { setTxForm({ ...txForm, type: "income" }); setTxOpen(true); }}
+                  onAdd={() => { setEditingTx(null); setTxForm({ ...txForm, type: "income", category: "" }); setTxOpen(true); }}
                   onDelete={deleteTransaction}
+                  onEdit={openEdit}
                 />
               </TabsContent>
 
               {/* Expenses Tab */}
               <TabsContent value="expenses" className="mt-4">
                 <TransactionList
-                  transactions={transactions.filter((t) => t.type === "expense")}
+                  transactions={filteredTx.filter((t) => t.type === "expense")}
                   type="expense"
-                  onAdd={() => { setTxForm({ ...txForm, type: "expense" }); setTxOpen(true); }}
+                  onAdd={() => { setEditingTx(null); setTxForm({ ...txForm, type: "expense", category: "" }); setTxOpen(true); }}
                   onDelete={deleteTransaction}
+                  onEdit={openEdit}
                 />
               </TabsContent>
             </Tabs>
@@ -341,22 +385,31 @@ export default function Financial() {
         )}
       </div>
 
-      {/* Add Transaction Dialog */}
-      <Dialog open={txOpen} onOpenChange={setTxOpen}>
+      {/* Add/Edit Transaction Dialog */}
+      <Dialog open={txOpen} onOpenChange={(v) => { setTxOpen(v); if (!v) setEditingTx(null); }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="font-display">
-              {txForm.type === "income" ? "Nova Receita" : "Nova Despesa"}
+              {editingTx ? "Editar" : txForm.type === "income" ? "Nova Receita" : "Nova Despesa"}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={addTransaction} className="space-y-4">
             <div>
               <Label>Tipo</Label>
-              <Select value={txForm.type} onValueChange={(v) => setTxForm({ ...txForm, type: v as "income" | "expense" })}>
+              <Select value={txForm.type} onValueChange={(v) => setTxForm({ ...txForm, type: v as "income" | "expense", category: "" })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="income">💰 Receita</SelectItem>
                   <SelectItem value="expense">💸 Despesa</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Categoria</Label>
+              <Select value={txForm.category} onValueChange={(v) => setTxForm({ ...txForm, category: v })}>
+                <SelectTrigger><SelectValue placeholder="Selecione uma categoria" /></SelectTrigger>
+                <SelectContent>
+                  {CATEGORIES[txForm.type].map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -374,11 +427,7 @@ export default function Financial() {
                 <Input type="date" value={txForm.date} onChange={(e) => setTxForm({ ...txForm, date: e.target.value })} required />
               </div>
             </div>
-            <div>
-              <Label>Categoria (opcional)</Label>
-              <Input value={txForm.category} onChange={(e) => setTxForm({ ...txForm, category: e.target.value })} placeholder="Ex: Consultoria, Material, Aluguel" />
-            </div>
-            <Button type="submit" className="w-full gradient-primary">Salvar</Button>
+            <Button type="submit" className="w-full gradient-primary">{editingTx ? "Salvar Alterações" : "Salvar"}</Button>
           </form>
         </DialogContent>
       </Dialog>
@@ -391,11 +440,13 @@ function TransactionList({
   type,
   onAdd,
   onDelete,
+  onEdit,
 }: {
   transactions: Transaction[];
   type: "income" | "expense";
   onAdd: () => void;
   onDelete: (id: string) => void;
+  onEdit: (tx: Transaction) => void;
 }) {
   const isIncome = type === "income";
   return (
@@ -442,8 +493,11 @@ function TransactionList({
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`font-bold text-sm ${isIncome ? "text-emerald-500" : "text-red-500"}`}>
-                    R$ {tx.amount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    {formatBRL(tx.amount)}
                   </span>
+                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => onEdit(tx)}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                  </Button>
                   <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => onDelete(tx.id)}>
                     <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
                   </Button>

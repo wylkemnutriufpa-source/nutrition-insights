@@ -45,6 +45,7 @@ import AdminFeatureControl from "./pages/AdminFeatureControl";
 import AdminTestimonials from "./pages/AdminTestimonials";
 import AdminSiteEditor from "./pages/AdminSiteEditor";
 import AdminResourceCenter from "./pages/AdminResourceCenter";
+import AdminProjetoEditor from "./pages/AdminProjetoEditor";
 import AutomationCenter from "./pages/AutomationCenter";
 import WeightCalculator from "./pages/WeightCalculator";
 import WaterCalculator from "./pages/WaterCalculator";
@@ -137,7 +138,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-              
+
               {/* Shared routes (both roles) */}
               <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
               <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
@@ -192,6 +193,7 @@ const App = () => (
               <Route path="/admin/testimonials" element={<AdminRoute><AdminTestimonials /></AdminRoute>} />
               <Route path="/admin/site-editor" element={<AdminRoute><AdminSiteEditor /></AdminRoute>} />
               <Route path="/admin/resources" element={<AdminRoute><AdminResourceCenter /></AdminRoute>} />
+              <Route path="/admin/projetos" element={<AdminRoute><AdminProjetoEditor /></AdminRoute>} />
 
               {/* Public pricing */}
               <Route path="/pricing" element={<Pricing />} />
