@@ -342,8 +342,11 @@ export default function Patients() {
   const filteredPatients = patients.filter(p => {
     const matchSearch = !search || p.profile?.full_name?.toLowerCase().includes(search.toLowerCase());
     const score = p.priorityScore || 0;
+    // Score filter only applies to active patients; inactive always pass score filter
+    const isInactive = p.status !== "active";
     const matchScore =
       filter === "all" ? true :
+      isInactive ? true :
       filter === "critical" ? score < 40 :
       filter === "medium" ? score >= 40 && score < 70 :
       score >= 70;
