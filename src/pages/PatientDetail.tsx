@@ -125,7 +125,7 @@ export default function PatientDetail() {
     if (!patientId || !user) return;
     setLoading(true);
 
-    const [profileRes, timelineRes, anamnesisRes, ppRes, protocolsRes, checkRes, subRes, plansRes, mealPlansRes] = await Promise.all([
+    const [profileRes, timelineRes, anamnesisRes, ppRes, protocolsRes, checkRes, subRes, plansRes, mealPlansRes, recipesRes] = await Promise.all([
       supabase.from("profiles").select("full_name, avatar_url, phone").eq("user_id", patientId).single(),
       supabase.from("patient_timeline").select("*").eq("patient_id", patientId).order("created_at", { ascending: false }).limit(50),
       supabase.from("patient_anamnesis").select("*").eq("user_id", patientId).order("created_at", { ascending: false }).limit(1),
@@ -135,6 +135,7 @@ export default function PatientDetail() {
       supabase.from("subscriptions").select("*").eq("user_id", patientId).order("created_at", { ascending: false }).limit(1),
       supabase.from("pricing_plans").select("*").eq("is_active", true).order("sort_order"),
       supabase.from("meal_plans").select("*").eq("patient_id", patientId).eq("nutritionist_id", user.id).order("created_at", { ascending: false }),
+      supabase.from("recipes").select("*").eq("nutritionist_id", user.id).eq("is_shared", true).order("created_at", { ascending: false }),
     ]);
 
     setProfile(profileRes.data);
