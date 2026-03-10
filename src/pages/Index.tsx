@@ -608,6 +608,22 @@ function NutritionistDashboardContent() {
         </ExpandablePanel>
       </motion.div>
 
+      {/* ── Patient Progress Simulation ── */}
+      <motion.div variants={item}>
+        <ExpandablePanel title="Simulação de Progresso">
+          <PatientProgressSimulation
+            patients={riskPatients.map(p => ({
+              id: p.id,
+              name: p.name,
+              currentWeight: evolutionData.avgWeight,
+              adherence: p.score,
+              streak: 0,
+            }))}
+            loading={aiLoading}
+          />
+        </ExpandablePanel>
+      </motion.div>
+
       {/* ── 5️⃣ Activity Feed + 7️⃣ Program Performance ── */}
       <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Activity Feed */}
