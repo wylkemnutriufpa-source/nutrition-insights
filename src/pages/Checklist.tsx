@@ -326,7 +326,7 @@ export default function Checklist() {
           </div>
         ) : (
           <div className="space-y-6">
-            {Object.entries(grouped).map(([category, categoryTasks]) => (
+            {sortedCategories.map(([category, categoryTasks]) => (
               <div key={category}>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-sm font-semibold text-muted-foreground">
