@@ -245,6 +245,32 @@ export default function AdminPricing() {
           </p>
         </div>
 
+        {/* Financial Summary */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Card className="glass shadow-card">
+            <CardContent className="py-4 text-center">
+              <p className="text-2xl font-bold font-display text-primary">
+                R$ {financialSummary.monthlyRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+              </p>
+              <p className="text-[11px] text-muted-foreground">Receita do Mês</p>
+            </CardContent>
+          </Card>
+          <Card className="glass shadow-card">
+            <CardContent className="py-4 text-center">
+              <p className="text-2xl font-bold font-display text-accent">
+                R$ {financialSummary.totalRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+              </p>
+              <p className="text-[11px] text-muted-foreground">Receita Total</p>
+            </CardContent>
+          </Card>
+          <Card className="glass shadow-card">
+            <CardContent className="py-4 text-center">
+              <p className="text-2xl font-bold font-display">{financialSummary.totalPayments}</p>
+              <p className="text-[11px] text-muted-foreground">Pagamentos Recebidos</p>
+            </CardContent>
+          </Card>
+        </div>
+
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="grid grid-cols-3 w-full max-w-lg">
             <TabsTrigger value="patients" className="gap-1.5">
