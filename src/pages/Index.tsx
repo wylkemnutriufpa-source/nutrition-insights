@@ -20,6 +20,7 @@ import RiskPanel from "@/components/dashboard/RiskPanel";
 import HealthScoreRing, { calculateHealthScore } from "@/components/dashboard/HealthScoreRing";
 import AdherenceAnalytics from "@/components/dashboard/AdherenceAnalytics";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import SystemUsageCard from "@/components/dashboard/SystemUsageCard";
 import ExpandablePanel from "@/components/common/ExpandablePanel";
 import {
   UtensilsCrossed, Users, TrendingUp, Target, Sparkles, Plus,
@@ -721,6 +722,11 @@ function NutritionistDashboardContent() {
           </ExpandablePanel>
         </motion.div>
       )}
+
+      {/* ── System Usage Gamification ── */}
+      <motion.div variants={item}>
+        <SystemUsageCard />
+      </motion.div>
 
       {/* ── 9️⃣ Module Shortcut Grid ── */}
       <motion.div variants={item}>
