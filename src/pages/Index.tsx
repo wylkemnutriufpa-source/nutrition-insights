@@ -731,6 +731,8 @@ function NutritionistDashboardContent() {
             { to: "/programs", icon: Rocket, label: "Programas", color: "text-accent", bg: "bg-accent/10" },
             { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos", color: "text-success", bg: "bg-success/10" },
             { to: "/recipes", icon: ChefHat, label: "Receitas", color: "text-warning", bg: "bg-warning/10" },
+            { to: "/diet-templates", icon: FileText, label: "Templates", color: "text-info", bg: "bg-info/10" },
+            { to: "/global-tips", icon: MessageSquare, label: "Dicas", color: "text-success", bg: "bg-success/10" },
             { to: "/automation", icon: Bot, label: "Automação", color: "text-info", bg: "bg-info/10" },
             { to: "/reports", icon: BarChart3, label: "Relatórios", color: "text-primary", bg: "bg-primary/10" },
             { to: "/appointments", icon: Calendar, label: "Agenda", color: "text-accent", bg: "bg-accent/10" },
