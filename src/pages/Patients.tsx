@@ -311,11 +311,12 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
   );
 }
 
-function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, search, emptyMessage }: {
+function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, search, emptyMessage }: {
   patients: PatientInfo[]; navigate: any;
   toggleStatus: (id: string, status: string) => void;
   setAssignTarget: (p: PatientInfo) => void;
   setAssignDialogOpen: (v: boolean) => void;
+  removeFromProgram: (patientId: string, programId: string, programTitle: string) => void;
   search: string;
   emptyMessage: string;
 }) {
@@ -333,18 +334,11 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
       {patients.map((p, idx) => (
         <PatientCard key={p.id} p={p} idx={idx} navigate={navigate}
           toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
-          setAssignDialogOpen={setAssignDialogOpen} />
+          setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram} />
       ))}
     </div>
   );
 }
-
-export default function Patients() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const [patients, setPatients] = useState<PatientInfo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [patientName, setPatientName] = useState("");
   const [patientPassword, setPatientPassword] = useState("");
