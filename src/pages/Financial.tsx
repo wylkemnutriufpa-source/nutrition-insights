@@ -108,28 +108,46 @@ export default function Financial() {
     fetchData();
   }, [user]);
 
-  const addTransaction = async (e: React.FormEvent) => {
+  const saveTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
-    const { error } = await supabase.from("financial_transactions").insert({
+    const payload = {
       nutritionist_id: user.id,
       type: txForm.type,
-      description: txForm.description,
+      description: txForm.description.trim(),
       amount: parseFloat(txForm.amount),
       date: txForm.date,
-      category: txForm.category || null,
-    });
+      category: txForm.category.trim() || null,
+    };
 
-    if (error) {
-      toast.error(error.message);
-      return;
+    if (txForm.id) {
+      // Update existing
+      const { error } = await supabase.from("financial_transactions").update(payload).eq("id", txForm.id);
+      if (error) { toast.error(error.message); return; }
+      toast.success("Transação atualizada!");
+    } else {
+      // Insert new
+      const { error } = await supabase.from("financial_transactions").insert(payload);
+      if (error) { toast.error(error.message); return; }
+      toast.success("Transação adicionada!");
     }
 
-    toast.success("Transação adicionada!");
     setTxOpen(false);
-    setTxForm({ type: "income", description: "", amount: "", date: new Date().toISOString().split("T")[0], category: "" });
+    setTxForm({ ...defaultTxForm });
     fetchData();
+  };
+
+  const editTransaction = (tx: Transaction) => {
+    setTxForm({
+      id: tx.id,
+      type: tx.type,
+      description: tx.description,
+      amount: String(tx.amount),
+      date: tx.date,
+      category: tx.category || "",
+    });
+    setTxOpen(true);
   };
 
   const deleteTransaction = async (id: string) => {
