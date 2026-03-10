@@ -195,11 +195,12 @@ function AssignProgramDialog({
   );
 }
 
-function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen }: {
+function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram }: {
   p: PatientInfo; idx: number; navigate: any;
   toggleStatus: (id: string, status: string) => void;
   setAssignTarget: (p: PatientInfo) => void;
   setAssignDialogOpen: (v: boolean) => void;
+  removeFromProgram: (patientId: string, programId: string, programTitle: string) => void;
 }) {
   const isInactive = p.status !== "active";
   const score = p.priorityScore || 0;
