@@ -28,6 +28,8 @@ const TRIGGER_TYPES = [
   { value: "checkin.overdue", label: "Check-in atrasado" },
   { value: "weight.plateau", label: "Platô de peso detectado" },
   { value: "meal.skipped", label: "Refeição não registrada" },
+  { value: "pattern.weekend_drop", label: "🧠 Queda de aderência no fim de semana" },
+  { value: "pattern.consecutive_drop", label: "🧠 Queda consecutiva de aderência" },
 ];
 
 const ACTION_TYPES = [
@@ -221,6 +223,43 @@ const AUTOMATION_TEMPLATES: AutomationTemplate[] = [
     cooldown_hours: 72,
     icon: "💧",
     category: "metas",
+  },
+  // ── Behavioral Pattern Automations ──
+  {
+    name: "Suporte de Fim de Semana",
+    description: "Detecta queda de aderência na sexta/sábado/domingo e envia dicas de nutrição social: festas, restaurantes, praia e estratégias para manter consistência.",
+    trigger_type: "pattern.weekend_drop",
+    actions: ["notify_user", "create_task"],
+    cooldown_hours: 168,
+    icon: "🏖️",
+    category: "comportamental",
+  },
+  {
+    name: "Coach de Eventos Sociais",
+    description: "Envia dicas práticas para o paciente lidar com alimentação em restaurantes, bares, churrascos e festas sem sair do plano.",
+    trigger_type: "pattern.weekend_drop",
+    actions: ["notify_user"],
+    cooldown_hours: 72,
+    icon: "🍷",
+    category: "comportamental",
+  },
+  {
+    name: "Alerta de Padrão Negativo",
+    description: "Detecta quando a aderência cai por 3+ dias consecutivos e envia mensagem motivacional com micro-metas para retomada.",
+    trigger_type: "pattern.consecutive_drop",
+    actions: ["notify_user", "notify_professional"],
+    cooldown_hours: 72,
+    icon: "📊",
+    category: "comportamental",
+  },
+  {
+    name: "Preparação Pré-Fim de Semana",
+    description: "Toda quinta-feira envia ao paciente um checklist de preparação: compras, prep de marmitas e plano de hidratação para o fim de semana.",
+    trigger_type: "pattern.weekend_drop",
+    actions: ["notify_user", "create_task"],
+    cooldown_hours: 168,
+    icon: "📋",
+    category: "comportamental",
   },
 ];
 
