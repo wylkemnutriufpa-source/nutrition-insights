@@ -826,6 +826,57 @@ export default function Patients() {
           </div>
         </div>
 
+        {/* Prestige Filter Buttons */}
+        {prestigePlansList.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setPrestigeFilter("all")}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
+                prestigeFilter === "all"
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border bg-card text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Crown className="w-3.5 h-3.5" /> Todos os planos
+            </button>
+            {prestigePlansList.map((pp) => {
+              const count = patients.filter(p => p.prestigePlan?.slug === pp.slug).length;
+              return (
+                <button
+                  key={pp.slug}
+                  onClick={() => setPrestigeFilter(prestigeFilter === pp.slug ? "all" : pp.slug)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
+                    prestigeFilter === pp.slug
+                      ? "shadow-md"
+                      : "bg-card hover:opacity-80"
+                  }`}
+                  style={{
+                    borderColor: prestigeFilter === pp.slug ? pp.color : undefined,
+                    backgroundColor: prestigeFilter === pp.slug ? pp.color + "15" : undefined,
+                    color: prestigeFilter === pp.slug ? pp.color : undefined,
+                  }}
+                >
+                  <span>{pp.badge_icon}</span>
+                  {pp.name}
+                  {pp.crown_enabled && <Crown className="w-3 h-3" style={{ color: pp.color }} />}
+                  <span className="ml-0.5 opacity-70">{count}</span>
+                </button>
+              );
+            })}
+            <button
+              onClick={() => setPrestigeFilter(prestigeFilter === "none" ? "all" : "none")}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
+                prestigeFilter === "none"
+                  ? "border-muted-foreground bg-muted text-foreground"
+                  : "border-border bg-card text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Sem plano
+              <span className="opacity-70">{patients.filter(p => !p.prestigePlan).length}</span>
+            </button>
+          </div>
+        )}
+
         {/* Tabs: Ativos / Inativos / Programas */}
         {loading ? (
           <div className="flex items-center justify-center h-40">
