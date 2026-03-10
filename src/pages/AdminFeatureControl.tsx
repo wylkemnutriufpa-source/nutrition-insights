@@ -352,6 +352,9 @@ export default function AdminFeatureControl() {
             </div>
           </div>
         )}
+
+        {/* AI Usage Limits Editor */}
+        <AIUsageLimitsEditor />
       </div>
     </DashboardLayout>
   );
