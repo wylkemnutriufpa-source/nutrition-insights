@@ -3099,6 +3099,25 @@ export type Database = {
         Returns: string
       }
       find_patient_by_email: { Args: { _email: string }; Returns: string }
+      get_ranking_by_period: {
+        Args: { _limit?: number; _period?: string }
+        Returns: {
+          avatar_url: string
+          badge_icon: string
+          crown_enabled: boolean
+          display_name: string
+          patient_id: string
+          plan_color: string
+          plan_slug: string
+          points_checkin: number
+          points_checklist: number
+          points_meals: number
+          points_other: number
+          points_training: number
+          rank_position: number
+          total_points: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
