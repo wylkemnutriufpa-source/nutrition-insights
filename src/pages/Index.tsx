@@ -140,137 +140,136 @@ function PatientDashboardContent() {
         </DialogContent>
       </Dialog>
 
-    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
-      {/* Push notification banner */}
-      <PushNotificationBanner />
-      <HealthAlertsBanner />
+      <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+        {/* Push notification banner */}
+        <PushNotificationBanner />
+        <HealthAlertsBanner />
 
-      <motion.div variants={item} className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-bold">Meu Dashboard</h1>
-          <p className="text-muted-foreground text-sm">Acompanhe seu progresso</p>
-        </div>
-        <div className="flex gap-2">
-          <Link to="/analyze">
-            <Button className="gradient-primary shadow-glow gap-2">
-              <Sparkles className="w-4 h-4" /> Analisar Refeição
-            </Button>
-          </Link>
-        </div>
-      </motion.div>
+        <motion.div variants={item} className="flex items-center justify-between">
+          <div>
+            <h1 className="font-display text-2xl font-bold">Meu Dashboard</h1>
+            <p className="text-muted-foreground text-sm">Acompanhe seu progresso</p>
+          </div>
+          <div className="flex gap-2">
+            <Link to="/analyze">
+              <Button className="gradient-primary shadow-glow gap-2">
+                <Sparkles className="w-4 h-4" /> Analisar Refeição
+              </Button>
+            </Link>
+          </div>
+        </motion.div>
 
-      {/* Gamification */}
-      <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <XPBar totalXp={stats?.total_xp || 0} level={stats?.level || 1} />
-        <StreakCounter current={stats?.current_streak || 0} longest={stats?.longest_streak || 0} />
-      </motion.div>
+        {/* Gamification */}
+        <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <XPBar totalXp={stats?.total_xp || 0} level={stats?.level || 1} />
+          <StreakCounter current={stats?.current_streak || 0} longest={stats?.longest_streak || 0} />
+        </motion.div>
 
-      {/* Quick Stats */}
-      <motion.div variants={item} className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatsCard title="Refeições" value={stats?.meals_logged || 0} icon={UtensilsCrossed} gradient />
-        <StatsCard title="Nível" value={stats?.level || 1} icon={TrendingUp} />
-        <StatsCard title="XP Total" value={stats?.total_xp || 0} icon={Target} />
-        <StatsCard title="Streak" value={`${stats?.current_streak || 0}d`} icon={Target} />
-      </motion.div>
+        {/* Quick Stats */}
+        <motion.div variants={item} className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <StatsCard title="Refeições" value={stats?.meals_logged || 0} icon={UtensilsCrossed} gradient />
+          <StatsCard title="Nível" value={stats?.level || 1} icon={TrendingUp} />
+          <StatsCard title="XP Total" value={stats?.total_xp || 0} icon={Target} />
+          <StatsCard title="Streak" value={`${stats?.current_streak || 0}d`} icon={Target} />
+        </motion.div>
 
-      {/* Today's Checklist */}
-      <motion.div variants={item} className="glass rounded-xl p-5">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display font-semibold flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-primary" /> Checklist de Hoje
-          </h2>
-          <Link to="/checklist" className="text-sm text-primary hover:underline flex items-center gap-1">
-            Ver tudo <ArrowRight className="w-3 h-3" />
-          </Link>
-        </div>
-        {checklistTasks.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhuma tarefa para hoje. Aguarde seu protocolo!</p>
-        ) : (
-          <>
-            <Progress value={checklistProgress} className="h-2 mb-3" />
-            <div className="space-y-2">
-              {checklistTasks.slice(0, 5).map((task) => (
-                <div
-                  key={task.id}
-                  onClick={() => toggleTask(task)}
-                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
-                    task.completed ? "bg-success/5 opacity-60" : "bg-card hover:bg-muted"
-                  }`}
-                >
-                  {task.completed ? (
-                    <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0" />
-                  ) : (
-                    <Circle className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                  )}
-                  <span className="text-lg">{task.icon}</span>
-                  <span className={`text-sm ${task.completed ? "line-through text-muted-foreground" : "font-medium"}`}>
-                    {task.title}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </motion.div>
-
-      {/* Next Appointment + Chat */}
-      <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="glass rounded-xl p-5">
-          <h2 className="font-display font-semibold flex items-center gap-2 mb-3">
-            <Calendar className="w-5 h-5 text-primary" /> Próxima Consulta
-          </h2>
-          {nextAppointment ? (
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-xl bg-primary/10 flex flex-col items-center justify-center flex-shrink-0">
-                <span className="text-lg font-bold text-primary">{new Date(nextAppointment.appointment_date).getDate()}</span>
-                <span className="text-[10px] text-muted-foreground uppercase">{new Date(nextAppointment.appointment_date).toLocaleDateString("pt-BR", { month: "short" })}</span>
-              </div>
-              <div>
-                <p className="font-medium text-sm">{nextAppointment.title}</p>
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  {new Date(nextAppointment.appointment_date).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} • {nextAppointment.duration_minutes}min
-                </p>
-              </div>
-            </div>
+        {/* Today's Checklist */}
+        <motion.div variants={item} className="glass rounded-xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-display font-semibold flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-primary" /> Checklist de Hoje
+            </h2>
+            <Link to="/checklist" className="text-sm text-primary hover:underline flex items-center gap-1">
+              Ver tudo <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+          {checklistTasks.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhuma tarefa para hoje. Aguarde seu protocolo!</p>
           ) : (
-            <p className="text-sm text-muted-foreground">Nenhuma consulta agendada.</p>
+            <>
+              <Progress value={checklistProgress} className="h-2 mb-3" />
+              <div className="space-y-2">
+                {checklistTasks.slice(0, 5).map((task) => (
+                  <div
+                    key={task.id}
+                    onClick={() => toggleTask(task)}
+                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${task.completed ? "bg-success/5 opacity-60" : "bg-card hover:bg-muted"
+                      }`}
+                  >
+                    {task.completed ? (
+                      <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0" />
+                    ) : (
+                      <Circle className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                    )}
+                    <span className="text-lg">{task.icon}</span>
+                    <span className={`text-sm ${task.completed ? "line-through text-muted-foreground" : "font-medium"}`}>
+                      {task.title}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
-          <Link to="/appointments" className="text-primary text-xs mt-3 flex items-center gap-1 hover:underline">
-            Ver agenda <ArrowRight className="w-3 h-3" />
+        </motion.div>
+
+        {/* Next Appointment + Chat */}
+        <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="glass rounded-xl p-5">
+            <h2 className="font-display font-semibold flex items-center gap-2 mb-3">
+              <Calendar className="w-5 h-5 text-primary" /> Próxima Consulta
+            </h2>
+            {nextAppointment ? (
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex flex-col items-center justify-center flex-shrink-0">
+                  <span className="text-lg font-bold text-primary">{new Date(nextAppointment.appointment_date).getDate()}</span>
+                  <span className="text-[10px] text-muted-foreground uppercase">{new Date(nextAppointment.appointment_date).toLocaleDateString("pt-BR", { month: "short" })}</span>
+                </div>
+                <div>
+                  <p className="font-medium text-sm">{nextAppointment.title}</p>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {new Date(nextAppointment.appointment_date).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} • {nextAppointment.duration_minutes}min
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Nenhuma consulta agendada.</p>
+            )}
+            <Link to="/appointments" className="text-primary text-xs mt-3 flex items-center gap-1 hover:underline">
+              Ver agenda <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+
+          <Link to="/chat" className="glass rounded-xl p-5 hover:border-primary/30 transition-colors">
+            <h2 className="font-display font-semibold flex items-center gap-2 mb-3">
+              💬 Chat
+              {unreadMessages > 0 && <span className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-full">{unreadMessages} nova{unreadMessages > 1 ? "s" : ""}</span>}
+            </h2>
+            <p className="text-sm text-muted-foreground">Converse com seu nutricionista em tempo real.</p>
           </Link>
-        </div>
+        </motion.div>
 
-        <Link to="/chat" className="glass rounded-xl p-5 hover:border-primary/30 transition-colors">
-          <h2 className="font-display font-semibold flex items-center gap-2 mb-3">
-            💬 Chat
-            {unreadMessages > 0 && <span className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-full">{unreadMessages} nova{unreadMessages > 1 ? "s" : ""}</span>}
-          </h2>
-          <p className="text-sm text-muted-foreground">Converse com seu nutricionista em tempo real.</p>
-        </Link>
-      </motion.div>
+        {/* Patient Evolution Summary */}
+        <motion.div variants={item}>
+          <PatientEvolutionSummary />
+        </motion.div>
 
-      {/* Patient Evolution Summary */}
-      <motion.div variants={item}>
-        <PatientEvolutionSummary />
-      </motion.div>
+        {/* Subscription Card */}
+        <motion.div variants={item}>
+          <SubscriptionCard />
+        </motion.div>
 
-      {/* Subscription Card */}
-      <motion.div variants={item}>
-        <SubscriptionCard />
-      </motion.div>
+        {/* Smart Plan Card */}
+        <motion.div variants={item}>
+          <SmartPlanCard />
+        </motion.div>
 
-      {/* Smart Plan Card */}
-      <motion.div variants={item}>
-        <SmartPlanCard />
+        {/* Radar + Tips side by side */}
+        <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <MetabolicRadar anamnesis={anamnesis} />
+          <SmartTips />
+        </motion.div>
       </motion.div>
-
-      {/* Radar + Tips side by side */}
-      <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <MetabolicRadar anamnesis={anamnesis} />
-        <SmartTips />
-      </motion.div>
-    </motion.div>
     </>
   );
 }
@@ -294,7 +293,7 @@ function NutritionistDashboardContent() {
 
   // Risk & scores
   const [riskPatients, setRiskPatients] = useState<{ id: string; name: string; score: number; risks: string[] }[]>([]);
-  
+
   // Evolution
   const [evolutionPeriod, setEvolutionPeriod] = useState(7);
   const [evolutionData, setEvolutionData] = useState({ avgWeight: null as number | null, avgAdherence: 0, totalCheckins: 0, avgScore: 0 });
@@ -626,7 +625,7 @@ export default function Index() {
 
   return (
     <DashboardLayout>
-      {isNutritionist ? <NutritionistDashboardContent /> : <PatientDashboardContent />}
+      {(isNutritionist || isAdmin) ? <NutritionistDashboardContent /> : <PatientDashboardContent />}
     </DashboardLayout>
   );
 }

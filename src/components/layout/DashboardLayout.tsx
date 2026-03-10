@@ -28,6 +28,7 @@ const nutritionistLinks = [
   { to: "/programs", icon: Rocket, label: "Programas" },
   { to: "/automation", icon: Bot, label: "Automação" },
   { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos" },
+  { to: "/diet-templates", icon: ClipboardList, label: "Modelos de Dieta" },
   { to: "/recipes", icon: ChefHat, label: "Receitas" },
   { to: "/food-database", icon: Apple, label: "Alimentos" },
   { to: "/reports", icon: BarChart3, label: "Relatórios" },
@@ -66,14 +67,15 @@ const patientLinks = [
 
 const adminLinks = [
   { to: "/admin", icon: Shield, label: "Painel Admin" },
-  { to: "/admin/resources", icon: LayoutDashboard, label: "Central de Recursos" },
+  { to: "/", icon: LayoutDashboard, label: "Dashboard Clínico" },
+  { to: "/patients", icon: Users, label: "Pacientes" },
+  { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos" },
+  { to: "/diet-templates", icon: ClipboardList, label: "Modelos de Dieta" },
+  { to: "/recipes", icon: ChefHat, label: "Receitas" },
   { to: "/admin/features", icon: Zap, label: "Feature Flags" },
   { to: "/admin/testimonials", icon: Star, label: "Depoimentos" },
-  { to: "/patients", icon: Users, label: "Pacientes" },
-  { to: "/appointments", icon: Activity, label: "Agenda" },
+  { to: "/admin/resources", icon: LayoutDashboard, label: "Central de Recursos" },
   { to: "/automation", icon: Bot, label: "Automação" },
-  { to: "/reports", icon: BarChart3, label: "Relatórios" },
-  { to: "/food-database", icon: Apple, label: "Alimentos" },
   { to: "/branding", icon: Palette, label: "Branding" },
   { to: "/settings", icon: Settings, label: "Configurações" },
 ];
@@ -126,11 +128,10 @@ function SidebarContent({
               key={link.to}
               to={link.to}
               onClick={onLinkClick}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group ${
-                active
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group ${active
                   ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              }`}
+                }`}
             >
               <link.icon className={`w-5 h-5 flex-shrink-0 ${active ? "text-primary" : ""}`} />
               {!collapsed && <span className="text-sm font-medium">{link.label}</span>}
