@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import {
   Users, Plus, UserCheck, UserX, ChevronRight, Search,
-  TrendingUp, TrendingDown, Minus, Target, Loader2, ToggleLeft, ToggleRight, X
+  TrendingUp, TrendingDown, Minus, Target, Loader2, ToggleLeft, ToggleRight, X, CalendarDays
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -23,6 +23,7 @@ interface PatientInfo {
   status: string;
   notes: string | null;
   created_at: string;
+  expires_at?: string | null;
   email?: string;
   profile?: { full_name: string; avatar_url: string | null } | null;
   priorityScore?: number;
@@ -195,12 +196,13 @@ function AssignProgramDialog({
   );
 }
 
-function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram }: {
+function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry }: {
   p: PatientInfo; idx: number; navigate: any;
   toggleStatus: (id: string, status: string) => void;
   setAssignTarget: (p: PatientInfo) => void;
   setAssignDialogOpen: (v: boolean) => void;
   removeFromProgram: (patientId: string, programId: string, programTitle: string) => void;
+  onUpdateExpiry: (id: string, date: string | null) => void;
 }) {
   const isInactive = p.status !== "active";
   const score = p.priorityScore || 0;
@@ -234,8 +236,39 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
             <span className={`text-xs px-2 py-0.5 rounded-full ${
               p.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
             }`}>
-              {p.status === "active" ? "Ativo" : "Inativo"}
+              {p.status === "active" 
+                ? p.expires_at 
+                  ? (() => {
+                      const exp = new Date(p.expires_at);
+                      const now = new Date();
+                      const diffDays = Math.ceil((exp.getTime() - now.getTime()) / 86400000);
+                      const formatted = exp.toLocaleDateString("pt-BR");
+                      if (diffDays < 0) return `Vencido ${formatted}`;
+                      if (diffDays <= 7) return `Ativo até ${formatted} ⚠️`;
+                      return `Ativo até ${formatted}`;
+                    })()
+                  : "Ativo"
+                : "Inativo"
+              }
             </span>
+            {p.status === "active" && p.expires_at && (() => {
+              const diffDays = Math.ceil((new Date(p.expires_at).getTime() - Date.now()) / 86400000);
+              if (diffDays < 0) return <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive font-medium">Vencido</span>;
+              if (diffDays <= 7) return <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-warning/10 text-warning font-medium">{diffDays}d restantes</span>;
+              return null;
+            })()}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                const current = p.expires_at || "";
+                const input = prompt("Data de vencimento (AAAA-MM-DD):", current);
+                if (input === null) return;
+                onUpdateExpiry(p.id, input || null);
+              }}
+              className="text-muted-foreground hover:text-primary p-0.5" title="Definir vencimento"
+            >
+              <CalendarDays className="w-3 h-3" />
+            </button>
             {hasPrograms && (
               <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary flex items-center gap-1">
                 <Target className="w-3 h-3" /> {p.programs!.length} programa{p.programs!.length > 1 ? "s" : ""}
@@ -311,12 +344,13 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
   );
 }
 
-function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, search, emptyMessage }: {
+function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, search, emptyMessage }: {
   patients: PatientInfo[]; navigate: any;
   toggleStatus: (id: string, status: string) => void;
   setAssignTarget: (p: PatientInfo) => void;
   setAssignDialogOpen: (v: boolean) => void;
   removeFromProgram: (patientId: string, programId: string, programTitle: string) => void;
+  onUpdateExpiry: (id: string, date: string | null) => void;
   search: string;
   emptyMessage: string;
 }) {
@@ -334,7 +368,8 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
       {patients.map((p, idx) => (
         <PatientCard key={p.id} p={p} idx={idx} navigate={navigate}
           toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
-          setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram} />
+          setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
+          onUpdateExpiry={onUpdateExpiry} />
       ))}
     </div>
   );
@@ -501,7 +536,17 @@ export default function Patients() {
     }
   };
 
-  // Derive filtered lists based on active tab
+  const updateExpiry = async (id: string, date: string | null) => {
+    const { error } = await supabase.from("nutritionist_patients")
+      .update({ expires_at: date || null } as any)
+      .eq("id", id);
+    if (error) toast.error("Erro ao atualizar vencimento");
+    else {
+      toast.success(date ? `Vencimento definido: ${new Date(date).toLocaleDateString("pt-BR")}` : "Vencimento removido");
+      fetchPatients();
+    }
+  };
+
   const searchFilter = (p: PatientInfo) =>
     !search || p.profile?.full_name?.toLowerCase().includes(search.toLowerCase());
 
@@ -658,6 +703,7 @@ export default function Patients() {
               <PatientGrid patients={activePatientsList} navigate={navigate}
                 toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
                 setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
+                onUpdateExpiry={updateExpiry}
                 search={search} emptyMessage="Nenhum paciente ativo" />
             </TabsContent>
 
@@ -665,6 +711,7 @@ export default function Patients() {
               <PatientGrid patients={inactivePatientsList} navigate={navigate}
                 toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
                 setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
+                onUpdateExpiry={updateExpiry}
                 search={search} emptyMessage="Nenhum paciente inativo" />
             </TabsContent>
 
@@ -673,6 +720,7 @@ export default function Patients() {
                 <PatientGrid patients={programPatientLists.get(prog.id) || []} navigate={navigate}
                   toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
                   setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
+                  onUpdateExpiry={updateExpiry}
                   search={search} emptyMessage={`Nenhum paciente no programa "${prog.title}"`} />
               </TabsContent>
             ))}
