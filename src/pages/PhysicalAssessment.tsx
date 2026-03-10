@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import {
@@ -426,19 +426,10 @@ export default function PhysicalAssessment() {
           </motion.div>
         </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="body" className="w-full">
-          <TabsList className="w-full justify-start bg-card border border-border overflow-x-auto">
-            <TabsTrigger value="body"><Ruler className="w-3.5 h-3.5 mr-1" /> Medidas Corporais</TabsTrigger>
-            <TabsTrigger value="folds"><TrendingDown className="w-3.5 h-3.5 mr-1" /> Dobras Cutâneas</TabsTrigger>
-            <TabsTrigger value="energy"><Calculator className="w-3.5 h-3.5 mr-1" /> Gasto Energético</TabsTrigger>
-            <TabsTrigger value="compare"><GitCompare className="w-3.5 h-3.5 mr-1" /> Comparativo</TabsTrigger>
-            <TabsTrigger value="history"><History className="w-3.5 h-3.5 mr-1" /> Histórico</TabsTrigger>
-            <TabsTrigger value="docs"><Upload className="w-3.5 h-3.5 mr-1" /> Documentos</TabsTrigger>
-          </TabsList>
-
+        {/* Sections */}
+        <div className="space-y-6">
           {/* Body Measurements */}
-          <TabsContent value="body" className="space-y-4 mt-4">
+          <div className="space-y-4">
             <div className="glass rounded-xl p-5">
               <h3 className="font-display font-semibold mb-4 flex items-center gap-2">
                 <Scale className="w-5 h-5 text-primary" /> Dados Básicos
@@ -471,10 +462,10 @@ export default function PhysicalAssessment() {
                 <NumField label="Panturrilha E" value={form.left_calf} onChange={(v) => set("left_calf", v)} unit="cm" />
               </div>
             </div>
-          </TabsContent>
+          </div>
 
           {/* Skinfolds */}
-          <TabsContent value="folds" className="space-y-4 mt-4">
+          <div className="space-y-4">
             <div className="glass rounded-xl p-5">
               <h3 className="font-display font-semibold mb-2 flex items-center gap-2">
                 <TrendingDown className="w-5 h-5 text-primary" /> Dobras Cutâneas — Jackson-Pollock 7 Dobras
@@ -522,10 +513,10 @@ export default function PhysicalAssessment() {
                 />
               </div>
             </div>
-          </TabsContent>
+          </div>
 
           {/* Energy Expenditure */}
-          <TabsContent value="energy" className="space-y-4 mt-4">
+          <div className="space-y-4">
             <div className="glass rounded-xl p-5">
               <h3 className="font-display font-semibold mb-4 flex items-center gap-2">
                 <Calculator className="w-5 h-5 text-primary" /> Gasto Energético Total (GET)
@@ -641,15 +632,15 @@ export default function PhysicalAssessment() {
                 />
               </div>
             </div>
-          </TabsContent>
+          </div>
 
           {/* Comparison between consultations */}
-          <TabsContent value="compare" className="space-y-4 mt-4">
+          <div className="space-y-4">
             {patientId && <ConsultationCompare patientId={patientId} />}
-          </TabsContent>
+          </div>
 
           {/* History */}
-          <TabsContent value="history" className="space-y-4 mt-4">
+          <div className="space-y-4">
             <div className="glass rounded-xl p-5">
               <h3 className="font-display font-semibold mb-4 flex items-center gap-2">
                 <History className="w-5 h-5 text-primary" /> Histórico de Avaliações
@@ -816,10 +807,10 @@ export default function PhysicalAssessment() {
                 </>
               )}
             </div>
-          </TabsContent>
+          </div>
 
-          {/* Documents Tab */}
-          <TabsContent value="docs" className="mt-4">
+          {/* Documents */}
+          <div>
             <div className="glass rounded-xl p-5">
               <h3 className="font-display font-semibold mb-4 flex items-center gap-2">
                 📎 Documentos da Avaliação Física
@@ -835,8 +826,8 @@ export default function PhysicalAssessment() {
                 />
               )}
             </div>
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
       </div>
     </DashboardLayout>
   );
