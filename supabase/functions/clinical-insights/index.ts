@@ -9,9 +9,58 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { patients } = await req.json();
+    const body = await req.json();
+    const { patients, aggregatedData } = body;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    // If aggregatedData is provided, generate a text summary instead
+    if (aggregatedData) {
+      const summaryPrompt = `Você é um assistente de inteligência clínica nutricional. Analise os dados agregados abaixo e gere um resumo executivo com insights acionáveis.
+
+DADOS AGREGADOS (últimos ${aggregatedData.dateRange} dias):
+- Total de pacientes analisados: ${aggregatedData.totalPatients}
+- Adesão média: ${aggregatedData.avgAdherence}%
+- Score de saúde médio: ${aggregatedData.avgHealthScore}
+- Pacientes em alto risco: ${aggregatedData.highRiskCount}
+- Check-ins realizados: ${aggregatedData.totalCheckins}
+- Distribuição de risco: ${JSON.stringify(aggregatedData.riskDistribution)}
+- Engajamento por sexo: ${JSON.stringify(aggregatedData.engagementBySex)}
+- Adesão por faixa etária: ${JSON.stringify(aggregatedData.adherenceByAge)}
+- Dificuldades mais comuns: ${JSON.stringify(aggregatedData.topDifficulties)}
+
+Gere um resumo executivo com:
+1. Visão geral do cenário clínico
+2. Principais pontos de atenção
+3. Padrões identificados
+4. Recomendações práticas
+5. Prioridades de ação
+
+Responda em português brasileiro, de forma objetiva e profissional.`;
+
+      const summaryRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-3-flash-preview",
+          messages: [
+            { role: "system", content: "Você é um assistente de inteligência clínica nutricional. Responda sempre em português brasileiro." },
+            { role: "user", content: summaryPrompt },
+          ],
+        }),
+      });
+
+      if (!summaryRes.ok) throw new Error("AI gateway error");
+      const summaryResult = await summaryRes.json();
+      const summary = summaryResult.choices?.[0]?.message?.content || "Sem insights disponíveis.";
+
+      return new Response(JSON.stringify({ summary }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const prompt = `Você é um assistente clínico de nutrição. Analise os dados dos pacientes abaixo e gere insights clínicos acionáveis.
 

@@ -33,6 +33,7 @@ const nutritionistLinks = [
   { to: "/recipes", icon: ChefHat, label: "Receitas" },
   { to: "/food-database", icon: Apple, label: "Alimentos" },
   { to: "/reports", icon: BarChart3, label: "Relatórios" },
+  { to: "/clinical-intelligence", icon: Activity, label: "Intel. Clínica" },
   { to: "/weekly-report", icon: FileBarChart, label: "Relatório Semanal" },
   { to: "/financial", icon: DollarSign, label: "Financeiro" },
   { to: "/supplements", icon: Pill, label: "Suplementação" },
