@@ -51,13 +51,15 @@ export default function AdminPricing() {
   const [pointRules, setPointRules] = useState<PointRule[]>([]);
   const [saving, setSaving] = useState(false);
   const [newFeature, setNewFeature] = useState<Record<string, string>>({});
+  const [payments, setPayments] = useState<any[]>([]);
 
-  useEffect(() => {
+  const fetchAll = () => {
     Promise.all([
       supabase.from("prestige_plans").select("*").order("display_order"),
       supabase.from("pricing_plans").select("*").order("sort_order"),
       supabase.from("ranking_point_rules").select("*").order("action_key"),
-    ]).then(([pr, pp, ru]) => {
+      supabase.from("payments").select("amount, status, gateway, created_at").order("created_at", { ascending: false }).limit(500),
+    ]).then(([pr, pp, ru, pay]) => {
       setPrestigePlans(pr.data || []);
       setPricingPlans(
         (pp.data || []).map((p: any) => ({
@@ -66,8 +68,24 @@ export default function AdminPricing() {
         }))
       );
       setPointRules((ru.data as PointRule[]) || []);
+      setPayments(pay.data || []);
     });
-  }, []);
+  };
+
+  useEffect(() => { fetchAll(); }, []);
+
+  // Financial summary
+  const financialSummary = useMemo(() => {
+    const paid = payments.filter(p => p.status === "paid");
+    const totalRevenue = paid.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    const thisMonth = paid.filter(p => {
+      const d = new Date(p.created_at);
+      const now = new Date();
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    });
+    const monthlyRevenue = thisMonth.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    return { totalRevenue, monthlyRevenue, totalPayments: paid.length };
+  }, [payments]);
 
   // ─── Prestige Plans (Pacientes) ───
   const updatePrestige = (id: string, field: string, value: any) =>
