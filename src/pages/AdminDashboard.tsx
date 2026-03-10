@@ -513,6 +513,7 @@ function AdminReportsPanel({ professionals }: { professionals: ProfessionalInfo[
       </Card>
     </div>
   );
+}
 
 // ─── Create Professional Dialog ───
 function CreateProfessionalDialog({
