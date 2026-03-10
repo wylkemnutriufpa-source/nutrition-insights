@@ -22,10 +22,12 @@ const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>
   "Relatórios & Financeiro": BarChart3,
 };
 
+type FeatureStatus = "enabled" | "disabled" | "coming_soon";
+
 interface NutritionistFeature {
   user_id: string;
   full_name: string;
-  features: Record<string, boolean>;
+  features: Record<string, FeatureStatus>;
 }
 
 export default function AdminFeatureControl() {
