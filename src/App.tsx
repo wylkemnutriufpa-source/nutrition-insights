@@ -257,6 +257,7 @@ const App = () => (
               <Route path="/admin/prestige" element={<AdminRoute><AdminPrestige /></AdminRoute>} />
               <Route path="/admin/pricing" element={<AdminRoute><AdminPricing /></AdminRoute>} />
               <Route path="/admin/patient-features" element={<AdminRoute><AdminPatientFeatures /></AdminRoute>} />
+              <Route path="/admin/audit-logs" element={<AdminRoute><AuditLogs /></AdminRoute>} />
 
               {/* Global Ranking */}
               <Route path="/ranking" element={<ProtectedRoute><GlobalRanking /></ProtectedRoute>} />

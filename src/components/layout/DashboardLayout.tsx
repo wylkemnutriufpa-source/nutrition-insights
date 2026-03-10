@@ -94,6 +94,7 @@ const adminLinks = [
   { to: "/user-guide", icon: BookOpen, label: "Guia do Paciente" },
   { to: "/admin/pricing", icon: DollarSign, label: "Planos & Preços" },
   { to: "/admin/patient-features", icon: Crown, label: "Features Paciente" },
+  { to: "/admin/audit-logs", icon: Shield, label: "Audit Logs" },
 ];
 
 function SidebarContent({
