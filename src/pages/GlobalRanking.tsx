@@ -21,6 +21,7 @@ import {
   Cell, RadarChart, PolarGrid, PolarAngleAxis, Radar, Legend
 } from "recharts";
 import PrestigeBadge from "@/components/prestige/PrestigeBadge";
+import PodiumBadge from "@/components/prestige/PodiumBadge";
 import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
 
 type Period = "daily" | "weekly" | "monthly" | "annual";
