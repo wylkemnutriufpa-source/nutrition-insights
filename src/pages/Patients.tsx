@@ -384,7 +384,7 @@ export default function Patients() {
               <Users className="w-7 h-7 text-primary" /> Pacientes
             </h1>
             <p className="text-muted-foreground text-sm">
-              {patients.filter(p => p.status === "active").length} ativos · ordenados por prioridade
+              {activePatients.length} ativos nas métricas · {patients.length - activePatients.length} excluídos · ordenados por prioridade
             </p>
           </div>
           <div className="flex items-center gap-2">
