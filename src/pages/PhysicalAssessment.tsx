@@ -16,6 +16,7 @@ import {
   Calculator, Beef, Wheat, Droplets, Loader2, History, Zap, Scale, Heart, GitCompare
 } from "lucide-react";
 import ConsultationCompare from "@/components/patient/ConsultationCompare";
+import DocumentUpload from "@/components/common/DocumentUpload";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, Area, AreaChart
