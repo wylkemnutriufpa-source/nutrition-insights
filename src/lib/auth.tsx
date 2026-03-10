@@ -125,6 +125,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               fetchRoles(session.user.id),
             ]);
             setLoading(false);
+            // Check subscription in background (don't block loading)
+            checkSubscription();
           }, 0);
         } else {
           setProfile(null);
