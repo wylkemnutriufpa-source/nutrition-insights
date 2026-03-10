@@ -598,7 +598,7 @@ export default function Landing() {
               Pronto para <span className="text-gradient">decolar</span>?
             </h2>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto mb-8">
-              Junte-se a centenas de nutricionistas que já transformaram seu atendimento com NutriFlow.
+              Junte-se a centenas de nutricionistas que já transformaram seu atendimento com FitJourney.
               Comece grátis agora mesmo.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

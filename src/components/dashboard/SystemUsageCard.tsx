@@ -330,7 +330,7 @@ export default function SystemUsageCard() {
           className="p-3 rounded-lg bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 text-center"
         >
           <p className="text-sm font-bold">🎉 Parabéns! Você explorou 100% do sistema!</p>
-          <p className="text-xs text-muted-foreground mt-0.5">Você é um Expert NutriFlow!</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Você é um Expert FitJourney!</p>
         </motion.div>
       )}
     </div>
