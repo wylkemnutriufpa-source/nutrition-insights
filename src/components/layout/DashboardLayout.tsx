@@ -72,6 +72,7 @@ const patientLinks = [
 
 const adminLinks = [
   { to: "/admin", icon: Shield, label: "Painel Admin" },
+  { to: "/ranking", icon: Trophy, label: "🏆 Ranking Global" },
   { to: "/admin/resources", icon: LayoutDashboard, label: "Central de Recursos" },
   { to: "/admin/features", icon: Zap, label: "Feature Flags" },
   { to: "/admin/testimonials", icon: Star, label: "Depoimentos" },
