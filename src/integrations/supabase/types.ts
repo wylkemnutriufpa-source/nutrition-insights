@@ -163,6 +163,39 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          resource_id: string | null
+          resource_type: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          resource_id?: string | null
+          resource_type: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          resource_id?: string | null
+          resource_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       automation_rules: {
         Row: {
           actions: Json
@@ -3216,6 +3249,15 @@ export type Database = {
       is_program_owner: {
         Args: { _program_id: string; _user_id: string }
         Returns: boolean
+      }
+      log_audit: {
+        Args: {
+          _action: string
+          _metadata?: Json
+          _resource_id?: string
+          _resource_type: string
+        }
+        Returns: undefined
       }
       lookup_referral_by_code: {
         Args: { _code: string }
