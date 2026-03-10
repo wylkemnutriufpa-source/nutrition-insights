@@ -1051,6 +1051,66 @@ export type Database = {
           },
         ]
       }
+      patient_documents: {
+        Row: {
+          assessment_id: string | null
+          created_at: string
+          document_type: string
+          file_name: string
+          file_size: number | null
+          file_url: string
+          id: string
+          meal_plan_id: string | null
+          mime_type: string | null
+          nutritionist_id: string
+          patient_id: string
+          title: string
+        }
+        Insert: {
+          assessment_id?: string | null
+          created_at?: string
+          document_type?: string
+          file_name: string
+          file_size?: number | null
+          file_url: string
+          id?: string
+          meal_plan_id?: string | null
+          mime_type?: string | null
+          nutritionist_id: string
+          patient_id: string
+          title: string
+        }
+        Update: {
+          assessment_id?: string | null
+          created_at?: string
+          document_type?: string
+          file_name?: string
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          meal_plan_id?: string | null
+          mime_type?: string | null
+          nutritionist_id?: string
+          patient_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_documents_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "physical_assessments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_documents_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_favorite_recipes: {
         Row: {
           created_at: string

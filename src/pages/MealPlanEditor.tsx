@@ -17,6 +17,7 @@ import {
   Bookmark, BookmarkCheck, FolderDown, FolderUp, BookOpen
 } from "lucide-react";
 import PlanScheduler from "@/components/plans/PlanScheduler";
+import DocumentUpload from "@/components/common/DocumentUpload";
 import FoodAutocomplete, { type FoodItem } from "@/components/meals/FoodAutocomplete";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
@@ -71,6 +72,7 @@ export default function MealPlanEditor() {
   const [patientName, setPatientName] = useState("");
   const [items, setItems] = useState<MealPlanItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [planDocs, setPlanDocs] = useState<any[]>([]);
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -113,8 +115,29 @@ export default function MealPlanEditor() {
       setPatientName(profile?.full_name || "Paciente");
     }
     setItems(itemsData || []);
+
+    // Fetch documents
+    const { data: docs } = await supabase
+      .from("patient_documents" as any)
+      .select("*")
+      .eq("meal_plan_id", id)
+      .eq("document_type", "meal_plan")
+      .order("created_at", { ascending: false });
+    setPlanDocs(docs || []);
+
     setLoading(false);
   }, [id, user]);
+
+  const fetchDocs = async () => {
+    if (!id) return;
+    const { data } = await supabase
+      .from("patient_documents" as any)
+      .select("*")
+      .eq("meal_plan_id", id)
+      .eq("document_type", "meal_plan")
+      .order("created_at", { ascending: false });
+    setPlanDocs(data || []);
+  };
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -452,6 +475,23 @@ export default function MealPlanEditor() {
             </Button>
           </div>
         </div>
+
+        {/* Document Upload Section */}
+        {plan && user && (
+          <div className="glass rounded-xl p-5">
+            <h3 className="font-display font-semibold text-sm mb-3 flex items-center gap-2">
+              📎 Documentos do Plano
+            </h3>
+            <DocumentUpload
+              patientId={plan.patient_id}
+              nutritionistId={user.id}
+              documentType="meal_plan"
+              referenceId={plan.id}
+              documents={planDocs}
+              onUploadComplete={fetchDocs}
+            />
+          </div>
+        )}
 
         {/* Grid */}
         <div className="overflow-x-auto -mx-4 px-4 pb-4">

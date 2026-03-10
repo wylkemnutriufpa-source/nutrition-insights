@@ -13,9 +13,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import {
   ArrowLeft, Save, Ruler, Activity, Flame, Target, TrendingDown,
-  Calculator, Beef, Wheat, Droplets, Loader2, History, Zap, Scale, Heart, GitCompare
+  Calculator, Beef, Wheat, Droplets, Loader2, History, Zap, Scale, Heart, GitCompare, Upload
 } from "lucide-react";
 import ConsultationCompare from "@/components/patient/ConsultationCompare";
+import DocumentUpload from "@/components/common/DocumentUpload";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, Area, AreaChart
@@ -104,6 +105,7 @@ export default function PhysicalAssessment() {
   const [saving, setSaving] = useState(false);
   const [history, setHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [assessmentDocs, setAssessmentDocs] = useState<any[]>([]);
 
   const set = useCallback((field: keyof Assessment, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -165,6 +167,20 @@ export default function PhysicalAssessment() {
         setLoadingHistory(false);
       });
   }, [patientId, user]);
+
+  // Fetch assessment documents
+  const fetchAssessmentDocs = async () => {
+    if (!patientId) return;
+    const { data } = await supabase
+      .from("patient_documents" as any)
+      .select("*")
+      .eq("patient_id", patientId)
+      .eq("document_type", "assessment")
+      .order("created_at", { ascending: false });
+    setAssessmentDocs(data || []);
+  };
+
+  useEffect(() => { fetchAssessmentDocs(); }, [patientId]);
 
   // Auto-calculate derived values
   const computed = useMemo(() => {
@@ -418,6 +434,7 @@ export default function PhysicalAssessment() {
             <TabsTrigger value="energy"><Calculator className="w-3.5 h-3.5 mr-1" /> Gasto Energético</TabsTrigger>
             <TabsTrigger value="compare"><GitCompare className="w-3.5 h-3.5 mr-1" /> Comparativo</TabsTrigger>
             <TabsTrigger value="history"><History className="w-3.5 h-3.5 mr-1" /> Histórico</TabsTrigger>
+            <TabsTrigger value="docs"><Upload className="w-3.5 h-3.5 mr-1" /> Documentos</TabsTrigger>
           </TabsList>
 
           {/* Body Measurements */}
@@ -797,6 +814,25 @@ export default function PhysicalAssessment() {
                     </div>
                   </div>
                 </>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Documents Tab */}
+          <TabsContent value="docs" className="mt-4">
+            <div className="glass rounded-xl p-5">
+              <h3 className="font-display font-semibold mb-4 flex items-center gap-2">
+                📎 Documentos da Avaliação Física
+              </h3>
+              {patientId && user && (
+                <DocumentUpload
+                  patientId={patientId}
+                  nutritionistId={user.id}
+                  documentType="assessment"
+                  referenceId={form.id}
+                  documents={assessmentDocs}
+                  onUploadComplete={fetchAssessmentDocs}
+                />
               )}
             </div>
           </TabsContent>
