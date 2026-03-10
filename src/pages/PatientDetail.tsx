@@ -166,6 +166,15 @@ export default function PatientDetail() {
     setMealPlans(mealPlansRes.data || []);
     setRecipes(recipesRes.data || []);
 
+    // Fetch documents for this patient
+    const { data: docs } = await supabase.from("patient_documents")
+      .select("*")
+      .eq("patient_id", patientId!)
+      .eq("nutritionist_id", user!.id)
+      .order("created_at", { ascending: false });
+    setMealPlanDocs((docs || []).filter((d: any) => d.document_type === "meal_plan"));
+    setAssessmentDocs((docs || []).filter((d: any) => d.document_type === "assessment"));
+
     // Pre-fill plan form if subscription exists
     if (subRes.data?.[0]) {
       setPlanForm({
