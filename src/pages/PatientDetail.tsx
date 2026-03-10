@@ -441,11 +441,16 @@ export default function PatientDetail() {
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h1 className="font-display text-2xl font-bold">{profile?.full_name || "Paciente"}</h1>
+            <div className="flex items-center gap-2 flex-wrap">
+              {currentPrestigePlan ? (
+                <PrestigeName name={profile?.full_name || "Paciente"} plan={currentPrestigePlan} className="font-display text-2xl font-bold" />
+              ) : (
+                <h1 className="font-display text-2xl font-bold">{profile?.full_name || "Paciente"}</h1>
+              )}
               <Badge variant={patientStatus === "active" ? "default" : "secondary"}>
                 {patientStatus === "active" ? "Ativo" : "Inativo"}
               </Badge>
+              {currentPrestigePlan && <PrestigeBadge plan={currentPrestigePlan} size="sm" />}
             </div>
             <p className="text-sm text-muted-foreground">
               Checklist hoje: {checklistStats.completed}/{checklistStats.total} tarefas •
