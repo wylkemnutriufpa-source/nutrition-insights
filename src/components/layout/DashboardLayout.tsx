@@ -19,6 +19,8 @@ import NotificationBell from "@/components/notifications/NotificationBell";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePresenceTracker } from "@/hooks/usePresenceTracker";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
+import CommandPalette from "@/components/common/CommandPalette";
+import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
 
 const nutritionistLinks = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
