@@ -920,6 +920,32 @@ export default function PatientDetail() {
                             <Input value={planForm.plan_name} onChange={(e) => setPlanForm({ ...planForm, plan_name: e.target.value })} placeholder="Nome do plano" required />
                           )}
                         </div>
+                        <div>
+                          <Label className="flex items-center gap-2">
+                            <Crown className="w-4 h-4 text-accent" /> Prestígio
+                          </Label>
+                          <Select value={selectedPrestigePlanId} onValueChange={setSelectedPrestigePlanId}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o nível de prestígio..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {prestigePlans.map((pp) => (
+                                <SelectItem key={pp.id} value={pp.id}>
+                                  <span className="flex items-center gap-2">
+                                    <span>{pp.badge_icon}</span>
+                                    <span style={{ color: pp.color }}>{pp.name}</span>
+                                    {pp.crown_enabled && <Crown className="w-3 h-3" style={{ color: pp.color }} />}
+                                  </span>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {selectedPrestigePlanId && (
+                            <div className="mt-2">
+                              <PrestigeBadge plan={prestigePlans.find(p => p.id === selectedPrestigePlanId) || null} size="md" />
+                            </div>
+                          )}
+                        </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div><Label>Data Início</Label><Input type="date" value={planForm.started_at} onChange={(e) => setPlanForm({ ...planForm, started_at: e.target.value })} required /></div>
                           <div><Label>Data Fim</Label><Input type="date" value={planForm.expires_at} onChange={(e) => setPlanForm({ ...planForm, expires_at: e.target.value })} /></div>
