@@ -48,12 +48,28 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
             boxShadow: "0 0 20px hsl(152 58% 42% / 0.3), inset 0 1px 1px rgba(255,255,255,0.3)",
           }}
         >
-          {/* Spinning leaf */}
+          {/* Bouncing 3D leaf */}
           <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+            style={{ perspective: 200 }}
+            animate={{
+              y: [0, -3, 0, 3, 0],
+              x: [0, 2, 0, -2, 0],
+              rotateY: [0, 25, 0, -25, 0],
+              rotateX: [0, -15, 0, 15, 0],
+            }}
+            transition={{
+              duration: 6,
+              repeat: Infinity,
+              ease: "easeInOut",
+              times: [0, 0.25, 0.5, 0.75, 1],
+            }}
           >
-            <Leaf className={`${s.leaf} text-primary-foreground drop-shadow-sm`} />
+            <Leaf
+              className={`${s.leaf} text-primary-foreground`}
+              style={{
+                filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.25))",
+              }}
+            />
           </motion.div>
         </div>
       </div>
