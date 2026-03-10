@@ -821,11 +821,11 @@ export default function PatientDetail() {
                 </DialogContent>
               </Dialog>
 
-              {/* Checkins Modal */}
-              <Dialog open={openSection === "checkins"} onOpenChange={(v) => !v && setOpenSection(null)}>
+              {/* Checklist Modal */}
+              <Dialog open={openSection === "checklist"} onOpenChange={(v) => !v && setOpenSection(null)}>
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display">Check-ins</DialogTitle></DialogHeader>
-                  <PatientCheckinsTab patientId={patientId!} />
+                  <DialogHeader><DialogTitle className="font-display">Checklist Diário</DialogTitle></DialogHeader>
+                  <PatientChecklistView patientId={patientId!} editable={true} />
                 </DialogContent>
               </Dialog>
 
