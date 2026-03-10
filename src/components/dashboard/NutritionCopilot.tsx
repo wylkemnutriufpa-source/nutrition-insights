@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { calculateChurnRisk } from "./ChurnRiskPanel";
-import { useNavigate } from "react-router-dom";
 import {
   Brain, AlertTriangle, TrendingDown, Clock, Users, Calendar,
   ArrowRight, MessageSquare, UserCheck, FileText, Shield, Zap,
