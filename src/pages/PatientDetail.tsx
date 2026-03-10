@@ -905,6 +905,18 @@ export default function PatientDetail() {
                         ))}
                       </div>
                     )}
+                    <div className="border-t border-border pt-6">
+                      <h3 className="font-display text-lg font-semibold mb-4 flex items-center gap-2">
+                        <Upload className="w-5 h-5 text-success" /> Documentos do Plano Alimentar
+                      </h3>
+                      <DocumentUpload
+                        patientId={patientId!}
+                        nutritionistId={user!.id}
+                        documentType="meal_plan"
+                        documents={mealPlanDocs}
+                        onUploadComplete={fetchAll}
+                      />
+                    </div>
                   </div>
                 </DialogContent>
               </Dialog>
