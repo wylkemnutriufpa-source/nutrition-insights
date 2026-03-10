@@ -52,6 +52,7 @@ export default function ImportPatients() {
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<FilterType>("all");
   const [tab, setTab] = useState("import");
+  const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     fetch("/data/Pacientes.csv")
