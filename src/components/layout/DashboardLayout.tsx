@@ -115,15 +115,8 @@ function SidebarContent({
   return (
     <>
       {/* Logo */}
-      <div className="p-4 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center flex-shrink-0 shadow-glow">
-          <Leaf className="w-5 h-5 text-primary-foreground" />
-        </div>
-        {!collapsed && (
-          <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="font-display font-bold text-lg">
-            Fit<span className="text-gradient">Journey</span>
-          </motion.span>
-        )}
+      <div className="p-4">
+        <FitJourneyLogo collapsed={collapsed} size="md" />
       </div>
 
       {/* Nav links */}

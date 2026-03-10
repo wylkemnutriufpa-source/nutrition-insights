@@ -124,11 +124,8 @@ export default function Landing() {
       {/* ══════════ NAV ══════════ */}
       <nav className="fixed top-0 w-full z-50 glass border-b border-border/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-glow group-hover:scale-110 transition-transform">
-              <Sparkles className="w-4.5 h-4.5 text-primary-foreground" />
-            </div>
-            <span className="font-display font-bold text-xl tracking-tight">{brandName}</span>
+          <Link to="/" className="flex items-center group">
+            <FitJourneyLogo size="sm" />
           </Link>
 
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
