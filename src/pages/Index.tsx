@@ -514,7 +514,37 @@ function NutritionistDashboardContent() {
     note: { icon: FileText, color: "text-muted-foreground" },
   };
 
+  const [activeTab, setActiveTab] = useState("clinical");
+
   return (
+    <div className="space-y-6">
+      {/* ── Tab Switcher ── */}
+      <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1 w-fit">
+        <button
+          onClick={() => setActiveTab("clinical")}
+          className={`flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-md transition-all ${
+            activeTab === "clinical"
+              ? "bg-card shadow-sm text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Heart className="w-4 h-4" /> Clínico
+        </button>
+        <button
+          onClick={() => setActiveTab("analytics")}
+          className={`flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-md transition-all ${
+            activeTab === "analytics"
+              ? "bg-card shadow-sm text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <BarChart3 className="w-4 h-4" /> Analytics
+        </button>
+      </div>
+
+      {activeTab === "analytics" ? (
+        <AnalyticsDashboard />
+      ) : (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
       {/* ── Header ── */}
       <motion.div variants={item} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
