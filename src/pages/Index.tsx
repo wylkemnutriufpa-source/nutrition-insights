@@ -852,6 +852,8 @@ function NutritionistDashboardContent() {
         </div>
       </motion.div>
     </motion.div>
+      )}
+    </div>
   );
 }
 
