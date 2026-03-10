@@ -18,6 +18,7 @@ import {
   Search, ToggleLeft, Trash2, Ban, CheckCircle2, Plus, FileText, Download, Sparkles
 } from "lucide-react";
 import { toast } from "sonner";
+import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
 import { FEATURE_REGISTRY, getFeaturesByCategory, type FeatureTier } from "@/lib/featureRegistry";
 
 // ─── Types ───
@@ -801,11 +802,12 @@ export default function AdminDashboard() {
 
             {/* ─── Metrics ─── */}
             <TabsContent value="metrics" className="mt-4 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 <MetricCard label="Profissionais" value={metrics.totalProfessionals} icon={UserCheck} color="text-primary" />
-                <MetricCard label="Pacientes" value={metrics.totalPatients} icon={Users} color="text-blue-400" />
-                <MetricCard label="Assinaturas Ativas" value={metrics.activeSubscriptions} icon={Star} color="text-amber-400" />
-                <MetricCard label="Receita Mensal" value={metrics.monthlyRevenue} icon={DollarSign} color="text-emerald-400" prefix="R$" />
+                <MetricCard label="Pacientes" value={metrics.totalPatients} icon={Users} color="text-primary" />
+                <MetricCard label="Assinaturas Ativas" value={metrics.activeSubscriptions} icon={Star} color="text-accent" />
+                <MetricCard label="Receita Mensal" value={metrics.monthlyRevenue} icon={DollarSign} color="text-primary" prefix="R$" />
+                <OnlinePatientsWidget variant="card" />
               </div>
 
               {/* Quick actions */}

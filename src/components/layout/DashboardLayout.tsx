@@ -17,6 +17,7 @@ import {
 import { useState } from "react";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { usePresenceTracker } from "@/hooks/usePresenceTracker";
 
 const nutritionistLinks = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
@@ -244,6 +245,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Track presence for all logged-in users
+  usePresenceTracker();
 
   // Scroll to top on route change
   useEffect(() => {
