@@ -236,6 +236,7 @@ const App = () => (
               {/* FitJourney Network - Admin growth */}
               <Route path="/admin/growth" element={<AdminRoute><GrowthDashboard /></AdminRoute>} />
               <Route path="/admin/prestige" element={<AdminRoute><AdminPrestige /></AdminRoute>} />
+              <Route path="/admin/pricing" element={<AdminRoute><AdminPricing /></AdminRoute>} />
 
               {/* Global Ranking */}
               <Route path="/ranking" element={<ProtectedRoute><GlobalRanking /></ProtectedRoute>} />
