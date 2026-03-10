@@ -84,6 +84,7 @@ const adminLinks = [
   { to: "/reports", icon: BarChart3, label: "Relatórios" },
   { to: "/food-database", icon: Apple, label: "Alimentos" },
   { to: "/branding", icon: Palette, label: "Branding" },
+  { to: "/global-tips", icon: Lightbulb, label: "Dicas" },
   { to: "/admin/pricing", icon: DollarSign, label: "Planos & Preços" },
   { to: "/admin/patient-features", icon: Crown, label: "Features Paciente" },
 ];
