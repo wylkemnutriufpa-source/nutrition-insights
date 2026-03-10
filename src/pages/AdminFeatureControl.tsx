@@ -53,7 +53,7 @@ export default function AdminFeatureControl() {
           .eq("nutritionist_id", r.user_id);
 
         const existingNames = new Set((featureRows || []).map((fr: any) => fr.feature_name));
-        const features: Record<string, boolean> = {};
+        const features: Record<string, FeatureStatus> = {};
 
         // Auto-sync: insert new features that don't exist in DB yet
         const newFeatures = ALL_FEATURES.filter(f => !existingNames.has(f.name));
@@ -66,8 +66,8 @@ export default function AdminFeatureControl() {
           await (supabase.from("professional_feature_usage" as any) as any).upsert(inserts, { onConflict: "nutritionist_id,feature_name" });
         }
 
-        ALL_FEATURES.forEach(f => { features[f.name] = true; });
-        featureRows?.forEach((fr: any) => { features[fr.feature_name] = fr.status === "enabled"; });
+        ALL_FEATURES.forEach(f => { features[f.name] = "enabled"; });
+        featureRows?.forEach((fr: any) => { features[fr.feature_name] = (fr.status as FeatureStatus) || "enabled"; });
 
         result.push({ user_id: r.user_id, full_name: profile?.full_name || "Nutricionista", features });
       }
