@@ -245,7 +245,7 @@ export default function AnalyzeMeal() {
               <Button
                 onClick={analyze}
                 className="w-full gradient-primary shadow-glow gap-2"
-                disabled={analyzing}
+                disabled={analyzing || !aiUsage.allowed}
                 size="lg"
               >
                 {analyzing ? (
