@@ -335,6 +335,7 @@ function NutritionistDashboardContent() {
 
   // Recent timeline
   const [recentTimeline, setRecentTimeline] = useState<any[]>([]);
+  const [timelineModalOpen, setTimelineModalOpen] = useState(false);
 
   // Program performance
   const [programPerformance, setProgramPerformance] = useState<{ id: string; title: string; patientCount: number; avgAdherence: number }[]>([]);
