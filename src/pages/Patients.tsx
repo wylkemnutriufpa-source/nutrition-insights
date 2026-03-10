@@ -956,7 +956,7 @@ export default function Patients() {
             </TabsList>
 
             <TabsContent value="ativos">
-              <PatientGrid patients={activePatientsList} navigate={navigate}
+              <PatientGrid patients={activePatientsList} navigate={navigateToPatient}
                 toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
                 setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
                 onUpdateExpiry={updateExpiry}
