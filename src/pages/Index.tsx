@@ -738,6 +738,18 @@ function NutritionistDashboardContent() {
         </ExpandablePanel>
       </motion.div>
 
+      {/* ── Advanced Analytics Charts ── */}
+      <motion.div variants={item}>
+        <ExpandablePanel title="Analytics Avançados">
+          <DashboardAdvancedCharts
+            riskPatients={riskPatients}
+            evolutionData={evolutionData}
+            programPerformance={programPerformance}
+            patientCount={patientCount}
+          />
+        </ExpandablePanel>
+      </motion.div>
+
 
       {riskPatients.length > 0 && (
         <motion.div variants={item}>
