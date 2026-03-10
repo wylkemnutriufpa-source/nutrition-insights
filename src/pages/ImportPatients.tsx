@@ -416,9 +416,19 @@ export default function ImportPatients() {
                       Limpar filtros
                     </button>
                   )}
+                  {filteredImportableCount > 0 && (
+                    <div className="flex items-center gap-2">
+                      <button onClick={toggleAllFiltered} className="text-xs text-primary hover:underline">
+                        {filteredSelectedCount === filteredImportableCount ? "Desmarcar" : "Selecionar"} importáveis
+                      </button>
+                      {filteredSelectedCount > 0 && (
+                        <Badge variant="outline" className="text-[10px]">{filteredSelectedCount} selecionados</Badge>
+                      )}
+                    </div>
+                  )}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
                 <div className="max-h-[400px] overflow-y-auto space-y-1.5">
                   {filteredPatients.length === 0 ? (
                     <div className="text-center py-8">
@@ -426,10 +436,30 @@ export default function ImportPatients() {
                       <p className="text-sm text-muted-foreground">Nenhum paciente encontrado</p>
                     </div>
                   ) : (
-                    filteredPatients.map((p, i) => {
+                    filteredPatients.map((p) => {
+                      const realIdx = allPatients.indexOf(p);
                       const missing = getMissingBadges(p);
+                      const canImport = !!(p.email && p.name.trim());
+                      const isSelected = selectedIndices.has(realIdx);
                       return (
-                        <div key={i} className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-muted/30 border border-border/50 text-sm">
+                        <div
+                          key={realIdx}
+                          onClick={() => canImport && togglePatient(realIdx)}
+                          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border text-sm transition-colors ${
+                            canImport ? "cursor-pointer" : "opacity-60 cursor-not-allowed"
+                          } ${
+                            isSelected && canImport
+                              ? "bg-primary/10 border-primary/30"
+                              : "bg-muted/30 border-border/50 hover:bg-muted/50"
+                          }`}
+                        >
+                          {canImport && (
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={() => togglePatient(realIdx)}
+                              className="shrink-0"
+                            />
+                          )}
                           <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                             <span className="text-xs font-bold text-primary">
                               {p.name ? p.name[0].toUpperCase() : "?"}
@@ -461,6 +491,17 @@ export default function ImportPatients() {
                     })
                   )}
                 </div>
+
+                {/* Import button for filtered selection */}
+                {filteredSelectedCount > 0 && (
+                  <Button onClick={handleImport} disabled={importing || selectedPatients.length === 0} className="w-full" size="lg">
+                    {importing ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Importando...</>
+                    ) : (
+                      <><Upload className="w-4 h-4 mr-2" /> Importar {selectedPatients.length} Paciente{selectedPatients.length !== 1 ? "s" : ""} Selecionados</>
+                    )}
+                  </Button>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
