@@ -833,7 +833,7 @@ export default function Patients() {
                   toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
                   setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
                   onUpdateExpiry={updateExpiry}
-                  search={search} emptyMessage={`Nenhum paciente no programa "${prog.title}"`} />
+                  search={search} emptyMessage={`Nenhum paciente no programa "${prog.title}"`} layout={layout} />
               </TabsContent>
             ))}
           </Tabs>
