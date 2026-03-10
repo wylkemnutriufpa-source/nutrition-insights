@@ -39,6 +39,7 @@ interface AnalysisResult {
 
 export default function AnalyzeMeal() {
   const { user } = useAuth();
+  const aiUsage = useAIUsage("analyze_meal");
   const [description, setDescription] = useState("");
   const [mealType, setMealType] = useState<MealType>("lunch");
   const [imageFile, setImageFile] = useState<File | null>(null);
