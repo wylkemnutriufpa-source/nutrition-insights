@@ -2,7 +2,7 @@ import { useOnlinePatients } from "@/hooks/useOnlinePatients";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Wifi, Crown } from "lucide-react";
+import { UsersRound, Crown } from "lucide-react";
 
 interface OnlinePatientsWidgetProps {
   variant?: "card" | "badge" | "inline";
