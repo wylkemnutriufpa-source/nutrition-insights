@@ -10,9 +10,18 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DollarSign, TrendingUp, Plus, CreditCard, ArrowUpCircle, ArrowDownCircle, Trash2, AlertTriangle, BarChart3 } from "lucide-react";
+import { DollarSign, TrendingUp, Plus, CreditCard, ArrowUpCircle, ArrowDownCircle, Trash2, AlertTriangle, BarChart3, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from "recharts";
+
+const defaultTxForm = {
+  id: null as string | null,
+  type: "income" as "income" | "expense",
+  description: "",
+  amount: "",
+  date: new Date().toISOString().split("T")[0],
+  category: "",
+};
 
 interface PatientPayment {
   id: string;
@@ -41,13 +50,7 @@ export default function Financial() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [txOpen, setTxOpen] = useState(false);
-  const [txForm, setTxForm] = useState({
-    type: "income" as "income" | "expense",
-    description: "",
-    amount: "",
-    date: new Date().toISOString().split("T")[0],
-    category: "",
-  });
+  const [txForm, setTxForm] = useState({ ...defaultTxForm });
 
   const fetchData = async () => {
     if (!user) return;
@@ -105,28 +108,46 @@ export default function Financial() {
     fetchData();
   }, [user]);
 
-  const addTransaction = async (e: React.FormEvent) => {
+  const saveTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
-    const { error } = await supabase.from("financial_transactions").insert({
+    const payload = {
       nutritionist_id: user.id,
       type: txForm.type,
-      description: txForm.description,
+      description: txForm.description.trim(),
       amount: parseFloat(txForm.amount),
       date: txForm.date,
-      category: txForm.category || null,
-    });
+      category: txForm.category.trim() || null,
+    };
 
-    if (error) {
-      toast.error(error.message);
-      return;
+    if (txForm.id) {
+      // Update existing
+      const { error } = await supabase.from("financial_transactions").update(payload).eq("id", txForm.id);
+      if (error) { toast.error(error.message); return; }
+      toast.success("Transação atualizada!");
+    } else {
+      // Insert new
+      const { error } = await supabase.from("financial_transactions").insert(payload);
+      if (error) { toast.error(error.message); return; }
+      toast.success("Transação adicionada!");
     }
 
-    toast.success("Transação adicionada!");
     setTxOpen(false);
-    setTxForm({ type: "income", description: "", amount: "", date: new Date().toISOString().split("T")[0], category: "" });
+    setTxForm({ ...defaultTxForm });
     fetchData();
+  };
+
+  const editTransaction = (tx: Transaction) => {
+    setTxForm({
+      id: tx.id,
+      type: tx.type,
+      description: tx.description,
+      amount: String(tx.amount),
+      date: tx.date,
+      category: tx.category || "",
+    });
+    setTxOpen(true);
   };
 
   const deleteTransaction = async (id: string) => {
@@ -207,13 +228,23 @@ export default function Financial() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
-            <DollarSign className="w-5 h-5 text-primary-foreground" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
+              <DollarSign className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="font-display text-2xl font-bold">Financeiro</h1>
+              <p className="text-sm text-muted-foreground">Gestão de planos, receitas e despesas</p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-display text-2xl font-bold">Financeiro</h1>
-            <p className="text-sm text-muted-foreground">Gestão de planos, receitas e despesas</p>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => { setTxForm({ ...defaultTxForm, type: "expense" }); setTxOpen(true); }} className="gap-1">
+              <ArrowDownCircle className="w-4 h-4" /> Despesa
+            </Button>
+            <Button size="sm" onClick={() => { setTxForm({ ...defaultTxForm, type: "income" }); setTxOpen(true); }} className="gap-1 gradient-primary">
+              <Plus className="w-4 h-4" /> Receita
+            </Button>
           </div>
         </div>
 
@@ -476,17 +507,18 @@ export default function Financial() {
                 <TransactionList
                   transactions={transactions.filter((t) => t.type === "income")}
                   type="income"
-                  onAdd={() => { setTxForm({ ...txForm, type: "income" }); setTxOpen(true); }}
+                  onAdd={() => { setTxForm({ ...defaultTxForm, type: "income" }); setTxOpen(true); }}
+                  onEdit={editTransaction}
                   onDelete={deleteTransaction}
                 />
               </TabsContent>
 
-              {/* Expenses Tab */}
               <TabsContent value="expenses" className="mt-4">
                 <TransactionList
                   transactions={transactions.filter((t) => t.type === "expense")}
                   type="expense"
-                  onAdd={() => { setTxForm({ ...txForm, type: "expense" }); setTxOpen(true); }}
+                  onAdd={() => { setTxForm({ ...defaultTxForm, type: "expense" }); setTxOpen(true); }}
+                  onEdit={editTransaction}
                   onDelete={deleteTransaction}
                 />
               </TabsContent>
@@ -500,10 +532,10 @@ export default function Financial() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="font-display">
-              {txForm.type === "income" ? "Nova Receita" : "Nova Despesa"}
+              {txForm.id ? "Editar Transação" : (txForm.type === "income" ? "Nova Receita" : "Nova Despesa")}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={addTransaction} className="space-y-4">
+          <form onSubmit={saveTransaction} className="space-y-4">
             <div>
               <Label>Tipo</Label>
               <Select value={txForm.type} onValueChange={(v) => setTxForm({ ...txForm, type: v as "income" | "expense" })}>
@@ -544,11 +576,13 @@ function TransactionList({
   transactions,
   type,
   onAdd,
+  onEdit,
   onDelete,
 }: {
   transactions: Transaction[];
   type: "income" | "expense";
   onAdd: () => void;
+  onEdit: (tx: Transaction) => void;
   onDelete: (id: string) => void;
 }) {
   const isIncome = type === "income";
@@ -594,10 +628,13 @@ function TransactionList({
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <span className={`font-bold text-sm ${isIncome ? "text-emerald-500" : "text-red-500"}`}>
                     R$ {tx.amount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </span>
+                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => onEdit(tx)}>
+                    <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                  </Button>
                   <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => onDelete(tx.id)}>
                     <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
                   </Button>
