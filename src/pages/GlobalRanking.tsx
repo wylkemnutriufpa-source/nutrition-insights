@@ -268,9 +268,12 @@ export default function GlobalRanking() {
               Competição saudável de engajamento — Top 20
             </p>
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Flame className="w-3.5 h-3.5 text-orange-400" />
-            Atualiza a cada 30min
+          <div className="flex items-center gap-3">
+            <OnlinePatientsWidget variant="badge" />
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Flame className="w-3.5 h-3.5 text-orange-400" />
+              30min
+            </div>
           </div>
         </div>
 
