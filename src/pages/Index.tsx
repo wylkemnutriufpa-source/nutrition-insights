@@ -501,66 +501,76 @@ function NutritionistDashboardContent() {
 
       {/* AI Summary Banner */}
       {aiSummary && (
-        <motion.div variants={item} className="glass rounded-xl p-4 border-primary/20 flex items-center gap-4 flex-wrap">
-          <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
-            <Brain className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold">Resumo da IA</p>
-            <p className="text-xs text-muted-foreground">{aiSummary.total_analyzed} pacientes analisados · {aiSummary.high_risk_count} em risco alto · Principal preocupação: {aiSummary.top_concern}</p>
-          </div>
-          {aiSummary.avg_adherence_estimate && (
-            <div className="text-center px-4">
-              <p className="font-display text-xl font-bold text-primary">{aiSummary.avg_adherence_estimate}%</p>
-              <p className="text-[10px] text-muted-foreground">Adesão estimada</p>
+        <motion.div variants={item}>
+          <ExpandablePanel title="Resumo da IA">
+            <div className="glass rounded-xl p-4 border-primary/20 flex items-center gap-4 flex-wrap">
+              <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
+                <Brain className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold">Resumo da IA</p>
+                <p className="text-xs text-muted-foreground">{aiSummary.total_analyzed} pacientes analisados · {aiSummary.high_risk_count} em risco alto · Principal preocupação: {aiSummary.top_concern}</p>
+              </div>
+              {aiSummary.avg_adherence_estimate && (
+                <div className="text-center px-4">
+                  <p className="font-display text-xl font-bold text-primary">{aiSummary.avg_adherence_estimate}%</p>
+                  <p className="text-[10px] text-muted-foreground">Adesão estimada</p>
+                </div>
+              )}
             </div>
-          )}
+          </ExpandablePanel>
         </motion.div>
       )}
 
       {/* Main Grid: Attention + Insights + Risk */}
       <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <AttentionPatientsPanel patients={attentionPatients} loading={aiLoading} />
-        <AIInsightsPanel insights={aiInsights} loading={aiLoading} />
-        <RiskPanel patients={riskPatients} />
+        <ExpandablePanel title="Precisam de Atenção"><AttentionPatientsPanel patients={attentionPatients} loading={aiLoading} /></ExpandablePanel>
+        <ExpandablePanel title="Insights da IA"><AIInsightsPanel insights={aiInsights} loading={aiLoading} /></ExpandablePanel>
+        <ExpandablePanel title="Painel de Risco"><RiskPanel patients={riskPatients} /></ExpandablePanel>
       </motion.div>
 
       {/* Evolution Charts */}
       <motion.div variants={item}>
-        <PatientEvolutionCharts
-          data={evolutionData}
-          activePeriod={evolutionPeriod}
-          onPeriodChange={(days) => setEvolutionPeriod(days)}
-        />
+        <ExpandablePanel title="Evolução Geral">
+          <PatientEvolutionCharts
+            data={evolutionData}
+            activePeriod={evolutionPeriod}
+            onPeriodChange={(days) => { setEvolutionPeriod(days); }}
+          />
+        </ExpandablePanel>
       </motion.div>
 
       {/* Patient Health Scores Overview */}
       {riskPatients.length > 0 && (
-        <motion.div variants={item} className="glass rounded-xl p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Heart className="w-4 h-4 text-primary" />
+        <motion.div variants={item}>
+          <ExpandablePanel title="Health Score dos Pacientes">
+            <div className="glass rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Heart className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <h2 className="font-display font-semibold">Health Score dos Pacientes</h2>
+                  <p className="text-xs text-muted-foreground">Score de 0-100 baseado em adesão, registros e consistência</p>
+                </div>
+              </div>
+              <div className="flex gap-4 overflow-x-auto pb-2">
+                {riskPatients.slice(0, 8).map((p, i) => (
+                  <motion.div
+                    key={p.id}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    onClick={(e) => { e.stopPropagation(); navigate(`/patients/${p.id}`); }}
+                    className="flex flex-col items-center gap-1 min-w-[80px] cursor-pointer hover:opacity-80 transition-opacity"
+                  >
+                    <HealthScoreRing score={p.score} size="sm" />
+                    <p className="text-xs font-medium truncate max-w-[80px] text-center">{p.name.split(" ")[0]}</p>
+                  </motion.div>
+                ))}
+              </div>
             </div>
-            <div>
-              <h2 className="font-display font-semibold">Health Score dos Pacientes</h2>
-              <p className="text-xs text-muted-foreground">Score de 0-100 baseado em adesão, registros e consistência</p>
-            </div>
-          </div>
-          <div className="flex gap-4 overflow-x-auto pb-2">
-            {riskPatients.slice(0, 8).map((p, i) => (
-              <motion.div
-                key={p.id}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.05 }}
-                onClick={() => navigate(`/patients/${p.id}`)}
-                className="flex flex-col items-center gap-1 min-w-[80px] cursor-pointer hover:opacity-80 transition-opacity"
-              >
-                <HealthScoreRing score={p.score} size="sm" />
-                <p className="text-xs font-medium truncate max-w-[80px] text-center">{p.name.split(" ")[0]}</p>
-              </motion.div>
-            ))}
-          </div>
+          </ExpandablePanel>
         </motion.div>
       )}
 
