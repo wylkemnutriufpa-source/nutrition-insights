@@ -566,11 +566,13 @@ function TransactionList({
   transactions,
   type,
   onAdd,
+  onEdit,
   onDelete,
 }: {
   transactions: Transaction[];
   type: "income" | "expense";
   onAdd: () => void;
+  onEdit: (tx: Transaction) => void;
   onDelete: (id: string) => void;
 }) {
   const isIncome = type === "income";
