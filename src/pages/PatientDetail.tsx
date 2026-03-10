@@ -328,6 +328,14 @@ export default function PatientDetail() {
     setTogglingStatus(false);
   };
 
+  const deletePatient = async () => {
+    if (!npId || !user) return;
+    const { error } = await supabase.from("nutritionist_patients").delete().eq("id", npId);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Paciente removido com sucesso!");
+    navigate("/patients");
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
