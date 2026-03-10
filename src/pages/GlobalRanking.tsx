@@ -112,7 +112,7 @@ export default function GlobalRanking() {
   const [hasPremium, setHasPremium] = useState<boolean | null>(null);
   const [nutritionistId, setNutritionistId] = useState<string | null>(null);
 
-  // Check premium access for nutritionists
+  // Check premium access for nutritionists; patients always have access
   useEffect(() => {
     if (!user) return;
     if (isAdmin) {
@@ -120,7 +120,8 @@ export default function GlobalRanking() {
       return;
     }
     if (isPatient) {
-      // Patients: find their nutritionist and check if they have premium
+      // All patients can see their nutritionist's ranking
+      setHasPremium(true);
       supabase
         .from("nutritionist_patients")
         .select("nutritionist_id")
@@ -131,10 +132,6 @@ export default function GlobalRanking() {
         .then(({ data }) => {
           if (data) {
             setNutritionistId(data.nutritionist_id);
-            // Check if nutritionist has premium
-            checkNutritionistPremium(data.nutritionist_id);
-          } else {
-            setHasPremium(false);
           }
         });
       return;
