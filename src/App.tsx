@@ -184,6 +184,9 @@ const App = () => (
               <Route path="/automation" element={<NutritionistRoute><AutomationCenter /></NutritionistRoute>} />
               <Route path="/checkin-panel" element={<NutritionistRoute><CheckinPanel /></NutritionistRoute>} />
 
+              {/* Patient portal */}
+              <Route path="/client/dashboard" element={<PatientRoute><ClientDashboard /></PatientRoute>} />
+
               {/* Patient-only routes */}
               <Route path="/meals" element={<ProtectedRoute><Meals /></ProtectedRoute>} />
               <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
