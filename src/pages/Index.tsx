@@ -21,6 +21,7 @@ import HealthScoreRing, { calculateHealthScore } from "@/components/dashboard/He
 import AdherenceAnalytics from "@/components/dashboard/AdherenceAnalytics";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import SystemUsageCard from "@/components/dashboard/SystemUsageCard";
+import NutritionCopilot from "@/components/dashboard/NutritionCopilot";
 import ExpandablePanel from "@/components/common/ExpandablePanel";
 import {
   UtensilsCrossed, Users, TrendingUp, Target, Sparkles, Plus,
@@ -567,6 +568,27 @@ function NutritionistDashboardContent() {
             )}
           </div>
         </div>
+      </motion.div>
+
+      {/* ── Nutrition Copilot ── */}
+      <motion.div variants={item}>
+        <NutritionCopilot
+          patients={riskPatients.map(p => ({
+            id: p.id,
+            name: p.name,
+            score: p.score,
+            risks: p.risks,
+            lastActivity: p.lastActivity,
+          }))}
+          attentionPatients={attentionPatients}
+          aiInsights={aiInsights}
+          aiSummary={aiSummary}
+          aiLoading={aiLoading}
+          appointmentsToday={appointmentsToday}
+          pendingCheckins={pendingCheckins}
+          patientCount={patientCount}
+          evolutionData={evolutionData}
+        />
       </motion.div>
 
       {/* ── Main Grid: Attention + Insights + Risk ── */}
