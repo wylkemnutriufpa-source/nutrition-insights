@@ -360,7 +360,7 @@ export default function Landing() {
             <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={stagger}>
               <motion.span variants={fadeUp} className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-4">DIFERENCIAIS</motion.span>
               <motion.h2 variants={fadeUp} className="font-display text-3xl md:text-4xl font-bold mb-6 leading-tight">
-                Por que nutricionistas escolhem o <span className="text-gradient">NutriFlow</span>?
+                Por que nutricionistas escolhem o <span className="text-gradient">FitJourney</span>?
               </motion.h2>
               <div className="space-y-5">
                 {[
