@@ -958,7 +958,7 @@ export default function PatientDetail() {
                                     </p>
                                   </div>
                                 </div>
-                                <Button size="sm" variant="outline" onClick={() => { setOpenSection(null); navigate(`/meal-plan/${plan.id}`); }}>
+                                <Button size="sm" variant="outline" onClick={() => { setOpenSection(null); navigate(`/meal-plans/${plan.id}`); }}>
                                   <FileText className="w-3.5 h-3.5 mr-1" /> Ver Plano
                                 </Button>
                               </div>
