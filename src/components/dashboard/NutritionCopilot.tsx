@@ -297,6 +297,7 @@ export default function NutritionCopilot({
   patients, attentionPatients, aiInsights, aiSummary, aiLoading,
   appointmentsToday, pendingCheckins, patientCount, evolutionData,
 }: CopilotProps) {
+  const [expanded, setExpanded] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>("priority");
   const navigate = useNavigate();
 
@@ -309,6 +310,12 @@ export default function NutritionCopilot({
 
   const toggle = (section: string) =>
     setExpandedSection(prev => prev === section ? null : section);
+
+  const highRisk = patients.filter(p => p.score < 30).length;
+  const inactive = patients.filter(p => {
+    if (!p.lastActivity) return true;
+    return Math.floor((Date.now() - new Date(p.lastActivity).getTime()) / 86400000) >= 3;
+  }).length;
 
   if (patients.length === 0 && !aiLoading) {
     return (
@@ -323,113 +330,146 @@ export default function NutritionCopilot({
   }
 
   return (
-    <div className="space-y-4">
-      {/* ── Copilot Header ── */}
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
-          <Brain className="w-5 h-5 text-primary-foreground" />
-        </div>
-        <div>
-          <h2 className="font-display font-bold text-lg tracking-tight">Nutrition Copilot</h2>
-          <p className="text-xs text-muted-foreground">Assistente clínico inteligente · {patientCount} pacientes</p>
-        </div>
-        {aiLoading && (
-          <RefreshCw className="w-4 h-4 text-primary animate-spin ml-auto" />
-        )}
-      </div>
-
-      {/* ── 8. Smart Summary Metrics ── */}
-      <SmartMetrics
-        patients={sortedPatients}
-        avgAdherence={evolutionData.avgAdherence}
-        appointmentsToday={appointmentsToday}
-        pendingCheckins={pendingCheckins}
-      />
-
-      {/* ── 2. Priority Queue ── */}
-      <CopilotSection
-        title="Fila de Prioridade"
-        subtitle={`${sortedPatients.filter(p => p.score < 60).length} pacientes precisam de ação`}
-        icon={<AlertTriangle className="w-4 h-4 text-warning" />}
-        isOpen={expandedSection === "priority"}
-        onToggle={() => toggle("priority")}
-        badge={sortedPatients.filter(p => p.score < 30).length > 0 ? `${sortedPatients.filter(p => p.score < 30).length} urgente` : undefined}
-        badgeColor="destructive"
-      >
-        <div className="space-y-2">
-          {sortedPatients.filter(p => p.score < 70).slice(0, 6).map((p, i) => (
-            <PriorityPatientCard key={p.id} patient={p} rank={i} />
-          ))}
-          {sortedPatients.filter(p => p.score < 70).length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-3">Todos os pacientes estão com bom score! 🎉</p>
+    <div
+      className={`rounded-xl border transition-all cursor-pointer ${expanded ? "border-primary/30 bg-gradient-to-br from-primary/5 via-card to-accent/5" : "border-primary/20 bg-gradient-to-r from-primary/5 via-card to-accent/5"}`}
+      onClick={() => setExpanded(prev => !prev)}
+    >
+      {/* Collapsed header */}
+      <div className="p-5">
+        <div className="flex items-start gap-4">
+          <div className="w-11 h-11 rounded-xl gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
+            <Brain className="w-5 h-5 text-primary-foreground" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h2 className="font-display font-bold text-base">Nutrition Copilot</h2>
+              {aiLoading && <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary animate-pulse">Analisando...</span>}
+              {highRisk > 0 && !aiLoading && <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/20 text-destructive font-bold animate-pulse">{highRisk} urgente</span>}
+              <span className="text-[10px] text-muted-foreground ml-auto">{expanded ? "▲ Recolher" : "▼ Expandir"}</span>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              <span className="text-foreground font-medium">{patientCount} pacientes</span>
+              {" · "}Adesão média: <span className={`font-medium ${evolutionData.avgAdherence >= 60 ? "text-success" : "text-warning"}`}>{evolutionData.avgAdherence}%</span>
+              {highRisk > 0 && <> · <span className="text-destructive font-medium">{highRisk} alto risco</span></>}
+              {inactive > 0 && <> · <span className="text-warning font-medium">{inactive} inativo(s)</span></>}
+            </p>
+          </div>
+          {evolutionData.avgScore > 0 && (
+            <div className="text-center px-3 flex-shrink-0 hidden sm:block">
+              <p className="font-display text-2xl font-bold text-primary">{evolutionData.avgScore}</p>
+              <p className="text-[10px] text-muted-foreground">Score médio</p>
+            </div>
           )}
         </div>
-      </CopilotSection>
+      </div>
 
-      {/* ── 3. AI Recommendations ── */}
-      <CopilotSection
-        title="Recomendações da IA"
-        subtitle="Ações sugeridas com base nos dados"
-        icon={<Zap className="w-4 h-4 text-primary" />}
-        isOpen={expandedSection === "recommendations"}
-        onToggle={() => toggle("recommendations")}
-      >
-        <AIRecommendations patients={sortedPatients} insights={aiInsights} />
-      </CopilotSection>
+      {/* Expanded content */}
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden"
+          >
+            <div className="px-5 pb-5 space-y-4 border-t border-border/30 pt-4" onClick={(e) => e.stopPropagation()}>
+              {/* Smart metrics */}
+              <SmartMetrics
+                patients={sortedPatients}
+                avgAdherence={evolutionData.avgAdherence}
+                appointmentsToday={appointmentsToday}
+                pendingCheckins={pendingCheckins}
+              />
 
-      {/* ── 4. Behavior Patterns ── */}
-      {behaviorPatterns.length > 0 && (
-        <CopilotSection
-          title="Padrões Comportamentais"
-          subtitle={`${behaviorPatterns.length} padrões detectados`}
-          icon={<Activity className="w-4 h-4 text-accent" />}
-          isOpen={expandedSection === "behavior"}
-          onToggle={() => toggle("behavior")}
-        >
-          <div className="space-y-1.5">
-            {behaviorPatterns.map((bp, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: i * 0.04 }}
-                onClick={() => navigate(`/patients/${bp.patientId}`)}
-                className="flex items-start gap-3 p-2.5 rounded-lg bg-muted/20 border border-border/50 cursor-pointer hover:border-accent/30 transition-all"
+              {/* Priority Queue */}
+              <CopilotSection
+                title="Fila de Prioridade"
+                subtitle={`${sortedPatients.filter(p => p.score < 60).length} pacientes precisam de ação`}
+                icon={<AlertTriangle className="w-4 h-4 text-warning" />}
+                isOpen={expandedSection === "priority"}
+                onToggle={() => toggle("priority")}
+                badge={sortedPatients.filter(p => p.score < 30).length > 0 ? `${sortedPatients.filter(p => p.score < 30).length} urgente` : undefined}
+                badgeColor="destructive"
               >
-                <bp.icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${bp.severity === "critical" ? "text-destructive" : bp.severity === "warning" ? "text-warning" : "text-info"}`} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold">{bp.patientName}</p>
-                  <p className="text-[11px] text-muted-foreground">{bp.pattern}</p>
+                <div className="space-y-2">
+                  {sortedPatients.filter(p => p.score < 70).slice(0, 6).map((p, i) => (
+                    <PriorityPatientCard key={p.id} patient={p} rank={i} />
+                  ))}
+                  {sortedPatients.filter(p => p.score < 70).length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-3">Todos os pacientes estão com bom score! 🎉</p>
+                  )}
                 </div>
-              </motion.div>
-            ))}
-          </div>
-        </CopilotSection>
-      )}
+              </CopilotSection>
 
-      {/* ── 5. Clinical Alerts ── */}
-      <CopilotSection
-        title="Alertas Clínicos"
-        subtitle="Prioridades de atendimento"
-        icon={<Shield className="w-4 h-4 text-destructive" />}
-        isOpen={expandedSection === "alerts"}
-        onToggle={() => toggle("alerts")}
-        badge={sortedPatients.filter(p => p.score < 30).length > 0 ? `${sortedPatients.filter(p => p.score < 30).length}` : undefined}
-        badgeColor="destructive"
-      >
-        <ClinicalAlerts patients={sortedPatients} />
-      </CopilotSection>
+              {/* AI Recommendations */}
+              <CopilotSection
+                title="Recomendações da IA"
+                subtitle="Ações sugeridas com base nos dados"
+                icon={<Zap className="w-4 h-4 text-primary" />}
+                isOpen={expandedSection === "recommendations"}
+                onToggle={() => toggle("recommendations")}
+              >
+                <AIRecommendations patients={sortedPatients} insights={aiInsights} />
+              </CopilotSection>
 
-      {/* ── 7. AI Activity Feed ── */}
-      <CopilotSection
-        title="Feed de Inteligência"
-        subtitle="Eventos detectados pela IA"
-        icon={<BarChart3 className="w-4 h-4 text-info" />}
-        isOpen={expandedSection === "feed"}
-        onToggle={() => toggle("feed")}
-      >
-        <AIFeed patients={sortedPatients} insights={aiInsights} />
-      </CopilotSection>
+              {/* Behavior Patterns */}
+              {behaviorPatterns.length > 0 && (
+                <CopilotSection
+                  title="Padrões Comportamentais"
+                  subtitle={`${behaviorPatterns.length} padrões detectados`}
+                  icon={<Activity className="w-4 h-4 text-accent" />}
+                  isOpen={expandedSection === "behavior"}
+                  onToggle={() => toggle("behavior")}
+                >
+                  <div className="space-y-1.5">
+                    {behaviorPatterns.map((bp, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: i * 0.04 }}
+                        onClick={() => navigate(`/patients/${bp.patientId}`)}
+                        className="flex items-start gap-3 p-2.5 rounded-lg bg-muted/20 border border-border/50 cursor-pointer hover:border-accent/30 transition-all"
+                      >
+                        <bp.icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${bp.severity === "critical" ? "text-destructive" : bp.severity === "warning" ? "text-warning" : "text-info"}`} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold">{bp.patientName}</p>
+                          <p className="text-[11px] text-muted-foreground">{bp.pattern}</p>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </CopilotSection>
+              )}
+
+              {/* Clinical Alerts */}
+              <CopilotSection
+                title="Alertas Clínicos"
+                subtitle="Prioridades de atendimento"
+                icon={<Shield className="w-4 h-4 text-destructive" />}
+                isOpen={expandedSection === "alerts"}
+                onToggle={() => toggle("alerts")}
+                badge={sortedPatients.filter(p => p.score < 30).length > 0 ? `${sortedPatients.filter(p => p.score < 30).length}` : undefined}
+                badgeColor="destructive"
+              >
+                <ClinicalAlerts patients={sortedPatients} />
+              </CopilotSection>
+
+              {/* AI Feed */}
+              <CopilotSection
+                title="Feed de Inteligência"
+                subtitle="Eventos detectados pela IA"
+                icon={<BarChart3 className="w-4 h-4 text-info" />}
+                isOpen={expandedSection === "feed"}
+                onToggle={() => toggle("feed")}
+              >
+                <AIFeed patients={sortedPatients} insights={aiInsights} />
+              </CopilotSection>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
