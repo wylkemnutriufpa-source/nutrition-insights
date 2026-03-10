@@ -21,6 +21,7 @@ import {
   Cell, RadarChart, PolarGrid, PolarAngleAxis, Radar, Legend
 } from "recharts";
 import PrestigeBadge from "@/components/prestige/PrestigeBadge";
+import PodiumBadge from "@/components/prestige/PodiumBadge";
 import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
 
 type Period = "daily" | "weekly" | "monthly" | "annual";
@@ -470,11 +471,10 @@ export default function GlobalRanking() {
                           </p>
 
                           {entry.plan_slug && (
-                            <PrestigeBadge
+                            <PodiumBadge
                               plan={allPrestigePlans.find(p => p.slug === entry.plan_slug) || null}
                               allPlans={allPrestigePlans}
-                              size="sm"
-                              clickable
+                              position={idx}
                             />
                           )}
 
