@@ -89,6 +89,7 @@ const adminLinks = [
   { to: "/branding", icon: Palette, label: "Branding" },
   { to: "/global-tips", icon: Lightbulb, label: "Dicas" },
   { to: "/professional-guide", icon: Compass, label: "Guia do Profissional" },
+  { to: "/user-guide", icon: BookOpen, label: "Guia do Paciente" },
   { to: "/admin/pricing", icon: DollarSign, label: "Planos & Preços" },
   { to: "/admin/patient-features", icon: Crown, label: "Features Paciente" },
 ];
