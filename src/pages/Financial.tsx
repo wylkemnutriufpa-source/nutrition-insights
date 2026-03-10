@@ -618,12 +618,16 @@ function TransactionList({
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <span className={`font-bold text-sm ${isIncome ? "text-emerald-500" : "text-red-500"}`}>
                     R$ {tx.amount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </span>
+                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => onEdit(tx)}>
+                    <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                  </Button>
                   <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => onDelete(tx.id)}>
                     <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
+                  </Button>
                   </Button>
                 </div>
               </div>
