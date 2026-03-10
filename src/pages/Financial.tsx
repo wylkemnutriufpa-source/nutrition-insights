@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -9,9 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { DollarSign, Users, TrendingUp, Plus, CreditCard, ArrowUpCircle, ArrowDownCircle, Trash2, AlertTriangle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DollarSign, TrendingUp, Plus, CreditCard, ArrowUpCircle, ArrowDownCircle, Trash2, AlertTriangle, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from "recharts";
 
 interface PatientPayment {
   id: string;
@@ -146,6 +147,47 @@ export default function Financial() {
   const expenseTotal = transactions.filter((t) => t.type === "expense").reduce((sum, t) => sum + t.amount, 0);
   const balance = incomeTotal - expenseTotal;
 
+  // Chart data: monthly income vs expense (last 6 months)
+  const monthlyData = useMemo(() => {
+    const months: Record<string, { month: string; receitas: number; despesas: number }> = {};
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const label = d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" });
+      months[key] = { month: label, receitas: 0, despesas: 0 };
+    }
+    transactions.forEach((tx) => {
+      const key = tx.date.substring(0, 7);
+      if (months[key]) {
+        if (tx.type === "income") months[key].receitas += tx.amount;
+        else months[key].despesas += tx.amount;
+      }
+    });
+    return Object.values(months);
+  }, [transactions]);
+
+  // Category breakdown for pie chart
+  const categoryData = useMemo(() => {
+    const cats: Record<string, number> = {};
+    transactions.forEach((tx) => {
+      const cat = tx.category || (tx.type === "income" ? "Receita geral" : "Despesa geral");
+      cats[cat] = (cats[cat] || 0) + tx.amount;
+    });
+    return Object.entries(cats).map(([name, value]) => ({ name, value }));
+  }, [transactions]);
+
+  // Payment status breakdown
+  const paymentStatusData = useMemo(() => {
+    const statuses: Record<string, number> = {};
+    payments.forEach((p) => {
+      const label = statusLabels[p.status] || p.status;
+      statuses[label] = (statuses[label] || 0) + 1;
+    });
+    return Object.entries(statuses).map(([name, value]) => ({ name, value }));
+  }, [payments]);
+
+  const PIE_COLORS = ["hsl(160, 84%, 39%)", "hsl(45, 93%, 47%)", "hsl(0, 84%, 60%)", "hsl(200, 80%, 50%)", "hsl(280, 70%, 50%)"];
   const statusColors: Record<string, string> = {
     paid: "bg-emerald-500/10 text-emerald-500",
     approved: "bg-emerald-500/10 text-emerald-500",
@@ -248,6 +290,125 @@ export default function Financial() {
                     </p>
                     <p className="text-sm text-muted-foreground">Saldo</p>
                   </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Charts Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Monthly Bar Chart */}
+              <Card className="glass shadow-card">
+                <CardHeader>
+                  <CardTitle className="font-display text-lg flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5 text-primary" />
+                    Receitas vs Despesas (6 meses)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={260}>
+                    <BarChart data={monthlyData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="month" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
+                      <YAxis tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
+                      <Tooltip
+                        contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }}
+                        labelStyle={{ color: "hsl(var(--foreground))" }}
+                        formatter={(value: number) => `R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
+                      />
+                      <Legend />
+                      <Bar dataKey="receitas" name="Receitas" fill="hsl(160, 84%, 39%)" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="despesas" name="Despesas" fill="hsl(0, 84%, 60%)" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              {/* Category Pie Chart */}
+              <Card className="glass shadow-card">
+                <CardHeader>
+                  <CardTitle className="font-display text-lg">Distribuição por Categoria</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {categoryData.length === 0 ? (
+                    <div className="flex items-center justify-center h-[260px] text-sm text-muted-foreground">
+                      Nenhuma transação registrada
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={260}>
+                      <PieChart>
+                        <Pie
+                          data={categoryData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={100}
+                          paddingAngle={3}
+                          dataKey="value"
+                          label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                        >
+                          {categoryData.map((_, idx) => (
+                            <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value: number) => `R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Balance Line Chart */}
+              <Card className="glass shadow-card">
+                <CardHeader>
+                  <CardTitle className="font-display text-lg">Evolução do Saldo</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={260}>
+                    <LineChart data={monthlyData.map((m) => ({ ...m, saldo: m.receitas - m.despesas }))}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="month" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
+                      <YAxis tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
+                      <Tooltip
+                        contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }}
+                        formatter={(value: number) => `R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
+                      />
+                      <Line type="monotone" dataKey="saldo" name="Saldo" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              {/* Payment Status Pie */}
+              <Card className="glass shadow-card">
+                <CardHeader>
+                  <CardTitle className="font-display text-lg">Status dos Pagamentos</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {paymentStatusData.length === 0 ? (
+                    <div className="flex items-center justify-center h-[260px] text-sm text-muted-foreground">
+                      Nenhum pagamento registrado
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={260}>
+                      <PieChart>
+                        <Pie
+                          data={paymentStatusData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={100}
+                          paddingAngle={3}
+                          dataKey="value"
+                          label={({ name, value }) => `${name}: ${value}`}
+                        >
+                          {paymentStatusData.map((_, idx) => (
+                            <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  )}
                 </CardContent>
               </Card>
             </div>
