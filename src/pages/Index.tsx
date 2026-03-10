@@ -18,6 +18,7 @@ import AttentionPatientsPanel from "@/components/dashboard/AttentionPatientsPane
 import PatientEvolutionCharts from "@/components/dashboard/PatientEvolutionCharts";
 import RiskPanel from "@/components/dashboard/RiskPanel";
 import HealthScoreRing, { calculateHealthScore } from "@/components/dashboard/HealthScoreRing";
+import AdherenceAnalytics from "@/components/dashboard/AdherenceAnalytics";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import ExpandablePanel from "@/components/common/ExpandablePanel";
 import {
