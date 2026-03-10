@@ -46,6 +46,7 @@ const nutritionistLinks = [
 
 const patientLinks = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
+  { to: "/ranking", icon: Trophy, label: "🏆 Ranking", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
   { to: "/checkin", icon: ClipboardCheck, label: "Check-in", color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
   { to: "/checklist", icon: CheckCircle2, label: "Checklist", color: "from-success/20 to-success/5", iconColor: "text-success" },
   { to: "/my-diet", icon: UtensilsCrossed, label: "Minha Dieta", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
