@@ -22,6 +22,7 @@ import HealthScoreRing, { calculateHealthScore } from "@/components/dashboard/He
 import AdherenceAnalytics from "@/components/dashboard/AdherenceAnalytics";
 import DashboardAdvancedCharts from "@/components/dashboard/DashboardAdvancedCharts";
 import AnalyticsDashboard from "@/components/dashboard/AnalyticsDashboard";
+import AIStrategyCenter from "@/components/dashboard/AIStrategyCenter";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import SystemUsageCard from "@/components/dashboard/SystemUsageCard";
