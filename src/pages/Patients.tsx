@@ -488,6 +488,19 @@ export default function Patients() {
     setBulkLoading(false);
   };
 
+  const removeFromProgram = async (patientId: string, programId: string, programTitle: string) => {
+    if (!confirm(`Remover paciente do programa "${programTitle}"?`)) return;
+    const { error } = await supabase.from("program_patients")
+      .delete()
+      .eq("patient_id", patientId)
+      .eq("program_id", programId);
+    if (error) toast.error("Erro ao remover do programa");
+    else {
+      toast.success(`Paciente removido de "${programTitle}"`);
+      fetchPatients();
+    }
+  };
+
   // Derive filtered lists based on active tab
   const searchFilter = (p: PatientInfo) =>
     !search || p.profile?.full_name?.toLowerCase().includes(search.toLowerCase());
