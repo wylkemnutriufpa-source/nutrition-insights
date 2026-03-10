@@ -720,7 +720,10 @@ function NutritionistDashboardContent() {
                       <Icon className={`w-3.5 h-3.5 ${conf.color}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{ev.title}</p>
+                      <p className="text-sm font-medium truncate">
+                        {ev.patient_name && <span className="text-primary">{ev.patient_name}</span>}
+                        {ev.patient_name ? " — " : ""}{ev.title}
+                      </p>
                       {ev.description && <p className="text-xs text-muted-foreground truncate">{ev.description}</p>}
                     </div>
                     <span className="text-[10px] text-muted-foreground flex-shrink-0 mt-1">
