@@ -137,15 +137,10 @@ export default function Financial() {
     }
   };
 
-  const activeSubs = subs.filter((s) => s.status === "active");
-  const totalActive = activeSubs.length;
-
-  // Subs expiring in 7 days
-  const expiringAlert = subs.filter((s) => {
-    if (!s.expiresAt || s.status !== "active") return false;
-    const days = Math.ceil((new Date(s.expiresAt).getTime() - Date.now()) / 86400000);
-    return days > 0 && days <= 7;
-  });
+  const paidPayments = payments.filter((p) => p.status === "paid" || p.status === "approved");
+  const totalPaid = paidPayments.length;
+  const pendingPayments = payments.filter((p) => p.status === "pending");
+  const paymentRevenue = paidPayments.reduce((sum, p) => sum + p.amount, 0);
 
   const incomeTotal = transactions.filter((t) => t.type === "income").reduce((sum, t) => sum + t.amount, 0);
   const expenseTotal = transactions.filter((t) => t.type === "expense").reduce((sum, t) => sum + t.amount, 0);
