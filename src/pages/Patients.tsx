@@ -376,7 +376,10 @@ function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssign
         <span className="text-sm font-bold text-primary">{displayName[0].toUpperCase()}</span>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-sm truncate">{displayName}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="font-semibold text-sm truncate" style={p.prestigePlan?.crown_enabled ? { color: p.prestigePlan.color } : undefined}>{displayName}</p>
+          {p.prestigePlan && <PrestigeBadge plan={p.prestigePlan} size="sm" showLabel={false} />}
+        </div>
         <div className="flex items-center gap-2 flex-wrap">
           <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
             p.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
