@@ -888,6 +888,44 @@ export default function PatientDetail() {
                   <MetabolicRadar anamnesis={anamnesis} />
                 </DialogContent>
               </Dialog>
+
+              {/* Recipes Modal */}
+              <Dialog open={openSection === "recipes"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display">Receitas Compartilhadas</DialogTitle></DialogHeader>
+                  {recipes.length === 0 ? (
+                    <div className="text-center py-10 text-muted-foreground">
+                      <ChefHat className="w-12 h-12 mx-auto mb-3 opacity-40" />
+                      <p className="text-sm">Nenhuma receita compartilhada ainda.</p>
+                      <p className="text-xs mt-1">Compartilhe receitas na seção Receitas do painel.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {recipes.map((recipe) => (
+                        <div key={recipe.id} className="rounded-xl border border-border bg-card p-4 hover:shadow-md transition-shadow">
+                          {recipe.image_url && (
+                            <img src={recipe.image_url} alt={recipe.title} className="w-full h-32 object-cover rounded-lg mb-3" />
+                          )}
+                          <h4 className="font-semibold text-sm">{recipe.title}</h4>
+                          {recipe.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{recipe.description}</p>}
+                          <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
+                            {recipe.calories_per_serving && <span>{recipe.calories_per_serving} kcal</span>}
+                            {recipe.prep_time_minutes && <span>{recipe.prep_time_minutes} min preparo</span>}
+                            {recipe.difficulty && <Badge variant="secondary" className="text-[10px]">{recipe.difficulty}</Badge>}
+                          </div>
+                          {recipe.tags?.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {recipe.tags.map((tag: string) => (
+                                <Badge key={tag} variant="outline" className="text-[10px]">{tag}</Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
             </>
           );
         })()}
