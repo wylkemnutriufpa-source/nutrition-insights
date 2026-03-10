@@ -13,13 +13,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { DollarSign, Users, TrendingUp, Plus, CreditCard, ArrowUpCircle, ArrowDownCircle, Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
-interface PatientSub {
+interface PatientPayment {
   id: string;
   patientName: string;
   planName: string;
   status: string;
-  startedAt: string;
-  expiresAt: string | null;
+  amount: number;
+  gateway: string;
+  createdAt: string;
+  paidAt: string | null;
 }
 
 interface Transaction {
@@ -34,7 +36,7 @@ interface Transaction {
 
 export default function Financial() {
   const { user } = useAuth();
-  const [subs, setSubs] = useState<PatientSub[]>([]);
+  const [payments, setPayments] = useState<PatientPayment[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [txOpen, setTxOpen] = useState(false);
@@ -73,23 +75,28 @@ export default function Financial() {
 
     const patientIds = patients.map((p) => p.patient_id);
 
-    const [subsRes, profilesRes] = await Promise.all([
-      supabase.from("subscriptions").select("*").in("user_id", patientIds),
+    const [paymentsRes, profilesRes] = await Promise.all([
+      supabase.from("payments").select("*").in("user_id", patientIds).order("created_at", { ascending: false }),
       supabase.from("profiles").select("user_id, full_name").in("user_id", patientIds),
     ]);
 
     const profileMap = new Map(profilesRes.data?.map((p) => [p.user_id, p.full_name]) || []);
 
-    const mapped: PatientSub[] = (subsRes.data || []).map((s) => ({
-      id: s.id,
-      patientName: profileMap.get(s.user_id) || "Paciente",
-      planName: s.plan_name,
-      status: s.status,
-      startedAt: s.started_at,
-      expiresAt: s.expires_at,
-    }));
+    const mapped: PatientPayment[] = (paymentsRes.data || []).map((p) => {
+      const meta = p.metadata as Record<string, string> | null;
+      return {
+        id: p.id,
+        patientName: profileMap.get(p.user_id) || "Paciente",
+        planName: meta?.plan_name || p.gateway,
+        status: p.status,
+        amount: Number(p.amount),
+        gateway: p.gateway,
+        createdAt: p.created_at,
+        paidAt: p.paid_at,
+      };
+    });
 
-    setSubs(mapped);
+    setPayments(mapped);
     setLoading(false);
   };
 
@@ -130,32 +137,29 @@ export default function Financial() {
     }
   };
 
-  const activeSubs = subs.filter((s) => s.status === "active");
-  const totalActive = activeSubs.length;
-
-  // Subs expiring in 7 days
-  const expiringAlert = subs.filter((s) => {
-    if (!s.expiresAt || s.status !== "active") return false;
-    const days = Math.ceil((new Date(s.expiresAt).getTime() - Date.now()) / 86400000);
-    return days > 0 && days <= 7;
-  });
+  const paidPayments = payments.filter((p) => p.status === "paid" || p.status === "approved");
+  const totalPaid = paidPayments.length;
+  const pendingPayments = payments.filter((p) => p.status === "pending");
+  const paymentRevenue = paidPayments.reduce((sum, p) => sum + p.amount, 0);
 
   const incomeTotal = transactions.filter((t) => t.type === "income").reduce((sum, t) => sum + t.amount, 0);
   const expenseTotal = transactions.filter((t) => t.type === "expense").reduce((sum, t) => sum + t.amount, 0);
   const balance = incomeTotal - expenseTotal;
 
   const statusColors: Record<string, string> = {
-    active: "bg-emerald-500/10 text-emerald-500",
-    expired: "bg-red-500/10 text-red-500",
+    paid: "bg-emerald-500/10 text-emerald-500",
+    approved: "bg-emerald-500/10 text-emerald-500",
+    pending: "bg-amber-500/10 text-amber-500",
+    failed: "bg-destructive/10 text-destructive",
     cancelled: "bg-muted text-muted-foreground",
-    trial: "bg-blue-500/10 text-blue-500",
   };
 
   const statusLabels: Record<string, string> = {
-    active: "Ativo",
-    expired: "Expirado",
+    paid: "Pago",
+    approved: "Aprovado",
+    pending: "Pendente",
+    failed: "Falhou",
     cancelled: "Cancelado",
-    trial: "Trial",
   };
 
   return (
@@ -177,21 +181,18 @@ export default function Financial() {
           </div>
         ) : (
           <>
-            {/* Alert for expiring subscriptions */}
-            {expiringAlert.length > 0 && (
-              <Card className="border-warning/50 bg-warning/5">
+            {/* Alert for pending payments */}
+            {pendingPayments.length > 0 && (
+              <Card className="border-amber-500/50 bg-amber-500/5">
                 <CardContent className="flex items-start gap-3 py-4">
-                  <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
+                  <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium">Mensalidades vencendo em breve</p>
-                    {expiringAlert.map((s) => {
-                      const days = Math.ceil((new Date(s.expiresAt!).getTime() - Date.now()) / 86400000);
-                      return (
-                        <p key={s.id} className="text-xs text-muted-foreground">
-                          {s.patientName} — {s.planName} vence em {days} dia{days > 1 ? "s" : ""}
-                        </p>
-                      );
-                    })}
+                    <p className="text-sm font-medium">Pagamentos pendentes</p>
+                    {pendingPayments.map((p) => (
+                      <p key={p.id} className="text-xs text-muted-foreground">
+                        {p.patientName} — {p.planName} • R$ {p.amount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </p>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
@@ -205,8 +206,8 @@ export default function Financial() {
                     <CreditCard className="w-6 h-6 text-emerald-500" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold font-display">{totalActive}</p>
-                    <p className="text-sm text-muted-foreground">Assinaturas Ativas</p>
+                    <p className="text-2xl font-bold font-display">{totalPaid}</p>
+                    <p className="text-sm text-muted-foreground">Pagamentos Confirmados</p>
                   </div>
                 </CardContent>
               </Card>
@@ -253,7 +254,7 @@ export default function Financial() {
 
             <Tabs defaultValue="subscriptions" className="w-full">
               <TabsList className="w-full justify-start bg-card border border-border">
-                <TabsTrigger value="subscriptions">Assinaturas</TabsTrigger>
+                <TabsTrigger value="subscriptions">Pagamentos</TabsTrigger>
                 <TabsTrigger value="income">
                   <ArrowUpCircle className="w-3.5 h-3.5 mr-1" /> Receitas
                 </TabsTrigger>
@@ -262,55 +263,47 @@ export default function Financial() {
                 </TabsTrigger>
               </TabsList>
 
-              {/* Subscriptions Tab */}
               <TabsContent value="subscriptions" className="mt-4">
                 <Card className="glass shadow-card">
                   <CardHeader>
-                    <CardTitle className="font-display text-lg">Assinaturas dos Pacientes</CardTitle>
+                    <CardTitle className="font-display text-lg">Pagamentos dos Pacientes</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {subs.length === 0 ? (
+                    {payments.length === 0 ? (
                       <div className="text-center py-8">
                         <DollarSign className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
-                        <p className="text-sm text-muted-foreground">Nenhuma assinatura encontrada</p>
+                        <p className="text-sm text-muted-foreground">Nenhum pagamento encontrado</p>
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        {subs.map((sub) => {
-                          const daysLeft = sub.expiresAt
-                            ? Math.ceil((new Date(sub.expiresAt).getTime() - Date.now()) / 86400000)
-                            : null;
-                          return (
-                            <div key={sub.id} className="flex items-center justify-between p-4 rounded-xl bg-muted/50">
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                  <span className="text-sm font-bold text-primary">
-                                    {sub.patientName[0]?.toUpperCase()}
-                                  </span>
-                                </div>
-                                <div>
-                                  <p className="font-medium text-sm">{sub.patientName}</p>
-                                  <p className="text-xs text-muted-foreground">{sub.planName}</p>
-                                </div>
+                        {payments.map((pay) => (
+                          <div key={pay.id} className="flex items-center justify-between p-4 rounded-xl bg-muted/50">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                <span className="text-sm font-bold text-primary">
+                                  {pay.patientName[0]?.toUpperCase()}
+                                </span>
                               </div>
-                              <div className="text-right flex items-center gap-3">
-                                <div>
-                                  <Badge className={statusColors[sub.status] || "bg-muted text-muted-foreground"}>
-                                    {statusLabels[sub.status] || sub.status}
-                                  </Badge>
-                                  <p className="text-xs text-muted-foreground mt-1">
-                                    Início: {new Date(sub.startedAt).toLocaleDateString("pt-BR")}
-                                  </p>
-                                  {daysLeft !== null && daysLeft > 0 && daysLeft <= 7 && (
-                                    <p className="text-xs text-warning font-medium mt-0.5">
-                                      ⚠️ Vence em {daysLeft} dia{daysLeft > 1 ? "s" : ""}
-                                    </p>
-                                  )}
-                                </div>
+                              <div>
+                                <p className="font-medium text-sm">{pay.patientName}</p>
+                                <p className="text-xs text-muted-foreground">{pay.planName} • {pay.gateway}</p>
                               </div>
                             </div>
-                          );
-                        })}
+                            <div className="text-right flex items-center gap-3">
+                              <div>
+                                <Badge className={statusColors[pay.status] || "bg-muted text-muted-foreground"}>
+                                  {statusLabels[pay.status] || pay.status}
+                                </Badge>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  R$ {pay.amount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {new Date(pay.createdAt).toLocaleDateString("pt-BR")}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </CardContent>
