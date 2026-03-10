@@ -344,12 +344,13 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
   );
 }
 
-function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, search, emptyMessage }: {
+function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, search, emptyMessage }: {
   patients: PatientInfo[]; navigate: any;
   toggleStatus: (id: string, status: string) => void;
   setAssignTarget: (p: PatientInfo) => void;
   setAssignDialogOpen: (v: boolean) => void;
   removeFromProgram: (patientId: string, programId: string, programTitle: string) => void;
+  onUpdateExpiry: (id: string, date: string | null) => void;
   search: string;
   emptyMessage: string;
 }) {
@@ -367,7 +368,8 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
       {patients.map((p, idx) => (
         <PatientCard key={p.id} p={p} idx={idx} navigate={navigate}
           toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
-          setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram} />
+          setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
+          onUpdateExpiry={onUpdateExpiry} />
       ))}
     </div>
   );
