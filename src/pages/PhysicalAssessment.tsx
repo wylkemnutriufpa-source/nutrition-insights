@@ -168,6 +168,20 @@ export default function PhysicalAssessment() {
       });
   }, [patientId, user]);
 
+  // Fetch assessment documents
+  const fetchAssessmentDocs = async () => {
+    if (!patientId) return;
+    const { data } = await supabase
+      .from("patient_documents" as any)
+      .select("*")
+      .eq("patient_id", patientId)
+      .eq("document_type", "assessment")
+      .order("created_at", { ascending: false });
+    setAssessmentDocs(data || []);
+  };
+
+  useEffect(() => { fetchAssessmentDocs(); }, [patientId]);
+
   // Auto-calculate derived values
   const computed = useMemo(() => {
     const w = parseFloat(form.weight) || 0;
