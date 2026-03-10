@@ -630,6 +630,54 @@ export type Database = {
         }
         Relationships: []
       }
+      meal_item_completions: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          date: string
+          id: string
+          meal_plan_id: string
+          meal_plan_item_id: string
+          patient_id: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          meal_plan_id: string
+          meal_plan_item_id: string
+          patient_id: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          meal_plan_id?: string
+          meal_plan_item_id?: string
+          patient_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_item_completions_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_item_completions_meal_plan_item_id_fkey"
+            columns: ["meal_plan_item_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meal_plan_items: {
         Row: {
           calories_target: number | null
