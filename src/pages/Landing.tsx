@@ -458,7 +458,7 @@ export default function Landing() {
           <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-16">
             <span className="inline-block px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-semibold mb-4">DEPOIMENTOS</span>
             <h2 className="font-display text-3xl md:text-5xl font-bold mb-4">Amado por <span className="text-gradient">nutricionistas</span></h2>
-            <p className="text-muted-foreground text-lg">Veja o que profissionais reais dizem sobre o NutriFlow</p>
+            <p className="text-muted-foreground text-lg">Veja o que profissionais reais dizem sobre o FitJourney</p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
