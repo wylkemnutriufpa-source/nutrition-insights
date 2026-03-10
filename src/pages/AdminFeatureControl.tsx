@@ -50,7 +50,20 @@ export default function AdminFeatureControl() {
           .select("feature_name, status")
           .eq("nutritionist_id", r.user_id);
 
+        const existingNames = new Set((featureRows || []).map((fr: any) => fr.feature_name));
         const features: Record<string, boolean> = {};
+
+        // Auto-sync: insert new features that don't exist in DB yet
+        const newFeatures = ALL_FEATURES.filter(f => !existingNames.has(f.name));
+        if (newFeatures.length > 0) {
+          const inserts = newFeatures.map(f => ({
+            nutritionist_id: r.user_id,
+            feature_name: f.name,
+            status: "enabled",
+          }));
+          await (supabase.from("professional_feature_usage" as any) as any).upsert(inserts, { onConflict: "nutritionist_id,feature_name" });
+        }
+
         ALL_FEATURES.forEach(f => { features[f.name] = true; });
         featureRows?.forEach((fr: any) => { features[fr.feature_name] = fr.status === "enabled"; });
 
