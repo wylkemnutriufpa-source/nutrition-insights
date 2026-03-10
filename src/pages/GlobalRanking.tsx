@@ -247,13 +247,12 @@ export default function GlobalRanking() {
                   </p>
 
                   {entry.plan_slug && (
-                    <Badge
-                      variant="outline"
-                      className="text-[10px] px-1.5 py-0 mt-0.5"
-                      style={{ borderColor: (entry.plan_color || "#666") + "60", color: entry.plan_color || undefined }}
-                    >
-                      {entry.badge_icon} {PLAN_LABELS[entry.plan_slug] || entry.plan_slug}
-                    </Badge>
+                    <PrestigeBadge
+                      plan={allPrestigePlans.find(p => p.slug === entry.plan_slug) || null}
+                      allPlans={allPrestigePlans}
+                      size="sm"
+                      clickable
+                    />
                   )}
 
                   <span className="text-sm font-bold mt-1">
