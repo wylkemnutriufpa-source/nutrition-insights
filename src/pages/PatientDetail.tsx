@@ -444,8 +444,6 @@ export default function PatientDetail() {
             { key: "radar", label: "Radar Metabólico", icon: TrendingUp, color: "from-destructive/20 to-destructive/5", iconColor: "text-destructive" },
           ];
 
-          const [openSection, setOpenSection] = useState<string | null>(null);
-
           return (
             <>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
