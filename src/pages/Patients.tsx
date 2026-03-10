@@ -479,6 +479,7 @@ export default function Patients() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredPatients.map((p, idx) => {
+              const isInactive = p.status !== "active";
               const score = p.priorityScore || 0;
               const tier = getScoreTier(score);
               const hasPrograms = p.programs && p.programs.length > 0;
@@ -489,9 +490,14 @@ export default function Patients() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.04 }}
                   whileHover={{ y: -2 }}
-                  className={`glass rounded-xl p-5 shadow-card cursor-pointer ring-2 ${tier.ring} transition-all`}
+                  className={`glass rounded-xl p-5 shadow-card cursor-pointer ring-2 ${isInactive ? "ring-muted/30 opacity-60" : tier.ring} transition-all relative`}
                   onClick={() => navigate(`/patients/${p.patient_id}`)}
                 >
+                  {isInactive && (
+                    <div className="absolute top-2 right-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                      Fora das métricas
+                    </div>
+                  )}
                   {/* Top row */}
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
