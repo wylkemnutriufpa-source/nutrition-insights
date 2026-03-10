@@ -19,6 +19,7 @@ import PatientEvolutionCharts from "@/components/dashboard/PatientEvolutionChart
 import RiskPanel from "@/components/dashboard/RiskPanel";
 import HealthScoreRing, { calculateHealthScore } from "@/components/dashboard/HealthScoreRing";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import ExpandablePanel from "@/components/common/ExpandablePanel";
 import {
   UtensilsCrossed, Users, TrendingUp, Target, Sparkles, Plus,
   CheckCircle2, Circle, AlertTriangle, Activity, FileText, Rocket,
@@ -161,8 +162,8 @@ function PatientDashboardContent() {
 
       {/* Gamification */}
       <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <XPBar totalXp={stats?.total_xp || 0} level={stats?.level || 1} />
-        <StreakCounter current={stats?.current_streak || 0} longest={stats?.longest_streak || 0} />
+        <ExpandablePanel title="XP"><XPBar totalXp={stats?.total_xp || 0} level={stats?.level || 1} /></ExpandablePanel>
+        <ExpandablePanel title="Streak"><StreakCounter current={stats?.current_streak || 0} longest={stats?.longest_streak || 0} /></ExpandablePanel>
       </motion.div>
 
       {/* Quick Stats */}
@@ -174,43 +175,47 @@ function PatientDashboardContent() {
       </motion.div>
 
       {/* Today's Checklist */}
-      <motion.div variants={item} className="glass rounded-xl p-5">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display font-semibold flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-primary" /> Checklist de Hoje
-          </h2>
-          <Link to="/checklist" className="text-sm text-primary hover:underline flex items-center gap-1">
-            Ver tudo <ArrowRight className="w-3 h-3" />
-          </Link>
-        </div>
-        {checklistTasks.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhuma tarefa para hoje. Aguarde seu protocolo!</p>
-        ) : (
-          <>
-            <Progress value={checklistProgress} className="h-2 mb-3" />
-            <div className="space-y-2">
-              {checklistTasks.slice(0, 5).map((task) => (
-                <div
-                  key={task.id}
-                  onClick={() => toggleTask(task)}
-                  className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
-                    task.completed ? "bg-success/5 opacity-60" : "bg-card hover:bg-muted"
-                  }`}
-                >
-                  {task.completed ? (
-                    <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0" />
-                  ) : (
-                    <Circle className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                  )}
-                  <span className="text-lg">{task.icon}</span>
-                  <span className={`text-sm ${task.completed ? "line-through text-muted-foreground" : "font-medium"}`}>
-                    {task.title}
-                  </span>
-                </div>
-              ))}
+      <motion.div variants={item}>
+        <ExpandablePanel title="Checklist de Hoje">
+          <div className="glass rounded-xl p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-display font-semibold flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-primary" /> Checklist de Hoje
+              </h2>
+              <Link to="/checklist" className="text-sm text-primary hover:underline flex items-center gap-1">
+                Ver tudo <ArrowRight className="w-3 h-3" />
+              </Link>
             </div>
-          </>
-        )}
+            {checklistTasks.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhuma tarefa para hoje. Aguarde seu protocolo!</p>
+            ) : (
+              <>
+                <Progress value={checklistProgress} className="h-2 mb-3" />
+                <div className="space-y-2">
+                  {checklistTasks.slice(0, 5).map((task) => (
+                    <div
+                      key={task.id}
+                      onClick={(e) => { e.stopPropagation(); toggleTask(task); }}
+                      className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
+                        task.completed ? "bg-success/5 opacity-60" : "bg-card hover:bg-muted"
+                      }`}
+                    >
+                      {task.completed ? (
+                        <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0" />
+                      ) : (
+                        <Circle className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                      )}
+                      <span className="text-lg">{task.icon}</span>
+                      <span className={`text-sm ${task.completed ? "line-through text-muted-foreground" : "font-medium"}`}>
+                        {task.title}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </ExpandablePanel>
       </motion.div>
 
       {/* Next Appointment + Chat */}
@@ -252,23 +257,29 @@ function PatientDashboardContent() {
 
       {/* Patient Evolution Summary */}
       <motion.div variants={item}>
-        <PatientEvolutionSummary />
+        <ExpandablePanel title="Evolução do Paciente">
+          <PatientEvolutionSummary />
+        </ExpandablePanel>
       </motion.div>
 
       {/* Subscription Card */}
       <motion.div variants={item}>
-        <SubscriptionCard />
+        <ExpandablePanel title="Assinatura">
+          <SubscriptionCard />
+        </ExpandablePanel>
       </motion.div>
 
       {/* Smart Plan Card */}
       <motion.div variants={item}>
-        <SmartPlanCard />
+        <ExpandablePanel title="Plano Inteligente">
+          <SmartPlanCard />
+        </ExpandablePanel>
       </motion.div>
 
       {/* Radar + Tips side by side */}
       <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <MetabolicRadar anamnesis={anamnesis} />
-        <SmartTips />
+        <ExpandablePanel title="Radar Metabólico"><MetabolicRadar anamnesis={anamnesis} /></ExpandablePanel>
+        <ExpandablePanel title="Dicas Inteligentes"><SmartTips /></ExpandablePanel>
       </motion.div>
     </motion.div>
     </>
@@ -490,66 +501,76 @@ function NutritionistDashboardContent() {
 
       {/* AI Summary Banner */}
       {aiSummary && (
-        <motion.div variants={item} className="glass rounded-xl p-4 border-primary/20 flex items-center gap-4 flex-wrap">
-          <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
-            <Brain className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold">Resumo da IA</p>
-            <p className="text-xs text-muted-foreground">{aiSummary.total_analyzed} pacientes analisados · {aiSummary.high_risk_count} em risco alto · Principal preocupação: {aiSummary.top_concern}</p>
-          </div>
-          {aiSummary.avg_adherence_estimate && (
-            <div className="text-center px-4">
-              <p className="font-display text-xl font-bold text-primary">{aiSummary.avg_adherence_estimate}%</p>
-              <p className="text-[10px] text-muted-foreground">Adesão estimada</p>
+        <motion.div variants={item}>
+          <ExpandablePanel title="Resumo da IA">
+            <div className="glass rounded-xl p-4 border-primary/20 flex items-center gap-4 flex-wrap">
+              <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
+                <Brain className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold">Resumo da IA</p>
+                <p className="text-xs text-muted-foreground">{aiSummary.total_analyzed} pacientes analisados · {aiSummary.high_risk_count} em risco alto · Principal preocupação: {aiSummary.top_concern}</p>
+              </div>
+              {aiSummary.avg_adherence_estimate && (
+                <div className="text-center px-4">
+                  <p className="font-display text-xl font-bold text-primary">{aiSummary.avg_adherence_estimate}%</p>
+                  <p className="text-[10px] text-muted-foreground">Adesão estimada</p>
+                </div>
+              )}
             </div>
-          )}
+          </ExpandablePanel>
         </motion.div>
       )}
 
       {/* Main Grid: Attention + Insights + Risk */}
       <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <AttentionPatientsPanel patients={attentionPatients} loading={aiLoading} />
-        <AIInsightsPanel insights={aiInsights} loading={aiLoading} />
-        <RiskPanel patients={riskPatients} />
+        <ExpandablePanel title="Precisam de Atenção"><AttentionPatientsPanel patients={attentionPatients} loading={aiLoading} /></ExpandablePanel>
+        <ExpandablePanel title="Insights da IA"><AIInsightsPanel insights={aiInsights} loading={aiLoading} /></ExpandablePanel>
+        <ExpandablePanel title="Painel de Risco"><RiskPanel patients={riskPatients} /></ExpandablePanel>
       </motion.div>
 
       {/* Evolution Charts */}
       <motion.div variants={item}>
-        <PatientEvolutionCharts
-          data={evolutionData}
-          activePeriod={evolutionPeriod}
-          onPeriodChange={(days) => setEvolutionPeriod(days)}
-        />
+        <ExpandablePanel title="Evolução Geral">
+          <PatientEvolutionCharts
+            data={evolutionData}
+            activePeriod={evolutionPeriod}
+            onPeriodChange={(days) => { setEvolutionPeriod(days); }}
+          />
+        </ExpandablePanel>
       </motion.div>
 
       {/* Patient Health Scores Overview */}
       {riskPatients.length > 0 && (
-        <motion.div variants={item} className="glass rounded-xl p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Heart className="w-4 h-4 text-primary" />
+        <motion.div variants={item}>
+          <ExpandablePanel title="Health Score dos Pacientes">
+            <div className="glass rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Heart className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <h2 className="font-display font-semibold">Health Score dos Pacientes</h2>
+                  <p className="text-xs text-muted-foreground">Score de 0-100 baseado em adesão, registros e consistência</p>
+                </div>
+              </div>
+              <div className="flex gap-4 overflow-x-auto pb-2">
+                {riskPatients.slice(0, 8).map((p, i) => (
+                  <motion.div
+                    key={p.id}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    onClick={(e) => { e.stopPropagation(); navigate(`/patients/${p.id}`); }}
+                    className="flex flex-col items-center gap-1 min-w-[80px] cursor-pointer hover:opacity-80 transition-opacity"
+                  >
+                    <HealthScoreRing score={p.score} size="sm" />
+                    <p className="text-xs font-medium truncate max-w-[80px] text-center">{p.name.split(" ")[0]}</p>
+                  </motion.div>
+                ))}
+              </div>
             </div>
-            <div>
-              <h2 className="font-display font-semibold">Health Score dos Pacientes</h2>
-              <p className="text-xs text-muted-foreground">Score de 0-100 baseado em adesão, registros e consistência</p>
-            </div>
-          </div>
-          <div className="flex gap-4 overflow-x-auto pb-2">
-            {riskPatients.slice(0, 8).map((p, i) => (
-              <motion.div
-                key={p.id}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.05 }}
-                onClick={() => navigate(`/patients/${p.id}`)}
-                className="flex flex-col items-center gap-1 min-w-[80px] cursor-pointer hover:opacity-80 transition-opacity"
-              >
-                <HealthScoreRing score={p.score} size="sm" />
-                <p className="text-xs font-medium truncate max-w-[80px] text-center">{p.name.split(" ")[0]}</p>
-              </motion.div>
-            ))}
-          </div>
+          </ExpandablePanel>
         </motion.div>
       )}
 
