@@ -79,6 +79,7 @@ const adminLinks = [
   { to: "/food-database", icon: Apple, label: "Alimentos" },
   { to: "/branding", icon: Palette, label: "Branding" },
   { to: "/admin/pricing", icon: DollarSign, label: "Planos & Preços" },
+  { to: "/admin/patient-features", icon: Crown, label: "Features Paciente" },
 ];
 
 function SidebarContent({
