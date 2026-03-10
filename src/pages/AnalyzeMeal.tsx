@@ -13,7 +13,6 @@ import { Link } from "react-router-dom";
 import type { Database } from "@/integrations/supabase/types";
 import { useAIUsage } from "@/hooks/useAIUsage";
 import AIUsageBadge from "@/components/common/AIUsageBadge";
-import type { Database } from "@/integrations/supabase/types";
 
 type MealType = Database["public"]["Enums"]["meal_type"];
 
