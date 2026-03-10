@@ -128,20 +128,29 @@ export default function MealPlans() {
                 <DialogTitle className="font-display">Criar Plano Alimentar</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <Label>Paciente</Label>
-                  <select
-                    value={form.patient_id}
-                    onChange={(e) => setForm({ ...form, patient_id: e.target.value })}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    required
-                  >
-                    <option value="">Selecione...</option>
-                    {patients.map((p) => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
-                </div>
+                {preselectedPatientId ? (
+                  <div>
+                    <Label>Paciente</Label>
+                    <div className="w-full rounded-md border border-input bg-muted/50 px-3 py-2 text-sm">
+                      {patients.find(p => p.id === preselectedPatientId)?.name || "Paciente selecionado"}
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <Label>Paciente</Label>
+                    <select
+                      value={form.patient_id}
+                      onChange={(e) => setForm({ ...form, patient_id: e.target.value })}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      required
+                    >
+                      <option value="">Selecione...</option>
+                      {patients.map((p) => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div>
                   <Label>Título</Label>
                   <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Ex: Plano de emagrecimento" required />
