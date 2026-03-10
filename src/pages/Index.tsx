@@ -590,12 +590,13 @@ function NutritionistDashboardContent() {
       </motion.div>
 
       {/* ── 1️⃣ Daily Overview Cards ── */}
-      <motion.div variants={item} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <motion.div variants={item} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <DailyMetricCard label="Pacientes" value={patientCount} icon={Users} color="primary" onClick={() => navigate("/patients")} />
         <DailyMetricCard label="Consultas Hoje" value={appointmentsToday} icon={Calendar} color="info" onClick={() => navigate("/appointments")} />
         <DailyMetricCard label="Programas Ativos" value={programCount} icon={Rocket} color="accent" onClick={() => navigate("/programs")} />
         <DailyMetricCard label="Protocolos" value={protocolCount} icon={FileText} color="warning" onClick={() => navigate("/protocols")} />
         <DailyMetricCard label="Check-ins Pendentes" value={pendingCheckins} icon={ClipboardList} color="destructive" pulse={pendingCheckins > 0} onClick={() => navigate("/checkin-panel")} />
+        <OnlinePatientsWidget variant="card" showPremiumTag={true} />
       </motion.div>
 
       {/* ── 3️⃣ AI Daily Briefing (expandable) ── */}
