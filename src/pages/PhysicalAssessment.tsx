@@ -462,10 +462,10 @@ export default function PhysicalAssessment() {
                 <NumField label="Panturrilha E" value={form.left_calf} onChange={(v) => set("left_calf", v)} unit="cm" />
               </div>
             </div>
-          </TabsContent>
+          </div>
 
           {/* Skinfolds */}
-          <TabsContent value="folds" className="space-y-4 mt-4">
+          <div className="space-y-4">
             <div className="glass rounded-xl p-5">
               <h3 className="font-display font-semibold mb-2 flex items-center gap-2">
                 <TrendingDown className="w-5 h-5 text-primary" /> Dobras Cutâneas — Jackson-Pollock 7 Dobras
