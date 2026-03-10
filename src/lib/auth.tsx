@@ -13,6 +13,14 @@ interface Profile {
   phone: string | null;
 }
 
+interface SubscriptionState {
+  subscribed: boolean;
+  subscription_tier: string | null;
+  subscription_end: string | null;
+  is_trial: boolean;
+  trial_end: string | null;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -22,11 +30,21 @@ interface AuthContextType {
   isNutritionist: boolean;
   isPatient: boolean;
   isAdmin: boolean;
+  subscription: SubscriptionState;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  checkSubscription: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const defaultSubscription: SubscriptionState = {
+  subscribed: false,
+  subscription_tier: null,
+  subscription_end: null,
+  is_trial: false,
+  trial_end: null,
+};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -34,6 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const [subscription, setSubscription] = useState<SubscriptionState>(defaultSubscription);
 
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
@@ -50,6 +69,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .select("role")
       .eq("user_id", userId);
     setRoles(data?.map((r) => r.role) || []);
+  };
+
+  const checkSubscription = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke("check-subscription");
+      if (!error && data) {
+        setSubscription({
+          subscribed: data.subscribed ?? false,
+          subscription_tier: data.subscription_tier ?? null,
+          subscription_end: data.subscription_end ?? null,
+          is_trial: data.is_trial ?? false,
+          trial_end: data.trial_end ?? null,
+        });
+      }
+    } catch (e) {
+      console.error("Error checking subscription:", e);
+    }
   };
 
   const refreshProfile = async () => {
@@ -89,6 +125,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               fetchRoles(session.user.id),
             ]);
             setLoading(false);
+            // Check subscription in background (don't block loading)
+            checkSubscription();
           }, 0);
         } else {
           setProfile(null);
@@ -110,7 +148,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         Promise.all([
           fetchProfile(session.user.id),
           fetchRoles(session.user.id),
-        ]).then(() => setLoading(false));
+        ]).then(() => {
+          setLoading(false);
+          checkSubscription();
+        });
       } else {
         setLoading(false);
       }
@@ -134,8 +175,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isNutritionist: roles.includes("nutritionist"),
         isPatient: roles.includes("patient"),
         isAdmin: (roles as string[]).includes("admin"),
+        subscription,
         signOut,
         refreshProfile,
+        checkSubscription,
       }}
     >
       {children}
