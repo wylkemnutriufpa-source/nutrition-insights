@@ -41,7 +41,7 @@ const nutritionistLinks = [
   { to: "/financial", icon: DollarSign, label: "Financeiro" },
   { to: "/supplements", icon: Pill, label: "Suplementação" },
   { to: "/global-tips", icon: Lightbulb, label: "Dicas" },
-  { to: "/user-guide", icon: Compass, label: "Guia do Usuário" },
+  { to: "/professional-guide", icon: Compass, label: "Guia do Profissional" },
   { to: "/feedbacks", icon: MessageSquare, label: "Feedbacks" },
   { to: "/branding", icon: Palette, label: "Branding" },
 ];
@@ -87,7 +87,7 @@ const adminLinks = [
   { to: "/food-database", icon: Apple, label: "Alimentos" },
   { to: "/branding", icon: Palette, label: "Branding" },
   { to: "/global-tips", icon: Lightbulb, label: "Dicas" },
-  { to: "/user-guide", icon: Compass, label: "Guia do Usuário" },
+  { to: "/professional-guide", icon: Compass, label: "Guia do Profissional" },
   { to: "/admin/pricing", icon: DollarSign, label: "Planos & Preços" },
   { to: "/admin/patient-features", icon: Crown, label: "Features Paciente" },
 ];
