@@ -64,7 +64,11 @@ import CheckinPanel from "./pages/CheckinPanel";
 import ClientDashboard from "./pages/ClientDashboard";
 import ImportPatients from "./pages/ImportPatients";
 import AdminProfessionals from "./pages/AdminProfessionals";
-
+import PublicProfile from "./pages/PublicProfile";
+import PublicProgram from "./pages/PublicProgram";
+import GrowthDashboard from "./pages/GrowthDashboard";
+import MyPublicProfile from "./pages/MyPublicProfile";
+import MyReferrals from "./pages/MyReferrals";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
