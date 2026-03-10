@@ -312,7 +312,11 @@ export default function Patients() {
     const { error } = await supabase.from("nutritionist_patients").update({ status: newStatus }).eq("id", id);
     if (error) toast.error("Erro ao atualizar status");
     else {
-      toast.success(`Paciente ${newStatus === "active" ? "ativado" : "desativado"}`);
+      toast.success(
+        newStatus === "active"
+          ? "Paciente ativado — dados incluídos nas métricas"
+          : "Paciente desativado — excluído das métricas e leituras de IA"
+      );
       fetchPatients();
     }
   };
@@ -354,11 +358,13 @@ export default function Patients() {
     return matchSearch && matchScore && matchStatus && matchProgram;
   });
 
+  // Only count active patients in score metrics
+  const activePatients = patients.filter(p => p.status === "active");
   const counts = {
     all: patients.length,
-    critical: patients.filter(p => (p.priorityScore || 0) < 40).length,
-    medium: patients.filter(p => { const s = p.priorityScore || 0; return s >= 40 && s < 70; }).length,
-    good: patients.filter(p => (p.priorityScore || 0) >= 70).length,
+    critical: activePatients.filter(p => (p.priorityScore || 0) < 40).length,
+    medium: activePatients.filter(p => { const s = p.priorityScore || 0; return s >= 40 && s < 70; }).length,
+    good: activePatients.filter(p => (p.priorityScore || 0) >= 70).length,
   };
 
   const filterButtons: { key: typeof filter; label: string }[] = [
@@ -378,7 +384,7 @@ export default function Patients() {
               <Users className="w-7 h-7 text-primary" /> Pacientes
             </h1>
             <p className="text-muted-foreground text-sm">
-              {patients.filter(p => p.status === "active").length} ativos · ordenados por prioridade
+              {activePatients.length} ativos nas métricas · {patients.length - activePatients.length} excluídos · ordenados por prioridade
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -473,6 +479,7 @@ export default function Patients() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredPatients.map((p, idx) => {
+              const isInactive = p.status !== "active";
               const score = p.priorityScore || 0;
               const tier = getScoreTier(score);
               const hasPrograms = p.programs && p.programs.length > 0;
@@ -483,9 +490,14 @@ export default function Patients() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.04 }}
                   whileHover={{ y: -2 }}
-                  className={`glass rounded-xl p-5 shadow-card cursor-pointer ring-2 ${tier.ring} transition-all`}
+                  className={`glass rounded-xl p-5 shadow-card cursor-pointer ring-2 ${isInactive ? "ring-muted/30 opacity-60" : tier.ring} transition-all relative`}
                   onClick={() => navigate(`/patients/${p.patient_id}`)}
                 >
+                  {isInactive && (
+                    <div className="absolute top-2 right-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                      Fora das métricas
+                    </div>
+                  )}
                   {/* Top row */}
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
