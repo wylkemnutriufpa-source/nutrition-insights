@@ -947,7 +947,7 @@ export default function PatientDetail() {
                           </Select>
                           {selectedPrestigePlanId && (
                             <div className="mt-2">
-                              <PrestigeBadge plan={prestigePlans.find(p => p.id === selectedPrestigePlanId) || null} size="md" />
+                              <PrestigeBadge plan={prestigePlans.find(p => p.id === selectedPrestigePlanId) || null} allPlans={prestigePlans} size="md" />
                             </div>
                           )}
                         </div>
