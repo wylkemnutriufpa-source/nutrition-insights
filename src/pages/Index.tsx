@@ -786,7 +786,144 @@ function DailyMetricCard({ label, value, icon: Icon, color, pulse, onClick }: {
   );
 }
 
-// Local fallback insights when AI is unavailable
+// ── Briefing Expandable ──
+function BriefingExpandable({ aiSummary, aiLoading, aiInsights, attentionPatients, pendingCheckins, appointmentsToday, riskPatients }: {
+  aiSummary: any; aiLoading: boolean; aiInsights: any[]; attentionPatients: any[];
+  pendingCheckins: number; appointmentsToday: number; riskPatients: any[];
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const navigate = useNavigate();
+  const highRisk = riskPatients.filter(p => p.score < 30);
+  const inactive = riskPatients.filter(p => {
+    if (!p.lastActivity) return true;
+    return Math.floor((Date.now() - new Date(p.lastActivity).getTime()) / 86400000) >= 3;
+  });
+
+  return (
+    <div
+      className={`rounded-xl border transition-all cursor-pointer ${expanded ? "border-primary/30 bg-gradient-to-br from-primary/5 via-card to-accent/5" : "border-primary/20 bg-gradient-to-r from-primary/5 via-card to-accent/5"}`}
+      onClick={() => setExpanded(prev => !prev)}
+    >
+      <div className="p-5">
+        <div className="flex items-start gap-4">
+          <div className="w-11 h-11 rounded-xl gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
+            <Brain className="w-5 h-5 text-primary-foreground" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h2 className="font-display font-bold text-base">Briefing Diário da IA</h2>
+              {aiLoading && <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary animate-pulse">Analisando...</span>}
+              <span className="text-[10px] text-muted-foreground ml-auto">{expanded ? "▲ Recolher" : "▼ Expandir"}</span>
+            </div>
+            {aiSummary ? (
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                <span className="text-foreground font-medium">{aiSummary.high_risk_count || 0} paciente{(aiSummary.high_risk_count || 0) !== 1 ? "s" : ""} requer{(aiSummary.high_risk_count || 0) === 1 ? "" : "em"} atenção hoje.</span>
+                {" "}{pendingCheckins > 0 ? `${pendingCheckins} check-in${pendingCheckins > 1 ? "s" : ""} pendente${pendingCheckins > 1 ? "s" : ""}. ` : "Todos os check-ins em dia. "}
+                {appointmentsToday > 0 ? `${appointmentsToday} consulta${appointmentsToday > 1 ? "s" : ""} agendada${appointmentsToday > 1 ? "s" : ""}.` : "Nenhuma consulta hoje."}
+                {aiSummary.top_concern ? ` Principal preocupação: ${aiSummary.top_concern}.` : ""}
+              </p>
+            ) : !aiLoading ? (
+              <p className="text-sm text-muted-foreground">Cadastre pacientes com anamnese para ativar o briefing inteligente.</p>
+            ) : null}
+          </div>
+          {aiSummary?.avg_adherence_estimate && (
+            <div className="text-center px-3 flex-shrink-0 hidden sm:block">
+              <p className="font-display text-2xl font-bold text-primary">{aiSummary.avg_adherence_estimate}%</p>
+              <p className="text-[10px] text-muted-foreground">Adesão geral</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden"
+          >
+            <div className="px-5 pb-5 space-y-4 border-t border-border/30 pt-4" onClick={(e) => e.stopPropagation()}>
+              {/* Quick metrics */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="rounded-lg bg-destructive/10 p-3 text-center">
+                  <p className="font-display font-bold text-lg text-destructive">{highRisk.length}</p>
+                  <p className="text-[10px] text-muted-foreground">Alto Risco</p>
+                </div>
+                <div className="rounded-lg bg-warning/10 p-3 text-center">
+                  <p className="font-display font-bold text-lg text-warning">{inactive.length}</p>
+                  <p className="text-[10px] text-muted-foreground">Inativos (3d+)</p>
+                </div>
+                <div className="rounded-lg bg-info/10 p-3 text-center">
+                  <p className="font-display font-bold text-lg text-info">{pendingCheckins}</p>
+                  <p className="text-[10px] text-muted-foreground">Check-ins Pendentes</p>
+                </div>
+                <div className="rounded-lg bg-primary/10 p-3 text-center">
+                  <p className="font-display font-bold text-lg text-primary">{appointmentsToday}</p>
+                  <p className="text-[10px] text-muted-foreground">Consultas Hoje</p>
+                </div>
+              </div>
+
+              {/* AI Insights feed */}
+              {aiInsights.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Insights da IA</p>
+                  <div className="space-y-1.5">
+                    {aiInsights.map((ins, i) => (
+                      <div key={i} className={`flex items-start gap-3 p-2.5 rounded-lg border ${
+                        ins.severity === "critical" ? "bg-destructive/5 border-destructive/20" :
+                        ins.severity === "warning" ? "bg-warning/5 border-warning/20" : "bg-info/5 border-info/20"
+                      }`}>
+                        <Brain className={`w-3.5 h-3.5 mt-0.5 flex-shrink-0 ${
+                          ins.severity === "critical" ? "text-destructive" : ins.severity === "warning" ? "text-warning" : "text-info"
+                        }`} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold">{ins.title}</p>
+                          <p className="text-[11px] text-muted-foreground">{ins.description}</p>
+                        </div>
+                        {ins.affected_count && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-card text-muted-foreground">{ins.affected_count}p</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Attention patients */}
+              {attentionPatients.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Pacientes que precisam de ação</p>
+                  <div className="space-y-1.5">
+                    {attentionPatients.slice(0, 5).map((p: any, i: number) => (
+                      <div
+                        key={i}
+                        onClick={() => navigate(`/patients/${p.patient_id}`)}
+                        className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/20 border border-border/50 cursor-pointer hover:border-primary/30 transition-all"
+                      >
+                        <AlertTriangle className={`w-3.5 h-3.5 flex-shrink-0 ${
+                          p.priority === "high" ? "text-destructive" : p.priority === "medium" ? "text-warning" : "text-info"
+                        }`} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold truncate">{p.patient_name}</p>
+                          <p className="text-[11px] text-muted-foreground truncate">{p.reason}</p>
+                        </div>
+                        <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+
 function generateLocalInsights(patients: any[]) {
   const insights: any[] = [];
   const attention: any[] = [];
