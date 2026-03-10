@@ -104,6 +104,7 @@ export default function PatientDetail() {
 
   // Plan management
   const [planOpen, setPlanOpen] = useState(false);
+  const [openSection, setOpenSection] = useState<string | null>(null);
   const [patientSubscription, setPatientSubscription] = useState<any>(null);
   const [pricingPlans, setPricingPlans] = useState<any[]>([]);
   const [planForm, setPlanForm] = useState({
