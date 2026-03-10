@@ -6,9 +6,14 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Users, Plus, UserCheck, UserX, ChevronRight, Search, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import {
+  Users, Plus, UserCheck, UserX, ChevronRight, Search,
+  TrendingUp, TrendingDown, Minus, Target, Loader2, ToggleLeft, ToggleRight
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface PatientInfo {
@@ -20,7 +25,13 @@ interface PatientInfo {
   profile?: { full_name: string; avatar_url: string | null } | null;
   priorityScore?: number;
   stats?: { last_meal_date?: string; total_xp?: number; current_streak?: number } | null;
-  checklistAdherence?: number; // 0-100
+  checklistAdherence?: number;
+  programs?: { id: string; title: string }[];
+}
+
+interface ProgramInfo {
+  id: string;
+  title: string;
 }
 
 function computeScore(stats: any, checklistData: any): number {
@@ -45,28 +56,16 @@ function computeScore(stats: any, checklistData: any): number {
 
 function getScoreTier(score: number): { label: string; color: string; bg: string; ring: string; icon: React.ReactNode; description: string } {
   if (score >= 70) return {
-    label: "Ótimo",
-    color: "text-success",
-    bg: "bg-success",
-    ring: "ring-success/30",
-    icon: <TrendingUp className="w-3 h-3" />,
-    description: "Paciente engajado"
+    label: "Ótimo", color: "text-success", bg: "bg-success", ring: "ring-success/30",
+    icon: <TrendingUp className="w-3 h-3" />, description: "Paciente engajado"
   };
   if (score >= 40) return {
-    label: "Médio",
-    color: "text-warning",
-    bg: "bg-warning",
-    ring: "ring-warning/30",
-    icon: <Minus className="w-3 h-3" />,
-    description: "Precisa de atenção"
+    label: "Médio", color: "text-warning", bg: "bg-warning", ring: "ring-warning/30",
+    icon: <Minus className="w-3 h-3" />, description: "Precisa de atenção"
   };
   return {
-    label: "Crítico",
-    color: "text-destructive",
-    bg: "bg-destructive",
-    ring: "ring-destructive/30",
-    icon: <TrendingDown className="w-3 h-3" />,
-    description: "Contato urgente"
+    label: "Crítico", color: "text-destructive", bg: "bg-destructive", ring: "ring-destructive/30",
+    icon: <TrendingDown className="w-3 h-3" />, description: "Contato urgente"
   };
 }
 
@@ -75,19 +74,13 @@ function ScoreRing({ score }: { score: number }) {
   const radius = 18;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (score / 100) * circumference;
-
   return (
     <div className="relative w-12 h-12 flex items-center justify-center flex-shrink-0">
       <svg className="w-12 h-12 -rotate-90" viewBox="0 0 48 48">
         <circle cx="24" cy="24" r={radius} fill="none" stroke="currentColor" strokeWidth="4" className="text-muted/20" />
-        <circle
-          cx="24" cy="24" r={radius} fill="none" strokeWidth="4"
-          strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
-          strokeLinecap="round"
-          className={`transition-all duration-700 ${
-            score >= 70 ? "stroke-success" : score >= 40 ? "stroke-warning" : "stroke-destructive"
-          }`}
+        <circle cx="24" cy="24" r={radius} fill="none" strokeWidth="4"
+          strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} strokeLinecap="round"
+          className={`transition-all duration-700 ${score >= 70 ? "stroke-success" : score >= 40 ? "stroke-warning" : "stroke-destructive"}`}
         />
       </svg>
       <span className={`absolute text-xs font-bold ${tier.color}`}>{score}</span>
@@ -101,20 +94,102 @@ function ScoreBar({ score, label }: { score: number; label: string }) {
     <div className="space-y-1">
       <div className="flex items-center justify-between text-xs">
         <span className="text-muted-foreground">{label}</span>
-        <span className={`font-semibold flex items-center gap-1 ${tier.color}`}>
-          {tier.icon} {tier.label}
-        </span>
+        <span className={`font-semibold flex items-center gap-1 ${tier.color}`}>{tier.icon} {tier.label}</span>
       </div>
       <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${score}%` }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className={`h-full rounded-full ${tier.bg}`}
-        />
+        <motion.div initial={{ width: 0 }} animate={{ width: `${score}%` }} transition={{ duration: 0.8, ease: "easeOut" }} className={`h-full rounded-full ${tier.bg}`} />
       </div>
       <p className="text-xs text-muted-foreground">{tier.description}</p>
     </div>
+  );
+}
+
+// ─── Assign to Program Dialog ───
+function AssignProgramDialog({
+  open, onOpenChange, patient, programs, onAssigned
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  patient: PatientInfo | null;
+  programs: ProgramInfo[];
+  onAssigned: () => void;
+}) {
+  const [selectedProgram, setSelectedProgram] = useState("");
+  const [assigning, setAssigning] = useState(false);
+
+  const alreadyEnrolled = new Set(patient?.programs?.map(p => p.id) || []);
+  const available = programs.filter(p => !alreadyEnrolled.has(p.id));
+
+  const handleAssign = async () => {
+    if (!patient || !selectedProgram) return;
+    setAssigning(true);
+    const { error } = await supabase.from("program_patients").insert({
+      program_id: selectedProgram,
+      patient_id: patient.patient_id,
+      status: "active",
+    });
+    if (error) {
+      if (error.code === "23505") toast.info("Paciente já está neste programa");
+      else toast.error(error.message);
+    } else {
+      toast.success("Paciente adicionado ao programa!");
+      onAssigned();
+      onOpenChange(false);
+    }
+    setAssigning(false);
+    setSelectedProgram("");
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="font-display flex items-center gap-2">
+            <Target className="w-5 h-5" /> Adicionar a Programa
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Adicionando <strong>{patient?.profile?.full_name}</strong> a um programa
+          </p>
+
+          {patient?.programs && patient.programs.length > 0 && (
+            <div>
+              <Label className="text-xs">Programas atuais</Label>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {patient.programs.map(pg => (
+                  <Badge key={pg.id} variant="secondary" className="text-xs">{pg.title}</Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {available.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              {programs.length === 0 ? "Nenhum programa criado ainda" : "Paciente já está em todos os programas"}
+            </p>
+          ) : (
+            <>
+              <div>
+                <Label className="text-xs">Programa</Label>
+                <Select value={selectedProgram} onValueChange={setSelectedProgram}>
+                  <SelectTrigger><SelectValue placeholder="Selecione um programa" /></SelectTrigger>
+                  <SelectContent>
+                    {available.map(p => (
+                      <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={handleAssign} disabled={!selectedProgram || assigning} className="w-full gap-2">
+                {assigning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Target className="w-4 h-4" />}
+                Adicionar ao Programa
+              </Button>
+            </>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -130,6 +205,12 @@ export default function Patients() {
   const [submitting, setSubmitting] = useState(false);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "critical" | "medium" | "good">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [programFilter, setProgramFilter] = useState<"all" | "enrolled" | "not_enrolled">("all");
+  const [programs, setPrograms] = useState<ProgramInfo[]>([]);
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [assignTarget, setAssignTarget] = useState<PatientInfo | null>(null);
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const fetchPatients = async () => {
     if (!user) return;
@@ -139,10 +220,15 @@ export default function Patients() {
       .eq("nutritionist_id", user.id)
       .order("created_at", { ascending: false });
 
+    // Fetch programs created by this nutritionist
+    const { data: progs } = await supabase.from("programs")
+      .select("id, title").eq("created_by", user.id).eq("is_active", true);
+    setPrograms(progs || []);
+
     if (data) {
       const patientIds = data.map(p => p.patient_id);
 
-      const [profilesRes, statsRes, checklistRes] = await Promise.all([
+      const [profilesRes, statsRes, checklistRes, enrollmentsRes] = await Promise.all([
         Promise.all(patientIds.map(id =>
           supabase.from("profiles").select("full_name, avatar_url").eq("user_id", id).single()
         )),
@@ -152,7 +238,20 @@ export default function Patients() {
         Promise.all(patientIds.map(id =>
           supabase.from("checklist_tasks").select("id, completed").eq("patient_id", id).eq("date", new Date().toISOString().split("T")[0])
         )),
+        // Fetch program enrollments for all patients
+        supabase.from("program_patients")
+          .select("patient_id, program_id, programs(id, title)")
+          .eq("status", "active")
+          .in("patient_id", patientIds),
       ]);
+
+      // Build enrollment map
+      const enrollmentMap = new Map<string, { id: string; title: string }[]>();
+      (enrollmentsRes.data || []).forEach((e: any) => {
+        const list = enrollmentMap.get(e.patient_id) || [];
+        if (e.programs) list.push({ id: e.programs.id, title: e.programs.title });
+        enrollmentMap.set(e.patient_id, list);
+      });
 
       const enriched = data.map((p, i) => {
         const checkTasks = checklistRes[i]?.data || [];
@@ -165,6 +264,7 @@ export default function Patients() {
           stats: statsRes[i]?.data,
           checklistAdherence: adherence,
           priorityScore: computeScore(statsRes[i]?.data, { total, completed }),
+          programs: enrollmentMap.get(p.patient_id) || [],
         };
       });
 
@@ -182,7 +282,6 @@ export default function Patients() {
     if (!patientName.trim()) { toast.error("Informe o nome do paciente"); return; }
     if (patientPassword.length < 6) { toast.error("Senha deve ter mínimo 6 caracteres"); return; }
     setSubmitting(true);
-
     try {
       const { data: patientId, error: createError } = await supabase
         .rpc("create_patient_account", {
@@ -190,22 +289,15 @@ export default function Patients() {
           _full_name: patientName.trim(),
           _password: patientPassword,
         });
-
       if (createError) throw createError;
       if (!patientId) throw new Error("Erro ao criar conta do paciente");
-
       const { error: linkError } = await supabase.from("nutritionist_patients").insert({
-        nutritionist_id: user.id,
-        patient_id: patientId,
+        nutritionist_id: user.id, patient_id: patientId,
       });
-
       if (linkError) {
         if (linkError.code === "23505") toast.info("Paciente já está na sua lista.");
         else throw linkError;
-      } else {
-        toast.success("Paciente cadastrado e vinculado! 🎉");
-      }
-
+      } else toast.success("Paciente cadastrado e vinculado! 🎉");
       setOpen(false);
       setEmail(""); setPatientName(""); setPatientPassword("");
       fetchPatients();
@@ -225,15 +317,41 @@ export default function Patients() {
     }
   };
 
+  const bulkToggle = async (newStatus: "active" | "inactive") => {
+    if (!user) return;
+    const count = patients.filter(p => p.status !== newStatus).length;
+    if (count === 0) { toast.info(`Todos já estão ${newStatus === "active" ? "ativos" : "inativos"}`); return; }
+    if (!confirm(`${newStatus === "active" ? "Ativar" : "Desativar"} ${count} pacientes?`)) return;
+    setBulkLoading(true);
+    const ids = patients.filter(p => p.status !== newStatus).map(p => p.id);
+    const { error } = await supabase.from("nutritionist_patients")
+      .update({ status: newStatus })
+      .in("id", ids);
+    if (error) toast.error("Erro ao atualizar");
+    else {
+      toast.success(`${count} pacientes ${newStatus === "active" ? "ativados" : "desativados"}`);
+      fetchPatients();
+    }
+    setBulkLoading(false);
+  };
+
   const filteredPatients = patients.filter(p => {
     const matchSearch = !search || p.profile?.full_name?.toLowerCase().includes(search.toLowerCase());
     const score = p.priorityScore || 0;
-    const matchFilter =
+    const matchScore =
       filter === "all" ? true :
       filter === "critical" ? score < 40 :
       filter === "medium" ? score >= 40 && score < 70 :
       score >= 70;
-    return matchSearch && matchFilter;
+    const matchStatus =
+      statusFilter === "all" ? true :
+      statusFilter === "active" ? p.status === "active" :
+      p.status !== "active";
+    const matchProgram =
+      programFilter === "all" ? true :
+      programFilter === "enrolled" ? (p.programs && p.programs.length > 0) :
+      (!p.programs || p.programs.length === 0);
+    return matchSearch && matchScore && matchStatus && matchProgram;
   });
 
   const counts = {
@@ -243,11 +361,11 @@ export default function Patients() {
     good: patients.filter(p => (p.priorityScore || 0) >= 70).length,
   };
 
-  const filterButtons: { key: typeof filter; label: string; color: string }[] = [
-    { key: "all", label: "Todos", color: "bg-muted text-muted-foreground" },
-    { key: "critical", label: "🔴 Críticos", color: "bg-destructive/10 text-destructive" },
-    { key: "medium", label: "🟡 Atenção", color: "bg-warning/10 text-warning" },
-    { key: "good", label: "🟢 Ótimos", color: "bg-success/10 text-success" },
+  const filterButtons: { key: typeof filter; label: string }[] = [
+    { key: "all", label: "Todos" },
+    { key: "critical", label: "🔴 Críticos" },
+    { key: "medium", label: "🟡 Atenção" },
+    { key: "good", label: "🟢 Ótimos" },
   ];
 
   return (
@@ -263,36 +381,45 @@ export default function Patients() {
               {patients.filter(p => p.status === "active").length} ativos · ordenados por prioridade
             </p>
           </div>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button className="gradient-primary gap-2 shadow-glow">
-                <Plus className="w-4 h-4" /> Adicionar Paciente
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle className="font-display">Adicionar Paciente</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={addPatient} className="space-y-4">
-                <div>
-                  <Label>Nome do paciente</Label>
-                  <Input value={patientName} onChange={(e) => setPatientName(e.target.value)} placeholder="Nome completo" required />
-                </div>
-                <div>
-                  <Label>Email do paciente</Label>
-                  <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="paciente@email.com" required />
-                </div>
-                <div>
-                  <Label>Senha inicial</Label>
-                  <Input type="password" value={patientPassword} onChange={(e) => setPatientPassword(e.target.value)} placeholder="Mínimo 6 caracteres" minLength={6} required />
-                  <p className="text-xs text-muted-foreground mt-1">O paciente poderá alterar a senha depois em Configurações.</p>
-                </div>
-                <Button type="submit" className="w-full gradient-primary" disabled={submitting}>
-                  {submitting ? "Criando conta..." : "Cadastrar Paciente"}
+          <div className="flex items-center gap-2">
+            {/* Bulk actions */}
+            <Button variant="outline" size="sm" onClick={() => bulkToggle("active")} disabled={bulkLoading} className="gap-1.5 text-xs">
+              <ToggleRight className="w-3.5 h-3.5" /> Ativar Todos
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => bulkToggle("inactive")} disabled={bulkLoading} className="gap-1.5 text-xs">
+              <ToggleLeft className="w-3.5 h-3.5" /> Desativar Todos
+            </Button>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button className="gradient-primary gap-2 shadow-glow">
+                  <Plus className="w-4 h-4" /> Adicionar Paciente
                 </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle className="font-display">Adicionar Paciente</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={addPatient} className="space-y-4">
+                  <div>
+                    <Label>Nome do paciente</Label>
+                    <Input value={patientName} onChange={(e) => setPatientName(e.target.value)} placeholder="Nome completo" required />
+                  </div>
+                  <div>
+                    <Label>Email do paciente</Label>
+                    <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="paciente@email.com" required />
+                  </div>
+                  <div>
+                    <Label>Senha inicial</Label>
+                    <Input type="password" value={patientPassword} onChange={(e) => setPatientPassword(e.target.value)} placeholder="Mínimo 6 caracteres" minLength={6} required />
+                    <p className="text-xs text-muted-foreground mt-1">O paciente poderá alterar a senha depois em Configurações.</p>
+                  </div>
+                  <Button type="submit" className="w-full gradient-primary" disabled={submitting}>
+                    {submitting ? "Criando conta..." : "Cadastrar Paciente"}
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {/* Summary cards */}
@@ -309,10 +436,28 @@ export default function Patients() {
           ))}
         </div>
 
-        {/* Search */}
-        <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Buscar paciente..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
+        {/* Filters row */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input placeholder="Buscar paciente..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
+          </div>
+          <Select value={statusFilter} onValueChange={(v: any) => setStatusFilter(v)}>
+            <SelectTrigger className="w-[130px]"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="active">Ativos</SelectItem>
+              <SelectItem value="inactive">Inativos</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={programFilter} onValueChange={(v: any) => setProgramFilter(v)}>
+            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Programa" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="enrolled">Em programa</SelectItem>
+              <SelectItem value="not_enrolled">Sem programa</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {loading ? (
@@ -330,6 +475,7 @@ export default function Patients() {
             {filteredPatients.map((p, idx) => {
               const score = p.priorityScore || 0;
               const tier = getScoreTier(score);
+              const hasPrograms = p.programs && p.programs.length > 0;
               return (
                 <motion.div
                   key={p.id}
@@ -341,46 +487,58 @@ export default function Patients() {
                   onClick={() => navigate(`/patients/${p.patient_id}`)}
                 >
                   {/* Top row */}
-                  <div className="flex items-center gap-3 mb-4">
-                    {/* Avatar */}
+                  <div className="flex items-center gap-3 mb-3">
                     <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                       <span className="text-lg font-bold text-primary">
                         {(p.profile?.full_name || "P")[0].toUpperCase()}
                       </span>
                     </div>
-
-                    {/* Name + status */}
                     <div className="flex-1 min-w-0">
                       <h3 className="font-display font-semibold truncate">{p.profile?.full_name || "Paciente"}</h3>
-                      <div className="flex items-center gap-2 mt-0.5">
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                         <span className={`text-xs px-2 py-0.5 rounded-full ${
                           p.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
                         }`}>
                           {p.status === "active" ? "Ativo" : "Inativo"}
                         </span>
+                        {hasPrograms && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary flex items-center gap-1">
+                            <Target className="w-3 h-3" /> {p.programs!.length} programa{p.programs!.length > 1 ? "s" : ""}
+                          </span>
+                        )}
                         {p.stats?.current_streak ? (
                           <span className="text-xs text-muted-foreground">🔥 {p.stats.current_streak}d</span>
                         ) : null}
-                        {p.stats?.total_xp ? (
-                          <span className="text-xs text-muted-foreground">⚡ {p.stats.total_xp} XP</span>
-                        ) : null}
                       </div>
                     </div>
-
-                    {/* Score ring */}
                     <ScoreRing score={score} />
-
-                    {/* Actions */}
                     <div className="flex items-center gap-1">
                       <button
+                        onClick={(e) => { e.stopPropagation(); setAssignTarget(p); setAssignDialogOpen(true); }}
+                        className="text-muted-foreground hover:text-primary p-1" title="Adicionar a programa"
+                      >
+                        <Target className="w-4 h-4" />
+                      </button>
+                      <button
                         onClick={(e) => { e.stopPropagation(); toggleStatus(p.id, p.status); }}
-                        className="text-muted-foreground hover:text-foreground p-1"
+                        className="text-muted-foreground hover:text-foreground p-1" title={p.status === "active" ? "Desativar" : "Ativar"}
                       >
                         {p.status === "active" ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
                       </button>
                       <ChevronRight className="w-4 h-4 text-muted-foreground" />
                     </div>
                   </div>
+
+                  {/* Program badges */}
+                  {hasPrograms && (
+                    <div className="flex flex-wrap gap-1 mb-3">
+                      {p.programs!.map(pg => (
+                        <Badge key={pg.id} variant="outline" className="text-xs gap-1">
+                          <Target className="w-3 h-3" /> {pg.title}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
 
                   {/* Score bar */}
                   <ScoreBar score={score} label="Engajamento" />
@@ -416,6 +574,14 @@ export default function Patients() {
           </div>
         )}
       </div>
+
+      <AssignProgramDialog
+        open={assignDialogOpen}
+        onOpenChange={setAssignDialogOpen}
+        patient={assignTarget}
+        programs={programs}
+        onAssigned={fetchPatients}
+      />
     </DashboardLayout>
   );
 }
