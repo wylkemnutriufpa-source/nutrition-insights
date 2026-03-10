@@ -28,6 +28,8 @@ const TRIGGER_TYPES = [
   { value: "checkin.overdue", label: "Check-in atrasado" },
   { value: "weight.plateau", label: "Platô de peso detectado" },
   { value: "meal.skipped", label: "Refeição não registrada" },
+  { value: "pattern.weekend_drop", label: "🧠 Queda de aderência no fim de semana" },
+  { value: "pattern.consecutive_drop", label: "🧠 Queda consecutiva de aderência" },
 ];
 
 const ACTION_TYPES = [
