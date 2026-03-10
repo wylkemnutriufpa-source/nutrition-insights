@@ -13,13 +13,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { DollarSign, Users, TrendingUp, Plus, CreditCard, ArrowUpCircle, ArrowDownCircle, Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
-interface PatientSub {
+interface PatientPayment {
   id: string;
   patientName: string;
   planName: string;
   status: string;
-  startedAt: string;
-  expiresAt: string | null;
+  amount: number;
+  gateway: string;
+  createdAt: string;
+  paidAt: string | null;
 }
 
 interface Transaction {
@@ -34,7 +36,7 @@ interface Transaction {
 
 export default function Financial() {
   const { user } = useAuth();
-  const [subs, setSubs] = useState<PatientSub[]>([]);
+  const [payments, setPayments] = useState<PatientPayment[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [txOpen, setTxOpen] = useState(false);
@@ -73,23 +75,28 @@ export default function Financial() {
 
     const patientIds = patients.map((p) => p.patient_id);
 
-    const [subsRes, profilesRes] = await Promise.all([
-      supabase.from("subscriptions").select("*").in("user_id", patientIds),
+    const [paymentsRes, profilesRes] = await Promise.all([
+      supabase.from("payments").select("*").in("user_id", patientIds).order("created_at", { ascending: false }),
       supabase.from("profiles").select("user_id, full_name").in("user_id", patientIds),
     ]);
 
     const profileMap = new Map(profilesRes.data?.map((p) => [p.user_id, p.full_name]) || []);
 
-    const mapped: PatientSub[] = (subsRes.data || []).map((s) => ({
-      id: s.id,
-      patientName: profileMap.get(s.user_id) || "Paciente",
-      planName: s.plan_name,
-      status: s.status,
-      startedAt: s.started_at,
-      expiresAt: s.expires_at,
-    }));
+    const mapped: PatientPayment[] = (paymentsRes.data || []).map((p) => {
+      const meta = p.metadata as Record<string, string> | null;
+      return {
+        id: p.id,
+        patientName: profileMap.get(p.user_id) || "Paciente",
+        planName: meta?.plan_name || p.gateway,
+        status: p.status,
+        amount: Number(p.amount),
+        gateway: p.gateway,
+        createdAt: p.created_at,
+        paidAt: p.paid_at,
+      };
+    });
 
-    setSubs(mapped);
+    setPayments(mapped);
     setLoading(false);
   };
 
