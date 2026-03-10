@@ -630,6 +630,56 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_requests: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          message: string | null
+          name: string
+          nutritionist_id: string
+          phone: string | null
+          program_id: string | null
+          referral_code: string | null
+          source: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          message?: string | null
+          name: string
+          nutritionist_id: string
+          phone?: string | null
+          program_id?: string | null
+          referral_code?: string | null
+          source?: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string | null
+          name?: string
+          nutritionist_id?: string
+          phone?: string | null
+          program_id?: string | null
+          referral_code?: string | null
+          source?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_requests_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meal_item_completions: {
         Row: {
           adherence_status: string
@@ -1233,6 +1283,50 @@ export type Database = {
             columns: ["insight_id"]
             isOneToOne: false
             referencedRelation: "anamnesis_ai_insights"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_referrals: {
+        Row: {
+          clicks: number
+          created_at: string
+          id: string
+          is_active: boolean
+          leads_generated: number
+          nutritionist_id: string
+          patient_id: string
+          program_id: string | null
+          referral_code: string
+        }
+        Insert: {
+          clicks?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          leads_generated?: number
+          nutritionist_id: string
+          patient_id: string
+          program_id?: string | null
+          referral_code?: string
+        }
+        Update: {
+          clicks?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          leads_generated?: number
+          nutritionist_id?: string
+          patient_id?: string
+          program_id?: string | null
+          referral_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_referrals_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
             referencedColumns: ["id"]
           },
         ]
@@ -2128,6 +2222,42 @@ export type Database = {
           id?: string
           is_template?: boolean
           title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      public_profile_settings: {
+        Row: {
+          bio: string | null
+          booking_enabled: boolean | null
+          created_at: string
+          id: string
+          is_public: boolean
+          nutritionist_id: string
+          slug: string
+          specialties: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          bio?: string | null
+          booking_enabled?: boolean | null
+          created_at?: string
+          id?: string
+          is_public?: boolean
+          nutritionist_id: string
+          slug: string
+          specialties?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          bio?: string | null
+          booking_enabled?: boolean | null
+          created_at?: string
+          id?: string
+          is_public?: boolean
+          nutritionist_id?: string
+          slug?: string
+          specialties?: string[] | null
           updated_at?: string
         }
         Relationships: []

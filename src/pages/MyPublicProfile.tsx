@@ -1,0 +1,214 @@
+import { useState, useEffect } from "react";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
+import {
+  Globe, Eye, Save, Loader2, Link2, Copy, ExternalLink,
+  Users, MessageSquare, TrendingUp
+} from "lucide-react";
+
+export default function MyPublicProfile() {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [settings, setSettings] = useState({
+    slug: "",
+    is_public: false,
+    bio: "",
+    specialties: [] as string[],
+    booking_enabled: true,
+  });
+  const [newSpecialty, setNewSpecialty] = useState("");
+  const [leads, setLeads] = useState<any[]>([]);
+  const [leadsCount, setLeadsCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const [settingsRes, leadsRes] = await Promise.all([
+        supabase.from("public_profile_settings").select("*").eq("nutritionist_id", user.id).single(),
+        supabase.from("lead_requests").select("*").eq("nutritionist_id", user.id).order("created_at", { ascending: false }).limit(20),
+      ]);
+
+      if (settingsRes.data) {
+        const d = settingsRes.data as any;
+        setSettings({
+          slug: d.slug || "",
+          is_public: d.is_public || false,
+          bio: d.bio || "",
+          specialties: d.specialties || [],
+          booking_enabled: d.booking_enabled ?? true,
+        });
+      } else {
+        // Auto-generate slug from user email
+        const slug = user.email?.split("@")[0]?.replace(/[^a-z0-9-]/g, "-") || "meu-perfil";
+        setSettings(s => ({ ...s, slug }));
+      }
+
+      setLeads(leadsRes.data || []);
+      setLeadsCount((leadsRes.data || []).length);
+      setLoading(false);
+    })();
+  }, [user]);
+
+  const handleSave = async () => {
+    if (!user || !settings.slug.trim()) { toast.error("Slug é obrigatório"); return; }
+    setSaving(true);
+
+    const payload = {
+      nutritionist_id: user.id,
+      slug: settings.slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-"),
+      is_public: settings.is_public,
+      bio: settings.bio.trim(),
+      specialties: settings.specialties,
+      booking_enabled: settings.booking_enabled,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error } = await supabase.from("public_profile_settings").upsert(payload, { onConflict: "nutritionist_id" });
+    setSaving(false);
+
+    if (error) {
+      if (error.code === "23505") toast.error("Este slug já está em uso. Escolha outro.");
+      else toast.error("Erro ao salvar configurações.");
+      return;
+    }
+    toast.success("Perfil público atualizado!");
+  };
+
+  const addSpecialty = () => {
+    if (!newSpecialty.trim()) return;
+    setSettings(s => ({ ...s, specialties: [...s.specialties, newSpecialty.trim()] }));
+    setNewSpecialty("");
+  };
+
+  const removeSpecialty = (idx: number) => {
+    setSettings(s => ({ ...s, specialties: s.specialties.filter((_, i) => i !== idx) }));
+  };
+
+  const publicUrl = `${window.location.origin}/p/${settings.slug}`;
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(publicUrl);
+    toast.success("Link copiado!");
+  };
+
+  if (loading) return (
+    <DashboardLayout>
+      <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+    </DashboardLayout>
+  );
+
+  return (
+    <DashboardLayout>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 max-w-3xl">
+        <div>
+          <h1 className="font-display text-2xl font-bold flex items-center gap-3">
+            <Globe className="w-6 h-6 text-primary" /> Meu Perfil Público
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">Configure sua página pública para atrair novos pacientes</p>
+        </div>
+
+        {/* Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Configurações do Perfil</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-sm">Perfil Público</p>
+                <p className="text-xs text-muted-foreground">Tornar seu perfil visível para visitantes</p>
+              </div>
+              <Switch checked={settings.is_public} onCheckedChange={v => setSettings(s => ({ ...s, is_public: v }))} />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Slug (URL)</label>
+              <div className="flex gap-2 mt-1">
+                <span className="text-sm text-muted-foreground py-2">/p/</span>
+                <Input value={settings.slug} onChange={e => setSettings(s => ({ ...s, slug: e.target.value }))} placeholder="meu-perfil" className="flex-1" />
+              </div>
+              {settings.is_public && (
+                <div className="flex items-center gap-2 mt-2">
+                  <p className="text-xs text-muted-foreground truncate">{publicUrl}</p>
+                  <Button variant="ghost" size="sm" className="h-6 px-2" onClick={copyLink}><Copy className="w-3 h-3" /></Button>
+                  <a href={publicUrl} target="_blank" rel="noopener noreferrer">
+                    <Button variant="ghost" size="sm" className="h-6 px-2"><ExternalLink className="w-3 h-3" /></Button>
+                  </a>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Bio</label>
+              <Textarea value={settings.bio} onChange={e => setSettings(s => ({ ...s, bio: e.target.value }))} rows={4} placeholder="Conte sobre sua experiência e abordagem..." className="mt-1" maxLength={1000} />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Especialidades</label>
+              <div className="flex flex-wrap gap-2 mt-1 mb-2">
+                {settings.specialties.map((s, i) => (
+                  <Badge key={i} variant="secondary" className="cursor-pointer" onClick={() => removeSpecialty(i)}>{s} ✕</Badge>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Input value={newSpecialty} onChange={e => setNewSpecialty(e.target.value)} placeholder="Ex: Emagrecimento" onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addSpecialty())} />
+                <Button variant="outline" onClick={addSpecialty}>Adicionar</Button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-sm">Botão de Agendamento</p>
+                <p className="text-xs text-muted-foreground">Permitir que visitantes solicitem consultas</p>
+              </div>
+              <Switch checked={settings.booking_enabled} onCheckedChange={v => setSettings(s => ({ ...s, booking_enabled: v }))} />
+            </div>
+
+            <Button onClick={handleSave} disabled={saving} className="w-full gradient-primary gap-2">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              Salvar Configurações
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Leads */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-info" /> Leads Recebidos ({leadsCount})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {leads.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">Nenhum lead recebido ainda. Ative seu perfil público!</p>
+            ) : (
+              <div className="space-y-2">
+                {leads.map(lead => (
+                  <div key={lead.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/20 border border-border/50">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold truncate">{lead.name}</p>
+                      <p className="text-xs text-muted-foreground">{lead.email}</p>
+                      {lead.message && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{lead.message}</p>}
+                    </div>
+                    <Badge variant="outline" className="text-[10px]">{lead.source}</Badge>
+                    <span className="text-[10px] text-muted-foreground">{new Date(lead.created_at).toLocaleDateString("pt-BR")}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
+    </DashboardLayout>
+  );
+}

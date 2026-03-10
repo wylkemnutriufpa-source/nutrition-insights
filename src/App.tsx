@@ -64,7 +64,11 @@ import CheckinPanel from "./pages/CheckinPanel";
 import ClientDashboard from "./pages/ClientDashboard";
 import ImportPatients from "./pages/ImportPatients";
 import AdminProfessionals from "./pages/AdminProfessionals";
-
+import PublicProfile from "./pages/PublicProfile";
+import PublicProgram from "./pages/PublicProgram";
+import GrowthDashboard from "./pages/GrowthDashboard";
+import MyPublicProfile from "./pages/MyPublicProfile";
+import MyReferrals from "./pages/MyReferrals";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -215,6 +219,20 @@ const App = () => (
 
               {/* Public pricing */}
               <Route path="/pricing" element={<Pricing />} />
+
+              {/* FitJourney Network - Public pages */}
+              <Route path="/p/:slug" element={<PublicProfile />} />
+              <Route path="/program/:programId/public" element={<PublicProgram />} />
+
+              {/* FitJourney Network - Nutritionist pages */}
+              <Route path="/my-public-profile" element={<NutritionistRoute><MyPublicProfile /></NutritionistRoute>} />
+
+              {/* FitJourney Network - Patient referrals */}
+              <Route path="/my-referrals" element={<ProtectedRoute><MyReferrals /></ProtectedRoute>} />
+
+              {/* FitJourney Network - Admin growth */}
+              <Route path="/admin/growth" element={<AdminRoute><GrowthDashboard /></AdminRoute>} />
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>
