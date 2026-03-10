@@ -17,6 +17,7 @@ import {
 import { useState } from "react";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { usePresenceTracker } from "@/hooks/usePresenceTracker";
 
 const nutritionistLinks = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
