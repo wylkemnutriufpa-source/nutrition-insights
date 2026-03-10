@@ -390,45 +390,85 @@ export default function AnalyticsDashboard() {
           {/* ── Row 1: Adherence + Risk Distribution ── */}
           <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Adherence over time */}
-            <Card className="glass border-border lg:col-span-2">
-              <CardHeader className="pb-2">
+            <Card className="glass border-border lg:col-span-2 relative overflow-hidden">
+              <motion.div className="absolute inset-0 pointer-events-none z-0"
+                style={{ background: "linear-gradient(135deg, transparent 30%, hsla(0,0%,100%,0.02) 50%, transparent 70%)" }}
+                animate={{ x: ["-100%", "100%"] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", repeatDelay: 3 }}
+              />
+              <CardHeader className="pb-2 relative z-10">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-success" /> Adesão ao Longo do Tempo
+                  <motion.div animate={{ rotate: [0, 8, -8, 0] }} transition={{ duration: 2, repeat: Infinity, repeatDelay: 4 }}>
+                    <TrendingUp className="w-4 h-4 text-success" />
+                  </motion.div>
+                  Adesão ao Longo do Tempo
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="relative z-10">
                 <ResponsiveContainer width="100%" height={260}>
                   <LineChart data={adherenceOverTime}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                    <defs>
+                      <linearGradient id="analytics-line-metallic" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="#bbf7d0" />
+                        <stop offset="30%" stopColor="hsl(152, 58%, 42%)" />
+                        <stop offset="70%" stopColor="hsl(170, 60%, 45%)" />
+                        <stop offset="100%" stopColor="#6ee7a0" />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
                     <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
                     <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={30} />
                     <Tooltip content={<ChartTooltip />} />
-                    <Line type="monotone" dataKey="adesão" name="Adesão %" stroke="hsl(var(--success))" strokeWidth={2.5}
-                      dot={{ r: 4, fill: "hsl(var(--success))", strokeWidth: 0 }}
-                      activeDot={{ r: 6, strokeWidth: 2, stroke: "hsl(var(--background))" }} />
+                    <Line type="monotone" dataKey="adesão" name="Adesão %" stroke="url(#analytics-line-metallic)" strokeWidth={3}
+                      dot={{ r: 5, fill: "hsl(152, 58%, 42%)", strokeWidth: 2, stroke: "#bbf7d0" }}
+                      activeDot={{ r: 7, strokeWidth: 3, stroke: "#bbf7d0", fill: "hsl(152, 58%, 42%)" }}
+                      animationBegin={0} animationDuration={1200} />
                   </LineChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
 
             {/* Risk distribution donut */}
-            <Card className="glass border-border">
-              <CardHeader className="pb-2">
+            <Card className="glass border-border relative overflow-hidden">
+              <motion.div className="absolute inset-0 pointer-events-none"
+                style={{ background: "radial-gradient(circle at 50% 50%, hsla(0,0%,100%,0.02) 0%, transparent 70%)" }}
+              />
+              <CardHeader className="pb-2 relative z-10">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <ShieldAlert className="w-4 h-4 text-destructive" /> Distribuição de Pacientes
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="relative z-10">
                 {riskDistribution.length > 0 ? (
                   <ResponsiveContainer width="100%" height={260}>
                     <PieChart>
+                      <defs>
+                        <linearGradient id="analytics-pie-baixo" x1="0" y1="0" x2="1" y2="1">
+                          <stop offset="0%" stopColor="#bbf7d0" />
+                          <stop offset="100%" stopColor="hsl(152, 58%, 35%)" />
+                        </linearGradient>
+                        <linearGradient id="analytics-pie-moderado" x1="0" y1="0" x2="1" y2="1">
+                          <stop offset="0%" stopColor="#fef3c7" />
+                          <stop offset="100%" stopColor="hsl(36, 95%, 42%)" />
+                        </linearGradient>
+                        <linearGradient id="analytics-pie-alto" x1="0" y1="0" x2="1" y2="1">
+                          <stop offset="0%" stopColor="#fecaca" />
+                          <stop offset="100%" stopColor="hsl(0, 72%, 42%)" />
+                        </linearGradient>
+                      </defs>
                       <Pie data={riskDistribution} cx="50%" cy="50%" innerRadius={55} outerRadius={85}
                         paddingAngle={4} dataKey="value"
                         label={({ name, value }) => `${name}: ${value}`}
-                        labelLine={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1 }}>
-                        {riskDistribution.map((entry, i) => (
-                          <Cell key={i} fill={RISK_COLORS[entry.name as keyof typeof RISK_COLORS] || CHART_COLORS[i]} />
-                        ))}
+                        labelLine={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1 }}
+                        animationBegin={200} animationDuration={1000} animationEasing="ease-out">
+                        {riskDistribution.map((entry, i) => {
+                          const gradMap: Record<string, string> = {
+                            "Baixo": "url(#analytics-pie-baixo)",
+                            "Moderado": "url(#analytics-pie-moderado)",
+                            "Alto": "url(#analytics-pie-alto)",
+                          };
+                          return <Cell key={i} fill={gradMap[entry.name] || CHART_COLORS[i]} stroke="transparent" />;
+                        })}
                       </Pie>
                       <Tooltip content={<ChartTooltip />} />
                       <Legend formatter={v => <span className="text-xs text-muted-foreground">{v}</span>} iconSize={8} />
@@ -443,23 +483,44 @@ export default function AnalyticsDashboard() {
 
           {/* ── Row 2: Engagement by Program ── */}
           <motion.div variants={item}>
-            <Card className="glass border-border">
-              <CardHeader className="pb-2">
+            <Card className="glass border-border relative overflow-hidden">
+              <motion.div className="absolute inset-0 pointer-events-none z-0"
+                style={{ background: "linear-gradient(135deg, transparent 30%, hsla(0,0%,100%,0.02) 50%, transparent 70%)" }}
+                animate={{ x: ["-100%", "100%"] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", repeatDelay: 2 }}
+              />
+              <CardHeader className="pb-2 relative z-10">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <Users className="w-4 h-4 text-accent" /> Engajamento por Programa
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="relative z-10">
                 {engagementByProgram.length > 0 ? (
                   <ResponsiveContainer width="100%" height={280}>
                     <BarChart data={engagementByProgram} layout="vertical" margin={{ left: 10 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                      <defs>
+                        <linearGradient id="analytics-bar-primary" x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stopColor="hsl(152, 58%, 32%)" />
+                          <stop offset="40%" stopColor="hsl(152, 58%, 42%)" />
+                          <stop offset="80%" stopColor="hsl(170, 60%, 45%)" />
+                          <stop offset="100%" stopColor="#bbf7d0" stopOpacity={0.8} />
+                        </linearGradient>
+                        <linearGradient id="analytics-bar-accent" x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stopColor="hsl(36, 95%, 40%)" />
+                          <stop offset="40%" stopColor="hsl(36, 95%, 55%)" />
+                          <stop offset="80%" stopColor="hsl(25, 95%, 53%)" />
+                          <stop offset="100%" stopColor="#fef3c7" stopOpacity={0.8} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
                       <XAxis type="number" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
                       <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
                       <Tooltip content={<ChartTooltip />} />
                       <Legend formatter={v => <span className="text-xs">{v}</span>} iconSize={8} />
-                      <Bar dataKey="pacientes" name="Pacientes" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} barSize={16} />
-                      <Bar dataKey="adesão" name="Adesão %" fill="hsl(var(--accent))" radius={[0, 4, 4, 0]} barSize={16} />
+                      <Bar dataKey="pacientes" name="Pacientes" fill="url(#analytics-bar-primary)" radius={[0, 4, 4, 0]} barSize={16}
+                        animationBegin={0} animationDuration={800} animationEasing="ease-out" />
+                      <Bar dataKey="adesão" name="Adesão %" fill="url(#analytics-bar-accent)" radius={[0, 4, 4, 0]} barSize={16}
+                        animationBegin={200} animationDuration={800} animationEasing="ease-out" />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
@@ -474,53 +535,72 @@ export default function AnalyticsDashboard() {
           {/* ── Row 3: Abandonment Rate + Health Score Evolution ── */}
           <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Abandonment rate */}
-            <Card className="glass border-border">
-              <CardHeader className="pb-2">
+            <Card className="glass border-border relative overflow-hidden">
+              <motion.div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(180deg, transparent 60%, hsla(36,95%,55%,0.03) 100%)" }} />
+              <CardHeader className="pb-2 relative z-10">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-warning" /> Taxa de Abandono
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="relative z-10">
                 <ResponsiveContainer width="100%" height={240}>
                   <LineChart data={abandonmentOverTime}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                    <defs>
+                      <linearGradient id="analytics-abandon-line" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="#fef3c7" />
+                        <stop offset="30%" stopColor="hsl(36, 95%, 55%)" />
+                        <stop offset="70%" stopColor="hsl(25, 95%, 53%)" />
+                        <stop offset="100%" stopColor="#fcd34d" />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
                     <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
                     <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={30}
                       tickFormatter={v => `${v}%`} />
                     <Tooltip content={<ChartTooltip />} />
-                    <Line type="monotone" dataKey="taxa" name="Taxa de Abandono %" stroke="hsl(var(--warning))" strokeWidth={2.5}
-                      dot={{ r: 4, fill: "hsl(var(--warning))", strokeWidth: 0 }}
-                      activeDot={{ r: 6, strokeWidth: 2, stroke: "hsl(var(--background))" }}
-                      strokeDasharray="6 3" />
+                    <Line type="monotone" dataKey="taxa" name="Taxa de Abandono %" stroke="url(#analytics-abandon-line)" strokeWidth={3}
+                      dot={{ r: 5, fill: "hsl(36, 95%, 55%)", strokeWidth: 2, stroke: "#fef3c7" }}
+                      activeDot={{ r: 7, strokeWidth: 3, stroke: "#fef3c7", fill: "hsl(36, 95%, 55%)" }}
+                      strokeDasharray="6 3"
+                      animationBegin={0} animationDuration={1200} />
                   </LineChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
 
             {/* Health score evolution */}
-            <Card className="glass border-border">
-              <CardHeader className="pb-2">
+            <Card className="glass border-border relative overflow-hidden">
+              <motion.div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(180deg, transparent 60%, hsla(152,58%,42%,0.03) 100%)" }} />
+              <CardHeader className="pb-2 relative z-10">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <Heart className="w-4 h-4 text-primary" /> Evolução do Health Score
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="relative z-10">
                 <ResponsiveContainer width="100%" height={240}>
                   <AreaChart data={healthScoreEvolution}>
                     <defs>
                       <linearGradient id="analyticsScoreGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(152, 58%, 42%)" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="hsl(152, 58%, 42%)" stopOpacity={0} />
+                        <stop offset="0%" stopColor="#bbf7d0" stopOpacity={0.4} />
+                        <stop offset="40%" stopColor="hsl(152, 58%, 42%)" stopOpacity={0.2} />
+                        <stop offset="100%" stopColor="hsl(152, 58%, 42%)" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="analyticsScoreStroke" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="#bbf7d0" />
+                        <stop offset="30%" stopColor="hsl(152, 58%, 42%)" />
+                        <stop offset="70%" stopColor="hsl(170, 60%, 45%)" />
+                        <stop offset="100%" stopColor="#6ee7a0" />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
                     <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
                     <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={30} />
                     <Tooltip content={<ChartTooltip />} />
-                    <Area type="monotone" dataKey="score" name="Health Score" stroke="hsl(152, 58%, 42%)" strokeWidth={2.5}
+                    <Area type="monotone" dataKey="score" name="Health Score" stroke="url(#analyticsScoreStroke)" strokeWidth={3}
                       fill="url(#analyticsScoreGrad)"
-                      dot={{ r: 3, fill: "hsl(152, 58%, 42%)", strokeWidth: 0 }}
-                      activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--background))" }} />
+                      dot={{ r: 4, fill: "hsl(152, 58%, 42%)", strokeWidth: 2, stroke: "#bbf7d0" }}
+                      activeDot={{ r: 6, strokeWidth: 3, stroke: "#bbf7d0", fill: "hsl(152, 58%, 42%)" }}
+                      animationBegin={300} animationDuration={1200} />
                   </AreaChart>
                 </ResponsiveContainer>
               </CardContent>

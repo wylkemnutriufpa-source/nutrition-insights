@@ -19,7 +19,7 @@ type Period = 7 | 30 | 90;
 const ChartTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-lg border border-border/50 bg-card px-3 py-2 shadow-xl text-xs">
+    <div className="rounded-lg border border-border/50 bg-card px-3 py-2 shadow-xl text-xs backdrop-blur-sm">
       <p className="font-medium mb-1">{label}</p>
       {payload.map((p: any) => (
         <p key={p.dataKey} style={{ color: p.color || p.stroke }}>
@@ -54,7 +54,7 @@ function buildRiskOverTime(riskPatients: Props["riskPatients"], period: Period) 
   const mod = riskPatients.filter(p => p.score >= 40 && p.score < 70).length;
   const low = riskPatients.filter(p => p.score >= 70).length;
 
-  return labels.map((name, i) => ({
+  return labels.map((name) => ({
     name,
     alto: Math.max(0, high + Math.round((Math.random() - 0.5) * 2)),
     moderado: Math.max(0, mod + Math.round((Math.random() - 0.5) * 2)),
@@ -79,7 +79,6 @@ function buildDifficulties(riskPatients: Props["riskPatients"]) {
     if (p.risks.length === 0 && p.score < 50) map["Sem anamnese"]++;
   });
 
-  // Ensure at least some data for display
   if (Object.values(map).every(v => v === 0)) {
     map["Check-ins ausentes"] = Math.round(riskPatients.length * 0.2) || 1;
     map["Baixa adesão"] = Math.round(riskPatients.length * 0.15) || 1;
@@ -93,7 +92,7 @@ function buildDifficulties(riskPatients: Props["riskPatients"]) {
 
 function buildWeeklyActivity(adh: number, patientCount: number) {
   const days = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
-  const pattern = [0.9, 0.95, 1.0, 0.85, 0.8, 0.5, 0.4]; // weekday pattern
+  const pattern = [0.9, 0.95, 1.0, 0.85, 0.8, 0.5, 0.4];
   return days.map((name, i) => ({
     name,
     atividade: Math.max(1, Math.round(patientCount * (adh / 100) * pattern[i] + (Math.random() - 0.5) * 3)),
@@ -112,18 +111,12 @@ function buildHealthScoreEvolution(score: number, period: Period) {
   }));
 }
 
-const RISK_COLORS = {
-  alto: "hsl(0, 72%, 51%)",
-  moderado: "hsl(36, 95%, 55%)",
-  baixo: "hsl(152, 58%, 42%)",
-};
-
 const DIFFICULTY_COLORS = [
-  "hsl(0, 72%, 51%)",
-  "hsl(36, 95%, 55%)",
-  "hsl(210, 92%, 55%)",
-  "hsl(280, 65%, 55%)",
-  "hsl(170, 60%, 45%)",
+  { base: "hsl(0, 72%, 51%)", light: "#fecaca", dark: "hsl(0, 72%, 38%)" },
+  { base: "hsl(36, 95%, 55%)", light: "#fef3c7", dark: "hsl(36, 95%, 40%)" },
+  { base: "hsl(210, 92%, 55%)", light: "#dbeafe", dark: "hsl(210, 92%, 40%)" },
+  { base: "hsl(280, 65%, 55%)", light: "#ede9fe", dark: "hsl(280, 65%, 40%)" },
+  { base: "hsl(170, 60%, 45%)", light: "#ccfbf1", dark: "hsl(170, 60%, 32%)" },
 ];
 
 export default function DashboardAdvancedCharts({ riskPatients, evolutionData, programPerformance, patientCount }: Props) {
@@ -142,12 +135,24 @@ export default function DashboardAdvancedCharts({ riskPatients, evolutionData, p
   ];
 
   return (
-    <div className="glass rounded-xl p-5 space-y-5">
+    <div className="glass rounded-xl p-5 space-y-5 relative overflow-hidden">
+      {/* Metallic shimmer */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none z-0"
+        style={{
+          background: "linear-gradient(135deg, transparent 30%, hsla(0,0%,100%,0.02) 50%, transparent 70%)",
+        }}
+        animate={{ x: ["-100%", "100%"] }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", repeatDelay: 3 }}
+      />
+
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between relative z-10">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-info/10 flex items-center justify-center">
-            <TrendingUp className="w-4 h-4 text-info" />
+            <motion.div animate={{ rotate: [0, 8, -8, 0] }} transition={{ duration: 2, repeat: Infinity, repeatDelay: 4 }}>
+              <TrendingUp className="w-4 h-4 text-info" />
+            </motion.div>
           </div>
           <div>
             <h2 className="font-display font-semibold">Analytics Avançados</h2>
@@ -171,21 +176,30 @@ export default function DashboardAdvancedCharts({ riskPatients, evolutionData, p
         </div>
       </div>
 
-      {/* Row 1: Adherence over time + Risk distribution */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* 1. Adherence over time - Line chart */}
+      {/* Row 1: Adherence + Risk */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 relative z-10">
+        {/* Adherence Line */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-xl bg-muted/20 border border-border/30 p-4"
+          className="rounded-xl bg-muted/20 border border-border/30 p-4 relative overflow-hidden"
         >
-          <div className="flex items-center gap-2 mb-3">
+          <motion.div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(180deg, transparent 60%, hsla(152,58%,42%,0.03) 100%)" }} />
+          <div className="flex items-center gap-2 mb-3 relative z-10">
             <TrendingUp className="w-3.5 h-3.5 text-success" />
             <p className="text-xs font-semibold">Adesão ao Longo do Tempo</p>
           </div>
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={adherenceData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+              <defs>
+                <linearGradient id="adv-line-metallic" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#bbf7d0" />
+                  <stop offset="30%" stopColor="hsl(152, 58%, 42%)" />
+                  <stop offset="70%" stopColor="hsl(170, 60%, 45%)" />
+                  <stop offset="100%" stopColor="#6ee7a0" />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
               <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={30} />
               <Tooltip content={<ChartTooltip />} />
@@ -193,44 +207,67 @@ export default function DashboardAdvancedCharts({ riskPatients, evolutionData, p
                 type="monotone"
                 dataKey="adesão"
                 name="Adesão %"
-                stroke="hsl(var(--success))"
-                strokeWidth={2.5}
-                dot={{ r: 3, fill: "hsl(var(--success))", strokeWidth: 0 }}
-                activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--background))" }}
+                stroke="url(#adv-line-metallic)"
+                strokeWidth={3}
+                dot={{ r: 4, fill: "hsl(152, 58%, 42%)", strokeWidth: 2, stroke: "#bbf7d0" }}
+                activeDot={{ r: 6, strokeWidth: 3, stroke: "#bbf7d0", fill: "hsl(152, 58%, 42%)" }}
+                animationBegin={0}
+                animationDuration={1200}
               />
             </LineChart>
           </ResponsiveContainer>
         </motion.div>
 
-        {/* 2. Risk distribution over time - Stacked bar */}
+        {/* Risk Stacked Bar */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
-          className="rounded-xl bg-muted/20 border border-border/30 p-4"
+          className="rounded-xl bg-muted/20 border border-border/30 p-4 relative overflow-hidden"
         >
-          <div className="flex items-center gap-2 mb-3">
+          <motion.div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(180deg, transparent 60%, hsla(0,72%,51%,0.02) 100%)" }} />
+          <div className="flex items-center gap-2 mb-3 relative z-10">
             <ShieldAlert className="w-3.5 h-3.5 text-destructive" />
             <p className="text-xs font-semibold">Distribuição de Risco ao Longo do Tempo</p>
           </div>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={riskData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+              <defs>
+                <linearGradient id="adv-risk-alto" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#fecaca" stopOpacity={0.9} />
+                  <stop offset="50%" stopColor="hsl(0, 72%, 51%)" />
+                  <stop offset="100%" stopColor="hsl(0, 72%, 38%)" />
+                </linearGradient>
+                <linearGradient id="adv-risk-mod" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#fef3c7" stopOpacity={0.9} />
+                  <stop offset="50%" stopColor="hsl(36, 95%, 55%)" />
+                  <stop offset="100%" stopColor="hsl(36, 95%, 40%)" />
+                </linearGradient>
+                <linearGradient id="adv-risk-baixo" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#bbf7d0" stopOpacity={0.9} />
+                  <stop offset="50%" stopColor="hsl(152, 58%, 42%)" />
+                  <stop offset="100%" stopColor="hsl(152, 58%, 32%)" />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
               <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={25} />
               <Tooltip content={<ChartTooltip />} />
               <Legend formatter={(v) => <span className="text-[10px]">{v}</span>} iconSize={8} />
-              <Bar dataKey="alto" name="Alto" stackId="risk" fill={RISK_COLORS.alto} radius={[0, 0, 0, 0]} />
-              <Bar dataKey="moderado" name="Moderado" stackId="risk" fill={RISK_COLORS.moderado} />
-              <Bar dataKey="baixo" name="Baixo" stackId="risk" fill={RISK_COLORS.baixo} radius={[3, 3, 0, 0]} />
+              <Bar dataKey="alto" name="Alto" stackId="risk" fill="url(#adv-risk-alto)" radius={[0, 0, 0, 0]}
+                animationBegin={0} animationDuration={800} animationEasing="ease-out" />
+              <Bar dataKey="moderado" name="Moderado" stackId="risk" fill="url(#adv-risk-mod)"
+                animationBegin={150} animationDuration={800} animationEasing="ease-out" />
+              <Bar dataKey="baixo" name="Baixo" stackId="risk" fill="url(#adv-risk-baixo)" radius={[3, 3, 0, 0]}
+                animationBegin={300} animationDuration={800} animationEasing="ease-out" />
             </BarChart>
           </ResponsiveContainer>
         </motion.div>
       </div>
 
-      {/* Row 2: Engagement by program + Difficulties */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* 3. Engagement by program - Horizontal bar */}
+      {/* Row 2: Engagement + Difficulties */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 relative z-10">
+        {/* Engagement by program */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -256,18 +293,28 @@ export default function DashboardAdvancedCharts({ riskPatients, evolutionData, p
                     <span className="text-muted-foreground">{prog.patientCount}p · {prog.avgAdherence}%</span>
                   </div>
                   <div className="flex gap-1 h-5">
-                    <div
-                      className="rounded-l-md bg-primary/80 transition-all duration-700 flex items-center justify-center"
-                      style={{ width: `${Math.max(10, prog.avgAdherence)}%` }}
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.max(10, prog.avgAdherence)}%` }}
+                      transition={{ duration: 0.8, delay: 0.15 + i * 0.05 }}
+                      className="rounded-l-md flex items-center justify-center"
+                      style={{
+                        background: "linear-gradient(90deg, hsl(152,58%,42%), hsl(170,60%,45%))",
+                      }}
                     >
                       <span className="text-[9px] text-primary-foreground font-bold">Adesão</span>
-                    </div>
-                    <div
-                      className="rounded-r-md bg-accent/60 transition-all duration-700 flex items-center justify-center"
-                      style={{ width: `${Math.max(5, (prog.patientCount / Math.max(patientCount, 1)) * 100)}%` }}
+                    </motion.div>
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.max(5, (prog.patientCount / Math.max(patientCount, 1)) * 100)}%` }}
+                      transition={{ duration: 0.8, delay: 0.2 + i * 0.05 }}
+                      className="rounded-r-md flex items-center justify-center"
+                      style={{
+                        background: "linear-gradient(90deg, hsl(36,95%,55%), hsl(25,95%,50%))",
+                      }}
                     >
                       <span className="text-[9px] text-accent-foreground font-bold">{prog.patientCount}</span>
-                    </div>
+                    </motion.div>
                   </div>
                 </motion.div>
               ))}
@@ -279,7 +326,7 @@ export default function DashboardAdvancedCharts({ riskPatients, evolutionData, p
           )}
         </motion.div>
 
-        {/* 4. Most common difficulties - Bar chart */}
+        {/* Difficulties */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -294,19 +341,22 @@ export default function DashboardAdvancedCharts({ riskPatients, evolutionData, p
             {difficulties.map((d, i) => {
               const maxVal = difficulties[0]?.value || 1;
               const pct = Math.round((d.value / maxVal) * 100);
+              const color = DIFFICULTY_COLORS[i % DIFFICULTY_COLORS.length];
               return (
                 <div key={d.name} className="space-y-1">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">{d.name}</span>
                     <span className="font-bold">{d.value}</span>
                   </div>
-                  <div className="h-2 bg-muted/50 rounded-full overflow-hidden">
+                  <div className="h-2.5 bg-muted/50 rounded-full overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${pct}%` }}
                       transition={{ delay: 0.2 + i * 0.05, duration: 0.6 }}
                       className="h-full rounded-full"
-                      style={{ backgroundColor: DIFFICULTY_COLORS[i % DIFFICULTY_COLORS.length] }}
+                      style={{
+                        background: `linear-gradient(90deg, ${color.light}, ${color.base}, ${color.dark})`,
+                      }}
                     />
                   </div>
                 </div>
@@ -316,33 +366,46 @@ export default function DashboardAdvancedCharts({ riskPatients, evolutionData, p
         </motion.div>
       </div>
 
-      {/* Row 3: Weekly activity + Health score evolution */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* 5. Weekly activity pattern */}
+      {/* Row 3: Weekly activity + Health score */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 relative z-10">
+        {/* Weekly activity */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="rounded-xl bg-muted/20 border border-border/30 p-4"
+          className="rounded-xl bg-muted/20 border border-border/30 p-4 relative overflow-hidden"
         >
-          <div className="flex items-center gap-2 mb-3">
+          <motion.div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(180deg, transparent 60%, hsla(210,92%,55%,0.03) 100%)" }} />
+          <div className="flex items-center gap-2 mb-3 relative z-10">
             <Calendar className="w-3.5 h-3.5 text-info" />
             <p className="text-xs font-semibold">Padrão de Atividade Semanal</p>
           </div>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={weeklyActivity}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+              <defs>
+                {weeklyActivity.map((_, i) => (
+                  <linearGradient key={i} id={`adv-activity-${i}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#dbeafe" stopOpacity={0.9} />
+                    <stop offset="30%" stopColor="#93c5fd" stopOpacity={0.85} />
+                    <stop offset="60%" stopColor="hsl(210, 92%, 55%)" />
+                    <stop offset="100%" stopColor="hsl(210, 92%, 38%)" />
+                  </linearGradient>
+                ))}
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
               <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={25} />
               <Tooltip content={<ChartTooltip />} />
-              <Bar dataKey="atividade" name="Pacientes Ativos" radius={[4, 4, 0, 0]}>
+              <Bar dataKey="atividade" name="Pacientes Ativos" radius={[4, 4, 0, 0]}
+                animationBegin={200} animationDuration={800} animationEasing="ease-out">
                 {weeklyActivity.map((entry, i) => {
-                  const intensity = entry.atividade / Math.max(...weeklyActivity.map(e => e.atividade), 1);
+                  const maxVal = Math.max(...weeklyActivity.map(e => e.atividade), 1);
+                  const intensity = entry.atividade / maxVal;
                   return (
                     <Cell
                       key={i}
-                      fill={`hsl(210, 92%, ${35 + intensity * 25}%)`}
-                      opacity={0.5 + intensity * 0.5}
+                      fill={`url(#adv-activity-${i})`}
+                      fillOpacity={0.5 + intensity * 0.5}
                     />
                   );
                 })}
@@ -351,26 +414,34 @@ export default function DashboardAdvancedCharts({ riskPatients, evolutionData, p
           </ResponsiveContainer>
         </motion.div>
 
-        {/* 6. Health score evolution - Area chart */}
+        {/* Health score evolution */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
-          className="rounded-xl bg-muted/20 border border-border/30 p-4"
+          className="rounded-xl bg-muted/20 border border-border/30 p-4 relative overflow-hidden"
         >
-          <div className="flex items-center gap-2 mb-3">
+          <motion.div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(180deg, transparent 60%, hsla(152,58%,42%,0.03) 100%)" }} />
+          <div className="flex items-center gap-2 mb-3 relative z-10">
             <Heart className="w-3.5 h-3.5 text-primary" />
             <p className="text-xs font-semibold">Evolução do Health Score</p>
           </div>
           <ResponsiveContainer width="100%" height={180}>
             <AreaChart data={healthScoreData}>
               <defs>
-                <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(152, 58%, 42%)" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="hsl(152, 58%, 42%)" stopOpacity={0} />
+                <linearGradient id="advScoreGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#bbf7d0" stopOpacity={0.4} />
+                  <stop offset="40%" stopColor="hsl(152, 58%, 42%)" stopOpacity={0.2} />
+                  <stop offset="100%" stopColor="hsl(152, 58%, 42%)" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="advScoreStroke" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#bbf7d0" />
+                  <stop offset="30%" stopColor="hsl(152, 58%, 42%)" />
+                  <stop offset="70%" stopColor="hsl(170, 60%, 45%)" />
+                  <stop offset="100%" stopColor="#6ee7a0" />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
               <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={30} />
               <Tooltip content={<ChartTooltip />} />
@@ -378,11 +449,13 @@ export default function DashboardAdvancedCharts({ riskPatients, evolutionData, p
                 type="monotone"
                 dataKey="score"
                 name="Health Score"
-                stroke="hsl(152, 58%, 42%)"
-                strokeWidth={2.5}
-                fill="url(#scoreGradient)"
-                dot={{ r: 3, fill: "hsl(152, 58%, 42%)", strokeWidth: 0 }}
-                activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--background))" }}
+                stroke="url(#advScoreStroke)"
+                strokeWidth={3}
+                fill="url(#advScoreGradient)"
+                dot={{ r: 4, fill: "hsl(152, 58%, 42%)", strokeWidth: 2, stroke: "#bbf7d0" }}
+                activeDot={{ r: 6, strokeWidth: 3, stroke: "#bbf7d0", fill: "hsl(152, 58%, 42%)" }}
+                animationBegin={300}
+                animationDuration={1200}
               />
             </AreaChart>
           </ResponsiveContainer>

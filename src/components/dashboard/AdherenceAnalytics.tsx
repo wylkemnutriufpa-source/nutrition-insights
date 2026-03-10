@@ -69,7 +69,7 @@ function buildData(props: Props): AdherenceData {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-lg border border-border/50 bg-card px-3 py-2 shadow-xl text-xs">
+    <div className="rounded-lg border border-border/50 bg-card px-3 py-2 shadow-xl text-xs backdrop-blur-sm">
       <p className="font-medium mb-1">{label}</p>
       {payload.map((p: any) => (
         <p key={p.dataKey} style={{ color: p.color }}>
@@ -90,11 +90,23 @@ export default function AdherenceAnalytics(props: Props) {
     : 0;
 
   return (
-    <div className="glass rounded-xl p-5 space-y-6">
+    <div className="glass rounded-xl p-5 space-y-6 relative overflow-hidden">
+      {/* Metallic shimmer overlay */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none z-0"
+        style={{
+          background: "linear-gradient(135deg, transparent 30%, hsla(0,0%,100%,0.02) 50%, transparent 70%)",
+        }}
+        animate={{ x: ["-100%", "100%"] }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", repeatDelay: 3 }}
+      />
+
       {/* Header */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 relative z-10">
         <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-          <Activity className="w-4 h-4 text-primary" />
+          <motion.div animate={{ rotate: [0, 8, -8, 0] }} transition={{ duration: 2, repeat: Infinity, repeatDelay: 4 }}>
+            <Activity className="w-4 h-4 text-primary" />
+          </motion.div>
         </div>
         <div>
           <h2 className="font-display font-semibold">Análise de Adesão</h2>
@@ -103,8 +115,7 @@ export default function AdherenceAnalytics(props: Props) {
       </div>
 
       {/* Positive / Negative summary cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Positive */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
         <motion.div
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
@@ -122,7 +133,6 @@ export default function AdherenceAnalytics(props: Props) {
           </div>
         </motion.div>
 
-        {/* Negative */}
         <motion.div
           initial={{ opacity: 0, x: 10 }}
           animate={{ opacity: 1, x: 0 }}
@@ -142,23 +152,44 @@ export default function AdherenceAnalytics(props: Props) {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 relative z-10">
         {/* Weekly Bar Chart */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="rounded-xl bg-muted/20 border border-border/30 p-4"
+          className="rounded-xl bg-muted/20 border border-border/30 p-4 relative overflow-hidden"
         >
-          <p className="text-xs font-semibold mb-3">Adesão Semanal</p>
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: "linear-gradient(180deg, transparent 60%, hsla(152,58%,42%,0.03) 100%)" }}
+          />
+          <p className="text-xs font-semibold mb-3 relative z-10">Adesão Semanal</p>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={data.weeklyData} barGap={2}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+              <defs>
+                <linearGradient id="adh-metallic-success" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#bbf7d0" stopOpacity={0.9} />
+                  <stop offset="20%" stopColor="#6ee7a0" stopOpacity={0.85} />
+                  <stop offset="50%" stopColor="hsl(152, 58%, 42%)" />
+                  <stop offset="85%" stopColor="hsl(152, 58%, 32%)" stopOpacity={0.9} />
+                  <stop offset="100%" stopColor="hsl(152, 58%, 25%)" />
+                </linearGradient>
+                <linearGradient id="adh-metallic-destructive" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#fecaca" stopOpacity={0.8} />
+                  <stop offset="20%" stopColor="#f87171" stopOpacity={0.7} />
+                  <stop offset="50%" stopColor="hsl(0, 72%, 51%)" stopOpacity={0.6} />
+                  <stop offset="100%" stopColor="hsl(0, 72%, 38%)" stopOpacity={0.5} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
               <XAxis dataKey="day" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={25} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="completed" name="Concluído" fill="hsl(var(--success))" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="missed" name="Perdido" fill="hsl(var(--destructive))" radius={[3, 3, 0, 0]} opacity={0.6} />
+              <Bar dataKey="completed" name="Concluído" fill="url(#adh-metallic-success)" radius={[3, 3, 0, 0]}
+                animationBegin={0} animationDuration={800} animationEasing="ease-out" />
+              <Bar dataKey="missed" name="Perdido" fill="url(#adh-metallic-destructive)" radius={[3, 3, 0, 0]}
+                animationBegin={200} animationDuration={800} animationEasing="ease-out" />
             </BarChart>
           </ResponsiveContainer>
         </motion.div>
@@ -168,12 +199,24 @@ export default function AdherenceAnalytics(props: Props) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="rounded-xl bg-muted/20 border border-border/30 p-4"
+          className="rounded-xl bg-muted/20 border border-border/30 p-4 relative overflow-hidden"
         >
-          <p className="text-xs font-semibold mb-3">Tendência Mensal</p>
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: "linear-gradient(180deg, transparent 60%, hsla(152,58%,42%,0.03) 100%)" }}
+          />
+          <p className="text-xs font-semibold mb-3 relative z-10">Tendência Mensal</p>
           <ResponsiveContainer width="100%" height={180}>
             <LineChart data={data.monthlyTrend}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+              <defs>
+                <linearGradient id="adh-line-metallic" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#bbf7d0" />
+                  <stop offset="30%" stopColor="hsl(152, 58%, 42%)" />
+                  <stop offset="70%" stopColor="hsl(170, 60%, 45%)" />
+                  <stop offset="100%" stopColor="#6ee7a0" />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
               <XAxis dataKey="week" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={25} />
               <Tooltip content={<CustomTooltip />} />
@@ -181,10 +224,12 @@ export default function AdherenceAnalytics(props: Props) {
                 type="monotone"
                 dataKey="adherence"
                 name="Adesão %"
-                stroke="hsl(var(--primary))"
-                strokeWidth={2.5}
-                dot={{ r: 4, fill: "hsl(var(--primary))", strokeWidth: 0 }}
-                activeDot={{ r: 6, strokeWidth: 2, stroke: "hsl(var(--background))" }}
+                stroke="url(#adh-line-metallic)"
+                strokeWidth={3}
+                dot={{ r: 5, fill: "hsl(152, 58%, 42%)", strokeWidth: 2, stroke: "#bbf7d0" }}
+                activeDot={{ r: 7, strokeWidth: 3, stroke: "#bbf7d0", fill: "hsl(152, 58%, 42%)" }}
+                animationBegin={400}
+                animationDuration={1000}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -195,11 +240,29 @@ export default function AdherenceAnalytics(props: Props) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="rounded-xl bg-muted/20 border border-border/30 p-4"
+          className="rounded-xl bg-muted/20 border border-border/30 p-4 relative overflow-hidden"
         >
-          <p className="text-xs font-semibold mb-3">Distribuição de Risco</p>
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: "radial-gradient(circle at 50% 50%, hsla(0,0%,100%,0.02) 0%, transparent 70%)" }}
+          />
+          <p className="text-xs font-semibold mb-3 relative z-10">Distribuição de Risco</p>
           <ResponsiveContainer width="100%" height={180}>
             <PieChart>
+              <defs>
+                <linearGradient id="adh-pie-destructive" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#fecaca" />
+                  <stop offset="100%" stopColor="hsl(0, 72%, 45%)" />
+                </linearGradient>
+                <linearGradient id="adh-pie-warning" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#fef3c7" />
+                  <stop offset="100%" stopColor="hsl(36, 95%, 45%)" />
+                </linearGradient>
+                <linearGradient id="adh-pie-success" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#bbf7d0" />
+                  <stop offset="100%" stopColor="hsl(152, 58%, 35%)" />
+                </linearGradient>
+              </defs>
               <Pie
                 data={data.riskDistribution}
                 cx="50%"
@@ -209,11 +272,13 @@ export default function AdherenceAnalytics(props: Props) {
                 paddingAngle={4}
                 dataKey="value"
                 animationBegin={300}
-                animationDuration={800}
+                animationDuration={1000}
+                animationEasing="ease-out"
               >
-                {data.riskDistribution.map((entry, i) => (
-                  <Cell key={i} fill={entry.color} stroke="transparent" />
-                ))}
+                {data.riskDistribution.map((entry, i) => {
+                  const gradIds = ["url(#adh-pie-destructive)", "url(#adh-pie-warning)", "url(#adh-pie-success)"];
+                  return <Cell key={i} fill={gradIds[i] || entry.color} stroke="transparent" />;
+                })}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
               <Legend
