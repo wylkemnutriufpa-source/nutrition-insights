@@ -105,6 +105,7 @@ export default function PhysicalAssessment() {
   const [saving, setSaving] = useState(false);
   const [history, setHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [assessmentDocs, setAssessmentDocs] = useState<any[]>([]);
 
   const set = useCallback((field: keyof Assessment, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
