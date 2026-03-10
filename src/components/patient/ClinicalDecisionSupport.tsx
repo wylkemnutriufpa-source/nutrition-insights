@@ -119,7 +119,7 @@ export default function ClinicalDecisionSupport({ patientId, nutritionistId }: P
       toast.error("Erro ao gerar análise: " + (err.message || "Tente novamente"));
     }
     setLoading(false);
-  }, [patientId, nutritionistId]);
+  }, [patientId, nutritionistId, useCopilot]);
 
   const toggleSection = (key: string) => {
     setExpandedSection(expandedSection === key ? null : key);
