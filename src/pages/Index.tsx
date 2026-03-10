@@ -677,7 +677,18 @@ function NutritionistDashboardContent() {
         </ExpandablePanel>
       </motion.div>
 
-      {/* ── Health Score Overview ── */}
+      {/* ── Adherence Analytics ── */}
+      <motion.div variants={item}>
+        <ExpandablePanel title="Análise de Adesão">
+          <AdherenceAnalytics
+            patientCount={patientCount}
+            riskPatients={riskPatients}
+            evolutionData={evolutionData}
+          />
+        </ExpandablePanel>
+      </motion.div>
+
+
       {riskPatients.length > 0 && (
         <motion.div variants={item}>
           <ExpandablePanel title="Health Score dos Pacientes">
