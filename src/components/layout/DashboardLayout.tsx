@@ -29,6 +29,7 @@ const nutritionistLinks = [
   { to: "/programs", icon: Rocket, label: "Programas" },
   { to: "/automation", icon: Bot, label: "Automação" },
   { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos" },
+  { to: "/diet-templates", icon: BookOpen, label: "Templates" },
   { to: "/recipes", icon: ChefHat, label: "Receitas" },
   { to: "/food-database", icon: Apple, label: "Alimentos" },
   { to: "/reports", icon: BarChart3, label: "Relatórios" },
