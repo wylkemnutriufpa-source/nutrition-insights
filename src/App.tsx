@@ -219,6 +219,20 @@ const App = () => (
 
               {/* Public pricing */}
               <Route path="/pricing" element={<Pricing />} />
+
+              {/* FitJourney Network - Public pages */}
+              <Route path="/p/:slug" element={<PublicProfile />} />
+              <Route path="/program/:programId/public" element={<PublicProgram />} />
+
+              {/* FitJourney Network - Nutritionist pages */}
+              <Route path="/my-public-profile" element={<NutritionistRoute><MyPublicProfile /></NutritionistRoute>} />
+
+              {/* FitJourney Network - Patient referrals */}
+              <Route path="/my-referrals" element={<ProtectedRoute><MyReferrals /></ProtectedRoute>} />
+
+              {/* FitJourney Network - Admin growth */}
+              <Route path="/admin/growth" element={<AdminRoute><GrowthDashboard /></AdminRoute>} />
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>
