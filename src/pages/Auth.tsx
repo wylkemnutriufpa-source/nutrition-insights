@@ -79,14 +79,10 @@ export default function Auth() {
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-md relative z-10">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
-            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary shadow-lg mb-4">
-            <Leaf className="w-8 h-8 text-primary-foreground" />
+        <div className="flex flex-col items-center mb-8">
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, delay: 0.1 }} className="mb-4">
+            <FitJourneyLogo size="lg" />
           </motion.div>
-          <h1 className="text-3xl font-bold font-display">
-            <span className="bg-gradient-to-r from-primary via-emerald-400 to-teal-300 bg-clip-text text-transparent">Fit</span><span className="bg-gradient-to-r from-teal-300 via-cyan-400 to-primary bg-clip-text text-transparent">Journey</span>
-          </h1>
           <p className="text-muted-foreground mt-1">Sua jornada fitness inteligente & gamificada</p>
         </div>
 
