@@ -1032,6 +1032,14 @@ export default function PatientDetail() {
                   )}
                 </DialogContent>
               </Dialog>
+
+              {/* Clinical Decision Support Modal */}
+              <Dialog open={openSection === "clinical-decision"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display">Suporte à Decisão Clínica</DialogTitle></DialogHeader>
+                  <ClinicalDecisionSupport patientId={patientId!} nutritionistId={user!.id} />
+                </DialogContent>
+              </Dialog>
             </>
           );
         })()}
