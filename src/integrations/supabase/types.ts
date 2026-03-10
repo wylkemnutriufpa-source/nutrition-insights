@@ -2990,6 +2990,27 @@ export type Database = {
           },
         ]
       }
+      user_presence: {
+        Row: {
+          device_info: string | null
+          is_online: boolean
+          last_seen_at: string
+          user_id: string
+        }
+        Insert: {
+          device_info?: string | null
+          is_online?: boolean
+          last_seen_at?: string
+          user_id: string
+        }
+        Update: {
+          device_info?: string | null
+          is_online?: boolean
+          last_seen_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
