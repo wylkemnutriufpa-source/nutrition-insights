@@ -71,6 +71,7 @@ import MyPublicProfile from "./pages/MyPublicProfile";
 import MyReferrals from "./pages/MyReferrals";
 import GlobalRanking from "./pages/GlobalRanking";
 import AdminPrestige from "./pages/AdminPrestige";
+import AdminPricing from "./pages/AdminPricing";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -235,6 +236,7 @@ const App = () => (
               {/* FitJourney Network - Admin growth */}
               <Route path="/admin/growth" element={<AdminRoute><GrowthDashboard /></AdminRoute>} />
               <Route path="/admin/prestige" element={<AdminRoute><AdminPrestige /></AdminRoute>} />
+              <Route path="/admin/pricing" element={<AdminRoute><AdminPricing /></AdminRoute>} />
 
               {/* Global Ranking */}
               <Route path="/ranking" element={<ProtectedRoute><GlobalRanking /></ProtectedRoute>} />
