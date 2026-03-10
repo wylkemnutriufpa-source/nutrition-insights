@@ -259,17 +259,18 @@ function SmartMetrics({ patients, avgAdherence, appointmentsToday, pendingChecki
   patients: CopilotPatient[]; avgAdherence: number; appointmentsToday: number; pendingCheckins: number;
 }) {
   const highRisk = patients.filter(p => p.score < 30).length;
+  const churnResults = useMemo(() => calculateChurnRisk(patients), [patients]);
+  const churnHigh = churnResults.filter(r => r.level === "high").length;
   const inactive = patients.filter(p => {
     if (!p.lastActivity) return true;
     return Math.floor((Date.now() - new Date(p.lastActivity).getTime()) / 86400000) >= 3;
   }).length;
-  const needFollowUp = patients.filter(p => p.score < 50).length;
 
   const metrics = [
     { label: "Alto Risco", value: highRisk, color: "text-destructive", bg: "bg-destructive/10" },
+    { label: "Risco Abandono", value: churnHigh, color: churnHigh > 0 ? "text-destructive" : "text-success", bg: churnHigh > 0 ? "bg-destructive/10" : "bg-success/10" },
     { label: "Inativos", value: inactive, color: "text-warning", bg: "bg-warning/10" },
     { label: "Adesão Média", value: `${avgAdherence}%`, color: avgAdherence >= 60 ? "text-success" : "text-warning", bg: avgAdherence >= 60 ? "bg-success/10" : "bg-warning/10" },
-    { label: "Follow-up", value: needFollowUp, color: "text-info", bg: "bg-info/10" },
     { label: "Consultas Hoje", value: appointmentsToday, color: "text-primary", bg: "bg-primary/10" },
   ];
 
