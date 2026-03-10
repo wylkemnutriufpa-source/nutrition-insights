@@ -508,8 +508,7 @@ export default function Patients() {
     if (data) {
       const patientIds = data.map(p => p.patient_id);
 
-      // Also fetch emails for fallback names
-      const [profilesRes, statsRes, checklistRes, enrollmentsRes, emailsRes] = await Promise.all([
+      const [profilesRes, statsRes, checklistRes, enrollmentsRes, emailsRes, prestigeRes, pPlansRes] = await Promise.all([
         Promise.all(patientIds.map(id =>
           supabase.from("profiles").select("full_name, avatar_url").eq("user_id", id).single()
         )),
@@ -523,10 +522,40 @@ export default function Patients() {
           .select("patient_id, program_id, programs(id, title)")
           .eq("status", "active")
           .in("patient_id", patientIds),
-        // Use RPC to get emails as fallback — but we can't query auth.users
-        // Instead we'll just rely on profiles, and show patient_id as last resort
         Promise.resolve(null),
+        supabase.from("patient_prestige")
+          .select("patient_id, plan_id, prestige_plans(*)")
+          .eq("is_active", true)
+          .in("patient_id", patientIds),
+        supabase.from("prestige_plans").select("*").eq("is_active", true).order("display_order"),
       ]);
+
+      // Store prestige plans list for filter tabs
+      const ppList = (pPlansRes.data || []).map((d: any) => ({
+        id: d.id, name: d.name, slug: d.slug, display_order: d.display_order, color: d.color,
+        badge_icon: d.badge_icon, badge_label: d.badge_label, crown_enabled: d.crown_enabled,
+        effect_type: d.effect_type, ranking_highlight: d.ranking_highlight,
+        ai_usage_multiplier: d.ai_usage_multiplier, features: d.features || [],
+        price_monthly: d.price_monthly, price_quarterly: d.price_quarterly,
+        price_semiannual: d.price_semiannual, price_annual: d.price_annual,
+      })) as PrestigePlan[];
+      setPrestigePlansList(ppList);
+
+      // Build prestige map
+      const prestigeMap = new Map<string, PrestigePlan>();
+      (prestigeRes.data || []).forEach((pp: any) => {
+        if (pp.prestige_plans) {
+          const d = pp.prestige_plans;
+          prestigeMap.set(pp.patient_id, {
+            id: d.id, name: d.name, slug: d.slug, display_order: d.display_order, color: d.color,
+            badge_icon: d.badge_icon, badge_label: d.badge_label, crown_enabled: d.crown_enabled,
+            effect_type: d.effect_type, ranking_highlight: d.ranking_highlight,
+            ai_usage_multiplier: d.ai_usage_multiplier, features: d.features || [],
+            price_monthly: d.price_monthly, price_quarterly: d.price_quarterly,
+            price_semiannual: d.price_semiannual, price_annual: d.price_annual,
+          });
+        }
+      });
 
       const enrollmentMap = new Map<string, { id: string; title: string }[]>();
       (enrollmentsRes.data || []).forEach((e: any) => {
@@ -548,6 +577,7 @@ export default function Patients() {
           checklistAdherence: adherence,
           priorityScore: computeScore(statsRes[i]?.data, { total, completed }),
           programs: enrollmentMap.get(p.patient_id) || [],
+          prestigePlan: prestigeMap.get(p.patient_id) || null,
         };
       });
 
