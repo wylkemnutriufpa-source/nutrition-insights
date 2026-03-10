@@ -8,7 +8,7 @@ import {
   Brain, Bot, ChefHat, Sparkles, Camera, FileText,
   Users, Utensils, ClipboardCheck, Target, Dumbbell, Pill,
   MessageSquare, Calendar, Bell, BookOpen,
-  ShoppingCart, Heart,
+  ShoppingCart, Heart, Upload, FileUp, UserPlus,
   BarChart3, DollarSign, Activity, Trophy,
 } from "lucide-react";
 
