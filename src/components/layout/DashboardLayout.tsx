@@ -42,6 +42,7 @@ const nutritionistLinks = [
   { to: "/supplements", icon: Pill, label: "Suplementação" },
   { to: "/global-tips", icon: Lightbulb, label: "Dicas" },
   { to: "/professional-guide", icon: Compass, label: "Guia do Profissional" },
+  { to: "/user-guide", icon: BookOpen, label: "Guia do Paciente" },
   { to: "/feedbacks", icon: MessageSquare, label: "Feedbacks" },
   { to: "/branding", icon: Palette, label: "Branding" },
 ];
