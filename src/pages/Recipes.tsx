@@ -52,6 +52,7 @@ const emptyForm = {
 // ──── NUTRITIONIST VIEW ────
 function NutritionistRecipes() {
   const { user } = useAuth();
+  const aiUsage = useAIUsage("generate_recipe");
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
