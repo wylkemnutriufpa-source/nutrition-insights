@@ -80,6 +80,11 @@ export default function MealPlans() {
 
   useEffect(() => { fetchPlans(); fetchPatients(); }, [user]);
 
+  // Auto-open dialog when coming from patient profile
+  useEffect(() => {
+    if (preselectedPatientId) setOpen(true);
+  }, [preselectedPatientId]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !form.patient_id) return;
