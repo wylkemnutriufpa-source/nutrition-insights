@@ -117,13 +117,34 @@ export default function ImportPatients() {
     no_name: noNameCount,
   };
 
+  const togglePatient = (idx: number) => {
+    setSelectedIndices(prev => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx);
+      else next.add(idx);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (selectedIndices.size === activePatients.length) {
+      setSelectedIndices(new Set());
+    } else {
+      const all = new Set<number>();
+      allPatients.forEach((p, i) => { if (p.active && p.email) all.add(i); });
+      setSelectedIndices(all);
+    }
+  };
+
+  const selectedPatients = allPatients.filter((p, i) => selectedIndices.has(i) && p.active && p.email);
+
   const handleImport = async () => {
-    if (!user || activePatients.length === 0) return;
+    if (!user || selectedPatients.length === 0) return;
     setImporting(true);
     setResult(null);
 
     try {
-      const payload = activePatients.map(p => ({
+      const payload = selectedPatients.map(p => ({
         name: p.name,
         email: p.email,
       }));
