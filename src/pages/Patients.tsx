@@ -689,14 +689,20 @@ export default function Patients() {
     return score >= 70;
   };
 
+  const prestigeFilterFn = (p: PatientInfo) => {
+    if (prestigeFilter === "all") return true;
+    if (prestigeFilter === "none") return !p.prestigePlan;
+    return p.prestigePlan?.slug === prestigeFilter;
+  };
+
   const activePatientsList = useMemo(() =>
-    patients.filter(p => p.status === "active" && searchFilter(p) && scoreFilter(p)),
-    [patients, search, filter]
+    patients.filter(p => p.status === "active" && searchFilter(p) && scoreFilter(p) && prestigeFilterFn(p)),
+    [patients, search, filter, prestigeFilter]
   );
 
   const inactivePatientsList = useMemo(() =>
-    patients.filter(p => p.status !== "active" && searchFilter(p)),
-    [patients, search]
+    patients.filter(p => p.status !== "active" && searchFilter(p) && prestigeFilterFn(p)),
+    [patients, search, prestigeFilter]
   );
 
   const allFiltered = useMemo(() =>
