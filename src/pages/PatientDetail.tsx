@@ -21,6 +21,8 @@ import BodyEvolutionCard from "@/components/patient/BodyEvolutionCard";
 import HealthScoreRing, { calculateHealthScore } from "@/components/dashboard/HealthScoreRing";
 import ConsultationCompare from "@/components/patient/ConsultationCompare";
 import PatientCheckinsTab from "@/components/patient/PatientCheckinsTab";
+import PatientChecklistView from "@/components/patient/PatientChecklistView";
+import SmartAlertsBanner from "@/components/patient/SmartAlertsBanner";
 import PlanScheduler from "@/components/plans/PlanScheduler";
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
@@ -326,6 +328,8 @@ export default function PatientDetail() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {/* Smart Alerts */}
+        <SmartAlertsBanner patientId={patientId!} onAction={(action) => setOpenSection(action)} />
         {/* Header */}
         <div className="flex items-center gap-4 flex-wrap">
           <Button variant="ghost" size="icon" onClick={() => navigate("/patients")}>
@@ -434,6 +438,7 @@ export default function PatientDetail() {
         {/* Section Cards Grid */}
         {(() => {
           const sections = [
+            { key: "checklist", label: "Checklist", icon: ListChecks, color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
             { key: "overview", label: "Visão Geral", icon: AlertTriangle, color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
             { key: "ai-insights", label: "IA Insights", icon: Brain, color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
             { key: "assessment", label: "Avaliação Física", icon: Activity, color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
@@ -442,7 +447,6 @@ export default function PatientDetail() {
             { key: "timeline", label: "Timeline", icon: Clock, color: "from-muted-foreground/20 to-muted-foreground/5", iconColor: "text-muted-foreground" },
             { key: "plan", label: "Plano", icon: CreditCard, color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
             { key: "protocols", label: "Protocolos", icon: FileText, color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
-            { key: "checkins", label: "Check-ins", icon: MessageSquare, color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
             { key: "meal-plans", label: "Planos Alimentares", icon: UtensilsCrossed, color: "from-success/20 to-success/5", iconColor: "text-success" },
             { key: "radar", label: "Radar Metabólico", icon: TrendingUp, color: "from-destructive/20 to-destructive/5", iconColor: "text-destructive" },
             { key: "recipes", label: "Receitas", icon: ChefHat, color: "from-primary/20 to-accent/5", iconColor: "text-primary" },
@@ -817,11 +821,11 @@ export default function PatientDetail() {
                 </DialogContent>
               </Dialog>
 
-              {/* Checkins Modal */}
-              <Dialog open={openSection === "checkins"} onOpenChange={(v) => !v && setOpenSection(null)}>
+              {/* Checklist Modal */}
+              <Dialog open={openSection === "checklist"} onOpenChange={(v) => !v && setOpenSection(null)}>
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display">Check-ins</DialogTitle></DialogHeader>
-                  <PatientCheckinsTab patientId={patientId!} />
+                  <DialogHeader><DialogTitle className="font-display">Checklist Diário</DialogTitle></DialogHeader>
+                  <PatientChecklistView patientId={patientId!} editable={true} />
                 </DialogContent>
               </Dialog>
 
