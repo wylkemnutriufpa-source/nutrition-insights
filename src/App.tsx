@@ -73,6 +73,7 @@ import GlobalRanking from "./pages/GlobalRanking";
 import AdminPrestige from "./pages/AdminPrestige";
 import AdminPricing from "./pages/AdminPricing";
 import AdminPatientFeatures from "./pages/AdminPatientFeatures";
+import UserGuide from "./pages/UserGuide";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
