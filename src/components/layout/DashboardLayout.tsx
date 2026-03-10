@@ -342,7 +342,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           className="fixed top-0 right-0 z-40 p-3 transition-[left] duration-200"
           style={{ left: collapsed ? 72 : 260 }}
         >
-          <div className="flex justify-end">
+          <div className="flex items-center justify-end gap-1">
+            {location.pathname !== "/" && (
+              <Link to="/">
+                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span className="text-xs hidden sm:inline">Dashboard</span>
+                </Button>
+              </Link>
+            )}
             <NotificationBell />
           </div>
         </div>
