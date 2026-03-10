@@ -506,7 +506,7 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
         <PatientCard key={p.id} p={p} idx={idx} navigate={navigate}
           toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
           setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
-          onUpdateExpiry={onUpdateExpiry} />
+          onUpdateExpiry={onUpdateExpiry} allPrestigePlans={allPrestigePlans} />
       ))}
     </div>
   );
