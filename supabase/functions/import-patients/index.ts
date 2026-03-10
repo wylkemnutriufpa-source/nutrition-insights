@@ -118,16 +118,22 @@ Deno.serve(async (req) => {
           });
         }
 
-        // Link to nutritionist
+        // Link to nutritionist (check first to avoid duplicates)
         const nutritionistId = user.id;
-        await supabase.from("nutritionist_patients").upsert(
-          {
+        const { data: existingLink } = await supabase
+          .from("nutritionist_patients")
+          .select("id")
+          .eq("nutritionist_id", nutritionistId)
+          .eq("patient_id", patientUserId)
+          .maybeSingle();
+
+        if (!existingLink) {
+          await supabase.from("nutritionist_patients").insert({
             nutritionist_id: nutritionistId,
             patient_id: patientUserId,
             status: "active",
-          },
-          { onConflict: "nutritionist_id,patient_id", ignoreDuplicates: true }
-        );
+          });
+        }
 
         results.created++;
       } catch (err: any) {
