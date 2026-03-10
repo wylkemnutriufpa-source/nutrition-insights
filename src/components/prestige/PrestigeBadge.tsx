@@ -1,14 +1,21 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import type { PrestigePlan } from "@/hooks/usePrestige";
+import PlanDetailModal from "./PlanDetailModal";
 
 interface PrestigeBadgeProps {
   plan: PrestigePlan | null;
+  allPlans?: PrestigePlan[];
   size?: "sm" | "md" | "lg";
   showLabel?: boolean;
+  clickable?: boolean;
+  onUpgrade?: (planId: string) => void;
   className?: string;
 }
 
-export default function PrestigeBadge({ plan, size = "md", showLabel = true, className = "" }: PrestigeBadgeProps) {
+export default function PrestigeBadge({ plan, allPlans = [], size = "md", showLabel = true, clickable = true, onUpgrade, className = "" }: PrestigeBadgeProps) {
+  const [modalOpen, setModalOpen] = useState(false);
+
   if (!plan) return null;
 
   const sizeMap = { sm: "w-5 h-5 text-xs", md: "w-7 h-7 text-sm", lg: "w-10 h-10 text-lg" };
@@ -23,22 +30,36 @@ export default function PrestigeBadge({ plan, size = "md", showLabel = true, cla
     : "";
 
   return (
-    <motion.div
-      initial={{ scale: 0.8, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      className={`inline-flex items-center gap-1.5 ${className}`}
-    >
-      <div
-        className={`${sizeMap[size]} rounded-full flex items-center justify-center ${effectClass}`}
-        style={{ backgroundColor: plan.color + "20", border: `2px solid ${plan.color}` }}
+    <>
+      <motion.button
+        type="button"
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        whileHover={clickable ? { scale: 1.08 } : undefined}
+        whileTap={clickable ? { scale: 0.95 } : undefined}
+        onClick={clickable ? (e) => { e.stopPropagation(); setModalOpen(true); } : undefined}
+        className={`inline-flex items-center gap-1.5 ${clickable ? "cursor-pointer" : "cursor-default"} ${className}`}
       >
-        <span>{plan.badge_icon}</span>
-      </div>
-      {showLabel && (
-        <span className={`${textSize[size]} font-semibold`} style={{ color: plan.color }}>
-          {plan.badge_label || plan.name}
-        </span>
-      )}
-    </motion.div>
+        <div
+          className={`${sizeMap[size]} rounded-full flex items-center justify-center ${effectClass}`}
+          style={{ backgroundColor: plan.color + "20", border: `2px solid ${plan.color}` }}
+        >
+          <span>{plan.badge_icon}</span>
+        </div>
+        {showLabel && (
+          <span className={`${textSize[size]} font-semibold`} style={{ color: plan.color }}>
+            {plan.badge_label || plan.name}
+          </span>
+        )}
+      </motion.button>
+
+      <PlanDetailModal
+        plan={plan}
+        allPlans={allPlans}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        onUpgrade={onUpgrade}
+      />
+    </>
   );
 }
