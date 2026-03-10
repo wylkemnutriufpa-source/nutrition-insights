@@ -264,7 +264,9 @@ function PatientDashboardContent() {
 
       {/* Subscription Card */}
       <motion.div variants={item}>
-        <SubscriptionCard />
+        <ExpandablePanel title="Assinatura">
+          <SubscriptionCard />
+        </ExpandablePanel>
       </motion.div>
 
       {/* Smart Plan Card */}
