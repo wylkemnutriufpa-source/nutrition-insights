@@ -134,21 +134,24 @@ function SidebarContent({
                   key={link.to}
                   to={link.to}
                   onClick={onLinkClick}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all group border ${
+                  className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all group border
+                    hover:translate-x-1 hover:scale-[1.02] active:scale-[0.98]
+                    ${
                     active
                       ? `bg-gradient-to-r ${linkColor} border-primary/20 shadow-sm`
                       : "border-transparent hover:border-border hover:bg-muted/50"
                   }`}
+                  style={{ transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)" }}
                 >
                   <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${
                     active
-                      ? "bg-card shadow-sm"
+                      ? "bg-card shadow-sm animate-pulse"
                       : "bg-muted/50 group-hover:bg-card group-hover:shadow-sm"
                   }`}>
                     <link.icon className={`w-3.5 h-3.5 ${active ? linkIconColor : "text-muted-foreground group-hover:" + (linkIconColor || "text-primary")}`} />
                   </div>
                   <span className={`text-xs font-medium ${active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}>{link.label}</span>
-                  {active && <ChevronRight className="w-3.5 h-3.5 ml-auto text-primary" />}
+                  {active && <ChevronRight className="w-3.5 h-3.5 ml-auto text-primary animate-bounce" />}
                 </Link>
               );
             }
@@ -158,15 +161,18 @@ function SidebarContent({
                 key={link.to}
                 to={link.to}
                 onClick={onLinkClick}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all group ${
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all group
+                  hover:translate-x-1 hover:scale-[1.02] active:scale-[0.98]
+                  ${
                   active
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
+                style={{ transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)" }}
               >
-                <link.icon className={`w-4 h-4 flex-shrink-0 ${active ? "text-primary" : ""}`} />
+                <link.icon className={`w-4 h-4 flex-shrink-0 ${active ? "text-primary animate-pulse" : "group-hover:scale-110 transition-transform"}`} />
                 {!collapsed && <span className="text-xs font-medium">{link.label}</span>}
-                {active && !collapsed && <ChevronRight className="w-3.5 h-3.5 ml-auto text-primary" />}
+                {active && !collapsed && <ChevronRight className="w-3.5 h-3.5 ml-auto text-primary animate-bounce" />}
               </Link>
             );
           })}
