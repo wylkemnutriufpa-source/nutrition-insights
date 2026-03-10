@@ -413,6 +413,7 @@ export default function Financial() {
               </Card>
             </div>
 
+            <Tabs defaultValue="subscriptions" className="w-full">
               <TabsList className="w-full justify-start bg-card border border-border">
                 <TabsTrigger value="subscriptions">Pagamentos</TabsTrigger>
                 <TabsTrigger value="income">
