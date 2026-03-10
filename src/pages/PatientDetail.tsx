@@ -569,6 +569,18 @@ export default function PatientDetail() {
                       <h3 className="font-display text-lg font-semibold mb-4">Comparativo entre Consultas</h3>
                       <ConsultationCompare patientId={patientId!} />
                     </div>
+                    <div className="border-t border-border pt-6">
+                      <h3 className="font-display text-lg font-semibold mb-4 flex items-center gap-2">
+                        <Upload className="w-5 h-5 text-accent" /> Documentos da Avaliação
+                      </h3>
+                      <DocumentUpload
+                        patientId={patientId!}
+                        nutritionistId={user!.id}
+                        documentType="assessment"
+                        documents={assessmentDocs}
+                        onUploadComplete={fetchAll}
+                      />
+                    </div>
                   </div>
                 </DialogContent>
               </Dialog>
