@@ -21,6 +21,7 @@ import { usePresenceTracker } from "@/hooks/usePresenceTracker";
 
 const nutritionistLinks = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/ranking", icon: Trophy, label: "🏆 Ranking Global" },
   { to: "/patients", icon: Users, label: "Pacientes" },
   { to: "/checkin-panel", icon: ClipboardCheck, label: "Check-ins" },
   { to: "/appointments", icon: Activity, label: "Agenda" },
@@ -45,6 +46,7 @@ const nutritionistLinks = [
 
 const patientLinks = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
+  { to: "/ranking", icon: Trophy, label: "🏆 Ranking", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
   { to: "/checkin", icon: ClipboardCheck, label: "Check-in", color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
   { to: "/checklist", icon: CheckCircle2, label: "Checklist", color: "from-success/20 to-success/5", iconColor: "text-success" },
   { to: "/my-diet", icon: UtensilsCrossed, label: "Minha Dieta", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
@@ -70,6 +72,7 @@ const patientLinks = [
 
 const adminLinks = [
   { to: "/admin", icon: Shield, label: "Painel Admin" },
+  { to: "/ranking", icon: Trophy, label: "🏆 Ranking Global" },
   { to: "/admin/resources", icon: LayoutDashboard, label: "Central de Recursos" },
   { to: "/admin/features", icon: Zap, label: "Feature Flags" },
   { to: "/admin/testimonials", icon: Star, label: "Depoimentos" },
