@@ -10,14 +10,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { User, Lock, Save, Bell, BellOff, Trophy, Eye } from "lucide-react";
+import { User, Lock, Save, Bell, BellOff, Trophy, Eye, Camera } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import AvatarPicker from "@/components/profile/AvatarPicker";
 
 export default function Settings() {
   const { user, profile, refreshProfile } = useAuth();
   const { permission, isSubscribed, isSupported, loading: pushLoading, subscribe, unsubscribe } = usePushNotifications();
   const [fullName, setFullName] = useState(profile?.full_name || "");
   const [phone, setPhone] = useState(profile?.phone || "");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatar_url || null);
   const [savingProfile, setSavingProfile] = useState(false);
 
   const [currentPassword, setCurrentPassword] = useState("");
@@ -100,6 +102,14 @@ export default function Settings() {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            <AvatarPicker
+              currentUrl={avatarUrl}
+              onUpdate={(url) => {
+                setAvatarUrl(url);
+                refreshProfile();
+              }}
+            />
+            <Separator className="my-4" />
             <form onSubmit={handleSaveProfile} className="space-y-4">
               <div>
                 <Label>Email</Label>
