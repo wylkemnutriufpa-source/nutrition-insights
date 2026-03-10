@@ -497,17 +497,18 @@ export default function Financial() {
                 <TransactionList
                   transactions={transactions.filter((t) => t.type === "income")}
                   type="income"
-                  onAdd={() => { setTxForm({ ...txForm, type: "income" }); setTxOpen(true); }}
+                  onAdd={() => { setTxForm({ ...defaultTxForm, type: "income" }); setTxOpen(true); }}
+                  onEdit={editTransaction}
                   onDelete={deleteTransaction}
                 />
               </TabsContent>
 
-              {/* Expenses Tab */}
               <TabsContent value="expenses" className="mt-4">
                 <TransactionList
                   transactions={transactions.filter((t) => t.type === "expense")}
                   type="expense"
-                  onAdd={() => { setTxForm({ ...txForm, type: "expense" }); setTxOpen(true); }}
+                  onAdd={() => { setTxForm({ ...defaultTxForm, type: "expense" }); setTxOpen(true); }}
+                  onEdit={editTransaction}
                   onDelete={deleteTransaction}
                 />
               </TabsContent>
