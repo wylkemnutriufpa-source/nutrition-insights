@@ -41,7 +41,7 @@ const howItWorks = [
 ];
 
 const defaultTestimonials = [
-  { name: "Dra. Ana Costa", role: "Nutricionista Esportiva", text: "O NutriFlow revolucionou meu atendimento. A IA me economiza 3h por dia e meus pacientes adoram a gamificação!", rating: 5, avatar: "AC" },
+  { name: "Dra. Ana Costa", role: "Nutricionista Esportiva", text: "O FitJourney revolucionou meu atendimento. A IA me economiza 3h por dia e meus pacientes adoram a gamificação!", rating: 5, avatar: "AC" },
   { name: "Dr. Carlos Silva", role: "Nutricionista Clínico", text: "Meus pacientes nunca foram tão engajados. A adesão ao tratamento subiu 60% com os streaks e desafios.", rating: 5, avatar: "CS" },
   { name: "Dra. Mariana Luz", role: "Nutricionista Funcional", text: "Relatórios profissionais com 1 clique, análise corporal por IA, chat integrado. Tudo que eu precisava em um só lugar.", rating: 5, avatar: "ML" },
   { name: "Dr. Rafael Mendes", role: "Nutricionista Comportamental", text: "O AutoBot responde meus pacientes 24/7 sobre dúvidas de nutrição. É como ter um assistente que nunca dorme.", rating: 5, avatar: "RM" },
@@ -66,7 +66,7 @@ const defaultPlans = [
 ];
 
 const defaultFaqs = [
-  { q: "Preciso instalar alguma coisa?", a: "Não! NutriFlow é 100% web e PWA. Funciona no navegador e pode ser instalado como app no celular." },
+  { q: "Preciso instalar alguma coisa?", a: "Não! FitJourney é 100% web e PWA. Funciona no navegador e pode ser instalado como app no celular." },
   { q: "Meus pacientes precisam pagar?", a: "Não. Apenas o profissional paga pelo plano. Pacientes acessam gratuitamente com login próprio." },
   { q: "A IA substitui o nutricionista?", a: "Jamais! A IA é sua assistente — analisa dados, gera sugestões e economiza tempo. Todas as decisões clínicas são suas." },
   { q: "Meus dados estão seguros?", a: "Sim. Usamos criptografia de ponta, autenticação robusta e Row-Level Security. Cada paciente só acessa seus próprios dados." },
@@ -101,7 +101,7 @@ export default function Landing() {
   const { data: siteData } = useSiteSettings();
   const s = siteData?.map;
 
-  const brandName = getSetting(s, "brand_name", "NutriFlow");
+  const brandName = getSetting(s, "brand_name", "FitJourney");
   const heroTitle = getSetting(s, "hero_title", "Transforme seu consultório com IA e Gamificação");
   const heroSubtitle = getSetting(s, "hero_subtitle", "Gerencie pacientes, crie planos alimentares personalizados com IA, e engaje seus clientes com gamificação — tudo em uma plataforma completa e intuitiva.");
   const heroCta = getSetting(s, "hero_cta_text", "Começar Gratuitamente");
@@ -110,7 +110,7 @@ export default function Landing() {
   const plans = getSetting(s, "pricing_plans", defaultPlans);
   const testimonials = getSetting(s, "testimonials_landing", defaultTestimonials);
   const faqs = getSetting(s, "faqs", defaultFaqs);
-  const metaTitle = getSetting(s, "meta_title", "NutriFlow — Plataforma de Nutrição com IA e Gamificação");
+  const metaTitle = getSetting(s, "meta_title", "FitJourney — Plataforma de Nutrição com IA e Gamificação");
   const metaDescription = getSetting(s, "meta_description", "Gerencie pacientes, crie planos alimentares com IA, engaje com gamificação. A plataforma #1 para nutricionistas modernos.");
   const footerText = getSetting(s, "footer_text", "Plataforma completa para nutricionistas modernos.");
 
@@ -360,7 +360,7 @@ export default function Landing() {
             <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={stagger}>
               <motion.span variants={fadeUp} className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-4">DIFERENCIAIS</motion.span>
               <motion.h2 variants={fadeUp} className="font-display text-3xl md:text-4xl font-bold mb-6 leading-tight">
-                Por que nutricionistas escolhem o <span className="text-gradient">NutriFlow</span>?
+                Por que nutricionistas escolhem o <span className="text-gradient">FitJourney</span>?
               </motion.h2>
               <div className="space-y-5">
                 {[
@@ -389,7 +389,7 @@ export default function Landing() {
                   <div className="w-3 h-3 rounded-full bg-destructive/60" />
                   <div className="w-3 h-3 rounded-full bg-warning/60" />
                   <div className="w-3 h-3 rounded-full bg-success/60" />
-                  <span className="ml-2 text-xs text-muted-foreground font-mono">nutriflow.app/dashboard</span>
+                  <span className="ml-2 text-xs text-muted-foreground font-mono">fitjourney.app/dashboard</span>
                 </div>
                 <div className="space-y-3">
                   <div className="flex gap-3">
@@ -458,7 +458,7 @@ export default function Landing() {
           <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-16">
             <span className="inline-block px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-semibold mb-4">DEPOIMENTOS</span>
             <h2 className="font-display text-3xl md:text-5xl font-bold mb-4">Amado por <span className="text-gradient">nutricionistas</span></h2>
-            <p className="text-muted-foreground text-lg">Veja o que profissionais reais dizem sobre o NutriFlow</p>
+            <p className="text-muted-foreground text-lg">Veja o que profissionais reais dizem sobre o FitJourney</p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -598,7 +598,7 @@ export default function Landing() {
               Pronto para <span className="text-gradient">decolar</span>?
             </h2>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto mb-8">
-              Junte-se a centenas de nutricionistas que já transformaram seu atendimento com NutriFlow.
+              Junte-se a centenas de nutricionistas que já transformaram seu atendimento com FitJourney.
               Comece grátis agora mesmo.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
