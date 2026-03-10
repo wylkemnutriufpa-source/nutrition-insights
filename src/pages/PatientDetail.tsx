@@ -374,7 +374,7 @@ export default function PatientDetail() {
               onClick={() => navigate(`/anamnesis?patientId=${patientId}`)}
             >
               <Heart className="w-4 h-4" />
-              {anamnesis ? "Refazer Anamnese" : "Preencher Anamnese"}
+              {anamnesis ? "Editar Anamnese" : "Preencher Anamnese"}
             </Button>
             <Dialog open={activateOpen} onOpenChange={setActivateOpen}>
               <DialogTrigger asChild>
