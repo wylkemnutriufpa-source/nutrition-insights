@@ -619,7 +619,16 @@ export default function Patients() {
         };
       });
 
-      enriched.sort((a, b) => (a.priorityScore || 0) - (b.priorityScore || 0));
+      // Sort: recently viewed first, then by priority score
+      enriched.sort((a, b) => {
+        const recentA = getRecentScore(a.patient_id);
+        const recentB = getRecentScore(b.patient_id);
+        // If either has significant recent activity, prioritize that
+        if (recentA > 10 || recentB > 10) {
+          if (Math.abs(recentA - recentB) > 5) return recentB - recentA;
+        }
+        return (a.priorityScore || 0) - (b.priorityScore || 0);
+      });
       setPatients(enriched);
     }
     setLoading(false);
