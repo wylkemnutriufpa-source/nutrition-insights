@@ -62,6 +62,10 @@ export default function ImportPatients() {
         const parsed = parseCsv(text);
         setAllPatients(parsed);
         setLoaded(true);
+        // Pre-select all importable patients
+        const importableIndices = new Set<number>();
+        parsed.forEach((p, i) => { if (p.active && p.email) importableIndices.add(i); });
+        setSelectedIndices(importableIndices);
       });
   }, []);
 
