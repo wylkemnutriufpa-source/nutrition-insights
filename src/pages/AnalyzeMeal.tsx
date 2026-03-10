@@ -183,11 +183,14 @@ export default function AnalyzeMeal() {
           <Link to="/">
             <Button variant="ghost" size="icon"><ArrowLeft className="w-5 h-5" /></Button>
           </Link>
-          <div>
-            <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-              <Brain className="w-7 h-7 text-primary" /> Análise por IA
-            </h1>
-            <p className="text-muted-foreground text-sm">Descreva ou fotografe sua refeição</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="font-display text-2xl font-bold flex items-center gap-2">
+                <Brain className="w-7 h-7 text-primary" /> Análise por IA
+              </h1>
+              <p className="text-muted-foreground text-sm">Descreva ou fotografe sua refeição</p>
+            </div>
+            <AIUsageBadge status={aiUsage} />
           </div>
         </div>
 
