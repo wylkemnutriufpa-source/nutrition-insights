@@ -14,9 +14,11 @@ import { toast } from "sonner";
 import {
   Users, Plus, UserCheck, UserX, ChevronRight, Search,
   TrendingUp, TrendingDown, Minus, Target, Loader2, ToggleLeft, ToggleRight, X, CalendarDays,
-  LayoutGrid, List
+  LayoutGrid, List, Crown
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import PrestigeBadge from "@/components/prestige/PrestigeBadge";
+import type { PrestigePlan } from "@/hooks/usePrestige";
 
 interface PatientInfo {
   id: string;
