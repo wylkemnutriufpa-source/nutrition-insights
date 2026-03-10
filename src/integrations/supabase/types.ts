@@ -2790,6 +2790,14 @@ export type Database = {
         Args: { _program_id: string; _user_id: string }
         Returns: boolean
       }
+      lookup_referral_by_code: {
+        Args: { _code: string }
+        Returns: {
+          nutritionist_id: string
+          program_id: string
+          referral_code: string
+        }[]
+      }
       promote_to_admin: { Args: { _user_email: string }; Returns: string }
       reset_professional_password: {
         Args: { _new_password: string; _user_id: string }
