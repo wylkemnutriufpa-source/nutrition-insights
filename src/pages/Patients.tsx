@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PrestigeBadge from "@/components/prestige/PrestigeBadge";
+import { useOnlinePatients } from "@/hooks/useOnlinePatients";
 import type { PrestigePlan } from "@/hooks/usePrestige";
 
 interface PatientInfo {
