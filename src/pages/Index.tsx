@@ -346,7 +346,7 @@ function NutritionistDashboardContent() {
     const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
     const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
 
-    const [patientsRes, protocolsRes, programsRes, plansRes, aptsRes, chatsRes, pendingRes, timelineRes, programsListRes] = await Promise.all([
+    const [patientsRes, protocolsRes, programsRes, plansRes, aptsRes, chatsRes, pendingRes, programsListRes] = await Promise.all([
       supabase.from("nutritionist_patients").select("id, patient_id", { count: "exact" }).eq("nutritionist_id", user.id).eq("status", "active"),
       supabase.from("protocols").select("id", { count: "exact" }).eq("created_by", user.id),
       supabase.from("programs").select("id", { count: "exact" }).eq("created_by", user.id).eq("is_active", true),
@@ -354,7 +354,6 @@ function NutritionistDashboardContent() {
       supabase.from("patient_appointments").select("id", { count: "exact" }).eq("nutritionist_id", user.id).gte("appointment_date", todayStart.toISOString()).lte("appointment_date", todayEnd.toISOString()),
       supabase.from("chat_messages").select("id", { count: "exact", head: true }).eq("receiver_id", user.id).eq("is_read", false),
       supabase.from("patient_checkins").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id).eq("status", "pending"),
-      supabase.from("patient_timeline").select("*").order("created_at", { ascending: false }).limit(10),
       supabase.from("programs").select("id, title").eq("created_by", user.id).eq("is_active", true).limit(5),
     ]);
 
@@ -365,7 +364,24 @@ function NutritionistDashboardContent() {
     setAppointmentsToday(aptsRes.count || 0);
     setUnreadChats(chatsRes.count || 0);
     setPendingCheckins(pendingRes.count || 0);
-    setRecentTimeline(timelineRes.data || []);
+
+    // Fetch timeline filtered by nutritionist's patients with patient names
+    const patientIds = (patientsRes.data || []).map((p: any) => p.patient_id);
+    if (patientIds.length > 0) {
+      const [timelineRes, profilesRes] = await Promise.all([
+        supabase.from("patient_timeline").select("*").in("patient_id", patientIds).order("created_at", { ascending: false }).limit(15),
+        supabase.from("profiles").select("user_id, full_name").in("user_id", patientIds),
+      ]);
+      const nameMap: Record<string, string> = {};
+      (profilesRes.data || []).forEach((p: any) => { nameMap[p.user_id] = p.full_name; });
+      const enriched = (timelineRes.data || []).map((ev: any) => ({
+        ...ev,
+        patient_name: nameMap[ev.patient_id] || "Paciente",
+      }));
+      setRecentTimeline(enriched);
+    } else {
+      setRecentTimeline([]);
+    }
 
     // Program performance
     if (programsListRes.data && programsListRes.data.length > 0) {
@@ -381,8 +397,8 @@ function NutritionistDashboardContent() {
     }
 
     // Process patients for health scores & risk panel
-    const patientIds = patientsRes.data?.map(p => p.patient_id) || [];
-    if (patientIds.length > 0) {
+    const patientIds2 = patientsRes.data?.map(p => p.patient_id) || [];
+    if (patientIds2.length > 0) {
       const patientDataForAI: any[] = [];
       const riskList: typeof riskPatients = [];
       let totalScore = 0;
@@ -469,7 +485,7 @@ function NutritionistDashboardContent() {
         avgWeight: weightCount > 0 ? totalWeight / weightCount : null,
         avgAdherence: adherenceCount > 0 ? Math.round(totalAdherence / adherenceCount) : 0,
         totalCheckins,
-        avgScore: patientIds.length > 0 ? Math.round(totalScore / Math.min(patientIds.length, 30)) : 0,
+        avgScore: patientIds2.length > 0 ? Math.round(totalScore / Math.min(patientIds2.length, 30)) : 0,
       });
 
       if (patientDataForAI.length > 0) {
@@ -704,7 +720,10 @@ function NutritionistDashboardContent() {
                       <Icon className={`w-3.5 h-3.5 ${conf.color}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{ev.title}</p>
+                      <p className="text-sm font-medium truncate">
+                        {ev.patient_name && <span className="text-primary">{ev.patient_name}</span>}
+                        {ev.patient_name ? " — " : ""}{ev.title}
+                      </p>
                       {ev.description && <p className="text-xs text-muted-foreground truncate">{ev.description}</p>}
                     </div>
                     <span className="text-[10px] text-muted-foreground flex-shrink-0 mt-1">
