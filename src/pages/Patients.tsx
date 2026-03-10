@@ -410,7 +410,7 @@ function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssign
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
           <p className="font-semibold text-sm truncate" style={p.prestigePlan?.crown_enabled ? { color: p.prestigePlan.color } : undefined}>{displayName}</p>
-          {p.prestigePlan && <PrestigeBadge plan={p.prestigePlan} size="sm" showLabel={false} />}
+          {p.prestigePlan && <PrestigeBadge plan={p.prestigePlan} allPlans={prestigePlansList} size="sm" showLabel={false} />}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
