@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { FEATURE_REGISTRY, getFeaturesByCategory, type FeatureDefinition } from "@/lib/featureRegistry";
 import {
   Zap, Users, Utensils, BarChart3, MessageSquare,
-  Crown, Search, Shield, Sparkles
+  Crown, Search, Shield, Sparkles, Clock
 } from "lucide-react";
 
 const ALL_FEATURES = FEATURE_REGISTRY;
