@@ -1,13 +1,15 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { usePrestige } from "@/hooks/usePrestige";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Crown, Trophy, TrendingUp, Flame, Utensils, Dumbbell, ClipboardCheck, CheckCircle2, Sparkles } from "lucide-react";
+import { Crown, Trophy, TrendingUp, Flame, Utensils, Dumbbell, ClipboardCheck, CheckCircle2, Sparkles, Lock, Rocket, Bot, Palette, BarChart3, Users, Zap } from "lucide-react";
 import PrestigeBadge from "@/components/prestige/PrestigeBadge";
 
 type Period = "daily" | "weekly" | "monthly" | "annual";
