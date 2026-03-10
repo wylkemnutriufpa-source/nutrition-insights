@@ -397,7 +397,7 @@ function NutritionistDashboardContent() {
     }
 
     // Process patients for health scores & risk panel
-    const patientIds = patientsRes.data?.map(p => p.patient_id) || [];
+    const patientIds2 = patientsRes.data?.map(p => p.patient_id) || [];
     if (patientIds.length > 0) {
       const patientDataForAI: any[] = [];
       const riskList: typeof riskPatients = [];
