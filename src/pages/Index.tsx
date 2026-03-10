@@ -162,8 +162,8 @@ function PatientDashboardContent() {
 
       {/* Gamification */}
       <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <XPBar totalXp={stats?.total_xp || 0} level={stats?.level || 1} />
-        <StreakCounter current={stats?.current_streak || 0} longest={stats?.longest_streak || 0} />
+        <ExpandablePanel title="XP"><XPBar totalXp={stats?.total_xp || 0} level={stats?.level || 1} /></ExpandablePanel>
+        <ExpandablePanel title="Streak"><StreakCounter current={stats?.current_streak || 0} longest={stats?.longest_streak || 0} /></ExpandablePanel>
       </motion.div>
 
       {/* Quick Stats */}
