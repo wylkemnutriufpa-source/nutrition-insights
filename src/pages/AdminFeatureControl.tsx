@@ -85,15 +85,15 @@ export default function AdminFeatureControl() {
     setGlobalDefaults(defaults);
   }, []);
 
-  const toggleFeature = async (nutId: string, featureName: string, enabled: boolean) => {
-    const newStatus = enabled ? "enabled" : "disabled";
+  const setFeatureStatus = async (nutId: string, featureName: string, status: FeatureStatus) => {
     const { error } = await (supabase.from("professional_feature_usage" as any) as any).upsert(
-      { nutritionist_id: nutId, feature_name: featureName, status: newStatus },
+      { nutritionist_id: nutId, feature_name: featureName, status },
       { onConflict: "nutritionist_id,feature_name" }
     );
     if (error) { toast.error("Erro ao atualizar: " + error.message); return; }
-    setNutritionists(prev => prev.map(n => n.user_id === nutId ? { ...n, features: { ...n.features, [featureName]: enabled } } : n));
-    toast.success(`${featureName} ${enabled ? "habilitada" : "desabilitada"}`);
+    setNutritionists(prev => prev.map(n => n.user_id === nutId ? { ...n, features: { ...n.features, [featureName]: status } } : n));
+    const labels: Record<FeatureStatus, string> = { enabled: "habilitada", disabled: "desabilitada (Premium)", coming_soon: "marcada como Em Breve" };
+    toast.success(`${featureName} ${labels[status]}`);
   };
 
   const toggleAllForNut = async (nutId: string, enabled: boolean) => {
