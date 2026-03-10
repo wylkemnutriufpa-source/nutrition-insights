@@ -973,7 +973,7 @@ export default function Patients() {
 
             {programs.map(prog => (
               <TabsContent key={prog.id} value={`prog-${prog.id}`}>
-                <PatientGrid patients={programPatientLists.get(prog.id) || []} navigate={navigate}
+                <PatientGrid patients={programPatientLists.get(prog.id) || []} navigate={navigateToPatient}
                   toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
                   setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
                   onUpdateExpiry={updateExpiry}
