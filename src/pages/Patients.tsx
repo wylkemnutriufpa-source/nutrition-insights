@@ -483,7 +483,16 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
   allPrestigePlans?: PrestigePlan[];
   onlineSet?: Set<string>;
 }) {
-  if (patients.length === 0) {
+  // Sort online patients first
+  const sorted = onlineSet && onlineSet.size > 0
+    ? [...patients].sort((a, b) => {
+        const aOn = onlineSet.has(a.patient_id) ? 1 : 0;
+        const bOn = onlineSet.has(b.patient_id) ? 1 : 0;
+        return bOn - aOn;
+      })
+    : patients;
+
+  if (sorted.length === 0) {
     return (
       <div className="glass rounded-xl p-12 text-center">
         <Users className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
@@ -496,7 +505,7 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
   if (layout === "list") {
     return (
       <div className="space-y-2">
-        {patients.map((p, idx) => (
+        {sorted.map((p, idx) => (
           <PatientRow key={p.id} p={p} idx={idx} navigate={navigate}
             toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
             setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
@@ -508,11 +517,12 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {patients.map((p, idx) => (
+      {sorted.map((p, idx) => (
         <PatientCard key={p.id} p={p} idx={idx} navigate={navigate}
           toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
           setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
-          onUpdateExpiry={onUpdateExpiry} allPrestigePlans={allPrestigePlans} />
+          onUpdateExpiry={onUpdateExpiry} allPrestigePlans={allPrestigePlans}
+          isOnline={onlineSet?.has(p.patient_id)} />
       ))}
     </div>
   );
