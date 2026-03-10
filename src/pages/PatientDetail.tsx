@@ -26,6 +26,7 @@ import PatientChecklistView from "@/components/patient/PatientChecklistView";
 import SmartAlertsBanner from "@/components/patient/SmartAlertsBanner";
 import PlanScheduler from "@/components/plans/PlanScheduler";
 import DocumentUpload from "@/components/common/DocumentUpload";
+import ClinicalDecisionSupport from "@/components/patient/ClinicalDecisionSupport";
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
