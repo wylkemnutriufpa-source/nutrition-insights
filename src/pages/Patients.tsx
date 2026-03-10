@@ -511,7 +511,12 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
 
 export default function Patients() {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const nav = useNavigate();
+  const navigateToPatient = useCallback((patientId: string) => {
+    trackPatientView(patientId);
+    nav(`/patients/${patientId}`);
+  }, [nav]);
+  const navigate = useCallback((path: string) => nav(path), [nav]);
   const [patients, setPatients] = useState<PatientInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
