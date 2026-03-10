@@ -71,6 +71,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRoles(data?.map((r) => r.role) || []);
   };
 
+  const checkSubscription = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke("check-subscription");
+      if (!error && data) {
+        setSubscription({
+          subscribed: data.subscribed ?? false,
+          subscription_tier: data.subscription_tier ?? null,
+          subscription_end: data.subscription_end ?? null,
+          is_trial: data.is_trial ?? false,
+          trial_end: data.trial_end ?? null,
+        });
+      }
+    } catch (e) {
+      console.error("Error checking subscription:", e);
+    }
+  };
+
   const refreshProfile = async () => {
     if (user) {
       await Promise.all([fetchProfile(user.id), fetchRoles(user.id)]);
