@@ -75,6 +75,7 @@ export default function Checklist() {
   const [form, setForm] = useState({ title: "", icon: "✅", category: "habit", description: "" });
   const [saving, setSaving] = useState(false);
   const [seeding, setSeeding] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   const fetchTasks = useCallback(async () => {
     if (!user) return;
