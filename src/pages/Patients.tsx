@@ -769,9 +769,12 @@ export default function Patients() {
     return p.prestigePlan?.slug === prestigeFilter;
   };
 
+  const onlineFilterFn = (p: PatientInfo) =>
+    !onlineFilter || onlineSet.has(p.patient_id);
+
   const activePatientsList = useMemo(() =>
-    patients.filter(p => p.status === "active" && searchFilter(p) && scoreFilter(p) && prestigeFilterFn(p)),
-    [patients, search, filter, prestigeFilter]
+    patients.filter(p => p.status === "active" && searchFilter(p) && scoreFilter(p) && prestigeFilterFn(p) && onlineFilterFn(p)),
+    [patients, search, filter, prestigeFilter, onlineFilter, onlineSet]
   );
 
   const inactivePatientsList = useMemo(() =>
