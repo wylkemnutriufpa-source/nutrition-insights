@@ -61,6 +61,10 @@ export default function AnalyzeMeal() {
       toast.error("Descreva a refeição ou envie uma foto");
       return;
     }
+    if (!aiUsage.allowed) {
+      toast.error(aiUsage.nextAvailableLabel || "Limite de análises atingido");
+      return;
+    }
     setAnalyzing(true);
 
     try {
