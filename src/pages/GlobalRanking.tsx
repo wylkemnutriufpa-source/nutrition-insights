@@ -2,12 +2,13 @@ import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { usePrestige } from "@/hooks/usePrestige";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Crown, Trophy, TrendingUp, Flame, Utensils, Dumbbell, ClipboardCheck, CheckCircle2, Sparkles } from "lucide-react";
+import PrestigeBadge from "@/components/prestige/PrestigeBadge";
 
 type Period = "daily" | "weekly" | "monthly" | "annual";
 
@@ -100,6 +101,7 @@ function CategoryBar({ label, icon: Icon, points, maxPoints, color }: {
 
 export default function GlobalRanking() {
   const { user } = useAuth();
+  const { plans: allPrestigePlans } = usePrestige();
   const [period, setPeriod] = useState<Period>("monthly");
   const [ranking, setRanking] = useState<RankEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -176,9 +178,12 @@ export default function GlobalRanking() {
                   <p className="font-display font-bold text-lg">{myRank.total_points} pontos</p>
                 </div>
                 {myRank.plan_slug && (
-                  <Badge variant="outline" style={{ borderColor: myRank.plan_color || undefined, color: myRank.plan_color || undefined }}>
-                    {myRank.badge_icon} {PLAN_LABELS[myRank.plan_slug] || myRank.plan_slug}
-                  </Badge>
+                  <PrestigeBadge
+                    plan={allPrestigePlans.find(p => p.slug === myRank.plan_slug) || null}
+                    allPlans={allPrestigePlans}
+                    size="sm"
+                    clickable
+                  />
                 )}
                 <TrendingUp className="w-5 h-5 text-primary" />
               </CardContent>
@@ -242,13 +247,12 @@ export default function GlobalRanking() {
                   </p>
 
                   {entry.plan_slug && (
-                    <Badge
-                      variant="outline"
-                      className="text-[10px] px-1.5 py-0 mt-0.5"
-                      style={{ borderColor: (entry.plan_color || "#666") + "60", color: entry.plan_color || undefined }}
-                    >
-                      {entry.badge_icon} {PLAN_LABELS[entry.plan_slug] || entry.plan_slug}
-                    </Badge>
+                    <PrestigeBadge
+                      plan={allPrestigePlans.find(p => p.slug === entry.plan_slug) || null}
+                      allPlans={allPrestigePlans}
+                      size="sm"
+                      clickable
+                    />
                   )}
 
                   <span className="text-sm font-bold mt-1">
@@ -332,9 +336,12 @@ export default function GlobalRanking() {
                               {entry.display_name}
                             </p>
                             {entry.plan_slug && (
-                              <span className="text-xs text-muted-foreground">
-                                {entry.badge_icon} {PLAN_LABELS[entry.plan_slug] || entry.plan_slug}
-                              </span>
+                              <PrestigeBadge
+                                plan={allPrestigePlans.find(p => p.slug === entry.plan_slug) || null}
+                                allPlans={allPrestigePlans}
+                                size="sm"
+                                clickable
+                              />
                             )}
                           </div>
                           <span className="text-sm font-bold">
