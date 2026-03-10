@@ -40,28 +40,28 @@ const nutritionistLinks = [
 ];
 
 const patientLinks = [
-  { to: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/checkin", icon: ClipboardCheck, label: "Check-in" },
-  { to: "/checklist", icon: CheckCircle2, label: "Checklist" },
-  { to: "/my-diet", icon: UtensilsCrossed, label: "Minha Dieta" },
-  { to: "/weekly-goals", icon: Target, label: "Metas" },
-  { to: "/appointments", icon: Activity, label: "Agenda" },
-  { to: "/chat", icon: MessageSquare, label: "Chat" },
-  { to: "/autobot", icon: Bot, label: "AutoBot IA" },
-  { to: "/meals", icon: Leaf, label: "Refeições" },
-  { to: "/recipes", icon: ChefHat, label: "Receitas" },
-  { to: "/shopping-list", icon: ShoppingCart, label: "Compras" },
-  { to: "/journey", icon: TrendingUp, label: "Jornada" },
-  { to: "/library", icon: BookOpen, label: "Biblioteca" },
-  { to: "/supplements", icon: Pill, label: "Suplementos" },
-  { to: "/anamnesis", icon: ClipboardCheck, label: "Anamnese" },
-  { to: "/food-database", icon: Apple, label: "Alimentos" },
-  { to: "/weight-calculator", icon: Scale, label: "Peso Ideal" },
-  { to: "/water-calculator", icon: Droplets, label: "Hidratação" },
-  { to: "/health-quiz", icon: Heart, label: "Health Check" },
-  { to: "/feedbacks", icon: MessageSquare, label: "Feedbacks" },
-  { to: "/achievements", icon: Trophy, label: "Conquistas" },
-  { to: "/challenges", icon: Target, label: "Desafios" },
+  { to: "/", icon: LayoutDashboard, label: "Dashboard", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
+  { to: "/checkin", icon: ClipboardCheck, label: "Check-in", color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
+  { to: "/checklist", icon: CheckCircle2, label: "Checklist", color: "from-success/20 to-success/5", iconColor: "text-success" },
+  { to: "/my-diet", icon: UtensilsCrossed, label: "Minha Dieta", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
+  { to: "/weekly-goals", icon: Target, label: "Metas", color: "from-info/20 to-info/5", iconColor: "text-info" },
+  { to: "/appointments", icon: Activity, label: "Agenda", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
+  { to: "/chat", icon: MessageSquare, label: "Chat", color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
+  { to: "/autobot", icon: Bot, label: "AutoBot IA", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
+  { to: "/meals", icon: Leaf, label: "Refeições", color: "from-success/20 to-success/5", iconColor: "text-success" },
+  { to: "/recipes", icon: ChefHat, label: "Receitas", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
+  { to: "/shopping-list", icon: ShoppingCart, label: "Compras", color: "from-info/20 to-info/5", iconColor: "text-info" },
+  { to: "/journey", icon: TrendingUp, label: "Jornada", color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
+  { to: "/library", icon: BookOpen, label: "Biblioteca", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
+  { to: "/supplements", icon: Pill, label: "Suplementos", color: "from-success/20 to-success/5", iconColor: "text-success" },
+  { to: "/anamnesis", icon: ClipboardCheck, label: "Anamnese", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
+  { to: "/food-database", icon: Apple, label: "Alimentos", color: "from-info/20 to-info/5", iconColor: "text-info" },
+  { to: "/weight-calculator", icon: Scale, label: "Peso Ideal", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
+  { to: "/water-calculator", icon: Droplets, label: "Hidratação", color: "from-info/20 to-info/5", iconColor: "text-info" },
+  { to: "/health-quiz", icon: Heart, label: "Health Check", color: "from-destructive/20 to-destructive/5", iconColor: "text-destructive" },
+  { to: "/feedbacks", icon: MessageSquare, label: "Feedbacks", color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
+  { to: "/achievements", icon: Trophy, label: "Conquistas", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
+  { to: "/challenges", icon: Target, label: "Desafios", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
 ];
 
 const adminLinks = [
@@ -120,6 +120,35 @@ function SidebarContent({
       <nav className="flex-1 px-3 mt-4 space-y-1 overflow-y-auto">
         {links.map((link) => {
           const active = location.pathname === link.to;
+          const hasColor = 'color' in link && !isNutritionist;
+          const linkColor = (link as any).color as string | undefined;
+          const linkIconColor = (link as any).iconColor as string | undefined;
+
+          if (hasColor && !collapsed) {
+            return (
+              <Link
+                key={link.to}
+                to={link.to}
+                onClick={onLinkClick}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group border ${
+                  active
+                    ? `bg-gradient-to-r ${linkColor} border-primary/20 shadow-sm`
+                    : "border-transparent hover:border-border hover:bg-muted/50"
+                }`}
+              >
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${
+                  active
+                    ? "bg-card shadow-sm"
+                    : "bg-muted/50 group-hover:bg-card group-hover:shadow-sm"
+                }`}>
+                  <link.icon className={`w-4 h-4 ${active ? linkIconColor : "text-muted-foreground group-hover:" + (linkIconColor || "text-primary")}`} />
+                </div>
+                <span className={`text-sm font-medium ${active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}>{link.label}</span>
+                {active && <ChevronRight className="w-4 h-4 ml-auto text-primary" />}
+              </Link>
+            );
+          }
+
           return (
             <Link
               key={link.to}
@@ -142,7 +171,7 @@ function SidebarContent({
           <Link
             to="/analyze"
             onClick={onLinkClick}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg gradient-primary text-primary-foreground mt-4 shadow-glow"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl gradient-primary text-primary-foreground mt-4 shadow-glow"
           >
             <Sparkles className="w-5 h-5 flex-shrink-0" />
             {!collapsed && <span className="text-sm font-medium">Analisar com IA</span>}
