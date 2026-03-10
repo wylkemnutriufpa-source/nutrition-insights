@@ -23,7 +23,7 @@ export default function OnlinePatientsWidget({ variant = "card", showPremiumTag 
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
               </span>
               <span className="text-xs font-semibold text-primary">{loading ? "..." : onlineCount}</span>
-              <Wifi className="w-3 h-3 text-primary" />
+              <UsersRound className="w-3 h-3 text-primary" />
             </div>
           </TooltipTrigger>
           <TooltipContent>
