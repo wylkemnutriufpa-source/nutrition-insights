@@ -129,6 +129,10 @@ function NutritionistRecipes() {
 
   const generateRecipe = async () => {
     if (!user || !aiPrompt.trim()) return;
+    if (!aiUsage.allowed) {
+      toast.error(aiUsage.nextAvailableLabel || "Limite de geração atingido");
+      return;
+    }
     setGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-recipe", {
