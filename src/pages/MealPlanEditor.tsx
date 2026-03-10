@@ -476,6 +476,23 @@ export default function MealPlanEditor() {
           </div>
         </div>
 
+        {/* Document Upload Section */}
+        {plan && user && (
+          <div className="glass rounded-xl p-5">
+            <h3 className="font-display font-semibold text-sm mb-3 flex items-center gap-2">
+              📎 Documentos do Plano
+            </h3>
+            <DocumentUpload
+              patientId={plan.patient_id}
+              nutritionistId={user.id}
+              documentType="meal_plan"
+              referenceId={plan.id}
+              documents={planDocs}
+              onUploadComplete={fetchDocs}
+            />
+          </div>
+        )}
+
         {/* Grid */}
         <div className="overflow-x-auto -mx-4 px-4 pb-4">
           <div className="min-w-[1100px]">
