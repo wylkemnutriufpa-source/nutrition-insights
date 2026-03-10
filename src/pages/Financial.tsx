@@ -50,13 +50,7 @@ export default function Financial() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [txOpen, setTxOpen] = useState(false);
-  const [txForm, setTxForm] = useState({
-    type: "income" as "income" | "expense",
-    description: "",
-    amount: "",
-    date: new Date().toISOString().split("T")[0],
-    category: "",
-  });
+  const [txForm, setTxForm] = useState({ ...defaultTxForm });
 
   const fetchData = async () => {
     if (!user) return;
