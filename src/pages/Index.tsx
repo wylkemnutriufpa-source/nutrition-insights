@@ -693,20 +693,27 @@ function NutritionistDashboardContent() {
       <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Activity Feed */}
         <div className="glass rounded-xl p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-info/10 flex items-center justify-center">
-              <Activity className="w-4 h-4 text-info" />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-info/10 flex items-center justify-center">
+                <Activity className="w-4 h-4 text-info" />
+              </div>
+              <div>
+                <h2 className="font-display font-semibold">Atividade Recente</h2>
+                <p className="text-xs text-muted-foreground">Últimos eventos dos pacientes</p>
+              </div>
             </div>
-            <div>
-              <h2 className="font-display font-semibold">Atividade Recente</h2>
-              <p className="text-xs text-muted-foreground">Últimos eventos dos pacientes</p>
-            </div>
+            {recentTimeline.length > 0 && (
+              <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => setTimelineModalOpen(true)}>
+                Ver tudo <ArrowRight className="w-3 h-3" />
+              </Button>
+            )}
           </div>
           {recentTimeline.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-6">Nenhuma atividade registrada.</p>
           ) : (
             <div className="space-y-1 max-h-64 overflow-y-auto pr-1">
-              {recentTimeline.slice(0, 8).map((ev, i) => {
+              {recentTimeline.slice(0, 5).map((ev, i) => {
                 const conf = timelineEventIcons[ev.event_type] || timelineEventIcons.note;
                 const Icon = conf.icon;
                 return (
@@ -736,6 +743,52 @@ function NutritionistDashboardContent() {
             </div>
           )}
         </div>
+
+        {/* Timeline Expanded Modal */}
+        <Dialog open={timelineModalOpen} onOpenChange={setTimelineModalOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="flex items-center gap-3 pb-4 border-b border-border">
+              <div className="w-10 h-10 rounded-xl bg-info/10 flex items-center justify-center">
+                <Activity className="w-5 h-5 text-info" />
+              </div>
+              <div>
+                <h2 className="font-display text-lg font-bold">Atividades Recentes</h2>
+                <p className="text-xs text-muted-foreground">{recentTimeline.length} eventos registrados</p>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto space-y-1 pr-1 py-2">
+              {recentTimeline.map((ev, i) => {
+                const conf = timelineEventIcons[ev.event_type] || timelineEventIcons.note;
+                const Icon = conf.icon;
+                return (
+                  <motion.div
+                    key={ev.id}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.03 }}
+                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/30 transition-colors"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Icon className={`w-4 h-4 ${conf.color}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        {ev.patient_name && (
+                          <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{ev.patient_name}</span>
+                        )}
+                        <span className="text-[10px] text-muted-foreground">
+                          {new Date(ev.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      </div>
+                      <p className="text-sm font-medium mt-1">{ev.title}</p>
+                      {ev.description && <p className="text-xs text-muted-foreground mt-0.5">{ev.description}</p>}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Program Performance */}
         <div className="glass rounded-xl p-5">
