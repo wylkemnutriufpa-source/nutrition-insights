@@ -121,6 +121,31 @@ export default function Checklist() {
     setSeeding(false);
   };
 
+  const resetToDefaults = async () => {
+    if (!user) return;
+    setResetting(true);
+    // Delete existing tasks for this date
+    await supabase.from("checklist_tasks").delete().eq("patient_id", user.id).eq("date", date);
+    // Insert new defaults
+    const inserts = DEFAULT_TASKS.map(t => ({
+      patient_id: user.id,
+      title: t.title,
+      icon: t.icon,
+      category: t.category,
+      description: t.description,
+      date,
+      completed: false,
+    }));
+    const { error } = await supabase.from("checklist_tasks").insert(inserts);
+    if (!error) {
+      toast.success("✅ Checklist resetado com 15 tarefas comportamentais!");
+    } else {
+      toast.error(error.message);
+    }
+    await fetchTasks();
+    setResetting(false);
+  };
+
   // Realtime subscription
   useEffect(() => {
     if (!user) return;
