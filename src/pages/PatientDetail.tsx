@@ -322,6 +322,25 @@ export default function PatientDetail() {
       if (error) { toast.error(error.message); return; }
       toast.success("Plano atribuído!");
     }
+
+    // Sync prestige plan
+    if (selectedPrestigePlanId) {
+      // Upsert: delete existing then insert
+      await supabase.from("patient_prestige").delete().eq("patient_id", patientId);
+      const { error: prestigeErr } = await supabase.from("patient_prestige").insert({
+        patient_id: patientId,
+        plan_id: selectedPrestigePlanId,
+        assigned_by: user.id,
+        is_active: true,
+      });
+      if (prestigeErr) {
+        console.error("Prestige assignment error:", prestigeErr);
+      } else {
+        const selectedPlan = prestigePlans.find(p => p.id === selectedPrestigePlanId);
+        toast.success(`Prestígio ${selectedPlan?.name || ''} aplicado! ${selectedPlan?.badge_icon || ''}`, { duration: 3000 });
+      }
+    }
+
     setPlanOpen(false);
     fetchAll();
   };
