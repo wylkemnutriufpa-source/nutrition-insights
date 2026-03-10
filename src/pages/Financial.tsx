@@ -263,55 +263,47 @@ export default function Financial() {
                 </TabsTrigger>
               </TabsList>
 
-              {/* Subscriptions Tab */}
               <TabsContent value="subscriptions" className="mt-4">
                 <Card className="glass shadow-card">
                   <CardHeader>
-                    <CardTitle className="font-display text-lg">Assinaturas dos Pacientes</CardTitle>
+                    <CardTitle className="font-display text-lg">Pagamentos dos Pacientes</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {subs.length === 0 ? (
+                    {payments.length === 0 ? (
                       <div className="text-center py-8">
                         <DollarSign className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
-                        <p className="text-sm text-muted-foreground">Nenhuma assinatura encontrada</p>
+                        <p className="text-sm text-muted-foreground">Nenhum pagamento encontrado</p>
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        {subs.map((sub) => {
-                          const daysLeft = sub.expiresAt
-                            ? Math.ceil((new Date(sub.expiresAt).getTime() - Date.now()) / 86400000)
-                            : null;
-                          return (
-                            <div key={sub.id} className="flex items-center justify-between p-4 rounded-xl bg-muted/50">
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                  <span className="text-sm font-bold text-primary">
-                                    {sub.patientName[0]?.toUpperCase()}
-                                  </span>
-                                </div>
-                                <div>
-                                  <p className="font-medium text-sm">{sub.patientName}</p>
-                                  <p className="text-xs text-muted-foreground">{sub.planName}</p>
-                                </div>
+                        {payments.map((pay) => (
+                          <div key={pay.id} className="flex items-center justify-between p-4 rounded-xl bg-muted/50">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                <span className="text-sm font-bold text-primary">
+                                  {pay.patientName[0]?.toUpperCase()}
+                                </span>
                               </div>
-                              <div className="text-right flex items-center gap-3">
-                                <div>
-                                  <Badge className={statusColors[sub.status] || "bg-muted text-muted-foreground"}>
-                                    {statusLabels[sub.status] || sub.status}
-                                  </Badge>
-                                  <p className="text-xs text-muted-foreground mt-1">
-                                    Início: {new Date(sub.startedAt).toLocaleDateString("pt-BR")}
-                                  </p>
-                                  {daysLeft !== null && daysLeft > 0 && daysLeft <= 7 && (
-                                    <p className="text-xs text-warning font-medium mt-0.5">
-                                      ⚠️ Vence em {daysLeft} dia{daysLeft > 1 ? "s" : ""}
-                                    </p>
-                                  )}
-                                </div>
+                              <div>
+                                <p className="font-medium text-sm">{pay.patientName}</p>
+                                <p className="text-xs text-muted-foreground">{pay.planName} • {pay.gateway}</p>
                               </div>
                             </div>
-                          );
-                        })}
+                            <div className="text-right flex items-center gap-3">
+                              <div>
+                                <Badge className={statusColors[pay.status] || "bg-muted text-muted-foreground"}>
+                                  {statusLabels[pay.status] || pay.status}
+                                </Badge>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  R$ {pay.amount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {new Date(pay.createdAt).toLocaleDateString("pt-BR")}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </CardContent>
