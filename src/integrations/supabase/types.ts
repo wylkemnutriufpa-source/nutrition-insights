@@ -1706,6 +1706,47 @@ export type Database = {
         }
         Relationships: []
       }
+      professional_profiles: {
+        Row: {
+          clinic_name: string | null
+          created_at: string
+          id: string
+          onboarding_completed: boolean
+          plan_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          clinic_name?: string | null
+          created_at?: string
+          id?: string
+          onboarding_completed?: boolean
+          plan_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          clinic_name?: string | null
+          created_at?: string
+          id?: string
+          onboarding_completed?: boolean
+          plan_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_profiles_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "pricing_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -2593,6 +2634,10 @@ export type Database = {
         Returns: boolean
       }
       promote_to_admin: { Args: { _user_email: string }; Returns: string }
+      reset_professional_password: {
+        Args: { _new_password: string; _user_id: string }
+        Returns: undefined
+      }
       sync_protocol_checklist: {
         Args: { _date?: string; _patient_protocol_id: string }
         Returns: number

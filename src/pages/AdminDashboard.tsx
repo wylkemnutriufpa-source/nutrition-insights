@@ -741,6 +741,15 @@ export default function AdminDashboard() {
                     </div>
                   </CardContent>
                 </Card>
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/profissionais")}>
+                  <CardContent className="flex items-center gap-4 py-6">
+                    <Users className="w-8 h-8 text-primary" />
+                    <div>
+                      <p className="font-display font-semibold">Gestão de Profissionais</p>
+                      <p className="text-sm text-muted-foreground">Cadastro, planos e status</p>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </TabsContent>
 

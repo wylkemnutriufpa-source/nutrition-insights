@@ -62,6 +62,7 @@ import Checkin from "./pages/Checkin";
 import CheckinPanel from "./pages/CheckinPanel";
 import ClientDashboard from "./pages/ClientDashboard";
 import ImportPatients from "./pages/ImportPatients";
+import AdminProfessionals from "./pages/AdminProfessionals";
 
 const queryClient = new QueryClient();
 
@@ -208,6 +209,7 @@ const App = () => (
               <Route path="/admin/site-editor" element={<AdminRoute><AdminSiteEditor /></AdminRoute>} />
               <Route path="/admin/resources" element={<AdminRoute><AdminResourceCenter /></AdminRoute>} />
               <Route path="/admin/import-patients" element={<NutritionistRoute><ImportPatients /></NutritionistRoute>} />
+              <Route path="/admin/profissionais" element={<AdminRoute><AdminProfessionals /></AdminRoute>} />
 
               {/* Public pricing */}
               <Route path="/pricing" element={<Pricing />} />
