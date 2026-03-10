@@ -181,21 +181,18 @@ export default function Financial() {
           </div>
         ) : (
           <>
-            {/* Alert for expiring subscriptions */}
-            {expiringAlert.length > 0 && (
-              <Card className="border-warning/50 bg-warning/5">
+            {/* Alert for pending payments */}
+            {pendingPayments.length > 0 && (
+              <Card className="border-amber-500/50 bg-amber-500/5">
                 <CardContent className="flex items-start gap-3 py-4">
-                  <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
+                  <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium">Mensalidades vencendo em breve</p>
-                    {expiringAlert.map((s) => {
-                      const days = Math.ceil((new Date(s.expiresAt!).getTime() - Date.now()) / 86400000);
-                      return (
-                        <p key={s.id} className="text-xs text-muted-foreground">
-                          {s.patientName} — {s.planName} vence em {days} dia{days > 1 ? "s" : ""}
-                        </p>
-                      );
-                    })}
+                    <p className="text-sm font-medium">Pagamentos pendentes</p>
+                    {pendingPayments.map((p) => (
+                      <p key={p.id} className="text-xs text-muted-foreground">
+                        {p.patientName} — {p.planName} • R$ {p.amount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </p>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
