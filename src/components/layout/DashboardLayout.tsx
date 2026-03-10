@@ -19,6 +19,8 @@ import NotificationBell from "@/components/notifications/NotificationBell";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePresenceTracker } from "@/hooks/usePresenceTracker";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
+import CommandPalette from "@/components/common/CommandPalette";
+import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
 
 const nutritionistLinks = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
@@ -92,6 +94,7 @@ const adminLinks = [
   { to: "/user-guide", icon: BookOpen, label: "Guia do Paciente" },
   { to: "/admin/pricing", icon: DollarSign, label: "Planos & Preços" },
   { to: "/admin/patient-features", icon: Crown, label: "Features Paciente" },
+  { to: "/admin/audit-logs", icon: Shield, label: "Audit Logs" },
 ];
 
 function SidebarContent({
@@ -294,6 +297,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   if (isMobile) {
     return (
       <div className="min-h-screen bg-background">
+        <CommandPalette />
+        <OnboardingWizard />
         {/* Mobile Top Bar */}
         <div className="fixed top-0 left-0 right-0 z-50 h-14 bg-card border-b border-border flex items-center justify-between px-4">
           <div className="flex items-center gap-3">
@@ -340,6 +345,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen flex bg-background">
+      <CommandPalette />
+      <OnboardingWizard />
       {/* Desktop Sidebar */}
       <motion.aside
         initial={false}

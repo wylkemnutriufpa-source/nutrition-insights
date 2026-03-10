@@ -34,7 +34,7 @@ const features = [
 ];
 
 const howItWorks = [
-  { step: "01", title: "Crie sua conta", desc: "Cadastro gratuito em 30 segundos. Sem cartão de crédito.", icon: Sparkles },
+  { step: "01", title: "Crie sua conta", desc: "Teste grátis por 7 dias. Sem cartão de crédito.", icon: Sparkles },
   { step: "02", title: "Cadastre pacientes", desc: "Adicione pacientes com 1 clique. Eles recebem acesso automaticamente.", icon: Users },
   { step: "03", title: "Configure protocolos", desc: "Crie planos alimentares, protocolos e metas personalizadas.", icon: ClipboardCheck },
   { step: "04", title: "Acompanhe com IA", desc: "A IA analisa evolução, gera relatórios e sugere ajustes automaticamente.", icon: Brain },
@@ -49,9 +49,9 @@ const defaultTestimonials = [
 
 const defaultPlans = [
   {
-    name: "Starter", price: "Grátis", period: "para sempre", popular: false,
+    name: "Starter", price: "Grátis", period: "7 dias", popular: false,
     features: ["Até 5 pacientes", "Planos alimentares", "Checklist de hábitos", "Chat básico", "Banco de alimentos TACO"],
-    cta: "Começar Grátis",
+    cta: "Testar 7 Dias Grátis",
   },
   {
     name: "Pro", price: "R$ 97", period: "/mês", popular: true,
@@ -119,6 +119,29 @@ export default function Landing() {
       <Helmet>
         <title>{metaTitle}</title>
         <meta name="description" content={metaDescription} />
+        <meta property="og:title" content={metaTitle} />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://fijourney.lovable.app" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={metaTitle} />
+        <meta name="twitter:description" content={metaDescription} />
+        <link rel="canonical" href="https://fijourney.lovable.app" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "FitJourney",
+          "applicationCategory": "HealthApplication",
+          "operatingSystem": "Web",
+          "description": metaDescription,
+          "url": "https://fijourney.lovable.app",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "BRL",
+            "description": "Trial gratuito de 7 dias"
+          }
+        })}</script>
       </Helmet>
 
       {/* ══════════ NAV ══════════ */}
@@ -201,7 +224,7 @@ export default function Landing() {
             </motion.div>
 
             <motion.p variants={fadeUp} className="text-xs text-muted-foreground mb-16">
-              ✅ Grátis para começar · Sem cartão de crédito · Setup em 30 segundos
+              ✅ 7 dias grátis · Sem cartão de crédito · Setup em 30 segundos
             </motion.p>
 
             {/* Stats */}
