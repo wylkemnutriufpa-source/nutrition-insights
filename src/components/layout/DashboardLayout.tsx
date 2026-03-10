@@ -66,6 +66,7 @@ const patientLinks = [
   { to: "/weight-calculator", icon: Scale, label: "Peso Ideal", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
   { to: "/water-calculator", icon: Droplets, label: "Hidratação", color: "from-info/20 to-info/5", iconColor: "text-info" },
   { to: "/health-quiz", icon: Heart, label: "Health Check", color: "from-destructive/20 to-destructive/5", iconColor: "text-destructive" },
+  { to: "/global-tips", icon: Lightbulb, label: "Dicas", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
   { to: "/feedbacks", icon: MessageSquare, label: "Feedbacks", color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
   { to: "/achievements", icon: Trophy, label: "Conquistas", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
   { to: "/challenges", icon: Target, label: "Desafios", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
