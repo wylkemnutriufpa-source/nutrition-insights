@@ -75,6 +75,7 @@ export default function Checklist() {
   const [form, setForm] = useState({ title: "", icon: "✅", category: "habit", description: "" });
   const [saving, setSaving] = useState(false);
   const [seeding, setSeeding] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   const fetchTasks = useCallback(async () => {
     if (!user) return;
@@ -118,6 +119,31 @@ export default function Checklist() {
       fetchTasks();
     }
     setSeeding(false);
+  };
+
+  const resetToDefaults = async () => {
+    if (!user) return;
+    setResetting(true);
+    // Delete existing tasks for this date
+    await supabase.from("checklist_tasks").delete().eq("patient_id", user.id).eq("date", date);
+    // Insert new defaults
+    const inserts = DEFAULT_TASKS.map(t => ({
+      patient_id: user.id,
+      title: t.title,
+      icon: t.icon,
+      category: t.category,
+      description: t.description,
+      date,
+      completed: false,
+    }));
+    const { error } = await supabase.from("checklist_tasks").insert(inserts);
+    if (!error) {
+      toast.success("✅ Checklist resetado com 15 tarefas comportamentais!");
+    } else {
+      toast.error(error.message);
+    }
+    await fetchTasks();
+    setResetting(false);
   };
 
   // Realtime subscription
@@ -284,12 +310,25 @@ export default function Checklist() {
               </Button>
             </div>
           </div>
-          <Button
-            className="gradient-primary gap-2 shadow-glow"
-            onClick={() => { setEditingTask(null); setForm({ title: "", icon: "✅", category: "habit", description: "" }); setAddOpen(true); }}
-          >
-            <Plus className="w-4 h-4" /> Nova Tarefa
-          </Button>
+          <div className="flex items-center gap-2">
+            {isToday && tasks.length > 0 && tasks.length < 15 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetToDefaults}
+                disabled={resetting}
+                className="gap-1 text-xs"
+              >
+                {resetting ? "Resetando..." : "🔄 Resetar Padrão"}
+              </Button>
+            )}
+            <Button
+              className="gradient-primary gap-2 shadow-glow"
+              onClick={() => { setEditingTask(null); setForm({ title: "", icon: "✅", category: "habit", description: "" }); setAddOpen(true); }}
+            >
+              <Plus className="w-4 h-4" /> Nova Tarefa
+            </Button>
+          </div>
         </div>
 
         {/* Progress */}
