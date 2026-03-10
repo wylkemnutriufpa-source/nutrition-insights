@@ -22,7 +22,7 @@ type FeatureStatus = "enabled" | "disabled" | "coming_soon";
 
 // Map feature names to routes for quick navigation
 const FEATURE_ROUTES: Record<string, string> = {
-  ia_plan: "/analyze-meal",
+  ia_plan: "/analyze",
   automations: "/automation",
   recipe_generator: "/recipes",
   autobot: "/autobot",
@@ -30,6 +30,9 @@ const FEATURE_ROUTES: Record<string, string> = {
   ai_anamnesis: "/anamnesis",
   weekly_report_ai: "/weekly-report",
   behavioral_analysis: "/automation",
+  nutrition_copilot: "/",
+  churn_prediction: "/",
+  adherence_gamification: "/achievements",
   patients: "/patients",
   meal_plans: "/meal-plans",
   protocols: "/protocols",
@@ -37,6 +40,8 @@ const FEATURE_ROUTES: Record<string, string> = {
   physical_assessment: "/physical-assessment",
   supplements: "/supplements",
   checkin_panel: "/checkin-panel",
+  import_patients: "/admin/import-patients",
+  document_upload: "/patients",
   chat: "/chat",
   appointments: "/appointments",
   notifications_push: "/settings",
@@ -49,6 +54,22 @@ const FEATURE_ROUTES: Record<string, string> = {
   branding: "/branding",
   reports: "/reports",
   financial: "/financial",
+  system_usage_gamification: "/",
+  progress_simulation: "/",
+  clinical_intelligence: "/clinical-intelligence",
+  ai_strategy_center: "/",
+  clinical_decision_support: "/patients",
+  public_profile: "/my-public-profile",
+  program_landing: "/programs",
+  patient_referrals: "/my-referrals",
+  lead_generation: "/my-public-profile",
+  growth_dashboard: "/admin/growth",
+  weekly_goals: "/weekly-goals",
+  patient_checkin: "/checkin",
+  patient_journey: "/journey",
+  health_quiz: "/health-quiz",
+  weight_calculator: "/weight-calculator",
+  water_calculator: "/water-calculator",
 };
 
 // Tips for each feature to encourage exploration
