@@ -79,7 +79,7 @@ export default function PodiumBadge({ plan, allPlans = [], position, onUpgrade }
             opacity: 0.6,
           }}
           animate={{ rotate: 360 }}
-          transition={{ duration: isGold ? 3 : 5, repeat: Infinity, ease: "linear" }}
+          transition={{ duration: isGold ? 8 : 12, repeat: Infinity, ease: "linear" }}
         />
 
         {/* Main badge body */}
