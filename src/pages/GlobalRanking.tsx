@@ -471,11 +471,10 @@ export default function GlobalRanking() {
                           </p>
 
                           {entry.plan_slug && (
-                            <PrestigeBadge
+                            <PodiumBadge
                               plan={allPrestigePlans.find(p => p.slug === entry.plan_slug) || null}
                               allPlans={allPrestigePlans}
-                              size="sm"
-                              clickable
+                              position={idx}
                             />
                           )}
 
