@@ -364,22 +364,101 @@ function SubscriptionPlans({ plans, onRefresh }: { plans: PricingPlan[]; onRefre
   );
 }
 
-// ─── Feature Flags (Platform-level) ───
+// ─── Feature Flags (Platform-level with Tier Locking) ───
 function PlatformFeatureFlags() {
-  const categories = getFeaturesByCategory();
+  const { user } = useAuth();
+  const [tiers, setTiers] = useState<Record<string, FeatureTier>>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState<string | null>(null);
+
   const MODULE_GROUPS = [
     { key: "crm", label: "CRM", features: ["patients", "protocols", "programs", "physical_assessment", "supplements", "checkin_panel"] },
     { key: "finance", label: "Financeiro", features: ["financial", "reports"] },
-    { key: "programs", label: "Programas", features: ["programs", "protocols"] },
-    { key: "smart_tips", label: "Smart Tips", features: ["global_tips", "autobot", "ai_anamnesis"] },
-    { key: "marketing", label: "Automação & Marketing", features: ["automations", "behavioral_analysis", "churn_prediction"] },
+    { key: "ia", label: "IA & Automação", features: ["ia_plan", "automations", "recipe_generator", "autobot", "ai_body_analysis", "ai_anamnesis", "weekly_report_ai", "behavioral_analysis", "nutrition_copilot", "churn_prediction", "adherence_gamification"] },
+    { key: "communication", label: "Comunicação", features: ["chat", "appointments", "notifications_push", "feedbacks", "global_tips"] },
+    { key: "tools", label: "Ferramentas", features: ["food_database", "recipes", "shopping_list", "diet_templates", "branding"] },
+    { key: "reports", label: "Relatórios & Avançado", features: ["system_usage_gamification", "progress_simulation"] },
   ];
+
+  useEffect(() => {
+    const fetchTiers = async () => {
+      const { data } = await supabase.from("platform_feature_tiers").select("feature_name, tier");
+      const map: Record<string, FeatureTier> = {};
+      // Set defaults from registry
+      FEATURE_REGISTRY.forEach(f => { map[f.name] = f.defaultTier || "basic"; });
+      // Override with DB values
+      (data || []).forEach((row: any) => { map[row.feature_name] = row.tier as FeatureTier; });
+      setTiers(map);
+      setLoading(false);
+    };
+    fetchTiers();
+  }, []);
+
+  const changeTier = async (featureName: string, newTier: FeatureTier) => {
+    setSaving(featureName);
+    const prev = tiers[featureName];
+    setTiers(t => ({ ...t, [featureName]: newTier }));
+
+    const { error } = await supabase.from("platform_feature_tiers").upsert(
+      { feature_name: featureName, tier: newTier, updated_by: user?.id },
+      { onConflict: "feature_name" }
+    );
+
+    if (error) {
+      setTiers(t => ({ ...t, [featureName]: prev }));
+      toast.error("Erro ao salvar: " + error.message);
+    } else {
+      toast.success(`${featureName} → ${newTier === "basic" ? "Básico" : newTier === "premium" ? "Premium" : "Em Breve"}`);
+    }
+    setSaving(null);
+  };
+
+  const tierBadge = (tier: FeatureTier) => {
+    switch (tier) {
+      case "basic": return <Badge variant="secondary" className="text-xs">Básico</Badge>;
+      case "premium": return <Badge className="text-xs bg-amber-500/20 text-amber-400 border-amber-500/30">⭐ Premium</Badge>;
+      case "coming_soon": return <Badge variant="outline" className="text-xs text-muted-foreground">🕐 Em Breve</Badge>;
+    }
+  };
+
+  const stats = {
+    basic: Object.values(tiers).filter(t => t === "basic").length,
+    premium: Object.values(tiers).filter(t => t === "premium").length,
+    coming_soon: Object.values(tiers).filter(t => t === "coming_soon").length,
+  };
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-40"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
+  }
 
   return (
     <div className="space-y-4">
+      {/* Summary */}
+      <div className="grid grid-cols-3 gap-3">
+        <Card className="glass shadow-card">
+          <CardContent className="py-4 text-center">
+            <p className="text-2xl font-bold font-display text-primary">{stats.basic}</p>
+            <p className="text-xs text-muted-foreground">Básico (todos)</p>
+          </CardContent>
+        </Card>
+        <Card className="glass shadow-card">
+          <CardContent className="py-4 text-center">
+            <p className="text-2xl font-bold font-display text-amber-400">{stats.premium}</p>
+            <p className="text-xs text-muted-foreground">Premium</p>
+          </CardContent>
+        </Card>
+        <Card className="glass shadow-card">
+          <CardContent className="py-4 text-center">
+            <p className="text-2xl font-bold font-display text-muted-foreground">{stats.coming_soon}</p>
+            <p className="text-xs text-muted-foreground">Em Breve</p>
+          </CardContent>
+        </Card>
+      </div>
+
       <p className="text-sm text-muted-foreground">
-        Módulos da plataforma. Use o <strong>Controle por Profissional</strong> na Central de Recursos para controle granular.
+        <strong>Básico:</strong> disponível para todos os planos. <strong>Premium:</strong> apenas planos premium. <strong>Em Breve:</strong> bloqueado para todos.
       </p>
+
       {MODULE_GROUPS.map(group => (
         <Card key={group.key} className="glass shadow-card">
           <CardHeader className="pb-2">
@@ -389,21 +468,38 @@ function PlatformFeatureFlags() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="space-y-1">
               {group.features.map(fName => {
                 const feat = FEATURE_REGISTRY.find(f => f.name === fName);
                 if (!feat) return null;
                 const Icon = feat.icon;
+                const currentTier = tiers[fName] || "basic";
                 return (
-                  <div key={fName} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-muted/50">
-                    <div className="flex items-center gap-3">
-                      <Icon className="w-4 h-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm font-medium">{feat.label}</p>
-                        <p className="text-xs text-muted-foreground">{feat.description}</p>
+                  <div key={fName} className="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{feat.label}</p>
+                        <p className="text-xs text-muted-foreground truncate">{feat.description}</p>
                       </div>
                     </div>
-                    <Badge variant="default" className="text-xs">Ativo</Badge>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {tierBadge(currentTier)}
+                      <Select
+                        value={currentTier}
+                        onValueChange={(v) => changeTier(fName, v as FeatureTier)}
+                        disabled={saving === fName}
+                      >
+                        <SelectTrigger className="w-[120px] h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="basic">Básico</SelectItem>
+                          <SelectItem value="premium">⭐ Premium</SelectItem>
+                          <SelectItem value="coming_soon">🕐 Em Breve</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 );
               })}
