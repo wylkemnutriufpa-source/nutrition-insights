@@ -60,6 +60,7 @@ import PatientMealPlan from "./pages/PatientMealPlan";
 import BiquiniBrancoLanding from "./pages/BiquiniBrancoLanding";
 import Checkin from "./pages/Checkin";
 import CheckinPanel from "./pages/CheckinPanel";
+import ClientDashboard from "./pages/ClientDashboard";
 
 const queryClient = new QueryClient();
 
