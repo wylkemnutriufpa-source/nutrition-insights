@@ -72,6 +72,7 @@ import MyReferrals from "./pages/MyReferrals";
 import GlobalRanking from "./pages/GlobalRanking";
 import AdminPrestige from "./pages/AdminPrestige";
 import AdminPricing from "./pages/AdminPricing";
+import AdminPatientFeatures from "./pages/AdminPatientFeatures";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -237,6 +238,7 @@ const App = () => (
               <Route path="/admin/growth" element={<AdminRoute><GrowthDashboard /></AdminRoute>} />
               <Route path="/admin/prestige" element={<AdminRoute><AdminPrestige /></AdminRoute>} />
               <Route path="/admin/pricing" element={<AdminRoute><AdminPricing /></AdminRoute>} />
+              <Route path="/admin/patient-features" element={<AdminRoute><AdminPatientFeatures /></AdminRoute>} />
 
               {/* Global Ranking */}
               <Route path="/ranking" element={<ProtectedRoute><GlobalRanking /></ProtectedRoute>} />

@@ -12,7 +12,7 @@ import {
   ClipboardCheck, FileText, Rocket, CheckCircle2, Activity,
   MessageSquare, Lightbulb, ChefHat, ShoppingCart, Apple, Camera,
   Palette, Bell, BarChart3, Menu, X, Shield, Zap, Star, Bot,
-  Scale, Droplets, Heart, Calculator, TrendingUp, BookOpen, DollarSign, Pill
+  Scale, Droplets, Heart, Calculator, TrendingUp, BookOpen, DollarSign, Pill, Crown
 } from "lucide-react";
 import { useState } from "react";
 import NotificationBell from "@/components/notifications/NotificationBell";
@@ -79,6 +79,7 @@ const adminLinks = [
   { to: "/food-database", icon: Apple, label: "Alimentos" },
   { to: "/branding", icon: Palette, label: "Branding" },
   { to: "/admin/pricing", icon: DollarSign, label: "Planos & Preços" },
+  { to: "/admin/patient-features", icon: Crown, label: "Features Paciente" },
 ];
 
 function SidebarContent({
