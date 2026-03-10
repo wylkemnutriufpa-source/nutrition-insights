@@ -24,6 +24,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import SystemUsageCard from "@/components/dashboard/SystemUsageCard";
 import NutritionCopilot from "@/components/dashboard/NutritionCopilot";
 import ChurnRiskPanel from "@/components/dashboard/ChurnRiskPanel";
+import PatientProgressSimulation from "@/components/dashboard/PatientProgressSimulation";
 import ExpandablePanel from "@/components/common/ExpandablePanel";
 import {
   UtensilsCrossed, Users, TrendingUp, Target, Sparkles, Plus,
@@ -601,6 +602,22 @@ function NutritionistDashboardContent() {
               score: p.score,
               risks: p.risks,
               lastActivity: p.lastActivity,
+            }))}
+            loading={aiLoading}
+          />
+        </ExpandablePanel>
+      </motion.div>
+
+      {/* ── Patient Progress Simulation ── */}
+      <motion.div variants={item}>
+        <ExpandablePanel title="Simulação de Progresso">
+          <PatientProgressSimulation
+            patients={riskPatients.map(p => ({
+              id: p.id,
+              name: p.name,
+              currentWeight: evolutionData.avgWeight,
+              adherence: p.score,
+              streak: 0,
             }))}
             loading={aiLoading}
           />
