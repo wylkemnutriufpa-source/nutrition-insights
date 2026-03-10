@@ -73,6 +73,41 @@ export default function AdminPricing() {
   const updatePrestige = (id: string, field: string, value: any) =>
     setPrestigePlans((prev) => prev.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
 
+  const addNewPrestigePlan = async () => {
+    const slug = `prestige-${Date.now()}`;
+    const { data, error } = await supabase
+      .from("prestige_plans")
+      .insert({
+        name: "Novo Plano",
+        slug,
+        color: "#6366f1",
+        badge_icon: "⭐",
+        badge_label: "Novo",
+        display_order: prestigePlans.length + 1,
+        price_monthly: 0,
+      })
+      .select()
+      .single();
+    if (error) {
+      toast.error("Erro ao criar plano: " + error.message);
+      return;
+    }
+    if (data) {
+      setPrestigePlans((prev) => [...prev, data]);
+      toast.success("Novo plano de paciente criado!");
+    }
+  };
+
+  const deletePrestigePlan = async (id: string) => {
+    if (!confirm("Excluir este plano de paciente?")) return;
+    const { error } = await supabase.from("prestige_plans").delete().eq("id", id);
+    if (error) toast.error(error.message);
+    else {
+      setPrestigePlans((prev) => prev.filter((p) => p.id !== id));
+      toast.success("Plano removido!");
+    }
+  };
+
   const savePrestigePlans = async () => {
     setSaving(true);
     for (const plan of prestigePlans) {
