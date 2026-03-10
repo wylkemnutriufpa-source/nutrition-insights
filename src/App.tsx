@@ -62,6 +62,7 @@ import Checkin from "./pages/Checkin";
 import CheckinPanel from "./pages/CheckinPanel";
 import ClientDashboard from "./pages/ClientDashboard";
 import ImportPatients from "./pages/ImportPatients";
+import AdminProfessionals from "./pages/AdminProfessionals";
 
 const queryClient = new QueryClient();
 
