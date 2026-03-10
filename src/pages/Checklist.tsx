@@ -240,13 +240,27 @@ export default function Checklist() {
   }, {} as Record<string, ChecklistTask[]>);
 
   const categoryLabels: Record<string, string> = {
-    habit: "🔄 Hábitos",
     nutrition: "🥗 Nutrição",
+    hydration: "💧 Hidratação",
+    food_quality: "🍎 Qualidade Alimentar",
+    movement: "🏃 Movimento",
+    eating_behavior: "⏳ Comportamento Alimentar",
+    lifestyle: "😴 Estilo de Vida",
+    monitoring: "📊 Monitoramento",
+    consistency: "🎯 Consistência",
+    habit: "🔄 Hábitos",
     exercise: "💪 Exercício",
     supplement: "💊 Suplementos",
     mindset: "🧠 Mindset",
-    hydration: "💧 Hidratação",
   };
+
+  // Define category display order
+  const categoryOrder = ["nutrition", "hydration", "food_quality", "movement", "eating_behavior", "lifestyle", "monitoring", "consistency", "habit", "exercise", "supplement", "mindset"];
+  const sortedCategories = Object.entries(grouped).sort(([a], [b]) => {
+    const ia = categoryOrder.indexOf(a);
+    const ib = categoryOrder.indexOf(b);
+    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+  });
 
   return (
     <DashboardLayout>
