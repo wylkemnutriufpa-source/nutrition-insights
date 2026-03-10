@@ -681,12 +681,12 @@ export default function ClinicalIntelligence() {
             <Card className="glass border-border border-primary/20">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-primary" /> Resumo IA — Inteligência Clínica
-                  </CardTitle>
-                  <Button size="sm" onClick={generateAISummary} disabled={generatingAI} className="gap-1.5 gradient-primary shadow-glow">
-                    {generatingAI ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Brain className="w-3.5 h-3.5" />}
-                    {generatingAI ? "Analisando..." : "Gerar Análise IA"}
+                   <CardTitle className="text-sm flex items-center gap-2">
+                     <Sparkles className="w-4 h-4 text-primary" /> Resumo Executivo — Motor de Regras
+                   </CardTitle>
+                   <Button size="sm" onClick={generateAISummary} disabled={generatingAI} className="gap-1.5 gradient-primary shadow-glow">
+                     {generatingAI ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Brain className="w-3.5 h-3.5" />}
+                     {generatingAI ? "Gerando..." : "Gerar Resumo"}
                   </Button>
                 </div>
               </CardHeader>
