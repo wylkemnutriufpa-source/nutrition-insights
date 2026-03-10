@@ -86,6 +86,8 @@ export default function AnalyzeMeal() {
 
       if (error) throw error;
 
+      // Record AI usage
+      await aiUsage.recordUsage();
       setResult({
         title: data.title || description.slice(0, 50),
         calories: data.calories || 0,
