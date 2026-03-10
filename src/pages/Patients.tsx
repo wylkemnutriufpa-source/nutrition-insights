@@ -490,6 +490,8 @@ export default function Patients() {
   const [assignTarget, setAssignTarget] = useState<PatientInfo | null>(null);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [layout, setLayout] = useState<"grid" | "list">("grid");
+  const [prestigeFilter, setPrestigeFilter] = useState<string>("all");
+  const [prestigePlansList, setPrestigePlansList] = useState<PrestigePlan[]>([]);
 
   const fetchPatients = async () => {
     if (!user) return;
