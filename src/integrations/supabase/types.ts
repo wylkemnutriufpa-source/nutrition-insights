@@ -3100,7 +3100,7 @@ export type Database = {
       }
       find_patient_by_email: { Args: { _email: string }; Returns: string }
       get_ranking_by_period: {
-        Args: { _limit?: number; _period?: string }
+        Args: { _limit?: number; _period: string }
         Returns: {
           avatar_url: string
           badge_icon: string
