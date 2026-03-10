@@ -2,15 +2,14 @@ import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { FEATURE_REGISTRY, getFeaturesByCategory, type FeatureDefinition } from "@/lib/featureRegistry";
 import {
   Zap, Users, Utensils, BarChart3, MessageSquare,
-  Crown, Search, Shield, Sparkles
+  Crown, Search, Shield, Sparkles, Clock
 } from "lucide-react";
 
 const ALL_FEATURES = FEATURE_REGISTRY;
@@ -22,10 +21,12 @@ const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>
   "Relatórios & Financeiro": BarChart3,
 };
 
+type FeatureStatus = "enabled" | "disabled" | "coming_soon";
+
 interface NutritionistFeature {
   user_id: string;
   full_name: string;
-  features: Record<string, boolean>;
+  features: Record<string, FeatureStatus>;
 }
 
 export default function AdminFeatureControl() {
@@ -51,7 +52,7 @@ export default function AdminFeatureControl() {
           .eq("nutritionist_id", r.user_id);
 
         const existingNames = new Set((featureRows || []).map((fr: any) => fr.feature_name));
-        const features: Record<string, boolean> = {};
+        const features: Record<string, FeatureStatus> = {};
 
         // Auto-sync: insert new features that don't exist in DB yet
         const newFeatures = ALL_FEATURES.filter(f => !existingNames.has(f.name));
@@ -64,8 +65,8 @@ export default function AdminFeatureControl() {
           await (supabase.from("professional_feature_usage" as any) as any).upsert(inserts, { onConflict: "nutritionist_id,feature_name" });
         }
 
-        ALL_FEATURES.forEach(f => { features[f.name] = true; });
-        featureRows?.forEach((fr: any) => { features[fr.feature_name] = fr.status === "enabled"; });
+        ALL_FEATURES.forEach(f => { features[f.name] = "enabled"; });
+        featureRows?.forEach((fr: any) => { features[fr.feature_name] = (fr.status as FeatureStatus) || "enabled"; });
 
         result.push({ user_id: r.user_id, full_name: profile?.full_name || "Nutricionista", features });
       }
@@ -83,20 +84,20 @@ export default function AdminFeatureControl() {
     setGlobalDefaults(defaults);
   }, []);
 
-  const toggleFeature = async (nutId: string, featureName: string, enabled: boolean) => {
-    const newStatus = enabled ? "enabled" : "disabled";
+  const setFeatureStatus = async (nutId: string, featureName: string, status: FeatureStatus) => {
     const { error } = await (supabase.from("professional_feature_usage" as any) as any).upsert(
-      { nutritionist_id: nutId, feature_name: featureName, status: newStatus },
+      { nutritionist_id: nutId, feature_name: featureName, status },
       { onConflict: "nutritionist_id,feature_name" }
     );
     if (error) { toast.error("Erro ao atualizar: " + error.message); return; }
-    setNutritionists(prev => prev.map(n => n.user_id === nutId ? { ...n, features: { ...n.features, [featureName]: enabled } } : n));
-    toast.success(`${featureName} ${enabled ? "habilitada" : "desabilitada"}`);
+    setNutritionists(prev => prev.map(n => n.user_id === nutId ? { ...n, features: { ...n.features, [featureName]: status } } : n));
+    const labels: Record<FeatureStatus, string> = { enabled: "habilitada", disabled: "desabilitada (Premium)", coming_soon: "marcada como Em Breve" };
+    toast.success(`${featureName} ${labels[status]}`);
   };
 
-  const toggleAllForNut = async (nutId: string, enabled: boolean) => {
+  const setAllForNut = async (nutId: string, status: FeatureStatus) => {
     for (const f of ALL_FEATURES) {
-      await toggleFeature(nutId, f.name, enabled);
+      await setFeatureStatus(nutId, f.name, status);
     }
   };
 
@@ -126,7 +127,8 @@ export default function AdminFeatureControl() {
     return cats;
   }, [filteredFeatures]);
 
-  const enabledCount = selectedNutData ? Object.values(selectedNutData.features).filter(Boolean).length : 0;
+  const enabledCount = selectedNutData ? Object.values(selectedNutData.features).filter(s => s === "enabled").length : 0;
+  const comingSoonCount = selectedNutData ? Object.values(selectedNutData.features).filter(s => s === "coming_soon").length : 0;
   const totalCount = ALL_FEATURES.length;
 
   return (
@@ -174,7 +176,7 @@ export default function AdminFeatureControl() {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {nutritionists.map(n => {
-                    const count = Object.values(n.features).filter(Boolean).length;
+                    const count = Object.values(n.features).filter(s => s === "enabled").length;
                     const isSelected = selectedNut === n.user_id;
                     return (
                       <button
@@ -208,59 +210,65 @@ export default function AdminFeatureControl() {
             <div className="lg:col-span-3 space-y-4">
               {selectedNutData && (
                 <>
-                  {/* Stats bar */}
-                  <div className="grid grid-cols-3 gap-3">
-                    <Card className="glass shadow-card">
-                      <CardContent className="p-4 text-center">
-                        <p className="text-2xl font-bold text-primary">{enabledCount}</p>
-                        <p className="text-xs text-muted-foreground">Ativas</p>
-                      </CardContent>
-                    </Card>
-                    <Card className="glass shadow-card">
-                      <CardContent className="p-4 text-center">
-                        <p className="text-2xl font-bold text-destructive">{totalCount - enabledCount}</p>
-                        <p className="text-xs text-muted-foreground">Desativadas</p>
-                      </CardContent>
-                    </Card>
-                    <Card className="glass shadow-card">
-                      <CardContent className="p-4 text-center">
-                        <p className="text-2xl font-bold text-amber-500">{Object.keys(categories).length}</p>
-                        <p className="text-xs text-muted-foreground">Categorias</p>
-                      </CardContent>
-                    </Card>
-                  </div>
+                   {/* Stats bar */}
+                   <div className="grid grid-cols-4 gap-3">
+                     <Card className="glass shadow-card">
+                       <CardContent className="p-4 text-center">
+                         <p className="text-2xl font-bold text-primary">{enabledCount}</p>
+                         <p className="text-xs text-muted-foreground">Ativas</p>
+                       </CardContent>
+                     </Card>
+                     <Card className="glass shadow-card">
+                       <CardContent className="p-4 text-center">
+                         <p className="text-2xl font-bold text-destructive">{totalCount - enabledCount - comingSoonCount}</p>
+                         <p className="text-xs text-muted-foreground">Premium</p>
+                       </CardContent>
+                     </Card>
+                     <Card className="glass shadow-card">
+                       <CardContent className="p-4 text-center">
+                         <p className="text-2xl font-bold text-info">{comingSoonCount}</p>
+                         <p className="text-xs text-muted-foreground">Em Breve</p>
+                       </CardContent>
+                     </Card>
+                     <Card className="glass shadow-card">
+                       <CardContent className="p-4 text-center">
+                         <p className="text-2xl font-bold text-warning">{Object.keys(categories).length}</p>
+                         <p className="text-xs text-muted-foreground">Categorias</p>
+                       </CardContent>
+                     </Card>
+                   </div>
 
-                  {/* Search and bulk actions */}
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Buscar feature..."
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        className="pl-9"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => toggleAllForNut(selectedNutData.user_id, true)}
-                        className="px-3 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
-                      >
-                        Ativar Todas
-                      </button>
-                      <button
-                        onClick={() => toggleAllForNut(selectedNutData.user_id, false)}
-                        className="px-3 py-2 rounded-lg bg-destructive/10 text-destructive text-sm font-medium hover:bg-destructive/20 transition-colors"
-                      >
-                        Desativar Todas
-                      </button>
-                    </div>
-                  </div>
+                   {/* Search and bulk actions */}
+                   <div className="flex flex-col sm:flex-row gap-3">
+                     <div className="relative flex-1">
+                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                       <Input
+                         placeholder="Buscar feature..."
+                         value={search}
+                         onChange={e => setSearch(e.target.value)}
+                         className="pl-9"
+                       />
+                     </div>
+                     <div className="flex gap-2">
+                       <button
+                         onClick={() => setAllForNut(selectedNutData.user_id, "enabled")}
+                         className="px-3 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
+                       >
+                         Ativar Todas
+                       </button>
+                       <button
+                         onClick={() => setAllForNut(selectedNutData.user_id, "disabled")}
+                         className="px-3 py-2 rounded-lg bg-destructive/10 text-destructive text-sm font-medium hover:bg-destructive/20 transition-colors"
+                       >
+                         Desativar Todas
+                       </button>
+                     </div>
+                   </div>
 
                   {/* Feature categories */}
                   {Object.entries(filteredCategories).map(([category, features]) => {
                     const CatIcon = CATEGORY_ICONS[category] || Zap;
-                    const activeInCat = features.filter(f => selectedNutData.features[f.name]).length;
+                    const activeInCat = features.filter(f => selectedNutData.features[f.name] === "enabled").length;
                     return (
                       <Card key={category} className="glass shadow-card">
                         <CardHeader className="pb-3">
@@ -273,43 +281,64 @@ export default function AdminFeatureControl() {
                               {activeInCat}/{features.length}
                             </Badge>
                           </div>
-                          <CardDescription className="text-xs">
-                            {activeInCat === features.length ? "Todas ativas" : `${features.length - activeInCat} desativada(s)`}
-                          </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-2">
                           {features.map(f => {
-                            const isEnabled = selectedNutData.features[f.name] ?? true;
+                            const status: FeatureStatus = selectedNutData.features[f.name] ?? "enabled";
                             return (
                               <div
                                 key={f.name}
                                 className={`flex items-center justify-between py-2.5 px-3 rounded-lg transition-colors ${
-                                  isEnabled ? "bg-muted/30" : "bg-destructive/5 border border-destructive/10"
+                                  status === "enabled" ? "bg-muted/30" : status === "coming_soon" ? "bg-info/5 border border-info/10" : "bg-destructive/5 border border-destructive/10"
                                 }`}
                               >
                                 <div className="flex items-center gap-3">
                                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                                    isEnabled ? "bg-primary/10" : "bg-muted"
+                                    status === "enabled" ? "bg-primary/10" : status === "coming_soon" ? "bg-info/10" : "bg-muted"
                                   }`}>
-                                    <f.icon className={`w-4 h-4 ${isEnabled ? "text-primary" : "text-muted-foreground"}`} />
+                                    <f.icon className={`w-4 h-4 ${status === "enabled" ? "text-primary" : status === "coming_soon" ? "text-info" : "text-muted-foreground"}`} />
                                   </div>
                                   <div>
                                     <div className="flex items-center gap-2">
                                       <p className="text-sm font-medium">{f.label}</p>
-                                      {!isEnabled && (
-                                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-500/30 text-amber-500">
+                                      {status === "disabled" && (
+                                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-warning/30 text-warning">
                                           <Crown className="w-2.5 h-2.5 mr-0.5" />
                                           Premium
+                                        </Badge>
+                                      )}
+                                      {status === "coming_soon" && (
+                                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-info/30 text-info">
+                                          <Clock className="w-2.5 h-2.5 mr-0.5" />
+                                          Em Breve
                                         </Badge>
                                       )}
                                     </div>
                                     <p className="text-xs text-muted-foreground">{f.description}</p>
                                   </div>
                                 </div>
-                                <Switch
-                                  checked={isEnabled}
-                                  onCheckedChange={(checked) => toggleFeature(selectedNutData.user_id, f.name, checked)}
-                                />
+                                <div className="flex items-center gap-1.5 flex-shrink-0">
+                                  {(["enabled", "disabled", "coming_soon"] as FeatureStatus[]).map(s => {
+                                    const labels: Record<FeatureStatus, string> = { enabled: "✓", disabled: "💎", coming_soon: "🕐" };
+                                    const titles: Record<FeatureStatus, string> = { enabled: "Ativa", disabled: "Premium", coming_soon: "Em Breve" };
+                                    const active = status === s;
+                                    const colors: Record<FeatureStatus, string> = {
+                                      enabled: active ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground hover:bg-primary/20",
+                                      disabled: active ? "bg-warning text-warning-foreground" : "bg-muted/50 text-muted-foreground hover:bg-warning/20",
+                                      coming_soon: active ? "bg-info text-info-foreground" : "bg-muted/50 text-muted-foreground hover:bg-info/20",
+                                    };
+                                    return (
+                                      <button
+                                        key={s}
+                                        title={titles[s]}
+                                        onClick={() => setFeatureStatus(selectedNutData.user_id, f.name, s)}
+                                        className={`w-8 h-8 rounded-md text-xs font-bold transition-all ${colors[s]}`}
+                                      >
+                                        {labels[s]}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
                               </div>
                             );
                           })}
