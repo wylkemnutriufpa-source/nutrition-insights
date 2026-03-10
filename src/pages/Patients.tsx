@@ -339,6 +339,13 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
     </div>
   );
 }
+
+export default function Patients() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [patients, setPatients] = useState<PatientInfo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [patientName, setPatientName] = useState("");
   const [patientPassword, setPatientPassword] = useState("");
