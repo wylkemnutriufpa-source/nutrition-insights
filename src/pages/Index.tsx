@@ -20,6 +20,7 @@ import PatientEvolutionCharts from "@/components/dashboard/PatientEvolutionChart
 import RiskPanel from "@/components/dashboard/RiskPanel";
 import HealthScoreRing, { calculateHealthScore } from "@/components/dashboard/HealthScoreRing";
 import AdherenceAnalytics from "@/components/dashboard/AdherenceAnalytics";
+import DashboardAdvancedCharts from "@/components/dashboard/DashboardAdvancedCharts";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import SystemUsageCard from "@/components/dashboard/SystemUsageCard";
 import NutritionCopilot from "@/components/dashboard/NutritionCopilot";
