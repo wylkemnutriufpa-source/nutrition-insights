@@ -703,6 +703,7 @@ export default function Patients() {
               <PatientGrid patients={activePatientsList} navigate={navigate}
                 toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
                 setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
+                onUpdateExpiry={updateExpiry}
                 search={search} emptyMessage="Nenhum paciente ativo" />
             </TabsContent>
 
@@ -710,6 +711,7 @@ export default function Patients() {
               <PatientGrid patients={inactivePatientsList} navigate={navigate}
                 toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
                 setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
+                onUpdateExpiry={updateExpiry}
                 search={search} emptyMessage="Nenhum paciente inativo" />
             </TabsContent>
 
@@ -718,6 +720,7 @@ export default function Patients() {
                 <PatientGrid patients={programPatientLists.get(prog.id) || []} navigate={navigate}
                   toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
                   setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
+                  onUpdateExpiry={updateExpiry}
                   search={search} emptyMessage={`Nenhum paciente no programa "${prog.title}"`} />
               </TabsContent>
             ))}
