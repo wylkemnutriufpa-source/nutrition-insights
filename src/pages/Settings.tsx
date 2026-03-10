@@ -102,6 +102,14 @@ export default function Settings() {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            <AvatarPicker
+              currentUrl={avatarUrl}
+              onUpdate={(url) => {
+                setAvatarUrl(url);
+                refreshProfile();
+              }}
+            />
+            <Separator className="my-4" />
             <form onSubmit={handleSaveProfile} className="space-y-4">
               <div>
                 <Label>Email</Label>
