@@ -20,6 +20,7 @@ import RiskPanel from "@/components/dashboard/RiskPanel";
 import HealthScoreRing, { calculateHealthScore } from "@/components/dashboard/HealthScoreRing";
 import AdherenceAnalytics from "@/components/dashboard/AdherenceAnalytics";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import SystemUsageCard from "@/components/dashboard/SystemUsageCard";
 import ExpandablePanel from "@/components/common/ExpandablePanel";
 import {
   UtensilsCrossed, Users, TrendingUp, Target, Sparkles, Plus,
