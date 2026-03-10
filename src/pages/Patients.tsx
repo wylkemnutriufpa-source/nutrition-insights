@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import {
   Users, Plus, UserCheck, UserX, ChevronRight, Search,
-  TrendingUp, TrendingDown, Minus, Target, Loader2, ToggleLeft, ToggleRight
+  TrendingUp, TrendingDown, Minus, Target, Loader2, ToggleLeft, ToggleRight, X
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -195,11 +195,12 @@ function AssignProgramDialog({
   );
 }
 
-function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen }: {
+function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram }: {
   p: PatientInfo; idx: number; navigate: any;
   toggleStatus: (id: string, status: string) => void;
   setAssignTarget: (p: PatientInfo) => void;
   setAssignDialogOpen: (v: boolean) => void;
+  removeFromProgram: (patientId: string, programId: string, programTitle: string) => void;
 }) {
   const isInactive = p.status !== "active";
   const score = p.priorityScore || 0;
@@ -266,8 +267,15 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
       {hasPrograms && (
         <div className="flex flex-wrap gap-1 mb-3">
           {p.programs!.map(pg => (
-            <Badge key={pg.id} variant="outline" className="text-xs gap-1">
+            <Badge key={pg.id} variant="outline" className="text-xs gap-1 pr-1">
               <Target className="w-3 h-3" /> {pg.title}
+              <button
+                onClick={(e) => { e.stopPropagation(); removeFromProgram(p.patient_id, pg.id, pg.title); }}
+                className="ml-0.5 hover:bg-destructive/20 rounded-full p-0.5 transition-colors"
+                title={`Remover de ${pg.title}`}
+              >
+                <X className="w-3 h-3 text-destructive" />
+              </button>
             </Badge>
           ))}
         </div>
@@ -303,11 +311,12 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
   );
 }
 
-function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, search, emptyMessage }: {
+function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, search, emptyMessage }: {
   patients: PatientInfo[]; navigate: any;
   toggleStatus: (id: string, status: string) => void;
   setAssignTarget: (p: PatientInfo) => void;
   setAssignDialogOpen: (v: boolean) => void;
+  removeFromProgram: (patientId: string, programId: string, programTitle: string) => void;
   search: string;
   emptyMessage: string;
 }) {
@@ -325,7 +334,7 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
       {patients.map((p, idx) => (
         <PatientCard key={p.id} p={p} idx={idx} navigate={navigate}
           toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
-          setAssignDialogOpen={setAssignDialogOpen} />
+          setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram} />
       ))}
     </div>
   );
@@ -477,6 +486,19 @@ export default function Patients() {
       fetchPatients();
     }
     setBulkLoading(false);
+  };
+
+  const removeFromProgram = async (patientId: string, programId: string, programTitle: string) => {
+    if (!confirm(`Remover paciente do programa "${programTitle}"?`)) return;
+    const { error } = await supabase.from("program_patients")
+      .delete()
+      .eq("patient_id", patientId)
+      .eq("program_id", programId);
+    if (error) toast.error("Erro ao remover do programa");
+    else {
+      toast.success(`Paciente removido de "${programTitle}"`);
+      fetchPatients();
+    }
   };
 
   // Derive filtered lists based on active tab
@@ -635,23 +657,23 @@ export default function Patients() {
             <TabsContent value="ativos">
               <PatientGrid patients={activePatientsList} navigate={navigate}
                 toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
-                setAssignDialogOpen={setAssignDialogOpen} search={search}
-                emptyMessage="Nenhum paciente ativo" />
+                setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
+                search={search} emptyMessage="Nenhum paciente ativo" />
             </TabsContent>
 
             <TabsContent value="inativos">
               <PatientGrid patients={inactivePatientsList} navigate={navigate}
                 toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
-                setAssignDialogOpen={setAssignDialogOpen} search={search}
-                emptyMessage="Nenhum paciente inativo" />
+                setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
+                search={search} emptyMessage="Nenhum paciente inativo" />
             </TabsContent>
 
             {programs.map(prog => (
               <TabsContent key={prog.id} value={`prog-${prog.id}`}>
                 <PatientGrid patients={programPatientLists.get(prog.id) || []} navigate={navigate}
                   toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
-                  setAssignDialogOpen={setAssignDialogOpen} search={search}
-                  emptyMessage={`Nenhum paciente no programa "${prog.title}"`} />
+                  setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
+                  search={search} emptyMessage={`Nenhum paciente no programa "${prog.title}"`} />
               </TabsContent>
             ))}
           </Tabs>
