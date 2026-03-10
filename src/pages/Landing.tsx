@@ -101,7 +101,7 @@ export default function Landing() {
   const { data: siteData } = useSiteSettings();
   const s = siteData?.map;
 
-  const brandName = getSetting(s, "brand_name", "NutriFlow");
+  const brandName = getSetting(s, "brand_name", "FitJourney");
   const heroTitle = getSetting(s, "hero_title", "Transforme seu consultório com IA e Gamificação");
   const heroSubtitle = getSetting(s, "hero_subtitle", "Gerencie pacientes, crie planos alimentares personalizados com IA, e engaje seus clientes com gamificação — tudo em uma plataforma completa e intuitiva.");
   const heroCta = getSetting(s, "hero_cta_text", "Começar Gratuitamente");
