@@ -1,225 +1,725 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
-import { Shield, Users, UserCheck, Zap, Star, UserPlus, Settings, Globe, Palette, Eye } from "lucide-react";
+import {
+  Shield, Users, UserCheck, Zap, Star, UserPlus, Settings, Globe,
+  Eye, BarChart3, DollarSign, CreditCard, Crown, Loader2,
+  Search, ToggleLeft, Trash2, Ban, CheckCircle2, Plus
+} from "lucide-react";
 import { toast } from "sonner";
+import { FEATURE_REGISTRY, getFeaturesByCategory } from "@/lib/featureRegistry";
 
-interface AdminStats {
-  totalNutritionists: number;
+// ─── Types ───
+interface PlatformMetrics {
+  totalProfessionals: number;
   totalPatients: number;
-  totalMeals: number;
-  totalProtocols: number;
+  activeSubscriptions: number;
+  monthlyRevenue: number;
 }
 
-interface NutritionistInfo {
+interface ProfessionalInfo {
   user_id: string;
   full_name: string;
+  email?: string;
   patientCount: number;
+  status: "active" | "suspended";
+  created_at?: string;
 }
 
+interface PricingPlan {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  price_monthly: number;
+  price_yearly: number | null;
+  max_patients: number | null;
+  features: any;
+  is_active: boolean;
+  is_featured: boolean;
+  sort_order: number;
+}
+
+// ─── Platform Metrics Card ───
+function MetricCard({ label, value, icon: Icon, color, prefix }: {
+  label: string; value: number; icon: any; color: string; prefix?: string;
+}) {
+  return (
+    <Card className="glass shadow-card">
+      <CardContent className="flex items-center gap-4 py-6">
+        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+          <Icon className={`w-6 h-6 ${color}`} />
+        </div>
+        <div>
+          <p className="text-2xl font-bold font-display">
+            {prefix}{typeof value === "number" ? value.toLocaleString("pt-BR") : value}
+          </p>
+          <p className="text-sm text-muted-foreground">{label}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── Professional Management ───
+function ProfessionalManagement({
+  professionals, onRefresh, onCreateOpen
+}: {
+  professionals: ProfessionalInfo[];
+  onRefresh: () => void;
+  onCreateOpen: () => void;
+}) {
+  const [search, setSearch] = useState("");
+  const [toggling, setToggling] = useState<string | null>(null);
+
+  const filtered = professionals.filter(p =>
+    p.full_name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const toggleStatus = async (prof: ProfessionalInfo) => {
+    setToggling(prof.user_id);
+    // We'll track suspended status via a simple approach: add/remove a 'suspended' role
+    // For now, we use the user_roles table
+    if (prof.status === "active") {
+      await supabase.from("user_roles").insert({
+        user_id: prof.user_id,
+        role: "suspended" as any,
+      });
+      toast.success(`${prof.full_name} suspenso`);
+    } else {
+      await supabase.from("user_roles").delete()
+        .eq("user_id", prof.user_id)
+        .eq("role", "suspended" as any);
+      toast.success(`${prof.full_name} reativado`);
+    }
+    setToggling(null);
+    onRefresh();
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar profissional..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Button onClick={onCreateOpen} className="gap-2">
+          <UserPlus className="w-4 h-4" /> Novo Profissional
+        </Button>
+      </div>
+
+      <div className="space-y-2">
+        {filtered.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-8">Nenhum profissional encontrado</p>
+        ) : filtered.map(prof => (
+          <div key={prof.user_id} className="flex items-center justify-between p-4 rounded-xl bg-muted/50 hover:bg-muted/80 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="text-sm font-bold text-primary">{prof.full_name[0]?.toUpperCase()}</span>
+              </div>
+              <div>
+                <p className="font-medium text-sm">{prof.full_name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {prof.patientCount} pacientes
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant={prof.status === "active" ? "default" : "destructive"} className="text-xs">
+                {prof.status === "active" ? "Ativo" : "Suspenso"}
+              </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => toggleStatus(prof)}
+                disabled={toggling === prof.user_id}
+                className="gap-1.5"
+              >
+                {toggling === prof.user_id ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : prof.status === "active" ? (
+                  <><Ban className="w-4 h-4" /> Suspender</>
+                ) : (
+                  <><CheckCircle2 className="w-4 h-4" /> Reativar</>
+                )}
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Subscription Plans ───
+function SubscriptionPlans({ plans, onRefresh }: { plans: PricingPlan[]; onRefresh: () => void }) {
+  const [editPlan, setEditPlan] = useState<PricingPlan | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    name: "", slug: "", description: "", price_monthly: "",
+    price_yearly: "", max_patients: "", is_active: true, is_featured: false,
+    features: "[]", sort_order: "0",
+  });
+
+  const openNew = () => {
+    setEditPlan(null);
+    setForm({
+      name: "", slug: "", description: "", price_monthly: "0",
+      price_yearly: "", max_patients: "", is_active: true, is_featured: false,
+      features: "[]", sort_order: "0",
+    });
+    setDialogOpen(true);
+  };
+
+  const openEdit = (p: PricingPlan) => {
+    setEditPlan(p);
+    setForm({
+      name: p.name, slug: p.slug, description: p.description || "",
+      price_monthly: p.price_monthly.toString(),
+      price_yearly: p.price_yearly?.toString() || "",
+      max_patients: p.max_patients?.toString() || "",
+      is_active: p.is_active, is_featured: p.is_featured,
+      features: JSON.stringify(p.features, null, 2),
+      sort_order: p.sort_order.toString(),
+    });
+    setDialogOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (!form.name || !form.slug) {
+      toast.error("Nome e slug são obrigatórios");
+      return;
+    }
+    setSaving(true);
+    try {
+      let features;
+      try { features = JSON.parse(form.features); } catch { features = []; }
+
+      const payload = {
+        name: form.name,
+        slug: form.slug,
+        description: form.description || null,
+        price_monthly: parseFloat(form.price_monthly) || 0,
+        price_yearly: form.price_yearly ? parseFloat(form.price_yearly) : null,
+        max_patients: form.max_patients ? parseInt(form.max_patients) : null,
+        is_active: form.is_active,
+        is_featured: form.is_featured,
+        features,
+        sort_order: parseInt(form.sort_order) || 0,
+      };
+
+      if (editPlan) {
+        const { error } = await supabase.from("pricing_plans").update(payload).eq("id", editPlan.id);
+        if (error) throw error;
+        toast.success("Plano atualizado!");
+      } else {
+        const { error } = await supabase.from("pricing_plans").insert(payload);
+        if (error) throw error;
+        toast.success("Plano criado!");
+      }
+      setDialogOpen(false);
+      onRefresh();
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+    setSaving(false);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Remover este plano?")) return;
+    await supabase.from("pricing_plans").delete().eq("id", id);
+    toast.success("Plano removido");
+    onRefresh();
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <Button onClick={openNew} className="gap-2">
+          <Plus className="w-4 h-4" /> Novo Plano
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {plans.map(plan => (
+          <Card key={plan.id} className={`glass shadow-card ${plan.is_featured ? "border-primary/50 ring-1 ring-primary/20" : ""}`}>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="font-display text-lg">{plan.name}</CardTitle>
+                {plan.is_featured && <Badge className="text-xs">Destaque</Badge>}
+              </div>
+              <p className="text-xs text-muted-foreground">{plan.description}</p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-baseline gap-1">
+                <span className="text-3xl font-bold font-display text-primary">
+                  R${plan.price_monthly.toFixed(0)}
+                </span>
+                <span className="text-sm text-muted-foreground">/mês</span>
+              </div>
+              {plan.max_patients && (
+                <p className="text-xs text-muted-foreground">Até {plan.max_patients} pacientes</p>
+              )}
+              <Badge variant={plan.is_active ? "default" : "secondary"} className="text-xs">
+                {plan.is_active ? "Ativo" : "Inativo"}
+              </Badge>
+              <div className="flex gap-2 pt-2">
+                <Button variant="outline" size="sm" onClick={() => openEdit(plan)} className="flex-1">
+                  Editar
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleDelete(plan.id)} className="text-destructive">
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display">
+              {editPlan ? "Editar Plano" : "Novo Plano"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">Nome</Label>
+                <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+              </div>
+              <div>
+                <Label className="text-xs">Slug</Label>
+                <Input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Descrição</Label>
+              <Input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <Label className="text-xs">Preço Mensal (R$)</Label>
+                <Input type="number" value={form.price_monthly} onChange={e => setForm(f => ({ ...f, price_monthly: e.target.value }))} />
+              </div>
+              <div>
+                <Label className="text-xs">Preço Anual (R$)</Label>
+                <Input type="number" value={form.price_yearly} onChange={e => setForm(f => ({ ...f, price_yearly: e.target.value }))} />
+              </div>
+              <div>
+                <Label className="text-xs">Máx. Pacientes</Label>
+                <Input type="number" value={form.max_patients} onChange={e => setForm(f => ({ ...f, max_patients: e.target.value }))} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">Ordem</Label>
+                <Input type="number" value={form.sort_order} onChange={e => setForm(f => ({ ...f, sort_order: e.target.value }))} />
+              </div>
+            </div>
+            <div className="flex gap-6">
+              <label className="flex items-center gap-2 text-sm">
+                <Switch checked={form.is_active} onCheckedChange={v => setForm(f => ({ ...f, is_active: v }))} />
+                Ativo
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <Switch checked={form.is_featured} onCheckedChange={v => setForm(f => ({ ...f, is_featured: v }))} />
+                Destaque
+              </label>
+            </div>
+            <div>
+              <Label className="text-xs">Features (JSON array)</Label>
+              <textarea
+                className="w-full h-24 p-2 text-xs font-mono rounded-lg bg-muted border border-border"
+                value={form.features}
+                onChange={e => setForm(f => ({ ...f, features: e.target.value }))}
+              />
+            </div>
+            <Button onClick={handleSave} disabled={saving} className="w-full gap-2">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+              {editPlan ? "Atualizar" : "Criar"} Plano
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// ─── Feature Flags (Platform-level) ───
+function PlatformFeatureFlags() {
+  const categories = getFeaturesByCategory();
+  const MODULE_GROUPS = [
+    { key: "crm", label: "CRM", features: ["patients", "protocols", "programs", "physical_assessment", "supplements", "checkin_panel"] },
+    { key: "finance", label: "Financeiro", features: ["financial", "reports"] },
+    { key: "programs", label: "Programas", features: ["programs", "protocols"] },
+    { key: "smart_tips", label: "Smart Tips", features: ["global_tips", "autobot", "ai_anamnesis"] },
+    { key: "marketing", label: "Automação & Marketing", features: ["automations", "behavioral_analysis", "churn_prediction"] },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Módulos da plataforma. Use o <strong>Controle por Profissional</strong> na Central de Recursos para controle granular.
+      </p>
+      {MODULE_GROUPS.map(group => (
+        <Card key={group.key} className="glass shadow-card">
+          <CardHeader className="pb-2">
+            <CardTitle className="font-display text-base flex items-center gap-2">
+              <ToggleLeft className="w-5 h-5 text-primary" />
+              {group.label}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {group.features.map(fName => {
+                const feat = FEATURE_REGISTRY.find(f => f.name === fName);
+                if (!feat) return null;
+                const Icon = feat.icon;
+                return (
+                  <div key={fName} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-muted/50">
+                    <div className="flex items-center gap-3">
+                      <Icon className="w-4 h-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">{feat.label}</p>
+                        <p className="text-xs text-muted-foreground">{feat.description}</p>
+                      </div>
+                    </div>
+                    <Badge variant="default" className="text-xs">Ativo</Badge>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+// ─── Create Professional Dialog ───
+function CreateProfessionalDialog({
+  open, onOpenChange, onCreated
+}: { open: boolean; onOpenChange: (v: boolean) => void; onCreated: () => void }) {
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [creating, setCreating] = useState(false);
+
+  const handleCreate = async () => {
+    if (!email || !name || !password) {
+      toast.error("Preencha todos os campos");
+      return;
+    }
+    if (password.length < 6) {
+      toast.error("Senha deve ter pelo menos 6 caracteres");
+      return;
+    }
+    setCreating(true);
+    try {
+      const { data, error } = await supabase.rpc("create_nutritionist_account", {
+        _email: email,
+        _full_name: name,
+        _password: password,
+      });
+      if (error) throw error;
+      toast.success(`Profissional ${name} criado com sucesso!`);
+      setEmail(""); setName(""); setPassword("");
+      onOpenChange(false);
+      onCreated();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao criar profissional");
+    }
+    setCreating(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="font-display flex items-center gap-2">
+            <UserPlus className="w-5 h-5" /> Cadastrar Profissional
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label className="text-xs">Nome completo</Label>
+            <Input value={name} onChange={e => setName(e.target.value)} placeholder="Dr. João Silva" />
+          </div>
+          <div>
+            <Label className="text-xs">Email</Label>
+            <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="joao@clinica.com" />
+          </div>
+          <div>
+            <Label className="text-xs">Senha inicial</Label>
+            <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" />
+          </div>
+          <Button onClick={handleCreate} disabled={creating} className="w-full gap-2">
+            {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
+            Criar Profissional
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Main Admin Dashboard ───
 export default function AdminDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [stats, setStats] = useState<AdminStats>({ totalNutritionists: 0, totalPatients: 0, totalMeals: 0, totalProtocols: 0 });
-  const [nutritionists, setNutritionists] = useState<NutritionistInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [metrics, setMetrics] = useState<PlatformMetrics>({
+    totalProfessionals: 0, totalPatients: 0, activeSubscriptions: 0, monthlyRevenue: 0,
+  });
+  const [professionals, setProfessionals] = useState<ProfessionalInfo[]>([]);
+  const [plans, setPlans] = useState<PricingPlan[]>([]);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [promoteEmail, setPromoteEmail] = useState("");
 
-  useEffect(() => {
+  const fetchAll = useCallback(async () => {
     if (!user) return;
-    const fetchStats = async () => {
-      // Fetch nutritionist roles
-      const { data: nutRoles } = await supabase.from("user_roles").select("user_id").eq("role", "nutritionist");
-      const nutIds = nutRoles?.map(r => r.user_id) || [];
+    setLoading(true);
 
-      // Fetch patient roles
-      const { data: patRoles } = await supabase.from("user_roles").select("user_id").eq("role", "patient");
+    // Fetch nutritionist roles
+    const { data: nutRoles } = await supabase.from("user_roles").select("user_id").eq("role", "nutritionist");
+    const nutIds = nutRoles?.map(r => r.user_id) || [];
 
-      // Fetch nutritionist profiles
-      const nutProfiles: NutritionistInfo[] = [];
-      for (const nutId of nutIds) {
-        const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", nutId).single();
-        const { count } = await supabase.from("nutritionist_patients").select("id", { count: "exact", head: true }).eq("nutritionist_id", nutId).eq("status", "active");
-        nutProfiles.push({
-          user_id: nutId,
-          full_name: profile?.full_name || "Nutricionista",
-          patientCount: count || 0,
-        });
-      }
+    // Fetch patient roles
+    const { data: patRoles } = await supabase.from("user_roles").select("user_id").eq("role", "patient");
 
-      setStats({
-        totalNutritionists: nutIds.length,
-        totalPatients: patRoles?.length || 0,
-        totalMeals: 0,
-        totalProtocols: 0,
+    // Fetch suspended users
+    const { data: suspendedRoles } = await supabase.from("user_roles").select("user_id").eq("role", "suspended" as any);
+    const suspendedIds = new Set(suspendedRoles?.map(r => r.user_id) || []);
+
+    // Fetch nutritionist profiles
+    const profs: ProfessionalInfo[] = [];
+    for (const nutId of nutIds) {
+      const { data: profile } = await supabase.from("profiles").select("full_name, created_at").eq("user_id", nutId).single();
+      const { count } = await supabase.from("nutritionist_patients")
+        .select("id", { count: "exact", head: true })
+        .eq("nutritionist_id", nutId).eq("status", "active");
+      profs.push({
+        user_id: nutId,
+        full_name: profile?.full_name || "Nutricionista",
+        patientCount: count || 0,
+        status: suspendedIds.has(nutId) ? "suspended" : "active",
+        created_at: profile?.created_at,
       });
-      setNutritionists(nutProfiles);
-      setLoading(false);
-    };
-    fetchStats();
+    }
+
+    // Fetch plans
+    const { data: plansData } = await supabase.from("pricing_plans")
+      .select("*")
+      .order("sort_order");
+
+    // Fetch payments for revenue (current month)
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+    const { data: payments } = await supabase.from("payments")
+      .select("amount")
+      .eq("status", "paid")
+      .gte("paid_at", monthStart.toISOString());
+    const monthlyRevenue = payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
+
+    setMetrics({
+      totalProfessionals: nutIds.length,
+      totalPatients: patRoles?.length || 0,
+      activeSubscriptions: profs.filter(p => p.status === "active").length,
+      monthlyRevenue,
+    });
+    setProfessionals(profs);
+    setPlans((plansData as PricingPlan[]) || []);
+    setLoading(false);
   }, [user]);
 
+  useEffect(() => { fetchAll(); }, [fetchAll]);
+
   const handlePromoteToAdmin = async () => {
-    if (!promoteEmail.trim()) {
-      toast.error("Digite um email válido");
-      return;
-    }
+    if (!promoteEmail.trim()) { toast.error("Digite um email válido"); return; }
     try {
-      const { data, error } = await supabase.rpc("promote_to_admin", { _user_email: promoteEmail });
+      const { error } = await supabase.rpc("promote_to_admin", { _user_email: promoteEmail });
       if (error) throw error;
-      toast.success(`Usuário ${promoteEmail} promovido a admin com sucesso!`);
+      toast.success(`${promoteEmail} promovido a admin!`);
       setPromoteEmail("");
-    } catch (error: any) {
-      toast.error(error.message || "Erro ao promover usuário");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao promover");
     }
   };
-
-  const statCards = [
-    { label: "Nutricionistas", value: stats.totalNutritionists, icon: UserCheck, color: "text-primary" },
-    { label: "Pacientes", value: stats.totalPatients, icon: Users, color: "text-info" },
-  ];
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Shield className="w-8 h-8 text-primary" />
-          <div>
-            <h1 className="font-display text-2xl font-bold">Painel Admin</h1>
-            <p className="text-muted-foreground text-sm">Visão geral da plataforma</p>
+        {/* Header */}
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <Shield className="w-8 h-8 text-primary" />
+            <div>
+              <h1 className="font-display text-2xl font-bold">Painel Administrativo</h1>
+              <p className="text-muted-foreground text-sm">Controle da plataforma SaaS</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate("/admin/resources")} className="gap-1.5">
+              <Settings className="w-4 h-4" /> Central de Recursos
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => window.open("/landing", "_blank")} className="gap-1.5">
+              <Eye className="w-4 h-4" /> Landing Page
+            </Button>
           </div>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center h-40">
-            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {statCards.map(s => (
-                <Card key={s.label} className="glass shadow-card">
+          <Tabs defaultValue="metrics" className="w-full">
+            <TabsList className="w-full justify-start bg-card border border-border overflow-x-auto">
+              <TabsTrigger value="metrics"><BarChart3 className="w-3.5 h-3.5 mr-1" /> Métricas</TabsTrigger>
+              <TabsTrigger value="professionals"><Users className="w-3.5 h-3.5 mr-1" /> Profissionais</TabsTrigger>
+              <TabsTrigger value="plans"><CreditCard className="w-3.5 h-3.5 mr-1" /> Planos</TabsTrigger>
+              <TabsTrigger value="features"><Zap className="w-3.5 h-3.5 mr-1" /> Feature Flags</TabsTrigger>
+              <TabsTrigger value="admin"><Crown className="w-3.5 h-3.5 mr-1" /> Admin</TabsTrigger>
+            </TabsList>
+
+            {/* ─── Metrics ─── */}
+            <TabsContent value="metrics" className="mt-4 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <MetricCard label="Profissionais" value={metrics.totalProfessionals} icon={UserCheck} color="text-primary" />
+                <MetricCard label="Pacientes" value={metrics.totalPatients} icon={Users} color="text-blue-400" />
+                <MetricCard label="Assinaturas Ativas" value={metrics.activeSubscriptions} icon={Star} color="text-amber-400" />
+                <MetricCard label="Receita Mensal" value={metrics.monthlyRevenue} icon={DollarSign} color="text-emerald-400" prefix="R$" />
+              </div>
+
+              {/* Quick actions */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/resources")}>
                   <CardContent className="flex items-center gap-4 py-6">
-                    <div className={`w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center`}>
-                      <s.icon className={`w-6 h-6 ${s.color}`} />
-                    </div>
+                    <Settings className="w-8 h-8 text-primary" />
                     <div>
-                      <p className="text-2xl font-bold font-display">{s.value}</p>
-                      <p className="text-sm text-muted-foreground">{s.label}</p>
+                      <p className="font-display font-semibold">Editor do Site</p>
+                      <p className="text-sm text-muted-foreground">Landing page, branding</p>
                     </div>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/resources")}>
+                  <CardContent className="flex items-center gap-4 py-6">
+                    <Star className="w-8 h-8 text-amber-400" />
+                    <div>
+                      <p className="font-display font-semibold">Depoimentos</p>
+                      <p className="text-sm text-muted-foreground">Moderar depoimentos</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/import-patients")}>
+                  <CardContent className="flex items-center gap-4 py-6">
+                    <Globe className="w-8 h-8 text-blue-400" />
+                    <div>
+                      <p className="font-display font-semibold">Importar Pacientes</p>
+                      <p className="text-sm text-muted-foreground">CSV em massa</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
 
-            <Card className="glass shadow-card">
-              <CardHeader>
-                <CardTitle className="font-display text-lg flex items-center gap-2">
-                  <UserPlus className="w-5 h-5" />
-                  Promover Usuário a Admin
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex gap-2">
-                  <Input
-                    type="email"
-                    placeholder="email@exemplo.com"
-                    value={promoteEmail}
-                    onChange={(e) => setPromoteEmail(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button onClick={handlePromoteToAdmin} className="shrink-0">
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Promover
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground">Digite o email do usuário que deseja promover a administrador</p>
-              </CardContent>
-            </Card>
+            {/* ─── Professionals ─── */}
+            <TabsContent value="professionals" className="mt-4">
+              <ProfessionalManagement
+                professionals={professionals}
+                onRefresh={fetchAll}
+                onCreateOpen={() => setCreateDialogOpen(true)}
+              />
+            </TabsContent>
 
-            {/* Main CTA: Central de Recursos */}
-            <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow border-primary/30 bg-primary/5" onClick={() => navigate("/admin/resources")}>
-              <CardContent className="flex items-center gap-4 py-8">
-                <div className="w-14 h-14 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
-                  <Settings className="w-7 h-7 text-primary-foreground" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-display font-bold text-lg">Central de Recursos</p>
-                  <p className="text-sm text-muted-foreground">Controle total: Landing Page, Branding, Features, Depoimentos, Usuários — tudo em um só lugar</p>
-                </div>
-                <Globe className="w-6 h-6 text-primary" />
-              </CardContent>
-            </Card>
+            {/* ─── Plans ─── */}
+            <TabsContent value="plans" className="mt-4">
+              <SubscriptionPlans plans={plans} onRefresh={fetchAll} />
+            </TabsContent>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/resources")}>
-                <CardContent className="flex items-center gap-4 py-6">
-                  <Settings className="w-8 h-8 text-primary" />
-                  <div>
-                    <p className="font-display font-semibold">Editor do Site</p>
-                    <p className="text-sm text-muted-foreground">Landing page, branding, textos</p>
+            {/* ─── Feature Flags ─── */}
+            <TabsContent value="features" className="mt-4">
+              <PlatformFeatureFlags />
+            </TabsContent>
+
+            {/* ─── Admin Tools ─── */}
+            <TabsContent value="admin" className="mt-4 space-y-4">
+              <Card className="glass shadow-card">
+                <CardHeader>
+                  <CardTitle className="font-display text-lg flex items-center gap-2">
+                    <UserPlus className="w-5 h-5" /> Promover Usuário a Admin
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex gap-2">
+                    <Input
+                      type="email"
+                      placeholder="email@exemplo.com"
+                      value={promoteEmail}
+                      onChange={(e) => setPromoteEmail(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button onClick={handlePromoteToAdmin} className="shrink-0 gap-2">
+                      <UserPlus className="w-4 h-4" /> Promover
+                    </Button>
                   </div>
+                  <p className="text-xs text-muted-foreground">
+                    Digite o email do usuário que deseja promover a administrador
+                  </p>
                 </CardContent>
               </Card>
-              <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/resources")}>
-                <CardContent className="flex items-center gap-4 py-6">
-                  <Zap className="w-8 h-8 text-warning" />
-                  <div>
-                    <p className="font-display font-semibold">Feature Flags</p>
-                    <p className="text-sm text-muted-foreground">Controlar funcionalidades</p>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/resources")}>
-                <CardContent className="flex items-center gap-4 py-6">
-                  <Star className="w-8 h-8 text-accent" />
-                  <div>
-                    <p className="font-display font-semibold">Depoimentos</p>
-                    <p className="text-sm text-muted-foreground">Moderar depoimentos</p>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => window.open("/landing", "_blank")}>
-                <CardContent className="flex items-center gap-4 py-6">
-                  <Eye className="w-8 h-8 text-info" />
-                  <div>
-                    <p className="font-display font-semibold">Ver Landing Page</p>
-                    <p className="text-sm text-muted-foreground">Visualizar página pública</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
 
-            <Card className="glass shadow-card">
-              <CardHeader>
-                <CardTitle className="font-display text-lg">Nutricionistas</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {nutritionists.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">Nenhum nutricionista cadastrado</p>
-                ) : nutritionists.map(n => (
-                  <div key={n.user_id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-sm font-bold text-primary">{n.full_name[0]?.toUpperCase()}</span>
-                      </div>
-                      <div>
-                        <p className="font-medium text-sm">{n.full_name}</p>
-                        <p className="text-xs text-muted-foreground">{n.patientCount} pacientes ativos</p>
+              <Card className="glass shadow-card">
+                <CardHeader>
+                  <CardTitle className="font-display text-lg">Nutricionistas Ativos</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {professionals.filter(p => p.status === "active").length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">Nenhum nutricionista cadastrado</p>
+                  ) : professionals.filter(p => p.status === "active").map(n => (
+                    <div key={n.user_id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <span className="text-sm font-bold text-primary">{n.full_name[0]?.toUpperCase()}</span>
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">{n.full_name}</p>
+                          <p className="text-xs text-muted-foreground">{n.patientCount} pacientes ativos</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </>
+                  ))}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         )}
       </div>
+
+      <CreateProfessionalDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onCreated={fetchAll}
+      />
     </DashboardLayout>
   );
 }
