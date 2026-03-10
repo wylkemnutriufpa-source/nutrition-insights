@@ -82,8 +82,8 @@ Deno.serve(async (req) => {
         if (existingUser) {
           patientUserId = existingUser.id;
         } else {
-          // Create user with a random password (patient will need to reset)
-          const tempPassword = `FJ${Math.random().toString(36).slice(2, 10)}!${Date.now().toString(36)}`;
+          // Default password — patient changes on first login
+          const tempPassword = "123456";
           const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
             email: email.toLowerCase(),
             password: tempPassword,
