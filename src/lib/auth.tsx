@@ -148,7 +148,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         Promise.all([
           fetchProfile(session.user.id),
           fetchRoles(session.user.id),
-        ]).then(() => setLoading(false));
+        ]).then(() => {
+          setLoading(false);
+          checkSubscription();
+        });
       } else {
         setLoading(false);
       }
