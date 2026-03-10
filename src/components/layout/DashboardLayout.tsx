@@ -21,6 +21,7 @@ import { usePresenceTracker } from "@/hooks/usePresenceTracker";
 
 const nutritionistLinks = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/ranking", icon: Trophy, label: "🏆 Ranking Global" },
   { to: "/patients", icon: Users, label: "Pacientes" },
   { to: "/checkin-panel", icon: ClipboardCheck, label: "Check-ins" },
   { to: "/appointments", icon: Activity, label: "Agenda" },
