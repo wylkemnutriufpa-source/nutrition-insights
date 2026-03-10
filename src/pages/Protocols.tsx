@@ -15,7 +15,8 @@ import { toast } from "sonner";
 import {
   Plus, FileText, Trash2, Clock, ListChecks,
   ChevronRight, Users, Play, Pause, UserPlus,
-  BarChart3, CheckCircle2, XCircle, Calendar, TrendingUp
+  BarChart3, CheckCircle2, XCircle, Calendar, TrendingUp,
+  Pencil, Save, X
 } from "lucide-react";
 
 // ── Types ──
