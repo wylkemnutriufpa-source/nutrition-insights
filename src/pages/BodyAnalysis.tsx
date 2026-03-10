@@ -41,6 +41,7 @@ export default function BodyAnalysis() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const patientId = searchParams.get("patientId") || user?.id;
+  const aiUsage = useAIUsage("body_comparison");
 
   const [analyses, setAnalyses] = useState<BodyAnalysisRecord[]>([]);
   const [loading, setLoading] = useState(true);
