@@ -16,6 +16,8 @@ import {
   Camera, Upload, Sparkles, ArrowLeft, Calendar, TrendingUp,
   User as UserIcon, Activity
 } from "lucide-react";
+import { useAIUsage } from "@/hooks/useAIUsage";
+import AIUsageBadge from "@/components/common/AIUsageBadge";
 
 interface BodyAnalysisRecord {
   id: string;
