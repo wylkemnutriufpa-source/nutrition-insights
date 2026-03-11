@@ -13,8 +13,10 @@ import { toast } from "sonner";
 import { User, Lock, Save, Bell, BellOff, Trophy, Eye, Camera } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import AvatarPicker from "@/components/profile/AvatarPicker";
+import { useTranslation } from "react-i18next";
 
 export default function Settings() {
+  const { t } = useTranslation();
   const { user, profile, refreshProfile } = useAuth();
   const { permission, isSubscribed, isSupported, loading: pushLoading, subscribe, unsubscribe } = usePushNotifications();
   const [fullName, setFullName] = useState(profile?.full_name || "");
@@ -27,7 +29,6 @@ export default function Settings() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
 
-  // Ranking privacy
   const [showInRanking, setShowInRanking] = useState(false);
   const [rankingNickname, setRankingNickname] = useState("");
 
@@ -52,9 +53,9 @@ export default function Settings() {
       .eq("user_id", user.id);
     setSavingProfile(false);
     if (error) {
-      toast.error("Erro ao salvar: " + error.message);
+      toast.error(t("settings.saveError") + error.message);
     } else {
-      toast.success("Perfil atualizado!");
+      toast.success(t("settings.profileUpdated"));
       refreshProfile();
     }
   };
@@ -62,20 +63,20 @@ export default function Settings() {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      toast.error("As senhas não coincidem");
+      toast.error(t("settings.passwordsMismatch"));
       return;
     }
     if (newPassword.length < 6) {
-      toast.error("A senha deve ter no mínimo 6 caracteres");
+      toast.error(t("settings.passwordTooShort"));
       return;
     }
     setChangingPassword(true);
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     setChangingPassword(false);
     if (error) {
-      toast.error("Erro: " + error.message);
+      toast.error(t("common.error") + ": " + error.message);
     } else {
-      toast.success("Senha alterada com sucesso!");
+      toast.success(t("settings.passwordChanged"));
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -90,15 +91,15 @@ export default function Settings() {
         className="max-w-2xl mx-auto space-y-6"
       >
         <div>
-          <h1 className="font-display text-2xl font-bold">Configurações</h1>
-          <p className="text-muted-foreground text-sm">Gerencie seu perfil e segurança</p>
+          <h1 className="font-display text-2xl font-bold">{t("settings.title")}</h1>
+          <p className="text-muted-foreground text-sm">{t("settings.subtitle")}</p>
         </div>
 
         {/* Profile */}
         <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="font-display flex items-center gap-2">
-              <User className="w-5 h-5 text-primary" /> Perfil
+              <User className="w-5 h-5 text-primary" /> {t("settings.profile")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -112,20 +113,20 @@ export default function Settings() {
             <Separator className="my-4" />
             <form onSubmit={handleSaveProfile} className="space-y-4">
               <div>
-                <Label>Email</Label>
+                <Label>{t("common.email")}</Label>
                 <Input value={user?.email || ""} disabled className="bg-muted" />
               </div>
               <div>
-                <Label>Nome completo</Label>
+                <Label>{t("settings.fullName")}</Label>
                 <Input
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Seu nome"
+                  placeholder={t("settings.yourName")}
                   required
                 />
               </div>
               <div>
-                <Label>Telefone</Label>
+                <Label>{t("common.phone")}</Label>
                 <Input
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
@@ -134,7 +135,7 @@ export default function Settings() {
               </div>
               <Button type="submit" className="gradient-primary gap-2" disabled={savingProfile}>
                 <Save className="w-4 h-4" />
-                {savingProfile ? "Salvando..." : "Salvar Perfil"}
+                {savingProfile ? t("common.saving") : t("settings.saveProfile")}
               </Button>
             </form>
           </CardContent>
@@ -144,31 +145,31 @@ export default function Settings() {
         <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="font-display flex items-center gap-2">
-              <Eye className="w-5 h-5 text-primary" /> Privacidade do Ranking
+              <Eye className="w-5 h-5 text-primary" /> {t("settings.rankingPrivacy")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30">
               <div>
-                <p className="font-medium text-sm">Aparecer no ranking público</p>
-                <p className="text-xs text-muted-foreground">Mostrar seu nome completo no ranking global</p>
+                <p className="font-medium text-sm">{t("settings.showInRanking")}</p>
+                <p className="text-xs text-muted-foreground">{t("settings.showInRankingDesc")}</p>
               </div>
               <Switch
                 checked={showInRanking}
                 onCheckedChange={async (v) => {
                   setShowInRanking(v);
                   await supabase.from("profiles").update({ show_in_ranking: v }).eq("user_id", user!.id);
-                  toast.success(v ? "Visível no ranking!" : "Oculto do ranking público");
+                  toast.success(v ? t("settings.visibleInRanking") : t("settings.hiddenFromRanking"));
                 }}
               />
             </div>
             <div>
-              <Label>Apelido no ranking (quando nome oculto)</Label>
+              <Label>{t("settings.rankingNickname")}</Label>
               <div className="flex gap-2 mt-1">
                 <Input
                   value={rankingNickname}
                   onChange={(e) => setRankingNickname(e.target.value)}
-                  placeholder="Ex: FitWarrior123"
+                  placeholder={t("settings.nicknamePlaceholder")}
                   maxLength={20}
                 />
                 <Button
@@ -176,14 +177,14 @@ export default function Settings() {
                   size="sm"
                   onClick={async () => {
                     await supabase.from("profiles").update({ ranking_nickname: rankingNickname }).eq("user_id", user!.id);
-                    toast.success("Apelido atualizado!");
+                    toast.success(t("settings.nicknameUpdated"));
                   }}
                 >
                   <Save className="w-4 h-4" />
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Se desativado, seu nome aparecerá como "{fullName ? fullName[0] + '***' : 'P***'}"
+                {t("settings.nicknameHint", { initial: fullName ? fullName[0] : 'P' })}
               </p>
             </div>
           </CardContent>
@@ -193,35 +194,35 @@ export default function Settings() {
         <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="font-display flex items-center gap-2">
-              <Lock className="w-5 h-5 text-primary" /> Alterar Senha
+              <Lock className="w-5 h-5 text-primary" /> {t("settings.changePassword")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleChangePassword} className="space-y-4">
               <div>
-                <Label>Nova senha</Label>
+                <Label>{t("settings.newPassword")}</Label>
                 <Input
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Mínimo 6 caracteres"
+                  placeholder={t("settings.minChars")}
                   minLength={6}
                   required
                 />
               </div>
               <div>
-                <Label>Confirmar nova senha</Label>
+                <Label>{t("settings.confirmPassword")}</Label>
                 <Input
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Repita a nova senha"
+                  placeholder={t("settings.repeatPassword")}
                   required
                 />
               </div>
               <Button type="submit" variant="outline" className="gap-2" disabled={changingPassword}>
                 <Lock className="w-4 h-4" />
-                {changingPassword ? "Alterando..." : "Alterar Senha"}
+                {changingPassword ? t("settings.changingPassword") : t("settings.changePassword")}
               </Button>
             </form>
           </CardContent>
@@ -232,19 +233,19 @@ export default function Settings() {
           <Card className="glass border-border">
             <CardHeader>
               <CardTitle className="font-display flex items-center gap-2">
-                <Bell className="w-5 h-5 text-primary" /> Notificações Push
+                <Bell className="w-5 h-5 text-primary" /> {t("settings.pushNotifications")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/30">
                 <div>
-                  <p className="font-medium text-sm">Notificações push</p>
+                  <p className="font-medium text-sm">{t("settings.pushNotifications")}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {permission === "denied"
-                      ? "Bloqueado nas configurações do navegador"
+                      ? t("settings.pushBlocked")
                       : isSubscribed
-                      ? "Ativadas — você receberá alertas em tempo real"
-                      : "Receba alertas de metas, checklist e mensagens"}
+                      ? t("settings.pushEnabled")
+                      : t("settings.pushDescription")}
                   </p>
                 </div>
                 {permission !== "denied" ? (
@@ -254,18 +255,17 @@ export default function Settings() {
                     onClick={isSubscribed ? unsubscribe : subscribe}
                     disabled={pushLoading}
                     size="sm"
-                    gap-2
                   >
                     {isSubscribed ? <BellOff className="w-4 h-4 mr-1" /> : <Bell className="w-4 h-4 mr-1" />}
-                    {pushLoading ? "..." : isSubscribed ? "Desativar" : "Ativar"}
+                    {pushLoading ? "..." : isSubscribed ? t("settings.deactivate") : t("settings.activate")}
                   </Button>
                 ) : (
-                  <span className="text-xs text-destructive font-medium">Bloqueado</span>
+                  <span className="text-xs text-destructive font-medium">{t("settings.blocked")}</span>
                 )}
               </div>
               {permission === "denied" && (
                 <p className="text-xs text-muted-foreground">
-                  Para reativar, vá em Configurações do navegador → Site settings → Notifications e desbloqueie este site.
+                  {t("settings.pushBlockedHint")}
                 </p>
               )}
             </CardContent>
