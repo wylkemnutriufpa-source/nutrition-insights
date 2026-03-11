@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, Check, AlertCircle, Users, Loader2, Search, Filter, UserX, Mail, MailX } from "lucide-react";
 import { toast } from "sonner";
@@ -48,6 +49,7 @@ export default function ImportPatients() {
   const { user } = useAuth();
   const [allPatients, setAllPatients] = useState<PatientRow[]>([]);
   const [importing, setImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState<{ current: number; total: number; created: number; errors: number } | null>(null);
   const [result, setResult] = useState<{ created: number; skipped: number; errors: string[] } | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [search, setSearch] = useState("");
@@ -203,6 +205,7 @@ export default function ImportPatients() {
     if (!user || selectedPatients.length === 0) return;
     setImporting(true);
     setResult(null);
+    setImportProgress({ current: 0, total: selectedPatients.length, created: 0, errors: 0 });
 
     try {
       const payload = selectedPatients.map(p => ({
@@ -210,30 +213,83 @@ export default function ImportPatients() {
         email: p.email,
       }));
 
-      const batchSize = 20;
+      const batchSize = 10;
       const totalResults = { created: 0, skipped: 0, errors: [] as string[] };
+      let processed = 0;
 
       for (let i = 0; i < payload.length; i += batchSize) {
         const batch = payload.slice(i, i + batchSize);
-        const { data, error } = await supabase.functions.invoke("import-patients", {
-          body: { patients: batch },
+        
+        // Retry up to 2 times per batch
+        let attempts = 0;
+        let success = false;
+        while (attempts < 2 && !success) {
+          attempts++;
+          try {
+            const { data, error } = await supabase.functions.invoke("import-patients", {
+              body: { patients: batch },
+            });
+
+            if (error) {
+              if (attempts >= 2) {
+                totalResults.errors.push(`Lote ${Math.floor(i / batchSize) + 1}: ${error.message}`);
+              }
+              continue;
+            }
+
+            if (data) {
+              totalResults.created += data.created || 0;
+              totalResults.skipped += data.skipped || 0;
+              if (data.errors?.length) totalResults.errors.push(...data.errors);
+            }
+            success = true;
+          } catch (e: any) {
+            if (attempts >= 2) {
+              totalResults.errors.push(`Lote ${Math.floor(i / batchSize) + 1}: ${e.message}`);
+            }
+          }
+        }
+
+        processed += batch.length;
+        setImportProgress({
+          current: processed,
+          total: payload.length,
+          created: totalResults.created,
+          errors: totalResults.errors.length,
         });
 
-        if (error) {
-          totalResults.errors.push(`Batch ${Math.floor(i / batchSize) + 1}: ${error.message}`);
-        } else if (data) {
-          totalResults.created += data.created || 0;
-          totalResults.skipped += data.skipped || 0;
-          if (data.errors?.length) totalResults.errors.push(...data.errors);
+        // Small delay between batches to avoid throttling
+        if (i + batchSize < payload.length) {
+          await new Promise(r => setTimeout(r, 500));
         }
       }
 
       setResult(totalResults);
-      toast.success(`${totalResults.created} pacientes importados com sucesso!`);
+      
+      if (totalResults.created > 0) {
+        toast.success(`${totalResults.created} pacientes importados com sucesso!`);
+        // Re-check which emails are now imported
+        const emails = allPatients.filter(p => p.email).map(p => p.email.toLowerCase());
+        try {
+          const { data } = await supabase.functions.invoke("import-patients", {
+            body: { mode: "check", emails },
+          });
+          if (data?.existing) {
+            const linkedEmails = new Set<string>(
+              data.existing.filter((e: any) => e.already_linked).map((e: any) => e.email)
+            );
+            setAlreadyImported(linkedEmails);
+            setSelectedIndices(new Set());
+          }
+        } catch {}
+      } else {
+        toast.info("Nenhum paciente novo importado");
+      }
     } catch (err: any) {
       toast.error(err.message || "Erro na importação");
     } finally {
       setImporting(false);
+      setImportProgress(null);
     }
   };
 
@@ -402,9 +458,29 @@ export default function ImportPatients() {
                       </div>
                     </>
                   )}
+                  {/* Progress Bar */}
+                  {importProgress && (
+                    <div className="space-y-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">
+                          Processando {importProgress.current}/{importProgress.total}
+                        </span>
+                        <span className="font-medium text-primary">
+                          {Math.round((importProgress.current / importProgress.total) * 100)}%
+                        </span>
+                      </div>
+                      <Progress value={(importProgress.current / importProgress.total) * 100} className="h-2" />
+                      <div className="flex gap-4 text-xs text-muted-foreground">
+                        <span className="text-success">✓ {importProgress.created} criados</span>
+                        {importProgress.errors > 0 && (
+                          <span className="text-destructive">✗ {importProgress.errors} erros</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   <Button onClick={handleImport} disabled={importing || selectedPatients.length === 0} className="w-full" size="lg">
                     {importing ? (
-                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Importando...</>
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Importando {importProgress ? `${importProgress.current}/${importProgress.total}` : "..."}...</>
                     ) : (
                       <><Upload className="w-4 h-4 mr-2" /> Importar {selectedPatients.length} Paciente{selectedPatients.length !== 1 ? "s" : ""} Faltantes</>
                     )}
