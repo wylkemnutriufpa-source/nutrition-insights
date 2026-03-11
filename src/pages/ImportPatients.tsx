@@ -204,6 +204,7 @@ export default function ImportPatients() {
     if (!user || selectedPatients.length === 0) return;
     setImporting(true);
     setResult(null);
+    setImportProgress({ current: 0, total: selectedPatients.length, created: 0, errors: 0 });
 
     try {
       const payload = selectedPatients.map(p => ({
@@ -211,30 +212,83 @@ export default function ImportPatients() {
         email: p.email,
       }));
 
-      const batchSize = 20;
+      const batchSize = 10;
       const totalResults = { created: 0, skipped: 0, errors: [] as string[] };
+      let processed = 0;
 
       for (let i = 0; i < payload.length; i += batchSize) {
         const batch = payload.slice(i, i + batchSize);
-        const { data, error } = await supabase.functions.invoke("import-patients", {
-          body: { patients: batch },
+        
+        // Retry up to 2 times per batch
+        let attempts = 0;
+        let success = false;
+        while (attempts < 2 && !success) {
+          attempts++;
+          try {
+            const { data, error } = await supabase.functions.invoke("import-patients", {
+              body: { patients: batch },
+            });
+
+            if (error) {
+              if (attempts >= 2) {
+                totalResults.errors.push(`Lote ${Math.floor(i / batchSize) + 1}: ${error.message}`);
+              }
+              continue;
+            }
+
+            if (data) {
+              totalResults.created += data.created || 0;
+              totalResults.skipped += data.skipped || 0;
+              if (data.errors?.length) totalResults.errors.push(...data.errors);
+            }
+            success = true;
+          } catch (e: any) {
+            if (attempts >= 2) {
+              totalResults.errors.push(`Lote ${Math.floor(i / batchSize) + 1}: ${e.message}`);
+            }
+          }
+        }
+
+        processed += batch.length;
+        setImportProgress({
+          current: processed,
+          total: payload.length,
+          created: totalResults.created,
+          errors: totalResults.errors.length,
         });
 
-        if (error) {
-          totalResults.errors.push(`Batch ${Math.floor(i / batchSize) + 1}: ${error.message}`);
-        } else if (data) {
-          totalResults.created += data.created || 0;
-          totalResults.skipped += data.skipped || 0;
-          if (data.errors?.length) totalResults.errors.push(...data.errors);
+        // Small delay between batches to avoid throttling
+        if (i + batchSize < payload.length) {
+          await new Promise(r => setTimeout(r, 500));
         }
       }
 
       setResult(totalResults);
-      toast.success(`${totalResults.created} pacientes importados com sucesso!`);
+      
+      if (totalResults.created > 0) {
+        toast.success(`${totalResults.created} pacientes importados com sucesso!`);
+        // Re-check which emails are now imported
+        const emails = allPatients.filter(p => p.email).map(p => p.email.toLowerCase());
+        try {
+          const { data } = await supabase.functions.invoke("import-patients", {
+            body: { mode: "check", emails },
+          });
+          if (data?.existing) {
+            const linkedEmails = new Set<string>(
+              data.existing.filter((e: any) => e.already_linked).map((e: any) => e.email)
+            );
+            setAlreadyImported(linkedEmails);
+            setSelectedIndices(new Set());
+          }
+        } catch {}
+      } else {
+        toast.info("Nenhum paciente novo importado");
+      }
     } catch (err: any) {
       toast.error(err.message || "Erro na importação");
     } finally {
       setImporting(false);
+      setImportProgress(null);
     }
   };
 
