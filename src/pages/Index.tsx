@@ -282,7 +282,7 @@ function PatientDashboardContent() {
           </Link>
         </div>
 
-        <Link to="/chat" className="glass rounded-xl p-5 hover:border-primary/30 transition-colors">
+        <Link to="/chat" className="glass-premium rounded-xl p-5 hover:border-primary/30 transition-colors shimmer-sweep">
           <h2 className="font-display font-semibold flex items-center gap-2 mb-3">
             💬 Chat
             {unreadMessages > 0 && <span className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-full">{unreadMessages} nova{unreadMessages > 1 ? "s" : ""}</span>}
