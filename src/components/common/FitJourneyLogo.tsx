@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Leaf } from "lucide-react";
+import fitJourneyIcon from "@/assets/fitjourney-icon.png";
 
 interface FitJourneyLogoProps {
   collapsed?: boolean;
@@ -105,20 +105,22 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
 
         {/* Main icon container - CIRCLE */}
         <div
-          className={`${s.icon} rounded-full flex items-center justify-center relative z-10`}
+          className={`${s.icon} rounded-full flex items-center justify-center relative z-10 overflow-hidden`}
           style={{
-            background: "linear-gradient(135deg, hsl(152 58% 42%), hsl(170 60% 45%), hsl(152 58% 48%))",
-            boxShadow: "0 0 20px hsl(152 58% 42% / 0.3), inset 0 1px 1px rgba(255,255,255,0.3)",
+            boxShadow: "0 0 20px hsl(152 58% 42% / 0.3)",
           }}
         >
-          {/* 3D spinning leaf */}
+          {/* 3D spinning icon */}
           <motion.div
             animate={{ rotateY: 360 }}
             transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
             style={{ perspective: 200 }}
+            className="flex items-center justify-center"
           >
-            <Leaf
-              className={`${s.leaf} text-primary-foreground`}
+            <img
+              src={fitJourneyIcon}
+              alt="FitJourney"
+              className={`${s.icon} rounded-full object-cover`}
               style={{ filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.25))" }}
             />
           </motion.div>
