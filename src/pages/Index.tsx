@@ -41,6 +41,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import type { Tables } from "@/integrations/supabase/types";
 
 type PlayerStats = Tables<"player_stats">;
