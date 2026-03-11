@@ -49,13 +49,11 @@ export default function PodiumBadge({ plan, allPlans = [], position, onUpgrade }
   const isGold = position === 0;
   const badgeColor = plan.color || medal.ring;
 
-  const particles = Array.from({ length: isGold ? 8 : 5 }, (_, i) => ({
-    id: i,
-    delay: i * 0.4,
-    size: 2 + Math.random() * 3,
-    x: (Math.random() - 0.5) * 60,
-    y: (Math.random() - 0.5) * 60,
-  }));
+  const pulseRings = [
+    { id: 0, delay: 0, size: 4 },
+    { id: 1, delay: 0.7, size: 8 },
+    { id: 2, delay: 1.4, size: 12 },
+  ];
 
   return (
     <>
