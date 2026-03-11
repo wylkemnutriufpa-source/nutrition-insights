@@ -346,7 +346,7 @@ export default function Checklist() {
               className="gradient-primary gap-2 shadow-glow"
               onClick={() => { setEditingTask(null); setForm({ title: "", icon: "✅", category: "habit", description: "" }); setAddOpen(true); }}
             >
-              <Plus className="w-4 h-4" /> Nova Tarefa
+              <Plus className="w-4 h-4" /> {t("common.newTask")}
             </Button>
           </div>
         </div>
