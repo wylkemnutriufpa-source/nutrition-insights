@@ -205,7 +205,7 @@ function SidebarContent({
                     isPremium
                       ? "bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent font-bold"
                       : ""
-                  }`}>{link.label}</span>
+                  }`}>{t(link.labelKey)}</span>
                 )}
                 {active && !collapsed && <ChevronRight className={`w-3.5 h-3.5 ml-auto animate-bounce ${isPremium ? "text-amber-500" : "text-primary"}`} />}
               </Link>
