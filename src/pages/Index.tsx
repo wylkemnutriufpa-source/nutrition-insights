@@ -145,7 +145,7 @@ function PatientDashboardContent() {
                 className="flex-1 gradient-primary shadow-glow gap-2"
                 onClick={() => { setShowAnamnesisModal(false); navigate("/anamnesis"); }}
               >
-                <Sparkles className="w-4 h-4" /> Preencher Agora
+                <Sparkles className="w-4 h-4" /> {t("dashboard.fillNow")}
               </Button>
             </div>
           </motion.div>
