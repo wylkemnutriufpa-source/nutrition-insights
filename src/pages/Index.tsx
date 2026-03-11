@@ -275,7 +275,7 @@ function PatientDashboardContent() {
               </div>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">Nenhuma consulta agendada.</p>
+             <p className="text-sm text-muted-foreground">{t("dashboard.noAppointments")}</p>
           )}
           <Link to="/appointments" className="text-primary text-xs mt-3 flex items-center gap-1 hover:underline">
             Ver agenda <ArrowRight className="w-3 h-3" />
