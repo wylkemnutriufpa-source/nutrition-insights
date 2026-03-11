@@ -458,9 +458,29 @@ export default function ImportPatients() {
                       </div>
                     </>
                   )}
+                  {/* Progress Bar */}
+                  {importProgress && (
+                    <div className="space-y-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">
+                          Processando {importProgress.current}/{importProgress.total}
+                        </span>
+                        <span className="font-medium text-primary">
+                          {Math.round((importProgress.current / importProgress.total) * 100)}%
+                        </span>
+                      </div>
+                      <Progress value={(importProgress.current / importProgress.total) * 100} className="h-2" />
+                      <div className="flex gap-4 text-xs text-muted-foreground">
+                        <span className="text-success">✓ {importProgress.created} criados</span>
+                        {importProgress.errors > 0 && (
+                          <span className="text-destructive">✗ {importProgress.errors} erros</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   <Button onClick={handleImport} disabled={importing || selectedPatients.length === 0} className="w-full" size="lg">
                     {importing ? (
-                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Importando...</>
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Importando {importProgress ? `${importProgress.current}/${importProgress.total}` : "..."}...</>
                     ) : (
                       <><Upload className="w-4 h-4 mr-2" /> Importar {selectedPatients.length} Paciente{selectedPatients.length !== 1 ? "s" : ""} Faltantes</>
                     )}
