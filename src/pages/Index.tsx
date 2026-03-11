@@ -139,7 +139,7 @@ function PatientDashboardContent() {
              <p className="text-xs text-muted-foreground mb-4">{t("dashboard.anamnesisWarning")}</p>
             <div className="flex gap-3 w-full">
               <Button variant="outline" className="flex-1" onClick={() => setShowAnamnesisModal(false)}>
-                Depois
+                {t("common.later")}
               </Button>
               <Button
                 className="flex-1 gradient-primary shadow-glow gap-2"
