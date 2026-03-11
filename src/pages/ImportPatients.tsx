@@ -54,22 +54,59 @@ export default function ImportPatients() {
   const [filterType, setFilterType] = useState<FilterType>("all");
   const [tab, setTab] = useState("import");
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
+  const [alreadyImported, setAlreadyImported] = useState<Set<string>>(new Set());
+  const [checking, setChecking] = useState(false);
 
+  // Load CSV and check which emails are already imported
   useEffect(() => {
     fetch("/data/Pacientes.csv")
       .then(r => r.text())
-      .then(text => {
+      .then(async (text) => {
         const parsed = parseCsv(text);
         setAllPatients(parsed);
         setLoaded(true);
-        // Pre-select all importable patients
-        const importableIndices = new Set<number>();
-        parsed.forEach((p, i) => { if (p.active && p.email) importableIndices.add(i); });
-        setSelectedIndices(importableIndices);
-      });
-  }, []);
 
+        // Check which emails already exist
+        const emails = parsed.filter(p => p.email).map(p => p.email.toLowerCase());
+        if (emails.length > 0 && user) {
+          setChecking(true);
+          try {
+            const { data } = await supabase.functions.invoke("import-patients", {
+              body: { mode: "check", emails },
+            });
+            if (data?.existing) {
+              const linkedEmails = new Set<string>(
+                data.existing.filter((e: any) => e.already_linked).map((e: any) => e.email)
+              );
+              setAlreadyImported(linkedEmails);
+
+              // Pre-select only NOT yet imported patients
+              const importableIndices = new Set<number>();
+              parsed.forEach((p, i) => {
+                if (p.active && p.email && !linkedEmails.has(p.email.toLowerCase())) {
+                  importableIndices.add(i);
+                }
+              });
+              setSelectedIndices(importableIndices);
+            }
+          } catch (e) {
+            console.error("Check failed:", e);
+            // Fallback: select all importable
+            const importableIndices = new Set<number>();
+            parsed.forEach((p, i) => { if (p.active && p.email) importableIndices.add(i); });
+            setSelectedIndices(importableIndices);
+          }
+          setChecking(false);
+        } else {
+          const importableIndices = new Set<number>();
+          parsed.forEach((p, i) => { if (p.active && p.email) importableIndices.add(i); });
+          setSelectedIndices(importableIndices);
+        }
+      });
+  }, [user]);
   const activePatients = useMemo(() => allPatients.filter(p => p.active && p.email), [allPatients]);
+  const notYetImported = useMemo(() => activePatients.filter(p => !alreadyImported.has(p.email.toLowerCase())), [activePatients, alreadyImported]);
+  const alreadyImportedCount = useMemo(() => activePatients.filter(p => alreadyImported.has(p.email.toLowerCase())).length, [activePatients, alreadyImported]);
   const totalActive = allPatients.filter(p => p.active).length;
   const withEmail = activePatients.length;
   const withoutEmail = allPatients.filter(p => p.active && !p.email).length;
@@ -222,13 +259,14 @@ export default function ImportPatients() {
 
         {/* Stats */}
         {loaded && (
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
             {[
-              { label: "Total", value: allPatients.length, color: "" },
+              { label: "Total CSV", value: allPatients.length, color: "" },
               { label: "Ativos", value: totalActive, color: "text-primary" },
               { label: "Com Email", value: withEmail, color: "text-accent" },
+              { label: "Já Importados", value: alreadyImportedCount, color: "text-success" },
+              { label: "Faltam", value: notYetImported.length, color: "text-warning" },
               { label: "Sem Email", value: allPatients.filter(p => !p.email).length, color: "text-destructive" },
-              { label: "Inativos", value: inactiveCount, color: "text-muted-foreground" },
             ].map((s) => (
               <Card key={s.label} className="glass shadow-card">
                 <CardContent className="py-3 text-center">
@@ -238,6 +276,15 @@ export default function ImportPatients() {
               </Card>
             ))}
           </div>
+        )}
+
+        {checking && (
+          <Card className="glass shadow-card border-primary/30">
+            <CardContent className="py-4 flex items-center gap-3">
+              <Loader2 className="w-5 h-5 text-primary animate-spin" />
+              <p className="text-sm text-muted-foreground">Verificando quais pacientes já foram importados...</p>
+            </CardContent>
+          </Card>
         )}
 
         <Tabs value={tab} onValueChange={setTab}>
@@ -282,50 +329,83 @@ export default function ImportPatients() {
                   <CardTitle className="font-display text-lg flex items-center justify-between">
                     <span className="flex items-center gap-2">
                       <Users className="w-5 h-5" />
-                      Pacientes Importáveis ({withEmail})
+                      Faltam Importar ({notYetImported.length})
                     </span>
-                    <button
-                      onClick={toggleAll}
-                      className="text-xs text-primary hover:underline font-normal"
-                    >
-                      {selectedIndices.size === activePatients.length ? "Desmarcar todos" : "Selecionar todos"}
-                    </button>
+                    {notYetImported.length > 0 && (
+                      <button
+                        onClick={toggleAll}
+                        className="text-xs text-primary hover:underline font-normal"
+                      >
+                        {selectedIndices.size === notYetImported.length ? "Desmarcar todos" : "Selecionar faltantes"}
+                      </button>
+                    )}
                   </CardTitle>
-                  {selectedPatients.length !== activePatients.length && (
+                  {alreadyImportedCount > 0 && (
+                    <p className="text-xs text-success flex items-center gap-1">
+                      <Check className="w-3 h-3" /> {alreadyImportedCount} pacientes já importados anteriormente
+                    </p>
+                  )}
+                  {selectedPatients.length > 0 && (
                     <p className="text-xs text-muted-foreground">
-                      {selectedPatients.length} de {activePatients.length} selecionados
+                      {selectedPatients.length} selecionado{selectedPatients.length !== 1 ? "s" : ""} para importar
                     </p>
                   )}
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="max-h-72 overflow-y-auto space-y-1">
-                    {activePatients.map((p, _) => {
-                      const realIdx = allPatients.indexOf(p);
-                      const isSelected = selectedIndices.has(realIdx);
-                      return (
-                        <div
-                          key={realIdx}
-                          onClick={() => togglePatient(realIdx)}
-                          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm cursor-pointer transition-colors ${
-                            isSelected ? "bg-primary/10 border border-primary/30" : "bg-muted/50 hover:bg-muted border border-transparent"
-                          }`}
-                        >
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={() => togglePatient(realIdx)}
-                            className="shrink-0"
-                          />
-                          <span className="font-medium truncate flex-1">{p.name}</span>
-                          <span className="text-muted-foreground text-xs truncate ml-2">{p.email}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  {notYetImported.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Check className="w-12 h-12 mx-auto text-success mb-3" />
+                      <h3 className="font-display font-semibold text-lg text-success">Todos importados!</h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Todos os {alreadyImportedCount} pacientes ativos com email já estão no sistema.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="max-h-72 overflow-y-auto space-y-1">
+                        {activePatients.map((p) => {
+                          const realIdx = allPatients.indexOf(p);
+                          const isSelected = selectedIndices.has(realIdx);
+                          const isImported = alreadyImported.has(p.email.toLowerCase());
+                          return (
+                            <div
+                              key={realIdx}
+                              onClick={() => !isImported && togglePatient(realIdx)}
+                              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                                isImported
+                                  ? "bg-success/5 border border-success/20 opacity-60 cursor-default"
+                                  : isSelected 
+                                    ? "bg-primary/10 border border-primary/30 cursor-pointer" 
+                                    : "bg-muted/50 hover:bg-muted border border-transparent cursor-pointer"
+                              }`}
+                            >
+                              {isImported ? (
+                                <Check className="w-4 h-4 text-success shrink-0" />
+                              ) : (
+                                <Checkbox
+                                  checked={isSelected}
+                                  onCheckedChange={() => togglePatient(realIdx)}
+                                  className="shrink-0"
+                                />
+                              )}
+                              <span className="font-medium truncate flex-1">{p.name}</span>
+                              <span className="text-muted-foreground text-xs truncate ml-2">{p.email}</span>
+                              {isImported && (
+                                <Badge variant="outline" className="text-[10px] border-success/30 text-success shrink-0">
+                                  ✓ Importado
+                                </Badge>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
                   <Button onClick={handleImport} disabled={importing || selectedPatients.length === 0} className="w-full" size="lg">
                     {importing ? (
                       <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Importando...</>
                     ) : (
-                      <><Upload className="w-4 h-4 mr-2" /> Importar {selectedPatients.length} Paciente{selectedPatients.length !== 1 ? "s" : ""}</>
+                      <><Upload className="w-4 h-4 mr-2" /> Importar {selectedPatients.length} Paciente{selectedPatients.length !== 1 ? "s" : ""} Faltantes</>
                     )}
                   </Button>
                 </CardContent>
