@@ -29,22 +29,33 @@ const DEFAULT_TASKS = [
   { title: "Seguir café da manhã do plano", icon: "☕", category: "nutrition", description: "Café da manhã conforme plano alimentar" },
   { title: "Seguir almoço do plano", icon: "🥗", category: "nutrition", description: "Almoço conforme plano alimentar" },
   { title: "Seguir jantar do plano", icon: "🍽️", category: "nutrition", description: "Jantar conforme plano alimentar" },
+  { title: "Fazer lanches saudáveis entre refeições", icon: "🥜", category: "nutrition", description: "Escolher opções nutritivas nos intervalos" },
   { title: "Evitar ultraprocessados hoje", icon: "🚫", category: "nutrition", description: "Preferir alimentos naturais e integrais" },
   { title: "Consumir proteína suficiente", icon: "🥩", category: "nutrition", description: "Atingir meta proteica nas refeições" },
   // Hidratação
   { title: "Beber pelo menos 2L de água", icon: "💧", category: "hydration", description: "Distribuir ao longo do dia" },
+  { title: "Tomar água ao acordar", icon: "🌅", category: "hydration", description: "Hidratar o corpo logo pela manhã" },
   // Qualidade Alimentar
   { title: "Comer frutas hoje", icon: "🍎", category: "food_quality", description: "Ao menos 2 porções de frutas variadas" },
   { title: "Comer vegetais ou salada hoje", icon: "🥦", category: "food_quality", description: "Incluir em almoço e/ou jantar" },
+  { title: "Incluir fibras nas refeições", icon: "🌾", category: "food_quality", description: "Grãos integrais, sementes ou aveia" },
   // Movimento
   { title: "Praticar atividade física ou caminhar", icon: "🏃", category: "movement", description: "30-60 min de atividade moderada" },
+  { title: "Caminhar ao menos 6.000 passos", icon: "🚶", category: "movement", description: "Use o celular para contar os passos" },
+  { title: "Fazer alongamento (5-10 min)", icon: "🤸", category: "movement", description: "Acordar o corpo ou relaxar após treino" },
   // Comportamento Alimentar
   { title: "Evitar beliscar fora do plano", icon: "🍪", category: "eating_behavior", description: "Respeitar intervalos entre refeições" },
   { title: "Respeitar sinais de fome e saciedade", icon: "⏳", category: "eating_behavior", description: "Comer devagar e prestar atenção ao corpo" },
   // Estilo de Vida
   { title: "Dormir pelo menos 7 horas", icon: "😴", category: "lifestyle", description: "Priorizar qualidade do sono" },
+  { title: "Evitar telas 1h antes de dormir", icon: "📵", category: "lifestyle", description: "Melhora a qualidade do sono" },
+  { title: "Tomar sol por 15 minutos", icon: "☀️", category: "lifestyle", description: "Vitamina D natural — prefira manhã cedo" },
+  // Suplemento
+  { title: "Tomar suplementos prescritos", icon: "💊", category: "supplement", description: "No horário indicado pelo nutricionista" },
+  // Mindset
+  { title: "Fazer 5 min de respiração ou meditação", icon: "🧘", category: "mindset", description: "Reduz cortisol e melhora foco" },
   // Monitoramento
-  { title: "Registrar peso ou progresso", icon: "📊", category: "monitoring", description: "Quando necessário, anotar evolução" },
+  { title: "Registrar as refeições no app", icon: "📝", category: "monitoring", description: "Acompanhe sua evolução diariamente" },
   { title: "Registrar nível de energia hoje", icon: "⚡", category: "monitoring", description: "Como se sentiu ao longo do dia" },
   // Consistência
   { title: "Alcançar pelo menos 80% de aderência", icon: "🎯", category: "consistency", description: "Meta diária de consistência no plano" },
@@ -117,7 +128,7 @@ export default function Checklist() {
     }));
     const { error } = await supabase.from("checklist_tasks").insert(inserts);
     if (!error) {
-      toast.success("✅ 15 tarefas diárias criadas para hoje!");
+      toast.success("✅ 25 tarefas diárias criadas para hoje!");
       fetchTasks();
     }
     setSeeding(false);
@@ -140,7 +151,7 @@ export default function Checklist() {
     }));
     const { error } = await supabase.from("checklist_tasks").insert(inserts);
     if (!error) {
-      toast.success("✅ Checklist resetado com 15 tarefas comportamentais!");
+      toast.success("✅ Checklist resetado com 25 tarefas comportamentais!");
     } else {
       toast.error(error.message);
     }
