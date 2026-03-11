@@ -12,16 +12,56 @@ const sizes = {
   lg: { icon: "w-12 h-12", leaf: "w-6 h-6", text: "text-2xl", ring: "-inset-[4px]" },
 };
 
+// Electric arc component
+function ElectricArc({ delay, angle }: { delay: number; angle: number }) {
+  return (
+    <motion.div
+      className="absolute inset-0 pointer-events-none"
+      style={{
+        transform: `rotate(${angle}deg)`,
+      }}
+    >
+      <motion.div
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[2px] rounded-full"
+        style={{
+          height: "6px",
+          background: "linear-gradient(to top, hsl(152 58% 42%), hsl(170 80% 65%), transparent)",
+          boxShadow: "0 0 6px hsl(170 80% 65% / 0.8), 0 0 12px hsl(152 58% 42% / 0.4)",
+          transformOrigin: "bottom center",
+        }}
+        animate={{
+          opacity: [0, 1, 1, 0],
+          scaleY: [0.3, 1.2, 0.8, 0],
+          scaleX: [1, 1.5, 0.8, 1],
+        }}
+        transition={{
+          duration: 0.6,
+          repeat: Infinity,
+          delay,
+          repeatDelay: 1.5 + Math.random() * 2,
+          ease: "easeOut",
+        }}
+      />
+    </motion.div>
+  );
+}
+
 export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJourneyLogoProps) {
   const s = sizes[size];
 
+  const arcs = Array.from({ length: 8 }, (_, i) => ({
+    id: i,
+    angle: i * 45,
+    delay: i * 0.15,
+  }));
+
   return (
     <div className="flex items-center gap-3">
-      {/* Icon with spinning conic border like medals */}
+      {/* Icon with electric effect */}
       <div className="relative flex-shrink-0">
         {/* Outer glow pulse */}
         <motion.div
-          className={`absolute inset-0 rounded-xl`}
+          className="absolute inset-0 rounded-full"
           style={{
             background: "radial-gradient(circle, hsl(152 58% 42% / 0.3) 0%, transparent 70%)",
           }}
@@ -31,7 +71,7 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
 
         {/* Spinning conic gradient border */}
         <motion.div
-          className={`absolute ${s.ring} rounded-xl`}
+          className={`absolute ${s.ring} rounded-full`}
           style={{
             background: "conic-gradient(from 0deg, hsl(152 58% 42%), transparent 40%, hsl(170 60% 45% / 0.8) 60%, transparent 80%, hsl(152 58% 42%))",
             opacity: 0.7,
@@ -40,15 +80,22 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
           transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
         />
 
-        {/* Main icon container */}
+        {/* Electric arcs */}
+        <div className="absolute -inset-2 pointer-events-none z-20">
+          {arcs.map((arc) => (
+            <ElectricArc key={arc.id} delay={arc.delay} angle={arc.angle} />
+          ))}
+        </div>
+
+        {/* Main icon container - CIRCLE */}
         <div
-          className={`${s.icon} rounded-xl flex items-center justify-center relative z-10`}
+          className={`${s.icon} rounded-full flex items-center justify-center relative z-10`}
           style={{
             background: "linear-gradient(135deg, hsl(152 58% 42%), hsl(170 60% 45%), hsl(152 58% 48%))",
             boxShadow: "0 0 20px hsl(152 58% 42% / 0.3), inset 0 1px 1px rgba(255,255,255,0.3)",
           }}
         >
-          {/* 3D spinning leaf on its own axis */}
+          {/* 3D spinning leaf */}
           <motion.div
             animate={{ rotateY: 360 }}
             transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
