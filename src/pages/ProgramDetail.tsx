@@ -68,6 +68,7 @@ export default function ProgramDetail() {
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [protocols, setProtocols] = useState<{ id: string; title: string }[]>([]);
   const [allPatients, setAllPatients] = useState<{ id: string; name: string }[]>([]);
+  const [joinRequests, setJoinRequests] = useState<{ id: string; patient_id: string; patient_name: string; message: string | null; status: string; created_at: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Dialogs
