@@ -94,70 +94,68 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Auto sign-out on tab close if "remember me" was unchecked
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (sessionStorage.getItem("fitjourney_session_only") === "true") {
-        supabase.auth.signOut();
-        sessionStorage.removeItem("fitjourney_session_only");
+    let mounted = true;
+
+    const initializeAuth = async () => {
+      // getSession is the reliable source for the initial session
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!mounted) return;
+
+      setSession(session);
+      setUser(session?.user ?? null);
+
+      if (session?.user) {
+        await Promise.all([
+          fetchProfile(session.user.id),
+          fetchRoles(session.user.id),
+        ]);
+        if (mounted) {
+          setLoading(false);
+          checkSubscription();
+        }
+      } else {
+        setLoading(false);
       }
     };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, []);
 
-  useEffect(() => {
-    let initialSessionHandled = false;
+    initializeAuth();
 
+    // Listen for subsequent auth changes (sign in/out, token refresh)
     const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        // Skip if getSession already handled the initial load
-        if (event === "INITIAL_SESSION" && initialSessionHandled) return;
+      (event, session) => {
+        // Skip the initial session event — already handled above
+        if (event === "INITIAL_SESSION") return;
 
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Use setTimeout to avoid deadlock with Supabase auth
+          // Use setTimeout to avoid deadlock with Supabase auth internals
           setTimeout(async () => {
+            if (!mounted) return;
             await Promise.all([
               fetchProfile(session.user.id),
               fetchRoles(session.user.id),
             ]);
-            setLoading(false);
-            // Check subscription in background (don't block loading)
-            checkSubscription();
+            if (mounted) {
+              setLoading(false);
+              checkSubscription();
+            }
           }, 0);
         } else {
           setProfile(null);
           setRoles([]);
-          // Only set loading false for non-initial events, or if getSession already ran
-          if (event !== "INITIAL_SESSION") {
-            setLoading(false);
-          }
+          setLoading(false);
         }
       }
     );
 
-    // getSession is the reliable source for the initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      initialSessionHandled = true;
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        Promise.all([
-          fetchProfile(session.user.id),
-          fetchRoles(session.user.id),
-        ]).then(() => {
-          setLoading(false);
-          checkSubscription();
-        });
-      } else {
-        setLoading(false);
-      }
-    });
-
-    return () => authSubscription.unsubscribe();
+    return () => {
+      mounted = false;
+      authSubscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
