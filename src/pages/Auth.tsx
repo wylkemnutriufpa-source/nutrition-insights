@@ -40,15 +40,18 @@ export default function Auth() {
         sessionStorage.removeItem("fitjourney_session_only");
       }
       // Award login points (fire-and-forget)
-      supabase.rpc("award_points", {
-        _patient_id: (await supabase.auth.getUser()).data.user?.id,
-        _action_key: "login",
-        _metadata: {},
-      }).then(({ data }) => {
-        if (data && (data as any)?.awarded) {
-          toast.success(`+${(data as any).points} pontos por login diário! 🔑`, { duration: 2000 });
-        }
-      }).catch(() => {});
+      const currentUser = (await supabase.auth.getUser()).data.user;
+      if (currentUser) {
+        supabase.rpc("award_points", {
+          _patient_id: currentUser.id,
+          _action_key: "login",
+          _metadata: {},
+        }).then((res) => {
+          if (res.data && (res.data as any)?.awarded) {
+            toast.success(`+${(res.data as any).points} pontos por login diário! 🔑`, { duration: 2000 });
+          }
+        });
+      }
       navigate("/");
     }
   };
