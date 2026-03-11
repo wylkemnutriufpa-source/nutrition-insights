@@ -128,7 +128,7 @@ export default function Checklist() {
     }));
     const { error } = await supabase.from("checklist_tasks").insert(inserts);
     if (!error) {
-      toast.success("✅ 15 tarefas diárias criadas para hoje!");
+      toast.success("✅ 25 tarefas diárias criadas para hoje!");
       fetchTasks();
     }
     setSeeding(false);
