@@ -339,7 +339,7 @@ export default function Checklist() {
                 disabled={resetting}
                 className="gap-1 text-xs"
               >
-                {resetting ? "Resetando..." : "🔄 Resetar Padrão"}
+                {resetting ? t("common.resetting") : t("common.resetDefault")}
               </Button>
             )}
             <Button
