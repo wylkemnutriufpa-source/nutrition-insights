@@ -54,21 +54,56 @@ export default function ImportPatients() {
   const [filterType, setFilterType] = useState<FilterType>("all");
   const [tab, setTab] = useState("import");
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
+  const [alreadyImported, setAlreadyImported] = useState<Set<string>>(new Set());
+  const [checking, setChecking] = useState(false);
 
+  // Load CSV and check which emails are already imported
   useEffect(() => {
     fetch("/data/Pacientes.csv")
       .then(r => r.text())
-      .then(text => {
+      .then(async (text) => {
         const parsed = parseCsv(text);
         setAllPatients(parsed);
         setLoaded(true);
-        // Pre-select all importable patients
-        const importableIndices = new Set<number>();
-        parsed.forEach((p, i) => { if (p.active && p.email) importableIndices.add(i); });
-        setSelectedIndices(importableIndices);
-      });
-  }, []);
 
+        // Check which emails already exist
+        const emails = parsed.filter(p => p.email).map(p => p.email.toLowerCase());
+        if (emails.length > 0 && user) {
+          setChecking(true);
+          try {
+            const { data } = await supabase.functions.invoke("import-patients", {
+              body: { mode: "check", emails },
+            });
+            if (data?.existing) {
+              const linkedEmails = new Set<string>(
+                data.existing.filter((e: any) => e.already_linked).map((e: any) => e.email)
+              );
+              setAlreadyImported(linkedEmails);
+
+              // Pre-select only NOT yet imported patients
+              const importableIndices = new Set<number>();
+              parsed.forEach((p, i) => {
+                if (p.active && p.email && !linkedEmails.has(p.email.toLowerCase())) {
+                  importableIndices.add(i);
+                }
+              });
+              setSelectedIndices(importableIndices);
+            }
+          } catch (e) {
+            console.error("Check failed:", e);
+            // Fallback: select all importable
+            const importableIndices = new Set<number>();
+            parsed.forEach((p, i) => { if (p.active && p.email) importableIndices.add(i); });
+            setSelectedIndices(importableIndices);
+          }
+          setChecking(false);
+        } else {
+          const importableIndices = new Set<number>();
+          parsed.forEach((p, i) => { if (p.active && p.email) importableIndices.add(i); });
+          setSelectedIndices(importableIndices);
+        }
+      });
+  }, [user]);
   const activePatients = useMemo(() => allPatients.filter(p => p.active && p.email), [allPatients]);
   const totalActive = allPatients.filter(p => p.active).length;
   const withEmail = activePatients.length;
