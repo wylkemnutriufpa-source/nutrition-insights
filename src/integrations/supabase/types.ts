@@ -3322,7 +3322,16 @@ export type Database = {
         Args: { _email: string; _full_name: string; _password: string }
         Returns: string
       }
+      find_existing_patient_emails: {
+        Args: { _emails: string[]; _nutritionist_id: string }
+        Returns: {
+          already_linked: boolean
+          email: string
+        }[]
+      }
       find_patient_by_email: { Args: { _email: string }; Returns: string }
+      fix_all_null_tokens: { Args: never; Returns: undefined }
+      fix_user_null_tokens: { Args: { _user_id: string }; Returns: undefined }
       get_ranking_by_period: {
         Args: { _limit?: number; _nutritionist_id?: string; _period: string }
         Returns: {
