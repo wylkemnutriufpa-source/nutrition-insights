@@ -322,7 +322,7 @@ export default function Checklist() {
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-primary" />
                 <span className="font-medium text-sm">
-                  {isToday ? "Hoje" : new Date(date + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "short" })}
+                  {isToday ? t("common.today") : new Date(date + "T12:00:00").toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "short" })}
                 </span>
               </div>
               <Button variant="ghost" size="icon" onClick={() => changeDate(1)} disabled={isToday}>
