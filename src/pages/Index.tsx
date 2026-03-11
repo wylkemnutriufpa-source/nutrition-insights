@@ -553,38 +553,32 @@ function NutritionistDashboardContent() {
 
   return (
     <div className="space-y-6">
-      {/* ── Tab Switcher ── */}
-      <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1 w-fit">
-        <button
-          onClick={() => setActiveTab("clinical")}
-          className={`flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-md transition-all ${
-            activeTab === "clinical"
-              ? "bg-card shadow-sm text-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <Heart className="w-4 h-4" /> Clínico
-        </button>
-        <button
-          onClick={() => setActiveTab("analytics")}
-          className={`flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-md transition-all ${
-            activeTab === "analytics"
-              ? "bg-card shadow-sm text-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <BarChart3 className="w-4 h-4" /> Analytics
-        </button>
-        <button
-          onClick={() => setActiveTab("strategy")}
-          className={`flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-md transition-all ${
-            activeTab === "strategy"
-              ? "bg-card shadow-sm text-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <Brain className="w-4 h-4" /> IA Estratégica
-        </button>
+      {/* ── Premium Tab Switcher ── */}
+      <div className="flex items-center gap-1 glass-premium rounded-xl p-1.5 w-fit">
+        {[
+          { key: "clinical", icon: Heart, label: "Clínico" },
+          { key: "analytics", icon: BarChart3, label: "Analytics" },
+          { key: "strategy", icon: Brain, label: "IA Estratégica" },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`relative flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-lg transition-all duration-300 ${
+              activeTab === tab.key
+                ? "bg-gradient-to-r from-primary/10 to-primary/5 text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+            }`}
+          >
+            <tab.icon className={`w-4 h-4 ${activeTab === tab.key ? "text-primary" : ""}`} />
+            {tab.label}
+            {activeTab === tab.key && (
+              <motion.div
+                layoutId="activeTab"
+                className="absolute bottom-0 left-2 right-2 h-0.5 gradient-primary rounded-full"
+              />
+            )}
+          </button>
+        ))}
       </div>
 
       {activeTab === "analytics" ? (
