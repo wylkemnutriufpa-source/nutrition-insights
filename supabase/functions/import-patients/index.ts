@@ -50,7 +50,25 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { patients } = await req.json();
+    const body = await req.json();
+
+    // --- CHECK MODE: return which emails already exist ---
+    if (body.mode === "check") {
+      const emails: string[] = (body.emails || []).map((e: string) => e.trim().toLowerCase());
+      
+      // Query existing users by email using RPC or direct query
+      const { data: existingUsers } = await supabase
+        .rpc("find_existing_patient_emails", { _emails: emails, _nutritionist_id: user.id });
+      
+      return new Response(JSON.stringify({ 
+        existing: existingUsers || [] 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // --- IMPORT MODE ---
+    const { patients } = body;
 
     if (!patients || !Array.isArray(patients)) {
       return new Response(JSON.stringify({ error: "Invalid patients data" }), {
@@ -63,7 +81,7 @@ Deno.serve(async (req) => {
 
     for (const patient of patients) {
       try {
-        const email = patient.email?.trim();
+        const email = patient.email?.trim()?.toLowerCase();
         const fullName = patient.name?.trim();
 
         if (!email || !fullName) {
@@ -71,68 +89,94 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Check if user already exists
-        const { data: existingUsers } = await supabase.auth.admin.listUsers();
-        const existingUser = existingUsers?.users?.find(
-          (u: any) => u.email === email.toLowerCase()
-        );
-
-        let patientUserId: string;
-
-        if (existingUser) {
-          patientUserId = existingUser.id;
-        } else {
-          // Default password — patient changes on first login
-          const tempPassword = "123456";
-          const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-            email: email.toLowerCase(),
-            password: tempPassword,
-            email_confirm: true,
-            user_metadata: { full_name: fullName },
+        // Use the create_patient_account RPC which handles deduplication
+        // and sets all token fields to '' to avoid NULL scan errors
+        const { data: patientUserId, error: rpcError } = await supabase
+          .rpc("create_patient_account", {
+            _email: email,
+            _full_name: fullName,
+            _password: "123456",
           });
 
-          if (createError) {
-            results.errors.push(`${email}: ${createError.message}`);
-            continue;
+        if (rpcError) {
+          // If RPC fails, try direct approach
+          console.log(`RPC failed for ${email}: ${rpcError.message}, trying direct approach`);
+          
+          // Check if user exists by querying auth.users via service role
+          const { data: existingProfile } = await supabase
+            .from("profiles")
+            .select("user_id")
+            .ilike("full_name", fullName)
+            .limit(1);
+
+          // Look up by email using the existing function
+          const { data: foundId } = await supabase.rpc("find_patient_by_email", { _email: email });
+
+          let patientId = foundId;
+
+          if (!patientId) {
+            // Create via admin API
+            const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+              email,
+              password: "123456",
+              email_confirm: true,
+              user_metadata: { full_name: fullName },
+            });
+
+            if (createError) {
+              results.errors.push(`${email}: ${createError.message}`);
+              continue;
+            }
+
+            patientId = newUser.user.id;
+
+            // Fix NULL token fields immediately
+            await supabase.rpc("fix_user_null_tokens", { _user_id: patientId });
           }
 
-          patientUserId = newUser.user.id;
+          // Ensure role
+          await supabase
+            .from("user_roles")
+            .upsert({ user_id: patientId, role: "patient" }, { onConflict: "user_id,role" });
+
+          // Ensure profile
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("user_id", patientId)
+            .maybeSingle();
+
+          if (!profile) {
+            await supabase.from("profiles").insert({ user_id: patientId, full_name: fullName });
+          }
+
+          // Link to nutritionist
+          await supabase
+            .from("nutritionist_patients")
+            .upsert(
+              { nutritionist_id: user.id, patient_id: patientId, status: "active" },
+              { onConflict: "nutritionist_id,patient_id" }
+            );
+
+          results.created++;
+          continue;
         }
 
-        // Add patient role
-        await supabase
-          .from("user_roles")
-          .upsert({ user_id: patientUserId, role: "patient" }, { onConflict: "user_id,role" });
+        // RPC succeeded — link to nutritionist
+        if (patientUserId) {
+          await supabase
+            .from("nutritionist_patients")
+            .upsert(
+              { nutritionist_id: user.id, patient_id: patientUserId, status: "active" },
+              { onConflict: "nutritionist_id,patient_id" }
+            );
 
-        // Ensure profile exists
-        const { data: existingProfile } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("user_id", patientUserId)
-          .maybeSingle();
-
-        if (!existingProfile) {
-          await supabase.from("profiles").insert({
-            user_id: patientUserId,
-            full_name: fullName,
-          });
-        }
-
-        // Link to nutritionist (check first to avoid duplicates)
-        const nutritionistId = user.id;
-        const { data: existingLink } = await supabase
-          .from("nutritionist_patients")
-          .select("id")
-          .eq("nutritionist_id", nutritionistId)
-          .eq("patient_id", patientUserId)
-          .maybeSingle();
-
-        if (!existingLink) {
-          await supabase.from("nutritionist_patients").insert({
-            nutritionist_id: nutritionistId,
-            patient_id: patientUserId,
-            status: "active",
-          });
+          // Ensure profile name is set
+          await supabase
+            .from("profiles")
+            .update({ full_name: fullName })
+            .eq("user_id", patientUserId)
+            .is("full_name", null);
         }
 
         results.created++;
@@ -140,6 +184,9 @@ Deno.serve(async (req) => {
         results.errors.push(`${patient.email || patient.name}: ${err.message}`);
       }
     }
+
+    // Fix any remaining NULL tokens for all users
+    await supabase.rpc("fix_all_null_tokens");
 
     return new Response(JSON.stringify(results), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
