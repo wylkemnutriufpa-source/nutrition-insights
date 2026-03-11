@@ -151,7 +151,7 @@ export default function Checklist() {
     }));
     const { error } = await supabase.from("checklist_tasks").insert(inserts);
     if (!error) {
-      toast.success("✅ Checklist resetado com 15 tarefas comportamentais!");
+      toast.success("✅ Checklist resetado com 25 tarefas comportamentais!");
     } else {
       toast.error(error.message);
     }
