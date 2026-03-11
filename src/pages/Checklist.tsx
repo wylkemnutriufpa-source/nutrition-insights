@@ -465,7 +465,7 @@ export default function Checklist() {
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle className="font-display">{editingTask ? "Editar Tarefa" : "Nova Tarefa"}</DialogTitle>
+              <DialogTitle className="font-display">{editingTask ? t("checklist.editTask") : t("common.newTask")}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
