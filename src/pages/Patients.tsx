@@ -495,7 +495,7 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
 
   if (sorted.length === 0) {
     return (
-      <div className="glass rounded-xl p-12 text-center">
+      <div className="glass-premium rounded-xl p-12 text-center">
         <Users className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
         <h3 className="font-display font-semibold text-lg mb-1">{search ? "Nenhum resultado" : emptyMessage}</h3>
         <p className="text-muted-foreground">{search ? "Tente outro termo" : ""}</p>
