@@ -504,6 +504,180 @@ export type Database = {
           },
         ]
       }
+      clinical_rule_conditions: {
+        Row: {
+          created_at: string
+          id: string
+          is_required: boolean
+          operator: string
+          rule_id: string
+          signal_key: string
+          threshold: number | null
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_required?: boolean
+          operator?: string
+          rule_id: string
+          signal_key: string
+          threshold?: number | null
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_required?: boolean
+          operator?: string
+          rule_id?: string
+          signal_key?: string
+          threshold?: number | null
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_rule_conditions_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clinical_rule_conditions_signal_key_fkey"
+            columns: ["signal_key"]
+            isOneToOne: false
+            referencedRelation: "clinical_signals_catalog"
+            referencedColumns: ["signal_key"]
+          },
+        ]
+      }
+      clinical_rule_recommendations: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          recommendation_id: string
+          rule_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          recommendation_id: string
+          rule_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          recommendation_id?: string
+          rule_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_rule_recommendations_recommendation_id_fkey"
+            columns: ["recommendation_id"]
+            isOneToOne: false
+            referencedRelation: "recommendation_library"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clinical_rule_recommendations_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clinical_rules: {
+        Row: {
+          category: string
+          cooldown_hours: number
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          logic_operator: string
+          min_score: number
+          name: string
+          priority: number
+          rule_key: string
+          target_audience: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          cooldown_hours?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          logic_operator?: string
+          min_score?: number
+          name: string
+          priority?: number
+          rule_key: string
+          target_audience?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          cooldown_hours?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          logic_operator?: string
+          min_score?: number
+          name?: string
+          priority?: number
+          rule_key?: string
+          target_audience?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      clinical_signals_catalog: {
+        Row: {
+          category: string
+          created_at: string
+          data_source: string
+          default_severity: string
+          description: string | null
+          detection_query: string | null
+          id: string
+          is_active: boolean
+          name: string
+          signal_key: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          data_source: string
+          default_severity?: string
+          description?: string | null
+          detection_query?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          signal_key: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          data_source?: string
+          default_severity?: string
+          description?: string | null
+          detection_query?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          signal_key?: string
+        }
+        Relationships: []
+      }
       diet_templates: {
         Row: {
           base_calories: number
@@ -1572,6 +1746,53 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_signals: {
+        Row: {
+          context: Json | null
+          detected_at: string
+          detected_by: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          patient_id: string
+          severity: string
+          signal_key: string
+          value: number | null
+        }
+        Insert: {
+          context?: Json | null
+          detected_at?: string
+          detected_by?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          patient_id: string
+          severity?: string
+          signal_key: string
+          value?: number | null
+        }
+        Update: {
+          context?: Json | null
+          detected_at?: string
+          detected_by?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          patient_id?: string
+          severity?: string
+          signal_key?: string
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_signals_signal_key_fkey"
+            columns: ["signal_key"]
+            isOneToOne: false
+            referencedRelation: "clinical_signals_catalog"
+            referencedColumns: ["signal_key"]
           },
         ]
       }
@@ -2832,6 +3053,54 @@ export type Database = {
         }
         Relationships: []
       }
+      recommendation_library: {
+        Row: {
+          action_route: string | null
+          action_type: string | null
+          body_template: string
+          category: string
+          created_at: string
+          icon: string
+          id: string
+          is_active: boolean
+          priority: string
+          rec_key: string
+          tags: string[] | null
+          target_audience: string
+          title: string
+        }
+        Insert: {
+          action_route?: string | null
+          action_type?: string | null
+          body_template: string
+          category?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          priority?: string
+          rec_key: string
+          tags?: string[] | null
+          target_audience?: string
+          title: string
+        }
+        Update: {
+          action_route?: string | null
+          action_type?: string | null
+          body_template?: string
+          category?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          priority?: string
+          rec_key?: string
+          tags?: string[] | null
+          target_audience?: string
+          title?: string
+        }
+        Relationships: []
+      }
       saved_meals: {
         Row: {
           calories_target: number | null
@@ -3134,6 +3403,62 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      tip_library: {
+        Row: {
+          age_group: string | null
+          behavior_pattern: string | null
+          category: string
+          content: string
+          created_at: string
+          goal: string | null
+          icon: string
+          id: string
+          is_active: boolean
+          severity: string
+          sex: string | null
+          signal_key: string | null
+          tip_key: string
+        }
+        Insert: {
+          age_group?: string | null
+          behavior_pattern?: string | null
+          category?: string
+          content: string
+          created_at?: string
+          goal?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          severity?: string
+          sex?: string | null
+          signal_key?: string | null
+          tip_key: string
+        }
+        Update: {
+          age_group?: string | null
+          behavior_pattern?: string | null
+          category?: string
+          content?: string
+          created_at?: string
+          goal?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          severity?: string
+          sex?: string | null
+          signal_key?: string | null
+          tip_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tip_library_signal_key_fkey"
+            columns: ["signal_key"]
+            isOneToOne: false
+            referencedRelation: "clinical_signals_catalog"
+            referencedColumns: ["signal_key"]
+          },
+        ]
       }
       user_achievements: {
         Row: {
