@@ -292,14 +292,14 @@ export default function ImportPatients() {
             <TabsTrigger value="import" className="gap-1.5 flex-1">
               <Upload className="w-4 h-4" /> Importar
             </TabsTrigger>
-            <TabsTrigger value="filter" className="gap-1.5 flex-1">
-              <Filter className="w-4 h-4" /> Filtrar Dados
-              {(allPatients.filter(p => !p.email).length > 0) && (
-                <Badge variant="destructive" className="ml-1 text-[10px] px-1.5 py-0">
-                  {allPatients.filter(p => !p.email).length}
-                </Badge>
-              )}
-            </TabsTrigger>
+             <TabsTrigger value="filter" className="gap-1.5 flex-1">
+               <Filter className="w-4 h-4" /> Filtrar Dados
+               {(allPatients.filter(p => !p.email).length > 0) && (
+                 <span className="ml-1 text-[10px] px-1.5 py-0 rounded-full bg-destructive text-destructive-foreground font-medium">
+                   {allPatients.filter(p => !p.email).length}
+                 </span>
+               )}
+             </TabsTrigger>
           </TabsList>
 
           {/* ─── TAB: Import ─── */}

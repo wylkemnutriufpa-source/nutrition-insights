@@ -50,7 +50,17 @@ Deno.serve(async (req) => {
       });
     }
 
-    const body = await req.json();
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    console.log("[import-patients] mode:", body.mode, "patients count:", body.patients?.length);
 
     // --- CHECK MODE: return which emails already exist ---
     if (body.mode === "check") {
