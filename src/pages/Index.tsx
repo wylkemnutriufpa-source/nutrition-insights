@@ -284,10 +284,10 @@ function PatientDashboardContent() {
 
         <Link to="/chat" className="glass-premium rounded-xl p-5 hover:border-primary/30 transition-colors shimmer-sweep">
           <h2 className="font-display font-semibold flex items-center gap-2 mb-3">
-            💬 Chat
-            {unreadMessages > 0 && <span className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-full">{unreadMessages} nova{unreadMessages > 1 ? "s" : ""}</span>}
-          </h2>
-          <p className="text-sm text-muted-foreground">Converse com seu nutricionista em tempo real.</p>
+             💬 {t("dashboard.chatTitle")}
+             {unreadMessages > 0 && <span className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-full">{unreadMessages} {unreadMessages > 1 ? t("dashboard.newMessagesPlural") : t("dashboard.newMessages")}</span>}
+           </h2>
+           <p className="text-sm text-muted-foreground">{t("dashboard.chatDescription")}</p>
         </Link>
       </motion.div>
 
