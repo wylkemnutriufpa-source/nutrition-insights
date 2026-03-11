@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import confetti from "@/lib/confetti";
 import { usePatientPoints } from "@/hooks/usePatientPoints";
+import { useTranslation } from "react-i18next";
 
 interface ChecklistTask {
   id: string;
@@ -80,6 +81,7 @@ const CATEGORIES = [
 export default function Checklist() {
   const { user } = useAuth();
   const { awardPoints } = usePatientPoints();
+  const { t } = useTranslation();
   const [tasks, setTasks] = useState<ChecklistTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
@@ -128,7 +130,7 @@ export default function Checklist() {
     }));
     const { error } = await supabase.from("checklist_tasks").insert(inserts);
     if (!error) {
-      toast.success("✅ 25 tarefas diárias criadas para hoje!");
+      toast.success(t("checklist.seedSuccess"));
       fetchTasks();
     }
     setSeeding(false);
@@ -151,7 +153,7 @@ export default function Checklist() {
     }));
     const { error } = await supabase.from("checklist_tasks").insert(inserts);
     if (!error) {
-      toast.success("✅ Checklist resetado com 25 tarefas comportamentais!");
+      toast.success(t("checklist.resetSuccess"));
     } else {
       toast.error(error.message);
     }
@@ -197,7 +199,7 @@ export default function Checklist() {
 
       if (updated.every((t) => t.completed)) {
         confetti();
-        toast.success("🎉 Todas as tarefas concluídas!");
+        toast.success(t("checklist.allCompleted"));
         if (stats) {
           await supabase.from("player_stats").update({
             total_xp: stats.total_xp + 50,
@@ -233,7 +235,7 @@ export default function Checklist() {
         .update({ title: form.title, icon: form.icon, category: form.category, description: form.description || null })
         .eq("id", editingTask.id);
       if (error) toast.error(error.message);
-      else toast.success("Tarefa atualizada!");
+      else toast.success(t("checklist.taskUpdated"));
     } else {
       const { error } = await supabase.from("checklist_tasks").insert({
         patient_id: user.id,
@@ -245,7 +247,7 @@ export default function Checklist() {
         completed: false,
       });
       if (error) toast.error(error.message);
-      else toast.success("Tarefa adicionada!");
+      else toast.success(t("checklist.taskAdded"));
     }
     setSaving(false);
     setAddOpen(false);
@@ -257,7 +259,7 @@ export default function Checklist() {
   const handleDeleteTask = async (taskId: string) => {
     await supabase.from("checklist_tasks").delete().eq("id", taskId);
     setTasks(prev => prev.filter(t => t.id !== taskId));
-    toast.success("Tarefa removida");
+    toast.success(t("checklist.taskRemoved"));
   };
 
   const openEdit = (task: ChecklistTask, e: React.MouseEvent) => {
@@ -312,7 +314,7 @@ export default function Checklist() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="font-display text-2xl font-bold">Checklist Diário</h1>
+            <h1 className="font-display text-2xl font-bold">{t("checklist.title")}</h1>
             <div className="flex items-center gap-4 mt-1">
               <Button variant="ghost" size="icon" onClick={() => changeDate(-1)}>
                 <ChevronLeft className="w-5 h-5" />
@@ -320,7 +322,7 @@ export default function Checklist() {
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-primary" />
                 <span className="font-medium text-sm">
-                  {isToday ? "Hoje" : new Date(date + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "short" })}
+                  {isToday ? t("common.today") : new Date(date + "T12:00:00").toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "short" })}
                 </span>
               </div>
               <Button variant="ghost" size="icon" onClick={() => changeDate(1)} disabled={isToday}>
@@ -337,14 +339,14 @@ export default function Checklist() {
                 disabled={resetting}
                 className="gap-1 text-xs"
               >
-                {resetting ? "Resetando..." : "🔄 Resetar Padrão"}
+                {resetting ? t("common.resetting") : t("common.resetDefault")}
               </Button>
             )}
             <Button
               className="gradient-primary gap-2 shadow-glow"
               onClick={() => { setEditingTask(null); setForm({ title: "", icon: "✅", category: "habit", description: "" }); setAddOpen(true); }}
             >
-              <Plus className="w-4 h-4" /> Nova Tarefa
+              <Plus className="w-4 h-4" /> {t("common.newTask")}
             </Button>
           </div>
         </div>
@@ -354,14 +356,14 @@ export default function Checklist() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Flame className="w-5 h-5 text-primary" />
-              <span className="font-display font-semibold">Progresso do Dia</span>
+              <span className="font-display font-semibold">{t("checklist.dayProgress")}</span>
             </div>
             <span className="text-sm font-bold text-primary">{Math.round(progress)}% • {completedCount}/{tasks.length}</span>
           </div>
           <Progress value={progress} className="h-3" />
           {progress === 100 && tasks.length > 0 && (
             <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="flex items-center gap-2 mt-3 text-primary text-sm font-medium">
-              <Trophy className="w-4 h-4" /> Dia completo! 🎉
+              <Trophy className="w-4 h-4" /> {t("checklist.dayComplete")}
             </motion.div>
           )}
         </motion.div>
@@ -370,15 +372,15 @@ export default function Checklist() {
         {loading || seeding ? (
           <div className="flex flex-col items-center justify-center h-40 gap-3">
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            {seeding && <p className="text-sm text-muted-foreground">Criando tarefas padrão...</p>}
+            {seeding && <p className="text-sm text-muted-foreground">{t("common.creatingTasks")}</p>}
           </div>
         ) : tasks.length === 0 ? (
           <div className="glass rounded-2xl p-12 text-center">
             <CheckCircle2 className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-            <h3 className="font-display font-semibold text-lg mb-1">Nenhuma tarefa para este dia</h3>
-            <p className="text-muted-foreground text-sm mb-4">Adicione tarefas manualmente ou selecione "hoje" para carregar as tarefas padrão.</p>
+            <h3 className="font-display font-semibold text-lg mb-1">{t("checklist.noTasks")}</h3>
+            <p className="text-muted-foreground text-sm mb-4">{t("checklist.noTasksDescription")}</p>
             <Button variant="outline" onClick={() => { setDate(new Date().toISOString().split("T")[0]); }} className="gap-2">
-              <Calendar className="w-4 h-4" /> Ir para Hoje
+              <Calendar className="w-4 h-4" /> {t("common.goToToday")}
             </Button>
           </div>
         ) : (
@@ -387,7 +389,7 @@ export default function Checklist() {
               <div key={category}>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-sm font-semibold text-muted-foreground">
-                    {categoryLabels[category] || category}
+                    {t(`checklist.categories.${category}`, { defaultValue: categoryLabels[category] || category })}
                   </h3>
                   <span className="text-xs text-muted-foreground">
                     {categoryTasks.filter(t => t.completed).length}/{categoryTasks.length}
@@ -463,11 +465,11 @@ export default function Checklist() {
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle className="font-display">{editingTask ? "Editar Tarefa" : "Nova Tarefa"}</DialogTitle>
+              <DialogTitle className="font-display">{editingTask ? t("checklist.editTask") : t("common.newTask")}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-1 block">Título *</label>
+                <label className="text-sm font-medium mb-1 block">{t("common.title")} *</label>
                 <Input
                   value={form.title}
                   onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
@@ -475,7 +477,7 @@ export default function Checklist() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block">Descrição</label>
+                <label className="text-sm font-medium mb-1 block">{t("checklist.descriptionOptional")}</label>
                 <Input
                   value={form.description}
                   onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
@@ -484,7 +486,7 @@ export default function Checklist() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Ícone</label>
+                  <label className="text-sm font-medium mb-1 block">{t("checklist.icon")}</label>
                   <Select value={form.icon} onValueChange={v => setForm(p => ({ ...p, icon: v }))}>
                     <SelectTrigger>
                       <SelectValue />
@@ -497,7 +499,7 @@ export default function Checklist() {
                   </Select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Categoria</label>
+                  <label className="text-sm font-medium mb-1 block">{t("checklist.category")}</label>
                   <Select value={form.category} onValueChange={v => setForm(p => ({ ...p, category: v }))}>
                     <SelectTrigger>
                       <SelectValue />
@@ -511,7 +513,7 @@ export default function Checklist() {
                 </div>
               </div>
               <Button className="w-full gradient-primary" onClick={handleSaveTask} disabled={saving || !form.title.trim()}>
-                {saving ? "Salvando..." : editingTask ? "Salvar Alterações" : "Adicionar Tarefa"}
+                {saving ? t("checklist.saving") : editingTask ? t("common.save") : t("checklist.addTask")}
               </Button>
             </div>
           </DialogContent>

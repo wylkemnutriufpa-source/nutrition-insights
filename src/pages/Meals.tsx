@@ -12,22 +12,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Plus, UtensilsCrossed } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { Tables, Database } from "@/integrations/supabase/types";
 
 type Meal = Tables<"meals">;
 type MealType = Database["public"]["Enums"]["meal_type"];
 
-const mealTypes: { value: MealType; label: string }[] = [
-  { value: "breakfast", label: "☕ Café da manhã" },
-  { value: "morning_snack", label: "🍌 Lanche da manhã" },
-  { value: "lunch", label: "🍽️ Almoço" },
-  { value: "afternoon_snack", label: "🍎 Lanche da tarde" },
-  { value: "dinner", label: "🌙 Jantar" },
-  { value: "evening_snack", label: "🫖 Ceia" },
-];
-
 export default function Meals() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [meals, setMeals] = useState<Meal[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -41,6 +34,15 @@ export default function Meals() {
     fat: "",
   });
   const [submitting, setSubmitting] = useState(false);
+
+  const mealTypes: { value: MealType; label: string }[] = [
+    { value: "breakfast", label: t("meals.breakfast") },
+    { value: "morning_snack", label: t("meals.morningSnack") },
+    { value: "lunch", label: t("meals.lunch") },
+    { value: "afternoon_snack", label: t("meals.afternoonSnack") },
+    { value: "dinner", label: t("meals.dinner") },
+    { value: "evening_snack", label: t("meals.eveningSnack") },
+  ];
 
   const fetchMeals = async () => {
     if (!user) return;
@@ -60,7 +62,7 @@ export default function Meals() {
     if (!user) return;
     setSubmitting(true);
 
-    const xpEarned = 10; // base XP for logging
+    const xpEarned = 10;
 
     const { error } = await supabase.from("meals").insert({
       user_id: user.id,
@@ -75,9 +77,8 @@ export default function Meals() {
     });
 
     if (error) {
-      toast.error("Erro ao registrar: " + error.message);
+      toast.error(t("meals.registerError") + error.message);
     } else {
-      // Update player stats
       const { data: stats } = await supabase
         .from("player_stats")
         .select("*")
@@ -103,7 +104,7 @@ export default function Meals() {
         }).eq("user_id", user.id);
       }
 
-      toast.success("Refeição registrada com sucesso! 🎉");
+      toast.success(t("meals.registered"));
       setOpen(false);
       setForm({ title: "", description: "", meal_type: "lunch", calories: "", protein: "", carbs: "", fat: "" });
       fetchMeals();
@@ -116,59 +117,59 @@ export default function Meals() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="font-display text-2xl font-bold">Minhas Refeições</h1>
-            <p className="text-muted-foreground text-sm">Registre e acompanhe suas refeições</p>
+            <h1 className="font-display text-2xl font-bold">{t("meals.title")}</h1>
+            <p className="text-muted-foreground text-sm">{t("meals.subtitle")}</p>
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button className="gradient-primary gap-2 shadow-glow">
-                <Plus className="w-4 h-4" /> Nova Refeição
+                <Plus className="w-4 h-4" /> {t("meals.newMeal")}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>
-                <DialogTitle className="font-display">Registrar Refeição</DialogTitle>
+                <DialogTitle className="font-display">{t("meals.registerMeal")}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <Label>Tipo</Label>
+                  <Label>{t("common.type")}</Label>
                   <Select value={form.meal_type} onValueChange={(v) => setForm({ ...form, meal_type: v as MealType })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {mealTypes.map((t) => (
-                        <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                      {mealTypes.map((mt) => (
+                        <SelectItem key={mt.value} value={mt.value}>{mt.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label>Título</Label>
-                  <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Ex: Arroz, feijão e frango" required />
+                  <Label>{t("common.title")}</Label>
+                  <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder={t("meals.titlePlaceholder")} required />
                 </div>
                 <div>
-                  <Label>Descrição (opcional)</Label>
-                  <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Detalhes da refeição..." />
+                  <Label>{t("common.description")} ({t("common.optional")})</Label>
+                  <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder={t("meals.descriptionPlaceholder")} />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label>Calorias</Label>
+                    <Label>{t("common.calories")}</Label>
                     <Input type="number" value={form.calories} onChange={(e) => setForm({ ...form, calories: e.target.value })} placeholder="kcal" />
                   </div>
                   <div>
-                    <Label>Proteínas (g)</Label>
+                    <Label>{t("common.protein")} (g)</Label>
                     <Input type="number" step="0.1" value={form.protein} onChange={(e) => setForm({ ...form, protein: e.target.value })} />
                   </div>
                   <div>
-                    <Label>Carboidratos (g)</Label>
+                    <Label>{t("common.carbs")} (g)</Label>
                     <Input type="number" step="0.1" value={form.carbs} onChange={(e) => setForm({ ...form, carbs: e.target.value })} />
                   </div>
                   <div>
-                    <Label>Gorduras (g)</Label>
+                    <Label>{t("common.fat")} (g)</Label>
                     <Input type="number" step="0.1" value={form.fat} onChange={(e) => setForm({ ...form, fat: e.target.value })} />
                   </div>
                 </div>
                 <Button type="submit" className="w-full gradient-primary" disabled={submitting}>
-                  {submitting ? "Registrando..." : "Registrar Refeição"}
+                  {submitting ? t("common.registering") : t("meals.registerMeal")}
                 </Button>
               </form>
             </DialogContent>
@@ -182,8 +183,8 @@ export default function Meals() {
         ) : meals.length === 0 ? (
           <div className="glass rounded-xl p-12 text-center">
             <UtensilsCrossed className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-            <h3 className="font-display font-semibold text-lg mb-1">Nenhuma refeição registrada</h3>
-            <p className="text-muted-foreground">Comece registrando sua primeira refeição para ganhar XP!</p>
+            <h3 className="font-display font-semibold text-lg mb-1">{t("meals.noMeals")}</h3>
+            <p className="text-muted-foreground">{t("meals.noMealsDescription")}</p>
           </div>
         ) : (
           <motion.div

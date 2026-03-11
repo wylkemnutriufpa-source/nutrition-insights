@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Lightbulb, Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface Tip {
   id: string;
@@ -14,6 +15,7 @@ interface Tip {
 
 export default function SmartTips() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [tips, setTips] = useState<Tip[]>([]);
 
   useEffect(() => {
@@ -41,10 +43,10 @@ export default function SmartTips() {
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <Lightbulb className="w-5 h-5 text-accent" />
-        <h3 className="font-display font-semibold">Dicas Inteligentes</h3>
+        <h3 className="font-display font-semibold">{t("smartTips.title")}</h3>
         {unread > 0 && (
           <span className="text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent font-medium">
-            {unread} novas
+            {unread} {t("smartTips.newCount")}
           </span>
         )}
       </div>

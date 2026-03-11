@@ -41,6 +41,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import type { Tables } from "@/integrations/supabase/types";
 
 type PlayerStats = Tables<"player_stats">;
@@ -58,6 +59,7 @@ const item = {
 function PatientDashboardContent() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [stats, setStats] = useState<PlayerStats | null>(null);
   const [checklistTasks, setChecklistTasks] = useState<any[]>([]);
   const [anamnesis, setAnamnesis] = useState<any>(null);
@@ -116,36 +118,34 @@ function PatientDashboardContent() {
             <div className="w-20 h-20 rounded-full gradient-primary flex items-center justify-center mb-5 shadow-glow">
               <ClipboardList className="w-10 h-10 text-primary-foreground" />
             </div>
-            <h2 className="font-display text-xl font-bold mb-2">Preencha sua Anamnese!</h2>
-            <p className="text-muted-foreground text-sm max-w-sm mb-2">
-              Para que seu nutricionista possa criar um <span className="font-semibold text-primary">plano alimentar personalizado</span> e gerar <span className="font-semibold text-primary">dicas inteligentes</span> para você, é fundamental preencher a anamnese.
-            </p>
+             <h2 className="font-display text-xl font-bold mb-2">{t("dashboard.fillAnamnesis")}</h2>
+             <p className="text-muted-foreground text-sm max-w-sm mb-2">
+               {t("dashboard.anamnesisDescription")}
+             </p>
             <div className="space-y-2 text-left w-full mt-3 mb-5">
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
-                <Brain className="w-5 h-5 text-primary flex-shrink-0" />
-                <span className="text-sm">A IA analisa suas respostas e gera um plano personalizado</span>
-              </div>
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
-                <Heart className="w-5 h-5 text-primary flex-shrink-0" />
-                <span className="text-sm">Dicas de nutrição, sono, exercício e hidratação</span>
-              </div>
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
-                <Target className="w-5 h-5 text-primary flex-shrink-0" />
-                <span className="text-sm">Recomendações baseadas no seu perfil e objetivos</span>
-              </div>
+               <div className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
+                 <Brain className="w-5 h-5 text-primary flex-shrink-0" />
+                 <span className="text-sm">{t("dashboard.anamnesisAI")}</span>
+               </div>
+               <div className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
+                 <Heart className="w-5 h-5 text-primary flex-shrink-0" />
+                 <span className="text-sm">{t("dashboard.anamnesisTips")}</span>
+               </div>
+               <div className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
+                 <Target className="w-5 h-5 text-primary flex-shrink-0" />
+                 <span className="text-sm">{t("dashboard.anamnesisGoals")}</span>
+               </div>
             </div>
-            <p className="text-xs text-muted-foreground mb-4">
-              ⚠️ Seu plano alimentar só será elaborado após o preenchimento da anamnese.
-            </p>
+             <p className="text-xs text-muted-foreground mb-4">{t("dashboard.anamnesisWarning")}</p>
             <div className="flex gap-3 w-full">
               <Button variant="outline" className="flex-1" onClick={() => setShowAnamnesisModal(false)}>
-                Depois
+                {t("common.later")}
               </Button>
               <Button
                 className="flex-1 gradient-primary shadow-glow gap-2"
                 onClick={() => { setShowAnamnesisModal(false); navigate("/anamnesis"); }}
               >
-                <Sparkles className="w-4 h-4" /> Preencher Agora
+                <Sparkles className="w-4 h-4" /> {t("dashboard.fillNow")}
               </Button>
             </div>
           </motion.div>
@@ -169,15 +169,15 @@ function PatientDashboardContent() {
               >
                 {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
               </motion.p>
-              <h1 className="font-display text-2xl md:text-3xl font-bold">
-                Meu Dashboard
-              </h1>
-              <p className="text-muted-foreground text-sm mt-1">Acompanhe seu progresso e conquistas</p>
+               <h1 className="font-display text-2xl md:text-3xl font-bold">
+                 {t("dashboard.myDashboard")}
+               </h1>
+               <p className="text-muted-foreground text-sm mt-1">{t("dashboard.trackProgress")}</p>
             </div>
             <div className="flex gap-2">
               <Link to="/analyze">
                 <Button className="gradient-primary shadow-glow gap-2 rounded-xl">
-                  <Sparkles className="w-4 h-4" /> Analisar Refeição
+                  <Sparkles className="w-4 h-4" /> {t("dashboard.analyzeMeal")}
                 </Button>
               </Link>
             </div>
@@ -204,26 +204,26 @@ function PatientDashboardContent() {
 
       {/* Quick Stats */}
       <motion.div variants={item} className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatsCard title="Refeições" value={stats?.meals_logged || 0} icon={UtensilsCrossed} gradient />
-        <StatsCard title="Nível" value={stats?.level || 1} icon={TrendingUp} />
-        <StatsCard title="XP Total" value={stats?.total_xp || 0} icon={Target} />
-        <StatsCard title="Streak" value={`${stats?.current_streak || 0}d`} icon={Target} />
+         <StatsCard title={t("gamification.meals")} value={stats?.meals_logged || 0} icon={UtensilsCrossed} gradient />
+         <StatsCard title={t("gamification.level")} value={stats?.level || 1} icon={TrendingUp} />
+         <StatsCard title={t("gamification.totalXP")} value={stats?.total_xp || 0} icon={Target} />
+         <StatsCard title={t("gamification.streak")} value={`${stats?.current_streak || 0}d`} icon={Target} />
       </motion.div>
 
       {/* Today's Checklist */}
       <motion.div variants={item}>
-        <ExpandablePanel title="Checklist de Hoje">
-           <div className="glass-premium rounded-xl p-5 shimmer-sweep">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-display font-semibold flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-primary" /> Checklist de Hoje
-              </h2>
-              <Link to="/checklist" className="text-sm text-primary hover:underline flex items-center gap-1">
-                Ver tudo <ArrowRight className="w-3 h-3" />
-              </Link>
+         <ExpandablePanel title={t("dashboard.todayChecklist")}>
+            <div className="glass-premium rounded-xl p-5 shimmer-sweep">
+             <div className="flex items-center justify-between mb-3">
+               <h2 className="font-display font-semibold flex items-center gap-2">
+                 <CheckCircle2 className="w-5 h-5 text-primary" /> {t("dashboard.todayChecklist")}
+               </h2>
+               <Link to="/checklist" className="text-sm text-primary hover:underline flex items-center gap-1">
+                 {t("common.viewAll")} <ArrowRight className="w-3 h-3" />
+               </Link>
             </div>
             {checklistTasks.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhuma tarefa para hoje. Aguarde seu protocolo!</p>
+               <p className="text-sm text-muted-foreground">{t("dashboard.noTasksToday")}</p>
             ) : (
               <>
                 <Progress value={checklistProgress} className="h-2 mb-3" />
@@ -258,7 +258,7 @@ function PatientDashboardContent() {
       <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="glass-premium rounded-xl p-5 shimmer-sweep">
           <h2 className="font-display font-semibold flex items-center gap-2 mb-3">
-            <Calendar className="w-5 h-5 text-primary" /> Próxima Consulta
+             <Calendar className="w-5 h-5 text-primary" /> {t("dashboard.nextAppointment")}
           </h2>
           {nextAppointment ? (
             <div className="flex items-center gap-4">
@@ -275,47 +275,47 @@ function PatientDashboardContent() {
               </div>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">Nenhuma consulta agendada.</p>
+             <p className="text-sm text-muted-foreground">{t("dashboard.noAppointments")}</p>
           )}
-          <Link to="/appointments" className="text-primary text-xs mt-3 flex items-center gap-1 hover:underline">
-            Ver agenda <ArrowRight className="w-3 h-3" />
+           <Link to="/appointments" className="text-primary text-xs mt-3 flex items-center gap-1 hover:underline">
+             {t("dashboard.viewAgenda")} <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
 
         <Link to="/chat" className="glass-premium rounded-xl p-5 hover:border-primary/30 transition-colors shimmer-sweep">
           <h2 className="font-display font-semibold flex items-center gap-2 mb-3">
-            💬 Chat
-            {unreadMessages > 0 && <span className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-full">{unreadMessages} nova{unreadMessages > 1 ? "s" : ""}</span>}
-          </h2>
-          <p className="text-sm text-muted-foreground">Converse com seu nutricionista em tempo real.</p>
+             💬 {t("dashboard.chatTitle")}
+             {unreadMessages > 0 && <span className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-full">{unreadMessages} {unreadMessages > 1 ? t("dashboard.newMessagesPlural") : t("dashboard.newMessages")}</span>}
+           </h2>
+           <p className="text-sm text-muted-foreground">{t("dashboard.chatDescription")}</p>
         </Link>
       </motion.div>
 
       {/* Patient Evolution Summary */}
       <motion.div variants={item}>
-        <ExpandablePanel title="Evolução do Paciente">
-          <PatientEvolutionSummary />
-        </ExpandablePanel>
-      </motion.div>
+         <ExpandablePanel title={t("dashboard.patientEvolution")}>
+           <PatientEvolutionSummary />
+         </ExpandablePanel>
+       </motion.div>
 
-      {/* Subscription Card */}
-      <motion.div variants={item}>
-        <ExpandablePanel title="Assinatura">
-          <SubscriptionCard />
-        </ExpandablePanel>
-      </motion.div>
+       {/* Subscription Card */}
+       <motion.div variants={item}>
+         <ExpandablePanel title={t("dashboard.subscription")}>
+           <SubscriptionCard />
+         </ExpandablePanel>
+       </motion.div>
 
-      {/* Smart Plan Card */}
-      <motion.div variants={item}>
-        <ExpandablePanel title="Plano Inteligente">
-          <SmartPlanCard />
-        </ExpandablePanel>
-      </motion.div>
+       {/* Smart Plan Card */}
+       <motion.div variants={item}>
+         <ExpandablePanel title={t("dashboard.smartPlan")}>
+           <SmartPlanCard />
+         </ExpandablePanel>
+       </motion.div>
 
-      {/* Radar + Tips side by side */}
-      <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <ExpandablePanel title="Radar Metabólico"><MetabolicRadar anamnesis={anamnesis} /></ExpandablePanel>
-        <ExpandablePanel title="Dicas Inteligentes"><SmartTips /></ExpandablePanel>
+       {/* Radar + Tips side by side */}
+       <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+         <ExpandablePanel title={t("dashboard.metabolicRadar")}><MetabolicRadar anamnesis={anamnesis} /></ExpandablePanel>
+         <ExpandablePanel title={t("dashboard.smartTips")}><SmartTips /></ExpandablePanel>
       </motion.div>
     </motion.div>
     </>
