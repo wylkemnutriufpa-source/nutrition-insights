@@ -499,7 +499,7 @@ export default function Checklist() {
                   </Select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Categoria</label>
+                  <label className="text-sm font-medium mb-1 block">{t("checklist.category")}</label>
                   <Select value={form.category} onValueChange={v => setForm(p => ({ ...p, category: v }))}>
                     <SelectTrigger>
                       <SelectValue />
