@@ -27,7 +27,7 @@ import { AlertTriangle } from "lucide-react";
 
 const nutritionistLinks = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/ranking", icon: Trophy, label: "🏆 Ranking Global" },
+  { to: "/ranking", icon: Trophy, label: "🏆 Ranking Global", premium: true },
   { to: "/patients", icon: Users, label: "Pacientes" },
   { to: "/checkin-panel", icon: ClipboardCheck, label: "Check-ins" },
   { to: "/appointments", icon: Activity, label: "Agenda" },
@@ -82,7 +82,7 @@ const patientLinks = [
 
 const adminLinks = [
   { to: "/admin", icon: Shield, label: "Painel Admin" },
-  { to: "/ranking", icon: Trophy, label: "🏆 Ranking Global" },
+  { to: "/ranking", icon: Trophy, label: "🏆 Ranking Global", premium: true },
   { to: "/admin/resources", icon: LayoutDashboard, label: "Central de Recursos" },
   { to: "/admin/features", icon: Zap, label: "Feature Flags" },
   { to: "/admin/testimonials", icon: Star, label: "Depoimentos" },
