@@ -157,17 +157,31 @@ function PatientDashboardContent() {
       <PushNotificationBanner />
       <HealthAlertsBanner />
 
-      <motion.div variants={item} className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-bold">Meu Dashboard</h1>
-          <p className="text-muted-foreground text-sm">Acompanhe seu progresso</p>
-        </div>
-        <div className="flex gap-2">
-          <Link to="/analyze">
-            <Button className="gradient-primary shadow-glow gap-2">
-              <Sparkles className="w-4 h-4" /> Analisar Refeição
-            </Button>
-          </Link>
+      {/* Premium Welcome Header */}
+      <motion.div variants={item} className="relative overflow-hidden rounded-2xl gradient-border particles-bg">
+        <div className="glass-premium rounded-2xl p-6 shimmer-sweep">
+          <div className="flex items-center justify-between">
+            <div>
+              <motion.p
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="text-sm text-muted-foreground mb-1"
+              >
+                {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
+              </motion.p>
+              <h1 className="font-display text-2xl md:text-3xl font-bold">
+                Meu Dashboard
+              </h1>
+              <p className="text-muted-foreground text-sm mt-1">Acompanhe seu progresso e conquistas</p>
+            </div>
+            <div className="flex gap-2">
+              <Link to="/analyze">
+                <Button className="gradient-primary shadow-glow gap-2 rounded-xl">
+                  <Sparkles className="w-4 h-4" /> Analisar Refeição
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
       </motion.div>
 
