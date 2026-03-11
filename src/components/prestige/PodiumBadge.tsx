@@ -124,16 +124,14 @@ export default function PodiumBadge({ plan, allPlans = [], position, onUpgrade }
           </span>
         </div>
 
-        {/* Floating particles */}
-        <div className="absolute inset-0 overflow-visible pointer-events-none">
-          {particles.map((p) => (
-            <FloatingParticle
-              key={p.id}
-              delay={p.delay}
-              color={medal.particle}
-              size={p.size}
-              x={p.x}
-              y={p.y}
+        {/* Holographic pulse rings */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          {pulseRings.map((r) => (
+            <HoloPulseRing
+              key={r.id}
+              delay={r.delay}
+              badgeColor={badgeColor}
+              size={r.size}
             />
           ))}
         </div>
