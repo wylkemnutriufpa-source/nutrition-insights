@@ -16,18 +16,26 @@ const MEDAL_COLORS = [
   { ring: "#CD7F32", glow: "rgba(205,127,50,0.45)", particle: "#D4905C" },
 ];
 
-function FloatingParticle({ delay, color, size, x, y }: { delay: number; color: string; size: number; x: number; y: number }) {
+function HoloPulseRing({ delay, badgeColor, size }: { delay: number; badgeColor: string; size: number }) {
   return (
     <motion.div
       className="absolute rounded-full pointer-events-none"
-      style={{ width: size, height: size, backgroundColor: color, left: `${50 + x}%`, top: `${50 + y}%`, opacity: 0 }}
-      animate={{
-        opacity: [0, 0.8, 0],
-        y: [0, -18 - Math.random() * 12],
-        x: [0, (Math.random() - 0.5) * 16],
-        scale: [0.5, 1.2, 0.3],
+      style={{
+        inset: -size,
+        border: `1.5px solid ${badgeColor}`,
+        background: `conic-gradient(from 0deg, ${badgeColor}40, transparent 25%, ${badgeColor}20 50%, transparent 75%, ${badgeColor}40)`,
       }}
-      transition={{ duration: 2.5 + Math.random(), repeat: Infinity, delay, ease: "easeOut" }}
+      animate={{
+        scale: [0.6, 1.3],
+        opacity: [0.8, 0],
+        rotate: [0, 180],
+      }}
+      transition={{
+        duration: 2.2,
+        repeat: Infinity,
+        delay,
+        ease: "easeOut",
+      }}
     />
   );
 }
@@ -41,13 +49,11 @@ export default function PodiumBadge({ plan, allPlans = [], position, onUpgrade }
   const isGold = position === 0;
   const badgeColor = plan.color || medal.ring;
 
-  const particles = Array.from({ length: isGold ? 8 : 5 }, (_, i) => ({
-    id: i,
-    delay: i * 0.4,
-    size: 2 + Math.random() * 3,
-    x: (Math.random() - 0.5) * 60,
-    y: (Math.random() - 0.5) * 60,
-  }));
+  const pulseRings = [
+    { id: 0, delay: 0, size: 4 },
+    { id: 1, delay: 0.7, size: 8 },
+    { id: 2, delay: 1.4, size: 12 },
+  ];
 
   return (
     <>
@@ -118,16 +124,14 @@ export default function PodiumBadge({ plan, allPlans = [], position, onUpgrade }
           </span>
         </div>
 
-        {/* Floating particles */}
-        <div className="absolute inset-0 overflow-visible pointer-events-none">
-          {particles.map((p) => (
-            <FloatingParticle
-              key={p.id}
-              delay={p.delay}
-              color={medal.particle}
-              size={p.size}
-              x={p.x}
-              y={p.y}
+        {/* Holographic pulse rings */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          {pulseRings.map((r) => (
+            <HoloPulseRing
+              key={r.id}
+              delay={r.delay}
+              badgeColor={badgeColor}
+              size={r.size}
             />
           ))}
         </div>
