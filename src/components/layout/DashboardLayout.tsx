@@ -169,7 +169,7 @@ function SidebarContent({
                   }`}>
                     <link.icon className={`w-3.5 h-3.5 ${active ? linkIconColor : "text-muted-foreground group-hover:" + (linkIconColor || "text-primary")}`} />
                   </div>
-                  <span className={`text-xs font-medium ${active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}>{link.label}</span>
+                  <span className={`text-xs font-medium ${active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}>{t(link.labelKey)}</span>
                   {active && <ChevronRight className="w-3.5 h-3.5 ml-auto text-primary animate-bounce" />}
                 </Link>
               );
