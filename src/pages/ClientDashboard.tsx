@@ -164,6 +164,25 @@ export default function ClientDashboard() {
           </div>
         </motion.div>
 
+        {/* Action Buttons */}
+        <motion.div variants={item} className="flex flex-wrap gap-2">
+          <SubscriptionCard />
+          <div className="flex gap-2 items-center">
+            <PlanRequestButton />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setProgramJoinOpen(true)}
+              className="gap-2 border-primary/30 text-primary hover:bg-primary/10"
+            >
+              <Rocket className="w-4 h-4" />
+              Participar de Programa
+            </Button>
+          </div>
+        </motion.div>
+
+        <ProgramJoinRequest open={programJoinOpen} onOpenChange={setProgramJoinOpen} />
+
         {/* Quick Stats */}
         <motion.div variants={item} className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {/* Ranking Widget */}
