@@ -454,6 +454,9 @@ export default function Anamnesis() {
       .then(({ data }) => {
         if (data?.[0]?.status === "completed") {
           setCompleted(true);
+          setDraftId(data[0].id);
+          const savedAnswers = data[0].answers as Record<string, any>;
+          if (savedAnswers) setAnswers(savedAnswers);
         } else if (data?.[0]?.status === "draft") {
           // Restore draft
           setDraftId(data[0].id);
@@ -469,6 +472,13 @@ export default function Anamnesis() {
         }
       });
   }, [targetUserId]);
+
+  const handleEditAnamnesis = () => {
+    setCompleted(false);
+    setAnalyzing(false);
+    setStep(0);
+    toast.info("Modo edição ativado! Revise suas respostas ✏️");
+  };
 
   // Autosave function
   const performAutoSave = useCallback(async (currentAnswers: Record<string, any>) => {
@@ -715,9 +725,14 @@ export default function Anamnesis() {
                 </motion.div>
               )}
 
-              <Button onClick={() => navigate(isNutritionistMode ? `/patients/${forPatientId}` : "/")} className="w-full gradient-primary shadow-glow">
-                {isNutritionistMode ? "Voltar ao Paciente" : "Voltar ao Dashboard"}
-              </Button>
+              <div className="flex flex-col gap-3">
+                <Button onClick={handleEditAnamnesis} variant="outline" className="w-full gap-2">
+                  ✏️ Revisar / Editar Respostas
+                </Button>
+                <Button onClick={() => navigate(isNutritionistMode ? `/patients/${forPatientId}` : "/")} className="w-full gradient-primary shadow-glow">
+                  {isNutritionistMode ? "Voltar ao Paciente" : "Voltar ao Dashboard"}
+                </Button>
+              </div>
             </motion.div>
           )}
         </div>
