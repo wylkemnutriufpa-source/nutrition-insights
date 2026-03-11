@@ -101,20 +101,39 @@ export default function ProgramJoinRequest({ open, onOpenChange }: ProgramJoinRe
           <>
             <ScrollArea className="max-h-[40vh]">
               <div className="space-y-2">
-                {programs.map((program) => (
-                  <button
-                    key={program.id}
-                    onClick={() => setSelected(program.id)}
-                    className={`w-full text-left p-3 rounded-xl border transition-all ${
-                      selected === program.id
-                        ? "border-primary bg-primary/10"
-                        : "border-border/50 bg-muted/20 hover:border-primary/30"
-                    }`}
-                  >
-                    <p className="font-medium text-sm">{program.title}</p>
-                    {program.tag && <p className="text-xs text-muted-foreground">{program.tag}</p>}
-                  </button>
-                ))}
+                {programs.map((program) => {
+                  const isEnrolled = enrolledIds.includes(program.id);
+                  const isPending = pendingIds.includes(program.id);
+                  const disabled = isEnrolled || isPending;
+
+                  return (
+                    <button
+                      key={program.id}
+                      onClick={() => !disabled && setSelected(program.id)}
+                      disabled={disabled}
+                      className={`w-full text-left p-3 rounded-xl border transition-all ${
+                        disabled
+                          ? "border-border/30 bg-muted/10 opacity-60 cursor-not-allowed"
+                          : selected === program.id
+                            ? "border-primary bg-primary/10"
+                            : "border-border/50 bg-muted/20 hover:border-primary/30"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <p className="font-medium text-sm">{program.title}</p>
+                          {program.tag && <p className="text-xs text-muted-foreground">{program.tag}</p>}
+                        </div>
+                        {isEnrolled && (
+                          <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] shrink-0">✅ Já participa</Badge>
+                        )}
+                        {isPending && (
+                          <Badge className="bg-warning/10 text-warning border-warning/20 text-[10px] shrink-0">⏳ Aguardando</Badge>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </ScrollArea>
 
