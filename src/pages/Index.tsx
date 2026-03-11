@@ -282,7 +282,7 @@ function PatientDashboardContent() {
           </Link>
         </div>
 
-        <Link to="/chat" className="glass rounded-xl p-5 hover:border-primary/30 transition-colors">
+        <Link to="/chat" className="glass-premium rounded-xl p-5 hover:border-primary/30 transition-colors shimmer-sweep">
           <h2 className="font-display font-semibold flex items-center gap-2 mb-3">
             💬 Chat
             {unreadMessages > 0 && <span className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-full">{unreadMessages} nova{unreadMessages > 1 ? "s" : ""}</span>}
@@ -713,7 +713,7 @@ function NutritionistDashboardContent() {
       {/* ── 5️⃣ Activity Feed + 7️⃣ Program Performance ── */}
       <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Activity Feed */}
-        <div className="glass rounded-xl p-5">
+        <div className="glass-premium rounded-xl p-5 shimmer-sweep">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-info/10 flex items-center justify-center">
@@ -812,7 +812,7 @@ function NutritionistDashboardContent() {
         </Dialog>
 
         {/* Program Performance */}
-        <div className="glass rounded-xl p-5">
+        <div className="glass-premium rounded-xl p-5 shimmer-sweep">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
               <Rocket className="w-4 h-4 text-accent" />
@@ -895,7 +895,7 @@ function NutritionistDashboardContent() {
       {riskPatients.length > 0 && (
         <motion.div variants={item}>
           <ExpandablePanel title="Health Score dos Pacientes">
-            <div className="glass rounded-xl p-5">
+            <div className="glass-premium rounded-xl p-5 shimmer-sweep">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Heart className="w-4 h-4 text-primary" />

@@ -48,7 +48,7 @@ export default function OnlinePatientsWidget({ variant = "card", showPremiumTag 
   }
 
   return (
-    <Card className="glass shadow-card border-primary/20 relative overflow-hidden">
+    <Card className="glass-premium shadow-card border-primary/20 relative overflow-hidden shimmer-sweep">
       {showPremiumTag && (
         <div className="absolute top-2 right-2">
           <Badge variant="outline" className="text-[10px] gap-1 border-amber-400/50 text-amber-500">
