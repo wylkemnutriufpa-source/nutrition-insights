@@ -86,6 +86,15 @@ export default function MealPlanEditor() {
   const [copySource, setCopySource] = useState<{ day: number; mealType: MealType } | null>(null);
   const [generating, setGenerating] = useState(false);
 
+  // Quick-add state
+  const [quickAddKey, setQuickAddKey] = useState<string | null>(null); // "day-mealType"
+  const [quickAddText, setQuickAddText] = useState("");
+  const [quickAdding, setQuickAdding] = useState(false);
+
+  // View mode
+  const [editorView, setEditorView] = useState<"weekly" | "daily">("weekly");
+  const [selectedDay, setSelectedDay] = useState<number>(new Date().getDay());
+
   // Save/Import state
   const [savingMeal, setSavingMeal] = useState(false);
   const [savingPlan, setSavingPlan] = useState(false);
