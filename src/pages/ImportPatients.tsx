@@ -105,6 +105,8 @@ export default function ImportPatients() {
       });
   }, [user]);
   const activePatients = useMemo(() => allPatients.filter(p => p.active && p.email), [allPatients]);
+  const notYetImported = useMemo(() => activePatients.filter(p => !alreadyImported.has(p.email.toLowerCase())), [activePatients, alreadyImported]);
+  const alreadyImportedCount = useMemo(() => activePatients.filter(p => alreadyImported.has(p.email.toLowerCase())).length, [activePatients, alreadyImported]);
   const totalActive = allPatients.filter(p => p.active).length;
   const withEmail = activePatients.length;
   const withoutEmail = allPatients.filter(p => p.active && !p.email).length;
