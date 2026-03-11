@@ -377,10 +377,10 @@ export default function Checklist() {
         ) : tasks.length === 0 ? (
           <div className="glass rounded-2xl p-12 text-center">
             <CheckCircle2 className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-            <h3 className="font-display font-semibold text-lg mb-1">Nenhuma tarefa para este dia</h3>
-            <p className="text-muted-foreground text-sm mb-4">Adicione tarefas manualmente ou selecione "hoje" para carregar as tarefas padrão.</p>
+            <h3 className="font-display font-semibold text-lg mb-1">{t("checklist.noTasks")}</h3>
+            <p className="text-muted-foreground text-sm mb-4">{t("checklist.noTasksDescription")}</p>
             <Button variant="outline" onClick={() => { setDate(new Date().toISOString().split("T")[0]); }} className="gap-2">
-              <Calendar className="w-4 h-4" /> Ir para Hoje
+              <Calendar className="w-4 h-4" /> {t("common.goToToday")}
             </Button>
           </div>
         ) : (
