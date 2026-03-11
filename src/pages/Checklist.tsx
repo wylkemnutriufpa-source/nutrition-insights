@@ -363,7 +363,7 @@ export default function Checklist() {
           <Progress value={progress} className="h-3" />
           {progress === 100 && tasks.length > 0 && (
             <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="flex items-center gap-2 mt-3 text-primary text-sm font-medium">
-              <Trophy className="w-4 h-4" /> Dia completo! 🎉
+              <Trophy className="w-4 h-4" /> {t("checklist.dayComplete")}
             </motion.div>
           )}
         </motion.div>
