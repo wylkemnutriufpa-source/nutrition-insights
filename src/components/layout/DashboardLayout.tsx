@@ -87,6 +87,7 @@ const adminLinks = [
   { to: "/admin/features", icon: Zap, label: "Feature Flags" },
   { to: "/admin/testimonials", icon: Star, label: "Depoimentos" },
   { to: "/patients", icon: Users, label: "Pacientes" },
+  { to: "/programs", icon: Rocket, label: "✨ Projetos", premium: true },
   { to: "/appointments", icon: Activity, label: "Agenda" },
   { to: "/automation", icon: Bot, label: "Automação" },
   { to: "/reports", icon: BarChart3, label: "Relatórios" },
