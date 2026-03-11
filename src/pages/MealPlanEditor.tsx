@@ -64,10 +64,15 @@ const emptyForm: ItemForm = {
   fat_target: "",
 };
 
-// Helper: match text against food database
-const FOOD_DB_IMPORT = () => {
-  // We import the same database used by FoodAutocomplete
-  return import("@/components/meals/FoodAutocomplete").then(m => m.FOOD_DATABASE);
+// Helper: match text against food database for quick-add with macros
+import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
+
+const findFoodMatch = (text: string): FoodItem | null => {
+  const query = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return FOOD_DATABASE.find(f => {
+    const name = f.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return name === query || query.includes(name) || name.includes(query);
+  }) || null;
 };
 
 
