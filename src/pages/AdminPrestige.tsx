@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,8 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { Crown, Zap, Save, Plus, Trash2, X, Sparkles, Loader2 } from "lucide-react";
+import { Crown, Zap, Save, Plus, Trash2, X, Sparkles, Loader2, Users, Search, UserPlus, UserMinus } from "lucide-react";
 import PrestigeBadge from "@/components/prestige/PrestigeBadge";
 import type { PrestigePlan } from "@/hooks/usePrestige";
 
@@ -24,6 +26,18 @@ interface PointRule {
   is_active: boolean;
 }
 
+interface PatientInfo {
+  user_id: string;
+  full_name: string;
+}
+
+interface MemberInfo {
+  id: string;
+  patient_id: string;
+  plan_id: string;
+  full_name: string;
+}
+
 const DEFAULT_PLANS = [
   { name: "Basic", slug: "basic", display_order: 1, color: "#6b7280", badge_icon: "⬡", badge_label: "BASIC", crown_enabled: false, effect_type: "none", ranking_highlight: false, ai_usage_multiplier: 1, price_monthly: 0 },
   { name: "Elite", slug: "elite", display_order: 2, color: "#94a3b8", badge_icon: "✦", badge_label: "ELITE", crown_enabled: false, effect_type: "glow", ranking_highlight: false, ai_usage_multiplier: 2, price_monthly: 49.90, price_quarterly: 129.90 },
@@ -32,10 +46,18 @@ const DEFAULT_PLANS = [
 ];
 
 export default function AdminPrestige() {
+  const { user } = useAuth();
   const [plans, setPlans] = useState<any[]>([]);
   const [rules, setRules] = useState<PointRule[]>([]);
   const [saving, setSaving] = useState(false);
   const [newFeatureInputs, setNewFeatureInputs] = useState<Record<string, string>>({});
+
+  // Members tab state
+  const [allPatients, setAllPatients] = useState<PatientInfo[]>([]);
+  const [members, setMembers] = useState<MemberInfo[]>([]);
+  const [membersLoaded, setMembersLoaded] = useState(false);
+  const [memberSearch, setMemberSearch] = useState<Record<string, string>>({});
+  const [assigning, setAssigning] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -46,6 +68,97 @@ export default function AdminPrestige() {
       setRules((r.data as PointRule[]) || []);
     });
   }, []);
+
+  const loadMembers = async () => {
+    if (membersLoaded) return;
+    
+    const [patientsRes, membersRes] = await Promise.all([
+      supabase
+        .from("nutritionist_patients")
+        .select("patient_id, profiles!nutritionist_patients_patient_id_fkey(user_id, full_name)")
+        .eq("nutritionist_id", user?.id || "")
+        .eq("status", "active"),
+      supabase
+        .from("patient_prestige")
+        .select("id, patient_id, plan_id")
+        .eq("is_active", true),
+    ]);
+
+    // Fallback: if join doesn't work, load profiles separately
+    let patientList: PatientInfo[] = [];
+    if (patientsRes.data) {
+      const patientIds = patientsRes.data.map((p: any) => p.patient_id);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", patientIds);
+      patientList = (profiles || []).map((p: any) => ({
+        user_id: p.user_id,
+        full_name: p.full_name || "Sem nome",
+      })).sort((a, b) => a.full_name.localeCompare(b.full_name));
+    }
+
+    const memberList: MemberInfo[] = (membersRes.data || []).map((m: any) => {
+      const patient = patientList.find(p => p.user_id === m.patient_id);
+      return {
+        id: m.id,
+        patient_id: m.patient_id,
+        plan_id: m.plan_id,
+        full_name: patient?.full_name || "Paciente",
+      };
+    });
+
+    setAllPatients(patientList);
+    setMembers(memberList);
+    setMembersLoaded(true);
+  };
+
+  const assignPatient = async (patientId: string, planId: string) => {
+    setAssigning(patientId);
+    
+    // Deactivate any existing prestige
+    await supabase
+      .from("patient_prestige")
+      .update({ is_active: false })
+      .eq("patient_id", patientId)
+      .eq("is_active", true);
+
+    // Insert new
+    const { data, error } = await supabase
+      .from("patient_prestige")
+      .insert({
+        patient_id: patientId,
+        plan_id: planId,
+        is_active: true,
+        assigned_by: user?.id,
+      })
+      .select("id")
+      .single();
+
+    if (error) {
+      toast.error("Erro: " + error.message);
+      setAssigning(null);
+      return;
+    }
+
+    const patient = allPatients.find(p => p.user_id === patientId);
+    const plan = plans.find(p => p.id === planId);
+
+    // Update local state
+    setMembers(prev => [
+      ...prev.filter(m => m.patient_id !== patientId),
+      { id: data.id, patient_id: patientId, plan_id: planId, full_name: patient?.full_name || "Paciente" },
+    ]);
+
+    toast.success(`${patient?.full_name} → ${plan?.name}!`);
+    setAssigning(null);
+  };
+
+  const removeFromPlan = async (memberId: string, patientName: string) => {
+    await supabase.from("patient_prestige").update({ is_active: false }).eq("id", memberId);
+    setMembers(prev => prev.filter(m => m.id !== memberId));
+    toast.success(`${patientName} removido do plano`);
+  };
 
   const updatePlan = (id: string, field: string, value: any) => {
     setPlans(prev => prev.map(p => (p.id === id ? { ...p, [field]: value } : p)));
@@ -135,6 +248,19 @@ export default function AdminPrestige() {
     setSaving(false);
   };
 
+  // Get unassigned patients for a given plan's search
+  const getAvailablePatients = (planId: string) => {
+    const search = (memberSearch[planId] || "").toLowerCase();
+    const assignedIds = new Set(members.map(m => m.patient_id));
+    return allPatients
+      .filter(p => !assignedIds.has(p.user_id))
+      .filter(p => !search || p.full_name.toLowerCase().includes(search));
+  };
+
+  const getPlanMembers = (planId: string) => {
+    return members.filter(m => m.plan_id === planId).sort((a, b) => a.full_name.localeCompare(b.full_name));
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6 max-w-4xl mx-auto">
@@ -159,12 +285,14 @@ export default function AdminPrestige() {
           </div>
         </div>
 
-        <Tabs defaultValue="plans">
+        <Tabs defaultValue="plans" onValueChange={(v) => { if (v === "members") loadMembers(); }}>
           <TabsList>
             <TabsTrigger value="plans" className="gap-1"><Crown className="w-4 h-4" /> Planos</TabsTrigger>
+            <TabsTrigger value="members" className="gap-1"><Users className="w-4 h-4" /> Membros</TabsTrigger>
             <TabsTrigger value="points" className="gap-1"><Zap className="w-4 h-4" /> Pontos</TabsTrigger>
           </TabsList>
 
+          {/* ─── PLANS TAB ─── */}
           <TabsContent value="plans" className="space-y-4 mt-4">
             {plans.map(plan => {
               const features = Array.isArray(plan.features) ? plan.features : [];
@@ -186,7 +314,6 @@ export default function AdminPrestige() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      {/* Basic fields */}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                         <div>
                           <Label className="text-xs">Nome</Label>
@@ -234,7 +361,6 @@ export default function AdminPrestige() {
                         </div>
                       </div>
 
-                      {/* Toggles */}
                       <div className="flex gap-6">
                         <div className="flex items-center gap-2">
                           <Switch checked={plan.crown_enabled} onCheckedChange={v => updatePlan(plan.id, "crown_enabled", v)} />
@@ -250,7 +376,6 @@ export default function AdminPrestige() {
                         </div>
                       </div>
 
-                      {/* Prices */}
                       <div>
                         <Label className="text-xs font-semibold mb-2 block">Preços (R$)</Label>
                         <div className="grid grid-cols-4 gap-3">
@@ -275,7 +400,6 @@ export default function AdminPrestige() {
 
                       <Separator />
 
-                      {/* Features list editor */}
                       <div>
                         <Label className="text-xs font-semibold mb-2 flex items-center gap-1.5">
                           <Sparkles className="w-3.5 h-3.5 text-primary" />
@@ -316,7 +440,6 @@ export default function AdminPrestige() {
                         </div>
                       </div>
 
-                      {/* Preview */}
                       <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
                         <Label className="text-[10px] text-muted-foreground mb-2 block">Preview</Label>
                         <div className="flex items-center gap-3">
@@ -342,6 +465,109 @@ export default function AdminPrestige() {
             </Button>
           </TabsContent>
 
+          {/* ─── MEMBERS TAB ─── */}
+          <TabsContent value="members" className="space-y-4 mt-4">
+            {!membersLoaded ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-4">
+                {plans.filter(p => p.is_active !== false).map(plan => {
+                  const planMembers = getPlanMembers(plan.id);
+                  const available = getAvailablePatients(plan.id);
+                  const search = memberSearch[plan.id] || "";
+
+                  return (
+                    <Card key={plan.id} className="relative overflow-hidden">
+                      <div className="absolute top-0 left-0 right-0 h-1" style={{ background: `linear-gradient(90deg, ${plan.color}, ${plan.color}88)` }} />
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <PrestigeBadge plan={plan as PrestigePlan} size="sm" clickable={false} />
+                          <span style={{ color: plan.color }}>{plan.name}</span>
+                          <span className="ml-auto text-xs text-muted-foreground font-normal">
+                            {planMembers.length} membro{planMembers.length !== 1 ? "s" : ""}
+                          </span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {/* Search to add */}
+                        <div className="relative">
+                          <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-muted-foreground" />
+                          <Input
+                            placeholder="Buscar paciente para adicionar..."
+                            value={search}
+                            onChange={e => setMemberSearch(prev => ({ ...prev, [plan.id]: e.target.value }))}
+                            className="pl-8 h-9 text-sm"
+                          />
+                        </div>
+
+                        {/* Available patients dropdown */}
+                        {search.length > 0 && (
+                          <ScrollArea className="max-h-40 border border-border rounded-lg">
+                            <div className="p-1">
+                              {available.length === 0 ? (
+                                <p className="text-xs text-muted-foreground text-center py-3">Nenhum paciente disponível</p>
+                              ) : (
+                                available.slice(0, 20).map(patient => (
+                                  <button
+                                    key={patient.user_id}
+                                    onClick={() => assignPatient(patient.user_id, plan.id)}
+                                    disabled={assigning === patient.user_id}
+                                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left hover:bg-primary/10 transition-all text-sm group"
+                                  >
+                                    {assigning === patient.user_id ? (
+                                      <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                                    ) : (
+                                      <UserPlus className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                                    )}
+                                    <span className="flex-1 truncate">{patient.full_name}</span>
+                                  </button>
+                                ))
+                              )}
+                            </div>
+                          </ScrollArea>
+                        )}
+
+                        <Separator />
+
+                        {/* Current members */}
+                        <ScrollArea className="max-h-48">
+                          <div className="space-y-1">
+                            {planMembers.length === 0 ? (
+                              <p className="text-xs text-muted-foreground text-center py-4">Nenhum membro neste plano</p>
+                            ) : (
+                              planMembers.map(member => (
+                                <div
+                                  key={member.id}
+                                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-muted/50 group transition-all"
+                                >
+                                  <div
+                                    className="w-2 h-2 rounded-full flex-shrink-0"
+                                    style={{ backgroundColor: plan.color }}
+                                  />
+                                  <span className="text-sm flex-1 truncate">{member.full_name}</span>
+                                  <button
+                                    onClick={() => removeFromPlan(member.id, member.full_name)}
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                    title="Remover do plano"
+                                  >
+                                    <UserMinus className="w-3.5 h-3.5 text-destructive" />
+                                  </button>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </ScrollArea>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* ─── POINTS TAB ─── */}
           <TabsContent value="points" className="space-y-4 mt-4">
             <Card>
               <CardHeader className="pb-3">
