@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Leaf } from "lucide-react";
+import fitJourneyIcon from "@/assets/fitjourney-icon.png";
 
 interface FitJourneyLogoProps {
   collapsed?: boolean;
