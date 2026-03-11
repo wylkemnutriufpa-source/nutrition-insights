@@ -936,28 +936,35 @@ function NutritionistDashboardContent() {
         <SystemUsageCard />
       </motion.div>
 
-      {/* ── 9️⃣ Module Shortcut Grid ── */}
+      {/* ── 9️⃣ Module Shortcut Grid (Premium) ── */}
       <motion.div variants={item}>
-        <h2 className="font-display font-semibold text-sm text-muted-foreground uppercase tracking-wider mb-3">Módulos</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <h2 className="font-display font-semibold text-sm text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
+          <span className="w-8 h-[2px] gradient-primary rounded-full" />
+          Módulos
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
           {[
-            { to: "/protocols", icon: Shield, label: "Protocolos", color: "text-primary", bg: "bg-primary/10" },
-            { to: "/programs", icon: Rocket, label: "Programas", color: "text-accent", bg: "bg-accent/10" },
-            { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos", color: "text-success", bg: "bg-success/10" },
-            { to: "/recipes", icon: ChefHat, label: "Receitas", color: "text-warning", bg: "bg-warning/10" },
-            { to: "/diet-templates", icon: FileText, label: "Templates", color: "text-info", bg: "bg-info/10" },
-            { to: "/global-tips", icon: MessageSquare, label: "Dicas", color: "text-success", bg: "bg-success/10" },
-            { to: "/automation", icon: Bot, label: "Automação", color: "text-info", bg: "bg-info/10" },
-            { to: "/reports", icon: BarChart3, label: "Relatórios", color: "text-primary", bg: "bg-primary/10" },
-            { to: "/appointments", icon: Calendar, label: "Agenda", color: "text-accent", bg: "bg-accent/10" },
-            { to: "/supplements", icon: Pill, label: "Suplementos", color: "text-warning", bg: "bg-warning/10" },
-          ].map((mod) => (
+            { to: "/protocols", icon: Shield, label: "Protocolos", color: "text-primary", bg: "bg-gradient-to-br from-primary/15 to-primary/5" },
+            { to: "/programs", icon: Rocket, label: "Programas", color: "text-accent", bg: "bg-gradient-to-br from-accent/15 to-accent/5" },
+            { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos", color: "text-success", bg: "bg-gradient-to-br from-success/15 to-success/5" },
+            { to: "/recipes", icon: ChefHat, label: "Receitas", color: "text-warning", bg: "bg-gradient-to-br from-warning/15 to-warning/5" },
+            { to: "/diet-templates", icon: FileText, label: "Templates", color: "text-info", bg: "bg-gradient-to-br from-info/15 to-info/5" },
+            { to: "/global-tips", icon: MessageSquare, label: "Dicas", color: "text-success", bg: "bg-gradient-to-br from-success/15 to-success/5" },
+            { to: "/automation", icon: Bot, label: "Automação", color: "text-info", bg: "bg-gradient-to-br from-info/15 to-info/5" },
+            { to: "/reports", icon: BarChart3, label: "Relatórios", color: "text-primary", bg: "bg-gradient-to-br from-primary/15 to-primary/5" },
+            { to: "/appointments", icon: Calendar, label: "Agenda", color: "text-accent", bg: "bg-gradient-to-br from-accent/15 to-accent/5" },
+            { to: "/supplements", icon: Pill, label: "Suplementos", color: "text-warning", bg: "bg-gradient-to-br from-warning/15 to-warning/5" },
+          ].map((mod, i) => (
             <Link key={mod.to} to={mod.to}>
               <motion.div
-                whileHover={{ y: -3, scale: 1.02 }}
-                className="glass rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:border-primary/20 transition-all h-[72px]"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.03 }}
+                whileHover={{ y: -4, scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="glass-premium rounded-xl p-4 flex items-center gap-3 cursor-pointer metric-glow transition-all duration-300 h-[72px] group"
               >
-                <div className={`w-10 h-10 rounded-lg ${mod.bg} flex items-center justify-center flex-shrink-0`}>
+                <div className={`w-10 h-10 rounded-xl ${mod.bg} flex items-center justify-center transition-transform group-hover:scale-110`}>
                   <mod.icon className={`w-5 h-5 ${mod.color}`} />
                 </div>
                 <p className="font-display font-semibold text-sm">{mod.label}</p>
