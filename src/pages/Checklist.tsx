@@ -259,7 +259,7 @@ export default function Checklist() {
   const handleDeleteTask = async (taskId: string) => {
     await supabase.from("checklist_tasks").delete().eq("id", taskId);
     setTasks(prev => prev.filter(t => t.id !== taskId));
-    toast.success("Tarefa removida");
+    toast.success(t("checklist.taskRemoved"));
   };
 
   const openEdit = (task: ChecklistTask, e: React.MouseEvent) => {
