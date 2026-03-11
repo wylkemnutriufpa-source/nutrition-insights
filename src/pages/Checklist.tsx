@@ -469,7 +469,7 @@ export default function Checklist() {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-1 block">Título *</label>
+                <label className="text-sm font-medium mb-1 block">{t("common.title")} *</label>
                 <Input
                   value={form.title}
                   onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
