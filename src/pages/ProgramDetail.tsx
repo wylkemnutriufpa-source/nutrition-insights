@@ -213,6 +213,24 @@ export default function ProgramDetail() {
     fetchAll();
   };
 
+  const approveJoinRequest = async (requestId: string, patientId: string, patientName: string) => {
+    if (!programId || !user) return;
+    await supabase.from("program_join_requests").update({ status: "approved", reviewed_by: user.id, reviewed_at: new Date().toISOString() }).eq("id", requestId);
+    await supabase.from("program_patients").insert({ program_id: programId, patient_id: patientId });
+    await supabase.from("program_timeline" as any).insert({
+      program_id: programId, event_type: "enrollment",
+      title: "Solicitação aprovada", description: patientName, created_by: user.id,
+    });
+    toast.success(`✅ ${patientName} aprovado e inscrito!`);
+    fetchAll();
+  };
+
+  const rejectJoinRequest = async (requestId: string) => {
+    await supabase.from("program_join_requests").update({ status: "rejected", reviewed_by: user?.id, reviewed_at: new Date().toISOString() }).eq("id", requestId);
+    toast.success("Solicitação recusada.");
+    setJoinRequests((prev) => prev.map((r) => r.id === requestId ? { ...r, status: "rejected" } : r));
+  };
+
   const activateProtocolForAll = async (protocolId: string) => {
     if (!user || !programId) return;
     let count = 0;
