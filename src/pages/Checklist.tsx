@@ -513,7 +513,7 @@ export default function Checklist() {
                 </div>
               </div>
               <Button className="w-full gradient-primary" onClick={handleSaveTask} disabled={saving || !form.title.trim()}>
-                {saving ? "Salvando..." : editingTask ? "Salvar Alterações" : "Adicionar Tarefa"}
+                {saving ? t("checklist.saving") : editingTask ? t("common.save") : t("checklist.addTask")}
               </Button>
             </div>
           </DialogContent>
