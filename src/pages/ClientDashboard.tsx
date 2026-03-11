@@ -15,6 +15,10 @@ import ExplorerProgressWidget from "@/components/dashboard/ExplorerProgressWidge
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import PlanRequestButton from "@/components/patient/PlanRequestButton";
+import ProgramJoinRequest from "@/components/patient/ProgramJoinRequest";
+import SubscriptionCard from "@/components/patient/SubscriptionCard";
+import { Button } from "@/components/ui/button";
 
 interface ProgramInfo {
   id: string;
