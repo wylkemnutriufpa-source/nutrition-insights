@@ -14,8 +14,9 @@ import {
   ArrowLeft, Plus, Trash2, Copy, GripVertical, Utensils,
   Sun, Coffee, Apple, Sandwich, Moon, Cookie, Save, ChevronLeft, ChevronRight,
   Flame, Beef, Wheat, Droplets, Leaf, PencilLine, X, Check, Sparkles, Loader2,
-  Bookmark, BookmarkCheck, FolderDown, FolderUp, BookOpen
+  Bookmark, BookmarkCheck, FolderDown, FolderUp, BookOpen, CalendarDays, CalendarRange
 } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import PlanScheduler from "@/components/plans/PlanScheduler";
 import DocumentUpload from "@/components/common/DocumentUpload";
 import FoodAutocomplete, { type FoodItem } from "@/components/meals/FoodAutocomplete";
