@@ -245,14 +245,14 @@ export default function ClientDashboard() {
           >
             <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/5 via-amber-400/10 to-yellow-500/5 opacity-60 group-hover:opacity-100 transition-opacity" />
             <div className="relative flex items-center justify-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-yellow-500/20 to-amber-600/10 flex items-center justify-center">
-                <Rocket className="w-5.5 h-5.5 text-yellow-500" />
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 flex items-center justify-center">
+                <Rocket className="w-5.5 h-5.5 text-amber-500" />
               </div>
               <div className="text-left">
-                <p className="text-xs uppercase tracking-widest font-bold bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 bg-clip-text text-transparent">
+                <p className="text-xs uppercase tracking-widest font-bold bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent">
                   ✨ Projetos Disponíveis
                 </p>
-                <p className="text-sm font-display font-bold bg-gradient-to-r from-yellow-300 via-amber-200 to-yellow-400 bg-clip-text text-transparent">
+                <p className="text-sm font-display font-bold bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 bg-clip-text text-transparent">
                   Participar de um Projeto
                 </p>
               </div>
