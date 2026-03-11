@@ -177,7 +177,7 @@ function PatientDashboardContent() {
             <div className="flex gap-2">
               <Link to="/analyze">
                 <Button className="gradient-primary shadow-glow gap-2 rounded-xl">
-                  <Sparkles className="w-4 h-4" /> Analisar Refeição
+                  <Sparkles className="w-4 h-4" /> {t("dashboard.analyzeMeal")}
                 </Button>
               </Link>
             </div>
