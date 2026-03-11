@@ -437,6 +437,14 @@ export default function ProgramDetail() {
         <Tabs defaultValue="patients" className="w-full">
           <TabsList className="w-full justify-start bg-card border border-border flex-wrap h-auto gap-1 p-1">
             <TabsTrigger value="patients" className="gap-1"><Users className="w-3.5 h-3.5" /> Pacientes</TabsTrigger>
+            <TabsTrigger value="requests" className="gap-1 relative">
+              <UserPlus className="w-3.5 h-3.5" /> Solicitações
+              {joinRequests.filter(r => r.status === "pending").length > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[10px] flex items-center justify-center font-bold">
+                  {joinRequests.filter(r => r.status === "pending").length}
+                </span>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="ranking" className="gap-1"><Crown className="w-3.5 h-3.5" /> Ranking</TabsTrigger>
             <TabsTrigger value="radar" className="gap-1"><Activity className="w-3.5 h-3.5" /> Radar Médio</TabsTrigger>
             <TabsTrigger value="timeline" className="gap-1"><Clock className="w-3.5 h-3.5" /> Timeline</TabsTrigger>
