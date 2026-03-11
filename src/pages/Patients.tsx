@@ -879,7 +879,7 @@ export default function Patients() {
             <button
               key={fb.key}
               onClick={() => setFilter(fb.key)}
-              className={`glass rounded-xl p-4 text-left transition-all border-2 ${filter === fb.key ? "border-primary shadow-glow" : "border-transparent"}`}
+              className={`glass-premium rounded-xl p-4 text-left transition-all border-2 metric-glow ${filter === fb.key ? "border-primary shadow-glow" : "border-transparent"}`}
             >
               <p className="text-2xl font-display font-bold">{counts[fb.key]}</p>
               <p className="text-sm text-muted-foreground mt-0.5">{fb.label}</p>
