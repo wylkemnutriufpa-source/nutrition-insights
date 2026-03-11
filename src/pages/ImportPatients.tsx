@@ -48,6 +48,7 @@ export default function ImportPatients() {
   const { user } = useAuth();
   const [allPatients, setAllPatients] = useState<PatientRow[]>([]);
   const [importing, setImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState<{ current: number; total: number; created: number; errors: number } | null>(null);
   const [result, setResult] = useState<{ created: number; skipped: number; errors: string[] } | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [search, setSearch] = useState("");
