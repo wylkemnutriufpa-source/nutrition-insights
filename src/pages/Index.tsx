@@ -256,7 +256,7 @@ function PatientDashboardContent() {
 
       {/* Next Appointment + Chat */}
       <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="glass rounded-xl p-5">
+        <div className="glass-premium rounded-xl p-5 shimmer-sweep">
           <h2 className="font-display font-semibold flex items-center gap-2 mb-3">
             <Calendar className="w-5 h-5 text-primary" /> Próxima Consulta
           </h2>
