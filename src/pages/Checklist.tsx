@@ -372,7 +372,7 @@ export default function Checklist() {
         {loading || seeding ? (
           <div className="flex flex-col items-center justify-center h-40 gap-3">
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            {seeding && <p className="text-sm text-muted-foreground">Criando tarefas padrão...</p>}
+            {seeding && <p className="text-sm text-muted-foreground">{t("common.creatingTasks")}</p>}
           </div>
         ) : tasks.length === 0 ? (
           <div className="glass rounded-2xl p-12 text-center">
