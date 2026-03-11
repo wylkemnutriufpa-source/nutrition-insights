@@ -417,6 +417,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           {children}
         </motion.div>
       </main>
+      {isPatient && <SOSModal open={sosOpen} onOpenChange={setSosOpen} />}
+      {(isNutritionist || isAdmin) && <SOSInbox open={sosInboxOpen} onOpenChange={setSosInboxOpen} />}
     </div>
   );
 }
