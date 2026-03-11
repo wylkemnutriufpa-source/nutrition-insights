@@ -266,6 +266,31 @@ export default function MealPlanEditor() {
     };
   };
 
+  // Quick-add: allows typing a food name and instantly adding it
+  const handleQuickAdd = async (day: number, mealType: MealType) => {
+    if (!id || !quickAddText.trim()) return;
+    setQuickAdding(true);
+    const { error } = await supabase.from("meal_plan_items").insert({
+      meal_plan_id: id,
+      title: quickAddText.trim(),
+      description: null,
+      meal_type: mealType,
+      day_of_week: day,
+      calories_target: null,
+      protein_target: null,
+      carbs_target: null,
+      fat_target: null,
+    });
+    setQuickAdding(false);
+    if (error) toast.error("Erro ao adicionar: " + error.message);
+    else {
+      toast.success("Item adicionado!");
+      setQuickAddText("");
+      setQuickAddKey(null);
+      fetchData();
+    }
+  };
+
   // Save current meal item as reusable
   const handleSaveMeal = async () => {
     if (!user || !form.title.trim()) return;
