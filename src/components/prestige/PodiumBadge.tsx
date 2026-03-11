@@ -123,14 +123,17 @@ function getOrbits(badgeColor: string, medalParticle: string) {
           </span>
         </div>
 
-        {/* Holographic pulse rings */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          {pulseRings.map((r) => (
-            <HoloPulseRing
-              key={r.id}
-              delay={r.delay}
-              badgeColor={badgeColor}
-              size={r.size}
+        {/* Orbital particles — same effect as logo */}
+        <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center" style={{ perspective: 400 }}>
+          {getOrbits(badgeColor, medal.particle).map((o, i) => (
+            <OrbitalParticle
+              key={i}
+              duration={o.duration}
+              delay={o.delay}
+              tilt={o.tilt}
+              radius={20}
+              particleSize={o.particleSize}
+              color={o.color}
             />
           ))}
         </div>
