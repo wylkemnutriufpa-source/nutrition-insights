@@ -268,7 +268,7 @@ export default function ClientDashboard() {
                 <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center">
                   <Rocket className="w-4.5 h-4.5 text-primary" />
                 </div>
-                <h3 className="font-display font-semibold text-base">Programas Ativos</h3>
+                <h3 className="font-display font-semibold text-base">Projetos Ativos</h3>
               </div>
               <div className="px-5 pb-5 space-y-3">
                 {programs.length === 0 ? (
