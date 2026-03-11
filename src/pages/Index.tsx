@@ -713,7 +713,7 @@ function NutritionistDashboardContent() {
       {/* ── 5️⃣ Activity Feed + 7️⃣ Program Performance ── */}
       <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Activity Feed */}
-        <div className="glass rounded-xl p-5">
+        <div className="glass-premium rounded-xl p-5 shimmer-sweep">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-info/10 flex items-center justify-center">
