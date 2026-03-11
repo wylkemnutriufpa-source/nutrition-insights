@@ -211,6 +211,15 @@ function SidebarContent({
               </button>
             </>
           )}
+          {isNutritionist && (
+            <button
+              onClick={() => { onSosOpen?.(); onLinkClick?.(); }}
+              className="flex items-center gap-3 px-3 py-2 rounded-xl bg-destructive/10 text-destructive border border-destructive/20 mt-3 w-full hover:bg-destructive/20 transition-all"
+            >
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+              {!collapsed && <span className="text-xs font-medium">🆘 SOS Inbox</span>}
+            </button>
+          )}
         </nav>
       </ScrollArea>
 
