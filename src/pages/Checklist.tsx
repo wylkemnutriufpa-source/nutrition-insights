@@ -389,7 +389,7 @@ export default function Checklist() {
               <div key={category}>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-sm font-semibold text-muted-foreground">
-                    {categoryLabels[category] || category}
+                    {t(`checklist.categories.${category}`, { defaultValue: categoryLabels[category] || category })}
                   </h3>
                   <span className="text-xs text-muted-foreground">
                     {categoryTasks.filter(t => t.completed).length}/{categoryTasks.length}
