@@ -64,6 +64,13 @@ const emptyForm: ItemForm = {
   fat_target: "",
 };
 
+// Helper: match text against food database
+const FOOD_DB_IMPORT = () => {
+  // We import the same database used by FoodAutocomplete
+  return import("@/components/meals/FoodAutocomplete").then(m => m.FOOD_DATABASE);
+};
+
+
 export default function MealPlanEditor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
