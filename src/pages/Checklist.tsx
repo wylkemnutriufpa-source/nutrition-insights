@@ -199,7 +199,7 @@ export default function Checklist() {
 
       if (updated.every((t) => t.completed)) {
         confetti();
-        toast.success("🎉 Todas as tarefas concluídas!");
+        toast.success(t("checklist.allCompleted"));
         if (stats) {
           await supabase.from("player_stats").update({
             total_xp: stats.total_xp + 50,
