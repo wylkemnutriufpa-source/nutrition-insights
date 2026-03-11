@@ -16,45 +16,44 @@ const MEDAL_COLORS = [
   { ring: "#CD7F32", glow: "rgba(205,127,50,0.45)", particle: "#D4905C" },
 ];
 
-function HoloPulseRing({ delay, badgeColor, size }: { delay: number; badgeColor: string; size: number }) {
+function OrbitalParticle({ duration, delay, tilt, radius, particleSize, color }: {
+  duration: number; delay: number; tilt: number; radius: number; particleSize: number; color: string;
+}) {
   return (
     <motion.div
-      className="absolute rounded-full pointer-events-none"
-      style={{
-        inset: -size,
-        border: `1.5px solid ${badgeColor}`,
-        background: `conic-gradient(from 0deg, ${badgeColor}40, transparent 25%, ${badgeColor}20 50%, transparent 75%, ${badgeColor}40)`,
-      }}
-      animate={{
-        scale: [0.6, 1.3],
-        opacity: [0.8, 0],
-        rotate: [0, 180],
-      }}
-      transition={{
-        duration: 2.2,
-        repeat: Infinity,
-        delay,
-        ease: "easeOut",
-      }}
-    />
+      className="absolute inset-0 pointer-events-none"
+      style={{ transform: `rotateX(${tilt}deg)`, transformStyle: "preserve-3d" }}
+    >
+      <motion.div
+        className="absolute"
+        style={{
+          width: particleSize,
+          height: particleSize,
+          borderRadius: "50%",
+          background: `radial-gradient(circle, ${color}, transparent)`,
+          boxShadow: `0 0 ${particleSize * 2}px ${color}`,
+          top: "50%",
+          left: "50%",
+          marginTop: -particleSize / 2,
+          marginLeft: -particleSize / 2,
+          offsetPath: `circle(${radius}px at 0px 0px)`,
+          offsetRotate: "0deg",
+        }}
+        animate={{ offsetDistance: ["0%", "100%"] }}
+        transition={{ duration, repeat: Infinity, delay, ease: "linear" }}
+      />
+    </motion.div>
   );
 }
 
-export default function PodiumBadge({ plan, allPlans = [], position, onUpgrade }: PodiumBadgeProps) {
-  const [modalOpen, setModalOpen] = useState(false);
-
-  if (!plan) return null;
-
-  const medal = MEDAL_COLORS[position] || MEDAL_COLORS[2];
-  const isGold = position === 0;
-  const badgeColor = plan.color || medal.ring;
-
-  const pulseRings = [
-    { id: 0, delay: 0, size: 4 },
-    { id: 1, delay: 0.7, size: 8 },
-    { id: 2, delay: 1.4, size: 12 },
+function getOrbits(badgeColor: string, medalParticle: string) {
+  return [
+    { duration: 3, delay: 0, tilt: 65, particleSize: 2.5, color: badgeColor },
+    { duration: 3, delay: 1.5, tilt: 65, particleSize: 2, color: medalParticle },
+    { duration: 4, delay: 0.3, tilt: -20, particleSize: 3, color: badgeColor },
+    { duration: 3.5, delay: 0.8, tilt: 140, particleSize: 2, color: medalParticle },
   ];
-
+}
   return (
     <>
       <motion.button
