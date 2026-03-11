@@ -27,6 +27,9 @@ export default function ProgramJoinRequest({ open, onOpenChange }: ProgramJoinRe
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const [enrolledIds, setEnrolledIds] = useState<string[]>([]);
+  const [pendingIds, setPendingIds] = useState<string[]>([]);
+
   useEffect(() => {
     if (!open || !user) return;
     loadPrograms();
@@ -34,23 +37,17 @@ export default function ProgramJoinRequest({ open, onOpenChange }: ProgramJoinRe
 
   async function loadPrograms() {
     setLoading(true);
-    // Get programs the patient is NOT already enrolled in
-    const { data: enrolled } = await supabase
-      .from("program_patients")
-      .select("program_id")
-      .eq("patient_id", user!.id)
-      .eq("status", "active");
+    const [enrolledRes, pendingRes, allRes] = await Promise.all([
+      supabase.from("program_patients").select("program_id").eq("patient_id", user!.id).eq("status", "active"),
+      supabase.from("program_join_requests").select("program_id").eq("patient_id", user!.id).eq("status", "pending"),
+      supabase.from("programs").select("id, title, tag").eq("is_active", true),
+    ]);
 
-    const enrolledIds = enrolled?.map((e: any) => e.program_id) || [];
-
-    const query = supabase
-      .from("programs")
-      .select("id, title, tag")
-      .eq("is_active", true);
-
-    const { data } = await query;
-
-    setPrograms((data || []).filter((p: any) => !enrolledIds.includes(p.id)));
+    const enrolled = enrolledRes.data?.map((e: any) => e.program_id) || [];
+    const pending = pendingRes.data?.map((e: any) => e.program_id) || [];
+    setEnrolledIds(enrolled);
+    setPendingIds(pending);
+    setPrograms((allRes.data || []) as Program[]);
     setLoading(false);
   }
 
