@@ -186,4 +186,65 @@
     @apply bg-clip-text text-transparent;
     background-image: var(--gradient-primary);
   }
+
+  /* Premium shimmer sweep */
+  .shimmer-sweep {
+    position: relative;
+    overflow: hidden;
+  }
+  .shimmer-sweep::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.06), transparent);
+    animation: shimmer-sweep 4s ease-in-out infinite;
+  }
+  @keyframes shimmer-sweep {
+    0%, 100% { left: -100%; }
+    50% { left: 150%; }
+  }
+
+  /* Premium glass with glow border */
+  .glass-premium {
+    @apply bg-card/80 backdrop-blur-xl border border-border/50;
+    box-shadow: var(--shadow-card), inset 0 1px 0 hsl(0 0% 100% / 0.06);
+  }
+
+  /* Animated gradient border */
+  .gradient-border {
+    position: relative;
+    background-clip: padding-box;
+  }
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.4), hsl(var(--accent) / 0.3), hsl(var(--primary) / 0.4));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Metric card glow on hover */
+  .metric-glow:hover {
+    box-shadow: 0 0 24px hsl(var(--primary) / 0.12), var(--shadow-card);
+  }
+
+  /* Premium counter animation */
+  .counter-animate {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Floating particles effect */
+  .particles-bg {
+    background-image: radial-gradient(circle at 20% 50%, hsl(var(--primary) / 0.04) 0%, transparent 50%),
+                       radial-gradient(circle at 80% 20%, hsl(var(--accent) / 0.04) 0%, transparent 50%),
+                       radial-gradient(circle at 40% 80%, hsl(var(--info) / 0.03) 0%, transparent 50%);
+  }
 }

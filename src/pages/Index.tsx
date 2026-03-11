@@ -157,17 +157,31 @@ function PatientDashboardContent() {
       <PushNotificationBanner />
       <HealthAlertsBanner />
 
-      <motion.div variants={item} className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-bold">Meu Dashboard</h1>
-          <p className="text-muted-foreground text-sm">Acompanhe seu progresso</p>
-        </div>
-        <div className="flex gap-2">
-          <Link to="/analyze">
-            <Button className="gradient-primary shadow-glow gap-2">
-              <Sparkles className="w-4 h-4" /> Analisar Refeição
-            </Button>
-          </Link>
+      {/* Premium Welcome Header */}
+      <motion.div variants={item} className="relative overflow-hidden rounded-2xl gradient-border particles-bg">
+        <div className="glass-premium rounded-2xl p-6 shimmer-sweep">
+          <div className="flex items-center justify-between">
+            <div>
+              <motion.p
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="text-sm text-muted-foreground mb-1"
+              >
+                {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
+              </motion.p>
+              <h1 className="font-display text-2xl md:text-3xl font-bold">
+                Meu Dashboard
+              </h1>
+              <p className="text-muted-foreground text-sm mt-1">Acompanhe seu progresso e conquistas</p>
+            </div>
+            <div className="flex gap-2">
+              <Link to="/analyze">
+                <Button className="gradient-primary shadow-glow gap-2 rounded-xl">
+                  <Sparkles className="w-4 h-4" /> Analisar Refeição
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
       </motion.div>
 
@@ -199,7 +213,7 @@ function PatientDashboardContent() {
       {/* Today's Checklist */}
       <motion.div variants={item}>
         <ExpandablePanel title="Checklist de Hoje">
-          <div className="glass rounded-xl p-5">
+           <div className="glass-premium rounded-xl p-5 shimmer-sweep">
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-display font-semibold flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-primary" /> Checklist de Hoje
@@ -242,7 +256,7 @@ function PatientDashboardContent() {
 
       {/* Next Appointment + Chat */}
       <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="glass rounded-xl p-5">
+        <div className="glass-premium rounded-xl p-5 shimmer-sweep">
           <h2 className="font-display font-semibold flex items-center gap-2 mb-3">
             <Calendar className="w-5 h-5 text-primary" /> Próxima Consulta
           </h2>
@@ -539,38 +553,32 @@ function NutritionistDashboardContent() {
 
   return (
     <div className="space-y-6">
-      {/* ── Tab Switcher ── */}
-      <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1 w-fit">
-        <button
-          onClick={() => setActiveTab("clinical")}
-          className={`flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-md transition-all ${
-            activeTab === "clinical"
-              ? "bg-card shadow-sm text-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <Heart className="w-4 h-4" /> Clínico
-        </button>
-        <button
-          onClick={() => setActiveTab("analytics")}
-          className={`flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-md transition-all ${
-            activeTab === "analytics"
-              ? "bg-card shadow-sm text-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <BarChart3 className="w-4 h-4" /> Analytics
-        </button>
-        <button
-          onClick={() => setActiveTab("strategy")}
-          className={`flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-md transition-all ${
-            activeTab === "strategy"
-              ? "bg-card shadow-sm text-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <Brain className="w-4 h-4" /> IA Estratégica
-        </button>
+      {/* ── Premium Tab Switcher ── */}
+      <div className="flex items-center gap-1 glass-premium rounded-xl p-1.5 w-fit">
+        {[
+          { key: "clinical", icon: Heart, label: "Clínico" },
+          { key: "analytics", icon: BarChart3, label: "Analytics" },
+          { key: "strategy", icon: Brain, label: "IA Estratégica" },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`relative flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-lg transition-all duration-300 ${
+              activeTab === tab.key
+                ? "bg-gradient-to-r from-primary/10 to-primary/5 text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+            }`}
+          >
+            <tab.icon className={`w-4 h-4 ${activeTab === tab.key ? "text-primary" : ""}`} />
+            {tab.label}
+            {activeTab === tab.key && (
+              <motion.div
+                layoutId="activeTab"
+                className="absolute bottom-0 left-2 right-2 h-0.5 gradient-primary rounded-full"
+              />
+            )}
+          </button>
+        ))}
       </div>
 
       {activeTab === "analytics" ? (
@@ -579,21 +587,32 @@ function NutritionistDashboardContent() {
         <AIStrategyCenter />
       ) : (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
-      {/* ── Header ── */}
-      <motion.div variants={item} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight">Dashboard Clínico</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">
-            {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })} · Central de Comando
-          </p>
+      {/* ── Premium Header ── */}
+      <motion.div variants={item} className="relative overflow-hidden rounded-2xl gradient-border particles-bg">
+        <div className="glass-premium rounded-2xl p-6 shimmer-sweep">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <motion.p
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="text-sm text-muted-foreground mb-1"
+              >
+                {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
+              </motion.p>
+              <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight">Dashboard Clínico</h1>
+              <p className="text-muted-foreground text-sm mt-0.5">Central de Comando · Inteligência Clínica</p>
+            </div>
+            <div className="flex items-center gap-3">
+              {unreadChats > 0 && (
+                <Button variant="outline" size="sm" className="gap-2 rounded-xl" onClick={() => navigate("/chat")}>
+                  <MessageSquare className="w-4 h-4" />
+                  {unreadChats} mensagem{unreadChats > 1 ? "s" : ""}
+                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
-        {unreadChats > 0 && (
-          <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate("/chat")}>
-            <MessageSquare className="w-4 h-4" />
-            {unreadChats} mensagem{unreadChats > 1 ? "s" : ""}
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-          </Button>
-        )}
       </motion.div>
 
       {/* ── 2️⃣ Action Shortcuts ── */}
@@ -911,28 +930,35 @@ function NutritionistDashboardContent() {
         <SystemUsageCard />
       </motion.div>
 
-      {/* ── 9️⃣ Module Shortcut Grid ── */}
+      {/* ── 9️⃣ Module Shortcut Grid (Premium) ── */}
       <motion.div variants={item}>
-        <h2 className="font-display font-semibold text-sm text-muted-foreground uppercase tracking-wider mb-3">Módulos</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <h2 className="font-display font-semibold text-sm text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
+          <span className="w-8 h-[2px] gradient-primary rounded-full" />
+          Módulos
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
           {[
-            { to: "/protocols", icon: Shield, label: "Protocolos", color: "text-primary", bg: "bg-primary/10" },
-            { to: "/programs", icon: Rocket, label: "Programas", color: "text-accent", bg: "bg-accent/10" },
-            { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos", color: "text-success", bg: "bg-success/10" },
-            { to: "/recipes", icon: ChefHat, label: "Receitas", color: "text-warning", bg: "bg-warning/10" },
-            { to: "/diet-templates", icon: FileText, label: "Templates", color: "text-info", bg: "bg-info/10" },
-            { to: "/global-tips", icon: MessageSquare, label: "Dicas", color: "text-success", bg: "bg-success/10" },
-            { to: "/automation", icon: Bot, label: "Automação", color: "text-info", bg: "bg-info/10" },
-            { to: "/reports", icon: BarChart3, label: "Relatórios", color: "text-primary", bg: "bg-primary/10" },
-            { to: "/appointments", icon: Calendar, label: "Agenda", color: "text-accent", bg: "bg-accent/10" },
-            { to: "/supplements", icon: Pill, label: "Suplementos", color: "text-warning", bg: "bg-warning/10" },
-          ].map((mod) => (
+            { to: "/protocols", icon: Shield, label: "Protocolos", color: "text-primary", bg: "bg-gradient-to-br from-primary/15 to-primary/5" },
+            { to: "/programs", icon: Rocket, label: "Programas", color: "text-accent", bg: "bg-gradient-to-br from-accent/15 to-accent/5" },
+            { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos", color: "text-success", bg: "bg-gradient-to-br from-success/15 to-success/5" },
+            { to: "/recipes", icon: ChefHat, label: "Receitas", color: "text-warning", bg: "bg-gradient-to-br from-warning/15 to-warning/5" },
+            { to: "/diet-templates", icon: FileText, label: "Templates", color: "text-info", bg: "bg-gradient-to-br from-info/15 to-info/5" },
+            { to: "/global-tips", icon: MessageSquare, label: "Dicas", color: "text-success", bg: "bg-gradient-to-br from-success/15 to-success/5" },
+            { to: "/automation", icon: Bot, label: "Automação", color: "text-info", bg: "bg-gradient-to-br from-info/15 to-info/5" },
+            { to: "/reports", icon: BarChart3, label: "Relatórios", color: "text-primary", bg: "bg-gradient-to-br from-primary/15 to-primary/5" },
+            { to: "/appointments", icon: Calendar, label: "Agenda", color: "text-accent", bg: "bg-gradient-to-br from-accent/15 to-accent/5" },
+            { to: "/supplements", icon: Pill, label: "Suplementos", color: "text-warning", bg: "bg-gradient-to-br from-warning/15 to-warning/5" },
+          ].map((mod, i) => (
             <Link key={mod.to} to={mod.to}>
               <motion.div
-                whileHover={{ y: -3, scale: 1.02 }}
-                className="glass rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:border-primary/20 transition-all h-[72px]"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.03 }}
+                whileHover={{ y: -4, scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="glass-premium rounded-xl p-4 flex items-center gap-3 cursor-pointer metric-glow transition-all duration-300 h-[72px] group"
               >
-                <div className={`w-10 h-10 rounded-lg ${mod.bg} flex items-center justify-center flex-shrink-0`}>
+                <div className={`w-10 h-10 rounded-xl ${mod.bg} flex items-center justify-center transition-transform group-hover:scale-110`}>
                   <mod.icon className={`w-5 h-5 ${mod.color}`} />
                 </div>
                 <p className="font-display font-semibold text-sm">{mod.label}</p>
@@ -947,24 +973,40 @@ function NutritionistDashboardContent() {
   );
 }
 
-// ── Daily Metric Card ──
+// ── Daily Metric Card (Premium) ──
 function DailyMetricCard({ label, value, icon: Icon, color, pulse, onClick }: {
   label: string; value: number; icon: any; color: string; pulse?: boolean; onClick?: () => void;
 }) {
   return (
     <motion.div
-      whileHover={{ y: -3, scale: 1.02 }}
+      whileHover={{ y: -4, scale: 1.03 }}
+      whileTap={{ scale: 0.97 }}
       onClick={onClick}
-      className={`glass rounded-xl p-4 cursor-pointer hover:border-${color}/30 transition-all`}
+      className={`glass-premium rounded-xl p-4 cursor-pointer metric-glow transition-all duration-300 shimmer-sweep`}
     >
       <div className="flex items-center justify-between mb-2">
-        <div className={`w-9 h-9 rounded-lg bg-${color}/10 flex items-center justify-center`}>
-          <Icon className={`w-4.5 h-4.5 text-${color}`} />
-        </div>
-        {pulse && value > 0 && <span className={`w-2.5 h-2.5 rounded-full bg-${color} animate-pulse`} />}
+        <motion.div
+          whileHover={{ rotate: 8 }}
+          className={`w-10 h-10 rounded-xl bg-${color}/10 flex items-center justify-center`}
+        >
+          <Icon className={`w-5 h-5 text-${color}`} />
+        </motion.div>
+        {pulse && value > 0 && (
+          <span className="relative flex h-2.5 w-2.5">
+            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full bg-${color} opacity-75`} />
+            <span className={`relative inline-flex rounded-full h-2.5 w-2.5 bg-${color}`} />
+          </span>
+        )}
       </div>
-      <p className="font-display font-bold text-2xl">{value}</p>
-      <p className="text-[11px] text-muted-foreground font-medium">{label}</p>
+      <motion.p
+        key={value}
+        initial={{ scale: 1.15, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="font-display font-bold text-2xl counter-animate"
+      >
+        {value}
+      </motion.p>
+      <p className="text-[11px] text-muted-foreground font-medium mt-0.5">{label}</p>
     </motion.div>
   );
 }
