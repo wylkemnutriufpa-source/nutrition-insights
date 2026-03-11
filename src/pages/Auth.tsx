@@ -11,11 +11,14 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Eye, EyeOff, ArrowRight, Stethoscope, Users } from "lucide-react";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
+import LanguageSelector from "@/components/common/LanguageSelector";
+import { useTranslation } from "react-i18next";
 
 type AuthMode = "login" | "forgot";
 
 export default function Auth() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,7 +34,7 @@ export default function Auth() {
     setLoading(false);
     if (error) {
       toast.error(error.message === "Invalid login credentials"
-        ? "Email ou senha incorretos"
+        ? t("auth.invalidCredentials")
         : error.message);
     } else {
       if (!rememberMe) {
@@ -39,7 +42,6 @@ export default function Auth() {
       } else {
         sessionStorage.removeItem("fitjourney_session_only");
       }
-      // Award login points (fire-and-forget)
       const currentUser = (await supabase.auth.getUser()).data.user;
       if (currentUser) {
         supabase.rpc("award_points", {
@@ -60,7 +62,7 @@ export default function Auth() {
     });
     setLoading(false);
     if (error) { toast.error(error.message); }
-    else { toast.success("Email de recuperação enviado!"); setMode("login"); }
+    else { toast.success(t("auth.recoveryEmailSent")); setMode("login"); }
   };
 
   const handleSocialLogin = async (provider: "google" | "apple") => {
@@ -70,10 +72,10 @@ export default function Auth() {
         redirect_uri: window.location.origin,
       });
       if (result && 'error' in result && result.error) {
-        toast.error(`Erro ao entrar com ${provider === "google" ? "Google" : "Apple"}`);
+        toast.error(t("auth.socialError"));
       }
     } catch {
-      toast.error("Erro na autenticação social");
+      toast.error(t("auth.socialError"));
     }
     setSocialLoading(null);
   };
@@ -86,19 +88,24 @@ export default function Auth() {
         <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-accent/5 blur-3xl" />
       </div>
 
+      {/* Language Selector */}
+      <div className="absolute top-4 right-4 z-20">
+        <LanguageSelector />
+      </div>
+
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-md relative z-10">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, delay: 0.1 }} className="mb-4">
             <FitJourneyLogo size="lg" />
           </motion.div>
-          <p className="text-muted-foreground mt-1">Sua jornada fitness inteligente & gamificada</p>
+          <p className="text-muted-foreground mt-1">{t("auth.tagline")}</p>
         </div>
 
         <Card className="shadow-card border-border/50 bg-card/80 backdrop-blur-sm">
           <CardHeader className="pb-4">
             <h2 className="text-lg font-semibold text-center text-foreground">
-              {mode === "forgot" ? "Recuperar Senha" : "Entrar na Plataforma"}
+              {mode === "forgot" ? t("auth.forgotTitle") : t("auth.loginTitle")}
             </h2>
           </CardHeader>
 
@@ -118,7 +125,7 @@ export default function Auth() {
                       <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                     </svg>
                   )}
-                  Continuar com Google
+                  {t("auth.continueGoogle")}
                 </Button>
                 <Button variant="outline" className="w-full gap-3 h-11" type="button"
                   disabled={!!socialLoading} onClick={() => handleSocialLogin("apple")}>
@@ -129,7 +136,7 @@ export default function Auth() {
                       <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
                     </svg>
                   )}
-                  Continuar com Apple
+                  {t("auth.continueApple")}
                 </Button>
 
                 {/* Divider */}
@@ -138,7 +145,7 @@ export default function Auth() {
                     <span className="w-full border-t border-border" />
                   </div>
                   <div className="relative flex justify-center text-xs">
-                    <span className="bg-card px-3 text-muted-foreground">ou com email</span>
+                    <span className="bg-card px-3 text-muted-foreground">{t("auth.orWithEmail")}</span>
                   </div>
                 </div>
               </div>
@@ -149,14 +156,14 @@ export default function Auth() {
                 <motion.form key="forgot" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
                   onSubmit={handleForgot} className="space-y-4">
                   <div>
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">{t("auth.email")}</Label>
                     <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" required />
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Enviando..." : "Enviar link de recuperação"}
+                    {loading ? t("auth.sending") : t("auth.forgotButton")}
                   </Button>
                   <button type="button" onClick={() => setMode("login")} className="text-sm text-primary hover:underline w-full text-center">
-                    Voltar ao login
+                    {t("auth.backToLogin")}
                   </button>
                 </motion.form>
               ) : (
@@ -166,21 +173,21 @@ export default function Auth() {
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border/50">
                     <div className="flex gap-2">
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Stethoscope className="w-3.5 h-3.5" /><span>Nutricionista</span>
+                        <Stethoscope className="w-3.5 h-3.5" /><span>{t("auth.nutritionist")}</span>
                       </div>
                       <span className="text-border">|</span>
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Users className="w-3.5 h-3.5" /><span>Paciente</span>
+                        <Users className="w-3.5 h-3.5" /><span>{t("auth.patient")}</span>
                       </div>
                     </div>
                   </div>
 
                   <div>
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">{t("auth.email")}</Label>
                     <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" required />
                   </div>
                   <div>
-                    <Label htmlFor="password">Senha</Label>
+                    <Label htmlFor="password">{t("auth.password")}</Label>
                     <div className="relative">
                       <Input id="password" type={showPassword ? "text" : "password"} value={password}
                         onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
@@ -196,17 +203,17 @@ export default function Auth() {
                     <div className="flex items-center gap-2">
                       <Checkbox id="remember" checked={rememberMe} onCheckedChange={(v) => setRememberMe(!!v)} />
                       <label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer select-none">
-                        Manter conectado
+                        {t("auth.stayLoggedIn")}
                       </label>
                     </div>
                     <button type="button" onClick={() => setMode("forgot")} className="text-sm text-primary hover:underline">
-                      Esqueceu a senha?
+                      {t("auth.forgotPassword")}
                     </button>
                   </div>
 
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Entrando..." : (
-                      <span className="flex items-center gap-2">Entrar <ArrowRight className="w-4 h-4" /></span>
+                    {loading ? t("auth.loggingIn") : (
+                      <span className="flex items-center gap-2">{t("auth.loginButton")} <ArrowRight className="w-4 h-4" /></span>
                     )}
                   </Button>
                 </motion.form>
@@ -216,7 +223,7 @@ export default function Auth() {
         </Card>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
-          Seu acesso é criado pelo administrador ou nutricionista responsável.
+          {t("auth.accessNote")}
         </p>
 
         {/* Biquíni Branco Banner */}
@@ -229,8 +236,8 @@ export default function Auth() {
           >
             <span className="text-2xl">👙</span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground">Projeto Biquíni Branco</p>
-              <p className="text-xs text-muted-foreground truncate">Transformação em 12 semanas — Conheça o programa →</p>
+              <p className="text-sm font-semibold text-foreground">{t("auth.biquiniBranco")}</p>
+              <p className="text-xs text-muted-foreground truncate">{t("auth.biquiniBrancoDesc")}</p>
             </div>
             <ArrowRight className="w-4 h-4 text-pink-500 shrink-0" />
           </motion.div>
