@@ -513,6 +513,7 @@ export default function MealPlanEditor() {
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            <CalorieTemplates mealPlanId={plan.id} onApplied={fetchData} />
             <Button
               variant="outline"
               size="sm"
@@ -520,6 +521,7 @@ export default function MealPlanEditor() {
               className="gap-1.5"
             >
               <BookOpen className="w-4 h-4" /> Modelos Pré-Prontos
+            </Button>
             </Button>
             <Button
               variant="outline"
