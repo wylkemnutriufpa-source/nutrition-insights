@@ -178,33 +178,39 @@ export default function Checklist() {
     const updated = tasks.map((t) => t.id === task.id ? { ...t, completed: newCompleted } : t);
     setTasks(updated);
 
-    if (newCompleted && updated.every((t) => t.completed)) {
-      confetti();
-      toast.success("🎉 Todas as tarefas concluídas! +50 XP");
+    if (newCompleted) {
+      // Award ranking points for each completed task
+      awardPoints("checklist_complete", { task_id: task.id, task_title: task.title, category: task.category });
+
+      // Update player_stats XP
       const { data: stats } = await supabase.from("player_stats").select("*").eq("user_id", user!.id).single();
-      if (stats) {
-        await supabase.from("player_stats").update({
-          total_xp: stats.total_xp + 50,
-          level: Math.floor((stats.total_xp + 50) / 100) + 1,
-        }).eq("user_id", user!.id);
-      }
-      // Send adherence notification
-      const completedCount = updated.filter(t => t.completed).length;
-      const pct = Math.round((completedCount / updated.length) * 100);
-      await supabase.from("notifications").insert({
-        user_id: user!.id,
-        title: "🎉 Dia completo!",
-        message: `Parabéns! Você completou ${pct}% das suas tarefas hoje. Continue assim!`,
-        type: "success",
-      });
-    } else if (newCompleted) {
-      toast.success(`${task.icon} Tarefa concluída! +10 XP`);
-      const { data: stats } = await supabase.from("player_stats").select("*").eq("user_id", user!.id).single();
-      if (stats) {
-        await supabase.from("player_stats").update({
-          total_xp: stats.total_xp + 10,
-          level: Math.floor((stats.total_xp + 10) / 100) + 1,
-        }).eq("user_id", user!.id);
+
+      if (updated.every((t) => t.completed)) {
+        confetti();
+        toast.success("🎉 Todas as tarefas concluídas!");
+        if (stats) {
+          await supabase.from("player_stats").update({
+            total_xp: stats.total_xp + 50,
+            level: Math.floor((stats.total_xp + 50) / 100) + 1,
+          }).eq("user_id", user!.id);
+        }
+        // Streak bonus
+        awardPoints("streak_bonus", { date, reason: "all_tasks_completed" });
+        // Send adherence notification
+        const pct = Math.round((updated.filter(t => t.completed).length / updated.length) * 100);
+        await supabase.from("notifications").insert({
+          user_id: user!.id,
+          title: "🎉 Dia completo!",
+          message: `Parabéns! Você completou ${pct}% das suas tarefas hoje. Continue assim!`,
+          type: "success",
+        });
+      } else {
+        if (stats) {
+          await supabase.from("player_stats").update({
+            total_xp: stats.total_xp + 10,
+            level: Math.floor((stats.total_xp + 10) / 100) + 1,
+          }).eq("user_id", user!.id);
+        }
       }
     }
   };
