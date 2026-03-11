@@ -223,7 +223,7 @@ function PatientDashboardContent() {
                </Link>
             </div>
             {checklistTasks.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhuma tarefa para hoje. Aguarde seu protocolo!</p>
+               <p className="text-sm text-muted-foreground">{t("dashboard.noTasksToday")}</p>
             ) : (
               <>
                 <Progress value={checklistProgress} className="h-2 mb-3" />
