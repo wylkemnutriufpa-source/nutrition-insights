@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import confetti from "@/lib/confetti";
 import { usePatientPoints } from "@/hooks/usePatientPoints";
+import { useTranslation } from "react-i18next";
 
 interface ChecklistTask {
   id: string;
