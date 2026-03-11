@@ -725,9 +725,14 @@ export default function Anamnesis() {
                 </motion.div>
               )}
 
-              <Button onClick={() => navigate(isNutritionistMode ? `/patients/${forPatientId}` : "/")} className="w-full gradient-primary shadow-glow">
-                {isNutritionistMode ? "Voltar ao Paciente" : "Voltar ao Dashboard"}
-              </Button>
+              <div className="flex flex-col gap-3">
+                <Button onClick={handleEditAnamnesis} variant="outline" className="w-full gap-2">
+                  ✏️ Revisar / Editar Respostas
+                </Button>
+                <Button onClick={() => navigate(isNutritionistMode ? `/patients/${forPatientId}` : "/")} className="w-full gradient-primary shadow-glow">
+                  {isNutritionistMode ? "Voltar ao Paciente" : "Voltar ao Dashboard"}
+                </Button>
+              </div>
             </motion.div>
           )}
         </div>
