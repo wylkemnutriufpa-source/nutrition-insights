@@ -105,7 +105,7 @@ export default function UserGuide() {
 
             <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1">
               <Sparkles className="w-3 h-3" />
-              Cada funcionalidade explorada vale +5 pontos no ranking!
+              Cada funcionalidade explorada contribui para seu progresso!
             </p>
           </div>
         </motion.div>
