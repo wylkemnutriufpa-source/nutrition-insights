@@ -247,7 +247,7 @@ export default function Checklist() {
         completed: false,
       });
       if (error) toast.error(error.message);
-      else toast.success("Tarefa adicionada!");
+      else toast.success(t("checklist.taskAdded"));
     }
     setSaving(false);
     setAddOpen(false);
