@@ -191,7 +191,7 @@ function SidebarContent({
             <Link
               to="/analyze"
               onClick={onLinkClick}
-              className="flex items-center gap-3 px-3 py-2 rounded-xl gradient-primary text-primary-foreground mt-3 shadow-glow"
+              className="flex items-center gap-3 px-3 py-2 rounded-xl gradient-primary text-primary-foreground mt-3 shadow-glow shimmer-sweep"
             >
               <Sparkles className="w-4 h-4 flex-shrink-0" />
               {!collapsed && <span className="text-xs font-medium">Analisar com IA</span>}
@@ -201,11 +201,11 @@ function SidebarContent({
       </ScrollArea>
 
       {/* Bottom */}
-      <div className="p-3 border-t border-border space-y-2">
+      <div className="p-3 border-t border-border/50 space-y-2">
         <Link
           to="/settings"
           onClick={onLinkClick}
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted w-full transition-all"
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 w-full transition-all"
         >
           <Settings className="w-5 h-5" />
           {!collapsed && <span className="text-sm">Configurações</span>}
@@ -213,14 +213,14 @@ function SidebarContent({
 
         <button
           onClick={toggleDark}
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted w-full transition-all"
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 w-full transition-all"
         >
           {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           {!collapsed && <span className="text-sm">{dark ? "Modo claro" : "Modo escuro"}</span>}
         </button>
 
         <div className="flex items-center gap-3 px-3 py-2">
-          <Avatar className="w-8 h-8">
+          <Avatar className="w-8 h-8 ring-2 ring-primary/20">
             <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">{initials}</AvatarFallback>
           </Avatar>
           {!collapsed && (
@@ -296,11 +296,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background particles-bg">
         <CommandPalette />
         <OnboardingWizard />
         {/* Mobile Top Bar */}
-        <div className="fixed top-0 left-0 right-0 z-50 h-14 bg-card border-b border-border flex items-center justify-between px-4">
+        <div className="fixed top-0 left-0 right-0 z-50 h-14 glass-premium border-b border-border/50 flex items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
@@ -308,7 +308,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   <Menu className="w-5 h-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="p-0 w-72 flex flex-col">
+              <SheetContent side="left" className="p-0 w-72 flex flex-col bg-card/95 backdrop-blur-xl">
                 <SidebarContent {...sidebarProps} collapsed={false} onLinkClick={() => setMobileOpen(false)} />
               </SheetContent>
             </Sheet>
@@ -335,16 +335,22 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
         {/* Main content */}
         <main className="pt-14">
-          <div className="p-4 max-w-7xl mx-auto">
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
+            className="p-4 max-w-7xl mx-auto"
+          >
             {children}
-          </div>
+          </motion.div>
         </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="min-h-screen flex bg-background particles-bg">
       <CommandPalette />
       <OnboardingWizard />
       {/* Desktop Sidebar */}
@@ -352,7 +358,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         initial={false}
         animate={{ width: collapsed ? 72 : 260 }}
         transition={{ duration: 0.2 }}
-        className="fixed left-0 top-0 h-screen border-r border-border bg-card flex flex-col z-50"
+        className="fixed left-0 top-0 h-screen border-r border-border/50 bg-card/95 backdrop-blur-xl flex flex-col z-50"
       >
         <SidebarContent {...sidebarProps} collapsed={collapsed} setCollapsed={setCollapsed} />
       </motion.aside>
@@ -378,9 +384,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <NotificationBell />
           </div>
         </div>
-        <div className="p-6 pt-14 max-w-7xl mx-auto">
+        <motion.div
+          key={location.pathname}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25 }}
+          className="p-6 pt-14 max-w-7xl mx-auto"
+        >
           {children}
-        </div>
+        </motion.div>
       </main>
     </div>
   );
