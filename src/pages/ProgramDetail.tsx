@@ -502,6 +502,50 @@ export default function ProgramDetail() {
             )}
           </TabsContent>
 
+          {/* ── JOIN REQUESTS ── */}
+          <TabsContent value="requests" className="mt-4 space-y-3">
+            {joinRequests.length === 0 ? (
+              <div className="glass rounded-xl p-12 text-center">
+                <UserPlus className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+                <p className="text-muted-foreground">Nenhuma solicitação de participação.</p>
+              </div>
+            ) : (
+              joinRequests.map((req) => (
+                <div
+                  key={req.id}
+                  className={`glass rounded-xl p-4 flex items-center gap-4 transition-all ${
+                    req.status === "pending" ? "border-warning/30" : req.status === "approved" ? "border-primary/20 opacity-60" : "border-destructive/20 opacity-40"
+                  }`}
+                >
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="font-bold text-primary">{req.patient_name[0]}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm">{req.patient_name}</p>
+                    {req.message && <p className="text-xs text-muted-foreground mt-0.5">{req.message}</p>}
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(req.created_at).toLocaleDateString("pt-BR")}
+                    </p>
+                  </div>
+                  {req.status === "pending" ? (
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={() => approveJoinRequest(req.id, req.patient_id, req.patient_name)} className="gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Aceitar
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => rejectJoinRequest(req.id)} className="gap-1 text-destructive hover:text-destructive">
+                        <AlertTriangle className="w-3.5 h-3.5" /> Recusar
+                      </Button>
+                    </div>
+                  ) : (
+                    <Badge variant="outline" className={req.status === "approved" ? "text-primary" : "text-destructive"}>
+                      {req.status === "approved" ? "Aprovado" : "Recusado"}
+                    </Badge>
+                  )}
+                </div>
+              ))
+            )}
+          </TabsContent>
+
           {/* ── RANKING ── */}
           <TabsContent value="ranking" className="mt-4">
             <div className="glass rounded-xl overflow-hidden">
