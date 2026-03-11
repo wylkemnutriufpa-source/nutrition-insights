@@ -812,7 +812,7 @@ function NutritionistDashboardContent() {
         </Dialog>
 
         {/* Program Performance */}
-        <div className="glass rounded-xl p-5">
+        <div className="glass-premium rounded-xl p-5 shimmer-sweep">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
               <Rocket className="w-4 h-4 text-accent" />
