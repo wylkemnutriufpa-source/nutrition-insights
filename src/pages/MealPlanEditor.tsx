@@ -840,7 +840,15 @@ export default function MealPlanEditor() {
                             className="flex-1 h-9 gap-1.5 border border-dashed border-border hover:border-primary text-muted-foreground hover:text-primary"
                             onClick={() => { setQuickAddKey(cellKey); setQuickAddText(""); }}
                           >
-                            <Plus className="w-3.5 h-3.5" /> Adicionar Rápido
+                            <Plus className="w-3.5 h-3.5" /> Rápido
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-9 gap-1.5 border border-dashed border-border hover:border-primary text-muted-foreground hover:text-primary"
+                            onClick={() => { setBatchTarget({ day: selectedDay, mealType: meal.key }); setBatchText(""); }}
+                          >
+                            <Leaf className="w-3.5 h-3.5" /> Lote
                           </Button>
                           <Button
                             variant="ghost"
