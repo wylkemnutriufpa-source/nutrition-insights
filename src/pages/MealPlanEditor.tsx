@@ -20,6 +20,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import PlanScheduler from "@/components/plans/PlanScheduler";
 import DocumentUpload from "@/components/common/DocumentUpload";
 import FoodAutocomplete, { type FoodItem } from "@/components/meals/FoodAutocomplete";
+import CalorieTemplates from "@/components/meals/CalorieTemplates";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -512,6 +513,7 @@ export default function MealPlanEditor() {
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            <CalorieTemplates mealPlanId={plan.id} onApplied={fetchData} />
             <Button
               variant="outline"
               size="sm"
