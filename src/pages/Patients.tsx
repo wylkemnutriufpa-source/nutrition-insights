@@ -255,7 +255,7 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: idx * 0.04 }}
       whileHover={{ y: -2 }}
-      className={`glass rounded-xl p-5 shadow-card cursor-pointer ring-2 ${isInactive ? "ring-muted/30 opacity-60" : tier.ring} transition-all relative`}
+      className={`glass-premium rounded-xl p-5 shadow-card shimmer-sweep cursor-pointer ring-2 ${isInactive ? "ring-muted/30 opacity-60" : tier.ring} transition-all relative metric-glow`}
       onClick={() => navigate(p.patient_id)}
     >
       {isInactive && (
