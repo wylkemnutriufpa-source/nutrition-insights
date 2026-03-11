@@ -59,6 +59,7 @@ const item = {
 function PatientDashboardContent() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [stats, setStats] = useState<PlayerStats | null>(null);
   const [checklistTasks, setChecklistTasks] = useState<any[]>([]);
   const [anamnesis, setAnamnesis] = useState<any>(null);
