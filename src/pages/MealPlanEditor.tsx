@@ -1127,6 +1127,68 @@ export default function MealPlanEditor() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Batch Add Dialog */}
+      <Dialog open={!!batchTarget} onOpenChange={(open) => { if (!open) setBatchTarget(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              <Leaf className="w-5 h-5 text-primary" /> Adicionar em Lote
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Digite um alimento por linha. Alimentos reconhecidos terão macros preenchidos automaticamente.
+            </p>
+            {batchTarget && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className={MEAL_TYPES.find((m) => m.key === batchTarget.mealType)?.color}>
+                  {MEAL_TYPES.find((m) => m.key === batchTarget.mealType)?.icon}
+                </span>
+                {MEAL_TYPES.find((m) => m.key === batchTarget.mealType)?.label} — {DAYS[batchTarget.day]?.label}
+              </div>
+            )}
+            <Textarea
+              autoFocus
+              value={batchText}
+              onChange={(e) => setBatchText(e.target.value)}
+              placeholder={"Frango grelhado\nArroz integral\nBrócolis cozido\nAzeite de oliva"}
+              rows={8}
+              className="font-mono text-sm"
+            />
+            {batchText.trim() && (
+              <div className="bg-secondary/40 rounded-lg p-3 space-y-1">
+                <p className="text-xs font-medium text-muted-foreground">
+                  Pré-visualização ({batchText.split("\n").filter(l => l.trim()).length} itens):
+                </p>
+                {batchText.split("\n").filter(l => l.trim()).map((line, i) => {
+                  const match = findFoodMatch(line.trim());
+                  return (
+                    <div key={i} className="flex items-center justify-between text-xs">
+                      <span className="truncate flex-1">{line.trim()}</span>
+                      {match ? (
+                        <span className="text-primary ml-2 shrink-0">
+                          {match.calories} kcal • {match.protein}g P
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground/50 ml-2 shrink-0">sem macros</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            <Button
+              className="w-full gradient-primary gap-2"
+              onClick={() => batchTarget && handleBatchAdd(batchTarget.day, batchTarget.mealType)}
+              disabled={batchAdding || !batchText.trim()}
+            >
+              {batchAdding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+              Adicionar {batchText.split("\n").filter(l => l.trim()).length} itens
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
