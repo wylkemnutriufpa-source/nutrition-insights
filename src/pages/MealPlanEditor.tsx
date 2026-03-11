@@ -14,8 +14,9 @@ import {
   ArrowLeft, Plus, Trash2, Copy, GripVertical, Utensils,
   Sun, Coffee, Apple, Sandwich, Moon, Cookie, Save, ChevronLeft, ChevronRight,
   Flame, Beef, Wheat, Droplets, Leaf, PencilLine, X, Check, Sparkles, Loader2,
-  Bookmark, BookmarkCheck, FolderDown, FolderUp, BookOpen
+  Bookmark, BookmarkCheck, FolderDown, FolderUp, BookOpen, CalendarDays, CalendarRange
 } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import PlanScheduler from "@/components/plans/PlanScheduler";
 import DocumentUpload from "@/components/common/DocumentUpload";
 import FoodAutocomplete, { type FoodItem } from "@/components/meals/FoodAutocomplete";
@@ -85,6 +86,15 @@ export default function MealPlanEditor() {
   // Copy state
   const [copySource, setCopySource] = useState<{ day: number; mealType: MealType } | null>(null);
   const [generating, setGenerating] = useState(false);
+
+  // Quick-add state
+  const [quickAddKey, setQuickAddKey] = useState<string | null>(null); // "day-mealType"
+  const [quickAddText, setQuickAddText] = useState("");
+  const [quickAdding, setQuickAdding] = useState(false);
+
+  // View mode
+  const [editorView, setEditorView] = useState<"weekly" | "daily">("weekly");
+  const [selectedDay, setSelectedDay] = useState<number>(new Date().getDay());
 
   // Save/Import state
   const [savingMeal, setSavingMeal] = useState(false);
@@ -255,6 +265,31 @@ export default function MealPlanEditor() {
       calories: mealItems.reduce((s, i) => s + (i.calories_target || 0), 0),
       protein: mealItems.reduce((s, i) => s + (Number(i.protein_target) || 0), 0),
     };
+  };
+
+  // Quick-add: allows typing a food name and instantly adding it
+  const handleQuickAdd = async (day: number, mealType: MealType) => {
+    if (!id || !quickAddText.trim()) return;
+    setQuickAdding(true);
+    const { error } = await supabase.from("meal_plan_items").insert({
+      meal_plan_id: id,
+      title: quickAddText.trim(),
+      description: null,
+      meal_type: mealType,
+      day_of_week: day,
+      calories_target: null,
+      protein_target: null,
+      carbs_target: null,
+      fat_target: null,
+    });
+    setQuickAdding(false);
+    if (error) toast.error("Erro ao adicionar: " + error.message);
+    else {
+      toast.success("Item adicionado!");
+      setQuickAddText("");
+      setQuickAddKey(null);
+      fetchData();
+    }
   };
 
   // Save current meal item as reusable
@@ -493,196 +528,291 @@ export default function MealPlanEditor() {
           </div>
         )}
 
-        {/* Grid */}
-        <div className="overflow-x-auto -mx-4 px-4 pb-4">
-          <div className="min-w-[1100px]">
-            {/* Day Headers */}
-            <div className="grid grid-cols-[180px_repeat(7,1fr)] gap-1 mb-1">
-              <div className="p-2" /> {/* empty corner */}
-              {DAYS.map((day) => {
-                const totals = getDayTotals(day.key);
-                return (
-                  <div key={day.key} className="glass rounded-lg p-2 text-center">
-                    <p className="font-display font-semibold text-sm">{day.label}</p>
-                    <div className="flex items-center justify-center gap-2 mt-1 text-[10px] text-muted-foreground">
-                      <span className="flex items-center gap-0.5">
-                        <Flame className="w-3 h-3 text-orange-400" />
-                        {totals.calories}
-                      </span>
-                      <span className="flex items-center gap-0.5">
-                        <Beef className="w-3 h-3 text-red-400" />
-                        {totals.protein.toFixed(0)}g
-                      </span>
-                    </div>
-                    {copySource && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="mt-1 h-6 text-[10px] px-2"
-                        onClick={() => handleCopyDay(copySource.day, day.key)}
-                      >
-                        Colar aqui
-                      </Button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+        {/* View Mode Tabs */}
+        <Tabs value={editorView} onValueChange={(v) => setEditorView(v as "weekly" | "daily")} className="w-full">
+          <TabsList className="w-full grid grid-cols-2">
+            <TabsTrigger value="weekly" className="gap-1.5">
+              <CalendarRange className="w-4 h-4" /> Visão Semanal
+            </TabsTrigger>
+            <TabsTrigger value="daily" className="gap-1.5">
+              <CalendarDays className="w-4 h-4" /> Visão Diária
+            </TabsTrigger>
+          </TabsList>
 
-            {/* Meal Rows */}
-            {MEAL_TYPES.map((meal) => (
-              <div key={meal.key} className="grid grid-cols-[180px_repeat(7,1fr)] gap-1 mb-1">
-                {/* Row label */}
-                <div className="glass rounded-lg p-3 flex flex-col justify-center">
-                  <div className="flex items-center gap-2">
-                    <span className={meal.color}>{meal.icon}</span>
-                    <span className="font-display text-xs font-semibold">{meal.label}</span>
-                  </div>
-                  <div className="text-[10px] text-muted-foreground mt-1">
-                    {(() => {
-                      const t = getMealTypeTotals(meal.key);
-                      return `${t.calories} kcal • ${t.protein.toFixed(0)}g prot (semana)`;
-                    })()}
-                  </div>
+          {/* ========== WEEKLY VIEW ========== */}
+          <TabsContent value="weekly" className="mt-4">
+            <div className="overflow-x-auto -mx-4 px-4 pb-4">
+              <div className="min-w-[1100px]">
+                {/* Day Headers */}
+                <div className="grid grid-cols-[180px_repeat(7,1fr)] gap-1 mb-1">
+                  <div className="p-2" />
+                  {DAYS.map((day) => {
+                    const totals = getDayTotals(day.key);
+                    return (
+                      <div key={day.key} className="glass rounded-lg p-2 text-center">
+                        <p className="font-display font-semibold text-sm">{day.label}</p>
+                        <div className="flex items-center justify-center gap-2 mt-1 text-[10px] text-muted-foreground">
+                          <span className="flex items-center gap-0.5">
+                            <Flame className="w-3 h-3 text-orange-400" />
+                            {totals.calories}
+                          </span>
+                          <span className="flex items-center gap-0.5">
+                            <Beef className="w-3 h-3 text-red-400" />
+                            {totals.protein.toFixed(0)}g
+                          </span>
+                        </div>
+                        {copySource && (
+                          <Button size="sm" variant="outline" className="mt-1 h-6 text-[10px] px-2" onClick={() => handleCopyDay(copySource.day, day.key)}>
+                            Colar aqui
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
 
-                {/* Day cells */}
-                {DAYS.map((day) => {
-                  const cellItems = getItems(day.key, meal.key);
-                  return (
-                    <div
-                      key={day.key}
-                      className="glass rounded-lg p-2 min-h-[100px] flex flex-col group relative hover:border-primary/30 transition-colors"
-                    >
-                      {/* Items */}
-                      <div className="flex-1 space-y-1.5">
-                        <AnimatePresence mode="popLayout">
-                          {cellItems.map((item) => (
-                            <motion.div
-                              key={item.id}
-                              initial={{ opacity: 0, scale: 0.95 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.95 }}
-                              className="bg-secondary/60 rounded-md px-2 py-1.5 cursor-pointer hover:bg-secondary transition-colors group/item"
-                              onClick={() => openEditDialog(item)}
-                            >
-                              <p className="text-[11px] font-medium leading-tight truncate">
-                                {item.title}
-                              </p>
-                              {item.description && (
-                                <p className="text-[9px] text-muted-foreground leading-tight mt-0.5 line-clamp-2">
-                                  {item.description}
-                                </p>
-                              )}
-                              <div className="flex items-center gap-1.5 mt-1 text-[9px] text-muted-foreground">
-                                {item.calories_target && (
-                                  <span className="flex items-center gap-0.5">
-                                    <Flame className="w-2.5 h-2.5 text-orange-400" />
-                                    {item.calories_target}
-                                  </span>
-                                )}
-                                {item.protein_target && (
-                                  <span className="flex items-center gap-0.5">
-                                    <Beef className="w-2.5 h-2.5 text-red-400" />
-                                    {Number(item.protein_target).toFixed(0)}g
-                                  </span>
-                                )}
-                                {item.carbs_target && (
-                                  <span className="flex items-center gap-0.5">
-                                    <Wheat className="w-2.5 h-2.5 text-amber-500" />
-                                    {Number(item.carbs_target).toFixed(0)}g
-                                  </span>
-                                )}
-                                {item.fat_target && (
-                                  <span className="flex items-center gap-0.5">
-                                    <Droplets className="w-2.5 h-2.5 text-blue-400" />
-                                    {Number(item.fat_target).toFixed(0)}g
-                                  </span>
-                                )}
-                              </div>
-                              {/* Delete on hover */}
+                {/* Meal Rows */}
+                {MEAL_TYPES.map((meal) => (
+                  <div key={meal.key} className="grid grid-cols-[180px_repeat(7,1fr)] gap-1 mb-1">
+                    <div className="glass rounded-lg p-3 flex flex-col justify-center">
+                      <div className="flex items-center gap-2">
+                        <span className={meal.color}>{meal.icon}</span>
+                        <span className="font-display text-xs font-semibold">{meal.label}</span>
+                      </div>
+                      <div className="text-[10px] text-muted-foreground mt-1">
+                        {(() => { const t = getMealTypeTotals(meal.key); return `${t.calories} kcal • ${t.protein.toFixed(0)}g prot`; })()}
+                      </div>
+                    </div>
+
+                    {DAYS.map((day) => {
+                      const cellItems = getItems(day.key, meal.key);
+                      const cellKey = `${day.key}-${meal.key}`;
+                      return (
+                        <div key={day.key} className="glass rounded-lg p-2 min-h-[100px] flex flex-col group relative hover:border-primary/30 transition-colors">
+                          <div className="flex-1 space-y-1.5">
+                            <AnimatePresence mode="popLayout">
+                              {cellItems.map((item) => (
+                                <motion.div
+                                  key={item.id}
+                                  initial={{ opacity: 0, scale: 0.95 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  exit={{ opacity: 0, scale: 0.95 }}
+                                  className="bg-secondary/60 rounded-md px-2 py-1.5 cursor-pointer hover:bg-secondary transition-colors group/item"
+                                  onClick={() => openEditDialog(item)}
+                                >
+                                  <p className="text-[11px] font-medium leading-tight truncate">{item.title}</p>
+                                  {item.description && <p className="text-[9px] text-muted-foreground leading-tight mt-0.5 line-clamp-2">{item.description}</p>}
+                                  <div className="flex items-center gap-1.5 mt-1 text-[9px] text-muted-foreground">
+                                    {item.calories_target && <span className="flex items-center gap-0.5"><Flame className="w-2.5 h-2.5 text-orange-400" />{item.calories_target}</span>}
+                                    {item.protein_target && <span className="flex items-center gap-0.5"><Beef className="w-2.5 h-2.5 text-red-400" />{Number(item.protein_target).toFixed(0)}g</span>}
+                                  </div>
+                                  <button onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }} className="absolute top-1 right-1 opacity-0 group-hover/item:opacity-100 transition-opacity p-0.5 rounded hover:bg-destructive/10">
+                                    <X className="w-3 h-3 text-destructive" />
+                                  </button>
+                                </motion.div>
+                              ))}
+                            </AnimatePresence>
+                          </div>
+
+                          {/* Quick-add inline */}
+                          {quickAddKey === cellKey ? (
+                            <div className="mt-1 flex gap-1">
+                              <Input
+                                autoFocus
+                                value={quickAddText}
+                                onChange={(e) => setQuickAddText(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === "Enter") handleQuickAdd(day.key, meal.key); if (e.key === "Escape") { setQuickAddKey(null); setQuickAddText(""); } }}
+                                placeholder="Ex: 2 ovos cozidos"
+                                className="h-7 text-[11px]"
+                                disabled={quickAdding}
+                              />
+                              <Button size="icon" className="h-7 w-7 shrink-0" onClick={() => handleQuickAdd(day.key, meal.key)} disabled={quickAdding || !quickAddText.trim()}>
+                                {quickAdding ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="mt-1 flex gap-0.5">
                               <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteItem(item.id);
-                                }}
-                                className="absolute top-1 right-1 opacity-0 group-hover/item:opacity-100 transition-opacity p-0.5 rounded hover:bg-destructive/10"
+                                onClick={() => { setQuickAddKey(cellKey); setQuickAddText(""); }}
+                                className="flex-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-primary"
                               >
-                                <X className="w-3 h-3 text-destructive" />
+                                <Plus className="w-3 h-3" /> Rápido
                               </button>
-                            </motion.div>
-                          ))}
-                        </AnimatePresence>
+                              <button
+                                onClick={() => openAddDialog(day.key, meal.key)}
+                                className="flex-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-primary"
+                              >
+                                <PencilLine className="w-3 h-3" /> Detalhado
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+
+                {/* Totals row */}
+                <div className="grid grid-cols-[180px_repeat(7,1fr)] gap-1 mt-2">
+                  <div className="glass rounded-lg p-3 flex items-center">
+                    <span className="font-display text-xs font-bold text-primary">TOTAL DIÁRIO</span>
+                  </div>
+                  {DAYS.map((day) => {
+                    const t = getDayTotals(day.key);
+                    return (
+                      <div key={day.key} className="glass rounded-lg p-2 border-primary/20">
+                        <div className="grid grid-cols-2 gap-1 text-[10px]">
+                          <div className="flex items-center gap-1"><Flame className="w-3 h-3 text-orange-400" /><span className="font-semibold">{t.calories}</span><span className="text-muted-foreground">kcal</span></div>
+                          <div className="flex items-center gap-1"><Beef className="w-3 h-3 text-red-400" /><span className="font-semibold">{t.protein.toFixed(0)}g</span><span className="text-muted-foreground">prot</span></div>
+                          <div className="flex items-center gap-1"><Wheat className="w-3 h-3 text-amber-500" /><span className="font-semibold">{t.carbs.toFixed(0)}g</span><span className="text-muted-foreground">carb</span></div>
+                          <div className="flex items-center gap-1"><Droplets className="w-3 h-3 text-blue-400" /><span className="font-semibold">{t.fat.toFixed(0)}g</span><span className="text-muted-foreground">gord</span></div>
+                        </div>
+                        <div className="mt-1 flex justify-center">
+                          <button
+                            onClick={() => setCopySource(copySource?.day === day.key ? null : { day: day.key, mealType: "breakfast" })}
+                            className={`text-[9px] flex items-center gap-0.5 px-1.5 py-0.5 rounded transition-colors ${copySource?.day === day.key ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-primary"}`}
+                          >
+                            <Copy className="w-2.5 h-2.5" />
+                            {copySource?.day === day.key ? "Copiando..." : "Copiar dia"}
+                          </button>
+                        </div>
                       </div>
-
-                      {/* Add button */}
-                      <button
-                        onClick={() => openAddDialog(day.key, meal.key)}
-                        className="mt-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-primary"
-                      >
-                        <Plus className="w-3 h-3" /> Adicionar
-                      </button>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            ))}
+            </div>
+          </TabsContent>
 
-            {/* Totals row */}
-            <div className="grid grid-cols-[180px_repeat(7,1fr)] gap-1 mt-2">
-              <div className="glass rounded-lg p-3 flex items-center">
-                <span className="font-display text-xs font-bold text-primary">TOTAL DIÁRIO</span>
+          {/* ========== DAILY VIEW ========== */}
+          <TabsContent value="daily" className="mt-4 space-y-4">
+            {/* Day selector */}
+            <div className="flex items-center justify-center gap-2">
+              <Button variant="ghost" size="icon" onClick={() => setSelectedDay((selectedDay + 6) % 7)}>
+                <ChevronLeft className="w-5 h-5" />
+              </Button>
+              <div className="flex gap-1">
+                {DAYS.map((day) => (
+                  <Button
+                    key={day.key}
+                    variant={selectedDay === day.key ? "default" : "outline"}
+                    size="sm"
+                    className="h-8 px-2.5 text-xs"
+                    onClick={() => setSelectedDay(day.key)}
+                  >
+                    {day.short}
+                  </Button>
+                ))}
               </div>
-              {DAYS.map((day) => {
-                const t = getDayTotals(day.key);
+              <Button variant="ghost" size="icon" onClick={() => setSelectedDay((selectedDay + 1) % 7)}>
+                <ChevronRight className="w-5 h-5" />
+              </Button>
+            </div>
+
+            {/* Day totals */}
+            {(() => {
+              const t = getDayTotals(selectedDay);
+              return (
+                <div className="grid grid-cols-4 gap-2">
+                  <div className="glass rounded-xl p-3 text-center"><Flame className="w-4 h-4 mx-auto text-orange-500 mb-1" /><p className="text-xs text-muted-foreground">Calorias</p><p className="font-display font-bold text-sm">{t.calories}</p></div>
+                  <div className="glass rounded-xl p-3 text-center"><Beef className="w-4 h-4 mx-auto text-red-500 mb-1" /><p className="text-xs text-muted-foreground">Proteína</p><p className="font-display font-bold text-sm">{t.protein.toFixed(0)}g</p></div>
+                  <div className="glass rounded-xl p-3 text-center"><Wheat className="w-4 h-4 mx-auto text-amber-500 mb-1" /><p className="text-xs text-muted-foreground">Carbs</p><p className="font-display font-bold text-sm">{t.carbs.toFixed(0)}g</p></div>
+                  <div className="glass rounded-xl p-3 text-center"><Droplets className="w-4 h-4 mx-auto text-blue-400 mb-1" /><p className="text-xs text-muted-foreground">Gordura</p><p className="font-display font-bold text-sm">{t.fat.toFixed(0)}g</p></div>
+                </div>
+              );
+            })()}
+
+            {/* Meals for selected day */}
+            <div className="space-y-4">
+              {MEAL_TYPES.map((meal) => {
+                const cellItems = getItems(selectedDay, meal.key);
+                const cellKey = `daily-${selectedDay}-${meal.key}`;
                 return (
-                  <div key={day.key} className="glass rounded-lg p-2 border-primary/20">
-                    <div className="grid grid-cols-2 gap-1 text-[10px]">
-                      <div className="flex items-center gap-1">
-                        <Flame className="w-3 h-3 text-orange-400" />
-                        <span className="font-semibold">{t.calories}</span>
-                        <span className="text-muted-foreground">kcal</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Beef className="w-3 h-3 text-red-400" />
-                        <span className="font-semibold">{t.protein.toFixed(0)}g</span>
-                        <span className="text-muted-foreground">prot</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Wheat className="w-3 h-3 text-amber-500" />
-                        <span className="font-semibold">{t.carbs.toFixed(0)}g</span>
-                        <span className="text-muted-foreground">carb</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Droplets className="w-3 h-3 text-blue-400" />
-                        <span className="font-semibold">{t.fat.toFixed(0)}g</span>
-                        <span className="text-muted-foreground">gord</span>
-                      </div>
+                  <div key={meal.key} className="glass rounded-xl overflow-hidden">
+                    <div className="flex items-center gap-2 p-3 bg-secondary/30">
+                      <span className={meal.color}>{meal.icon}</span>
+                      <span className="font-display text-sm font-semibold flex-1">{meal.label}</span>
+                      <span className="text-[10px] text-muted-foreground">{cellItems.length} itens</span>
                     </div>
-                    {/* Copy day button */}
-                    <div className="mt-1 flex justify-center">
-                      <button
-                        onClick={() =>
-                          setCopySource(
-                            copySource?.day === day.key ? null : { day: day.key, mealType: "breakfast" }
-                          )
-                        }
-                        className={`text-[9px] flex items-center gap-0.5 px-1.5 py-0.5 rounded transition-colors ${
-                          copySource?.day === day.key
-                            ? "bg-primary/20 text-primary"
-                            : "text-muted-foreground hover:text-primary"
-                        }`}
-                      >
-                        <Copy className="w-2.5 h-2.5" />
-                        {copySource?.day === day.key ? "Copiando..." : "Copiar dia"}
-                      </button>
+                    <div className="p-3 space-y-2">
+                      {cellItems.map((item) => (
+                        <div
+                          key={item.id}
+                          className="flex items-center gap-3 p-2.5 rounded-lg bg-secondary/40 hover:bg-secondary/60 transition-colors cursor-pointer group/item relative"
+                          onClick={() => openEditDialog(item)}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{item.title}</p>
+                            {item.description && <p className="text-xs text-muted-foreground truncate">{item.description}</p>}
+                            <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
+                              {item.calories_target && <span className="flex items-center gap-0.5"><Flame className="w-3 h-3 text-orange-400" />{item.calories_target} kcal</span>}
+                              {item.protein_target && <span className="flex items-center gap-0.5"><Beef className="w-3 h-3 text-red-400" />{Number(item.protein_target).toFixed(0)}g</span>}
+                              {item.carbs_target && <span className="flex items-center gap-0.5"><Wheat className="w-3 h-3 text-amber-500" />{Number(item.carbs_target).toFixed(0)}g</span>}
+                              {item.fat_target && <span className="flex items-center gap-0.5"><Droplets className="w-3 h-3 text-blue-400" />{Number(item.fat_target).toFixed(0)}g</span>}
+                            </div>
+                          </div>
+                          <button onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }} className="opacity-0 group-hover/item:opacity-100 p-1 rounded hover:bg-destructive/10 transition-opacity">
+                            <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                          </button>
+                        </div>
+                      ))}
+
+                      {/* Quick-add inline for daily view */}
+                      {quickAddKey === cellKey ? (
+                        <div className="flex gap-1.5">
+                          <Input
+                            autoFocus
+                            value={quickAddText}
+                            onChange={(e) => setQuickAddText(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === "Enter") handleQuickAdd(selectedDay, meal.key); if (e.key === "Escape") { setQuickAddKey(null); setQuickAddText(""); } }}
+                            placeholder="Ex: 150g frango grelhado"
+                            className="h-9 text-sm"
+                            disabled={quickAdding}
+                          />
+                          <Button size="sm" className="h-9" onClick={() => handleQuickAdd(selectedDay, meal.key)} disabled={quickAdding || !quickAddText.trim()}>
+                            {quickAdding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="flex-1 h-9 gap-1.5 border border-dashed border-border hover:border-primary text-muted-foreground hover:text-primary"
+                            onClick={() => { setQuickAddKey(cellKey); setQuickAddText(""); }}
+                          >
+                            <Plus className="w-3.5 h-3.5" /> Adicionar Rápido
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-9 gap-1.5 border border-dashed border-border hover:border-primary text-muted-foreground hover:text-primary"
+                            onClick={() => openAddDialog(selectedDay, meal.key)}
+                          >
+                            <PencilLine className="w-3.5 h-3.5" /> Detalhado
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
               })}
             </div>
-          </div>
-        </div>
+
+            {/* Copy day button */}
+            <div className="flex justify-center gap-3">
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setCopySource(copySource?.day === selectedDay ? null : { day: selectedDay, mealType: "breakfast" })}>
+                <Copy className="w-4 h-4" />
+                {copySource?.day === selectedDay ? "Cancelar cópia" : "Copiar este dia"}
+              </Button>
+              {copySource && copySource.day !== selectedDay && (
+                <Button size="sm" className="gap-1.5" onClick={() => handleCopyDay(copySource.day, selectedDay)}>
+                  Colar de {DAYS.find(d => d.key === copySource.day)?.label}
+                </Button>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
 
         {/* Plan Scheduler */}
         <PlanScheduler mealPlanId={plan.id} planTitle={plan.title} />
