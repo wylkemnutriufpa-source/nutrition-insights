@@ -169,10 +169,10 @@ function PatientDashboardContent() {
               >
                 {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
               </motion.p>
-              <h1 className="font-display text-2xl md:text-3xl font-bold">
-                Meu Dashboard
-              </h1>
-              <p className="text-muted-foreground text-sm mt-1">Acompanhe seu progresso e conquistas</p>
+               <h1 className="font-display text-2xl md:text-3xl font-bold">
+                 {t("dashboard.myDashboard")}
+               </h1>
+               <p className="text-muted-foreground text-sm mt-1">{t("dashboard.trackProgress")}</p>
             </div>
             <div className="flex gap-2">
               <Link to="/analyze">
