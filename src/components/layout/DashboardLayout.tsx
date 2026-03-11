@@ -172,6 +172,8 @@ function SidebarContent({
               );
             }
 
+            const isPremium = 'premium' in link && (link as any).premium;
+
             return (
               <Link
                 key={link.to}
@@ -179,16 +181,30 @@ function SidebarContent({
                 onClick={onLinkClick}
                 className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all group
                   hover:translate-x-1 hover:scale-[1.02] active:scale-[0.98]
+                  ${isPremium && !active
+                    ? "border border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-transparent hover:from-amber-500/10"
+                    : ""
+                  }
                   ${
                   active
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    ? isPremium ? "bg-gradient-to-r from-amber-500/15 to-amber-600/5 text-amber-500 border border-amber-500/30" : "bg-primary/10 text-primary"
+                    : !isPremium ? "text-muted-foreground hover:text-foreground hover:bg-muted" : ""
                 }`}
                 style={{ transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)" }}
               >
-                <link.icon className={`w-4 h-4 flex-shrink-0 ${active ? "text-primary animate-pulse" : "group-hover:scale-110 transition-transform"}`} />
-                {!collapsed && <span className="text-xs font-medium">{link.label}</span>}
-                {active && !collapsed && <ChevronRight className="w-3.5 h-3.5 ml-auto text-primary animate-bounce" />}
+                <link.icon className={`w-4 h-4 flex-shrink-0 ${
+                  isPremium
+                    ? "text-amber-500"
+                    : active ? "text-primary animate-pulse" : "group-hover:scale-110 transition-transform"
+                }`} />
+                {!collapsed && (
+                  <span className={`text-xs font-medium ${
+                    isPremium
+                      ? "bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent font-bold"
+                      : ""
+                  }`}>{link.label}</span>
+                )}
+                {active && !collapsed && <ChevronRight className={`w-3.5 h-3.5 ml-auto animate-bounce ${isPremium ? "text-amber-500" : "text-primary"}`} />}
               </Link>
             );
           })}
