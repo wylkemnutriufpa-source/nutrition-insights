@@ -112,6 +112,7 @@ function SidebarContent({
   signOut,
   setCollapsed,
   onLinkClick,
+  onSosOpen,
 }: {
   links: typeof nutritionistLinks;
   location: ReturnType<typeof useLocation>;
@@ -124,6 +125,7 @@ function SidebarContent({
   signOut: () => void;
   setCollapsed?: (v: boolean) => void;
   onLinkClick?: () => void;
+  onSosOpen?: () => void;
 }) {
   return (
     <>
