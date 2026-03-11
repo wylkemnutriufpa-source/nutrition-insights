@@ -15,6 +15,7 @@ import {
   Scale, Droplets, Heart, Calculator, TrendingUp, BookOpen, DollarSign, Pill, Crown, Compass
 } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePresenceTracker } from "@/hooks/usePresenceTracker";
@@ -23,82 +24,83 @@ import CommandPalette from "@/components/common/CommandPalette";
 import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
 import SOSModal from "@/components/patient/SOSModal";
 import SOSInbox from "@/components/patient/SOSInbox";
+import LanguageSelector from "@/components/common/LanguageSelector";
 import { AlertTriangle } from "lucide-react";
 
 const nutritionistLinks = [
-  { to: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/ranking", icon: Trophy, label: "🏆 Ranking Global", premium: true },
-  { to: "/programs", icon: Rocket, label: "✨ Projetos", premium: true },
-  { to: "/patients", icon: Users, label: "Pacientes" },
-  { to: "/checkin-panel", icon: ClipboardCheck, label: "Check-ins" },
-  { to: "/appointments", icon: Activity, label: "Agenda" },
-  { to: "/chat", icon: MessageSquare, label: "Chat" },
-  { to: "/weekly-goals", icon: Target, label: "Metas" },
-  { to: "/protocols", icon: FileText, label: "Protocolos" },
-  { to: "/automation", icon: Bot, label: "Automação" },
-  { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos" },
-  { to: "/diet-templates", icon: BookOpen, label: "Templates" },
-  { to: "/recipes", icon: ChefHat, label: "Receitas" },
-  { to: "/food-database", icon: Apple, label: "Alimentos" },
-  { to: "/reports", icon: BarChart3, label: "Relatórios" },
-  { to: "/clinical-intelligence", icon: Activity, label: "Intel. Clínica" },
-  { to: "/weekly-report", icon: FileBarChart, label: "Relatório Semanal" },
-  { to: "/financial", icon: DollarSign, label: "Financeiro" },
-  { to: "/supplements", icon: Pill, label: "Suplementação" },
-  { to: "/global-tips", icon: Lightbulb, label: "Dicas" },
-  { to: "/professional-guide", icon: Compass, label: "Guia do Profissional" },
-  { to: "/user-guide", icon: BookOpen, label: "Guia do Paciente" },
-  { to: "/feedbacks", icon: MessageSquare, label: "Feedbacks" },
-  { to: "/branding", icon: Palette, label: "Branding" },
+  { to: "/", icon: LayoutDashboard, labelKey: "nav.dashboard" },
+  { to: "/ranking", icon: Trophy, labelKey: "nav.ranking", premium: true },
+  { to: "/programs", icon: Rocket, labelKey: "nav.programs", premium: true },
+  { to: "/patients", icon: Users, labelKey: "nav.patients" },
+  { to: "/checkin-panel", icon: ClipboardCheck, labelKey: "nav.checkins" },
+  { to: "/appointments", icon: Activity, labelKey: "nav.agenda" },
+  { to: "/chat", icon: MessageSquare, labelKey: "nav.chat" },
+  { to: "/weekly-goals", icon: Target, labelKey: "nav.goals" },
+  { to: "/protocols", icon: FileText, labelKey: "nav.protocols" },
+  { to: "/automation", icon: Bot, labelKey: "nav.automation" },
+  { to: "/meal-plans", icon: UtensilsCrossed, labelKey: "nav.mealPlans" },
+  { to: "/diet-templates", icon: BookOpen, labelKey: "nav.templates" },
+  { to: "/recipes", icon: ChefHat, labelKey: "nav.recipes" },
+  { to: "/food-database", icon: Apple, labelKey: "nav.foods" },
+  { to: "/reports", icon: BarChart3, labelKey: "nav.reports" },
+  { to: "/clinical-intelligence", icon: Activity, labelKey: "nav.clinicalIntel" },
+  { to: "/weekly-report", icon: FileBarChart, labelKey: "nav.weeklyReport" },
+  { to: "/financial", icon: DollarSign, labelKey: "nav.financial" },
+  { to: "/supplements", icon: Pill, labelKey: "nav.supplements" },
+  { to: "/global-tips", icon: Lightbulb, labelKey: "nav.tips" },
+  { to: "/professional-guide", icon: Compass, labelKey: "nav.professionalGuide" },
+  { to: "/user-guide", icon: BookOpen, labelKey: "nav.patientGuide" },
+  { to: "/feedbacks", icon: MessageSquare, labelKey: "nav.feedbacks" },
+  { to: "/branding", icon: Palette, labelKey: "nav.branding" },
 ];
 
 const patientLinks = [
-  { to: "/", icon: LayoutDashboard, label: "Dashboard", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
-  { to: "/ranking", icon: Trophy, label: "🏆 Ranking", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
-  { to: "/checkin", icon: ClipboardCheck, label: "Check-in", color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
-  { to: "/checklist", icon: CheckCircle2, label: "Checklist", color: "from-success/20 to-success/5", iconColor: "text-success" },
-  { to: "/my-diet", icon: UtensilsCrossed, label: "Minha Dieta", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
-  { to: "/weekly-goals", icon: Target, label: "Metas", color: "from-info/20 to-info/5", iconColor: "text-info" },
-  { to: "/appointments", icon: Activity, label: "Agenda", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
-  { to: "/chat", icon: MessageSquare, label: "Chat", color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
-  { to: "/autobot", icon: Bot, label: "AutoBot IA", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
-  { to: "/meals", icon: Leaf, label: "Refeições", color: "from-success/20 to-success/5", iconColor: "text-success" },
-  { to: "/recipes", icon: ChefHat, label: "Receitas", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
-  { to: "/shopping-list", icon: ShoppingCart, label: "Compras", color: "from-info/20 to-info/5", iconColor: "text-info" },
-  { to: "/journey", icon: TrendingUp, label: "Jornada", color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
-  { to: "/library", icon: BookOpen, label: "Biblioteca", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
-  { to: "/supplements", icon: Pill, label: "Suplementos", color: "from-success/20 to-success/5", iconColor: "text-success" },
-  { to: "/anamnesis", icon: ClipboardCheck, label: "Anamnese", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
-  { to: "/food-database", icon: Apple, label: "Alimentos", color: "from-info/20 to-info/5", iconColor: "text-info" },
-  { to: "/weight-calculator", icon: Scale, label: "Peso Ideal", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
-  { to: "/water-calculator", icon: Droplets, label: "Hidratação", color: "from-info/20 to-info/5", iconColor: "text-info" },
-  { to: "/health-quiz", icon: Heart, label: "Health Check", color: "from-destructive/20 to-destructive/5", iconColor: "text-destructive" },
-  { to: "/global-tips", icon: Lightbulb, label: "Dicas", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
-  { to: "/user-guide", icon: Compass, label: "Guia do Usuário", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
-  { to: "/feedbacks", icon: MessageSquare, label: "Feedbacks", color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
-  { to: "/achievements", icon: Trophy, label: "Conquistas", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
-  { to: "/challenges", icon: Target, label: "Desafios", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
+  { to: "/", icon: LayoutDashboard, labelKey: "nav.dashboard", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
+  { to: "/ranking", icon: Trophy, labelKey: "nav.ranking", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
+  { to: "/checkin", icon: ClipboardCheck, labelKey: "nav.checkin", color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
+  { to: "/checklist", icon: CheckCircle2, labelKey: "nav.checklist", color: "from-success/20 to-success/5", iconColor: "text-success" },
+  { to: "/my-diet", icon: UtensilsCrossed, labelKey: "nav.myDiet", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
+  { to: "/weekly-goals", icon: Target, labelKey: "nav.goals", color: "from-info/20 to-info/5", iconColor: "text-info" },
+  { to: "/appointments", icon: Activity, labelKey: "nav.agenda", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
+  { to: "/chat", icon: MessageSquare, labelKey: "nav.chat", color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
+  { to: "/autobot", icon: Bot, labelKey: "nav.autobot", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
+  { to: "/meals", icon: Leaf, labelKey: "nav.meals", color: "from-success/20 to-success/5", iconColor: "text-success" },
+  { to: "/recipes", icon: ChefHat, labelKey: "nav.recipes", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
+  { to: "/shopping-list", icon: ShoppingCart, labelKey: "nav.shopping", color: "from-info/20 to-info/5", iconColor: "text-info" },
+  { to: "/journey", icon: TrendingUp, labelKey: "nav.journey", color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
+  { to: "/library", icon: BookOpen, labelKey: "nav.library", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
+  { to: "/supplements", icon: Pill, labelKey: "nav.supplements", color: "from-success/20 to-success/5", iconColor: "text-success" },
+  { to: "/anamnesis", icon: ClipboardCheck, labelKey: "nav.anamnesis", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
+  { to: "/food-database", icon: Apple, labelKey: "nav.foods", color: "from-info/20 to-info/5", iconColor: "text-info" },
+  { to: "/weight-calculator", icon: Scale, labelKey: "nav.idealWeight", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
+  { to: "/water-calculator", icon: Droplets, labelKey: "nav.hydration", color: "from-info/20 to-info/5", iconColor: "text-info" },
+  { to: "/health-quiz", icon: Heart, labelKey: "nav.healthCheck", color: "from-destructive/20 to-destructive/5", iconColor: "text-destructive" },
+  { to: "/global-tips", icon: Lightbulb, labelKey: "nav.tips", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
+  { to: "/user-guide", icon: Compass, labelKey: "nav.userGuide", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
+  { to: "/feedbacks", icon: MessageSquare, labelKey: "nav.feedbacks", color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
+  { to: "/achievements", icon: Trophy, labelKey: "nav.achievements", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
+  { to: "/challenges", icon: Target, labelKey: "nav.challenges", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
 ];
 
 const adminLinks = [
-  { to: "/admin", icon: Shield, label: "Painel Admin" },
-  { to: "/ranking", icon: Trophy, label: "🏆 Ranking Global", premium: true },
-  { to: "/programs", icon: Rocket, label: "✨ Projetos", premium: true },
-  { to: "/admin/resources", icon: LayoutDashboard, label: "Central de Recursos" },
-  { to: "/admin/features", icon: Zap, label: "Feature Flags" },
-  { to: "/admin/testimonials", icon: Star, label: "Depoimentos" },
-  { to: "/patients", icon: Users, label: "Pacientes" },
-  { to: "/appointments", icon: Activity, label: "Agenda" },
-  { to: "/automation", icon: Bot, label: "Automação" },
-  { to: "/reports", icon: BarChart3, label: "Relatórios" },
-  { to: "/food-database", icon: Apple, label: "Alimentos" },
-  { to: "/branding", icon: Palette, label: "Branding" },
-  { to: "/global-tips", icon: Lightbulb, label: "Dicas" },
-  { to: "/professional-guide", icon: Compass, label: "Guia do Profissional" },
-  { to: "/user-guide", icon: BookOpen, label: "Guia do Paciente" },
-  { to: "/admin/pricing", icon: DollarSign, label: "Planos & Preços" },
-  { to: "/admin/patient-features", icon: Crown, label: "Features Paciente" },
-  { to: "/admin/audit-logs", icon: Shield, label: "Audit Logs" },
+  { to: "/admin", icon: Shield, labelKey: "nav.adminPanel" },
+  { to: "/ranking", icon: Trophy, labelKey: "nav.ranking", premium: true },
+  { to: "/programs", icon: Rocket, labelKey: "nav.programs", premium: true },
+  { to: "/admin/resources", icon: LayoutDashboard, labelKey: "nav.resources" },
+  { to: "/admin/features", icon: Zap, labelKey: "nav.featureFlags" },
+  { to: "/admin/testimonials", icon: Star, labelKey: "nav.testimonials" },
+  { to: "/patients", icon: Users, labelKey: "nav.patients" },
+  { to: "/appointments", icon: Activity, labelKey: "nav.agenda" },
+  { to: "/automation", icon: Bot, labelKey: "nav.automation" },
+  { to: "/reports", icon: BarChart3, labelKey: "nav.reports" },
+  { to: "/food-database", icon: Apple, labelKey: "nav.foods" },
+  { to: "/branding", icon: Palette, labelKey: "nav.branding" },
+  { to: "/global-tips", icon: Lightbulb, labelKey: "nav.tips" },
+  { to: "/professional-guide", icon: Compass, labelKey: "nav.professionalGuide" },
+  { to: "/user-guide", icon: BookOpen, labelKey: "nav.patientGuide" },
+  { to: "/admin/pricing", icon: DollarSign, labelKey: "nav.pricing" },
+  { to: "/admin/patient-features", icon: Crown, labelKey: "nav.patientFeatures" },
+  { to: "/admin/audit-logs", icon: Shield, labelKey: "nav.auditLogs" },
 ];
 
 function SidebarContent({
@@ -128,6 +130,7 @@ function SidebarContent({
   onLinkClick?: () => void;
   onSosOpen?: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <>
       {/* Logo */}
@@ -166,7 +169,7 @@ function SidebarContent({
                   }`}>
                     <link.icon className={`w-3.5 h-3.5 ${active ? linkIconColor : "text-muted-foreground group-hover:" + (linkIconColor || "text-primary")}`} />
                   </div>
-                  <span className={`text-xs font-medium ${active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}>{link.label}</span>
+                  <span className={`text-xs font-medium ${active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}>{t(link.labelKey)}</span>
                   {active && <ChevronRight className="w-3.5 h-3.5 ml-auto text-primary animate-bounce" />}
                 </Link>
               );
@@ -202,7 +205,7 @@ function SidebarContent({
                     isPremium
                       ? "bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent font-bold"
                       : ""
-                  }`}>{link.label}</span>
+                  }`}>{t(link.labelKey)}</span>
                 )}
                 {active && !collapsed && <ChevronRight className={`w-3.5 h-3.5 ml-auto animate-bounce ${isPremium ? "text-amber-500" : "text-primary"}`} />}
               </Link>
@@ -217,14 +220,14 @@ function SidebarContent({
                 className="flex items-center gap-3 px-3 py-2 rounded-xl gradient-primary text-primary-foreground mt-3 shadow-glow shimmer-sweep"
               >
                 <Sparkles className="w-4 h-4 flex-shrink-0" />
-                {!collapsed && <span className="text-xs font-medium">Analisar com IA</span>}
+                {!collapsed && <span className="text-xs font-medium">{t("nav.analyzeAI")}</span>}
               </Link>
               <button
                 onClick={() => { onSosOpen?.(); onLinkClick?.(); }}
                 className="flex items-center gap-3 px-3 py-2 rounded-xl bg-destructive/10 text-destructive border border-destructive/20 mt-2 w-full hover:bg-destructive/20 transition-all"
               >
                 <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                {!collapsed && <span className="text-xs font-medium">🆘 SOS</span>}
+                {!collapsed && <span className="text-xs font-medium">{t("nav.sos")}</span>}
               </button>
             </>
           )}
@@ -234,7 +237,7 @@ function SidebarContent({
               className="flex items-center gap-3 px-3 py-2 rounded-xl bg-destructive/10 text-destructive border border-destructive/20 mt-3 w-full hover:bg-destructive/20 transition-all"
             >
               <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-              {!collapsed && <span className="text-xs font-medium">🆘 SOS Inbox</span>}
+              {!collapsed && <span className="text-xs font-medium">{t("nav.sosInbox")}</span>}
             </button>
           )}
         </nav>
@@ -248,15 +251,17 @@ function SidebarContent({
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 w-full transition-all"
         >
           <Settings className="w-5 h-5" />
-          {!collapsed && <span className="text-sm">Configurações</span>}
+          {!collapsed && <span className="text-sm">{t("nav.settings")}</span>}
         </Link>
+
+        <LanguageSelector collapsed={collapsed} />
 
         <button
           onClick={toggleDark}
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 w-full transition-all"
         >
           {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          {!collapsed && <span className="text-sm">{dark ? "Modo claro" : "Modo escuro"}</span>}
+          {!collapsed && <span className="text-sm">{dark ? t("nav.lightMode") : t("nav.darkMode")}</span>}
         </button>
 
         <div className="flex items-center gap-3 px-3 py-2">
@@ -275,7 +280,7 @@ function SidebarContent({
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 w-full transition-all"
         >
           <LogOut className="w-5 h-5" />
-          {!collapsed && <span className="text-sm">Sair</span>}
+          {!collapsed && <span className="text-sm">{t("nav.signOut")}</span>}
         </button>
 
         {setCollapsed && (
