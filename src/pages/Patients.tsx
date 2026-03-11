@@ -815,16 +815,22 @@ export default function Patients() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-              <Users className="w-7 h-7 text-primary" /> Pacientes
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              {activePatients.length} ativos · {patients.length - activePatients.length} inativos · ordenados por prioridade
-            </p>
-          </div>
+        {/* Premium Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden rounded-2xl gradient-border particles-bg"
+        >
+          <div className="glass-premium rounded-2xl p-6 shimmer-sweep">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <h1 className="font-display text-2xl font-bold flex items-center gap-2">
+                  <Users className="w-7 h-7 text-primary" /> Pacientes
+                </h1>
+                <p className="text-muted-foreground text-sm">
+                  {activePatients.length} ativos · {patients.length - activePatients.length} inativos · ordenados por prioridade
+                </p>
+              </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => bulkToggle("active")} disabled={bulkLoading} className="gap-1.5 text-xs">
               <ToggleRight className="w-3.5 h-3.5" /> Ativar Todos
