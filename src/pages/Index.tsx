@@ -212,15 +212,15 @@ function PatientDashboardContent() {
 
       {/* Today's Checklist */}
       <motion.div variants={item}>
-        <ExpandablePanel title="Checklist de Hoje">
-           <div className="glass-premium rounded-xl p-5 shimmer-sweep">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-display font-semibold flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-primary" /> Checklist de Hoje
-              </h2>
-              <Link to="/checklist" className="text-sm text-primary hover:underline flex items-center gap-1">
-                Ver tudo <ArrowRight className="w-3 h-3" />
-              </Link>
+         <ExpandablePanel title={t("dashboard.todayChecklist")}>
+            <div className="glass-premium rounded-xl p-5 shimmer-sweep">
+             <div className="flex items-center justify-between mb-3">
+               <h2 className="font-display font-semibold flex items-center gap-2">
+                 <CheckCircle2 className="w-5 h-5 text-primary" /> {t("dashboard.todayChecklist")}
+               </h2>
+               <Link to="/checklist" className="text-sm text-primary hover:underline flex items-center gap-1">
+                 {t("common.viewAll")} <ArrowRight className="w-3 h-3" />
+               </Link>
             </div>
             {checklistTasks.length === 0 ? (
               <p className="text-sm text-muted-foreground">Nenhuma tarefa para hoje. Aguarde seu protocolo!</p>
