@@ -314,7 +314,7 @@ export default function Checklist() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="font-display text-2xl font-bold">Checklist Diário</h1>
+            <h1 className="font-display text-2xl font-bold">{t("checklist.title")}</h1>
             <div className="flex items-center gap-4 mt-1">
               <Button variant="ghost" size="icon" onClick={() => changeDate(-1)}>
                 <ChevronLeft className="w-5 h-5" />
