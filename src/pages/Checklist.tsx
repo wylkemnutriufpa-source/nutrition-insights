@@ -81,6 +81,7 @@ const CATEGORIES = [
 export default function Checklist() {
   const { user } = useAuth();
   const { awardPoints } = usePatientPoints();
+  const { t } = useTranslation();
   const [tasks, setTasks] = useState<ChecklistTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
