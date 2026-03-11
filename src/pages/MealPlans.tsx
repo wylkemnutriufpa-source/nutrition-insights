@@ -157,8 +157,39 @@ export default function MealPlans() {
                   </div>
                 )}
                 <div>
-                  <Label>Título</Label>
-                  <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Ex: Plano de emagrecimento" required />
+                  <Label>Objetivo do Plano</Label>
+                  <div className="flex flex-wrap gap-2 mt-2 mb-2">
+                    {[
+                      { label: "🔥 Emagrecimento", title: "Plano de Emagrecimento", desc: "Plano alimentar focado em déficit calórico controlado para perda de gordura" },
+                      { label: "💪 Hipertrofia", title: "Plano de Hipertrofia", desc: "Plano alimentar com superávit calórico para ganho de massa muscular" },
+                      { label: "⚖️ Manutenção", title: "Plano de Manutenção", desc: "Plano alimentar para manter peso e composição corporal atuais" },
+                      { label: "🩺 Clínico", title: "Plano Clínico", desc: "Plano alimentar adaptado a condições clínicas específicas" },
+                      { label: "🏃 Performance", title: "Plano de Performance", desc: "Plano alimentar otimizado para desempenho esportivo" },
+                      { label: "🤰 Gestação", title: "Plano Gestacional", desc: "Plano alimentar para gestantes com foco em nutrientes essenciais" },
+                      { label: "🌱 Reeducação", title: "Reeducação Alimentar", desc: "Plano focado em mudança gradual de hábitos alimentares" },
+                      { label: "🍽️ Low Carb", title: "Plano Low Carb", desc: "Plano com redução controlada de carboidratos" },
+                    ].map((goal) => (
+                      <button
+                        key={goal.title}
+                        type="button"
+                        onClick={() => setForm({ ...form, title: goal.title, description: goal.desc })}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                          form.title === goal.title
+                            ? "bg-primary text-primary-foreground border-primary shadow-glow"
+                            : "bg-muted/50 text-muted-foreground border-border hover:border-primary/40 hover:bg-primary/5"
+                        }`}
+                      >
+                        {goal.label}
+                      </button>
+                    ))}
+                  </div>
+                  <Input
+                    value={form.title}
+                    onChange={(e) => setForm({ ...form, title: e.target.value })}
+                    placeholder="Ou digite um título personalizado..."
+                    required
+                    className="mt-1"
+                  />
                 </div>
                 <div>
                   <Label>Descrição</Label>
