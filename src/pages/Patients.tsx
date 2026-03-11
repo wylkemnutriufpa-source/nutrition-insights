@@ -409,7 +409,7 @@ function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssign
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: idx * 0.03 }}
-      className={`glass rounded-lg px-4 py-3 cursor-pointer flex items-center gap-3 hover:bg-accent/5 transition-all ${isInactive ? "opacity-60" : ""}`}
+      className={`glass-premium rounded-lg px-4 py-3 cursor-pointer flex items-center gap-3 hover:bg-accent/5 transition-all metric-glow ${isInactive ? "opacity-60" : ""}`}
       onClick={() => navigate(p.patient_id)}
     >
       <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
