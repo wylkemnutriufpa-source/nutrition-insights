@@ -68,6 +68,7 @@ export default function ProgramDetail() {
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [protocols, setProtocols] = useState<{ id: string; title: string }[]>([]);
   const [allPatients, setAllPatients] = useState<{ id: string; name: string }[]>([]);
+  const [joinRequests, setJoinRequests] = useState<{ id: string; patient_id: string; patient_name: string; message: string | null; status: string; created_at: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Dialogs
@@ -149,6 +150,23 @@ export default function ProgramDetail() {
       setAllPatients(pts);
     }
 
+    // Join requests
+    const { data: joinReqs } = await supabase
+      .from("program_join_requests")
+      .select("*")
+      .eq("program_id", programId)
+      .order("created_at", { ascending: false });
+
+    if (joinReqs) {
+      const reqPatientIds = [...new Set(joinReqs.map((r: any) => r.patient_id))];
+      const { data: reqProfiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", reqPatientIds);
+      const nameMap = new Map(reqProfiles?.map((p: any) => [p.user_id, p.full_name]) || []);
+      setJoinRequests(joinReqs.map((r: any) => ({
+        ...r,
+        patient_name: nameMap.get(r.patient_id) || "Paciente",
+      })));
+    }
+
     setLoading(false);
   }, [programId, user]);
 
@@ -193,6 +211,24 @@ export default function ProgramDetail() {
     toast.success("Nota adicionada!");
     setNoteOpen(false); setNoteForm({ title: "", description: "", event_type: "note" });
     fetchAll();
+  };
+
+  const approveJoinRequest = async (requestId: string, patientId: string, patientName: string) => {
+    if (!programId || !user) return;
+    await supabase.from("program_join_requests").update({ status: "approved", reviewed_by: user.id, reviewed_at: new Date().toISOString() }).eq("id", requestId);
+    await supabase.from("program_patients").insert({ program_id: programId, patient_id: patientId });
+    await supabase.from("program_timeline" as any).insert({
+      program_id: programId, event_type: "enrollment",
+      title: "Solicitação aprovada", description: patientName, created_by: user.id,
+    });
+    toast.success(`✅ ${patientName} aprovado e inscrito!`);
+    fetchAll();
+  };
+
+  const rejectJoinRequest = async (requestId: string) => {
+    await supabase.from("program_join_requests").update({ status: "rejected", reviewed_by: user?.id, reviewed_at: new Date().toISOString() }).eq("id", requestId);
+    toast.success("Solicitação recusada.");
+    setJoinRequests((prev) => prev.map((r) => r.id === requestId ? { ...r, status: "rejected" } : r));
   };
 
   const activateProtocolForAll = async (protocolId: string) => {
@@ -401,6 +437,14 @@ export default function ProgramDetail() {
         <Tabs defaultValue="patients" className="w-full">
           <TabsList className="w-full justify-start bg-card border border-border flex-wrap h-auto gap-1 p-1">
             <TabsTrigger value="patients" className="gap-1"><Users className="w-3.5 h-3.5" /> Pacientes</TabsTrigger>
+            <TabsTrigger value="requests" className="gap-1 relative">
+              <UserPlus className="w-3.5 h-3.5" /> Solicitações
+              {joinRequests.filter(r => r.status === "pending").length > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[10px] flex items-center justify-center font-bold">
+                  {joinRequests.filter(r => r.status === "pending").length}
+                </span>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="ranking" className="gap-1"><Crown className="w-3.5 h-3.5" /> Ranking</TabsTrigger>
             <TabsTrigger value="radar" className="gap-1"><Activity className="w-3.5 h-3.5" /> Radar Médio</TabsTrigger>
             <TabsTrigger value="timeline" className="gap-1"><Clock className="w-3.5 h-3.5" /> Timeline</TabsTrigger>
@@ -455,6 +499,50 @@ export default function ProgramDetail() {
                   </motion.div>
                 );
               })
+            )}
+          </TabsContent>
+
+          {/* ── JOIN REQUESTS ── */}
+          <TabsContent value="requests" className="mt-4 space-y-3">
+            {joinRequests.length === 0 ? (
+              <div className="glass rounded-xl p-12 text-center">
+                <UserPlus className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+                <p className="text-muted-foreground">Nenhuma solicitação de participação.</p>
+              </div>
+            ) : (
+              joinRequests.map((req) => (
+                <div
+                  key={req.id}
+                  className={`glass rounded-xl p-4 flex items-center gap-4 transition-all ${
+                    req.status === "pending" ? "border-warning/30" : req.status === "approved" ? "border-primary/20 opacity-60" : "border-destructive/20 opacity-40"
+                  }`}
+                >
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="font-bold text-primary">{req.patient_name[0]}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm">{req.patient_name}</p>
+                    {req.message && <p className="text-xs text-muted-foreground mt-0.5">{req.message}</p>}
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(req.created_at).toLocaleDateString("pt-BR")}
+                    </p>
+                  </div>
+                  {req.status === "pending" ? (
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={() => approveJoinRequest(req.id, req.patient_id, req.patient_name)} className="gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Aceitar
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => rejectJoinRequest(req.id)} className="gap-1 text-destructive hover:text-destructive">
+                        <AlertTriangle className="w-3.5 h-3.5" /> Recusar
+                      </Button>
+                    </div>
+                  ) : (
+                    <Badge variant="outline" className={req.status === "approved" ? "text-primary" : "text-destructive"}>
+                      {req.status === "approved" ? "Aprovado" : "Recusado"}
+                    </Badge>
+                  )}
+                </div>
+              ))
             )}
           </TabsContent>
 
