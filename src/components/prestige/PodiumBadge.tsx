@@ -91,17 +91,12 @@ export default function PodiumBadge({ plan, allPlans = [], position, onUpgrade }
             boxShadow: `0 0 ${isGold ? 20 : 12}px ${badgeColor}35, inset 0 1px 0 ${badgeColor}20`,
           }}
         >
-          {/* Icon with shimmer */}
+          {/* Icon with 3D Y-axis rotation like the logo leaf */}
           <motion.span
-            className="text-base leading-none"
-            animate={isGold ? {
-              textShadow: [
-                `0 0 4px ${badgeColor}`,
-                `0 0 12px ${badgeColor}`,
-                `0 0 4px ${badgeColor}`,
-              ],
-            } : undefined}
-            transition={{ duration: 1.5, repeat: Infinity }}
+            className="text-base leading-none inline-block"
+            style={{ perspective: 200 }}
+            animate={{ rotateY: 360 }}
+            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
           >
             {plan.badge_icon}
           </motion.span>
