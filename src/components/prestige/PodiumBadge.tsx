@@ -54,6 +54,16 @@ function getOrbits(badgeColor: string, medalParticle: string) {
     { duration: 3.5, delay: 0.8, tilt: 140, particleSize: 2, color: medalParticle },
   ];
 }
+
+export default function PodiumBadge({ plan, allPlans = [], position, onUpgrade }: PodiumBadgeProps) {
+  const [modalOpen, setModalOpen] = useState(false);
+
+  if (!plan) return null;
+
+  const medal = MEDAL_COLORS[position] || MEDAL_COLORS[2];
+  const isGold = position === 0;
+  const badgeColor = plan.color || medal.ring;
+
   return (
     <>
       <motion.button
