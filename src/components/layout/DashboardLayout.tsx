@@ -21,6 +21,9 @@ import { usePresenceTracker } from "@/hooks/usePresenceTracker";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import CommandPalette from "@/components/common/CommandPalette";
 import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
+import SOSModal from "@/components/patient/SOSModal";
+import SOSInbox from "@/components/patient/SOSInbox";
+import { AlertTriangle } from "lucide-react";
 
 const nutritionistLinks = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
@@ -109,6 +112,7 @@ function SidebarContent({
   signOut,
   setCollapsed,
   onLinkClick,
+  onSosOpen,
 }: {
   links: typeof nutritionistLinks;
   location: ReturnType<typeof useLocation>;
@@ -121,6 +125,7 @@ function SidebarContent({
   signOut: () => void;
   setCollapsed?: (v: boolean) => void;
   onLinkClick?: () => void;
+  onSosOpen?: () => void;
 }) {
   return (
     <>
@@ -188,14 +193,32 @@ function SidebarContent({
           })}
 
           {!isNutritionist && (
-            <Link
-              to="/analyze"
-              onClick={onLinkClick}
-              className="flex items-center gap-3 px-3 py-2 rounded-xl gradient-primary text-primary-foreground mt-3 shadow-glow shimmer-sweep"
+            <>
+              <Link
+                to="/analyze"
+                onClick={onLinkClick}
+                className="flex items-center gap-3 px-3 py-2 rounded-xl gradient-primary text-primary-foreground mt-3 shadow-glow shimmer-sweep"
+              >
+                <Sparkles className="w-4 h-4 flex-shrink-0" />
+                {!collapsed && <span className="text-xs font-medium">Analisar com IA</span>}
+              </Link>
+              <button
+                onClick={() => { onSosOpen?.(); onLinkClick?.(); }}
+                className="flex items-center gap-3 px-3 py-2 rounded-xl bg-destructive/10 text-destructive border border-destructive/20 mt-2 w-full hover:bg-destructive/20 transition-all"
+              >
+                <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                {!collapsed && <span className="text-xs font-medium">🆘 SOS</span>}
+              </button>
+            </>
+          )}
+          {isNutritionist && (
+            <button
+              onClick={() => { onSosOpen?.(); onLinkClick?.(); }}
+              className="flex items-center gap-3 px-3 py-2 rounded-xl bg-destructive/10 text-destructive border border-destructive/20 mt-3 w-full hover:bg-destructive/20 transition-all"
             >
-              <Sparkles className="w-4 h-4 flex-shrink-0" />
-              {!collapsed && <span className="text-xs font-medium">Analisar com IA</span>}
-            </Link>
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+              {!collapsed && <span className="text-xs font-medium">🆘 SOS Inbox</span>}
+            </button>
           )}
         </nav>
       </ScrollArea>
@@ -258,6 +281,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sosOpen, setSosOpen] = useState(false);
+  const [sosInboxOpen, setSosInboxOpen] = useState(false);
+
+  const isPatient = !isNutritionist && !isAdmin;
 
   // Track presence for all logged-in users
   usePresenceTracker();
@@ -290,8 +317,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   const profileName = profile?.full_name || "Usuário";
 
+  const onSosHandler = isPatient ? () => setSosOpen(true) : (isNutritionist || isAdmin) ? () => setSosInboxOpen(true) : undefined;
+
   const sidebarProps = {
     links, location, isNutritionist, dark, toggleDark, initials, profileName, signOut,
+    onSosOpen: onSosHandler,
   };
 
   if (isMobile) {
@@ -345,6 +375,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             {children}
           </motion.div>
         </main>
+        {isPatient && <SOSModal open={sosOpen} onOpenChange={setSosOpen} />}
+        {(isNutritionist || isAdmin) && <SOSInbox open={sosInboxOpen} onOpenChange={setSosInboxOpen} />}
       </div>
     );
   }
@@ -394,6 +426,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           {children}
         </motion.div>
       </main>
+      {isPatient && <SOSModal open={sosOpen} onOpenChange={setSosOpen} />}
+      {(isNutritionist || isAdmin) && <SOSInbox open={sosInboxOpen} onOpenChange={setSosInboxOpen} />}
     </div>
   );
 }

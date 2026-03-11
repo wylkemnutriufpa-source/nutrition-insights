@@ -1,0 +1,55 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { toast } from "sonner";
+import { CreditCard } from "lucide-react";
+
+export default function PlanRequestButton() {
+  const { user } = useAuth();
+  const [sending, setSending] = useState(false);
+
+  const handleRequest = async () => {
+    if (!user) return;
+    setSending(true);
+
+    // Get nutritionist
+    const { data: rel } = await supabase
+      .from("nutritionist_patients")
+      .select("nutritionist_id")
+      .eq("patient_id", user.id)
+      .eq("status", "active")
+      .limit(1)
+      .maybeSingle();
+
+    const { error } = await supabase.from("plan_requests").insert({
+      patient_id: user.id,
+      nutritionist_id: rel?.nutritionist_id || null,
+      message: "Paciente solicita ativação/ajuste de plano.",
+    });
+
+    if (error) {
+      if (error.code === "23505") {
+        toast.info("Você já enviou uma solicitação. Aguarde o retorno do profissional.");
+      } else {
+        toast.error("Erro ao enviar solicitação");
+      }
+    } else {
+      toast.success("📋 Solicitação enviada! Seu nutricionista será notificado.");
+    }
+    setSending(false);
+  };
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleRequest}
+      disabled={sending}
+      className="gap-2 border-dashed border-warning/50 text-warning hover:bg-warning/10"
+    >
+      <CreditCard className="w-4 h-4" />
+      {sending ? "Enviando..." : "Estou sem Plano"}
+    </Button>
+  );
+}

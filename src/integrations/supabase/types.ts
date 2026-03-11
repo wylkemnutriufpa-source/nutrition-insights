@@ -1895,6 +1895,33 @@ export type Database = {
         }
         Relationships: []
       }
+      plan_requests: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          nutritionist_id: string | null
+          patient_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          nutritionist_id?: string | null
+          patient_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          nutritionist_id?: string | null
+          patient_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       plan_schedules: {
         Row: {
           activate_at: string
@@ -2213,6 +2240,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      program_join_requests: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          patient_id: string
+          program_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          patient_id: string
+          program_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          patient_id?: string
+          program_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "program_join_requests_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       program_patient_progress: {
         Row: {
@@ -2912,6 +2980,45 @@ export type Database = {
           setting_value?: Json
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      sos_tickets: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          nutritionist_id: string | null
+          patient_id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          nutritionist_id?: string | null
+          patient_id: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          nutritionist_id?: string | null
+          patient_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }

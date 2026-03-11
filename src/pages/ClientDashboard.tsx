@@ -15,6 +15,10 @@ import ExplorerProgressWidget from "@/components/dashboard/ExplorerProgressWidge
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import PlanRequestButton from "@/components/patient/PlanRequestButton";
+import ProgramJoinRequest from "@/components/patient/ProgramJoinRequest";
+import SubscriptionCard from "@/components/patient/SubscriptionCard";
+import { Button } from "@/components/ui/button";
 
 interface ProgramInfo {
   id: string;
@@ -63,6 +67,7 @@ export default function ClientDashboard() {
   const [notifications, setNotifications] = useState<NotificationInfo[]>([]);
   const [checklistStats, setChecklistStats] = useState<ChecklistStats>({ total: 0, completed: 0 });
   const [loading, setLoading] = useState(true);
+  const [programJoinOpen, setProgramJoinOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -158,6 +163,25 @@ export default function ClientDashboard() {
             </div>
           </div>
         </motion.div>
+
+        {/* Action Buttons */}
+        <motion.div variants={item} className="flex flex-wrap gap-2">
+          <SubscriptionCard />
+          <div className="flex gap-2 items-center">
+            <PlanRequestButton />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setProgramJoinOpen(true)}
+              className="gap-2 border-primary/30 text-primary hover:bg-primary/10"
+            >
+              <Rocket className="w-4 h-4" />
+              Participar de Programa
+            </Button>
+          </div>
+        </motion.div>
+
+        <ProgramJoinRequest open={programJoinOpen} onOpenChange={setProgramJoinOpen} />
 
         {/* Quick Stats */}
         <motion.div variants={item} className="grid grid-cols-2 md:grid-cols-5 gap-3">
