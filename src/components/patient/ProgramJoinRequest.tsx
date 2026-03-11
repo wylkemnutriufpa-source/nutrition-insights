@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -27,6 +28,9 @@ export default function ProgramJoinRequest({ open, onOpenChange }: ProgramJoinRe
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const [enrolledIds, setEnrolledIds] = useState<string[]>([]);
+  const [pendingIds, setPendingIds] = useState<string[]>([]);
+
   useEffect(() => {
     if (!open || !user) return;
     loadPrograms();
@@ -34,23 +38,17 @@ export default function ProgramJoinRequest({ open, onOpenChange }: ProgramJoinRe
 
   async function loadPrograms() {
     setLoading(true);
-    // Get programs the patient is NOT already enrolled in
-    const { data: enrolled } = await supabase
-      .from("program_patients")
-      .select("program_id")
-      .eq("patient_id", user!.id)
-      .eq("status", "active");
+    const [enrolledRes, pendingRes, allRes] = await Promise.all([
+      supabase.from("program_patients").select("program_id").eq("patient_id", user!.id).eq("status", "active"),
+      supabase.from("program_join_requests").select("program_id").eq("patient_id", user!.id).eq("status", "pending"),
+      supabase.from("programs").select("id, title, tag").eq("is_active", true),
+    ]);
 
-    const enrolledIds = enrolled?.map((e: any) => e.program_id) || [];
-
-    const query = supabase
-      .from("programs")
-      .select("id, title, tag")
-      .eq("is_active", true);
-
-    const { data } = await query;
-
-    setPrograms((data || []).filter((p: any) => !enrolledIds.includes(p.id)));
+    const enrolled = enrolledRes.data?.map((e: any) => e.program_id) || [];
+    const pending = pendingRes.data?.map((e: any) => e.program_id) || [];
+    setEnrolledIds(enrolled);
+    setPendingIds(pending);
+    setPrograms((allRes.data || []) as Program[]);
     setLoading(false);
   }
 
@@ -104,20 +102,39 @@ export default function ProgramJoinRequest({ open, onOpenChange }: ProgramJoinRe
           <>
             <ScrollArea className="max-h-[40vh]">
               <div className="space-y-2">
-                {programs.map((program) => (
-                  <button
-                    key={program.id}
-                    onClick={() => setSelected(program.id)}
-                    className={`w-full text-left p-3 rounded-xl border transition-all ${
-                      selected === program.id
-                        ? "border-primary bg-primary/10"
-                        : "border-border/50 bg-muted/20 hover:border-primary/30"
-                    }`}
-                  >
-                    <p className="font-medium text-sm">{program.title}</p>
-                    {program.tag && <p className="text-xs text-muted-foreground">{program.tag}</p>}
-                  </button>
-                ))}
+                {programs.map((program) => {
+                  const isEnrolled = enrolledIds.includes(program.id);
+                  const isPending = pendingIds.includes(program.id);
+                  const disabled = isEnrolled || isPending;
+
+                  return (
+                    <button
+                      key={program.id}
+                      onClick={() => !disabled && setSelected(program.id)}
+                      disabled={disabled}
+                      className={`w-full text-left p-3 rounded-xl border transition-all ${
+                        disabled
+                          ? "border-border/30 bg-muted/10 opacity-60 cursor-not-allowed"
+                          : selected === program.id
+                            ? "border-primary bg-primary/10"
+                            : "border-border/50 bg-muted/20 hover:border-primary/30"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <p className="font-medium text-sm">{program.title}</p>
+                          {program.tag && <p className="text-xs text-muted-foreground">{program.tag}</p>}
+                        </div>
+                        {isEnrolled && (
+                          <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] shrink-0">✅ Já participa</Badge>
+                        )}
+                        {isPending && (
+                          <Badge className="bg-warning/10 text-warning border-warning/20 text-[10px] shrink-0">⏳ Aguardando</Badge>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </ScrollArea>
 
