@@ -17,9 +17,8 @@ export function usePatientPoints() {
       return null;
     }
     const result = data as any;
-    if (result?.awarded) {
-      toast.success(`+${result.points} pontos! 🎉`, { duration: 2000 });
-    }
+    // Points awarded silently — no toast to avoid inducing clicks
+
     return result;
   }
 
