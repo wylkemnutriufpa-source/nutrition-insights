@@ -4,8 +4,10 @@ import { useAuth } from "@/lib/auth";
 import { Trophy, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import PrestigeBadge from "./PrestigeBadge";
+import { useTranslation } from "react-i18next";
 
 export default function RankingWidget() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [points, setPoints] = useState(0);
   const [rank, setRank] = useState<number | null>(null);
@@ -38,7 +40,7 @@ export default function RankingWidget() {
             <Trophy className="w-5 h-5 text-accent" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Ranking Global</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{t("gamification.globalRanking")}</p>
             <div className="flex items-center gap-2">
               <p className="text-lg font-display font-bold counter-animate">
                 {loaded ? `${points} pts` : "..."}

@@ -6,11 +6,13 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import AchievementCard from "@/components/gamification/AchievementCard";
 import { Trophy } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+import { useTranslation } from "react-i18next";
 
 type Achievement = Tables<"achievements">;
 type UserAchievement = Tables<"user_achievements">;
 
 export default function Achievements() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [earned, setEarned] = useState<Set<string>>(new Set());
@@ -33,17 +35,17 @@ export default function Achievements() {
       <div className="space-y-6">
         <div>
           <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-            <Trophy className="w-7 h-7 text-accent" /> Conquistas
+            <Trophy className="w-7 h-7 text-accent" /> {t("achievements.title")}
           </h1>
           <p className="text-muted-foreground text-sm">
-            {earnedCount}/{totalCount} desbloqueadas
+            {earnedCount}/{totalCount} {t("achievements.unlocked")}
           </p>
         </div>
 
         {/* Progress */}
         <div className="glass rounded-xl p-4 shadow-card">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Progresso Geral</span>
+            <span className="text-sm font-medium">{t("achievements.overallProgress")}</span>
             <span className="text-sm font-bold text-primary">
               {totalCount > 0 ? Math.round((earnedCount / totalCount) * 100) : 0}%
             </span>
