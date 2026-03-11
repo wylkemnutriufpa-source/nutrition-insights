@@ -241,9 +241,9 @@ export default function ClientDashboard() {
             whileHover={{ y: -3, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setProgramJoinOpen(true)}
-            className="w-full glass-premium rounded-xl p-5 cursor-pointer shimmer-sweep border border-yellow-500/30 hover:border-yellow-400/50 transition-all duration-300 relative overflow-hidden group"
+            className="w-full glass-premium rounded-xl p-5 cursor-pointer shimmer-sweep border border-warning/30 hover:border-warning/50 transition-all duration-300 relative overflow-hidden group"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/5 via-amber-400/10 to-yellow-500/5 opacity-60 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute inset-0 bg-gradient-to-r from-warning/5 via-warning/10 to-warning/5 opacity-60 group-hover:opacity-100 transition-opacity" />
             <div className="relative flex items-center justify-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 flex items-center justify-center">
                 <Rocket className="w-5.5 h-5.5 text-amber-500" />
