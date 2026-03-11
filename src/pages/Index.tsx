@@ -204,10 +204,10 @@ function PatientDashboardContent() {
 
       {/* Quick Stats */}
       <motion.div variants={item} className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatsCard title="Refeições" value={stats?.meals_logged || 0} icon={UtensilsCrossed} gradient />
-        <StatsCard title="Nível" value={stats?.level || 1} icon={TrendingUp} />
-        <StatsCard title="XP Total" value={stats?.total_xp || 0} icon={Target} />
-        <StatsCard title="Streak" value={`${stats?.current_streak || 0}d`} icon={Target} />
+         <StatsCard title={t("gamification.meals")} value={stats?.meals_logged || 0} icon={UtensilsCrossed} gradient />
+         <StatsCard title={t("gamification.level")} value={stats?.level || 1} icon={TrendingUp} />
+         <StatsCard title={t("gamification.totalXP")} value={stats?.total_xp || 0} icon={Target} />
+         <StatsCard title={t("gamification.streak")} value={`${stats?.current_streak || 0}d`} icon={Target} />
       </motion.div>
 
       {/* Today's Checklist */}
