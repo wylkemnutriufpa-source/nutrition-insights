@@ -235,7 +235,7 @@ export default function Checklist() {
         .update({ title: form.title, icon: form.icon, category: form.category, description: form.description || null })
         .eq("id", editingTask.id);
       if (error) toast.error(error.message);
-      else toast.success("Tarefa atualizada!");
+      else toast.success(t("checklist.taskUpdated"));
     } else {
       const { error } = await supabase.from("checklist_tasks").insert({
         patient_id: user.id,
