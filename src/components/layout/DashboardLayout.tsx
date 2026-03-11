@@ -251,15 +251,17 @@ function SidebarContent({
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 w-full transition-all"
         >
           <Settings className="w-5 h-5" />
-          {!collapsed && <span className="text-sm">Configurações</span>}
+          {!collapsed && <span className="text-sm">{t("nav.settings")}</span>}
         </Link>
+
+        <LanguageSelector collapsed={collapsed} />
 
         <button
           onClick={toggleDark}
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 w-full transition-all"
         >
           {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          {!collapsed && <span className="text-sm">{dark ? "Modo claro" : "Modo escuro"}</span>}
+          {!collapsed && <span className="text-sm">{dark ? t("nav.lightMode") : t("nav.darkMode")}</span>}
         </button>
 
         <div className="flex items-center gap-3 px-3 py-2">
@@ -278,7 +280,7 @@ function SidebarContent({
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 w-full transition-all"
         >
           <LogOut className="w-5 h-5" />
-          {!collapsed && <span className="text-sm">Sair</span>}
+          {!collapsed && <span className="text-sm">{t("nav.signOut")}</span>}
         </button>
 
         {setCollapsed && (
