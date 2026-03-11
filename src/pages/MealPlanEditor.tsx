@@ -522,7 +522,6 @@ export default function MealPlanEditor() {
             >
               <BookOpen className="w-4 h-4" /> Modelos Pré-Prontos
             </Button>
-            </Button>
             <Button
               variant="outline"
               size="sm"
