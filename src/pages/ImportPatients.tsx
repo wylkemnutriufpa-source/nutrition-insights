@@ -259,13 +259,14 @@ export default function ImportPatients() {
 
         {/* Stats */}
         {loaded && (
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
             {[
-              { label: "Total", value: allPatients.length, color: "" },
+              { label: "Total CSV", value: allPatients.length, color: "" },
               { label: "Ativos", value: totalActive, color: "text-primary" },
               { label: "Com Email", value: withEmail, color: "text-accent" },
+              { label: "Já Importados", value: alreadyImportedCount, color: "text-success" },
+              { label: "Faltam", value: notYetImported.length, color: "text-warning" },
               { label: "Sem Email", value: allPatients.filter(p => !p.email).length, color: "text-destructive" },
-              { label: "Inativos", value: inactiveCount, color: "text-muted-foreground" },
             ].map((s) => (
               <Card key={s.label} className="glass shadow-card">
                 <CardContent className="py-3 text-center">
@@ -275,6 +276,15 @@ export default function ImportPatients() {
               </Card>
             ))}
           </div>
+        )}
+
+        {checking && (
+          <Card className="glass shadow-card border-primary/30">
+            <CardContent className="py-4 flex items-center gap-3">
+              <Loader2 className="w-5 h-5 text-primary animate-spin" />
+              <p className="text-sm text-muted-foreground">Verificando quais pacientes já foram importados...</p>
+            </CardContent>
+          </Card>
         )}
 
         <Tabs value={tab} onValueChange={setTab}>
