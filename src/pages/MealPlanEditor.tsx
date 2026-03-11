@@ -103,6 +103,10 @@ export default function MealPlanEditor() {
   const [quickAddKey, setQuickAddKey] = useState<string | null>(null); // "day-mealType"
   const [quickAddText, setQuickAddText] = useState("");
   const [quickAdding, setQuickAdding] = useState(false);
+  const [batchMode, setBatchMode] = useState(false);
+  const [batchText, setBatchText] = useState("");
+  const [batchAdding, setBatchAdding] = useState(false);
+  const [batchTarget, setBatchTarget] = useState<{ day: number; mealType: MealType } | null>(null);
 
   // View mode
   const [editorView, setEditorView] = useState<"weekly" | "daily">("weekly");
