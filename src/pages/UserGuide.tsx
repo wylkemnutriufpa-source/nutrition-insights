@@ -42,7 +42,7 @@ export default function UserGuide() {
       return;
     }
     await markExplored(key);
-    toast.success(`+5 pontos! 🎉 "${label}" explorada!`, { duration: 2500 });
+    toast.success(`🎉 "${label}" explorada!`, { duration: 2500 });
   };
 
   if (loading) {
