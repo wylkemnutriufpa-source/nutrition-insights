@@ -150,6 +150,23 @@ export default function ProgramDetail() {
       setAllPatients(pts);
     }
 
+    // Join requests
+    const { data: joinReqs } = await supabase
+      .from("program_join_requests")
+      .select("*")
+      .eq("program_id", programId)
+      .order("created_at", { ascending: false });
+
+    if (joinReqs) {
+      const reqPatientIds = [...new Set(joinReqs.map((r: any) => r.patient_id))];
+      const { data: reqProfiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", reqPatientIds);
+      const nameMap = new Map(reqProfiles?.map((p: any) => [p.user_id, p.full_name]) || []);
+      setJoinRequests(joinReqs.map((r: any) => ({
+        ...r,
+        patient_name: nameMap.get(r.patient_id) || "Paciente",
+      })));
+    }
+
     setLoading(false);
   }, [programId, user]);
 
