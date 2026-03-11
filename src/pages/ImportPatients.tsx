@@ -408,7 +408,6 @@ export default function ImportPatients() {
                       <><Upload className="w-4 h-4 mr-2" /> Importar {selectedPatients.length} Paciente{selectedPatients.length !== 1 ? "s" : ""} Faltantes</>
                     )}
                   </Button>
-                  </Button>
                 </CardContent>
               </Card>
             )}
