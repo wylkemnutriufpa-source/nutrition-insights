@@ -83,11 +83,11 @@ const patientLinks = [
 const adminLinks = [
   { to: "/admin", icon: Shield, label: "Painel Admin" },
   { to: "/ranking", icon: Trophy, label: "🏆 Ranking Global", premium: true },
+  { to: "/programs", icon: Rocket, label: "✨ Projetos", premium: true },
   { to: "/admin/resources", icon: LayoutDashboard, label: "Central de Recursos" },
   { to: "/admin/features", icon: Zap, label: "Feature Flags" },
   { to: "/admin/testimonials", icon: Star, label: "Depoimentos" },
   { to: "/patients", icon: Users, label: "Pacientes" },
-  { to: "/programs", icon: Rocket, label: "✨ Projetos", premium: true },
   { to: "/appointments", icon: Activity, label: "Agenda" },
   { to: "/automation", icon: Bot, label: "Automação" },
   { to: "/reports", icon: BarChart3, label: "Relatórios" },
