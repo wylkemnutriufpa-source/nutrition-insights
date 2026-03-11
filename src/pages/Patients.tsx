@@ -255,7 +255,7 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: idx * 0.04 }}
       whileHover={{ y: -2 }}
-      className={`glass rounded-xl p-5 shadow-card cursor-pointer ring-2 ${isInactive ? "ring-muted/30 opacity-60" : tier.ring} transition-all relative`}
+      className={`glass-premium rounded-xl p-5 shadow-card shimmer-sweep cursor-pointer ring-2 ${isInactive ? "ring-muted/30 opacity-60" : tier.ring} transition-all relative metric-glow`}
       onClick={() => navigate(p.patient_id)}
     >
       {isInactive && (
@@ -409,7 +409,7 @@ function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssign
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: idx * 0.03 }}
-      className={`glass rounded-lg px-4 py-3 cursor-pointer flex items-center gap-3 hover:bg-accent/5 transition-all ${isInactive ? "opacity-60" : ""}`}
+      className={`glass-premium rounded-lg px-4 py-3 cursor-pointer flex items-center gap-3 hover:bg-accent/5 transition-all metric-glow ${isInactive ? "opacity-60" : ""}`}
       onClick={() => navigate(p.patient_id)}
     >
       <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -495,7 +495,7 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
 
   if (sorted.length === 0) {
     return (
-      <div className="glass rounded-xl p-12 text-center">
+      <div className="glass-premium rounded-xl p-12 text-center">
         <Users className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
         <h3 className="font-display font-semibold text-lg mb-1">{search ? "Nenhum resultado" : emptyMessage}</h3>
         <p className="text-muted-foreground">{search ? "Tente outro termo" : ""}</p>
@@ -815,16 +815,22 @@ export default function Patients() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-              <Users className="w-7 h-7 text-primary" /> Pacientes
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              {activePatients.length} ativos · {patients.length - activePatients.length} inativos · ordenados por prioridade
-            </p>
-          </div>
+        {/* Premium Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden rounded-2xl gradient-border particles-bg"
+        >
+          <div className="glass-premium rounded-2xl p-6 shimmer-sweep">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <h1 className="font-display text-2xl font-bold flex items-center gap-2">
+                  <Users className="w-7 h-7 text-primary" /> Pacientes
+                </h1>
+                <p className="text-muted-foreground text-sm">
+                  {activePatients.length} ativos · {patients.length - activePatients.length} inativos · ordenados por prioridade
+                </p>
+              </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => bulkToggle("active")} disabled={bulkLoading} className="gap-1.5 text-xs">
               <ToggleRight className="w-3.5 h-3.5" /> Ativar Todos
@@ -863,7 +869,9 @@ export default function Patients() {
               </DialogContent>
             </Dialog>
           </div>
-        </div>
+            </div>
+          </div>
+        </motion.div>
 
         {/* Summary cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -871,7 +879,7 @@ export default function Patients() {
             <button
               key={fb.key}
               onClick={() => setFilter(fb.key)}
-              className={`glass rounded-xl p-4 text-left transition-all border-2 ${filter === fb.key ? "border-primary shadow-glow" : "border-transparent"}`}
+              className={`glass-premium rounded-xl p-4 text-left transition-all border-2 metric-glow ${filter === fb.key ? "border-primary shadow-glow" : "border-transparent"}`}
             >
               <p className="text-2xl font-display font-bold">{counts[fb.key]}</p>
               <p className="text-sm text-muted-foreground mt-0.5">{fb.label}</p>
