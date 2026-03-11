@@ -593,21 +593,32 @@ function NutritionistDashboardContent() {
         <AIStrategyCenter />
       ) : (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
-      {/* ── Header ── */}
-      <motion.div variants={item} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight">Dashboard Clínico</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">
-            {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })} · Central de Comando
-          </p>
+      {/* ── Premium Header ── */}
+      <motion.div variants={item} className="relative overflow-hidden rounded-2xl gradient-border particles-bg">
+        <div className="glass-premium rounded-2xl p-6 shimmer-sweep">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <motion.p
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="text-sm text-muted-foreground mb-1"
+              >
+                {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
+              </motion.p>
+              <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight">Dashboard Clínico</h1>
+              <p className="text-muted-foreground text-sm mt-0.5">Central de Comando · Inteligência Clínica</p>
+            </div>
+            <div className="flex items-center gap-3">
+              {unreadChats > 0 && (
+                <Button variant="outline" size="sm" className="gap-2 rounded-xl" onClick={() => navigate("/chat")}>
+                  <MessageSquare className="w-4 h-4" />
+                  {unreadChats} mensagem{unreadChats > 1 ? "s" : ""}
+                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
-        {unreadChats > 0 && (
-          <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate("/chat")}>
-            <MessageSquare className="w-4 h-4" />
-            {unreadChats} mensagem{unreadChats > 1 ? "s" : ""}
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-          </Button>
-        )}
       </motion.div>
 
       {/* ── 2️⃣ Action Shortcuts ── */}
