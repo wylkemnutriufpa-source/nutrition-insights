@@ -272,6 +272,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sosOpen, setSosOpen] = useState(false);
+  const [sosInboxOpen, setSosInboxOpen] = useState(false);
+
+  const isPatient = !isNutritionist && !isAdmin;
 
   // Track presence for all logged-in users
   usePresenceTracker();
