@@ -136,9 +136,7 @@ function PatientDashboardContent() {
                  <span className="text-sm">{t("dashboard.anamnesisGoals")}</span>
                </div>
             </div>
-            <p className="text-xs text-muted-foreground mb-4">
-              ⚠️ Seu plano alimentar só será elaborado após o preenchimento da anamnese.
-            </p>
+             <p className="text-xs text-muted-foreground mb-4">{t("dashboard.anamnesisWarning")}</p>
             <div className="flex gap-3 w-full">
               <Button variant="outline" className="flex-1" onClick={() => setShowAnamnesisModal(false)}>
                 Depois
