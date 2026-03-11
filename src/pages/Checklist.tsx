@@ -356,7 +356,7 @@ export default function Checklist() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Flame className="w-5 h-5 text-primary" />
-              <span className="font-display font-semibold">Progresso do Dia</span>
+              <span className="font-display font-semibold">{t("checklist.dayProgress")}</span>
             </div>
             <span className="text-sm font-bold text-primary">{Math.round(progress)}% • {completedCount}/{tasks.length}</span>
           </div>
