@@ -972,24 +972,40 @@ function NutritionistDashboardContent() {
   );
 }
 
-// ── Daily Metric Card ──
+// ── Daily Metric Card (Premium) ──
 function DailyMetricCard({ label, value, icon: Icon, color, pulse, onClick }: {
   label: string; value: number; icon: any; color: string; pulse?: boolean; onClick?: () => void;
 }) {
   return (
     <motion.div
-      whileHover={{ y: -3, scale: 1.02 }}
+      whileHover={{ y: -4, scale: 1.03 }}
+      whileTap={{ scale: 0.97 }}
       onClick={onClick}
-      className={`glass rounded-xl p-4 cursor-pointer hover:border-${color}/30 transition-all`}
+      className={`glass-premium rounded-xl p-4 cursor-pointer metric-glow transition-all duration-300 shimmer-sweep`}
     >
       <div className="flex items-center justify-between mb-2">
-        <div className={`w-9 h-9 rounded-lg bg-${color}/10 flex items-center justify-center`}>
-          <Icon className={`w-4.5 h-4.5 text-${color}`} />
-        </div>
-        {pulse && value > 0 && <span className={`w-2.5 h-2.5 rounded-full bg-${color} animate-pulse`} />}
+        <motion.div
+          whileHover={{ rotate: 8 }}
+          className={`w-10 h-10 rounded-xl bg-${color}/10 flex items-center justify-center`}
+        >
+          <Icon className={`w-5 h-5 text-${color}`} />
+        </motion.div>
+        {pulse && value > 0 && (
+          <span className="relative flex h-2.5 w-2.5">
+            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full bg-${color} opacity-75`} />
+            <span className={`relative inline-flex rounded-full h-2.5 w-2.5 bg-${color}`} />
+          </span>
+        )}
       </div>
-      <p className="font-display font-bold text-2xl">{value}</p>
-      <p className="text-[11px] text-muted-foreground font-medium">{label}</p>
+      <motion.p
+        key={value}
+        initial={{ scale: 1.15, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="font-display font-bold text-2xl counter-animate"
+      >
+        {value}
+      </motion.p>
+      <p className="text-[11px] text-muted-foreground font-medium mt-0.5">{label}</p>
     </motion.div>
   );
 }
