@@ -213,7 +213,7 @@ function PatientDashboardContent() {
       {/* Today's Checklist */}
       <motion.div variants={item}>
         <ExpandablePanel title="Checklist de Hoje">
-          <div className="glass rounded-xl p-5">
+           <div className="glass-premium rounded-xl p-5 shimmer-sweep">
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-display font-semibold flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-primary" /> Checklist de Hoje
