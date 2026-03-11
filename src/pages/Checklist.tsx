@@ -477,7 +477,7 @@ export default function Checklist() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block">Descrição</label>
+                <label className="text-sm font-medium mb-1 block">{t("checklist.descriptionOptional")}</label>
                 <Input
                   value={form.description}
                   onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
