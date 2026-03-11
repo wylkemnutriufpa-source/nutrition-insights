@@ -895,7 +895,7 @@ function NutritionistDashboardContent() {
       {riskPatients.length > 0 && (
         <motion.div variants={item}>
           <ExpandablePanel title="Health Score dos Pacientes">
-            <div className="glass rounded-xl p-5">
+            <div className="glass-premium rounded-xl p-5 shimmer-sweep">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Heart className="w-4 h-4 text-primary" />
