@@ -166,7 +166,7 @@ export default function AnalyzeMeal() {
         }).eq("user_id", user.id);
       }
 
-      toast.success(`Refeição salva! +${xpEarned} XP 🧠✨`);
+      toast.success("Refeição salva com sucesso! 🧠✨");
       setResult(null);
       setDescription("");
       setImageFile(null);
