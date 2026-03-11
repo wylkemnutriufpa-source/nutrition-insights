@@ -179,8 +179,7 @@ export default function Checklist() {
     setTasks(updated);
 
     if (newCompleted) {
-      // Award ranking points for each completed task
-      awardPoints("checklist_complete", { task_id: task.id, task_title: task.title, category: task.category });
+      // Points are awarded automatically by DB trigger on checklist_tasks
 
       // Update player_stats XP
       const { data: stats } = await supabase.from("player_stats").select("*").eq("user_id", user!.id).single();
