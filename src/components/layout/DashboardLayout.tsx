@@ -21,6 +21,9 @@ import { usePresenceTracker } from "@/hooks/usePresenceTracker";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import CommandPalette from "@/components/common/CommandPalette";
 import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
+import SOSModal from "@/components/patient/SOSModal";
+import SOSInbox from "@/components/patient/SOSInbox";
+import { AlertTriangle } from "lucide-react";
 
 const nutritionistLinks = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
