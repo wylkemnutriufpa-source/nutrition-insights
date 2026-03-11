@@ -78,7 +78,7 @@ export default function PodiumBadge({ plan, allPlans = [], position, onUpgrade }
             background: `conic-gradient(from 0deg, ${badgeColor}, transparent 40%, ${badgeColor}80 60%, transparent 80%, ${badgeColor})`,
             opacity: 0.6,
           }}
-          animate={{ rotate: -360 }}
+          animate={{ rotate: 360 }}
           transition={{ duration: isGold ? 14 : 20, repeat: Infinity, ease: "linear" }}
         />
 
