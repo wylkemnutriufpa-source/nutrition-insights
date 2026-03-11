@@ -46,10 +46,6 @@ export default function Auth() {
           _patient_id: currentUser.id,
           _action_key: "login",
           _metadata: {},
-        }).then((res) => {
-          if (res.data && (res.data as any)?.awarded) {
-            toast.success(`+${(res.data as any).points} pontos por login diário! 🔑`, { duration: 2000 });
-          }
         });
       }
       navigate("/");

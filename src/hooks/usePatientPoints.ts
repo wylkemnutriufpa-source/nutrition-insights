@@ -1,6 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { toast } from "sonner";
 
 export function usePatientPoints() {
   const { user } = useAuth();
@@ -17,9 +16,8 @@ export function usePatientPoints() {
       return null;
     }
     const result = data as any;
-    if (result?.awarded) {
-      toast.success(`+${result.points} pontos! 🎉`, { duration: 2000 });
-    }
+    // Points awarded silently — no toast to avoid inducing clicks
+
     return result;
   }
 

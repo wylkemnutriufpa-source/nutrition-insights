@@ -42,7 +42,7 @@ export default function UserGuide() {
       return;
     }
     await markExplored(key);
-    toast.success(`+5 pontos! 🎉 "${label}" explorada!`, { duration: 2500 });
+    toast.success(`🎉 "${label}" explorada!`, { duration: 2500 });
   };
 
   if (loading) {
@@ -105,7 +105,7 @@ export default function UserGuide() {
 
             <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1">
               <Sparkles className="w-3 h-3" />
-              Cada funcionalidade explorada vale +5 pontos no ranking!
+              Cada funcionalidade explorada contribui para seu progresso!
             </p>
           </div>
         </motion.div>
@@ -215,7 +215,7 @@ export default function UserGuide() {
                             ) : (
                               <>
                                 <Sparkles className="w-3.5 h-3.5 mr-1" />
-                                Explorar (+5 pts)
+                                Explorar
                               </>
                             )}
                           </Button>

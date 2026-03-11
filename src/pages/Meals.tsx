@@ -103,7 +103,7 @@ export default function Meals() {
         }).eq("user_id", user.id);
       }
 
-      toast.success(`Refeição registrada! +${xpEarned} XP 🎉`);
+      toast.success("Refeição registrada com sucesso! 🎉");
       setOpen(false);
       setForm({ title: "", description: "", meal_type: "lunch", calories: "", protein: "", carbs: "", fat: "" });
       fetchMeals();

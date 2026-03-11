@@ -55,7 +55,6 @@ export function DailyScoreCard({ tasks }: { tasks: { category: string; completed
       </div>
       <div className="flex gap-1.5 flex-wrap mt-2">
         {tasks.map((t, i) => {
-          const pts = getCategoryPoints(t.category);
           return (
             <span
               key={i}
@@ -63,7 +62,7 @@ export function DailyScoreCard({ tasks }: { tasks: { category: string; completed
                 t.completed ? "bg-success/10 text-success" : "bg-muted/50 text-muted-foreground"
               }`}
             >
-              {t.category} +{pts}
+              {t.category}
             </span>
           );
         })}

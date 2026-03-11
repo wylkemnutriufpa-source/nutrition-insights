@@ -204,7 +204,7 @@ export default function PatientMealPlan() {
     }
 
     if (status === "followed") {
-      toast.success("✅ Refeição seguida! +5 XP");
+      toast.success("✅ Refeição seguida! Ótimo trabalho!");
     } else if (status === "partial") {
       toast("⚠️ Parcialmente seguida", { description: "Tente seguir 100% na próxima!" });
     }
