@@ -15,6 +15,7 @@ import {
   Scale, Droplets, Heart, Calculator, TrendingUp, BookOpen, DollarSign, Pill, Crown, Compass
 } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePresenceTracker } from "@/hooks/usePresenceTracker";
@@ -23,6 +24,7 @@ import CommandPalette from "@/components/common/CommandPalette";
 import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
 import SOSModal from "@/components/patient/SOSModal";
 import SOSInbox from "@/components/patient/SOSInbox";
+import LanguageSelector from "@/components/common/LanguageSelector";
 import { AlertTriangle } from "lucide-react";
 
 const nutritionistLinks = [
