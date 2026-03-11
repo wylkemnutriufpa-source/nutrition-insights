@@ -64,6 +64,18 @@ const emptyForm: ItemForm = {
   fat_target: "",
 };
 
+// Helper: match text against food database for quick-add with macros
+import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
+
+const findFoodMatch = (text: string): FoodItem | null => {
+  const query = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return FOOD_DATABASE.find(f => {
+    const name = f.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return name === query || query.includes(name) || name.includes(query);
+  }) || null;
+};
+
+
 export default function MealPlanEditor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -91,6 +103,10 @@ export default function MealPlanEditor() {
   const [quickAddKey, setQuickAddKey] = useState<string | null>(null); // "day-mealType"
   const [quickAddText, setQuickAddText] = useState("");
   const [quickAdding, setQuickAdding] = useState(false);
+  const [batchMode, setBatchMode] = useState(false);
+  const [batchText, setBatchText] = useState("");
+  const [batchAdding, setBatchAdding] = useState(false);
+  const [batchTarget, setBatchTarget] = useState<{ day: number; mealType: MealType } | null>(null);
 
   // View mode
   const [editorView, setEditorView] = useState<"weekly" | "daily">("weekly");
@@ -271,23 +287,60 @@ export default function MealPlanEditor() {
   const handleQuickAdd = async (day: number, mealType: MealType) => {
     if (!id || !quickAddText.trim()) return;
     setQuickAdding(true);
+    
+    // Try to match food from database for auto macros
+    const match = findFoodMatch(quickAddText.trim());
+    
     const { error } = await supabase.from("meal_plan_items").insert({
       meal_plan_id: id,
       title: quickAddText.trim(),
-      description: null,
+      description: match ? match.portion : null,
       meal_type: mealType,
       day_of_week: day,
-      calories_target: null,
-      protein_target: null,
-      carbs_target: null,
-      fat_target: null,
+      calories_target: match ? match.calories : null,
+      protein_target: match ? match.protein : null,
+      carbs_target: match ? match.carbs : null,
+      fat_target: match ? match.fat : null,
     });
     setQuickAdding(false);
     if (error) toast.error("Erro ao adicionar: " + error.message);
     else {
-      toast.success("Item adicionado!");
+      toast.success(match ? `${quickAddText.trim()} adicionado com macros! ✨` : "Item adicionado!");
       setQuickAddText("");
       setQuickAddKey(null);
+      fetchData();
+    }
+  };
+
+  // Batch add: multiple foods at once (one per line)
+  const handleBatchAdd = async (day: number, mealType: MealType) => {
+    if (!id || !batchText.trim()) return;
+    setBatchAdding(true);
+    
+    const lines = batchText.split("\n").map(l => l.trim()).filter(Boolean);
+    const inserts = lines.map(line => {
+      const match = findFoodMatch(line);
+      return {
+        meal_plan_id: id,
+        title: line,
+        description: match ? match.portion : null,
+        meal_type: mealType,
+        day_of_week: day,
+        calories_target: match ? match.calories : null,
+        protein_target: match ? match.protein : null,
+        carbs_target: match ? match.carbs : null,
+        fat_target: match ? match.fat : null,
+      };
+    });
+
+    const { error } = await supabase.from("meal_plan_items").insert(inserts);
+    setBatchAdding(false);
+    if (error) toast.error("Erro ao adicionar: " + error.message);
+    else {
+      const matched = inserts.filter(i => i.calories_target !== null).length;
+      toast.success(`${lines.length} itens adicionados! ${matched > 0 ? `(${matched} com macros automáticos ✨)` : ""}`);
+      setBatchText("");
+      setBatchTarget(null);
       fetchData();
     }
   };
@@ -639,6 +692,12 @@ export default function MealPlanEditor() {
                                 <Plus className="w-3 h-3" /> Rápido
                               </button>
                               <button
+                                onClick={() => { setBatchTarget({ day: day.key, mealType: meal.key }); setBatchText(""); }}
+                                className="flex-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-primary"
+                              >
+                                <Leaf className="w-3 h-3" /> Lote
+                              </button>
+                              <button
                                 onClick={() => openAddDialog(day.key, meal.key)}
                                 className="flex-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-primary"
                               >
@@ -781,7 +840,15 @@ export default function MealPlanEditor() {
                             className="flex-1 h-9 gap-1.5 border border-dashed border-border hover:border-primary text-muted-foreground hover:text-primary"
                             onClick={() => { setQuickAddKey(cellKey); setQuickAddText(""); }}
                           >
-                            <Plus className="w-3.5 h-3.5" /> Adicionar Rápido
+                            <Plus className="w-3.5 h-3.5" /> Rápido
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-9 gap-1.5 border border-dashed border-border hover:border-primary text-muted-foreground hover:text-primary"
+                            onClick={() => { setBatchTarget({ day: selectedDay, mealType: meal.key }); setBatchText(""); }}
+                          >
+                            <Leaf className="w-3.5 h-3.5" /> Lote
                           </Button>
                           <Button
                             variant="ghost"
@@ -1058,6 +1125,68 @@ export default function MealPlanEditor() {
               })}
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Batch Add Dialog */}
+      <Dialog open={!!batchTarget} onOpenChange={(open) => { if (!open) setBatchTarget(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              <Leaf className="w-5 h-5 text-primary" /> Adicionar em Lote
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Digite um alimento por linha. Alimentos reconhecidos terão macros preenchidos automaticamente.
+            </p>
+            {batchTarget && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className={MEAL_TYPES.find((m) => m.key === batchTarget.mealType)?.color}>
+                  {MEAL_TYPES.find((m) => m.key === batchTarget.mealType)?.icon}
+                </span>
+                {MEAL_TYPES.find((m) => m.key === batchTarget.mealType)?.label} — {DAYS[batchTarget.day]?.label}
+              </div>
+            )}
+            <Textarea
+              autoFocus
+              value={batchText}
+              onChange={(e) => setBatchText(e.target.value)}
+              placeholder={"Frango grelhado\nArroz integral\nBrócolis cozido\nAzeite de oliva"}
+              rows={8}
+              className="font-mono text-sm"
+            />
+            {batchText.trim() && (
+              <div className="bg-secondary/40 rounded-lg p-3 space-y-1">
+                <p className="text-xs font-medium text-muted-foreground">
+                  Pré-visualização ({batchText.split("\n").filter(l => l.trim()).length} itens):
+                </p>
+                {batchText.split("\n").filter(l => l.trim()).map((line, i) => {
+                  const match = findFoodMatch(line.trim());
+                  return (
+                    <div key={i} className="flex items-center justify-between text-xs">
+                      <span className="truncate flex-1">{line.trim()}</span>
+                      {match ? (
+                        <span className="text-primary ml-2 shrink-0">
+                          {match.calories} kcal • {match.protein}g P
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground/50 ml-2 shrink-0">sem macros</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            <Button
+              className="w-full gradient-primary gap-2"
+              onClick={() => batchTarget && handleBatchAdd(batchTarget.day, batchTarget.mealType)}
+              disabled={batchAdding || !batchText.trim()}
+            >
+              {batchAdding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+              Adicionar {batchText.split("\n").filter(l => l.trim()).length} itens
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </DashboardLayout>

@@ -13,7 +13,7 @@ export interface FoodItem {
   category: string;
 }
 
-const FOOD_DATABASE: FoodItem[] = [
+export const FOOD_DATABASE: FoodItem[] = [
   // ── Proteínas ──
   { name: "Frango grelhado", portion: "120g", calories: 198, protein: 37, carbs: 0, fat: 4.3, category: "proteina" },
   { name: "Peito de frango cozido", portion: "120g", calories: 192, protein: 36, carbs: 0, fat: 4, category: "proteina" },
