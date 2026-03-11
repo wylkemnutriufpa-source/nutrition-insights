@@ -123,18 +123,18 @@ function PatientDashboardContent() {
                {t("dashboard.anamnesisDescription")}
              </p>
             <div className="space-y-2 text-left w-full mt-3 mb-5">
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
-                <Brain className="w-5 h-5 text-primary flex-shrink-0" />
-                <span className="text-sm">A IA analisa suas respostas e gera um plano personalizado</span>
-              </div>
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
-                <Heart className="w-5 h-5 text-primary flex-shrink-0" />
-                <span className="text-sm">Dicas de nutrição, sono, exercício e hidratação</span>
-              </div>
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
-                <Target className="w-5 h-5 text-primary flex-shrink-0" />
-                <span className="text-sm">Recomendações baseadas no seu perfil e objetivos</span>
-              </div>
+               <div className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
+                 <Brain className="w-5 h-5 text-primary flex-shrink-0" />
+                 <span className="text-sm">{t("dashboard.anamnesisAI")}</span>
+               </div>
+               <div className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
+                 <Heart className="w-5 h-5 text-primary flex-shrink-0" />
+                 <span className="text-sm">{t("dashboard.anamnesisTips")}</span>
+               </div>
+               <div className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
+                 <Target className="w-5 h-5 text-primary flex-shrink-0" />
+                 <span className="text-sm">{t("dashboard.anamnesisGoals")}</span>
+               </div>
             </div>
             <p className="text-xs text-muted-foreground mb-4">
               ⚠️ Seu plano alimentar só será elaborado após o preenchimento da anamnese.
