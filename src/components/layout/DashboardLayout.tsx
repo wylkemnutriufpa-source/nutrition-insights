@@ -220,14 +220,14 @@ function SidebarContent({
                 className="flex items-center gap-3 px-3 py-2 rounded-xl gradient-primary text-primary-foreground mt-3 shadow-glow shimmer-sweep"
               >
                 <Sparkles className="w-4 h-4 flex-shrink-0" />
-                {!collapsed && <span className="text-xs font-medium">Analisar com IA</span>}
+                {!collapsed && <span className="text-xs font-medium">{t("nav.analyzeAI")}</span>}
               </Link>
               <button
                 onClick={() => { onSosOpen?.(); onLinkClick?.(); }}
                 className="flex items-center gap-3 px-3 py-2 rounded-xl bg-destructive/10 text-destructive border border-destructive/20 mt-2 w-full hover:bg-destructive/20 transition-all"
               >
                 <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                {!collapsed && <span className="text-xs font-medium">🆘 SOS</span>}
+                {!collapsed && <span className="text-xs font-medium">{t("nav.sos")}</span>}
               </button>
             </>
           )}
@@ -237,7 +237,7 @@ function SidebarContent({
               className="flex items-center gap-3 px-3 py-2 rounded-xl bg-destructive/10 text-destructive border border-destructive/20 mt-3 w-full hover:bg-destructive/20 transition-all"
             >
               <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-              {!collapsed && <span className="text-xs font-medium">🆘 SOS Inbox</span>}
+              {!collapsed && <span className="text-xs font-medium">{t("nav.sosInbox")}</span>}
             </button>
           )}
         </nav>
