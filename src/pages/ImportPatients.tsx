@@ -71,9 +71,10 @@ export default function ImportPatients() {
         if (emails.length > 0 && user) {
           setChecking(true);
           try {
-            const { data } = await supabase.functions.invoke("import-patients", {
+            const { data, error: checkError } = await supabase.functions.invoke("import-patients", {
               body: { mode: "check", emails },
             });
+            if (checkError) throw checkError;
             if (data?.existing) {
               const linkedEmails = new Set<string>(
                 data.existing.filter((e: any) => e.already_linked).map((e: any) => e.email)
