@@ -287,23 +287,60 @@ export default function MealPlanEditor() {
   const handleQuickAdd = async (day: number, mealType: MealType) => {
     if (!id || !quickAddText.trim()) return;
     setQuickAdding(true);
+    
+    // Try to match food from database for auto macros
+    const match = findFoodMatch(quickAddText.trim());
+    
     const { error } = await supabase.from("meal_plan_items").insert({
       meal_plan_id: id,
       title: quickAddText.trim(),
-      description: null,
+      description: match ? match.portion : null,
       meal_type: mealType,
       day_of_week: day,
-      calories_target: null,
-      protein_target: null,
-      carbs_target: null,
-      fat_target: null,
+      calories_target: match ? match.calories : null,
+      protein_target: match ? match.protein : null,
+      carbs_target: match ? match.carbs : null,
+      fat_target: match ? match.fat : null,
     });
     setQuickAdding(false);
     if (error) toast.error("Erro ao adicionar: " + error.message);
     else {
-      toast.success("Item adicionado!");
+      toast.success(match ? `${quickAddText.trim()} adicionado com macros! ✨` : "Item adicionado!");
       setQuickAddText("");
       setQuickAddKey(null);
+      fetchData();
+    }
+  };
+
+  // Batch add: multiple foods at once (one per line)
+  const handleBatchAdd = async (day: number, mealType: MealType) => {
+    if (!id || !batchText.trim()) return;
+    setBatchAdding(true);
+    
+    const lines = batchText.split("\n").map(l => l.trim()).filter(Boolean);
+    const inserts = lines.map(line => {
+      const match = findFoodMatch(line);
+      return {
+        meal_plan_id: id,
+        title: line,
+        description: match ? match.portion : null,
+        meal_type: mealType,
+        day_of_week: day,
+        calories_target: match ? match.calories : null,
+        protein_target: match ? match.protein : null,
+        carbs_target: match ? match.carbs : null,
+        fat_target: match ? match.fat : null,
+      };
+    });
+
+    const { error } = await supabase.from("meal_plan_items").insert(inserts);
+    setBatchAdding(false);
+    if (error) toast.error("Erro ao adicionar: " + error.message);
+    else {
+      const matched = inserts.filter(i => i.calories_target !== null).length;
+      toast.success(`${lines.length} itens adicionados! ${matched > 0 ? `(${matched} com macros automáticos ✨)` : ""}`);
+      setBatchText("");
+      setBatchTarget(null);
       fetchData();
     }
   };
