@@ -130,6 +130,7 @@ function SidebarContent({
   onLinkClick?: () => void;
   onSosOpen?: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <>
       {/* Logo */}
