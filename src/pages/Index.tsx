@@ -293,29 +293,29 @@ function PatientDashboardContent() {
 
       {/* Patient Evolution Summary */}
       <motion.div variants={item}>
-        <ExpandablePanel title="Evolução do Paciente">
-          <PatientEvolutionSummary />
-        </ExpandablePanel>
-      </motion.div>
+         <ExpandablePanel title={t("dashboard.patientEvolution")}>
+           <PatientEvolutionSummary />
+         </ExpandablePanel>
+       </motion.div>
 
-      {/* Subscription Card */}
-      <motion.div variants={item}>
-        <ExpandablePanel title="Assinatura">
-          <SubscriptionCard />
-        </ExpandablePanel>
-      </motion.div>
+       {/* Subscription Card */}
+       <motion.div variants={item}>
+         <ExpandablePanel title={t("dashboard.subscription")}>
+           <SubscriptionCard />
+         </ExpandablePanel>
+       </motion.div>
 
-      {/* Smart Plan Card */}
-      <motion.div variants={item}>
-        <ExpandablePanel title="Plano Inteligente">
-          <SmartPlanCard />
-        </ExpandablePanel>
-      </motion.div>
+       {/* Smart Plan Card */}
+       <motion.div variants={item}>
+         <ExpandablePanel title={t("dashboard.smartPlan")}>
+           <SmartPlanCard />
+         </ExpandablePanel>
+       </motion.div>
 
-      {/* Radar + Tips side by side */}
-      <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <ExpandablePanel title="Radar Metabólico"><MetabolicRadar anamnesis={anamnesis} /></ExpandablePanel>
-        <ExpandablePanel title="Dicas Inteligentes"><SmartTips /></ExpandablePanel>
+       {/* Radar + Tips side by side */}
+       <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+         <ExpandablePanel title={t("dashboard.metabolicRadar")}><MetabolicRadar anamnesis={anamnesis} /></ExpandablePanel>
+         <ExpandablePanel title={t("dashboard.smartTips")}><SmartTips /></ExpandablePanel>
       </motion.div>
     </motion.div>
     </>
