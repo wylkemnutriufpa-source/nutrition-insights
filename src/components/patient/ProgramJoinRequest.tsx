@@ -69,6 +69,21 @@ export default function ProgramJoinRequest({ open, onOpenChange }: ProgramJoinRe
         toast.error("Erro ao enviar solicitação");
       }
     } else {
+      // Send notification to program owner (nutritionist)
+      const selectedProgram = programs.find(p => p.id === selected);
+      const { data: programData } = await supabase.from("programs").select("created_by").eq("id", selected).single();
+      const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", user.id).single();
+      
+      if (programData?.created_by) {
+        await supabase.from("notifications").insert({
+          user_id: programData.created_by,
+          title: "Nova solicitação de programa",
+          message: `${profile?.full_name || "Um paciente"} solicitou participar do programa "${selectedProgram?.title || ""}".`,
+          type: "program_join_request",
+          action_url: `/programs/${selected}`,
+        });
+      }
+
       toast.success("🚀 Solicitação enviada! Aguarde a aprovação.");
       setSelected(null);
       setMessage("");
