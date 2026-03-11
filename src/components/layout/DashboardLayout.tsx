@@ -308,8 +308,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   const profileName = profile?.full_name || "Usuário";
 
+  const onSosHandler = isPatient ? () => setSosOpen(true) : (isNutritionist || isAdmin) ? () => setSosInboxOpen(true) : undefined;
+
   const sidebarProps = {
     links, location, isNutritionist, dark, toggleDark, initials, profileName, signOut,
+    onSosOpen: onSosHandler,
   };
 
   if (isMobile) {
