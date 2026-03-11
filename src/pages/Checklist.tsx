@@ -486,7 +486,7 @@ export default function Checklist() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Ícone</label>
+                  <label className="text-sm font-medium mb-1 block">{t("checklist.icon")}</label>
                   <Select value={form.icon} onValueChange={v => setForm(p => ({ ...p, icon: v }))}>
                     <SelectTrigger>
                       <SelectValue />
