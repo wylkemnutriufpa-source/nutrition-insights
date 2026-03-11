@@ -67,6 +67,7 @@ export default function ClientDashboard() {
   const [notifications, setNotifications] = useState<NotificationInfo[]>([]);
   const [checklistStats, setChecklistStats] = useState<ChecklistStats>({ total: 0, completed: 0 });
   const [loading, setLoading] = useState(true);
+  const [programJoinOpen, setProgramJoinOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
