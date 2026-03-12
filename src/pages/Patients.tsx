@@ -1040,6 +1040,16 @@ export default function Patients() {
                   search={search} emptyMessage={`Nenhum paciente no programa "${prog.title}"`} layout={layout} allPrestigePlans={prestigePlansList} onlineSet={onlineSet} />
               </TabsContent>
             ))}
+
+            <TabsContent value="sem-projeto">
+              <PatientGrid
+                patients={patients.filter(p => p.status === "active" && (!p.programs || p.programs.length === 0) && searchFilter(p) && prestigeFilterFn(p))}
+                navigate={navigateToPatient}
+                toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
+                setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
+                onUpdateExpiry={updateExpiry}
+                search={search} emptyMessage="Todos os pacientes ativos estão em pelo menos um projeto 🎉" layout={layout} allPrestigePlans={prestigePlansList} onlineSet={onlineSet} />
+            </TabsContent>
           </Tabs>
         )}
       </div>
