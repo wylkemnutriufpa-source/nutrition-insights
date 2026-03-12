@@ -375,7 +375,7 @@ function PlatformFeatureFlags() {
   const MODULE_GROUPS = [
     { key: "crm", label: "CRM", features: ["patients", "protocols", "programs", "physical_assessment", "supplements", "checkin_panel"] },
     { key: "finance", label: "Financeiro", features: ["financial", "reports"] },
-    { key: "ia", label: "IA & Automação", features: ["ia_plan", "automations", "recipe_generator", "autobot", "ai_body_analysis", "ai_anamnesis", "weekly_report_ai", "behavioral_analysis", "nutrition_copilot", "churn_prediction", "adherence_gamification"] },
+    { key: "ia", label: "IA & Automação", features: ["ia_plan", "automations", "recipe_generator", "ai_body_analysis", "ai_anamnesis", "weekly_report_ai", "behavioral_analysis", "nutrition_copilot", "churn_prediction", "adherence_gamification"] },
     { key: "communication", label: "Comunicação", features: ["chat", "appointments", "notifications_push", "feedbacks", "global_tips"] },
     { key: "tools", label: "Ferramentas", features: ["food_database", "recipes", "shopping_list", "diet_templates", "branding"] },
     { key: "reports", label: "Relatórios & Avançado", features: ["system_usage_gamification", "progress_simulation"] },

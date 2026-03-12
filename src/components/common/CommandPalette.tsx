@@ -50,7 +50,7 @@ const allRoutes = [
   { to: "/meals", icon: Leaf, label: "Refeições", roles: ["patient"] },
   { to: "/checklist", icon: ClipboardCheck, label: "Checklist", roles: ["patient"] },
   { to: "/my-diet", icon: UtensilsCrossed, label: "Minha Dieta", roles: ["patient"] },
-  { to: "/autobot", icon: Bot, label: "AutoBot IA", roles: ["patient"] },
+  { to: "/chat", icon: MessageSquare, label: "Chat com Nutricionista", roles: ["patient"] },
   { to: "/journey", icon: TrendingUp, label: "Jornada", roles: ["patient"] },
   { to: "/achievements", icon: Trophy, label: "Conquistas", roles: ["patient"] },
   { to: "/challenges", icon: Target, label: "Desafios", roles: ["patient"] },

@@ -58,7 +58,7 @@ const features = [
   { icon: BarChart3, title: "Avaliação Física Completa", desc: "Dobras cutâneas (Jackson-Pollock 7), circunferências, composição corporal, IMC, TMB e TDEE automático.", tag: "Clínico" },
   { icon: Utensils, title: "Planos Alimentares", desc: "Crie planos detalhados por dia/refeição com metas de macros, templates reutilizáveis e agendamento inteligente.", tag: "Nutrição" },
   { icon: Zap, title: "Gamificação Avançada", desc: "XP, streaks, conquistas, desafios semanais e ranking. Aumente a adesão do paciente em até 3x.", tag: "Engajamento" },
-  { icon: Bot, title: "AutoBot IA", desc: "Chatbot inteligente que tira dúvidas do paciente 24/7 sobre nutrição, receitas e seu plano alimentar.", tag: "IA" },
+  { icon: MessageSquare, title: "Chat em Tempo Real", desc: "Acompanhamento direto com seu nutricionista, com indicador de presença, respostas rápidas e histórico completo.", tag: "Comunicação" },
   { icon: FileText, title: "Protocolos & Programas", desc: "Crie protocolos reutilizáveis e programas como 'Projeto Biquíni' com inscrição em massa de pacientes.", tag: "Automação" },
   { icon: Camera, title: "Análise Corporal por Foto", desc: "Upload de fotos (frente, lado, costas) com análise de IA: tipo corporal, % gordura e evolução visual.", tag: "IA" },
   { icon: Pill, title: "Prescrição de Suplementos", desc: "Prescreva suplementos com dosagem, frequência, horário, marca e motivo. Paciente visualiza tudo.", tag: "Clínico" },
