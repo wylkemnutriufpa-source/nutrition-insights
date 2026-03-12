@@ -142,7 +142,7 @@ export default function PatientWorkouts() {
 
       setCompletionOpen(false);
       setShowReward(true);
-      triggerConfetti();
+      confetti();
 
       setTimeout(() => setShowReward(false), 3000);
 
