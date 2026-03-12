@@ -30,6 +30,7 @@ import NutritionCopilot from "@/components/dashboard/NutritionCopilot";
 import ChurnRiskPanel from "@/components/dashboard/ChurnRiskPanel";
 import PatientProgressSimulation from "@/components/dashboard/PatientProgressSimulation";
 import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
+import ChatDashboardWidget from "@/components/chat/ChatDashboardWidget";
 import ExpandablePanel from "@/components/common/ExpandablePanel";
 import {
   UtensilsCrossed, Users, TrendingUp, Target, Sparkles, Plus,
