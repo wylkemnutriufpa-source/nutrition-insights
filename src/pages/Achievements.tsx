@@ -31,16 +31,21 @@ export default function Achievements() {
   const earnedCount = earned.size;
   const totalCount = achievements.length;
 
+  const shareRef = useRef<HTMLDivElement>(null);
+
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-            <Trophy className="w-7 h-7 text-accent" /> {t("achievements.title")}
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            {earnedCount}/{totalCount} {t("achievements.unlocked")}
-          </p>
+      <div className="space-y-6" ref={shareRef}>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-display text-2xl font-bold flex items-center gap-2">
+              <Trophy className="w-7 h-7 text-accent" /> {t("achievements.title")}
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              {earnedCount}/{totalCount} {t("achievements.unlocked")}
+            </p>
+          </div>
+          <ShareProgressButton captureRef={shareRef} context="achievements" />
         </div>
 
         {/* Progress */}
