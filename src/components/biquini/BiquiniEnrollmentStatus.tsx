@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import {
   Lock, CheckCircle2, AlertTriangle, Clock, Scale,
-  Camera, Target, Flame, Calendar, ArrowRight
+  Camera, Target, Flame, Calendar, ArrowRight, Sparkles, Trophy
 } from "lucide-react";
 
 interface Enrollment {
@@ -36,7 +36,10 @@ const STATUS_MAP: Record<string, { label: string; color: string; icon: React.Rea
   protocol_locked: { label: "Protocolo Bloqueado", color: "bg-destructive/10 text-destructive", icon: <Lock className="w-4 h-4" /> },
   protocol_2_ready: { label: "Protocolo 2 Pronto", color: "bg-primary/10 text-primary", icon: <ArrowRight className="w-4 h-4" /> },
   protocol_2_active: { label: "Protocolo 2 Ativo", color: "bg-emerald-500/10 text-emerald-500", icon: <Flame className="w-4 h-4" /> },
-  protocol_3_active: { label: "Protocolo 3 Ativo", color: "bg-purple-500/10 text-purple-500", icon: <Target className="w-4 h-4" /> },
+  protocol_3_ready: { label: "Protocolo 3 Pronto", color: "bg-purple-500/10 text-purple-500", icon: <ArrowRight className="w-4 h-4" /> },
+  protocol_3_active: { label: "Protocolo 3 Ativo", color: "bg-purple-500/10 text-purple-500", icon: <Sparkles className="w-4 h-4" /> },
+  protocol_4_ready: { label: "Fase 4 — Aguardando Renovação", color: "bg-amber-500/10 text-amber-500", icon: <Clock className="w-4 h-4" /> },
+  protocol_4_active: { label: "Protocolo 4 Ativo", color: "bg-emerald-500/10 text-emerald-500", icon: <Trophy className="w-4 h-4" /> },
   completed: { label: "Programa Concluído", color: "bg-primary/10 text-primary", icon: <CheckCircle2 className="w-4 h-4" /> },
 };
 
@@ -54,15 +57,23 @@ export default function BiquiniEnrollmentStatus({ enrollment, onSendWeight, onSe
     : null;
 
   const isBlocked = enrollment.status === "protocol_locked";
+  const isAwaitingRenewal = enrollment.status === "protocol_4_ready";
   const needsWeight = enrollment.status === "awaiting_weight_update" || (daysUntilWeight !== null && daysUntilWeight <= 0);
   const needsReview = enrollment.status === "awaiting_full_reassessment" || (daysUntilReview !== null && daysUntilReview <= 0);
 
   return (
-    <Card className={`glass shadow-card overflow-hidden ${isBlocked ? "border-destructive/30" : ""}`}>
+    <Card className={`glass shadow-card overflow-hidden ${isBlocked ? "border-destructive/30" : isAwaitingRenewal ? "border-amber-500/30" : ""}`}>
       {isBlocked && (
         <div className="bg-destructive/10 p-3 flex items-center gap-2 text-destructive text-sm">
           <Lock className="w-4 h-4" />
           <span className="font-medium">Protocolo bloqueado: {enrollment.blocked_reason || "Envie peso e fotos para continuar."}</span>
+        </div>
+      )}
+
+      {isAwaitingRenewal && (
+        <div className="bg-amber-500/10 p-3 flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm">
+          <Clock className="w-4 h-4" />
+          <span className="font-medium">Fase 4 disponível após renovação do plano ou pacote semestral.</span>
         </div>
       )}
       
