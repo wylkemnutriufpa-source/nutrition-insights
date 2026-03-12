@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
+import PatientProgressSimulation from "@/components/dashboard/PatientProgressSimulation";
 import { FEATURE_REGISTRY, getFeaturesByCategory, type FeatureTier } from "@/lib/featureRegistry";
 import { useQuery } from "@tanstack/react-query";
 import { ScrollArea } from "@/components/ui/scroll-area";
