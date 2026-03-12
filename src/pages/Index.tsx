@@ -636,6 +636,7 @@ function NutritionistDashboardContent() {
         <DailyMetricCard label="Protocolos" value={protocolCount} icon={FileText} color="warning" onClick={() => navigate("/protocols")} />
         <DailyMetricCard label="Check-ins Pendentes" value={pendingCheckins} icon={ClipboardList} color="destructive" pulse={pendingCheckins > 0} onClick={() => navigate("/checkin-panel")} />
         <OnlinePatientsWidget variant="card" showPremiumTag={true} />
+        <ChatDashboardWidget />
       </motion.div>
 
       {/* ── 3️⃣ AI Daily Briefing (expandable) ── */}
