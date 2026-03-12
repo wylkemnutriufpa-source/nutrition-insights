@@ -7,13 +7,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSiteSettingsRaw, useUpdateSiteSetting, SiteSetting } from "@/hooks/useSiteSettings";
 import { toast } from "sonner";
-import { Settings, Palette, Globe, Search, Save, Type, Image, BarChart3, MessageSquare, HelpCircle, DollarSign, Share2 } from "lucide-react";
+import { Settings, Palette, Globe, Search, Save, Type, Image, BarChart3, MessageSquare, HelpCircle, DollarSign, Share2, Megaphone } from "lucide-react";
 import { Label } from "@/components/ui/label";
 
 const categoryConfig: Record<string, { label: string; icon: any; description: string }> = {
   branding: { label: "Branding & Identidade", icon: Palette, description: "Logo, cores, nome da marca e redes sociais" },
   landing: { label: "Landing Page", icon: Globe, description: "Textos, estatísticas, depoimentos e preços" },
   seo: { label: "SEO", icon: Search, description: "Meta tags e otimização para buscadores" },
+  promotions: { label: "Promoções", icon: Megaphone, description: "Alertas promocionais para inscrição em projetos" },
 };
 
 const keyIcons: Record<string, any> = {
