@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import SmartTips from "@/components/patient/SmartTips";
 import {
   Rocket, CalendarDays, Bell, TrendingUp, CheckCircle2,
-  UtensilsCrossed, Trophy, Target
+  UtensilsCrossed, Trophy, Target, Dumbbell, Flame
 } from "lucide-react";
 import RankingWidget from "@/components/prestige/RankingWidget";
 import ExplorerProgressWidget from "@/components/dashboard/ExplorerProgressWidget";
@@ -55,6 +55,18 @@ interface ChecklistStats {
   completed: number;
 }
 
+interface WorkoutInfo {
+  planTitle: string;
+  routineCount: number;
+  recentCompletions: Array<{
+    id: string;
+    routine_name: string;
+    completed_at: string;
+    perceived_effort: number | null;
+  }>;
+  hasPersonal: boolean;
+}
+
 const container = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.06 } },
@@ -88,6 +100,7 @@ export default function ClientDashboard() {
   const [programJoinOpen, setProgramJoinOpen] = useState(false);
   const [biquiniEnrollment, setBiquiniEnrollment] = useState<BiquiniEnrollment | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [workoutInfo, setWorkoutInfo] = useState<WorkoutInfo>({ planTitle: "", routineCount: 0, recentCompletions: [], hasPersonal: false });
 
   useEffect(() => {
     if (!user) return;
@@ -157,6 +170,51 @@ export default function ClientDashboard() {
           }
         }
       });
+
+    // Fetch workout data (personal trainer integration)
+    (async () => {
+      try {
+        // Check if patient has a personal trainer
+        const { data: pts } = await supabase
+          .from("personal_trainer_students")
+          .select("id")
+          .eq("student_id", user.id)
+          .eq("status", "active")
+          .limit(1);
+
+        if (pts && pts.length > 0) {
+          const [plansRes, completionsRes] = await Promise.all([
+            supabase
+              .from("workout_plans")
+              .select("title, workout_routines(id)")
+              .eq("student_id", user.id)
+              .eq("is_active", true)
+              .limit(1),
+            supabase
+              .from("workout_completions")
+              .select("id, completed_at, perceived_effort, workout_routines(name)")
+              .eq("student_id", user.id)
+              .order("completed_at", { ascending: false })
+              .limit(3),
+          ]);
+
+          const plan = plansRes.data?.[0];
+          setWorkoutInfo({
+            hasPersonal: true,
+            planTitle: plan?.title || "Treino",
+            routineCount: (plan as any)?.workout_routines?.length || 0,
+            recentCompletions: (completionsRes.data || []).map((c: any) => ({
+              id: c.id,
+              routine_name: c.workout_routines?.name || "Treino",
+              completed_at: c.completed_at,
+              perceived_effort: c.perceived_effort,
+            })),
+          });
+        }
+      } catch (e) {
+        console.error("Error fetching workout data:", e);
+      }
+    })();
   }, [user]);
 
   const checklistPercent = checklistStats.total > 0
@@ -344,8 +402,69 @@ export default function ClientDashboard() {
               </div>
             </motion.div>
           </Link>
+
+          {/* Workout card - only if has personal trainer */}
+          {workoutInfo.hasPersonal && (
+            <Link to="/my-workouts">
+              <motion.div whileHover={{ y: -3, scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-premium rounded-xl p-4 cursor-pointer metric-glow transition-all duration-300 shimmer-sweep h-full border border-orange-500/20 hover:border-orange-400/40">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500/15 to-orange-500/5 flex items-center justify-center">
+                    <Dumbbell className="w-5 h-5 text-orange-500" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Meus Treinos</p>
+                    <p className="text-sm font-medium">{workoutInfo.routineCount} rotinas</p>
+                  </div>
+                </div>
+              </motion.div>
+            </Link>
+          )}
         </motion.div>
 
+        {/* Workout Section - integrated when patient has personal trainer */}
+        {workoutInfo.hasPersonal && workoutInfo.recentCompletions.length > 0 && (
+          <motion.div variants={item}>
+            <div className="glass-premium rounded-xl overflow-hidden shimmer-sweep">
+              <div className="p-5 pb-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500/15 to-orange-500/5 flex items-center justify-center">
+                    <Dumbbell className="w-4.5 h-4.5 text-orange-500" />
+                  </div>
+                  <h3 className="font-display font-semibold text-base">Treinos Recentes</h3>
+                </div>
+                <Link to="/my-workouts" className="text-xs text-primary hover:underline font-medium">
+                  Ver todos →
+                </Link>
+              </div>
+              <div className="px-5 pb-5 space-y-2">
+                {workoutInfo.recentCompletions.map((c, i) => (
+                  <motion.div
+                    key={c.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/50"
+                  >
+                    <CheckCircle2 className="w-5 h-5 text-primary" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{c.routine_name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(c.completed_at), "dd MMM 'às' HH:mm", { locale: ptBR })}
+                      </p>
+                    </div>
+                    {c.perceived_effort && (
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex items-center gap-1 ${
+                        c.perceived_effort >= 8 ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"
+                      }`}>
+                        <Flame className="w-3 h-3" /> {c.perceived_effort}/10
+                      </span>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         <div className="grid md:grid-cols-2 gap-6">
           {/* Active Programs */}
