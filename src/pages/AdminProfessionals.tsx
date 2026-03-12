@@ -381,9 +381,11 @@ export default function AdminProfessionals() {
     if (!user) return;
     setLoading(true);
 
-    // Get all nutritionists
-    const { data: nutRoles } = await supabase.from("user_roles").select("user_id").eq("role", "nutritionist");
+    // Get all nutritionists and personal trainers
+    const { data: nutRoles } = await supabase.from("user_roles").select("user_id, role").in("role", ["nutritionist", "personal"] as any);
     const nutIds = nutRoles?.map(r => r.user_id) || [];
+    const roleMap = new Map<string, string>();
+    (nutRoles || []).forEach(r => roleMap.set(r.user_id, r.role));
 
     if (nutIds.length === 0) {
       setProfessionals([]);
