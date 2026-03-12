@@ -265,11 +265,14 @@ export default function AdminAffiliates() {
         </div>
 
         <Tabs defaultValue="affiliates" className="space-y-4">
-          <TabsList>
+          <TabsList className="flex-wrap h-auto gap-1 p-1">
             <TabsTrigger value="affiliates">Embaixadores ({affiliates.length})</TabsTrigger>
             <TabsTrigger value="referrals">Indicações ({allReferrals.length})</TabsTrigger>
             <TabsTrigger value="commissions">Comissões ({allCommissions.length})</TabsTrigger>
             <TabsTrigger value="payouts">Pagamentos ({allPayouts.length})</TabsTrigger>
+            <TabsTrigger value="risk" className="gap-1">
+              <AlertTriangle className="w-3.5 h-3.5" /> Fraude ({unresolvedFlags})
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="affiliates">
