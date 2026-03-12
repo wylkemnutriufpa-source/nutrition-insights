@@ -4816,6 +4816,10 @@ export type Database = {
           referral_code: string
         }[]
       }
+      promote_patient_to_professional: {
+        Args: { _patient_email: string; _target_role?: string }
+        Returns: Json
+      }
       promote_to_admin: { Args: { _user_email: string }; Returns: string }
       record_ai_usage: {
         Args: { _feature_key: string; _plan_tier?: string; _user_id: string }
