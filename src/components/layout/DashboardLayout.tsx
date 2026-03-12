@@ -49,6 +49,7 @@ const nutritionistLinks = [
   { to: "/financial", icon: DollarSign, labelKey: "nav.financial" },
   { to: "/supplements", icon: Pill, labelKey: "nav.supplements" },
   { to: "/global-tips", icon: Lightbulb, labelKey: "nav.tips" },
+  { to: "/curiosidades", icon: Sparkles, labelKey: "nav.curiosidades" },
   { to: "/professional-guide", icon: Compass, labelKey: "nav.professionalGuide" },
   { to: "/user-guide", icon: BookOpen, labelKey: "nav.patientGuide" },
   { to: "/feedbacks", icon: MessageSquare, labelKey: "nav.feedbacks" },
