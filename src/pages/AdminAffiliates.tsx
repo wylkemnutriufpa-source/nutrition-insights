@@ -356,6 +356,14 @@ export default function AdminAffiliates() {
           </TabsContent>
 
           <TabsContent value="commissions">
+            <div className="flex gap-2 mb-4">
+              <Button variant="outline" size="sm" onClick={exportCSV} className="gap-1.5">
+                <Download className="w-4 h-4" /> Exportar CSV
+              </Button>
+              <Button variant="outline" size="sm" onClick={batchApprove} className="gap-1.5">
+                <CheckCircle2 className="w-4 h-4" /> Aprovar todas pendentes
+              </Button>
+            </div>
             <Card>
               <CardContent className="pt-4">
                 <Table>
