@@ -144,6 +144,19 @@ export default function Landing() {
   const s = siteData?.map;
   const navScrolled = useNavScroll();
 
+  // Fetch real approved testimonials from DB
+  const [dbTestimonials, setDbTestimonials] = useState<any[]>([]);
+  const [topRanking, setTopRanking] = useState<any[]>([]);
+
+  useEffect(() => {
+    supabase.from("testimonials").select("*").eq("status", "approved").order("created_at", { ascending: false }).limit(6)
+      .then(({ data }) => { if (data?.length) setDbTestimonials(data); });
+    // Fetch top 5 from ranking cache for the landing page
+    supabase.from("patient_ranking_cache").select("display_name, total_points, avatar_url, plan_slug, plan_color, badge_icon, crown_enabled, rank_position")
+      .order("rank_position").limit(5)
+      .then(({ data }) => { if (data) setTopRanking(data); });
+  }, []);
+
   const brandName = getSetting(s, "brand_name", "FitJourney");
   const heroTitle = getSetting(s, "hero_title", "Transforme seu consultório com IA e Gamificação");
   const heroSubtitle = getSetting(s, "hero_subtitle", "Gerencie pacientes, crie planos alimentares personalizados com IA, e engaje seus clientes com gamificação — tudo em uma plataforma completa e intuitiva.");
@@ -151,7 +164,9 @@ export default function Landing() {
   const heroBadge = getSetting(s, "hero_badge_text", "Plataforma #1 para Nutricionistas Modernos");
   const stats = getSetting(s, "stats", defaultStats);
   const plans = getSetting(s, "pricing_plans", defaultPlans);
-  const testimonials = getSetting(s, "testimonials_landing", defaultTestimonials);
+  const testimonials = dbTestimonials.length > 0
+    ? dbTestimonials.map(t => ({ name: t.is_anonymous ? "Paciente Anônimo" : (t.display_name || "Paciente"), role: "Paciente FitJourney", text: t.content, rating: t.rating || 5, avatar: (t.display_name || "P")[0].toUpperCase() }))
+    : getSetting(s, "testimonials_landing", defaultTestimonials);
   const faqs = getSetting(s, "faqs", defaultFaqs);
   const metaTitle = getSetting(s, "meta_title", "FitJourney — Plataforma de Nutrição com IA e Gamificação");
   const metaDescription = getSetting(s, "meta_description", "Gerencie pacientes, crie planos alimentares com IA, engaje com gamificação. A plataforma #1 para nutricionistas modernos.");
