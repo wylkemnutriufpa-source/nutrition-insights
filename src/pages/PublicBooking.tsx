@@ -38,6 +38,8 @@ export default function PublicBooking() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
+  const [bookingPrice, setBookingPrice] = useState<number>(0);
+  const [paymentRequired, setPaymentRequired] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
