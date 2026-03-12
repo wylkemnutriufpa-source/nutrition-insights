@@ -728,6 +728,20 @@ export default function Anamnesis() {
 
     setAnalyzing(false);
     setCompleted(true);
+
+    // Update onboarding pipeline if active
+    const isPipelineMode = searchParams.get("pipeline") === "true";
+    if (isPipelineMode) {
+      await supabase
+        .from("onboarding_pipelines" as any)
+        .update({
+          anamnesis_completed: true,
+          status: "pending_body_data",
+          weight: weight,
+          height: height,
+        } as any)
+        .eq("patient_id", targetUserId);
+    }
   };
 
   if (completed) {
