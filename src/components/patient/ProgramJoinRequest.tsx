@@ -6,8 +6,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
-import { Rocket, Send } from "lucide-react";
+import { Rocket, Send, AlertTriangle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { motion, AnimatePresence } from "framer-motion";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface Program {
   id: string;
@@ -20,6 +23,12 @@ interface ProgramJoinRequestProps {
   onOpenChange: (open: boolean) => void;
 }
 
+interface PromoConfig {
+  enabled: boolean;
+  date: string;
+  price: string;
+}
+
 export default function ProgramJoinRequest({ open, onOpenChange }: ProgramJoinRequestProps) {
   const { user } = useAuth();
   const [programs, setPrograms] = useState<Program[]>([]);
@@ -27,6 +36,7 @@ export default function ProgramJoinRequest({ open, onOpenChange }: ProgramJoinRe
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [promo, setPromo] = useState<PromoConfig>({ enabled: false, date: "", price: "" });
 
   const [enrolledIds, setEnrolledIds] = useState<string[]>([]);
   const [pendingIds, setPendingIds] = useState<string[]>([]);
@@ -34,7 +44,24 @@ export default function ProgramJoinRequest({ open, onOpenChange }: ProgramJoinRe
   useEffect(() => {
     if (!open || !user) return;
     loadPrograms();
+    loadPromoConfig();
   }, [open, user]);
+
+  async function loadPromoConfig() {
+    const { data } = await (supabase as any)
+      .from("site_settings")
+      .select("setting_key, setting_value")
+      .in("setting_key", ["promo_alert_enabled", "promo_alert_date", "promo_alert_price"]);
+    if (data) {
+      const map: Record<string, string> = {};
+      data.forEach((r: any) => { map[r.setting_key] = typeof r.setting_value === "string" ? r.setting_value : String(r.setting_value); });
+      setPromo({
+        enabled: map["promo_alert_enabled"] === "true",
+        date: map["promo_alert_date"] || "",
+        price: map["promo_alert_price"] || "300",
+      });
+    }
+  }
 
   async function loadPrograms() {
     setLoading(true);
@@ -69,7 +96,6 @@ export default function ProgramJoinRequest({ open, onOpenChange }: ProgramJoinRe
         toast.error("Erro ao enviar solicitação");
       }
     } else {
-      // Send notification to program owner (nutritionist)
       const selectedProgram = programs.find(p => p.id === selected);
       const { data: programData } = await supabase.from("programs").select("created_by").eq("id", selected).single();
       const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", user.id).single();
@@ -91,6 +117,16 @@ export default function ProgramJoinRequest({ open, onOpenChange }: ProgramJoinRe
     }
     setSending(false);
   };
+
+  const formattedPromoDate = promo.date
+    ? (() => {
+        try {
+          return format(new Date(promo.date + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR });
+        } catch {
+          return promo.date;
+        }
+      })()
+    : "";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -115,6 +151,38 @@ export default function ProgramJoinRequest({ open, onOpenChange }: ProgramJoinRe
           </p>
         ) : (
           <>
+            {/* Promo Alert */}
+            <AnimatePresence>
+              {promo.enabled && selected && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="relative rounded-xl border border-amber-500/40 bg-gradient-to-r from-amber-500/10 via-yellow-400/15 to-amber-500/10 p-4 mb-2 overflow-hidden">
+                    <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-amber-500/20 via-yellow-400/30 to-amber-500/20 blur-md opacity-50 animate-pulse pointer-events-none" />
+                    <div className="relative flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500/30 to-amber-600/20 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(245,158,11,0.4)]">
+                        <AlertTriangle className="w-4 h-4 text-amber-400" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent">
+                          🔥 Oferta Promocional
+                        </p>
+                        <p className="text-sm text-foreground/90 mt-1 leading-relaxed">
+                          Aproveite a inscrição no <span className="font-bold text-amber-400">valor promocional</span> até{" "}
+                          <span className="font-bold text-amber-300">{formattedPromoDate}</span>.
+                          Após essa data, o valor será{" "}
+                          <span className="font-bold text-amber-300">R$ {promo.price}</span>.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <ScrollArea className="max-h-[40vh]">
               <div className="space-y-2">
                 {programs.map((program) => {
