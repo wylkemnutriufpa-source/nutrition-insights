@@ -1156,6 +1156,14 @@ export default function PatientDetail() {
                   <ClinicalDecisionSupport patientId={patientId!} nutritionistId={user!.id} />
                 </DialogContent>
               </Dialog>
+
+              {/* Onboarding Pipeline Modal */}
+              <Dialog open={openSection === "onboarding"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display">Onboarding Automático</DialogTitle></DialogHeader>
+                  <OnboardingApprovalQueue patientId={patientId!} patientName={profile?.full_name || "Paciente"} />
+                </DialogContent>
+              </Dialog>
             </>
           );
         })()}
