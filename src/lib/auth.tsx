@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { logAudit } from "@/lib/auditLog";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
 
@@ -125,8 +126,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Listen for subsequent auth changes (sign in/out, token refresh)
     const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        // Skip the initial session event — already handled above
         if (event === "INITIAL_SESSION") return;
+
+        if (event === "SIGNED_IN" && session?.user) {
+          logAudit("login", "auth", session.user.id, { email: session.user.email ?? "" });
+        }
+        if (event === "SIGNED_OUT") {
+          logAudit("logout", "auth");
+        }
 
         setSession(session);
         setUser(session?.user ?? null);

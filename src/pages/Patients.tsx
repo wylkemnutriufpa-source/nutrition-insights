@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { logAudit } from "@/lib/auditLog";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -684,7 +685,10 @@ export default function Patients() {
       if (linkError) {
         if (linkError.code === "23505") toast.info("Paciente já está na sua lista.");
         else throw linkError;
-      } else toast.success("Paciente cadastrado e vinculado! 🎉");
+      } else {
+        toast.success("Paciente cadastrado e vinculado! 🎉");
+        logAudit("create_patient", "patient", patientId as string, { email: email.trim().toLowerCase(), name: patientName.trim() });
+      }
       setOpen(false);
       setEmail(""); setPatientName(""); setPatientPassword("");
       fetchPatients();
@@ -704,6 +708,7 @@ export default function Patients() {
           ? "Paciente ativado — dados incluídos nas métricas"
           : "Paciente desativado — excluído das métricas e leituras de IA"
       );
+      logAudit("toggle_patient_status", "patient", id, { new_status: newStatus });
       fetchPatients();
     }
   };
