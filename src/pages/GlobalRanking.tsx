@@ -911,6 +911,26 @@ export default function GlobalRanking() {
                       );
                     })}
                   </AnimatePresence>
+
+                  {ranking.length > 20 && (
+                    <Button
+                      variant="ghost"
+                      className="w-full mt-3 text-sm text-muted-foreground hover:text-foreground gap-2"
+                      onClick={() => setShowAll(!showAll)}
+                    >
+                      {showAll ? (
+                        <>
+                          <ChevronUp className="w-4 h-4" />
+                          Mostrar Top 20
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="w-4 h-4" />
+                          Ver todos ({ranking.length} pacientes)
+                        </>
+                      )}
+                    </Button>
+                  )}
                 )}
               </CardContent>
             </Card>
