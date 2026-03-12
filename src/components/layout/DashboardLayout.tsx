@@ -483,7 +483,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const onSosHandler = isPatient ? () => setSosOpen(true) : (isNutritionist || isPersonal || isAdmin) ? () => setSosInboxOpen(true) : undefined;
 
   const sidebarProps = {
-    sections, flatLinks, location, isNutritionist: isNutritionist || isAdmin, dark, toggleDark, initials, profileName, signOut,
+    sections, flatLinks, location, isNutritionist: isNutritionist || isPersonal || isAdmin, dark, toggleDark, initials, profileName, signOut,
     onSosOpen: onSosHandler,
   };
 
