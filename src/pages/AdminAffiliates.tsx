@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, Users, DollarSign, TrendingUp, Award, Edit2, Power, Eye, Undo2, CheckCircle2, Banknote } from "lucide-react";
+import { Plus, Users, DollarSign, TrendingUp, Award, Edit2, Power, Eye, Undo2, CheckCircle2, Banknote, Download, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -47,7 +47,20 @@ export default function AdminAffiliates() {
         .from("affiliate_commissions")
         .select("*, affiliates(full_name, referral_code)")
         .order("created_at", { ascending: false })
-        .limit(200);
+        .limit(500);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const { data: riskFlags = [] } = useQuery({
+    queryKey: ["admin-risk-flags"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("affiliate_risk_flags")
+        .select("*, affiliates(full_name, referral_code)")
+        .order("created_at", { ascending: false })
+        .limit(100);
       if (error) throw error;
       return data || [];
     },
@@ -126,6 +139,41 @@ export default function AdminAffiliates() {
   const totalPending = allCommissions.filter((c: any) => c.status === "pending").reduce((s: number, c: any) => s + Number(c.commission_amount), 0);
   const totalApproved = allCommissions.filter((c: any) => c.status === "approved").reduce((s: number, c: any) => s + Number(c.commission_amount), 0);
   const totalPaid = allCommissions.filter((c: any) => c.status === "paid").reduce((s: number, c: any) => s + Number(c.commission_amount), 0);
+  const unresolvedFlags = riskFlags.filter((f: any) => !f.resolved).length;
+
+  const exportCSV = () => {
+    const rows = [["Embaixador","Tipo","Venda Bruta","Comissão %","Comissão R$","Status","Data"]];
+    allCommissions.forEach((c: any) => {
+      rows.push([
+        c.affiliates?.full_name || "",
+        c.commission_type === "first_payment" ? "1a Venda" : "Recorrente",
+        Number(c.gross_amount).toFixed(2),
+        Number(c.commission_percent).toFixed(0),
+        Number(c.commission_amount).toFixed(2),
+        c.status,
+        format(new Date(c.created_at), "dd/MM/yyyy", { locale: ptBR }),
+      ]);
+    });
+    const csv = rows.map(r => r.join(";")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `comissoes_${format(new Date(), "yyyy-MM-dd")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("CSV exportado!");
+  };
+
+  const batchApprove = async () => {
+    const pendingIds = allCommissions.filter((c: any) => c.status === "pending").map((c: any) => c.id);
+    if (pendingIds.length === 0) { toast.info("Nenhuma comissão pendente"); return; }
+    for (const id of pendingIds) {
+      await supabase.from("affiliate_commissions").update({ status: "approved" }).eq("id", id);
+    }
+    qc.invalidateQueries({ queryKey: ["admin-all-commissions"] });
+    toast.success(`${pendingIds.length} comissões aprovadas!`);
+  };
 
   return (
     <DashboardLayout>
@@ -217,11 +265,14 @@ export default function AdminAffiliates() {
         </div>
 
         <Tabs defaultValue="affiliates" className="space-y-4">
-          <TabsList>
+          <TabsList className="flex-wrap h-auto gap-1 p-1">
             <TabsTrigger value="affiliates">Embaixadores ({affiliates.length})</TabsTrigger>
             <TabsTrigger value="referrals">Indicações ({allReferrals.length})</TabsTrigger>
             <TabsTrigger value="commissions">Comissões ({allCommissions.length})</TabsTrigger>
             <TabsTrigger value="payouts">Pagamentos ({allPayouts.length})</TabsTrigger>
+            <TabsTrigger value="risk" className="gap-1">
+              <AlertTriangle className="w-3.5 h-3.5" /> Fraude ({unresolvedFlags})
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="affiliates">
@@ -305,6 +356,14 @@ export default function AdminAffiliates() {
           </TabsContent>
 
           <TabsContent value="commissions">
+            <div className="flex gap-2 mb-4">
+              <Button variant="outline" size="sm" onClick={exportCSV} className="gap-1.5">
+                <Download className="w-4 h-4" /> Exportar CSV
+              </Button>
+              <Button variant="outline" size="sm" onClick={batchApprove} className="gap-1.5">
+                <CheckCircle2 className="w-4 h-4" /> Aprovar todas pendentes
+              </Button>
+            </div>
             <Card>
               <CardContent className="pt-4">
                 <Table>
@@ -388,6 +447,65 @@ export default function AdminAffiliates() {
                           <TableCell><Badge variant="outline">{p.payout_status}</Badge></TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {format(new Date(p.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="risk">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-destructive" />
+                  Alertas Anti-Fraude
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Embaixador</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Severidade</TableHead>
+                      <TableHead>Descrição</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Data</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {riskFlags.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                          ✅ Nenhum alerta de fraude detectado.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      riskFlags.map((f: any) => (
+                        <TableRow key={f.id}>
+                          <TableCell>{f.affiliates?.full_name || "—"}</TableCell>
+                          <TableCell><Badge variant="outline">{f.flag_type}</Badge></TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={
+                              f.severity === "critical" ? "border-red-500/30 text-red-400" :
+                              f.severity === "high" ? "border-orange-500/30 text-orange-400" :
+                              "border-yellow-500/30 text-yellow-400"
+                            }>
+                              {f.severity}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-sm max-w-xs truncate">{f.description}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={f.resolved ? "border-emerald-500/30 text-emerald-400" : "border-red-500/30 text-red-400"}>
+                              {f.resolved ? "Resolvido" : "Pendente"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {format(new Date(f.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                           </TableCell>
                         </TableRow>
                       ))

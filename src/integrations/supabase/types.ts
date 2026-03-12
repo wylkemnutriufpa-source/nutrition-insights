@@ -107,6 +107,56 @@ export type Database = {
           },
         ]
       }
+      affiliate_metrics_cache: {
+        Row: {
+          active_referrals: number | null
+          affiliate_id: string
+          conversion_rate: number | null
+          monthly_earnings: number | null
+          pending_earnings: number | null
+          ranking_position: number | null
+          tier_level: number | null
+          tier_name: string | null
+          total_earnings: number | null
+          total_referrals: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          active_referrals?: number | null
+          affiliate_id: string
+          conversion_rate?: number | null
+          monthly_earnings?: number | null
+          pending_earnings?: number | null
+          ranking_position?: number | null
+          tier_level?: number | null
+          tier_name?: string | null
+          total_earnings?: number | null
+          total_referrals?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          active_referrals?: number | null
+          affiliate_id?: string
+          conversion_rate?: number | null
+          monthly_earnings?: number | null
+          pending_earnings?: number | null
+          ranking_position?: number | null
+          tier_level?: number | null
+          tier_name?: string | null
+          total_earnings?: number | null
+          total_referrals?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_metrics_cache_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: true
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliate_payouts: {
         Row: {
           affiliate_id: string
@@ -191,6 +241,63 @@ export type Database = {
             columns: ["affiliate_id"]
             isOneToOne: false
             referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliate_risk_flags: {
+        Row: {
+          affiliate_id: string | null
+          created_at: string | null
+          description: string | null
+          flag_type: string
+          id: string
+          metadata: Json | null
+          referral_id: string | null
+          resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string | null
+        }
+        Insert: {
+          affiliate_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          flag_type: string
+          id?: string
+          metadata?: Json | null
+          referral_id?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+        }
+        Update: {
+          affiliate_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          flag_type?: string
+          id?: string
+          metadata?: Json | null
+          referral_id?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_risk_flags_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_risk_flags_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_referrals"
             referencedColumns: ["id"]
           },
         ]
@@ -4327,6 +4434,7 @@ export type Database = {
         Args: { _feature_key: string; _plan_tier?: string; _user_id: string }
         Returns: Json
       }
+      refresh_affiliate_metrics: { Args: never; Returns: undefined }
       refresh_ranking_cache: { Args: never; Returns: undefined }
       refresh_ranking_snapshots: {
         Args: { _period_type?: string }

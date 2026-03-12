@@ -31,12 +31,12 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { event_type, invoice_id, subscription_id, customer_email, amount, user_id } = body;
+    const { event_type, invoice_id, subscription_id, customer_email, amount, user_id, ip_address } = body;
 
     log("Processing event", { event_type, invoice_id, customer_email });
 
+    // ─── INVOICE PAID → COMMISSION ───
     if (event_type === "invoice.paid" && invoice_id && customer_email) {
-      // Find referral for this customer
       const { data: referral } = await supabase
         .from("affiliate_referrals")
         .select("*, affiliates(*)")
@@ -45,7 +45,7 @@ serve(async (req) => {
         .single();
 
       if (!referral) {
-        log("No affiliate referral found for customer", { customer_email });
+        log("No affiliate referral found", { customer_email });
         return new Response(JSON.stringify({ ok: true, commission: false, reason: "no_referral" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -59,22 +59,81 @@ serve(async (req) => {
         });
       }
 
-      // Anti-abuse: self-referral check
+      // ─── ANTI-FRAUD CHECKS ───
+
+      // 1. Self-referral check (same user_id)
       if (affiliate.user_id && affiliate.user_id === user_id) {
-        log("Self-referral blocked", { user_id });
+        log("FRAUD: Self-referral blocked", { user_id });
+        await supabase.from("affiliate_risk_flags").insert({
+          affiliate_id: affiliate.id,
+          referral_id: referral.id,
+          flag_type: "self_referral",
+          severity: "critical",
+          description: `Self-referral attempt: affiliate user_id matches referred user_id (${user_id})`,
+          metadata: { user_id, customer_email },
+        });
         return new Response(JSON.stringify({ ok: true, commission: false, reason: "self_referral" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      // Get dynamic commission tier based on referral count
+      // 2. Same email domain check (affiliate email = referred email)
+      if (affiliate.email && affiliate.email.toLowerCase() === customer_email.toLowerCase()) {
+        log("FRAUD: Same email blocked", { affiliate_email: affiliate.email, customer_email });
+        await supabase.from("affiliate_risk_flags").insert({
+          affiliate_id: affiliate.id,
+          referral_id: referral.id,
+          flag_type: "self_referral",
+          severity: "critical",
+          description: `Same email: affiliate email matches referred email`,
+          metadata: { affiliate_email: affiliate.email, customer_email },
+        });
+        return new Response(JSON.stringify({ ok: true, commission: false, reason: "same_email" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // 3. Rapid signup detection (referral created < 2 min ago = suspicious)
+      const referralAge = Date.now() - new Date(referral.created_at).getTime();
+      const TWO_MINUTES = 2 * 60 * 1000;
+      if (referralAge < TWO_MINUTES) {
+        log("FRAUD: Rapid signup detected", { referral_age_ms: referralAge });
+        await supabase.from("affiliate_risk_flags").insert({
+          affiliate_id: affiliate.id,
+          referral_id: referral.id,
+          flag_type: "rapid_signup",
+          severity: "high",
+          description: `Referral created ${Math.round(referralAge / 1000)}s before payment`,
+          metadata: { referral_age_ms: referralAge, customer_email },
+        });
+        // Don't block, but flag - commission still created as pending
+      }
+
+      // 4. Check for suspicious volume (>5 referrals in last hour from same affiliate)
+      const { count: recentCount } = await supabase
+        .from("affiliate_referrals")
+        .select("*", { count: "exact", head: true })
+        .eq("affiliate_id", affiliate.id)
+        .gte("created_at", new Date(Date.now() - 3600000).toISOString());
+
+      if (recentCount && recentCount > 5) {
+        log("FRAUD: High volume detected", { recentCount, affiliate_id: affiliate.id });
+        await supabase.from("affiliate_risk_flags").insert({
+          affiliate_id: affiliate.id,
+          flag_type: "suspicious_pattern",
+          severity: "high",
+          description: `${recentCount} referrals in the last hour`,
+          metadata: { recent_count: recentCount },
+        });
+      }
+
+      // ─── COMMISSION CALCULATION ───
       const { data: tierData } = await supabase.rpc("get_affiliate_commission_tier", {
         _affiliate_id: affiliate.id,
       });
 
       const tier = tierData && tierData.length > 0 ? tierData[0] : null;
 
-      // Check if first_payment commission already exists for this referral
       const { data: existingFirst } = await supabase
         .from("affiliate_commissions")
         .select("id")
@@ -85,7 +144,6 @@ serve(async (req) => {
       const isFirstPayment = !existingFirst || existingFirst.length === 0;
       const commissionType = isFirstPayment ? "first_payment" : "recurring";
 
-      // Use tier-based commission if available, fallback to affiliate's stored values
       const commissionPercent = tier
         ? (isFirstPayment ? Number(tier.first_payment_percent) : Number(tier.recurring_percent))
         : (isFirstPayment ? affiliate.first_payment_commission_percent : affiliate.recurring_commission_percent);
@@ -93,11 +151,12 @@ serve(async (req) => {
       const grossAmount = amount || 0;
       const commissionAmount = Math.round((grossAmount * commissionPercent) / 100 * 100) / 100;
 
-      log("Tier-based commission", {
+      log("Commission calc", {
         tier_name: tier?.tier_name,
-        tier_level: tier?.tier_level,
         commissionPercent,
-        is_premium: tier?.is_premium,
+        commissionType,
+        grossAmount,
+        commissionAmount,
       });
 
       // Duplicate invoice check
@@ -115,7 +174,7 @@ serve(async (req) => {
         });
       }
 
-      // Create commission with status "pending" - will be approved next month
+      // Create commission — always PENDING (approved next month after verification)
       const { error: commError } = await supabase
         .from("affiliate_commissions")
         .insert({
@@ -127,7 +186,7 @@ serve(async (req) => {
           gross_amount: grossAmount,
           commission_percent: commissionPercent,
           commission_amount: commissionAmount,
-          status: "pending", // Always pending - paid next month after verification
+          status: "pending",
         });
 
       if (commError) {
@@ -135,7 +194,7 @@ serve(async (req) => {
         throw new Error(commError.message);
       }
 
-      // Update referral status to paying
+      // Update referral status
       if (referral.status !== "paying") {
         await supabase
           .from("affiliate_referrals")
@@ -143,10 +202,18 @@ serve(async (req) => {
           .eq("id", referral.id);
       }
 
-      log("Commission created", {
-        commissionType, commissionAmount, commissionPercent,
-        tier_name: tier?.tier_name, affiliate_id: affiliate.id
-      });
+      // Create notification for affiliate
+      if (affiliate.user_id) {
+        await supabase.from("notifications").insert({
+          user_id: affiliate.user_id,
+          title: "💰 Nova comissão!",
+          message: `Você ganhou R$ ${commissionAmount.toFixed(2)} de comissão (${commissionType === "first_payment" ? "1ª venda" : "recorrente"}).`,
+          type: "commission",
+          action_url: "/ambassador",
+        });
+      }
+
+      log("Commission created", { commissionType, commissionAmount, tier: tier?.tier_name });
 
       return new Response(JSON.stringify({
         ok: true,
@@ -160,29 +227,73 @@ serve(async (req) => {
       });
     }
 
+    // ─── SUBSCRIPTION CANCELLED ───
     if (event_type === "customer.subscription.deleted" && customer_email) {
-      const { error } = await supabase
+      // Update referral status
+      const { data: cancelledReferrals } = await supabase
         .from("affiliate_referrals")
         .update({ status: "cancelled" })
         .eq("referred_email", customer_email.toLowerCase())
-        .eq("status", "paying");
+        .eq("status", "paying")
+        .select("id, affiliate_id, created_at");
 
-      log("Subscription cancelled, referral updated", { customer_email, error: error?.message });
+      // Check for early cancellation (< 7 days) → flag pending commissions
+      if (cancelledReferrals) {
+        for (const ref of cancelledReferrals) {
+          const refAge = Date.now() - new Date(ref.created_at).getTime();
+          const SEVEN_DAYS = 7 * 24 * 3600 * 1000;
 
+          if (refAge < SEVEN_DAYS) {
+            // Early cancel — reverse pending commissions
+            await supabase
+              .from("affiliate_commissions")
+              .update({ status: "reversed" })
+              .eq("referral_id", ref.id)
+              .eq("status", "pending");
+
+            await supabase.from("affiliate_risk_flags").insert({
+              affiliate_id: ref.affiliate_id,
+              referral_id: ref.id,
+              flag_type: "early_cancel",
+              severity: "high",
+              description: `Subscription cancelled within ${Math.round(refAge / 86400000)} days — pending commissions reversed`,
+              metadata: { days_active: Math.round(refAge / 86400000), customer_email },
+            });
+
+            log("Early cancel — commissions reversed", { referral_id: ref.id });
+          }
+        }
+      }
+
+      log("Subscription cancelled", { customer_email });
       return new Response(JSON.stringify({ ok: true, action: "referral_cancelled" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    // ─── CHARGE REFUNDED ───
     if (event_type === "charge.refunded" && invoice_id) {
-      const { error } = await supabase
+      const { data: reversedComms } = await supabase
         .from("affiliate_commissions")
         .update({ status: "reversed" })
         .eq("stripe_invoice_id", invoice_id)
-        .in("status", ["pending", "approved"]);
+        .in("status", ["pending", "approved"])
+        .select("affiliate_id");
 
-      log("Commissions reversed due to refund", { invoice_id, error: error?.message });
+      // Flag refunds
+      if (reversedComms && reversedComms.length > 0) {
+        for (const c of reversedComms) {
+          await supabase.from("affiliate_risk_flags").insert({
+            affiliate_id: c.affiliate_id,
+            flag_type: "suspicious_pattern",
+            severity: "medium",
+            description: `Charge refunded for invoice ${invoice_id}`,
+            metadata: { invoice_id },
+          });
+        }
+      }
 
+      log("Commissions reversed due to refund", { invoice_id });
       return new Response(JSON.stringify({ ok: true, action: "commissions_reversed" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
