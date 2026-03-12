@@ -456,7 +456,65 @@ export default function AdminAffiliates() {
               </CardContent>
             </Card>
           </TabsContent>
-        </Tabs>
+
+          <TabsContent value="risk">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-destructive" />
+                  Alertas Anti-Fraude
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Embaixador</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Severidade</TableHead>
+                      <TableHead>Descrição</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Data</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {riskFlags.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                          ✅ Nenhum alerta de fraude detectado.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      riskFlags.map((f: any) => (
+                        <TableRow key={f.id}>
+                          <TableCell>{f.affiliates?.full_name || "—"}</TableCell>
+                          <TableCell><Badge variant="outline">{f.flag_type}</Badge></TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={
+                              f.severity === "critical" ? "border-red-500/30 text-red-400" :
+                              f.severity === "high" ? "border-orange-500/30 text-orange-400" :
+                              "border-yellow-500/30 text-yellow-400"
+                            }>
+                              {f.severity}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-sm max-w-xs truncate">{f.description}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={f.resolved ? "border-emerald-500/30 text-emerald-400" : "border-red-500/30 text-red-400"}>
+                              {f.resolved ? "Resolvido" : "Pendente"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {format(new Date(f.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
       </div>
     </DashboardLayout>
   );
