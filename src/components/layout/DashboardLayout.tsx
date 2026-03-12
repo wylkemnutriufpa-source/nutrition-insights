@@ -110,7 +110,6 @@ const adminLinks = [
   { to: "/user-guide", icon: BookOpen, labelKey: "nav.patientGuide" },
   { to: "/admin/pricing", icon: DollarSign, labelKey: "nav.pricing" },
   { to: "/admin/patient-features", icon: Crown, labelKey: "nav.patientFeatures" },
-  { to: "/admin/audit-logs", icon: Shield, labelKey: "nav.auditLogs" },
 ];
 
 function SidebarContent({
