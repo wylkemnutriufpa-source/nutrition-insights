@@ -251,9 +251,9 @@ Deno.serve(async (req) => {
 
         if ((taskCount || 0) < 10) return false;
 
-        // Check minimum 14 days in current phase
+        // Check minimum 30 days in current phase (phases transition every 30-35 days)
         const daysInPhase = Math.floor((now.getTime() - new Date(phaseStart).getTime()) / 86400000);
-        if (daysInPhase < 14) return false;
+        if (daysInPhase < 30) return false;
 
         // Mark as ready for next phase
         await supabase
