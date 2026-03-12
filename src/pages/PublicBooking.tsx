@@ -148,7 +148,6 @@ export default function PublicBooking() {
     setSubmitting(false);
     setSubmitted(true);
   };
-  };
 
   if (loading) return (
     <div className="min-h-screen bg-background flex items-center justify-center">
