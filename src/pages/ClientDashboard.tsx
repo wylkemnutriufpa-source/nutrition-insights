@@ -170,6 +170,51 @@ export default function ClientDashboard() {
           }
         }
       });
+
+    // Fetch workout data (personal trainer integration)
+    (async () => {
+      try {
+        // Check if patient has a personal trainer
+        const { data: pts } = await supabase
+          .from("personal_trainer_students")
+          .select("id")
+          .eq("student_id", user.id)
+          .eq("status", "active")
+          .limit(1);
+
+        if (pts && pts.length > 0) {
+          const [plansRes, completionsRes] = await Promise.all([
+            supabase
+              .from("workout_plans")
+              .select("title, workout_routines(id)")
+              .eq("student_id", user.id)
+              .eq("is_active", true)
+              .limit(1),
+            supabase
+              .from("workout_completions")
+              .select("id, completed_at, perceived_effort, workout_routines(name)")
+              .eq("student_id", user.id)
+              .order("completed_at", { ascending: false })
+              .limit(3),
+          ]);
+
+          const plan = plansRes.data?.[0];
+          setWorkoutInfo({
+            hasPersonal: true,
+            planTitle: plan?.title || "Treino",
+            routineCount: (plan as any)?.workout_routines?.length || 0,
+            recentCompletions: (completionsRes.data || []).map((c: any) => ({
+              id: c.id,
+              routine_name: c.workout_routines?.name || "Treino",
+              completed_at: c.completed_at,
+              perceived_effort: c.perceived_effort,
+            })),
+          });
+        }
+      } catch (e) {
+        console.error("Error fetching workout data:", e);
+      }
+    })();
   }, [user]);
 
   const checklistPercent = checklistStats.total > 0
