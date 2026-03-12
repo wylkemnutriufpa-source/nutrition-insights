@@ -413,6 +413,7 @@ export default function GlobalRanking() {
   const [ranking, setRanking] = useState<RankEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
   const [hasPremium, setHasPremium] = useState<boolean | null>(null);
   const [nutritionistId, setNutritionistId] = useState<string | null>(null);
   const [showChart, setShowChart] = useState(true);
@@ -459,7 +460,7 @@ export default function GlobalRanking() {
   // ── Load ranking ──
   const loadRanking = useCallback(async (p: Period) => {
     setLoading(true);
-    const params: any = { _period: p, _limit: 20 };
+    const params: any = { _period: p, _limit: 500 };
     if (nutritionistId && !isAdmin) params._nutritionist_id = nutritionistId;
     const { data, error } = await supabase.rpc("get_ranking_by_period", params);
     if (!error && data) setRanking(data as RankEntry[]);
@@ -476,6 +477,7 @@ export default function GlobalRanking() {
 
   const myRank = ranking.find((r) => r.patient_id === user?.id);
   const podium = ranking.slice(0, 3);
+  const visibleRanking = showAll ? ranking : ranking.slice(0, 20);
   const rest = ranking.slice(3, 20);
   const maxCategoryPoints = Math.max(
     ...ranking.map(r => Math.max(r.points_checklist, r.points_meals, r.points_training, r.points_checkin, r.points_other)),
@@ -777,8 +779,9 @@ export default function GlobalRanking() {
                     </p>
                   </div>
                 ) : (
+                  <>
                   <AnimatePresence>
-                    {ranking.map((entry, i) => {
+                    {visibleRanking.map((entry, i) => {
                       const isMe = entry.patient_id === user?.id;
                       const isExpanded = expandedId === entry.patient_id;
                       const isPodium = i < 3;
@@ -855,7 +858,6 @@ export default function GlobalRanking() {
                                 {entry.total_points.toLocaleString("pt-BR")}
                               </span>
                               <span className="text-[10px] text-muted-foreground ml-1">pts</span>
-                              {/* Mini category dots */}
                               <div className="flex gap-0.5 justify-end mt-1">
                                 {CATEGORY_CONFIG.map((c) => {
                                   const val = (entry as any)[c.key] || 0;
@@ -909,6 +911,27 @@ export default function GlobalRanking() {
                       );
                     })}
                   </AnimatePresence>
+
+                  {ranking.length > 20 && (
+                    <Button
+                      variant="ghost"
+                      className="w-full mt-3 text-sm text-muted-foreground hover:text-foreground gap-2"
+                      onClick={() => setShowAll(!showAll)}
+                    >
+                      {showAll ? (
+                        <>
+                          <ChevronUp className="w-4 h-4" />
+                          Mostrar Top 20
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="w-4 h-4" />
+                          Ver todos ({ranking.length} pacientes)
+                        </>
+                      )}
+                    </Button>
+                  )}
+                  </>
                 )}
               </CardContent>
             </Card>
