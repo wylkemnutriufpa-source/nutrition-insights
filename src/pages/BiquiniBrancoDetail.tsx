@@ -87,6 +87,7 @@ export default function BiquiniBrancoDetail() {
   const [phases, setPhases] = useState<any[]>([]);
   const [patients, setPatients] = useState<EnrolledPatient[]>([]);
   const [allPatients, setAllPatients] = useState<{ id: string; name: string }[]>([]);
+  const [enrollments, setEnrollments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [enrollOpen, setEnrollOpen] = useState(false);
   const [enrollPatientId, setEnrollPatientId] = useState("");
