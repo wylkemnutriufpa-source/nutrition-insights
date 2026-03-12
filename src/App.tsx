@@ -76,6 +76,7 @@ import AdminPatientFeatures from "./pages/AdminPatientFeatures";
 import UserGuide from "./pages/UserGuide";
 import ProfessionalGuide from "./pages/ProfessionalGuide";
 import AuditLogs from "./pages/AuditLogs";
+import Curiosidades from "./pages/Curiosidades";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
