@@ -35,6 +35,7 @@ import NutritionCopilot from "@/components/dashboard/NutritionCopilot";
 import ChurnRiskPanel from "@/components/dashboard/ChurnRiskPanel";
 import StagnationAlerts from "@/components/dashboard/StagnationAlerts";
 import PatientProgressSimulation from "@/components/dashboard/PatientProgressSimulation";
+import AffiliateRevenueSimulator from "@/components/dashboard/AffiliateRevenueSimulator";
 import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
 import ChatDashboardWidget from "@/components/chat/ChatDashboardWidget";
 import ExpandablePanel from "@/components/common/ExpandablePanel";
@@ -740,6 +741,13 @@ function NutritionistDashboardContent() {
             }))}
             loading={aiLoading}
           />
+        </ExpandablePanel>
+      </motion.div>
+
+      {/* ── Simulador de Faturamento Afiliados ── */}
+      <motion.div variants={item}>
+        <ExpandablePanel title="Simulador de Faturamento — Afiliados">
+          <AffiliateRevenueSimulator compact />
         </ExpandablePanel>
       </motion.div>
 

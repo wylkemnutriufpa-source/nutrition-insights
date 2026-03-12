@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Copy, Share2, Users, DollarSign, TrendingUp, Award, CheckCircle2, Clock, Trophy, Star, MessageCircle, Send, Instagram, Image, FileText, Sparkles, Target, Zap, Crown, Medal, Flame } from "lucide-react";
+import AffiliateRevenueSimulator from "@/components/dashboard/AffiliateRevenueSimulator";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Progress } from "@/components/ui/progress";
@@ -378,6 +379,7 @@ export default function AmbassadorDashboard() {
             <TabsTrigger value="ranking">🏆 Ranking</TabsTrigger>
             <TabsTrigger value="materials">📢 Materiais</TabsTrigger>
             <TabsTrigger value="career">💎 Carreira</TabsTrigger>
+            <TabsTrigger value="simulator">📊 Simulador</TabsTrigger>
           </TabsList>
 
           <TabsContent value="referrals">
@@ -569,6 +571,11 @@ export default function AmbassadorDashboard() {
                 <p className="text-xs text-muted-foreground mt-4 text-center">💡 Comissões são pagas no mês seguinte após verificação de pagamento real.</p>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Simulator */}
+          <TabsContent value="simulator">
+            <AffiliateRevenueSimulator />
           </TabsContent>
         </Tabs>
 
