@@ -4708,6 +4708,15 @@ export type Database = {
         Args: { _email: string; _full_name: string; _password: string }
         Returns: string
       }
+      create_professional_account: {
+        Args: {
+          _email: string
+          _full_name: string
+          _password: string
+          _role?: string
+        }
+        Returns: string
+      }
       find_existing_patient_emails: {
         Args: { _emails: string[]; _nutritionist_id: string }
         Returns: {
