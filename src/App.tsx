@@ -85,6 +85,7 @@ import AdminAffiliates from "./pages/AdminAffiliates";
 import GatewayPage from "./pages/GatewayPage";
 import PatientLanding from "./pages/PatientLanding";
 import AffiliateLanding from "./pages/AffiliateLanding";
+import AdminLandingPages from "./pages/AdminLandingPages";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
