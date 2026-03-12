@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
+import PatientProgressSimulation from "@/components/dashboard/PatientProgressSimulation";
 import { FEATURE_REGISTRY, getFeaturesByCategory, type FeatureTier } from "@/lib/featureRegistry";
 import { useQuery } from "@tanstack/react-query";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -1006,6 +1007,19 @@ export default function AdminDashboard() {
                   </CardContent>
                 </Card>
               </div>
+
+              {/* ─── Simulação de Progresso ─── */}
+              <Card className="glass shadow-card">
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-primary" />
+                    Simulação de Progresso
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <PatientProgressSimulation patients={[]} loading={false} />
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* ─── Professionals ─── */}
