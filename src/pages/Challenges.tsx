@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { Target, Clock, CheckCircle2, Zap, Users, Trophy, Swords, Crown } from "lucide-react";
+import CommunityGroups from "@/components/community/CommunityGroups";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Challenge = Tables<"challenges">;
@@ -232,6 +233,9 @@ export default function Challenges() {
             )}
           </div>
         </div>
+
+        {/* Community Groups */}
+        <CommunityGroups />
       </div>
     </DashboardLayout>
   );

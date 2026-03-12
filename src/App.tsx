@@ -65,6 +65,7 @@ import ClientDashboard from "./pages/ClientDashboard";
 import ImportPatients from "./pages/ImportPatients";
 import AdminProfessionals from "./pages/AdminProfessionals";
 import PublicProfile from "./pages/PublicProfile";
+import PublicBooking from "./pages/PublicBooking";
 import PublicProgram from "./pages/PublicProgram";
 import GrowthDashboard from "./pages/GrowthDashboard";
 import MyPublicProfile from "./pages/MyPublicProfile";
@@ -250,6 +251,7 @@ const App = () => (
 
               {/* FitJourney Network - Public pages */}
               <Route path="/p/:slug" element={<PublicProfile />} />
+              <Route path="/p/:slug/agendar" element={<PublicBooking />} />
               <Route path="/program/:programId/public" element={<PublicProgram />} />
 
               {/* FitJourney Network - Nutritionist pages */}
