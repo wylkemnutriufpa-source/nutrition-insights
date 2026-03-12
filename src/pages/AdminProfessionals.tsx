@@ -55,7 +55,7 @@ function ProfessionalDialog({
   const isEditing = !!professional;
   const [form, setForm] = useState({
     full_name: "", email: "", password: "", phone: "",
-    plan_id: "", clinic_name: "", status: "active",
+    plan_id: "", clinic_name: "", status: "active", role_type: "nutritionist" as string,
   });
   const [saving, setSaving] = useState(false);
 
