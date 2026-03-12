@@ -418,8 +418,8 @@ export default function GlobalRanking() {
   const [hasPremium, setHasPremium] = useState<boolean | null>(null);
   const [nutritionistId, setNutritionistId] = useState<string | null>(null);
   const [showChart, setShowChart] = useState(true);
+  const shareRef = useRef<HTMLDivElement>(null);
 
-  // ── Premium & tenant check ──
   useEffect(() => {
     if (!user) return;
     if (isAdmin) { setHasPremium(true); return; }
