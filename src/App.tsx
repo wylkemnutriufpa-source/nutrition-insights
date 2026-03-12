@@ -117,6 +117,22 @@ function NutritionistRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function PersonalRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading, isPersonal, isAdmin } = useAuth();
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  if (!user) return <Navigate to="/auth" replace />;
+  if (!isPersonal && !isAdmin) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
+function ProfessionalRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading, isNutritionist, isPersonal, isAdmin } = useAuth();
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  if (!user) return <Navigate to="/auth" replace />;
+  if (!isNutritionist && !isPersonal && !isAdmin) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 function PatientRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isPatient } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" /></div>;
