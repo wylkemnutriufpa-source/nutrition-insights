@@ -288,7 +288,7 @@ export default function BrainIntelligence({ collapsed = false }: { collapsed?: b
               }} />
 
               {/* Neural particles */}
-              <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
+              <div className="absolute inset-0 pointer-events-none overflow-hidden md:rounded-r-2xl">
                 {neuralParticles.map((p, i) => <NeuralParticle key={i} {...p} />)}
               </div>
 
