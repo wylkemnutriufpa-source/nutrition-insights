@@ -25,6 +25,7 @@ import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
 import SOSModal from "@/components/patient/SOSModal";
 import SOSInbox from "@/components/patient/SOSInbox";
 import LanguageSelector from "@/components/common/LanguageSelector";
+import BrainIntelligence from "@/components/common/BrainIntelligence";
 import { AlertTriangle } from "lucide-react";
 
 const nutritionistLinks = [
@@ -133,8 +134,9 @@ function SidebarContent({
   return (
     <>
       {/* Logo */}
-      <div className="p-4">
+      <div className="p-4 flex items-center justify-between">
         <FitJourneyLogo collapsed={collapsed} size="md" />
+        <BrainIntelligence collapsed={collapsed} />
       </div>
 
       {/* Nav links */}
@@ -371,6 +373,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 Fit<span className="text-gradient">Journey</span>
               </span>
             </Link>
+            <BrainIntelligence collapsed />
           </div>
           <div className="flex items-center gap-1">
             {location.pathname !== "/" && (
