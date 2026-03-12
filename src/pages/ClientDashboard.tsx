@@ -21,6 +21,8 @@ import ProgramJoinRequest from "@/components/patient/ProgramJoinRequest";
 import SubscriptionCard from "@/components/patient/SubscriptionCard";
 import { Button } from "@/components/ui/button";
 import PhaseTransitionModal from "@/components/biquini/PhaseTransitionModal";
+import BiquiniEnrollmentStatus from "@/components/biquini/BiquiniEnrollmentStatus";
+import BiquiniOnboardingWizard from "@/components/biquini/BiquiniOnboardingWizard";
 
 interface ProgramInfo {
   id: string;
@@ -62,6 +64,20 @@ const item = {
   show: { opacity: 1, y: 0 },
 };
 
+interface BiquiniEnrollment {
+  id: string;
+  program_id: string;
+  status: string;
+  current_phase: number;
+  blocked_reason: string | null;
+  next_weight_due_at: string | null;
+  next_full_review_due_at: string | null;
+  initial_weight: number | null;
+  initial_kcal_target: number | null;
+  onboarding_completed_at: string | null;
+  started_at: string;
+}
+
 export default function ClientDashboard() {
   const { user, profile } = useAuth();
   const [programs, setPrograms] = useState<ProgramInfo[]>([]);
@@ -70,6 +86,8 @@ export default function ClientDashboard() {
   const [checklistStats, setChecklistStats] = useState<ChecklistStats>({ total: 0, completed: 0 });
   const [loading, setLoading] = useState(true);
   const [programJoinOpen, setProgramJoinOpen] = useState(false);
+  const [biquiniEnrollment, setBiquiniEnrollment] = useState<BiquiniEnrollment | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -122,6 +140,23 @@ export default function ClientDashboard() {
       }
       setLoading(false);
     });
+
+    // Fetch Biquíni Branco enrollment
+    (supabase as any)
+      .from("program_enrollments")
+      .select("*")
+      .eq("patient_id", user.id)
+      .not("status", "eq", "completed")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .then(({ data }: any) => {
+        if (data && data.length > 0) {
+          setBiquiniEnrollment(data[0]);
+          if (data[0].status === "pending_onboarding") {
+            setShowOnboarding(true);
+          }
+        }
+      });
   }, [user]);
 
   const checklistPercent = checklistStats.total > 0
@@ -165,6 +200,53 @@ export default function ClientDashboard() {
             </div>
           </div>
         </motion.div>
+
+        {/* Biquíni Branco Enrollment */}
+        {biquiniEnrollment && !showOnboarding && (
+          <motion.div variants={item}>
+            <BiquiniEnrollmentStatus
+              enrollment={biquiniEnrollment}
+              onSendWeight={() => {
+                // TODO: open weight modal
+              }}
+              onSendPhotos={() => {
+                // TODO: open photos modal
+              }}
+            />
+          </motion.div>
+        )}
+
+        {/* Biquíni Branco Onboarding */}
+        {showOnboarding && biquiniEnrollment && (
+          <motion.div variants={item}>
+            <Card className="glass shadow-card overflow-hidden border-pink-500/30">
+              <div className="bg-gradient-to-r from-pink-500 via-rose-500 to-orange-400 p-4 text-white">
+                <h3 className="font-display font-bold text-lg flex items-center gap-2">
+                  👙 Onboarding — Projeto Biquíni Branco
+                </h3>
+                <p className="text-sm text-white/80">Complete as etapas para ativar seu primeiro protocolo.</p>
+              </div>
+              <CardContent className="p-5">
+                <BiquiniOnboardingWizard
+                  programId={biquiniEnrollment.program_id}
+                  enrollmentId={biquiniEnrollment.id}
+                  onComplete={() => {
+                    setShowOnboarding(false);
+                    // Refresh enrollment
+                    (supabase as any)
+                      .from("program_enrollments")
+                      .select("*")
+                      .eq("id", biquiniEnrollment.id)
+                      .single()
+                      .then(({ data }: any) => {
+                        if (data) setBiquiniEnrollment(data);
+                      });
+                  }}
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         {/* Nutritionist Status Banner */}
         <motion.div variants={item}>
