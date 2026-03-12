@@ -727,7 +727,17 @@ export default function Patients() {
   };
 
   const removeFromProgram = async (patientId: string, programId: string, programTitle: string) => {
-    if (!confirm(`Remover paciente do programa "${programTitle}"?`)) return;
+    const isBiquini = programTitle.toLowerCase().includes("biqu");
+    if (isBiquini) {
+      const pwd = prompt("🔒 Projeto protegido!\nDigite a senha do administrador para remover:");
+      if (!pwd) return;
+      if (pwd !== "Wylk3mkl3yton") {
+        toast.error("Senha incorreta. Remoção cancelada.");
+        return;
+      }
+    } else {
+      if (!confirm(`Remover paciente do programa "${programTitle}"?`)) return;
+    }
     const { error } = await supabase.from("program_patients")
       .delete()
       .eq("patient_id", patientId)
