@@ -20,6 +20,7 @@ import NutritionistStatusBanner from "@/components/chat/NutritionistStatusBanner
 import ProgramJoinRequest from "@/components/patient/ProgramJoinRequest";
 import SubscriptionCard from "@/components/patient/SubscriptionCard";
 import { Button } from "@/components/ui/button";
+import PhaseTransitionModal from "@/components/biquini/PhaseTransitionModal";
 
 interface ProgramInfo {
   id: string;
