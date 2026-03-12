@@ -67,10 +67,10 @@ export default function PersonalDashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatsCard title="Alunos Ativos" value={String(activeStudents)} icon={<Users className="w-5 h-5" />} />
-          <StatsCard title="Planos de Treino" value={String(totalPlans)} icon={<Dumbbell className="w-5 h-5" />} />
-          <StatsCard title="Treinos na Semana" value={String(weeklyCompletions)} icon={<TrendingUp className="w-5 h-5" />} />
-          <StatsCard title="Adesão Média" value={activeStudents > 0 ? `${Math.round((weeklyCompletions / (activeStudents * 5)) * 100)}%` : "—"} icon={<BarChart3 className="w-5 h-5" />} />
+          <StatsCard title="Alunos Ativos" value={String(activeStudents)} icon={Users} />
+          <StatsCard title="Planos de Treino" value={String(totalPlans)} icon={Dumbbell} />
+          <StatsCard title="Treinos na Semana" value={String(weeklyCompletions)} icon={TrendingUp} />
+          <StatsCard title="Adesão Média" value={activeStudents > 0 ? `${Math.round((weeklyCompletions / (activeStudents * 5)) * 100)}%` : "—"} icon={BarChart3} />
         </div>
 
         {/* Quick Actions */}
