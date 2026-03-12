@@ -72,7 +72,10 @@
     "sectionAnalytics": "Análises",
     "sectionMarketing": "📣 Marketing",
     "sectionContent": "Conteúdo",
-    "sectionAdmin": "Administração"
+    "sectionAdmin": "Administração",
+    "students": "Alunos",
+    "workouts": "Treinos",
+    "myWorkouts": "Meus Treinos"
   },
   "auth": {
     "tagline": "Sua jornada fitness inteligente & gamificada",
