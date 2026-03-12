@@ -19,8 +19,9 @@ import {
   ArrowLeft, Users, Calendar, Target, Trophy, UserPlus, Brain,
   TrendingDown, Activity, Zap, Crown, BarChart3, Sparkles,
   ChevronRight, CheckCircle2, AlertTriangle, Flame, Heart,
-  Scale, Ruler, PieChart
+  Scale, Ruler, PieChart, Shield
 } from "lucide-react";
+import BiquiniBrancoProtocol from "@/components/biquini/BiquiniBrancoProtocol";
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.06 } } };
 const item = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } };
@@ -358,6 +359,7 @@ export default function BiquiniBrancoDetail() {
             <TabsTrigger value="patients" className="gap-1"><Users className="w-4 h-4" /> Pacientes</TabsTrigger>
             <TabsTrigger value="evolution" className="gap-1"><BarChart3 className="w-4 h-4" /> Evolução</TabsTrigger>
             <TabsTrigger value="ai" className="gap-1"><Brain className="w-4 h-4" /> Insights IA</TabsTrigger>
+            <TabsTrigger value="protocol" className="gap-1"><Shield className="w-4 h-4" /> Protocolo Exclusivo</TabsTrigger>
           </TabsList>
 
           {/* ── PHASES TAB ── */}
@@ -726,6 +728,11 @@ export default function BiquiniBrancoDetail() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* ── EXCLUSIVE PROTOCOL TAB ── */}
+          <TabsContent value="protocol" className="space-y-4">
+            <BiquiniBrancoProtocol />
           </TabsContent>
         </Tabs>
       </motion.div>
