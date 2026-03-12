@@ -110,6 +110,14 @@ const adminSections: NavSection[] = [
     ],
   },
   {
+    sectionKey: "nav.sectionPersonal",
+    links: [
+      { to: "/personal/dashboard", icon: Dumbbell, labelKey: "nav.personalDashboard" },
+      { to: "/personal/students", icon: Users, labelKey: "nav.students" },
+      { to: "/personal/workouts", icon: Dumbbell, labelKey: "nav.workouts" },
+    ],
+  },
+  {
     sectionKey: "nav.sectionMain",
     links: [
       { to: "/ranking", icon: Trophy, labelKey: "nav.ranking", premium: true },
