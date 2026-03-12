@@ -422,7 +422,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     setMobileOpen(false);
   }, [location.pathname]);
 
-  const links = isAdmin ? adminLinks : isNutritionist ? nutritionistLinks : patientLinks;
+  const sections = isAdmin ? adminSections : isNutritionist ? nutritionistSections : undefined;
+  const flatLinks = isPatient ? patientLinks : undefined;
 
   const toggleDark = () => {
     const newDark = !dark;
@@ -443,7 +444,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const onSosHandler = isPatient ? () => setSosOpen(true) : (isNutritionist || isAdmin) ? () => setSosInboxOpen(true) : undefined;
 
   const sidebarProps = {
-    links, location, isNutritionist, dark, toggleDark, initials, profileName, signOut,
+    sections, flatLinks, location, isNutritionist: isNutritionist || isAdmin, dark, toggleDark, initials, profileName, signOut,
     onSosOpen: onSosHandler,
   };
 
