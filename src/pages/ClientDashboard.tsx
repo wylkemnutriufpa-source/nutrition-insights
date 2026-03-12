@@ -100,6 +100,7 @@ export default function ClientDashboard() {
   const [programJoinOpen, setProgramJoinOpen] = useState(false);
   const [biquiniEnrollment, setBiquiniEnrollment] = useState<BiquiniEnrollment | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [workoutInfo, setWorkoutInfo] = useState<WorkoutInfo>({ planTitle: "", routineCount: 0, recentCompletions: [], hasPersonal: false });
 
   useEffect(() => {
     if (!user) return;
