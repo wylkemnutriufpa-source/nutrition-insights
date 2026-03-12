@@ -1007,6 +1007,12 @@ export default function Patients() {
                   </Badge>
                 </TabsTrigger>
               ))}
+              <TabsTrigger value="sem-projeto" className="gap-1.5">
+                <UserX className="w-3.5 h-3.5" /> Sem projeto
+                <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+                  {patients.filter(p => p.status === "active" && (!p.programs || p.programs.length === 0)).length}
+                </Badge>
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="ativos">
