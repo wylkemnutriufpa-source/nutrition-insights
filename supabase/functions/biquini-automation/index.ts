@@ -235,18 +235,48 @@ Deno.serve(async (req) => {
       );
       if (advancedTo3) { results.advanced++; continue; }
 
-      // ─── PHASE 3 → PHASE 4 (Protocol 4 Ready) ───
-      const advancedTo4 = await checkAndAdvancePhase(
-        enrollment,
-        "protocol_4_ready",
-        4,
-        "protocol_4_active",
-        "Manutenção Inteligente",
-        3,
-        "Você chegou à Fase 4 do Projeto Biquíni Branco. Agora o foco é consolidar seus resultados e transformar sua evolução em um estilo de vida sustentável.",
-        "🏆 Fase 4 — Manutenção Inteligente Ativada!"
-      );
-      if (advancedTo4) { results.advanced++; continue; }
+      // ─── PHASE 3 → PHASE 4 (Requires plan renewal or semester package) ───
+      // Phase 4 is NOT auto-advanced. It requires plan renewal verification.
+      // When Phase 3 completes, status goes to "protocol_4_ready" and waits.
+      if (enrollment.status === "protocol_4_ready") {
+        // Check if patient has an active subscription with remaining time (renewal or semester+)
+        const { data: prestige } = await supabase
+          .from("patient_prestige")
+          .select("plan_id, prestige_plans(slug, duration_months)")
+          .eq("patient_id", enrollment.patient_id)
+          .eq("is_active", true)
+          .single();
+
+        // Check subscription expiry
+        const { data: npRelation } = await supabase
+          .from("nutritionist_patients")
+          .select("expires_at")
+          .eq("patient_id", enrollment.patient_id)
+          .eq("status", "active")
+          .single();
+
+        const hasValidPlan = npRelation?.expires_at && 
+          new Date(npRelation.expires_at).getTime() > now.getTime();
+        
+        // Check if plan is semester (6+ months) or if it was renewed after Phase 3 started
+        const planDuration = (prestige?.prestige_plans as any)?.duration_months || 0;
+        const isSemesterOrAbove = planDuration >= 6;
+
+        if (hasValidPlan && isSemesterOrAbove) {
+          const advancedTo4 = await checkAndAdvancePhase(
+            enrollment,
+            "protocol_4_ready",
+            4,
+            "protocol_4_active",
+            "Manutenção Inteligente",
+            3,
+            "Você chegou à Fase 4 do Projeto Biquíni Branco. Agora o foco é consolidar seus resultados e transformar sua evolução em um estilo de vida sustentável.",
+            "🏆 Fase 4 — Manutenção Inteligente Ativada!"
+          );
+          if (advancedTo4) { results.advanced++; continue; }
+        }
+        // If no valid plan, it stays as protocol_4_ready (awaiting renewal)
+      }
 
       // ─── PHASE 4 COMPLETION CHECK ───
       if (enrollment.status === "protocol_4_active" && enrollment.current_phase === 4) {
