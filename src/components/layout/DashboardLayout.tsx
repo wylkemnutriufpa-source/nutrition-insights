@@ -77,6 +77,7 @@ const patientLinks = [
   { to: "/water-calculator", icon: Droplets, labelKey: "nav.hydration", color: "from-info/20 to-info/5", iconColor: "text-info" },
   { to: "/health-quiz", icon: Heart, labelKey: "nav.healthCheck", color: "from-destructive/20 to-destructive/5", iconColor: "text-destructive" },
   { to: "/global-tips", icon: Lightbulb, labelKey: "nav.tips", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
+  { to: "/curiosidades", icon: Sparkles, labelKey: "nav.curiosidades", color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
   { to: "/user-guide", icon: Compass, labelKey: "nav.userGuide", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
   { to: "/feedbacks", icon: MessageSquare, labelKey: "nav.feedbacks", color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
   { to: "/achievements", icon: Trophy, labelKey: "nav.achievements", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
