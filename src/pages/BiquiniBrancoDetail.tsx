@@ -165,6 +165,14 @@ export default function BiquiniBrancoDetail() {
       if (error.code === "23505") toast.info("Paciente já inscrita");
       else toast.error(error.message);
     } else {
+      // Also create program enrollment for automation tracking
+      await (supabase as any).from("program_enrollments").insert({
+        program_id: programId,
+        patient_id: enrollPatientId,
+        professional_id: user!.id,
+        status: "pending_onboarding",
+        current_phase: 1,
+      });
       toast.success("Paciente inscrita no Projeto Biquíni Branco! 👙✨");
       setEnrollOpen(false);
       setEnrollPatientId("");
