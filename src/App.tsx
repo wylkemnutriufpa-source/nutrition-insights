@@ -80,6 +80,8 @@ import AuditLogs from "./pages/AuditLogs";
 import Curiosidades from "./pages/Curiosidades";
 import Planner from "./pages/Planner";
 import OnboardingPipeline from "./pages/OnboardingPipeline";
+import AmbassadorDashboard from "./pages/AmbassadorDashboard";
+import AdminAffiliates from "./pages/AdminAffiliates";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -266,6 +268,10 @@ const App = () => (
               <Route path="/admin/pricing" element={<AdminRoute><AdminPricing /></AdminRoute>} />
               <Route path="/admin/patient-features" element={<AdminRoute><AdminPatientFeatures /></AdminRoute>} />
               <Route path="/admin/audit-logs" element={<AdminRoute><AuditLogs /></AdminRoute>} />
+              <Route path="/admin/affiliates" element={<AdminRoute><AdminAffiliates /></AdminRoute>} />
+
+              {/* Ambassador */}
+              <Route path="/ambassador" element={<ProtectedRoute><AmbassadorDashboard /></ProtectedRoute>} />
 
               {/* Global Ranking */}
               <Route path="/ranking" element={<ProtectedRoute><GlobalRanking /></ProtectedRoute>} />

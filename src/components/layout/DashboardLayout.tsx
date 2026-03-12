@@ -13,7 +13,7 @@ import {
   MessageSquare, Lightbulb, ChefHat, ShoppingCart, Apple, Camera,
   Palette, Bell, BarChart3, Menu, X, Shield, Zap, Star, Bot,
   Scale, Droplets, Heart, Calculator, TrendingUp, BookOpen, DollarSign, Pill, Crown, Compass,
-  CalendarDays, Megaphone, Globe, UserCheck, Share2
+  CalendarDays, Megaphone, Globe, UserCheck, Share2, Award
 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -80,6 +80,7 @@ const nutritionistSections: NavSection[] = [
       { to: "/branding", icon: Palette, labelKey: "nav.branding" },
       { to: "/my-public-profile", icon: Globe, labelKey: "nav.myPublicProfile" },
       { to: "/my-referrals", icon: Share2, labelKey: "nav.myReferrals" },
+      { to: "/ambassador", icon: Award, labelKey: "nav.ambassador", premium: true },
     ],
   },
   {
@@ -130,6 +131,7 @@ const adminSections: NavSection[] = [
       { to: "/branding", icon: Palette, labelKey: "nav.branding" },
       { to: "/admin/testimonials", icon: Star, labelKey: "nav.testimonials" },
       { to: "/admin/growth", icon: TrendingUp, labelKey: "nav.growthDashboard" },
+      { to: "/admin/affiliates", icon: Award, labelKey: "nav.affiliates", premium: true },
     ],
   },
   {

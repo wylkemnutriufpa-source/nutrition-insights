@@ -47,6 +47,196 @@ export type Database = {
         }
         Relationships: []
       }
+      affiliate_commissions: {
+        Row: {
+          affiliate_id: string
+          commission_amount: number
+          commission_percent: number
+          commission_type: Database["public"]["Enums"]["commission_type"]
+          created_at: string
+          gross_amount: number
+          id: string
+          paid_at: string | null
+          referral_id: string
+          status: Database["public"]["Enums"]["commission_status"]
+          stripe_invoice_id: string | null
+          stripe_subscription_id: string | null
+        }
+        Insert: {
+          affiliate_id: string
+          commission_amount?: number
+          commission_percent: number
+          commission_type: Database["public"]["Enums"]["commission_type"]
+          created_at?: string
+          gross_amount?: number
+          id?: string
+          paid_at?: string | null
+          referral_id: string
+          status?: Database["public"]["Enums"]["commission_status"]
+          stripe_invoice_id?: string | null
+          stripe_subscription_id?: string | null
+        }
+        Update: {
+          affiliate_id?: string
+          commission_amount?: number
+          commission_percent?: number
+          commission_type?: Database["public"]["Enums"]["commission_type"]
+          created_at?: string
+          gross_amount?: number
+          id?: string
+          paid_at?: string | null
+          referral_id?: string
+          status?: Database["public"]["Enums"]["commission_status"]
+          stripe_invoice_id?: string | null
+          stripe_subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_commissions_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_commissions_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_referrals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliate_payouts: {
+        Row: {
+          affiliate_id: string
+          created_at: string
+          id: string
+          payout_method: string
+          payout_reference: string | null
+          payout_status: Database["public"]["Enums"]["payout_status"]
+          processed_at: string | null
+          total_amount: number
+        }
+        Insert: {
+          affiliate_id: string
+          created_at?: string
+          id?: string
+          payout_method?: string
+          payout_reference?: string | null
+          payout_status?: Database["public"]["Enums"]["payout_status"]
+          processed_at?: string | null
+          total_amount?: number
+        }
+        Update: {
+          affiliate_id?: string
+          created_at?: string
+          id?: string
+          payout_method?: string
+          payout_reference?: string | null
+          payout_status?: Database["public"]["Enums"]["payout_status"]
+          processed_at?: string | null
+          total_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_payouts_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliate_referrals: {
+        Row: {
+          affiliate_id: string
+          converted_at: string | null
+          created_at: string
+          id: string
+          referral_code_used: string
+          referred_email: string
+          referred_plan: string | null
+          referred_type: string
+          referred_user_id: string | null
+          status: Database["public"]["Enums"]["referral_status"]
+        }
+        Insert: {
+          affiliate_id: string
+          converted_at?: string | null
+          created_at?: string
+          id?: string
+          referral_code_used: string
+          referred_email: string
+          referred_plan?: string | null
+          referred_type?: string
+          referred_user_id?: string | null
+          status?: Database["public"]["Enums"]["referral_status"]
+        }
+        Update: {
+          affiliate_id?: string
+          converted_at?: string | null
+          created_at?: string
+          id?: string
+          referral_code_used?: string
+          referred_email?: string
+          referred_plan?: string | null
+          referred_type?: string
+          referred_user_id?: string | null
+          status?: Database["public"]["Enums"]["referral_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_referrals_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliates: {
+        Row: {
+          affiliate_type: Database["public"]["Enums"]["affiliate_type"]
+          created_at: string
+          email: string
+          first_payment_commission_percent: number
+          full_name: string
+          id: string
+          is_active: boolean
+          recurring_commission_percent: number
+          referral_code: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          affiliate_type?: Database["public"]["Enums"]["affiliate_type"]
+          created_at?: string
+          email: string
+          first_payment_commission_percent?: number
+          full_name: string
+          id?: string
+          is_active?: boolean
+          recurring_commission_percent?: number
+          referral_code: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          affiliate_type?: Database["public"]["Enums"]["affiliate_type"]
+          created_at?: string
+          email?: string
+          first_payment_commission_percent?: number
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          recurring_commission_percent?: number
+          referral_code?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       ai_usage_limits: {
         Row: {
           created_at: string
@@ -4104,6 +4294,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      lookup_affiliate_by_code: {
+        Args: { _code: string }
+        Returns: {
+          affiliate_id: string
+          affiliate_name: string
+          affiliate_type: Database["public"]["Enums"]["affiliate_type"]
+        }[]
+      }
       lookup_referral_by_code: {
         Args: { _code: string }
         Returns: {
@@ -4139,8 +4337,20 @@ export type Database = {
         | "xp_milestone"
         | "consistency"
         | "variety"
+      affiliate_type:
+        | "regular"
+        | "nutritionist"
+        | "premium_ambassador"
+        | "custom"
       app_role: "nutritionist" | "patient" | "admin"
       challenge_status: "active" | "completed" | "expired"
+      commission_status:
+        | "pending"
+        | "approved"
+        | "paid"
+        | "reversed"
+        | "cancelled"
+      commission_type: "first_payment" | "recurring"
       meal_type:
         | "breakfast"
         | "morning_snack"
@@ -4154,6 +4364,8 @@ export type Database = {
         | "pagseguro"
         | "pix"
         | "manual"
+      payout_status: "pending" | "processing" | "paid" | "failed"
+      referral_status: "lead" | "registered" | "paying" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4289,8 +4501,22 @@ export const Constants = {
         "consistency",
         "variety",
       ],
+      affiliate_type: [
+        "regular",
+        "nutritionist",
+        "premium_ambassador",
+        "custom",
+      ],
       app_role: ["nutritionist", "patient", "admin"],
       challenge_status: ["active", "completed", "expired"],
+      commission_status: [
+        "pending",
+        "approved",
+        "paid",
+        "reversed",
+        "cancelled",
+      ],
+      commission_type: ["first_payment", "recurring"],
       meal_type: [
         "breakfast",
         "morning_snack",
@@ -4300,6 +4526,8 @@ export const Constants = {
         "evening_snack",
       ],
       payment_gateway: ["stripe", "mercado_pago", "pagseguro", "pix", "manual"],
+      payout_status: ["pending", "processing", "paid", "failed"],
+      referral_status: ["lead", "registered", "paying", "cancelled"],
     },
   },
 } as const
