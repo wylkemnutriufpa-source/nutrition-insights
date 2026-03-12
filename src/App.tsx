@@ -50,7 +50,7 @@ import AutomationCenter from "./pages/AutomationCenter";
 import WeightCalculator from "./pages/WeightCalculator";
 import WaterCalculator from "./pages/WaterCalculator";
 import HealthCheckQuiz from "./pages/HealthCheckQuiz";
-import AutoBot from "./pages/AutoBot";
+// AutoBot removed - replaced by real-time chat
 import Journey from "./pages/Journey";
 import Library from "./pages/Library";
 import Financial from "./pages/Financial";
