@@ -139,91 +139,9 @@ const PROTOCOL_PHASES: ProtocolPhase[] = [
 ];
 
 export default function BiquiniBrancoProtocol() {
-  const [isLocked, setIsLocked] = useState(true);
-  const [password, setPassword] = useState("");
   const [selectedPhase, setSelectedPhase] = useState(1);
-  const [showPasswordInput, setShowPasswordInput] = useState(false);
-
-  const handleUnlock = () => {
-    if (password === ADMIN_PASSWORD) {
-      setIsLocked(false);
-      setShowPasswordInput(false);
-      setPassword("");
-      toast.success("Protocolo desbloqueado! 🔓");
-    } else {
-      toast.error("Senha incorreta.");
-      setPassword("");
-    }
-  };
 
   const activePhase = PROTOCOL_PHASES.find(p => p.number === selectedPhase)!;
-
-  if (isLocked) {
-    return (
-      <Card className="glass shadow-card overflow-hidden">
-        <div className="relative">
-          {/* Blurred preview background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 via-background to-rose-500/5" />
-
-          <CardContent className="relative py-16 flex flex-col items-center justify-center text-center space-y-6">
-            <motion.div
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-              className="w-24 h-24 rounded-2xl bg-gradient-to-br from-pink-500/20 to-rose-500/20 border border-pink-500/30 flex items-center justify-center"
-            >
-              <Lock className="w-12 h-12 text-pink-500" />
-            </motion.div>
-
-            <div className="space-y-2">
-              <h3 className="font-display text-xl font-bold">Protocolo Exclusivo</h3>
-              <p className="text-sm text-muted-foreground max-w-md">
-                Este protocolo contém estratégias nutricionais exclusivas do Projeto Biquíni Branco. 
-                Acesso restrito — apenas administradores autorizados.
-              </p>
-            </div>
-
-            <AnimatePresence>
-              {showPasswordInput ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="flex items-center gap-2 w-full max-w-xs"
-                >
-                  <Input
-                    type="password"
-                    placeholder="Senha do administrador"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    onKeyDown={e => e.key === "Enter" && handleUnlock()}
-                    autoFocus
-                    className="border-pink-500/30 focus-visible:ring-pink-500/50"
-                  />
-                  <Button
-                    onClick={handleUnlock}
-                    size="sm"
-                    className="bg-gradient-to-r from-pink-500 to-rose-500 text-white shrink-0"
-                  >
-                    <Unlock className="w-4 h-4" />
-                  </Button>
-                </motion.div>
-              ) : (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                  <Button
-                    onClick={() => setShowPasswordInput(true)}
-                    variant="outline"
-                    className="gap-2 border-pink-500/30 text-pink-500 hover:bg-pink-500/10"
-                  >
-                    <Shield className="w-4 h-4" /> Desbloquear com Senha
-                  </Button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </CardContent>
-        </div>
-      </Card>
-    );
-  }
 
   return (
     <div className="space-y-4">
