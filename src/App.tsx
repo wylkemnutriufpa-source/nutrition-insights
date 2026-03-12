@@ -251,6 +251,7 @@ const App = () => (
 
               {/* FitJourney Network - Public pages */}
               <Route path="/p/:slug" element={<PublicProfile />} />
+              <Route path="/p/:slug/agendar" element={<PublicBooking />} />
               <Route path="/program/:programId/public" element={<PublicProgram />} />
 
               {/* FitJourney Network - Nutritionist pages */}
