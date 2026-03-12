@@ -729,6 +729,11 @@ export default function BiquiniBrancoDetail() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* ── EXCLUSIVE PROTOCOL TAB ── */}
+          <TabsContent value="protocol" className="space-y-4">
+            <BiquiniBrancoProtocol />
+          </TabsContent>
         </Tabs>
       </motion.div>
     </DashboardLayout>
