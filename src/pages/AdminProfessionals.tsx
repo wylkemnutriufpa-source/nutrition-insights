@@ -432,6 +432,7 @@ export default function AdminProfessionals() {
         phone: p.phone,
         avatar_url: p.avatar_url,
         created_at: p.created_at,
+        role_type: (roleMap.get(p.user_id) === "personal" ? "personal" : "nutritionist") as "nutritionist" | "personal",
         profile_id: pp?.id || null,
         plan_id: pp?.plan_id || null,
         plan_name: pp?.plan_id ? (planMap.get(pp.plan_id) || null) : null,
