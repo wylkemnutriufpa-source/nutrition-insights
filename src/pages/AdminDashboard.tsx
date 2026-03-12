@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
 import PatientProgressSimulation from "@/components/dashboard/PatientProgressSimulation";
 import PatientRevenueSimulator from "@/components/dashboard/PatientRevenueSimulator";
+import AffiliateRevenueSimulator from "@/components/dashboard/AffiliateRevenueSimulator";
 import { FEATURE_REGISTRY, getFeaturesByCategory, type FeatureTier } from "@/lib/featureRegistry";
 import { useQuery } from "@tanstack/react-query";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -1024,6 +1025,9 @@ export default function AdminDashboard() {
 
               {/* ─── Simulador de Faturamento Pacientes ─── */}
               <PatientRevenueSimulator />
+
+              {/* ─── Simulador de Faturamento Afiliados ─── */}
+              <AffiliateRevenueSimulator />
             </TabsContent>
 
             {/* ─── Professionals ─── */}
