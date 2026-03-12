@@ -744,6 +744,13 @@ function NutritionistDashboardContent() {
         </ExpandablePanel>
       </motion.div>
 
+      {/* ── Simulador de Faturamento Afiliados ── */}
+      <motion.div variants={item}>
+        <ExpandablePanel title="Simulador de Faturamento — Afiliados">
+          <AffiliateRevenueSimulator compact />
+        </ExpandablePanel>
+      </motion.div>
+
       {/* ── 5️⃣ Activity Feed + 7️⃣ Program Performance ── */}
       <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Activity Feed */}
