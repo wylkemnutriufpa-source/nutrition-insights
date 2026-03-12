@@ -279,7 +279,7 @@ export default function BrainIntelligence({ collapsed = false }: { collapsed?: b
               }} />
 
               {/* Gradient border */}
-              <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{
+              <div className="absolute inset-0 md:rounded-r-2xl pointer-events-none" style={{
                 border: "1px solid transparent",
                 background: "linear-gradient(135deg, hsl(150 80% 50% / 0.35), hsl(170 70% 45% / 0.1), hsl(150 60% 45% / 0.25)) border-box",
                 WebkitMask: "linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)",
