@@ -43,7 +43,10 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    const today = new Date().toISOString().split("T")[0];
+    // Use Brazil timezone (UTC-3) to match patient's local date
+    const now = new Date();
+    const brDate = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    const today = `${brDate.getFullYear()}-${String(brDate.getMonth() + 1).padStart(2, '0')}-${String(brDate.getDate()).padStart(2, '0')}`;
 
     // Get all active patients (those linked to a nutritionist)
     const { data: activePatients, error: patientsError } = await supabase

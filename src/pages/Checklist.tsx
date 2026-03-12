@@ -84,7 +84,13 @@ export default function Checklist() {
   const { t } = useTranslation();
   const [tasks, setTasks] = useState<ChecklistTask[]>([]);
   const [loading, setLoading] = useState(true);
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const getLocalDate = (d: Date = new Date()) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const [date, setDate] = useState(getLocalDate());
   const [editingTask, setEditingTask] = useState<ChecklistTask | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [form, setForm] = useState({ title: "", icon: "✅", category: "habit", description: "" });
@@ -110,7 +116,7 @@ export default function Checklist() {
 
   // Auto-seed default tasks if empty today
   useEffect(() => {
-    const isToday = date === new Date().toISOString().split("T")[0];
+    const isToday = date === getLocalDate();
     if (!loading && tasks.length === 0 && isToday && user && !seeding) {
       seedDefaultTasks();
     }
@@ -271,12 +277,12 @@ export default function Checklist() {
 
   const completedCount = tasks.filter((t) => t.completed).length;
   const progress = tasks.length > 0 ? (completedCount / tasks.length) * 100 : 0;
-  const isToday = date === new Date().toISOString().split("T")[0];
+  const isToday = date === getLocalDate();
 
   const changeDate = (offset: number) => {
-    const d = new Date(date);
+    const d = new Date(date + "T12:00:00");
     d.setDate(d.getDate() + offset);
-    setDate(d.toISOString().split("T")[0]);
+    setDate(getLocalDate(d));
   };
 
   const grouped = tasks.reduce((acc, t) => {
@@ -379,7 +385,7 @@ export default function Checklist() {
             <CheckCircle2 className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
             <h3 className="font-display font-semibold text-lg mb-1">{t("checklist.noTasks")}</h3>
             <p className="text-muted-foreground text-sm mb-4">{t("checklist.noTasksDescription")}</p>
-            <Button variant="outline" onClick={() => { setDate(new Date().toISOString().split("T")[0]); }} className="gap-2">
+            <Button variant="outline" onClick={() => { setDate(getLocalDate()); }} className="gap-2">
               <Calendar className="w-4 h-4" /> {t("common.goToToday")}
             </Button>
           </div>
