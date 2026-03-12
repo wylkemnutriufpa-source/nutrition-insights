@@ -201,6 +201,53 @@ export default function ClientDashboard() {
           </div>
         </motion.div>
 
+        {/* Biquíni Branco Enrollment */}
+        {biquiniEnrollment && !showOnboarding && (
+          <motion.div variants={item}>
+            <BiquiniEnrollmentStatus
+              enrollment={biquiniEnrollment}
+              onSendWeight={() => {
+                // TODO: open weight modal
+              }}
+              onSendPhotos={() => {
+                // TODO: open photos modal
+              }}
+            />
+          </motion.div>
+        )}
+
+        {/* Biquíni Branco Onboarding */}
+        {showOnboarding && biquiniEnrollment && (
+          <motion.div variants={item}>
+            <Card className="glass shadow-card overflow-hidden border-pink-500/30">
+              <div className="bg-gradient-to-r from-pink-500 via-rose-500 to-orange-400 p-4 text-white">
+                <h3 className="font-display font-bold text-lg flex items-center gap-2">
+                  👙 Onboarding — Projeto Biquíni Branco
+                </h3>
+                <p className="text-sm text-white/80">Complete as etapas para ativar seu primeiro protocolo.</p>
+              </div>
+              <CardContent className="p-5">
+                <BiquiniOnboardingWizard
+                  programId={biquiniEnrollment.program_id}
+                  enrollmentId={biquiniEnrollment.id}
+                  onComplete={() => {
+                    setShowOnboarding(false);
+                    // Refresh enrollment
+                    (supabase as any)
+                      .from("program_enrollments")
+                      .select("*")
+                      .eq("id", biquiniEnrollment.id)
+                      .single()
+                      .then(({ data }: any) => {
+                        if (data) setBiquiniEnrollment(data);
+                      });
+                  }}
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
         {/* Nutritionist Status Banner */}
         <motion.div variants={item}>
           <NutritionistStatusBanner patientId={user?.id} />
