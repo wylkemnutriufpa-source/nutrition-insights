@@ -30,6 +30,7 @@ import NutritionCopilot from "@/components/dashboard/NutritionCopilot";
 import ChurnRiskPanel from "@/components/dashboard/ChurnRiskPanel";
 import PatientProgressSimulation from "@/components/dashboard/PatientProgressSimulation";
 import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
+import ChatDashboardWidget from "@/components/chat/ChatDashboardWidget";
 import ExpandablePanel from "@/components/common/ExpandablePanel";
 import {
   UtensilsCrossed, Users, TrendingUp, Target, Sparkles, Plus,
@@ -635,6 +636,7 @@ function NutritionistDashboardContent() {
         <DailyMetricCard label="Protocolos" value={protocolCount} icon={FileText} color="warning" onClick={() => navigate("/protocols")} />
         <DailyMetricCard label="Check-ins Pendentes" value={pendingCheckins} icon={ClipboardList} color="destructive" pulse={pendingCheckins > 0} onClick={() => navigate("/checkin-panel")} />
         <OnlinePatientsWidget variant="card" showPremiumTag={true} />
+        <ChatDashboardWidget />
       </motion.div>
 
       {/* ── 3️⃣ AI Daily Briefing (expandable) ── */}

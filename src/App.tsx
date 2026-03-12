@@ -221,7 +221,7 @@ const App = () => (
               <Route path="/analyze" element={<ProtectedRoute><AnalyzeMeal /></ProtectedRoute>} />
               <Route path="/shopping-list" element={<ProtectedRoute><ShoppingList /></ProtectedRoute>} />
               <Route path="/my-diet" element={<ProtectedRoute><PatientMealPlan /></ProtectedRoute>} />
-              <Route path="/autobot" element={<ProtectedRoute><AutoBot /></ProtectedRoute>} />
+              {/* autobot removed - replaced by real-time chat */}
               <Route path="/journey" element={<ProtectedRoute><Journey /></ProtectedRoute>} />
               <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
               <Route path="/weight-calculator" element={<ProtectedRoute><WeightCalculator /></ProtectedRoute>} />
