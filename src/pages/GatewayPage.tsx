@@ -42,20 +42,22 @@ const statIcons = [HeartPulse, Zap, ShieldCheck, TrendingUp];
 
 const pillars = [
   { icon: Brain, title: "Inteligência clínica determinística", description: "Motor de regras que analisa adesão, check-ins e evolução para gerar alertas e insights em tempo real — sem depender de LLMs." },
-  { icon: Trophy, title: "Gamificação real de adesão", description: "XP, streaks, medalhas, rankings e conquistas que transformam a rotina nutricional em uma experiência viciante." },
-  { icon: BotMessageSquare, title: "Automação completa de acompanhamento", description: "Regras inteligentes que disparam lembretes, alertas de risco e ações automáticas para cada paciente." },
-  { icon: Crown, title: "Experiência premium para pacientes", description: "Interface de app moderno com checklist diário, análise de refeições por IA, receitas e plano alimentar interativo." },
+  { icon: Trophy, title: "Gamificação real de adesão", description: "XP, streaks, medalhas, rankings e conquistas que transformam a rotina nutricional e de treinos em uma experiência viciante." },
+  { icon: BotMessageSquare, title: "Automação completa de acompanhamento", description: "Regras inteligentes que disparam lembretes, alertas de risco e ações automáticas para cada paciente e aluno." },
+  { icon: Crown, title: "Experiência premium para pacientes", description: "Interface de app moderno com checklist diário, análise de refeições por IA, treinos interativos e plano alimentar." },
 ];
 
 const cardMeta = [
-  { icon: Stethoscope, gradient: "from-violet-500 to-purple-600", glowColor: "hsl(263 70% 55% / 0.25)", borderHover: "hover:border-violet-500/40", to: "/landing", delay: 0.2, settingPrefix: "gateway_card_profissional" },
-  { icon: Users, gradient: "from-emerald-500 to-teal-600", glowColor: "hsl(152 58% 50% / 0.25)", borderHover: "hover:border-emerald-500/40", to: "/landing-paciente", delay: 0.4, settingPrefix: "gateway_card_paciente" },
+  { icon: Stethoscope, gradient: "from-violet-500 to-purple-600", glowColor: "hsl(263 70% 55% / 0.25)", borderHover: "hover:border-violet-500/40", to: "/landing", delay: 0.15, settingPrefix: "gateway_card_profissional" },
+  { icon: Dumbbell, gradient: "from-orange-500 to-red-600", glowColor: "hsl(20 90% 55% / 0.25)", borderHover: "hover:border-orange-500/40", to: "/landing-personal", delay: 0.3, settingPrefix: "gateway_card_personal" },
+  { icon: Users, gradient: "from-emerald-500 to-teal-600", glowColor: "hsl(152 58% 50% / 0.25)", borderHover: "hover:border-emerald-500/40", to: "/landing-paciente", delay: 0.45, settingPrefix: "gateway_card_paciente" },
   { icon: DollarSign, gradient: "from-amber-500 to-orange-600", glowColor: "hsl(38 92% 55% / 0.25)", borderHover: "hover:border-amber-500/40", to: "/landing-afiliado", delay: 0.6, settingPrefix: "gateway_card_afiliado" },
 ];
 
-const defaultCards = {
-  gateway_card_profissional: { title: "Sou Profissional", desc: "Gerencie pacientes, protocolos, planos alimentares e inteligência clínica em um único painel.", cta: "Entrar como profissional" },
-  gateway_card_paciente: { title: "Sou Paciente", desc: "Acompanhe sua evolução, ganhe pontos, siga seu plano alimentar e transforme seus resultados com tecnologia.", cta: "Começar minha jornada" },
+const defaultCards: Record<string, { title: string; desc: string; cta: string }> = {
+  gateway_card_profissional: { title: "Sou Nutricionista", desc: "Gerencie pacientes, protocolos, planos alimentares e inteligência clínica em um único painel.", cta: "Entrar como nutricionista" },
+  gateway_card_personal: { title: "Sou Personal Trainer", desc: "Monte treinos, acompanhe alunos, monitore adesão e evolução de performance em tempo real.", cta: "Entrar como personal" },
+  gateway_card_paciente: { title: "Sou Paciente", desc: "Acompanhe sua evolução, ganhe pontos, siga seu plano alimentar e de treinos com tecnologia.", cta: "Começar minha jornada" },
   gateway_card_afiliado: { title: "Sou Afiliado / Indicação", desc: "Indique o FitJourney e ganhe comissões recorrentes ajudando pessoas a transformarem suas vidas.", cta: "Quero indicar e ganhar" },
 };
 
