@@ -708,6 +708,7 @@ export default function Patients() {
           ? "Paciente ativado — dados incluídos nas métricas"
           : "Paciente desativado — excluído das métricas e leituras de IA"
       );
+      logAudit("toggle_patient_status", "patient", id, { new_status: newStatus });
       fetchPatients();
     }
   };
