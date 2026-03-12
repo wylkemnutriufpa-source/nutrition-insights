@@ -780,7 +780,7 @@ export default function GlobalRanking() {
                   </div>
                 ) : (
                   <AnimatePresence>
-                    {ranking.map((entry, i) => {
+                    {visibleRanking.map((entry, i) => {
                       const isMe = entry.patient_id === user?.id;
                       const isExpanded = expandedId === entry.patient_id;
                       const isPodium = i < 3;
