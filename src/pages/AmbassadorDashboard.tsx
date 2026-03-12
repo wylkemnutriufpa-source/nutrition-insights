@@ -572,6 +572,11 @@ export default function AmbassadorDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Simulator */}
+          <TabsContent value="simulator">
+            <AffiliateRevenueSimulator />
+          </TabsContent>
         </Tabs>
 
         {/* Total earnings */}
