@@ -373,6 +373,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 Fit<span className="text-gradient">Journey</span>
               </span>
             </Link>
+            <BrainIntelligence collapsed />
           </div>
           <div className="flex items-center gap-1">
             {location.pathname !== "/" && (
