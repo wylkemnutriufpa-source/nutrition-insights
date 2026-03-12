@@ -22,7 +22,7 @@ const benefits = [
   { icon: Target, title: "Metas Semanais Claras", desc: "Hidratação, passos, sono e treino — tudo monitorado visualmente." },
   { icon: Zap, title: "Gamificação & Motivação", desc: "XP, streaks, conquistas e ranking para manter você engajada todos os dias." },
   { icon: Flame, title: "Checklist Diário", desc: "Tarefas personalizadas por fase para você nunca se perder no processo." },
-  { icon: Heart, title: "Suporte com IA 24/7", desc: "Tire dúvidas sobre nutrição e receitas a qualquer hora com o AutoBot." },
+  { icon: Heart, title: "Suporte Direto 24/7", desc: "Converse em tempo real com sua nutricionista e tire dúvidas a qualquer hora." },
   { icon: Trophy, title: "Resultados Reais", desc: "Acompanhe sua evolução com fotos, medidas e gráficos de progresso." },
 ];
 

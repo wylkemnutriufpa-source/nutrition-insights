@@ -30,7 +30,7 @@ export const PATIENT_FEATURE_REGISTRY: PatientFeatureDefinition[] = [
   { key: "ai_meal_analysis", label: "Análise de Refeição IA", description: "Análise nutricional de refeições com IA", icon: Brain, category: "IA & Análises" },
   { key: "ai_recipe_generator", label: "Gerador de Receitas IA", description: "Gerar receitas personalizadas com IA", icon: ChefHat, category: "IA & Análises" },
   { key: "ai_body_analysis", label: "Análise Corporal IA", description: "Análise de composição corporal por fotos", icon: Camera, category: "IA & Análises" },
-  { key: "autobot_chat", label: "AutoBot (Chat IA)", description: "Assistente virtual com IA", icon: Sparkles, category: "IA & Análises" },
+  { key: "autobot_chat", label: "Chat com Nutricionista", description: "Converse em tempo real com seu profissional", icon: MessageSquare, category: "Comunicação" },
   { key: "ai_anamnesis_insights", label: "Insights de Anamnese", description: "Ver insights gerados por IA da anamnese", icon: Brain, category: "IA & Análises" },
 
   // Engajamento

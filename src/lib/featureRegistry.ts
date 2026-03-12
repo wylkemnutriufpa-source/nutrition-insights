@@ -36,7 +36,7 @@ export const FEATURE_REGISTRY: FeatureDefinition[] = [
   { name: "ia_plan", label: "Análise com IA", description: "Análise de refeições e corpo com inteligência artificial", icon: Brain, category: "IA & Automação", defaultTier: "premium" },
   { name: "automations", label: "Automações", description: "Motor de automação inteligente com regras personalizadas", icon: Bot, category: "IA & Automação", defaultTier: "premium" },
   { name: "recipe_generator", label: "Gerador de Receitas IA", description: "Geração automática de receitas com IA", icon: ChefHat, category: "IA & Automação", defaultTier: "premium" },
-  { name: "autobot", label: "AutoBot (Chat IA)", description: "Assistente virtual com IA para pacientes", icon: Sparkles, category: "IA & Automação", defaultTier: "premium" },
+  { name: "autobot", label: "Chat com Nutricionista", description: "Acompanhamento em tempo real com seu nutricionista", icon: MessageSquare, category: "Comunicação", defaultTier: "basic" },
   { name: "ai_body_analysis", label: "Análise Corporal IA", description: "Análise de composição corporal por fotos com IA", icon: Camera, category: "IA & Automação", defaultTier: "premium" },
   { name: "ai_anamnesis", label: "Anamnese Inteligente", description: "Insights automáticos de anamnese com IA", icon: Brain, category: "IA & Automação", defaultTier: "premium" },
   { name: "weekly_report_ai", label: "Relatório Semanal IA", description: "Geração automática de relatórios semanais", icon: FileText, category: "IA & Automação", defaultTier: "premium" },
