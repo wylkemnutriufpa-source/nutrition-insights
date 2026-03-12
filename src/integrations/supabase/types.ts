@@ -4447,6 +4447,7 @@ export type Database = {
         Row: {
           completed_at: string
           created_at: string
+          discomfort_flag: boolean | null
           duration_minutes: number | null
           id: string
           notes: string | null
@@ -4459,6 +4460,7 @@ export type Database = {
         Insert: {
           completed_at?: string
           created_at?: string
+          discomfort_flag?: boolean | null
           duration_minutes?: number | null
           id?: string
           notes?: string | null
@@ -4471,6 +4473,7 @@ export type Database = {
         Update: {
           completed_at?: string
           created_at?: string
+          discomfort_flag?: boolean | null
           duration_minutes?: number | null
           id?: string
           notes?: string | null
@@ -4551,6 +4554,8 @@ export type Database = {
           id: string
           image_url: string | null
           load_kg: number | null
+          media_url: string | null
+          muscle_group: string | null
           name: string
           notes: string | null
           reps: string
@@ -4565,6 +4570,8 @@ export type Database = {
           id?: string
           image_url?: string | null
           load_kg?: number | null
+          media_url?: string | null
+          muscle_group?: string | null
           name: string
           notes?: string | null
           reps?: string
@@ -4579,6 +4586,8 @@ export type Database = {
           id?: string
           image_url?: string | null
           load_kg?: number | null
+          media_url?: string | null
+          muscle_group?: string | null
           name?: string
           notes?: string | null
           reps?: string
@@ -4605,8 +4614,10 @@ export type Database = {
           end_date: string | null
           id: string
           is_active: boolean
+          objective: string | null
           personal_id: string
           start_date: string
+          status: string
           student_id: string
           title: string
           updated_at: string
@@ -4617,8 +4628,10 @@ export type Database = {
           end_date?: string | null
           id?: string
           is_active?: boolean
+          objective?: string | null
           personal_id: string
           start_date?: string
+          status?: string
           student_id: string
           title: string
           updated_at?: string
@@ -4629,8 +4642,10 @@ export type Database = {
           end_date?: string | null
           id?: string
           is_active?: boolean
+          objective?: string | null
           personal_id?: string
           start_date?: string
+          status?: string
           student_id?: string
           title?: string
           updated_at?: string
@@ -4642,6 +4657,7 @@ export type Database = {
           created_at: string
           day_of_week: number | null
           description: string | null
+          estimated_duration: number | null
           id: string
           name: string
           plan_id: string
@@ -4651,6 +4667,7 @@ export type Database = {
           created_at?: string
           day_of_week?: number | null
           description?: string | null
+          estimated_duration?: number | null
           id?: string
           name: string
           plan_id: string
@@ -4660,6 +4677,7 @@ export type Database = {
           created_at?: string
           day_of_week?: number | null
           description?: string | null
+          estimated_duration?: number | null
           id?: string
           name?: string
           plan_id?: string
