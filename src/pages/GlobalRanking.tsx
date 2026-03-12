@@ -23,6 +23,7 @@ import {
 import PrestigeBadge from "@/components/prestige/PrestigeBadge";
 import PodiumBadge from "@/components/prestige/PodiumBadge";
 import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
+import ShareProgressButton from "@/components/social/ShareProgressButton";
 
 type Period = "daily" | "weekly" | "monthly" | "annual";
 

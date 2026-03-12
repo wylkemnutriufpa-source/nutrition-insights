@@ -357,6 +357,7 @@ export default function Checklist() {
             >
               <Plus className="w-4 h-4" /> {t("common.newTask")}
             </Button>
+            <ShareProgressButton captureRef={shareRef} context="checklist" />
           </div>
         </div>
 
