@@ -148,6 +148,33 @@ const adminSections: NavSection[] = [
   },
 ];
 
+const personalSections: NavSection[] = [
+  {
+    sectionKey: "nav.sectionMain",
+    links: [
+      { to: "/", icon: LayoutDashboard, labelKey: "nav.dashboard" },
+      { to: "/personal/students", icon: Users, labelKey: "nav.students" },
+      { to: "/personal/workouts", icon: Dumbbell, labelKey: "nav.workouts" },
+      { to: "/ranking", icon: Trophy, labelKey: "nav.ranking", premium: true },
+      { to: "/chat", icon: MessageSquare, labelKey: "nav.chat" },
+      { to: "/appointments", icon: Activity, labelKey: "nav.agenda" },
+    ],
+  },
+  {
+    sectionKey: "nav.sectionAnalytics",
+    links: [
+      { to: "/reports", icon: BarChart3, labelKey: "nav.reports" },
+    ],
+  },
+  {
+    sectionKey: "nav.sectionContent",
+    links: [
+      { to: "/global-tips", icon: Lightbulb, labelKey: "nav.tips" },
+      { to: "/professional-guide", icon: Compass, labelKey: "nav.professionalGuide" },
+    ],
+  },
+];
+
 const patientLinks = [
   { to: "/", icon: LayoutDashboard, labelKey: "nav.dashboard", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
   { to: "/ranking", icon: Trophy, labelKey: "nav.ranking", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
