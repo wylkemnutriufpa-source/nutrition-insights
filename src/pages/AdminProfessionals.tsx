@@ -69,11 +69,12 @@ function ProfessionalDialog({
         plan_id: professional.plan_id || "",
         clinic_name: professional.clinic_name || "",
         status: professional.status || "active",
+        role_type: professional.role_type || "nutritionist",
       });
     } else {
       setForm({
         full_name: "", email: "", password: "", phone: "",
-        plan_id: "", clinic_name: "", status: "active",
+        plan_id: "", clinic_name: "", status: "active", role_type: "nutritionist",
       });
     }
   }, [professional, open]);
