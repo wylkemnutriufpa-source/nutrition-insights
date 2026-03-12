@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   Calendar as CalIcon, Clock, User, Loader2, Send,
-  CheckCircle2, ChevronLeft, ChevronRight, Video, MapPin
+  CheckCircle2, ChevronLeft, ChevronRight, Video, MapPin, CreditCard, Lock
 } from "lucide-react";
 import { format, addDays, isSameDay, startOfWeek, addWeeks, isAfter, isBefore, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -38,6 +38,8 @@ export default function PublicBooking() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
+  const [bookingPrice, setBookingPrice] = useState<number>(0);
+  const [paymentRequired, setPaymentRequired] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -51,6 +53,8 @@ export default function PublicBooking() {
 
       if (!pub) { setNotFound(true); setLoading(false); return; }
       setProfile(pub);
+      setBookingPrice(Number(pub.booking_price) || 0);
+      setPaymentRequired(pub.booking_payment_required === true);
 
       const { data: pData } = await supabase
         .from("profiles")
@@ -115,8 +119,33 @@ export default function PublicBooking() {
       source: "booking",
     });
 
+    if (error) { setSubmitting(false); toast.error("Erro ao enviar. Tente novamente."); return; }
+
+    // If payment required, redirect to Stripe checkout
+    if (paymentRequired && bookingPrice > 0) {
+      try {
+        const { data, error: payError } = await supabase.functions.invoke("create-booking-payment", {
+          body: {
+            nutritionist_id: profile.nutritionist_id,
+            amount: bookingPrice,
+            customer_name: form.name.trim(),
+            customer_email: form.email.trim(),
+            slot_date: format(selectedDate, "dd/MM/yyyy"),
+            slot_time: selectedSlot,
+          },
+        });
+        if (payError) throw payError;
+        if (data?.url) {
+          window.location.href = data.url;
+          return;
+        }
+      } catch (payErr: any) {
+        console.error("Payment error:", payErr);
+        toast.error("Erro ao processar pagamento. Seu agendamento foi registrado sem pagamento.");
+      }
+    }
+
     setSubmitting(false);
-    if (error) { toast.error("Erro ao enviar. Tente novamente."); return; }
     setSubmitted(true);
   };
 
@@ -326,6 +355,17 @@ export default function PublicBooking() {
                       onChange={e => setForm(p => ({ ...p, message: e.target.value }))}
                       rows={2} maxLength={2000}
                     />
+
+                    {paymentRequired && bookingPrice > 0 && (
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-accent/10 border border-accent/20">
+                        <CreditCard className="w-4 h-4 text-accent shrink-0" />
+                        <div className="text-xs">
+                          <span className="font-medium">Pagamento antecipado: </span>
+                          <span className="text-primary font-bold">R$ {bookingPrice.toFixed(2).replace(".", ",")}</span>
+                        </div>
+                      </div>
+                    )}
+
                     <Button
                       type="submit"
                       className="w-full gradient-primary shadow-glow gap-2"
@@ -333,10 +373,14 @@ export default function PublicBooking() {
                     >
                       {submitting ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : paymentRequired && bookingPrice > 0 ? (
+                        <CreditCard className="w-4 h-4" />
                       ) : (
                         <Send className="w-4 h-4" />
                       )}
-                      Solicitar Agendamento
+                      {paymentRequired && bookingPrice > 0
+                        ? `Pagar e Agendar — R$ ${bookingPrice.toFixed(2).replace(".", ",")}`
+                        : "Solicitar Agendamento"}
                     </Button>
                   </form>
 

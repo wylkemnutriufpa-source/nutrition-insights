@@ -64,6 +64,8 @@ import CheckinPanel from "./pages/CheckinPanel";
 import ClientDashboard from "./pages/ClientDashboard";
 import ImportPatients from "./pages/ImportPatients";
 import AdminProfessionals from "./pages/AdminProfessionals";
+import AdminBookingSettings from "./pages/AdminBookingSettings";
+import AdminSubscriptionMonitor from "./pages/AdminSubscriptionMonitor";
 import PublicProfile from "./pages/PublicProfile";
 import PublicBooking from "./pages/PublicBooking";
 import PublicProgram from "./pages/PublicProgram";
@@ -253,6 +255,8 @@ const App = () => (
               <Route path="/admin/resources" element={<AdminRoute><AdminResourceCenter /></AdminRoute>} />
               <Route path="/admin/import-patients" element={<NutritionistRoute><ImportPatients /></NutritionistRoute>} />
               <Route path="/admin/profissionais" element={<AdminRoute><AdminProfessionals /></AdminRoute>} />
+              <Route path="/admin/booking-settings" element={<AdminRoute><AdminBookingSettings /></AdminRoute>} />
+              <Route path="/admin/subscription-monitor" element={<AdminRoute><AdminSubscriptionMonitor /></AdminRoute>} />
 
               {/* Public pricing */}
               <Route path="/pricing" element={<Pricing />} />

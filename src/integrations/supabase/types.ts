@@ -633,6 +633,53 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_email: string
+          customer_name: string
+          id: string
+          lead_request_id: string | null
+          nutritionist_id: string
+          paid_at: string | null
+          status: string
+          stripe_session_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          customer_email: string
+          customer_name: string
+          id?: string
+          lead_request_id?: string | null
+          nutritionist_id: string
+          paid_at?: string | null
+          status?: string
+          stripe_session_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_email?: string
+          customer_name?: string
+          id?: string
+          lead_request_id?: string | null
+          nutritionist_id?: string
+          paid_at?: string | null
+          status?: string
+          stripe_session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_payments_lead_request_id_fkey"
+            columns: ["lead_request_id"]
+            isOneToOne: false
+            referencedRelation: "lead_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       branding_settings: {
         Row: {
           accent_color: string | null
@@ -3536,6 +3583,8 @@ export type Database = {
         Row: {
           bio: string | null
           booking_enabled: boolean | null
+          booking_payment_required: boolean | null
+          booking_price: number | null
           created_at: string
           id: string
           is_public: boolean
@@ -3547,6 +3596,8 @@ export type Database = {
         Insert: {
           bio?: string | null
           booking_enabled?: boolean | null
+          booking_payment_required?: boolean | null
+          booking_price?: number | null
           created_at?: string
           id?: string
           is_public?: boolean
@@ -3558,6 +3609,8 @@ export type Database = {
         Update: {
           bio?: string | null
           booking_enabled?: boolean | null
+          booking_payment_required?: boolean | null
+          booking_price?: number | null
           created_at?: string
           id?: string
           is_public?: boolean

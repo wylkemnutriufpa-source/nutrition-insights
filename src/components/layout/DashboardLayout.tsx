@@ -13,7 +13,7 @@ import {
   MessageSquare, Lightbulb, ChefHat, ShoppingCart, Apple, Camera,
   Palette, Bell, BarChart3, Menu, X, Shield, Zap, Star, Bot,
   Scale, Droplets, Heart, Calculator, TrendingUp, BookOpen, DollarSign, Pill, Crown, Compass,
-  CalendarDays, Megaphone, Globe, UserCheck, Share2, Award
+  CalendarDays, Megaphone, Globe, UserCheck, Share2, Award, CreditCard
 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -105,6 +105,8 @@ const adminSections: NavSection[] = [
       { to: "/admin/pricing", icon: DollarSign, labelKey: "nav.pricing" },
       { to: "/admin/patient-features", icon: Crown, labelKey: "nav.patientFeatures" },
       { to: "/admin/landing-pages", icon: LayoutDashboard, labelKey: "nav.landingPages" },
+      { to: "/admin/booking-settings", icon: CalendarDays, labelKey: "nav.bookingSettings" },
+      { to: "/admin/subscription-monitor", icon: CreditCard, labelKey: "nav.subscriptionMonitor" },
     ],
   },
   {
