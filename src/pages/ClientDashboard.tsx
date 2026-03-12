@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import SmartTips from "@/components/patient/SmartTips";
 import {
   Rocket, CalendarDays, Bell, TrendingUp, CheckCircle2,
-  UtensilsCrossed, Trophy, Target
+  UtensilsCrossed, Trophy, Target, Dumbbell, Flame
 } from "lucide-react";
 import RankingWidget from "@/components/prestige/RankingWidget";
 import ExplorerProgressWidget from "@/components/dashboard/ExplorerProgressWidget";
