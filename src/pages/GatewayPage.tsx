@@ -173,7 +173,7 @@ export default function GatewayPage() {
         </motion.div>
 
         <p className="text-white/15 text-xs flex items-center gap-1">
-          <Sparkles className="w-3 h-3" /> Powered by FitJourney — Nutrição Inteligente
+          <Sparkles className="w-3 h-3" /> Powered by FitJourney — Nutrição + Treino + Performance
         </p>
       </div>
     </div>

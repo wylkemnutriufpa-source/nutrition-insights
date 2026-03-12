@@ -29,6 +29,7 @@ interface AuthContextType {
   roles: AppRole[];
   loading: boolean;
   isNutritionist: boolean;
+  isPersonal: boolean;
   isPatient: boolean;
   isAdmin: boolean;
   subscription: SubscriptionState;
