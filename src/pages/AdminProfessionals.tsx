@@ -583,6 +583,9 @@ export default function AdminProfessionals() {
               <p className="text-muted-foreground text-sm">Cadastre, edite e gerencie os profissionais da plataforma</p>
             </div>
           </div>
+          <Button variant="outline" onClick={() => setPromoteDialogOpen(true)} className="gap-2">
+            <ArrowUpCircle className="w-4 h-4" /> Promover Paciente
+          </Button>
           <Button onClick={() => { setEditingProfessional(null); setDialogOpen(true); }} className="gap-2">
             <UserPlus className="w-4 h-4" /> Novo Profissional
           </Button>
