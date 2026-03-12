@@ -931,6 +931,7 @@ export default function GlobalRanking() {
                       )}
                     </Button>
                   )}
+                </>
                 )}
               </CardContent>
             </Card>
