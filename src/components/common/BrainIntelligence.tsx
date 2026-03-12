@@ -252,7 +252,7 @@ export default function BrainIntelligence({ collapsed = false }: { collapsed?: b
       <AnimatePresence>
         {open && (
           <motion.div
-            className="fixed inset-0 z-[100] flex items-start"
+            className="fixed inset-0 z-[100] flex"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -266,20 +266,20 @@ export default function BrainIntelligence({ collapsed = false }: { collapsed?: b
             />
 
             <motion.div
-              className="relative ml-16 mt-4 mb-4 w-[90vw] max-w-5xl h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl"
-              initial={{ opacity: 0, x: -80 }}
+              className="relative ml-0 md:ml-16 w-full md:w-[480px] lg:w-[520px] h-full overflow-y-auto"
+              initial={{ opacity: 0, x: -300 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -80 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              exit={{ opacity: 0, x: -300 }}
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
             >
               {/* Glass background */}
-              <div className="absolute inset-0 rounded-2xl" style={{
+              <div className="absolute inset-0 md:rounded-r-2xl" style={{
                 background: "linear-gradient(135deg, hsl(220 25% 12% / 0.97), hsl(220 30% 8% / 0.99))",
                 backdropFilter: "blur(24px)",
               }} />
 
               {/* Gradient border */}
-              <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{
+              <div className="absolute inset-0 md:rounded-r-2xl pointer-events-none" style={{
                 border: "1px solid transparent",
                 background: "linear-gradient(135deg, hsl(150 80% 50% / 0.35), hsl(170 70% 45% / 0.1), hsl(150 60% 45% / 0.25)) border-box",
                 WebkitMask: "linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)",
@@ -288,7 +288,7 @@ export default function BrainIntelligence({ collapsed = false }: { collapsed?: b
               }} />
 
               {/* Neural particles */}
-              <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
+              <div className="absolute inset-0 pointer-events-none overflow-hidden md:rounded-r-2xl">
                 {neuralParticles.map((p, i) => <NeuralParticle key={i} {...p} />)}
               </div>
 
@@ -320,7 +320,7 @@ export default function BrainIntelligence({ collapsed = false }: { collapsed?: b
                 </div>
 
                 {/* Horizontal 2-column layout */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   {/* Left column */}
                   <div className="space-y-4">
                     {/* Block 1: Motor Clínico Status */}
