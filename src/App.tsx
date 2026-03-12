@@ -64,6 +64,8 @@ import CheckinPanel from "./pages/CheckinPanel";
 import ClientDashboard from "./pages/ClientDashboard";
 import ImportPatients from "./pages/ImportPatients";
 import AdminProfessionals from "./pages/AdminProfessionals";
+import AdminBookingSettings from "./pages/AdminBookingSettings";
+import AdminSubscriptionMonitor from "./pages/AdminSubscriptionMonitor";
 import PublicProfile from "./pages/PublicProfile";
 import PublicBooking from "./pages/PublicBooking";
 import PublicProgram from "./pages/PublicProgram";
