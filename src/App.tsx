@@ -82,6 +82,9 @@ import Planner from "./pages/Planner";
 import OnboardingPipeline from "./pages/OnboardingPipeline";
 import AmbassadorDashboard from "./pages/AmbassadorDashboard";
 import AdminAffiliates from "./pages/AdminAffiliates";
+import GatewayPage from "./pages/GatewayPage";
+import PatientLanding from "./pages/PatientLanding";
+import AffiliateLanding from "./pages/AffiliateLanding";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -141,7 +144,7 @@ function RootRoute() {
       </div>
     );
   }
-  if (!user) return <Landing />;
+  if (!user) return <GatewayPage />;
   return <Index />;
 }
 
@@ -177,6 +180,8 @@ const App = () => (
             <DarkModeInit />
             <Routes>
               <Route path="/landing" element={<Landing />} />
+              <Route path="/para-pacientes" element={<PatientLanding />} />
+              <Route path="/para-embaixadores" element={<AffiliateLanding />} />
               <Route path="/biquini-branco" element={<BiquiniBrancoLanding />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
