@@ -140,6 +140,23 @@ export default function ClientDashboard() {
       }
       setLoading(false);
     });
+
+    // Fetch Biquíni Branco enrollment
+    (supabase as any)
+      .from("program_enrollments")
+      .select("*")
+      .eq("patient_id", user.id)
+      .not("status", "eq", "completed")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .then(({ data }: any) => {
+        if (data && data.length > 0) {
+          setBiquiniEnrollment(data[0]);
+          if (data[0].status === "pending_onboarding") {
+            setShowOnboarding(true);
+          }
+        }
+      });
   }, [user]);
 
   const checklistPercent = checklistStats.total > 0
