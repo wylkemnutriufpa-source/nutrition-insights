@@ -252,7 +252,7 @@ export default function BrainIntelligence({ collapsed = false }: { collapsed?: b
       <AnimatePresence>
         {open && (
           <motion.div
-            className="fixed inset-0 z-[100] flex items-start"
+            className="fixed inset-0 z-[100] flex"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -266,11 +266,11 @@ export default function BrainIntelligence({ collapsed = false }: { collapsed?: b
             />
 
             <motion.div
-              className="relative ml-16 mt-4 mb-4 w-[90vw] max-w-5xl h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl"
-              initial={{ opacity: 0, x: -80 }}
+              className="relative ml-0 md:ml-16 w-full md:w-[480px] lg:w-[520px] h-full overflow-y-auto"
+              initial={{ opacity: 0, x: -300 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -80 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              exit={{ opacity: 0, x: -300 }}
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
             >
               {/* Glass background */}
               <div className="absolute inset-0 rounded-2xl" style={{
