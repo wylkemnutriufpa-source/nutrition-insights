@@ -477,6 +477,7 @@ export default function GlobalRanking() {
 
   const myRank = ranking.find((r) => r.patient_id === user?.id);
   const podium = ranking.slice(0, 3);
+  const visibleRanking = showAll ? ranking : ranking.slice(0, 20);
   const rest = ranking.slice(3, 20);
   const maxCategoryPoints = Math.max(
     ...ranking.map(r => Math.max(r.points_checklist, r.points_meals, r.points_training, r.points_checkin, r.points_other)),
