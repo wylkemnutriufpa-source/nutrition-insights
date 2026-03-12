@@ -191,6 +191,7 @@ const patientLinks = [
   { to: "/journey", icon: TrendingUp, labelKey: "nav.journey", color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
   { to: "/library", icon: BookOpen, labelKey: "nav.library", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
   { to: "/supplements", icon: Pill, labelKey: "nav.supplements", color: "from-success/20 to-success/5", iconColor: "text-success" },
+  { to: "/my-workouts", icon: Dumbbell, labelKey: "nav.myWorkouts", color: "from-orange-500/20 to-orange-500/5", iconColor: "text-orange-500" },
   { to: "/anamnesis", icon: ClipboardCheck, labelKey: "nav.anamnesis", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
   { to: "/onboarding", icon: Zap, labelKey: "nav.onboarding", color: "from-primary/20 to-accent/5", iconColor: "text-primary" },
   { to: "/food-database", icon: Apple, labelKey: "nav.foods", color: "from-info/20 to-info/5", iconColor: "text-info" },
