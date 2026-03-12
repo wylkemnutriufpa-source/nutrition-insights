@@ -25,6 +25,7 @@ interface Professional {
   phone: string | null;
   avatar_url: string | null;
   created_at: string;
+  role_type: "nutritionist" | "personal";
   // From professional_profiles
   profile_id: string | null;
   plan_id: string | null;
