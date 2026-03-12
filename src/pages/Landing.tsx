@@ -1,15 +1,16 @@
 import { motion, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { useSiteSettings, getSetting } from "@/hooks/useSiteSettings";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Sparkles, Users, Brain, Shield, BarChart3, Utensils, CheckCircle2,
   ArrowRight, Star, Zap, Heart, ChevronRight, Bot, Pill, Camera,
   Target, MessageSquare, FileText, Rocket, ClipboardCheck, ChefHat,
   Palette, DollarSign, Play, ArrowDown, Menu, X, BookOpen, TrendingUp,
-  Award, Globe, Lock, Cpu
+  Award, Globe, Lock, Cpu, Trophy, Crown, Flame
 } from "lucide-react";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import BrainIntelligence from "@/components/common/BrainIntelligence";
