@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-const ADMIN_PASSWORD = "fitjourney2025";
+// Password removed - protocol is open. Delete protection handled separately.
 
 interface ProtocolPhase {
   number: number;
