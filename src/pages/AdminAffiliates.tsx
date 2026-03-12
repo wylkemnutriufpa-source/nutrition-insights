@@ -80,14 +80,14 @@ export default function AdminAffiliates() {
 
   const createAffiliate = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("affiliates").insert({
+      const { error } = await supabase.from("affiliates").insert([{
         full_name: form.full_name,
         email: form.email,
         referral_code: generateCode(),
-        affiliate_type: form.affiliate_type,
+        affiliate_type: form.affiliate_type as any,
         first_payment_commission_percent: parseFloat(form.first_payment_commission_percent),
         recurring_commission_percent: parseFloat(form.recurring_commission_percent),
-      });
+      }]);
       if (error) throw error;
     },
     onSuccess: () => {
