@@ -118,10 +118,11 @@ function ProfessionalDialog({
           return;
         }
 
-        const { data: newUserId, error } = await supabase.rpc("create_nutritionist_account", {
+        const { data: newUserId, error } = await supabase.rpc("create_professional_account" as any, {
           _email: form.email,
           _full_name: form.full_name,
           _password: form.password,
+          _role: form.role_type,
         });
         if (error) throw error;
 
