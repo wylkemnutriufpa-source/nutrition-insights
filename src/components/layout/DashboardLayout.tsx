@@ -27,6 +27,7 @@ import SOSInbox from "@/components/patient/SOSInbox";
 import LanguageSelector from "@/components/common/LanguageSelector";
 import BrainIntelligence from "@/components/common/BrainIntelligence";
 import { AlertTriangle } from "lucide-react";
+import ProtocolBlockedModal from "@/components/biquini/ProtocolBlockedModal";
 
 const nutritionistLinks = [
   { to: "/", icon: LayoutDashboard, labelKey: "nav.dashboard" },
