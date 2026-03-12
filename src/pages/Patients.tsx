@@ -685,7 +685,10 @@ export default function Patients() {
       if (linkError) {
         if (linkError.code === "23505") toast.info("Paciente já está na sua lista.");
         else throw linkError;
-      } else toast.success("Paciente cadastrado e vinculado! 🎉");
+      } else {
+        toast.success("Paciente cadastrado e vinculado! 🎉");
+        logAudit("create_patient", "patient", patientId as string, { email: email.trim().toLowerCase(), name: patientName.trim() });
+      }
       setOpen(false);
       setEmail(""); setPatientName(""); setPatientPassword("");
       fetchPatients();
