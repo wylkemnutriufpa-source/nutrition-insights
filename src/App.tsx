@@ -88,6 +88,10 @@ import GatewayPage from "./pages/GatewayPage";
 import PatientLanding from "./pages/PatientLanding";
 import AffiliateLanding from "./pages/AffiliateLanding";
 import AdminLandingPages from "./pages/AdminLandingPages";
+import PersonalDashboard from "./pages/PersonalDashboard";
+import PersonalStudents from "./pages/PersonalStudents";
+import PersonalWorkouts from "./pages/PersonalWorkouts";
+import PatientWorkouts from "./pages/PatientWorkouts";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -110,6 +114,22 @@ function NutritionistRoute({ children }: { children: React.ReactNode }) {
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" /></div>;
   if (!user) return <Navigate to="/auth" replace />;
   if (!isNutritionist && !isAdmin) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
+function PersonalRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading, isPersonal, isAdmin } = useAuth();
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  if (!user) return <Navigate to="/auth" replace />;
+  if (!isPersonal && !isAdmin) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
+function ProfessionalRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading, isNutritionist, isPersonal, isAdmin } = useAuth();
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  if (!user) return <Navigate to="/auth" replace />;
+  if (!isNutritionist && !isPersonal && !isAdmin) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
@@ -139,7 +159,7 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 }
 
 function RootRoute() {
-  const { user, loading } = useAuth();
+  const { user, loading, isPersonal } = useAuth();
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -148,6 +168,7 @@ function RootRoute() {
     );
   }
   if (!user) return <GatewayPage />;
+  if (isPersonal) return <PersonalDashboard />;
   return <Index />;
 }
 
@@ -184,6 +205,7 @@ const App = () => (
             <Routes>
               <Route path="/landing" element={<Landing />} />
               <Route path="/landing-paciente" element={<PatientLanding />} />
+              <Route path="/landing-personal" element={<Landing />} />
               <Route path="/landing-afiliado" element={<AffiliateLanding />} />
               <Route path="/biquini-branco" element={<BiquiniBrancoLanding />} />
               <Route path="/auth" element={<Auth />} />
@@ -224,8 +246,14 @@ const App = () => (
               <Route path="/automation" element={<NutritionistRoute><AutomationCenter /></NutritionistRoute>} />
               <Route path="/checkin-panel" element={<NutritionistRoute><CheckinPanel /></NutritionistRoute>} />
 
+              {/* Personal Trainer routes */}
+              <Route path="/personal/students" element={<PersonalRoute><PersonalStudents /></PersonalRoute>} />
+              <Route path="/personal/workouts" element={<PersonalRoute><PersonalWorkouts /></PersonalRoute>} />
+              <Route path="/personal/workouts/new" element={<PersonalRoute><PersonalWorkouts /></PersonalRoute>} />
+
               {/* Patient portal */}
               <Route path="/client/dashboard" element={<PatientRoute><ClientDashboard /></PatientRoute>} />
+              <Route path="/my-workouts" element={<ProtectedRoute><PatientWorkouts /></ProtectedRoute>} />
 
               {/* Patient-only routes */}
               <Route path="/meals" element={<ProtectedRoute><Meals /></ProtectedRoute>} />

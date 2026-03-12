@@ -13,7 +13,7 @@ import {
   MessageSquare, Lightbulb, ChefHat, ShoppingCart, Apple, Camera,
   Palette, Bell, BarChart3, Menu, X, Shield, Zap, Star, Bot,
   Scale, Droplets, Heart, Calculator, TrendingUp, BookOpen, DollarSign, Pill, Crown, Compass,
-  CalendarDays, Megaphone, Globe, UserCheck, Share2, Award, CreditCard
+  CalendarDays, Megaphone, Globe, UserCheck, Share2, Award, CreditCard, Dumbbell
 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -148,6 +148,33 @@ const adminSections: NavSection[] = [
   },
 ];
 
+const personalSections: NavSection[] = [
+  {
+    sectionKey: "nav.sectionMain",
+    links: [
+      { to: "/", icon: LayoutDashboard, labelKey: "nav.dashboard" },
+      { to: "/personal/students", icon: Users, labelKey: "nav.students" },
+      { to: "/personal/workouts", icon: Dumbbell, labelKey: "nav.workouts" },
+      { to: "/ranking", icon: Trophy, labelKey: "nav.ranking", premium: true },
+      { to: "/chat", icon: MessageSquare, labelKey: "nav.chat" },
+      { to: "/appointments", icon: Activity, labelKey: "nav.agenda" },
+    ],
+  },
+  {
+    sectionKey: "nav.sectionAnalytics",
+    links: [
+      { to: "/reports", icon: BarChart3, labelKey: "nav.reports" },
+    ],
+  },
+  {
+    sectionKey: "nav.sectionContent",
+    links: [
+      { to: "/global-tips", icon: Lightbulb, labelKey: "nav.tips" },
+      { to: "/professional-guide", icon: Compass, labelKey: "nav.professionalGuide" },
+    ],
+  },
+];
+
 const patientLinks = [
   { to: "/", icon: LayoutDashboard, labelKey: "nav.dashboard", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
   { to: "/ranking", icon: Trophy, labelKey: "nav.ranking", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
@@ -164,6 +191,7 @@ const patientLinks = [
   { to: "/journey", icon: TrendingUp, labelKey: "nav.journey", color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
   { to: "/library", icon: BookOpen, labelKey: "nav.library", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
   { to: "/supplements", icon: Pill, labelKey: "nav.supplements", color: "from-success/20 to-success/5", iconColor: "text-success" },
+  { to: "/my-workouts", icon: Dumbbell, labelKey: "nav.myWorkouts", color: "from-orange-500/20 to-orange-500/5", iconColor: "text-orange-500" },
   { to: "/anamnesis", icon: ClipboardCheck, labelKey: "nav.anamnesis", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
   { to: "/onboarding", icon: Zap, labelKey: "nav.onboarding", color: "from-primary/20 to-accent/5", iconColor: "text-primary" },
   { to: "/food-database", icon: Apple, labelKey: "nav.foods", color: "from-info/20 to-info/5", iconColor: "text-info" },
@@ -410,7 +438,7 @@ function SidebarContent({
 }
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { profile, isNutritionist, isAdmin, signOut } = useAuth();
+  const { profile, isNutritionist, isPersonal, isAdmin, signOut } = useAuth();
   const location = useLocation();
   const isMobile = useIsMobile();
   const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
@@ -419,7 +447,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [sosOpen, setSosOpen] = useState(false);
   const [sosInboxOpen, setSosInboxOpen] = useState(false);
 
-  const isPatient = !isNutritionist && !isAdmin;
+  const isPatient = !isNutritionist && !isPersonal && !isAdmin;
 
   // Track presence for all logged-in users
   usePresenceTracker();
@@ -434,7 +462,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     setMobileOpen(false);
   }, [location.pathname]);
 
-  const sections = isAdmin ? adminSections : isNutritionist ? nutritionistSections : undefined;
+  const sections = isAdmin ? adminSections : isNutritionist ? nutritionistSections : isPersonal ? personalSections : undefined;
   const flatLinks = isPatient ? patientLinks : undefined;
 
   const toggleDark = () => {
@@ -453,10 +481,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   const profileName = profile?.full_name || "Usuário";
 
-  const onSosHandler = isPatient ? () => setSosOpen(true) : (isNutritionist || isAdmin) ? () => setSosInboxOpen(true) : undefined;
+  const onSosHandler = isPatient ? () => setSosOpen(true) : (isNutritionist || isPersonal || isAdmin) ? () => setSosInboxOpen(true) : undefined;
 
   const sidebarProps = {
-    sections, flatLinks, location, isNutritionist: isNutritionist || isAdmin, dark, toggleDark, initials, profileName, signOut,
+    sections, flatLinks, location, isNutritionist: isNutritionist || isPersonal || isAdmin, dark, toggleDark, initials, profileName, signOut,
     onSosOpen: onSosHandler,
   };
 

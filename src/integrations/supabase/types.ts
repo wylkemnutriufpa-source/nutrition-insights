@@ -2506,6 +2506,36 @@ export type Database = {
           },
         ]
       }
+      personal_trainer_students: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          notes: string | null
+          personal_id: string
+          status: string
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          notes?: string | null
+          personal_id: string
+          status?: string
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          notes?: string | null
+          personal_id?: string
+          status?: string
+          student_id?: string
+        }
+        Relationships: []
+      }
       physical_assessments: {
         Row: {
           abdomen: number | null
@@ -4413,6 +4443,238 @@ export type Database = {
         }
         Relationships: []
       }
+      workout_completions: {
+        Row: {
+          completed_at: string
+          created_at: string
+          duration_minutes: number | null
+          id: string
+          notes: string | null
+          pain_report: string | null
+          perceived_effort: number | null
+          plan_id: string
+          routine_id: string
+          student_id: string
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          notes?: string | null
+          pain_report?: string | null
+          perceived_effort?: number | null
+          plan_id: string
+          routine_id: string
+          student_id: string
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          notes?: string | null
+          pain_report?: string | null
+          perceived_effort?: number | null
+          plan_id?: string
+          routine_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_completions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "workout_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workout_completions_routine_id_fkey"
+            columns: ["routine_id"]
+            isOneToOne: false
+            referencedRelation: "workout_routines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workout_exercise_logs: {
+        Row: {
+          completion_id: string
+          created_at: string
+          exercise_id: string
+          id: string
+          load_kg: number | null
+          notes: string | null
+          reps_done: string | null
+          sets_done: number | null
+        }
+        Insert: {
+          completion_id: string
+          created_at?: string
+          exercise_id: string
+          id?: string
+          load_kg?: number | null
+          notes?: string | null
+          reps_done?: string | null
+          sets_done?: number | null
+        }
+        Update: {
+          completion_id?: string
+          created_at?: string
+          exercise_id?: string
+          id?: string
+          load_kg?: number | null
+          notes?: string | null
+          reps_done?: string | null
+          sets_done?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_exercise_logs_completion_id_fkey"
+            columns: ["completion_id"]
+            isOneToOne: false
+            referencedRelation: "workout_completions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workout_exercise_logs_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "workout_exercises"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workout_exercises: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          load_kg: number | null
+          name: string
+          notes: string | null
+          reps: string
+          rest_seconds: number | null
+          routine_id: string
+          sets: number
+          sort_order: number
+          video_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          load_kg?: number | null
+          name: string
+          notes?: string | null
+          reps?: string
+          rest_seconds?: number | null
+          routine_id: string
+          sets?: number
+          sort_order?: number
+          video_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          load_kg?: number | null
+          name?: string
+          notes?: string | null
+          reps?: string
+          rest_seconds?: number | null
+          routine_id?: string
+          sets?: number
+          sort_order?: number
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_exercises_routine_id_fkey"
+            columns: ["routine_id"]
+            isOneToOne: false
+            referencedRelation: "workout_routines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workout_plans: {
+        Row: {
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean
+          personal_id: string
+          start_date: string
+          student_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          personal_id: string
+          start_date?: string
+          student_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          personal_id?: string
+          start_date?: string
+          student_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      workout_routines: {
+        Row: {
+          created_at: string
+          day_of_week: number | null
+          description: string | null
+          id: string
+          name: string
+          plan_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          day_of_week?: number | null
+          description?: string | null
+          id?: string
+          name: string
+          plan_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number | null
+          description?: string | null
+          id?: string
+          name?: string
+          plan_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_routines_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "workout_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -4561,7 +4823,7 @@ export type Database = {
         | "nutritionist"
         | "premium_ambassador"
         | "custom"
-      app_role: "nutritionist" | "patient" | "admin"
+      app_role: "nutritionist" | "patient" | "admin" | "personal"
       challenge_status: "active" | "completed" | "expired"
       commission_status:
         | "pending"
@@ -4726,7 +4988,7 @@ export const Constants = {
         "premium_ambassador",
         "custom",
       ],
-      app_role: ["nutritionist", "patient", "admin"],
+      app_role: ["nutritionist", "patient", "admin", "personal"],
       challenge_status: ["active", "completed", "expired"],
       commission_status: [
         "pending",
