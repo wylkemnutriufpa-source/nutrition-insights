@@ -1,0 +1,167 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+interface PushSubscription {
+  user_id: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    { auth: { persistSession: false } }
+  );
+
+  try {
+    const now = new Date();
+    const hour = now.getHours();
+    const today = now.toISOString().split("T")[0];
+    const results: string[] = [];
+
+    // 1. Morning motivation (8-9 AM) — patients with active checklists
+    if (hour >= 8 && hour < 9) {
+      const { data: patients } = await supabase
+        .from("checklist_tasks")
+        .select("patient_id")
+        .eq("date", today)
+        .eq("completed", false);
+
+      const uniquePatients = [...new Set((patients || []).map(p => p.patient_id))];
+      for (const patientId of uniquePatients.slice(0, 50)) {
+        await sendNotification(supabase, patientId, {
+          title: "Bom dia! ☀️",
+          body: "Suas tarefas do dia estão te esperando. Vamos começar?",
+          url: "/checklist",
+        });
+      }
+      results.push(`morning_motivation: ${uniquePatients.length} patients`);
+    }
+
+    // 2. Streak risk (7-8 PM) — patients who haven't done anything today
+    if (hour >= 19 && hour < 20) {
+      const { data: activePlayers } = await supabase
+        .from("player_stats")
+        .select("user_id, current_streak")
+        .gt("current_streak", 2);
+
+      for (const player of (activePlayers || []).slice(0, 50)) {
+        const { count } = await supabase
+          .from("checklist_tasks")
+          .select("id", { count: "exact", head: true })
+          .eq("patient_id", player.user_id)
+          .eq("date", today)
+          .eq("completed", true);
+
+        if ((count || 0) === 0) {
+          await sendNotification(supabase, player.user_id, {
+            title: `Seu streak de ${player.current_streak} dias está em risco! 🔥`,
+            body: "Complete pelo menos 1 tarefa para manter seu progresso.",
+            url: "/checklist",
+          });
+        }
+      }
+      results.push(`streak_risk: checked ${(activePlayers || []).length}`);
+    }
+
+    // 3. Meal reminder (12-13 PM) — patients who haven't logged lunch
+    if (hour >= 12 && hour < 13) {
+      const { data: patientsWithPlans } = await supabase
+        .from("meal_plans")
+        .select("patient_id")
+        .eq("is_active", true);
+
+      const uniqueMealPatients = [...new Set((patientsWithPlans || []).map(p => p.patient_id))];
+      for (const patientId of uniqueMealPatients.slice(0, 30)) {
+        const { count } = await supabase
+          .from("meals")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", patientId)
+          .eq("meal_type", "lunch")
+          .gte("logged_at", today);
+
+        if ((count || 0) === 0) {
+          await sendNotification(supabase, patientId, {
+            title: "Hora do almoço! 🥗",
+            body: "Registre sua refeição e ganhe pontos no ranking.",
+            url: "/meals",
+          });
+        }
+      }
+      results.push(`meal_reminder: ${uniqueMealPatients.length}`);
+    }
+
+    // 4. Weekly celebration (Sunday 10 AM)
+    if (now.getDay() === 0 && hour >= 10 && hour < 11) {
+      const { data: topPlayers } = await supabase
+        .from("patient_ranking_cache")
+        .select("patient_id, total_points, rank_position")
+        .order("rank_position")
+        .limit(10);
+
+      for (const player of (topPlayers || [])) {
+        await sendNotification(supabase, player.patient_id, {
+          title: `Parabéns! Você está em ${player.rank_position}º no ranking! 🏆`,
+          body: `${player.total_points} pontos esta semana. Continue assim!`,
+          url: "/ranking",
+        });
+      }
+      results.push(`weekly_celebration: ${(topPlayers || []).length}`);
+    }
+
+    // 5. Inactivity alert (3 days without activity)
+    if (hour >= 10 && hour < 11) {
+      const threeDaysAgo = new Date(Date.now() - 3 * 86400000).toISOString();
+      const { data: inactivePatients } = await supabase
+        .from("player_stats")
+        .select("user_id")
+        .lt("last_login", threeDaysAgo);
+
+      for (const patient of (inactivePatients || []).slice(0, 20)) {
+        await sendNotification(supabase, patient.user_id, {
+          title: "Sentimos sua falta! 💚",
+          body: "Que tal voltar e conferir suas novidades? Seus objetivos te esperam.",
+          url: "/",
+        });
+      }
+      results.push(`inactivity_alert: ${(inactivePatients || []).length}`);
+    }
+
+    return new Response(JSON.stringify({ success: true, results }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("[SMART-PUSH] Error:", msg);
+    return new Response(JSON.stringify({ error: msg }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+    });
+  }
+});
+
+async function sendNotification(
+  supabase: any,
+  userId: string,
+  payload: { title: string; body: string; url?: string }
+) {
+  // Store as in-app notification
+  await supabase.from("notifications").insert({
+    user_id: userId,
+    title: payload.title,
+    message: payload.body,
+    type: "smart_push",
+    action_url: payload.url || null,
+  });
+}
