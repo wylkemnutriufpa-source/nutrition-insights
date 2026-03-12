@@ -119,9 +119,35 @@ export default function PublicBooking() {
       source: "booking",
     });
 
+    if (error) { setSubmitting(false); toast.error("Erro ao enviar. Tente novamente."); return; }
+
+    // If payment required, redirect to Stripe checkout
+    if (paymentRequired && bookingPrice > 0) {
+      try {
+        const { data, error: payError } = await supabase.functions.invoke("create-booking-payment", {
+          body: {
+            nutritionist_id: profile.nutritionist_id,
+            amount: bookingPrice,
+            customer_name: form.name.trim(),
+            customer_email: form.email.trim(),
+            slot_date: format(selectedDate, "dd/MM/yyyy"),
+            slot_time: selectedSlot,
+          },
+        });
+        if (payError) throw payError;
+        if (data?.url) {
+          window.location.href = data.url;
+          return;
+        }
+      } catch (payErr: any) {
+        console.error("Payment error:", payErr);
+        toast.error("Erro ao processar pagamento. Seu agendamento foi registrado sem pagamento.");
+      }
+    }
+
     setSubmitting(false);
-    if (error) { toast.error("Erro ao enviar. Tente novamente."); return; }
     setSubmitted(true);
+  };
   };
 
   if (loading) return (
