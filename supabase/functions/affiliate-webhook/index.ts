@@ -17,6 +17,8 @@ serve(async (req) => {
   }
 
   const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+  const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+
   if (!stripeKey) {
     return new Response(JSON.stringify({ error: "STRIPE_SECRET_KEY not set" }), { status: 500, headers: corsHeaders });
   }
@@ -30,8 +32,78 @@ serve(async (req) => {
   const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
   try {
-    const body = await req.json();
-    const { event_type, invoice_id, subscription_id, customer_email, amount, user_id, ip_address } = body;
+    let event_type: string;
+    let invoice_id: string | undefined;
+    let subscription_id: string | undefined;
+    let customer_email: string | undefined;
+    let amount: number | undefined;
+    let user_id: string | undefined;
+    let ip_address: string | undefined;
+
+    const signature = req.headers.get("stripe-signature");
+
+    // ─── STRIPE SIGNATURE VERIFICATION ───
+    // If request has stripe-signature header AND webhook secret is configured,
+    // verify authenticity via Stripe SDK (production-grade security)
+    if (signature && webhookSecret) {
+      const rawBody = await req.text();
+      let event: any;
+      try {
+        event = await stripe.webhooks.constructEventAsync(
+          rawBody,
+          signature,
+          webhookSecret,
+          undefined,
+          Stripe.createSubtleCryptoProvider()
+        );
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        log("SIGNATURE VERIFICATION FAILED", { error: msg });
+        return new Response(JSON.stringify({ error: "Invalid signature" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      log("Stripe signature verified ✅", { type: event.type });
+
+      // Extract fields from verified Stripe event
+      event_type = event.type;
+      const obj = event.data?.object || {};
+      invoice_id = obj.id || obj.invoice;
+      subscription_id = obj.subscription || obj.id;
+      customer_email = obj.customer_email || obj.receipt_email;
+      amount = obj.amount_paid != null ? obj.amount_paid / 100 : (obj.total != null ? obj.total / 100 : undefined);
+
+      // If no email in event object, lookup via Stripe customer
+      if (!customer_email && obj.customer) {
+        try {
+          const cust = await stripe.customers.retrieve(obj.customer);
+          if (cust && !cust.deleted) {
+            customer_email = (cust as any).email;
+          }
+        } catch (_) { /* ignore */ }
+      }
+    } else if (!webhookSecret) {
+      // Fallback: no webhook secret configured — accept JSON body (legacy/internal mode)
+      // ⚠️ Less secure, only for internal calls
+      log("WARNING: No STRIPE_WEBHOOK_SECRET configured — accepting unverified request");
+      const body = await req.json();
+      event_type = body.event_type;
+      invoice_id = body.invoice_id;
+      subscription_id = body.subscription_id;
+      customer_email = body.customer_email;
+      amount = body.amount;
+      user_id = body.user_id;
+      ip_address = body.ip_address;
+    } else {
+      // Has webhook secret but no signature header — reject
+      log("REJECTED: Missing stripe-signature header");
+      return new Response(JSON.stringify({ error: "Missing stripe-signature header" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     log("Processing event", { event_type, invoice_id, customer_email });
 
