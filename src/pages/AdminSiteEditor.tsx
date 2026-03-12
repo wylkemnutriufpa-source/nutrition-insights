@@ -14,9 +14,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
+import { useNavigate } from "react-router-dom";
+
 const categoryConfig: Record<string, { label: string; icon: any; description: string }> = {
   branding: { label: "Branding & Identidade", icon: Palette, description: "Logo, cores, nome da marca e redes sociais" },
   landing: { label: "Landing Page", icon: Globe, description: "Textos, estatísticas, depoimentos e preços" },
+  landing_gateway: { label: "Gateway (Principal)", icon: Globe, description: "Página de entrada principal com 3 perfis" },
+  landing_paciente: { label: "Landing Paciente", icon: Globe, description: "Landing page dedicada para pacientes" },
+  landing_afiliado: { label: "Landing Afiliado", icon: DollarSign, description: "Landing page do programa de afiliados" },
   seo: { label: "SEO", icon: Search, description: "Meta tags e otimização para buscadores" },
   promotions: { label: "Promoções", icon: Megaphone, description: "Alertas promocionais para inscrição em projetos" },
 };
