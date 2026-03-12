@@ -729,6 +729,47 @@ export type Database = {
         }
         Relationships: []
       }
+      enrollment_photos: {
+        Row: {
+          created_at: string | null
+          enrollment_id: string
+          id: string
+          patient_id: string
+          phase: number
+          photo_back_url: string | null
+          photo_front_url: string | null
+          photo_side_url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          enrollment_id: string
+          id?: string
+          patient_id: string
+          phase?: number
+          photo_back_url?: string | null
+          photo_front_url?: string | null
+          photo_side_url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          enrollment_id?: string
+          id?: string
+          patient_id?: string
+          phase?: number
+          photo_back_url?: string | null
+          photo_front_url?: string | null
+          photo_side_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrollment_photos_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "program_enrollments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedbacks: {
         Row: {
           category: string
@@ -2465,6 +2506,104 @@ export type Database = {
         }
         Relationships: []
       }
+      program_enrollments: {
+        Row: {
+          blocked_reason: string | null
+          clinical_questions: Json | null
+          created_at: string | null
+          current_phase: number
+          has_measurements: boolean | null
+          id: string
+          initial_bmi: number | null
+          initial_carbs: number | null
+          initial_fat: number | null
+          initial_get: number | null
+          initial_height: number | null
+          initial_kcal_target: number | null
+          initial_protein: number | null
+          initial_tmb: number | null
+          initial_weight: number | null
+          last_photos_at: string | null
+          last_weight_at: string | null
+          measurements: Json | null
+          next_full_review_due_at: string | null
+          next_weight_due_at: string | null
+          onboarding_completed_at: string | null
+          patient_id: string
+          professional_id: string
+          program_id: string
+          started_at: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          blocked_reason?: string | null
+          clinical_questions?: Json | null
+          created_at?: string | null
+          current_phase?: number
+          has_measurements?: boolean | null
+          id?: string
+          initial_bmi?: number | null
+          initial_carbs?: number | null
+          initial_fat?: number | null
+          initial_get?: number | null
+          initial_height?: number | null
+          initial_kcal_target?: number | null
+          initial_protein?: number | null
+          initial_tmb?: number | null
+          initial_weight?: number | null
+          last_photos_at?: string | null
+          last_weight_at?: string | null
+          measurements?: Json | null
+          next_full_review_due_at?: string | null
+          next_weight_due_at?: string | null
+          onboarding_completed_at?: string | null
+          patient_id: string
+          professional_id: string
+          program_id: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          blocked_reason?: string | null
+          clinical_questions?: Json | null
+          created_at?: string | null
+          current_phase?: number
+          has_measurements?: boolean | null
+          id?: string
+          initial_bmi?: number | null
+          initial_carbs?: number | null
+          initial_fat?: number | null
+          initial_get?: number | null
+          initial_height?: number | null
+          initial_kcal_target?: number | null
+          initial_protein?: number | null
+          initial_tmb?: number | null
+          initial_weight?: number | null
+          last_photos_at?: string | null
+          last_weight_at?: string | null
+          measurements?: Json | null
+          next_full_review_due_at?: string | null
+          next_weight_due_at?: string | null
+          onboarding_completed_at?: string | null
+          patient_id?: string
+          professional_id?: string
+          program_id?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "program_enrollments_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       program_join_requests: {
         Row: {
           created_at: string
@@ -2750,6 +2889,62 @@ export type Database = {
             columns: ["protocol_id"]
             isOneToOne: false
             referencedRelation: "protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      protocol_cycles: {
+        Row: {
+          approval_required: boolean | null
+          approved_at: string | null
+          approved_by: string | null
+          auto_adjustments: Json | null
+          created_at: string | null
+          ended_at: string | null
+          enrollment_id: string
+          id: string
+          notes: string | null
+          phase: number
+          protocol_name: string
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          approval_required?: boolean | null
+          approved_at?: string | null
+          approved_by?: string | null
+          auto_adjustments?: Json | null
+          created_at?: string | null
+          ended_at?: string | null
+          enrollment_id: string
+          id?: string
+          notes?: string | null
+          phase: number
+          protocol_name: string
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          approval_required?: boolean | null
+          approved_at?: string | null
+          approved_by?: string | null
+          auto_adjustments?: Json | null
+          created_at?: string | null
+          ended_at?: string | null
+          enrollment_id?: string
+          id?: string
+          notes?: string | null
+          phase?: number
+          protocol_name?: string
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "protocol_cycles_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "program_enrollments"
             referencedColumns: ["id"]
           },
         ]
