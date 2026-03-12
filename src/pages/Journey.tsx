@@ -113,6 +113,12 @@ export default function Journey() {
               ))}
             </div>
 
+            {/* Journey Phases */}
+            <JourneyPhases />
+
+            {/* Before/After Report */}
+            <BeforeAfterReport />
+
             {/* Progress bar */}
             <Card className="glass shadow-card">
               <CardHeader>
