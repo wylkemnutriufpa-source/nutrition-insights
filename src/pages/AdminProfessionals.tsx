@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Users, UserPlus, Search, Loader2, Ban, CheckCircle2, KeyRound,
-  Edit, Eye, Building2, Shield, ArrowLeft
+  Edit, Eye, Building2, Shield, ArrowLeft, Dumbbell, Salad
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -25,6 +25,7 @@ interface Professional {
   phone: string | null;
   avatar_url: string | null;
   created_at: string;
+  role_type: "nutritionist" | "personal";
   // From professional_profiles
   profile_id: string | null;
   plan_id: string | null;
@@ -54,7 +55,7 @@ function ProfessionalDialog({
   const isEditing = !!professional;
   const [form, setForm] = useState({
     full_name: "", email: "", password: "", phone: "",
-    plan_id: "", clinic_name: "", status: "active",
+    plan_id: "", clinic_name: "", status: "active", role_type: "nutritionist" as string,
   });
   const [saving, setSaving] = useState(false);
 
@@ -68,11 +69,12 @@ function ProfessionalDialog({
         plan_id: professional.plan_id || "",
         clinic_name: professional.clinic_name || "",
         status: professional.status || "active",
+        role_type: professional.role_type || "nutritionist",
       });
     } else {
       setForm({
         full_name: "", email: "", password: "", phone: "",
-        plan_id: "", clinic_name: "", status: "active",
+        plan_id: "", clinic_name: "", status: "active", role_type: "nutritionist",
       });
     }
   }, [professional, open]);
@@ -116,10 +118,11 @@ function ProfessionalDialog({
           return;
         }
 
-        const { data: newUserId, error } = await supabase.rpc("create_nutritionist_account", {
+        const { data: newUserId, error } = await supabase.rpc("create_professional_account" as any, {
           _email: form.email,
           _full_name: form.full_name,
           _password: form.password,
+          _role: form.role_type,
         });
         if (error) throw error;
 
@@ -159,6 +162,24 @@ function ProfessionalDialog({
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
+            {!isEditing && (
+              <div className="col-span-2">
+                <Label className="text-xs">Tipo de profissional *</Label>
+                <Select value={form.role_type} onValueChange={v => setForm(f => ({ ...f, role_type: v }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nutritionist">
+                      <span className="flex items-center gap-2"><Salad className="w-4 h-4 text-emerald-500" /> Nutricionista</span>
+                    </SelectItem>
+                    <SelectItem value="personal">
+                      <span className="flex items-center gap-2"><Dumbbell className="w-4 h-4 text-blue-500" /> Personal Trainer</span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="col-span-2">
               <Label className="text-xs">Nome completo *</Label>
               <Input value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} placeholder="Dr. Maria Silva" />
@@ -360,9 +381,11 @@ export default function AdminProfessionals() {
     if (!user) return;
     setLoading(true);
 
-    // Get all nutritionists
-    const { data: nutRoles } = await supabase.from("user_roles").select("user_id").eq("role", "nutritionist");
+    // Get all nutritionists and personal trainers
+    const { data: nutRoles } = await supabase.from("user_roles").select("user_id, role").in("role", ["nutritionist", "personal"] as any);
     const nutIds = nutRoles?.map(r => r.user_id) || [];
+    const roleMap = new Map<string, string>();
+    (nutRoles || []).forEach(r => roleMap.set(r.user_id, r.role));
 
     if (nutIds.length === 0) {
       setProfessionals([]);
@@ -409,6 +432,7 @@ export default function AdminProfessionals() {
         phone: p.phone,
         avatar_url: p.avatar_url,
         created_at: p.created_at,
+        role_type: (roleMap.get(p.user_id) === "personal" ? "personal" : "nutritionist") as "nutritionist" | "personal",
         profile_id: pp?.id || null,
         plan_id: pp?.plan_id || null,
         plan_name: pp?.plan_id ? (planMap.get(pp.plan_id) || null) : null,
@@ -545,12 +569,15 @@ export default function AdminProfessionals() {
             {filtered.map(prof => (
               <div key={prof.user_id} className="flex items-center justify-between p-4 rounded-xl bg-card border border-border hover:shadow-card transition-shadow">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <span className="text-sm font-bold text-primary">{prof.full_name[0]?.toUpperCase()}</span>
+                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    {prof.role_type === "personal" ? <Dumbbell className="w-5 h-5 text-blue-500" /> : <Salad className="w-5 h-5 text-emerald-500" />}
                   </div>
                   <div className="min-w-0">
                     <p className="font-medium text-sm truncate">{prof.full_name}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                        {prof.role_type === "personal" ? "Personal" : "Nutricionista"}
+                      </Badge>
                       {prof.clinic_name && <span className="flex items-center gap-1"><Building2 className="w-3 h-3" />{prof.clinic_name}</span>}
                       <span>{prof.patient_count} pacientes</span>
                     </div>
