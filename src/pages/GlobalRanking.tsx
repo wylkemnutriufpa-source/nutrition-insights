@@ -546,9 +546,11 @@ export default function GlobalRanking() {
     );
   }
 
+  const shareRef = useRef<HTMLDivElement>(null);
+
   return (
     <DashboardLayout>
-      <div className="space-y-5 max-w-4xl mx-auto pb-10">
+      <div className="space-y-5 max-w-4xl mx-auto pb-10" ref={shareRef}>
         {/* ── Header ── */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
@@ -560,6 +562,7 @@ export default function GlobalRanking() {
             </p>
           </div>
           <div className="flex items-center gap-3">
+            <ShareProgressButton captureRef={shareRef} context="ranking" />
             <OnlinePatientsWidget variant="badge" />
             <TooltipProvider>
               <Tooltip>
