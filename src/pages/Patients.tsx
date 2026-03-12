@@ -1007,6 +1007,12 @@ export default function Patients() {
                   </Badge>
                 </TabsTrigger>
               ))}
+              <TabsTrigger value="sem-projeto" className="gap-1.5">
+                <UserX className="w-3.5 h-3.5" /> Sem projeto
+                <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+                  {patients.filter(p => p.status === "active" && (!p.programs || p.programs.length === 0)).length}
+                </Badge>
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="ativos">
@@ -1034,6 +1040,16 @@ export default function Patients() {
                   search={search} emptyMessage={`Nenhum paciente no programa "${prog.title}"`} layout={layout} allPrestigePlans={prestigePlansList} onlineSet={onlineSet} />
               </TabsContent>
             ))}
+
+            <TabsContent value="sem-projeto">
+              <PatientGrid
+                patients={patients.filter(p => p.status === "active" && (!p.programs || p.programs.length === 0) && searchFilter(p) && prestigeFilterFn(p))}
+                navigate={navigateToPatient}
+                toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
+                setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
+                onUpdateExpiry={updateExpiry}
+                search={search} emptyMessage="Todos os pacientes ativos estão em pelo menos um projeto 🎉" layout={layout} allPrestigePlans={prestigePlansList} onlineSet={onlineSet} />
+            </TabsContent>
           </Tabs>
         )}
       </div>
