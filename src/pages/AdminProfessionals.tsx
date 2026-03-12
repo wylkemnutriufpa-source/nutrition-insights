@@ -471,6 +471,7 @@ export default function AdminProfessionals() {
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [resetTarget, setResetTarget] = useState<Professional | null>(null);
   const [viewingProfessional, setViewingProfessional] = useState<Professional | null>(null);
+  const [promoteDialogOpen, setPromoteDialogOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
