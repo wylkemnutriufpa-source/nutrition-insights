@@ -233,6 +233,9 @@ export default function Challenges() {
             )}
           </div>
         </div>
+
+        {/* Community Groups */}
+        <CommunityGroups />
       </div>
     </DashboardLayout>
   );

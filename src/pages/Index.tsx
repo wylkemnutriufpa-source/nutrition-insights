@@ -720,6 +720,11 @@ function NutritionistDashboardContent() {
         </ExpandablePanel>
       </motion.div>
 
+      {/* ── Stagnation Alerts (Predictive) ── */}
+      <motion.div variants={item}>
+        <ExpandablePanel title="Alertas de Estagnação">
+          <StagnationAlerts />
+
       {/* ── Patient Progress Simulation ── */}
       <motion.div variants={item}>
         <ExpandablePanel title="Simulação de Progresso">
