@@ -57,6 +57,139 @@ interface PricingPlan {
   sort_order: number;
 }
 
+// ─── Audit Logs Embed ───
+const AUDIT_ACTION_META: Record<string, { label: string; color: string }> = {
+  login: { label: "Login", color: "text-primary" },
+  logout: { label: "Logout", color: "text-muted-foreground" },
+  create_patient: { label: "Paciente criado", color: "text-success" },
+  toggle_patient_status: { label: "Status alterado", color: "text-warning" },
+};
+
+function AuditLogsEmbed() {
+  const [auditSearch, setAuditSearch] = useState("");
+
+  const { data: auditLogs, isLoading: auditLoading, refetch: refetchAudit } = useQuery({
+    queryKey: ["admin-audit-logs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("audit_logs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const auditUserIds = useMemo(() => [...new Set((auditLogs || []).map(l => l.user_id))], [auditLogs]);
+
+  const { data: auditProfileMap } = useQuery({
+    queryKey: ["audit-profiles", auditUserIds],
+    enabled: auditUserIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("user_id, full_name").in("user_id", auditUserIds);
+      const map: Record<string, string> = {};
+      (data || []).forEach(p => { map[p.user_id] = p.full_name || "Sem nome"; });
+      return map;
+    },
+  });
+
+  const filteredAudit = useMemo(() => {
+    if (!auditLogs) return [];
+    if (!auditSearch) return auditLogs;
+    const s = auditSearch.toLowerCase();
+    return auditLogs.filter(log => {
+      const userName = auditProfileMap?.[log.user_id] || "";
+      return log.action.toLowerCase().includes(s) || log.resource_type.toLowerCase().includes(s) || userName.toLowerCase().includes(s);
+    });
+  }, [auditLogs, auditSearch, auditProfileMap]);
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: "Total", value: auditLogs?.length || 0, color: "text-primary" },
+          { label: "Logins", value: auditLogs?.filter(l => l.action === "login").length || 0, color: "text-success" },
+          { label: "Alterações", value: auditLogs?.filter(l => l.action.includes("toggle")).length || 0, color: "text-warning" },
+          { label: "Criações", value: auditLogs?.filter(l => l.action.includes("create")).length || 0, color: "text-info" },
+        ].map(s => (
+          <Card key={s.label} className="glass-premium">
+            <CardContent className="py-3 px-4 text-center">
+              <p className={`text-2xl font-bold font-display ${s.color}`}>{s.value}</p>
+              <p className="text-xs text-muted-foreground">{s.label}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input placeholder="Buscar por ação, recurso ou usuário..." value={auditSearch} onChange={e => setAuditSearch(e.target.value)} className="pl-9" />
+        </div>
+        <Button variant="outline" size="sm" onClick={() => refetchAudit()} className="gap-1.5">
+          <RefreshCw className="w-3.5 h-3.5" /> Atualizar
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="p-0">
+          <ScrollArea className="h-[50vh]">
+            {auditLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : !filteredAudit.length ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <Activity className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                <p className="font-medium">Nenhum log encontrado</p>
+                <p className="text-xs mt-1">Logs serão registrados conforme ações são realizadas</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {filteredAudit.map((log: any) => {
+                  const meta = AUDIT_ACTION_META[log.action] || { label: log.action, color: "text-muted-foreground" };
+                  const userName = auditProfileMap?.[log.user_id] || log.user_id?.slice(0, 8) + "...";
+                  const metaEntries = log.metadata && typeof log.metadata === "object" ? Object.entries(log.metadata) : [];
+
+                  return (
+                    <div key={log.id} className="flex items-start gap-3 p-3 hover:bg-muted/50 transition-colors text-sm">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`font-semibold text-xs ${meta.color}`}>{meta.label}</span>
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">{log.resource_type}</Badge>
+                          {log.resource_id && <span className="text-[10px] text-muted-foreground font-mono">#{log.resource_id.slice(0, 8)}</span>}
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <User className="w-3 h-3 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">{userName}</span>
+                        </div>
+                        {metaEntries.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {metaEntries.slice(0, 3).map(([k, v]) => (
+                              <span key={k} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono">
+                                {k}: {String(v).slice(0, 25)}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
+                        <Clock className="w-3 h-3" />
+                        {format(new Date(log.created_at), "dd/MM HH:mm", { locale: ptBR })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </ScrollArea>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 // ─── Platform Metrics Card ───
 function MetricCard({ label, value, icon: Icon, color, prefix }: {
   label: string; value: number; icon: any; color: string; prefix?: string;
