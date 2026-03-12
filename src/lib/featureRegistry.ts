@@ -9,7 +9,7 @@ import {
   Users, Utensils, ClipboardCheck, Target, Dumbbell, Pill,
   MessageSquare, Calendar, Bell, BookOpen,
   ShoppingCart, Heart, Upload, FileUp, UserPlus,
-  BarChart3, DollarSign, Activity, Trophy,
+  BarChart3, DollarSign, Activity, Trophy, Zap,
 } from "lucide-react";
 
 export type FeatureTier = "basic" | "premium" | "coming_soon";
