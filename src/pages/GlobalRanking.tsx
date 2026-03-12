@@ -779,6 +779,7 @@ export default function GlobalRanking() {
                     </p>
                   </div>
                 ) : (
+                  <>
                   <AnimatePresence>
                     {visibleRanking.map((entry, i) => {
                       const isMe = entry.patient_id === user?.id;
@@ -857,7 +858,6 @@ export default function GlobalRanking() {
                                 {entry.total_points.toLocaleString("pt-BR")}
                               </span>
                               <span className="text-[10px] text-muted-foreground ml-1">pts</span>
-                              {/* Mini category dots */}
                               <div className="flex gap-0.5 justify-end mt-1">
                                 {CATEGORY_CONFIG.map((c) => {
                                   const val = (entry as any)[c.key] || 0;
@@ -931,7 +931,7 @@ export default function GlobalRanking() {
                       )}
                     </Button>
                   )}
-                </>
+                  </>
                 )}
               </CardContent>
             </Card>
