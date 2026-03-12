@@ -78,6 +78,7 @@ import ProfessionalGuide from "./pages/ProfessionalGuide";
 import AuditLogs from "./pages/AuditLogs";
 import Curiosidades from "./pages/Curiosidades";
 import Planner from "./pages/Planner";
+import OnboardingPipeline from "./pages/OnboardingPipeline";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
