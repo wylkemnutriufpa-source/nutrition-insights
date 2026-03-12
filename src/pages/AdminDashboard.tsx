@@ -1021,6 +1021,9 @@ export default function AdminDashboard() {
                   <PatientProgressSimulation patients={[]} loading={false} />
                 </CardContent>
               </Card>
+
+              {/* ─── Simulador de Faturamento Afiliados ─── */}
+              <AffiliateRevenueSimulator />
             </TabsContent>
 
             {/* ─── Professionals ─── */}
