@@ -37,8 +37,8 @@ export function useNutritionistStatus(patientId: string | undefined) {
     if (!nutritionistId) return;
 
     const check = async () => {
-      const { data } = await supabase
-        .from("user_presence" as any)
+      const { data } = await (supabase as any)
+        .from("user_presence")
         .select("is_online, last_seen_at")
         .eq("user_id", nutritionistId)
         .single();
@@ -48,15 +48,16 @@ export function useNutritionistStatus(patientId: string | undefined) {
         return;
       }
 
-      const lastSeen = new Date(data.last_seen_at);
+      const row = data as { is_online: boolean; last_seen_at: string };
+      const lastSeen = new Date(row.last_seen_at);
       const diffMin = (Date.now() - lastSeen.getTime()) / 60000;
 
-      if (data.is_online && diffMin < 2) {
-        setStatus({ isOnline: true, lastSeen: data.last_seen_at, label: "Seu nutricionista está online agora", color: "green" });
+      if (row.is_online && diffMin < 2) {
+        setStatus({ isOnline: true, lastSeen: row.last_seen_at, label: "Seu nutricionista está online agora", color: "green" });
       } else if (diffMin < 30) {
-        setStatus({ isOnline: false, lastSeen: data.last_seen_at, label: "Seu nutricionista respondeu recentemente", color: "yellow" });
+        setStatus({ isOnline: false, lastSeen: row.last_seen_at, label: "Seu nutricionista respondeu recentemente", color: "yellow" });
       } else {
-        setStatus({ isOnline: false, lastSeen: data.last_seen_at, label: "Offline — responderá em breve", color: "gray" });
+        setStatus({ isOnline: false, lastSeen: row.last_seen_at, label: "Offline — responderá em breve", color: "gray" });
       }
     };
 
