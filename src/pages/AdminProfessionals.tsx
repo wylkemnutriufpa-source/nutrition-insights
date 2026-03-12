@@ -394,6 +394,7 @@ function PromotePatientDialog({
       </DialogContent>
     </Dialog>
   );
+}
 
 // ─── Professional Detail Card ───
 function ProfessionalDetailPanel({ professional, onClose }: { professional: Professional; onClose: () => void }) {
