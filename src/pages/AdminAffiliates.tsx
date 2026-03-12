@@ -27,7 +27,7 @@ export default function AdminAffiliates() {
     full_name: "",
     email: "",
     affiliate_type: "regular" as string,
-    first_payment_commission_percent: "30",
+    first_payment_commission_percent: "20",
     recurring_commission_percent: "5",
   });
 
