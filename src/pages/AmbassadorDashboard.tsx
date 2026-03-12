@@ -379,6 +379,7 @@ export default function AmbassadorDashboard() {
             <TabsTrigger value="ranking">🏆 Ranking</TabsTrigger>
             <TabsTrigger value="materials">📢 Materiais</TabsTrigger>
             <TabsTrigger value="career">💎 Carreira</TabsTrigger>
+            <TabsTrigger value="simulator">📊 Simulador</TabsTrigger>
           </TabsList>
 
           <TabsContent value="referrals">
