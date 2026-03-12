@@ -134,6 +134,13 @@ export default function BiquiniBrancoDetail() {
     }
     setPatients(enriched);
 
+    // Fetch enrollments
+    const { data: enrollData } = await (supabase as any)
+      .from("program_enrollments")
+      .select("*")
+      .eq("program_id", programId);
+    setEnrollments(enrollData || []);
+
     // All available patients
     const { data: allPtRes } = await supabase.from("nutritionist_patients").select("patient_id").eq("nutritionist_id", user.id).eq("status", "active");
     if (allPtRes) {
