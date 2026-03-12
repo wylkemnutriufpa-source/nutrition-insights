@@ -569,12 +569,15 @@ export default function AdminProfessionals() {
             {filtered.map(prof => (
               <div key={prof.user_id} className="flex items-center justify-between p-4 rounded-xl bg-card border border-border hover:shadow-card transition-shadow">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <span className="text-sm font-bold text-primary">{prof.full_name[0]?.toUpperCase()}</span>
+                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    {prof.role_type === "personal" ? <Dumbbell className="w-5 h-5 text-blue-500" /> : <Salad className="w-5 h-5 text-emerald-500" />}
                   </div>
                   <div className="min-w-0">
                     <p className="font-medium text-sm truncate">{prof.full_name}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                        {prof.role_type === "personal" ? "Personal" : "Nutricionista"}
+                      </Badge>
                       {prof.clinic_name && <span className="flex items-center gap-1"><Building2 className="w-3 h-3" />{prof.clinic_name}</span>}
                       <span>{prof.patient_count} pacientes</span>
                     </div>
