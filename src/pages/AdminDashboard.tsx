@@ -944,6 +944,11 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            {/* ─── Audit Logs ─── */}
+            <TabsContent value="audit" className="mt-4">
+              <AuditLogsEmbed />
+            </TabsContent>
           </Tabs>
         )}
       </div>
