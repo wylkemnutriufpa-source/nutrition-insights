@@ -574,6 +574,95 @@ export default function BiquiniBrancoDetail() {
             )}
           </TabsContent>
 
+          {/* ── ENROLLMENT AUTOMATION TAB ── */}
+          <TabsContent value="enrollment" className="space-y-4">
+            <Card className="glass shadow-card">
+              <CardHeader>
+                <CardTitle className="font-display text-lg flex items-center gap-2">
+                  <Settings className="w-5 h-5 text-primary" />
+                  Painel de Automação — Biquíni Branco
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Acompanhe o status automatizado de cada paciente no programa. O sistema monitora prazos, bloqueia protocolos vencidos e notifica automaticamente.
+                </p>
+
+                {enrollments.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Clock className="w-10 h-10 mx-auto text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground">Nenhuma inscrição com automação ativa.</p>
+                    <p className="text-xs text-muted-foreground">Inscreva pacientes para iniciar o fluxo automatizado.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {/* Summary cards */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      {[
+                        { label: "Total", value: enrollments.length, color: "text-primary", bg: "bg-primary/10" },
+                        { label: "Ativos", value: enrollments.filter(e => e.status.includes("active")).length, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+                        { label: "Bloqueados", value: enrollments.filter(e => e.status === "protocol_locked").length, color: "text-destructive", bg: "bg-destructive/10" },
+                        { label: "Pendentes", value: enrollments.filter(e => e.status.includes("awaiting") || e.status === "pending_onboarding").length, color: "text-amber-500", bg: "bg-amber-500/10" },
+                      ].map(s => (
+                        <div key={s.label} className={`p-3 rounded-xl ${s.bg} text-center`}>
+                          <p className={`font-display text-xl font-bold ${s.color}`}>{s.value}</p>
+                          <p className="text-xs text-muted-foreground">{s.label}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Enrollment list */}
+                    {enrollments.map(enrollment => {
+                      const patientName = patients.find(p => p.patient_id === enrollment.patient_id)?.name 
+                        || allPatients.find(p => p.id === enrollment.patient_id)?.name 
+                        || "Paciente";
+
+                      return (
+                        <BiquiniEnrollmentStatus
+                          key={enrollment.id}
+                          enrollment={{
+                            ...enrollment,
+                            id: enrollment.id,
+                            status: enrollment.status,
+                            current_phase: enrollment.current_phase,
+                            blocked_reason: enrollment.blocked_reason,
+                            next_weight_due_at: enrollment.next_weight_due_at,
+                            next_full_review_due_at: enrollment.next_full_review_due_at,
+                            initial_weight: enrollment.initial_weight,
+                            initial_kcal_target: enrollment.initial_kcal_target,
+                            onboarding_completed_at: enrollment.onboarding_completed_at,
+                            started_at: enrollment.started_at,
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Manual automation trigger */}
+                <div className="pt-4 border-t border-border/50">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1"
+                    onClick={async () => {
+                      try {
+                        const { error } = await supabase.functions.invoke("biquini-automation");
+                        if (error) throw error;
+                        toast.success("Automação executada com sucesso!");
+                        fetchAll();
+                      } catch (e: any) {
+                        toast.error(e.message || "Erro ao executar automação");
+                      }
+                    }}
+                  >
+                    <Zap className="w-4 h-4" /> Executar Automação Agora
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* ── EVOLUTION TAB ── */}
           <TabsContent value="evolution" className="space-y-4">
             {patients.filter(p => p.progress.length > 0).length === 0 ? (
