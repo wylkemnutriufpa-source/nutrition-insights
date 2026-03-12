@@ -159,7 +159,7 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 }
 
 function RootRoute() {
-  const { user, loading } = useAuth();
+  const { user, loading, isPersonal } = useAuth();
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -168,6 +168,7 @@ function RootRoute() {
     );
   }
   if (!user) return <GatewayPage />;
+  if (isPersonal) return <PersonalDashboard />;
   return <Index />;
 }
 
