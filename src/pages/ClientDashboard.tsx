@@ -20,6 +20,7 @@ import NutritionistStatusBanner from "@/components/chat/NutritionistStatusBanner
 import ProgramJoinRequest from "@/components/patient/ProgramJoinRequest";
 import SubscriptionCard from "@/components/patient/SubscriptionCard";
 import { Button } from "@/components/ui/button";
+import PhaseTransitionModal from "@/components/biquini/PhaseTransitionModal";
 
 interface ProgramInfo {
   id: string;
@@ -177,6 +178,7 @@ export default function ClientDashboard() {
         </motion.div>
 
         <ProgramJoinRequest open={programJoinOpen} onOpenChange={setProgramJoinOpen} />
+        <PhaseTransitionModal />
 
         {/* Quick Stats */}
         <motion.div variants={item} className="grid grid-cols-2 md:grid-cols-5 gap-3">

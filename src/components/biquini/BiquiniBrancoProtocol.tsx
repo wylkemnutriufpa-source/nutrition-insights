@@ -1,17 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   Lock, Unlock, Shield, CheckCircle2, Clock,
   Droplets, Apple, Dumbbell, Moon, Target,
-  Flame, Heart, Sparkles, AlertTriangle
+  Flame, Heart, Sparkles, AlertTriangle, Star, Zap, Leaf
 } from "lucide-react";
 import { toast } from "sonner";
-
-// Password removed - protocol is open. Delete protection handled separately.
+import PhaseTransitionModal from "./PhaseTransitionModal";
 
 interface ProtocolPhase {
   number: number;
@@ -112,13 +110,37 @@ const PROTOCOL_PHASES: ProtocolPhase[] = [
     icon: "✨",
     color: "from-purple-500 to-pink-400",
     weeks: "Semanas 6–9",
-    available: false,
+    available: true,
     protocol: {
-      objective: "Fase em desenvolvimento — será liberada em breve.",
-      dailyTasks: [],
-      nutritionRules: [],
-      restrictions: [],
-      targets: [],
+      objective: "Intensificar ajustes para refinar resultados com mais estratégia, consistência e definição corporal.",
+      dailyTasks: [
+        { title: "Reforçar meta proteica (2.0–2.2g/kg)", icon: <Target className="w-4 h-4 text-red-500" />, category: "Proteína" },
+        { title: "Timing de carboidratos otimizado", icon: <Zap className="w-4 h-4 text-amber-500" />, category: "Nutrição" },
+        { title: "Estratégia anti-inchaço (chás + fibras)", icon: <Leaf className="w-4 h-4 text-green-500" />, category: "Detox" },
+        { title: "Hidratação reforçada 3L+", icon: <Droplets className="w-4 h-4 text-sky-500" />, category: "Hidratação" },
+        { title: "Treino de definição 5x/semana", icon: <Dumbbell className="w-4 h-4 text-purple-500" />, category: "Treino" },
+        { title: "100% de adesão ao checklist", icon: <CheckCircle2 className="w-4 h-4 text-primary" />, category: "Disciplina" },
+      ],
+      nutritionRules: [
+        "Proteína elevada: 2.0–2.2g/kg para preservar massa magra",
+        "Carboidratos concentrados pré-treino e pós-treino",
+        "Suporte anti-inchaço com chás digestivos e fibras solúveis",
+        "Hidratação reforçada para drenagem natural",
+        "Protocolos complementares conforme necessidade clínica",
+        "Aumento de disciplina comportamental via checklist",
+      ],
+      restrictions: [
+        "Zero álcool durante toda a fase",
+        "Sem refeições livres sem planejamento prévio",
+        "Reduzir ao máximo sódio em excesso",
+        "Evitar alimentos que causem retenção ou inchaço",
+      ],
+      targets: [
+        { label: "Proteína", value: "2.2g/kg/dia" },
+        { label: "Treino", value: "5x/semana" },
+        { label: "Água", value: "3L+/dia" },
+        { label: "Checklist", value: "100%" },
+      ],
     },
   },
   {
@@ -127,13 +149,37 @@ const PROTOCOL_PHASES: ProtocolPhase[] = [
     icon: "🏆",
     color: "from-emerald-500 to-green-400",
     weeks: "Semanas 10–12",
-    available: false,
+    available: true,
     protocol: {
-      objective: "Fase em desenvolvimento — será liberada em breve.",
-      dailyTasks: [],
-      nutritionRules: [],
-      restrictions: [],
-      targets: [],
+      objective: "Consolidar resultados, reduzir risco de rebound e transformar a evolução em rotina sustentável.",
+      dailyTasks: [
+        { title: "Manter proteína adequada (1.8g/kg)", icon: <Target className="w-4 h-4 text-red-500" />, category: "Proteína" },
+        { title: "Rebalancear carboidratos gradualmente", icon: <Apple className="w-4 h-4 text-green-500" />, category: "Nutrição" },
+        { title: "Preservar alimentos tolerados", icon: <Heart className="w-4 h-4 text-pink-500" />, category: "Sustentabilidade" },
+        { title: "Manter hidratação 2.5–3L", icon: <Droplets className="w-4 h-4 text-sky-500" />, category: "Hidratação" },
+        { title: "Treino de manutenção 3–4x/semana", icon: <Dumbbell className="w-4 h-4 text-purple-500" />, category: "Treino" },
+        { title: "Checklist de hábitos sustentáveis", icon: <Star className="w-4 h-4 text-amber-500" />, category: "Rotina" },
+      ],
+      nutritionRules: [
+        "Proteína adequada: 1.6–1.8g/kg para manutenção",
+        "Reintrodução gradual de carboidratos conforme resposta",
+        "Preservar alimentos tolerados e estrutura sustentável",
+        "Reduzir intensidade restritiva desnecessária",
+        "Foco em manutenção de longo prazo, não mais déficit",
+        "Reforçar sustentabilidade da rotina e preservação de hábitos",
+      ],
+      restrictions: [
+        "Manter equilíbrio — sem extremos",
+        "Refeição livre controlada 1–2x/semana",
+        "Monitorar peso semanalmente para evitar rebound",
+        "Manter registro de refeições para consciência alimentar",
+      ],
+      targets: [
+        { label: "Proteína", value: "1.8g/kg/dia" },
+        { label: "Treino", value: "3–4x/semana" },
+        { label: "Água", value: "2.5–3L/dia" },
+        { label: "Peso", value: "Estável ±1kg" },
+      ],
     },
   },
 ];
@@ -161,7 +207,6 @@ export default function BiquiniBrancoProtocol() {
             {!phase.available && <Lock className="w-3 h-3 ml-1" />}
           </Button>
         ))}
-
       </div>
 
       {/* Phase content */}
