@@ -1,15 +1,16 @@
 import { motion, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { useSiteSettings, getSetting } from "@/hooks/useSiteSettings";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Sparkles, Users, Brain, Shield, BarChart3, Utensils, CheckCircle2,
   ArrowRight, Star, Zap, Heart, ChevronRight, Bot, Pill, Camera,
   Target, MessageSquare, FileText, Rocket, ClipboardCheck, ChefHat,
   Palette, DollarSign, Play, ArrowDown, Menu, X, BookOpen, TrendingUp,
-  Award, Globe, Lock, Cpu
+  Award, Globe, Lock, Cpu, Trophy, Crown, Flame
 } from "lucide-react";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import BrainIntelligence from "@/components/common/BrainIntelligence";
@@ -143,6 +144,19 @@ export default function Landing() {
   const s = siteData?.map;
   const navScrolled = useNavScroll();
 
+  // Fetch real approved testimonials from DB
+  const [dbTestimonials, setDbTestimonials] = useState<any[]>([]);
+  const [topRanking, setTopRanking] = useState<any[]>([]);
+
+  useEffect(() => {
+    supabase.from("testimonials").select("*").eq("status", "approved").order("created_at", { ascending: false }).limit(6)
+      .then(({ data }) => { if (data?.length) setDbTestimonials(data); });
+    // Fetch top 5 from ranking cache for the landing page
+    supabase.from("patient_ranking_cache").select("display_name, total_points, avatar_url, plan_slug, plan_color, badge_icon, crown_enabled, rank_position")
+      .order("rank_position").limit(5)
+      .then(({ data }) => { if (data) setTopRanking(data); });
+  }, []);
+
   const brandName = getSetting(s, "brand_name", "FitJourney");
   const heroTitle = getSetting(s, "hero_title", "Transforme seu consultório com IA e Gamificação");
   const heroSubtitle = getSetting(s, "hero_subtitle", "Gerencie pacientes, crie planos alimentares personalizados com IA, e engaje seus clientes com gamificação — tudo em uma plataforma completa e intuitiva.");
@@ -150,7 +164,9 @@ export default function Landing() {
   const heroBadge = getSetting(s, "hero_badge_text", "Plataforma #1 para Nutricionistas Modernos");
   const stats = getSetting(s, "stats", defaultStats);
   const plans = getSetting(s, "pricing_plans", defaultPlans);
-  const testimonials = getSetting(s, "testimonials_landing", defaultTestimonials);
+  const testimonials = dbTestimonials.length > 0
+    ? dbTestimonials.map(t => ({ name: t.is_anonymous ? "Paciente Anônimo" : (t.display_name || "Paciente"), role: "Paciente FitJourney", text: t.content, rating: t.rating || 5, avatar: (t.display_name || "P")[0].toUpperCase() }))
+    : getSetting(s, "testimonials_landing", defaultTestimonials);
   const faqs = getSetting(s, "faqs", defaultFaqs);
   const metaTitle = getSetting(s, "meta_title", "FitJourney — Plataforma de Nutrição com IA e Gamificação");
   const metaDescription = getSetting(s, "meta_description", "Gerencie pacientes, crie planos alimentares com IA, engaje com gamificação. A plataforma #1 para nutricionistas modernos.");
@@ -542,7 +558,68 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ══════════ TESTIMONIALS ══════════ */}
+      {/* ══════════ RANKING PREVIEW ══════════ */}
+      {topRanking.length > 0 && (
+        <section className="py-28 px-4 bg-muted/20 border-y border-border/30">
+          <div className="max-w-4xl mx-auto">
+            <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-16">
+              <span className="inline-block px-4 py-1.5 rounded-full glass-premium text-accent text-xs font-bold mb-5 gradient-border uppercase tracking-widest">
+                <Trophy className="w-3.5 h-3.5 inline mr-1" /> Ranking ao Vivo
+              </span>
+              <h2 className="font-display text-3xl md:text-5xl font-bold mb-4">
+                Pacientes <span className="text-gradient-animated">engajados</span> de verdade
+              </h2>
+              <p className="text-muted-foreground text-lg">Veja o ranking em tempo real. Gamificação que gera resultados.</p>
+            </motion.div>
+
+            <div className="space-y-3 max-w-lg mx-auto">
+              {topRanking.map((entry, i) => {
+                const medals = ["🥇", "🥈", "🥉"];
+                return (
+                  <motion.div
+                    key={entry.rank_position}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                    className={`glass-premium rounded-xl p-4 flex items-center gap-4 gradient-border ${i < 3 ? "ring-1 ring-accent/20" : ""}`}
+                  >
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center font-display font-bold text-lg shrink-0"
+                      style={{ backgroundColor: i < 3 ? (entry.plan_color || "hsl(var(--accent))") + "15" : undefined }}
+                    >
+                      {i < 3 ? medals[i] : <span className="text-muted-foreground text-sm">#{entry.rank_position}</span>}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-display font-semibold text-sm truncate"
+                          style={entry.crown_enabled ? { color: entry.plan_color } : undefined}
+                        >
+                          {entry.display_name}
+                        </span>
+                        {entry.crown_enabled && <Crown className="w-3.5 h-3.5" style={{ color: entry.plan_color }} />}
+                        {entry.badge_icon && <span className="text-xs">{entry.badge_icon}</span>}
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="font-display font-bold text-primary">{entry.total_points.toLocaleString()}</p>
+                      <p className="text-[10px] text-muted-foreground">pontos</p>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mt-10">
+              <Link to="/auth">
+                <Button variant="outline" className="gap-2 h-12 px-8 font-semibold">
+                  <Flame className="w-4 h-4 text-accent" /> Quero participar do ranking
+                </Button>
+              </Link>
+            </motion.div>
+          </div>
+        </section>
+      )}
+
       <section id="testimonials" className="py-28 px-4 relative noise-overlay">
         <div className="max-w-6xl mx-auto relative z-10">
           <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-20">

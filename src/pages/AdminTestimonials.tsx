@@ -28,7 +28,7 @@ export default function AdminTestimonials() {
   useEffect(() => {
     if (!user) return;
     const fetch = async () => {
-      const { data } = await (supabase.from("testimonials" as any) as any).select("*").order("created_at", { ascending: false });
+      const { data } = await supabase.from("testimonials").select("*").order("created_at", { ascending: false });
       if (data) {
         const enriched = await Promise.all(
           data.map(async (t: any) => {
@@ -44,7 +44,7 @@ export default function AdminTestimonials() {
   }, [user]);
 
   const updateStatus = async (id: string, status: string) => {
-    const { error } = await (supabase.from("testimonials" as any) as any).update({ status }).eq("id", id);
+    const { error } = await supabase.from("testimonials").update({ status, reviewed_at: new Date().toISOString(), reviewed_by: user?.id } as any).eq("id", id);
     if (error) { toast.error(error.message); return; }
     setTestimonials(prev => prev.map(t => t.id === id ? { ...t, status } : t));
     toast.success(status === "approved" ? "Depoimento aprovado!" : "Depoimento rejeitado");

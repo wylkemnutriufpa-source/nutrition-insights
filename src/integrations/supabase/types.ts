@@ -3762,35 +3762,47 @@ export type Database = {
       }
       testimonials: {
         Row: {
+          avatar_url: string | null
           content: string
           created_at: string
+          display_name: string | null
           id: string
           is_anonymous: boolean
           nutritionist_id: string | null
           patient_id: string
           rating: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           status: string
           updated_at: string
         }
         Insert: {
+          avatar_url?: string | null
           content: string
           created_at?: string
+          display_name?: string | null
           id?: string
           is_anonymous?: boolean
           nutritionist_id?: string | null
           patient_id: string
           rating?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string
           updated_at?: string
         }
         Update: {
+          avatar_url?: string | null
           content?: string
           created_at?: string
+          display_name?: string | null
           id?: string
           is_anonymous?: boolean
           nutritionist_id?: string | null
           patient_id?: string
           rating?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string
           updated_at?: string
         }

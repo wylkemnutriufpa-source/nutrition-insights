@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { MessageSquare, Send, Clock, CheckCircle2, Reply, User } from "lucide-react";
+import { MessageSquare, Send, Clock, CheckCircle2, Reply, User, Star, Award } from "lucide-react";
 
 interface Feedback {
   id: string;
@@ -46,7 +46,6 @@ function NutritionistFeedbacks() {
       .order("created_at", { ascending: false });
 
     if (data) {
-      // Fetch patient names
       const patientIds = [...new Set(data.map(f => f.patient_id))];
       const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", patientIds);
       const nameMap = new Map(profiles?.map(p => [p.user_id, p.full_name]) || []);
@@ -118,8 +117,8 @@ function NutritionistFeedbacks() {
                       </span>
                     </div>
                     {fb.status === "pending" && (
-                      <Button size="sm" variant="outline" className="gap-1" onClick={() => { setSelected(fb); setReplyOpen(true); }}>
-                        <Reply className="w-3.5 h-3.5" /> Responder
+                      <Button size="sm" variant="outline" onClick={() => { setSelected(fb); setReplyOpen(true); }}>
+                        <Reply className="w-4 h-4" />
                       </Button>
                     )}
                   </div>
@@ -132,11 +131,11 @@ function NutritionistFeedbacks() {
 
       <Dialog open={replyOpen} onOpenChange={setReplyOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle className="font-display">Responder Feedback</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Responder Feedback</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div className="p-3 rounded-lg bg-muted text-sm">{selected?.message}</div>
+            <div className="p-3 rounded bg-muted/50 text-sm">{selected?.message}</div>
             <div>
-              <Label>Sua resposta</Label>
+              <Label>Sua Resposta</Label>
               <Textarea value={response} onChange={e => setResponse(e.target.value)} rows={4} placeholder="Digite sua resposta..." />
             </div>
             <Button onClick={handleReply} className="w-full gradient-primary" disabled={!response.trim()}>
@@ -151,21 +150,30 @@ function NutritionistFeedbacks() {
 
 // ──── PATIENT VIEW ────
 function PatientFeedbacks() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [message, setMessage] = useState("");
   const [category, setCategory] = useState("general");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [nutritionistId, setNutritionistId] = useState<string | null>(null);
 
+  // Testimonial state
+  const [testimonialContent, setTestimonialContent] = useState("");
+  const [testimonialRating, setTestimonialRating] = useState(5);
+  const [testimonialAnonymous, setTestimonialAnonymous] = useState(false);
+  const [myTestimonials, setMyTestimonials] = useState<any[]>([]);
+  const [submittingTestimonial, setSubmittingTestimonial] = useState(false);
+
   const fetchData = async () => {
     if (!user) return;
-    // Get nutritionist
     const { data: np } = await supabase.from("nutritionist_patients").select("nutritionist_id").eq("patient_id", user.id).eq("status", "active").limit(1);
     if (np?.[0]) setNutritionistId(np[0].nutritionist_id);
 
     const { data } = await supabase.from("feedbacks").select("*").eq("patient_id", user.id).order("created_at", { ascending: false });
     setFeedbacks(data || []);
+
+    const { data: tData } = await supabase.from("testimonials").select("*").eq("patient_id", user.id).order("created_at", { ascending: false });
+    setMyTestimonials(tData || []);
   };
 
   useEffect(() => { fetchData(); }, [user]);
@@ -180,12 +188,101 @@ function PatientFeedbacks() {
     else { toast.success("Feedback enviado!"); setMessage(""); fetchData(); }
   };
 
+  const sendTestimonial = async () => {
+    if (!user || !testimonialContent.trim()) return;
+    setSubmittingTestimonial(true);
+    const { error } = await supabase.from("testimonials").insert({
+      patient_id: user.id,
+      content: testimonialContent.trim(),
+      rating: testimonialRating,
+      is_anonymous: testimonialAnonymous,
+      display_name: testimonialAnonymous ? "Anônimo" : (profile?.full_name || "Paciente"),
+      status: "pending",
+    });
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Depoimento enviado para aprovação! ✨");
+      setTestimonialContent("");
+      setTestimonialRating(5);
+      fetchData();
+    }
+    setSubmittingTestimonial(false);
+  };
+
+  const testimonialStatusBadge = (status: string) => {
+    if (status === "approved") return <Badge className="bg-success/10 text-success border-0 text-[10px]"><CheckCircle2 className="w-3 h-3 mr-1" />Aprovado</Badge>;
+    if (status === "rejected") return <Badge variant="destructive" className="text-[10px]">Rejeitado</Badge>;
+    return <Badge variant="secondary" className="text-[10px]"><Clock className="w-3 h-3 mr-1" />Em análise</Badge>;
+  };
+
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-2xl font-bold">Meus Feedbacks</h1>
+      <h1 className="font-display text-2xl font-bold">Feedbacks & Depoimentos</h1>
 
+      {/* ── Testimonial Section ── */}
+      <Card className="glass border-accent/20 bg-gradient-to-br from-accent/5 to-transparent">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Award className="w-5 h-5 text-accent" /> Deixe seu Depoimento
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">Compartilhe sua experiência! Depoimentos aprovados aparecem no site.</p>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Label className="text-xs">Avaliação:</Label>
+            <div className="flex gap-0.5">
+              {[1, 2, 3, 4, 5].map(s => (
+                <button key={s} onClick={() => setTestimonialRating(s)} className="p-0.5">
+                  <Star className={`w-5 h-5 transition-colors ${s <= testimonialRating ? "fill-accent text-accent" : "text-muted-foreground"}`} />
+                </button>
+              ))}
+            </div>
+            <label className="flex items-center gap-1.5 ml-auto cursor-pointer">
+              <input type="checkbox" checked={testimonialAnonymous} onChange={e => setTestimonialAnonymous(e.target.checked)} className="rounded" />
+              <span className="text-xs text-muted-foreground">Anônimo</span>
+            </label>
+          </div>
+          <Textarea
+            value={testimonialContent}
+            onChange={e => setTestimonialContent(e.target.value)}
+            placeholder="Como o FitJourney e seu nutricionista ajudaram você? Conte sua experiência..."
+            rows={3}
+            maxLength={500}
+          />
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-muted-foreground">{testimonialContent.length}/500</span>
+            <Button onClick={sendTestimonial} disabled={!testimonialContent.trim() || submittingTestimonial} size="sm" className="gradient-primary gap-1.5">
+              <Award className="w-3.5 h-3.5" /> Enviar Depoimento
+            </Button>
+          </div>
+
+          {myTestimonials.length > 0 && (
+            <div className="pt-3 border-t border-border/50 space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">Seus depoimentos:</p>
+              {myTestimonials.map(t => (
+                <div key={t.id} className="flex items-start gap-2 p-2 rounded-lg bg-muted/30 text-sm">
+                  <div className="flex gap-0.5 shrink-0 mt-0.5">
+                    {Array.from({ length: t.rating || 5 }, (_, i) => (
+                      <Star key={i} className="w-3 h-3 fill-accent text-accent" />
+                    ))}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs truncate">{t.content}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {testimonialStatusBadge(t.status)}
+                      <span className="text-[10px] text-muted-foreground">{new Date(t.created_at).toLocaleDateString("pt-BR")}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── Feedback to Nutritionist ── */}
       <Card className="glass border-border">
-        <CardHeader className="pb-3"><CardTitle className="text-base">Enviar Feedback</CardTitle></CardHeader>
+        <CardHeader className="pb-3"><CardTitle className="text-base">Enviar Feedback ao Nutricionista</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
