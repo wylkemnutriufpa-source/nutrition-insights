@@ -178,6 +178,7 @@ export default function ClientDashboard() {
         </motion.div>
 
         <ProgramJoinRequest open={programJoinOpen} onOpenChange={setProgramJoinOpen} />
+        <PhaseTransitionModal />
 
         {/* Quick Stats */}
         <motion.div variants={item} className="grid grid-cols-2 md:grid-cols-5 gap-3">
