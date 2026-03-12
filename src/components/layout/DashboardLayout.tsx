@@ -37,6 +37,7 @@ const nutritionistLinks = [
   { to: "/patients", icon: Users, labelKey: "nav.patients" },
   { to: "/checkin-panel", icon: ClipboardCheck, labelKey: "nav.checkins" },
   { to: "/appointments", icon: Activity, labelKey: "nav.agenda" },
+  { to: "/planner", icon: CalendarDays, labelKey: "nav.planner" },
   { to: "/chat", icon: MessageSquare, labelKey: "nav.chat" },
   { to: "/weekly-goals", icon: Target, labelKey: "nav.goals" },
   { to: "/protocols", icon: FileText, labelKey: "nav.protocols" },
