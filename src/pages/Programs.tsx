@@ -163,6 +163,21 @@ export default function Programs() {
   };
 
   const deleteProgram = async (id: string) => {
+    // Check if it's a Biquíni Branco program (protected)
+    const prog = programs.find(p => p.id === id);
+    const isBiquini = prog?.title?.toLowerCase().includes("biqu") || prog?.tag === "biquini";
+
+    if (isBiquini) {
+      const pwd = prompt("🔒 Projeto protegido!\nDigite a senha do administrador para excluir:");
+      if (!pwd) return;
+      if (pwd !== "Wylk3mkl3yton") {
+        toast.error("Senha incorreta. Exclusão cancelada.");
+        return;
+      }
+    } else {
+      if (!confirm("Remover este programa?")) return;
+    }
+
     await supabase.from("programs").delete().eq("id", id);
     fetchPrograms();
     toast.success("Programa removido");
