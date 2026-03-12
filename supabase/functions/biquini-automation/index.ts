@@ -35,7 +35,8 @@ Deno.serve(async (req) => {
     for (const enrollment of enrollments) {
       results.checked++;
 
-      // ─── WEIGHT DEADLINE CHECK (15 days) ─── applies to all active phases
+      // ─── WEIGHT DEADLINE CHECK (15 days) ───
+      // Day 14: warning → Day 16+: block
       const activePhaseStatuses = [
         "protocol_1_active",
         "protocol_2_active",
@@ -45,79 +46,131 @@ Deno.serve(async (req) => {
 
       if (enrollment.next_weight_due_at && activePhaseStatuses.includes(enrollment.status)) {
         const weightDue = new Date(enrollment.next_weight_due_at);
-        const daysOverdue = Math.floor((now.getTime() - weightDue.getTime()) / 86400000);
+        const msUntilDue = weightDue.getTime() - now.getTime();
+        const daysUntilDue = Math.floor(msUntilDue / 86400000);
+        const daysOverdue = Math.floor(-msUntilDue / 86400000);
 
-        if (daysOverdue >= 0 && daysOverdue < 3) {
+        // 1 day BEFORE deadline: send warning
+        if (daysUntilDue >= 0 && daysUntilDue <= 1) {
           await supabase.from("notifications").insert({
             user_id: enrollment.patient_id,
-            title: "⏰ Atualização de peso pendente",
-            message: "Seu prazo para enviar o peso chegou! Envie agora para manter seu protocolo ativo.",
-            type: "program",
+            title: "⚠️ Prazo de peso amanhã!",
+            message: "Você tem até amanhã para enviar seu peso atualizado. Caso contrário, seu protocolo será bloqueado.",
+            type: "alert",
             action_url: "/client/dashboard",
           });
-
-          await supabase
-            .from("program_enrollments")
-            .update({ status: "awaiting_weight_update" })
-            .eq("id", enrollment.id);
-
           results.notified++;
-        } else if (daysOverdue >= 3) {
-          await supabase
-            .from("program_enrollments")
-            .update({ status: "awaiting_weight_update" })
-            .eq("id", enrollment.id);
         }
-      }
 
-      // ─── FULL REVIEW DEADLINE CHECK (30 days) ─── applies to all phases
-      if (enrollment.next_full_review_due_at) {
-        const reviewDue = new Date(enrollment.next_full_review_due_at);
-        const daysOverdue = Math.floor((now.getTime() - reviewDue.getTime()) / 86400000);
-
-        if (daysOverdue >= 0 && daysOverdue < 5) {
-          await supabase.from("notifications").insert({
-            user_id: enrollment.patient_id,
-            title: "📸 Reavaliação completa pendente",
-            message: "Envie seu peso atualizado e novas fotos corporais para continuar sua evolução no programa.",
-            type: "program",
-            action_url: "/client/dashboard",
-          });
-
-          if (enrollment.status !== "protocol_locked") {
-            await supabase
-              .from("program_enrollments")
-              .update({ status: "awaiting_full_reassessment" })
-              .eq("id", enrollment.id);
-          }
-
-          results.notified++;
-        } else if (daysOverdue >= 5) {
-          // Block protocol progression
+        // 1+ day AFTER deadline: block
+        if (daysOverdue >= 1) {
           await supabase
             .from("program_enrollments")
             .update({
-              status: "protocol_locked",
-              blocked_reason: "Reavaliação completa vencida. Envie peso e fotos para continuar.",
+              status: "awaiting_weight_update",
+              blocked_reason: "Prazo de envio de peso expirado. Envie agora para desbloquear.",
             })
             .eq("id", enrollment.id);
 
           await supabase.from("notifications").insert({
             user_id: enrollment.patient_id,
-            title: "🔒 Protocolo bloqueado",
-            message: "Seu protocolo foi pausado. Envie seu peso e fotos corporais para desbloquear e continuar sua evolução.",
+            title: "🔒 Protocolo bloqueado — peso não enviado",
+            message: "Seu protocolo foi bloqueado por falta de atualização de peso. Envie agora para continuar.",
             type: "alert",
             action_url: "/client/dashboard",
           });
 
-          await supabase.from("notifications").insert({
-            user_id: enrollment.professional_id,
-            title: "⚠️ Paciente com protocolo bloqueado",
-            message: `Protocolo bloqueado por falta de reavaliação. Verifique o status no programa.`,
-            type: "alert",
-          });
-
           results.blocked++;
+        }
+      }
+
+      // ─── FULL REVIEW DEADLINE CHECK (30 days) ───
+      // Day 29: warning → Day 31+: block → Day 35+: protocol_locked
+      if (enrollment.next_full_review_due_at && activePhaseStatuses.includes(enrollment.status)) {
+        const reviewDue = new Date(enrollment.next_full_review_due_at);
+        const msUntilReview = reviewDue.getTime() - now.getTime();
+        const daysUntilReview = Math.floor(msUntilReview / 86400000);
+        const daysOverdueReview = Math.floor(-msUntilReview / 86400000);
+
+        // 1 day BEFORE deadline: send warning
+        if (daysUntilReview >= 0 && daysUntilReview <= 1) {
+          await supabase.from("notifications").insert({
+            user_id: enrollment.patient_id,
+            title: "⚠️ Reavaliação completa amanhã!",
+            message: "Amanhã é o último dia para enviar peso e fotos corporais. Se não enviar, seu protocolo será bloqueado.",
+            type: "alert",
+            action_url: "/client/dashboard",
+          });
+          results.notified++;
+        }
+
+        // 1+ day AFTER deadline: awaiting_full_reassessment
+        if (daysOverdueReview >= 1 && daysOverdueReview < 5) {
+          if (enrollment.status !== "awaiting_full_reassessment" && enrollment.status !== "protocol_locked") {
+            await supabase
+              .from("program_enrollments")
+              .update({
+                status: "awaiting_full_reassessment",
+                blocked_reason: "Prazo de reavaliação completa expirado. Envie peso e fotos para desbloquear.",
+              })
+              .eq("id", enrollment.id);
+
+            await supabase.from("notifications").insert({
+              user_id: enrollment.patient_id,
+              title: "🔒 Protocolo bloqueado — reavaliação pendente",
+              message: "Envie seu peso e fotos corporais para desbloquear o protocolo.",
+              type: "alert",
+              action_url: "/client/dashboard",
+            });
+
+            results.blocked++;
+          }
+        }
+
+        // 5+ days overdue: hard lock
+        if (daysOverdueReview >= 5) {
+          if (enrollment.status !== "protocol_locked") {
+            await supabase
+              .from("program_enrollments")
+              .update({
+                status: "protocol_locked",
+                blocked_reason: "Reavaliação completa vencida há mais de 5 dias. Envie peso e fotos para continuar.",
+              })
+              .eq("id", enrollment.id);
+
+            await supabase.from("notifications").insert({
+              user_id: enrollment.patient_id,
+              title: "🔒 Protocolo totalmente bloqueado",
+              message: "Seu protocolo foi pausado por falta de reavaliação. Envie seus dados agora.",
+              type: "alert",
+              action_url: "/client/dashboard",
+            });
+
+            await supabase.from("notifications").insert({
+              user_id: enrollment.professional_id,
+              title: "⚠️ Paciente com protocolo bloqueado",
+              message: "Protocolo bloqueado por falta de reavaliação. Verifique o status no programa.",
+              type: "alert",
+            });
+
+            results.blocked++;
+          }
+        }
+      }
+
+      // Also check already-blocked statuses for full review deadline
+      if (enrollment.next_full_review_due_at && enrollment.status === "awaiting_weight_update") {
+        const reviewDue = new Date(enrollment.next_full_review_due_at);
+        const daysOverdueReview = Math.floor((now.getTime() - reviewDue.getTime()) / 86400000);
+
+        if (daysOverdueReview >= 1 && enrollment.status !== "protocol_locked") {
+          await supabase
+            .from("program_enrollments")
+            .update({
+              status: "awaiting_full_reassessment",
+              blocked_reason: "Peso e reavaliação completa pendentes. Envie ambos para desbloquear.",
+            })
+            .eq("id", enrollment.id);
         }
       }
 
