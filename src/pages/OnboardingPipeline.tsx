@@ -87,16 +87,17 @@ export default function OnboardingPipeline() {
       .eq("patient_id", user.id)
       .maybeSingle();
     if (data) {
-      setPipeline(data as any);
-      if (data.weight) setBodyForm({ weight: String(data.weight), height: String(data.height || "") });
-      if (data.cooking_preference) {
+      const d = data as any;
+      setPipeline(d);
+      if (d.weight) setBodyForm({ weight: String(d.weight), height: String(d.height || "") });
+      if (d.cooking_preference) {
         setPrefForm({
-          wake_time: data.wake_time || "06:30",
-          sleep_time: data.sleep_time || "23:00",
-          meal_count: data.meal_count || 5,
-          cooking_preference: data.cooking_preference || "homemade",
-          favorite_foods: (data.food_preferences as any)?.favorites || "",
-          disliked_foods: (data.food_preferences as any)?.disliked || "",
+          wake_time: d.wake_time || "06:30",
+          sleep_time: d.sleep_time || "23:00",
+          meal_count: d.meal_count || 5,
+          cooking_preference: d.cooking_preference || "homemade",
+          favorite_foods: d.food_preferences?.favorites || "",
+          disliked_foods: d.food_preferences?.disliked || "",
         });
       }
     }
