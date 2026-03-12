@@ -162,6 +162,24 @@ function ProfessionalDialog({
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
+            {!isEditing && (
+              <div className="col-span-2">
+                <Label className="text-xs">Tipo de profissional *</Label>
+                <Select value={form.role_type} onValueChange={v => setForm(f => ({ ...f, role_type: v }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nutritionist">
+                      <span className="flex items-center gap-2"><Salad className="w-4 h-4 text-emerald-500" /> Nutricionista</span>
+                    </SelectItem>
+                    <SelectItem value="personal">
+                      <span className="flex items-center gap-2"><Dumbbell className="w-4 h-4 text-blue-500" /> Personal Trainer</span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="col-span-2">
               <Label className="text-xs">Nome completo *</Label>
               <Input value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} placeholder="Dr. Maria Silva" />
