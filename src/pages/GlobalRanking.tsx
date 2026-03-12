@@ -413,6 +413,7 @@ export default function GlobalRanking() {
   const [ranking, setRanking] = useState<RankEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
   const [hasPremium, setHasPremium] = useState<boolean | null>(null);
   const [nutritionistId, setNutritionistId] = useState<string | null>(null);
   const [showChart, setShowChart] = useState(true);
