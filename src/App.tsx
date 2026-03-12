@@ -77,6 +77,7 @@ import UserGuide from "./pages/UserGuide";
 import ProfessionalGuide from "./pages/ProfessionalGuide";
 import AuditLogs from "./pages/AuditLogs";
 import Curiosidades from "./pages/Curiosidades";
+import Planner from "./pages/Planner";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -180,6 +181,7 @@ const App = () => (
               {/* Shared routes (both roles) */}
               <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
               <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
+              <Route path="/planner" element={<ProtectedRoute><Planner /></ProtectedRoute>} />
               <Route path="/weekly-goals" element={<ProtectedRoute><WeeklyGoals /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />

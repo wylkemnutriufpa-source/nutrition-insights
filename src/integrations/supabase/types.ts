@@ -2225,6 +2225,63 @@ export type Database = {
           },
         ]
       }
+      planner_events: {
+        Row: {
+          all_day: boolean
+          color: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string | null
+          event_date: string
+          event_type: string
+          id: string
+          is_completed: boolean
+          metadata: Json | null
+          nutritionist_id: string | null
+          patient_id: string | null
+          target_user_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          all_day?: boolean
+          color?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_date?: string | null
+          event_date: string
+          event_type?: string
+          id?: string
+          is_completed?: boolean
+          metadata?: Json | null
+          nutritionist_id?: string | null
+          patient_id?: string | null
+          target_user_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          all_day?: boolean
+          color?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_date?: string | null
+          event_date?: string
+          event_type?: string
+          id?: string
+          is_completed?: boolean
+          metadata?: Json | null
+          nutritionist_id?: string | null
+          patient_id?: string | null
+          target_user_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       platform_feature_tiers: {
         Row: {
           feature_name: string

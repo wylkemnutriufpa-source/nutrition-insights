@@ -12,7 +12,8 @@ import {
   ClipboardCheck, FileText, Rocket, CheckCircle2, Activity,
   MessageSquare, Lightbulb, ChefHat, ShoppingCart, Apple, Camera,
   Palette, Bell, BarChart3, Menu, X, Shield, Zap, Star, Bot,
-  Scale, Droplets, Heart, Calculator, TrendingUp, BookOpen, DollarSign, Pill, Crown, Compass
+  Scale, Droplets, Heart, Calculator, TrendingUp, BookOpen, DollarSign, Pill, Crown, Compass,
+  CalendarDays
 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -36,6 +37,7 @@ const nutritionistLinks = [
   { to: "/patients", icon: Users, labelKey: "nav.patients" },
   { to: "/checkin-panel", icon: ClipboardCheck, labelKey: "nav.checkins" },
   { to: "/appointments", icon: Activity, labelKey: "nav.agenda" },
+  { to: "/planner", icon: CalendarDays, labelKey: "nav.planner" },
   { to: "/chat", icon: MessageSquare, labelKey: "nav.chat" },
   { to: "/weekly-goals", icon: Target, labelKey: "nav.goals" },
   { to: "/protocols", icon: FileText, labelKey: "nav.protocols" },
@@ -65,6 +67,7 @@ const patientLinks = [
   { to: "/my-diet", icon: UtensilsCrossed, labelKey: "nav.myDiet", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
   { to: "/weekly-goals", icon: Target, labelKey: "nav.goals", color: "from-info/20 to-info/5", iconColor: "text-info" },
   { to: "/appointments", icon: Activity, labelKey: "nav.agenda", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
+  { to: "/planner", icon: CalendarDays, labelKey: "nav.planner", color: "from-info/20 to-info/5", iconColor: "text-info" },
   { to: "/chat", icon: MessageSquare, labelKey: "nav.chat", color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
   { to: "/meals", icon: Leaf, labelKey: "nav.meals", color: "from-success/20 to-success/5", iconColor: "text-success" },
   { to: "/recipes", icon: ChefHat, labelKey: "nav.recipes", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
@@ -94,6 +97,7 @@ const adminLinks = [
   { to: "/admin/testimonials", icon: Star, labelKey: "nav.testimonials" },
   { to: "/patients", icon: Users, labelKey: "nav.patients" },
   { to: "/appointments", icon: Activity, labelKey: "nav.agenda" },
+  { to: "/planner", icon: CalendarDays, labelKey: "nav.planner" },
   { to: "/automation", icon: Bot, labelKey: "nav.automation" },
   { to: "/reports", icon: BarChart3, labelKey: "nav.reports" },
   { to: "/food-database", icon: Apple, labelKey: "nav.foods" },
