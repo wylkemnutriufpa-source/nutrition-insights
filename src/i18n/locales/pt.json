@@ -55,7 +55,8 @@
     "patientFeatures": "Features Paciente",
     "auditLogs": "Audit Logs",
     "sosInbox": "🆘 SOS Inbox",
-    "sos": "🆘 SOS"
+    "sos": "🆘 SOS",
+    "planner": "Meu Planejador"
   },
   "auth": {
     "tagline": "Sua jornada fitness inteligente & gamificada",

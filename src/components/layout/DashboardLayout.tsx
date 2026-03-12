@@ -97,6 +97,7 @@ const adminLinks = [
   { to: "/admin/testimonials", icon: Star, labelKey: "nav.testimonials" },
   { to: "/patients", icon: Users, labelKey: "nav.patients" },
   { to: "/appointments", icon: Activity, labelKey: "nav.agenda" },
+  { to: "/planner", icon: CalendarDays, labelKey: "nav.planner" },
   { to: "/automation", icon: Bot, labelKey: "nav.automation" },
   { to: "/reports", icon: BarChart3, labelKey: "nav.reports" },
   { to: "/food-database", icon: Apple, labelKey: "nav.foods" },
