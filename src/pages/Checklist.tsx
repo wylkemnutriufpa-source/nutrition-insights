@@ -84,7 +84,13 @@ export default function Checklist() {
   const { t } = useTranslation();
   const [tasks, setTasks] = useState<ChecklistTask[]>([]);
   const [loading, setLoading] = useState(true);
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const getLocalDate = (d: Date = new Date()) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const [date, setDate] = useState(getLocalDate());
   const [editingTask, setEditingTask] = useState<ChecklistTask | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [form, setForm] = useState({ title: "", icon: "✅", category: "habit", description: "" });
