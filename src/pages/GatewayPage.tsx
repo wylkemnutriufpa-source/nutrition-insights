@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
   Users, Stethoscope, DollarSign, ArrowRight, Sparkles, Brain,
-  Trophy, BotMessageSquare, Crown, Zap, ShieldCheck, HeartPulse, TrendingUp,
+  Trophy, BotMessageSquare, Crown, Zap, ShieldCheck, HeartPulse, TrendingUp, Dumbbell,
 } from "lucide-react";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import { Button } from "@/components/ui/button";
