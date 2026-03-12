@@ -27,6 +27,7 @@ interface PromoConfig {
   enabled: boolean;
   date: string;
   price: string;
+  programId: string; // "" or "all" = all programs, otherwise specific program ID
 }
 
 export default function ProgramJoinRequest({ open, onOpenChange }: ProgramJoinRequestProps) {
