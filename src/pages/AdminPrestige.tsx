@@ -59,6 +59,8 @@ export default function AdminPrestige() {
   const [membersLoaded, setMembersLoaded] = useState(false);
   const [memberSearch, setMemberSearch] = useState<Record<string, string>>({});
   const [assigning, setAssigning] = useState<string | null>(null);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     Promise.all([
