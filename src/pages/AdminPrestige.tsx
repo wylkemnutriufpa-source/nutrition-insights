@@ -12,7 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { Crown, Zap, Save, Plus, Trash2, X, Sparkles, Loader2, Users, Search, UserPlus, UserMinus } from "lucide-react";
+import { Crown, Zap, Save, Plus, Trash2, X, Sparkles, Loader2, Users, Search, UserPlus, UserMinus, RotateCcw } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import PrestigeBadge from "@/components/prestige/PrestigeBadge";
 import type { PrestigePlan } from "@/hooks/usePrestige";
 
@@ -58,6 +59,8 @@ export default function AdminPrestige() {
   const [membersLoaded, setMembersLoaded] = useState(false);
   const [memberSearch, setMemberSearch] = useState<Record<string, string>>({});
   const [assigning, setAssigning] = useState<string | null>(null);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -599,12 +602,57 @@ export default function AdminPrestige() {
                 )}
               </CardContent>
             </Card>
-            <Button onClick={saveRules} disabled={saving} className="gap-2">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              Salvar Regras
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button onClick={saveRules} disabled={saving} className="gap-2">
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Salvar Regras
+              </Button>
+              <Button variant="destructive" onClick={() => setResetDialogOpen(true)} className="gap-2">
+                <RotateCcw className="w-4 h-4" />
+                Zerar Pontos do Ranking
+              </Button>
+            </div>
           </TabsContent>
         </Tabs>
+
+        {/* Reset Confirmation Dialog */}
+        <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Zerar Pontos do Ranking</DialogTitle>
+              <DialogDescription>
+                Todos os pontos serão arquivados e o ranking será reiniciado do zero.
+                Os dados históricos ficam preservados no arquivo para consulta futura.
+                Esta ação não pode ser desfeita.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setResetDialogOpen(false)}>Cancelar</Button>
+              <Button
+                variant="destructive"
+                disabled={resetting}
+                onClick={async () => {
+                  setResetting(true);
+                  try {
+                    const { data, error } = await supabase.rpc("reset_all_ranking_points");
+                    if (error) throw error;
+                    const result = data as any;
+                    toast.success(`Ranking zerado! ${result?.archived_count ?? 0} registros arquivados.`);
+                    setResetDialogOpen(false);
+                  } catch (err: any) {
+                    toast.error("Erro ao zerar ranking: " + err.message);
+                  } finally {
+                    setResetting(false);
+                  }
+                }}
+                className="gap-2"
+              >
+                {resetting ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
+                Confirmar Reset
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
