@@ -57,7 +57,17 @@
     "auditLogs": "Audit Logs",
     "sosInbox": "🆘 SOS Inbox",
     "sos": "🆘 SOS",
-    "planner": "Meu Planejador"
+    "planner": "Meu Planejador",
+    "marketing": "Marketing",
+    "growthDashboard": "Painel de Crescimento",
+    "myPublicProfile": "Perfil Público",
+    "sectionMain": "Principal",
+    "sectionClinical": "Clínico",
+    "sectionNutrition": "Nutrição",
+    "sectionAnalytics": "Análises",
+    "sectionMarketing": "📣 Marketing",
+    "sectionContent": "Conteúdo",
+    "sectionAdmin": "Administração"
   },
   "auth": {
     "tagline": "Sua jornada fitness inteligente & gamificada",

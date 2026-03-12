@@ -13,7 +13,7 @@ import {
   MessageSquare, Lightbulb, ChefHat, ShoppingCart, Apple, Camera,
   Palette, Bell, BarChart3, Menu, X, Shield, Zap, Star, Bot,
   Scale, Droplets, Heart, Calculator, TrendingUp, BookOpen, DollarSign, Pill, Crown, Compass,
-  CalendarDays
+  CalendarDays, Megaphone, Globe, UserCheck, Share2
 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -30,33 +30,117 @@ import BrainIntelligence from "@/components/common/BrainIntelligence";
 import { AlertTriangle } from "lucide-react";
 import ProtocolBlockedModal from "@/components/biquini/ProtocolBlockedModal";
 
-const nutritionistLinks = [
-  { to: "/", icon: LayoutDashboard, labelKey: "nav.dashboard" },
-  { to: "/ranking", icon: Trophy, labelKey: "nav.ranking", premium: true },
-  { to: "/programs", icon: Rocket, labelKey: "nav.programs", premium: true },
-  { to: "/patients", icon: Users, labelKey: "nav.patients" },
-  { to: "/checkin-panel", icon: ClipboardCheck, labelKey: "nav.checkins" },
-  { to: "/appointments", icon: Activity, labelKey: "nav.agenda" },
-  { to: "/planner", icon: CalendarDays, labelKey: "nav.planner" },
-  { to: "/chat", icon: MessageSquare, labelKey: "nav.chat" },
-  { to: "/weekly-goals", icon: Target, labelKey: "nav.goals" },
-  { to: "/protocols", icon: FileText, labelKey: "nav.protocols" },
-  { to: "/automation", icon: Bot, labelKey: "nav.automation" },
-  { to: "/meal-plans", icon: UtensilsCrossed, labelKey: "nav.mealPlans" },
-  { to: "/diet-templates", icon: BookOpen, labelKey: "nav.templates" },
-  { to: "/recipes", icon: ChefHat, labelKey: "nav.recipes" },
-  { to: "/food-database", icon: Apple, labelKey: "nav.foods" },
-  { to: "/reports", icon: BarChart3, labelKey: "nav.reports" },
-  { to: "/clinical-intelligence", icon: Activity, labelKey: "nav.clinicalIntel" },
-  { to: "/weekly-report", icon: FileBarChart, labelKey: "nav.weeklyReport" },
-  { to: "/financial", icon: DollarSign, labelKey: "nav.financial" },
-  { to: "/supplements", icon: Pill, labelKey: "nav.supplements" },
-  { to: "/global-tips", icon: Lightbulb, labelKey: "nav.tips" },
-  { to: "/curiosidades", icon: Sparkles, labelKey: "nav.curiosidades" },
-  { to: "/professional-guide", icon: Compass, labelKey: "nav.professionalGuide" },
-  { to: "/user-guide", icon: BookOpen, labelKey: "nav.patientGuide" },
-  { to: "/feedbacks", icon: MessageSquare, labelKey: "nav.feedbacks" },
-  { to: "/branding", icon: Palette, labelKey: "nav.branding" },
+type NavLink = { to: string; icon: any; labelKey: string; premium?: boolean; color?: string; iconColor?: string };
+type NavSection = { sectionKey: string; links: NavLink[] };
+
+const nutritionistSections: NavSection[] = [
+  {
+    sectionKey: "nav.sectionMain",
+    links: [
+      { to: "/", icon: LayoutDashboard, labelKey: "nav.dashboard" },
+      { to: "/ranking", icon: Trophy, labelKey: "nav.ranking", premium: true },
+      { to: "/programs", icon: Rocket, labelKey: "nav.programs", premium: true },
+      { to: "/patients", icon: Users, labelKey: "nav.patients" },
+      { to: "/checkin-panel", icon: ClipboardCheck, labelKey: "nav.checkins" },
+      { to: "/appointments", icon: Activity, labelKey: "nav.agenda" },
+      { to: "/planner", icon: CalendarDays, labelKey: "nav.planner" },
+      { to: "/chat", icon: MessageSquare, labelKey: "nav.chat" },
+    ],
+  },
+  {
+    sectionKey: "nav.sectionClinical",
+    links: [
+      { to: "/weekly-goals", icon: Target, labelKey: "nav.goals" },
+      { to: "/protocols", icon: FileText, labelKey: "nav.protocols" },
+      { to: "/automation", icon: Bot, labelKey: "nav.automation" },
+      { to: "/supplements", icon: Pill, labelKey: "nav.supplements" },
+    ],
+  },
+  {
+    sectionKey: "nav.sectionNutrition",
+    links: [
+      { to: "/meal-plans", icon: UtensilsCrossed, labelKey: "nav.mealPlans" },
+      { to: "/diet-templates", icon: BookOpen, labelKey: "nav.templates" },
+      { to: "/recipes", icon: ChefHat, labelKey: "nav.recipes" },
+      { to: "/food-database", icon: Apple, labelKey: "nav.foods" },
+    ],
+  },
+  {
+    sectionKey: "nav.sectionAnalytics",
+    links: [
+      { to: "/reports", icon: BarChart3, labelKey: "nav.reports" },
+      { to: "/clinical-intelligence", icon: Activity, labelKey: "nav.clinicalIntel" },
+      { to: "/weekly-report", icon: FileBarChart, labelKey: "nav.weeklyReport" },
+      { to: "/financial", icon: DollarSign, labelKey: "nav.financial" },
+    ],
+  },
+  {
+    sectionKey: "nav.sectionMarketing",
+    links: [
+      { to: "/branding", icon: Palette, labelKey: "nav.branding" },
+      { to: "/my-public-profile", icon: Globe, labelKey: "nav.myPublicProfile" },
+      { to: "/my-referrals", icon: Share2, labelKey: "nav.myReferrals" },
+    ],
+  },
+  {
+    sectionKey: "nav.sectionContent",
+    links: [
+      { to: "/global-tips", icon: Lightbulb, labelKey: "nav.tips" },
+      { to: "/curiosidades", icon: Sparkles, labelKey: "nav.curiosidades" },
+      { to: "/feedbacks", icon: MessageSquare, labelKey: "nav.feedbacks" },
+      { to: "/professional-guide", icon: Compass, labelKey: "nav.professionalGuide" },
+      { to: "/user-guide", icon: BookOpen, labelKey: "nav.patientGuide" },
+    ],
+  },
+];
+
+const adminSections: NavSection[] = [
+  {
+    sectionKey: "nav.sectionAdmin",
+    links: [
+      { to: "/admin", icon: Shield, labelKey: "nav.adminPanel" },
+      { to: "/admin/resources", icon: LayoutDashboard, labelKey: "nav.resources" },
+      { to: "/admin/features", icon: Zap, labelKey: "nav.featureFlags" },
+      { to: "/admin/pricing", icon: DollarSign, labelKey: "nav.pricing" },
+      { to: "/admin/patient-features", icon: Crown, labelKey: "nav.patientFeatures" },
+    ],
+  },
+  {
+    sectionKey: "nav.sectionMain",
+    links: [
+      { to: "/ranking", icon: Trophy, labelKey: "nav.ranking", premium: true },
+      { to: "/programs", icon: Rocket, labelKey: "nav.programs", premium: true },
+      { to: "/patients", icon: Users, labelKey: "nav.patients" },
+      { to: "/appointments", icon: Activity, labelKey: "nav.agenda" },
+      { to: "/planner", icon: CalendarDays, labelKey: "nav.planner" },
+      { to: "/chat", icon: MessageSquare, labelKey: "nav.chat" },
+      { to: "/automation", icon: Bot, labelKey: "nav.automation" },
+    ],
+  },
+  {
+    sectionKey: "nav.sectionAnalytics",
+    links: [
+      { to: "/reports", icon: BarChart3, labelKey: "nav.reports" },
+      { to: "/food-database", icon: Apple, labelKey: "nav.foods" },
+    ],
+  },
+  {
+    sectionKey: "nav.sectionMarketing",
+    links: [
+      { to: "/branding", icon: Palette, labelKey: "nav.branding" },
+      { to: "/admin/testimonials", icon: Star, labelKey: "nav.testimonials" },
+      { to: "/admin/growth", icon: TrendingUp, labelKey: "nav.growthDashboard" },
+    ],
+  },
+  {
+    sectionKey: "nav.sectionContent",
+    links: [
+      { to: "/global-tips", icon: Lightbulb, labelKey: "nav.tips" },
+      { to: "/curiosidades", icon: Sparkles, labelKey: "nav.curiosidades" },
+      { to: "/professional-guide", icon: Compass, labelKey: "nav.professionalGuide" },
+      { to: "/user-guide", icon: BookOpen, labelKey: "nav.patientGuide" },
+    ],
+  },
 ];
 
 const patientLinks = [
@@ -89,31 +173,68 @@ const patientLinks = [
   { to: "/challenges", icon: Target, labelKey: "nav.challenges", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
 ];
 
-const adminLinks = [
-  { to: "/admin", icon: Shield, labelKey: "nav.adminPanel" },
-  { to: "/ranking", icon: Trophy, labelKey: "nav.ranking", premium: true },
-  { to: "/programs", icon: Rocket, labelKey: "nav.programs", premium: true },
-  { to: "/admin/resources", icon: LayoutDashboard, labelKey: "nav.resources" },
-  { to: "/admin/features", icon: Zap, labelKey: "nav.featureFlags" },
-  { to: "/admin/testimonials", icon: Star, labelKey: "nav.testimonials" },
-  { to: "/patients", icon: Users, labelKey: "nav.patients" },
-  { to: "/appointments", icon: Activity, labelKey: "nav.agenda" },
-  { to: "/planner", icon: CalendarDays, labelKey: "nav.planner" },
-  { to: "/chat", icon: MessageSquare, labelKey: "nav.chat" },
-  { to: "/automation", icon: Bot, labelKey: "nav.automation" },
-  { to: "/reports", icon: BarChart3, labelKey: "nav.reports" },
-  { to: "/food-database", icon: Apple, labelKey: "nav.foods" },
-  { to: "/branding", icon: Palette, labelKey: "nav.branding" },
-  { to: "/global-tips", icon: Lightbulb, labelKey: "nav.tips" },
-  { to: "/curiosidades", icon: Sparkles, labelKey: "nav.curiosidades" },
-  { to: "/professional-guide", icon: Compass, labelKey: "nav.professionalGuide" },
-  { to: "/user-guide", icon: BookOpen, labelKey: "nav.patientGuide" },
-  { to: "/admin/pricing", icon: DollarSign, labelKey: "nav.pricing" },
-  { to: "/admin/patient-features", icon: Crown, labelKey: "nav.patientFeatures" },
-];
+function RenderLink({ link, active, collapsed, isNutritionist, onLinkClick, t }: {
+  link: NavLink; active: boolean; collapsed: boolean; isNutritionist: boolean; onLinkClick?: () => void; t: any;
+}) {
+  const hasColor = link.color && !isNutritionist;
+  const isPremium = link.premium;
+
+  if (hasColor && !collapsed) {
+    return (
+      <Link
+        to={link.to}
+        onClick={onLinkClick}
+        className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all group border
+          hover:translate-x-1 hover:scale-[1.02] active:scale-[0.98]
+          ${active
+            ? `bg-gradient-to-r ${link.color} border-primary/20 shadow-sm`
+            : "border-transparent hover:border-border hover:bg-muted/50"
+          }`}
+        style={{ transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)" }}
+      >
+        <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${
+          active ? "bg-card shadow-sm animate-pulse" : "bg-muted/50 group-hover:bg-card group-hover:shadow-sm"
+        }`}>
+          <link.icon className={`w-3.5 h-3.5 ${active ? link.iconColor : "text-muted-foreground"}`} />
+        </div>
+        <span className={`text-xs font-medium ${active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}>{t(link.labelKey)}</span>
+        {active && <ChevronRight className="w-3.5 h-3.5 ml-auto text-primary animate-bounce" />}
+      </Link>
+    );
+  }
+
+  return (
+    <Link
+      to={link.to}
+      onClick={onLinkClick}
+      className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all group
+        hover:translate-x-1 hover:scale-[1.02] active:scale-[0.98]
+        ${isPremium && !active
+          ? "border border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-transparent hover:from-amber-500/10"
+          : ""
+        }
+        ${active
+          ? isPremium ? "bg-gradient-to-r from-amber-500/15 to-amber-600/5 text-amber-500 border border-amber-500/30" : "bg-primary/10 text-primary"
+          : !isPremium ? "text-muted-foreground hover:text-foreground hover:bg-muted" : ""
+        }`}
+      style={{ transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)" }}
+    >
+      <link.icon className={`w-4 h-4 flex-shrink-0 ${
+        isPremium ? "text-amber-500" : active ? "text-primary animate-pulse" : "group-hover:scale-110 transition-transform"
+      }`} />
+      {!collapsed && (
+        <span className={`text-xs font-medium ${
+          isPremium ? "bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent font-bold" : ""
+        }`}>{t(link.labelKey)}</span>
+      )}
+      {active && !collapsed && <ChevronRight className={`w-3.5 h-3.5 ml-auto animate-bounce ${isPremium ? "text-amber-500" : "text-primary"}`} />}
+    </Link>
+  );
+}
 
 function SidebarContent({
-  links,
+  sections,
+  flatLinks,
   location,
   collapsed,
   isNutritionist,
@@ -126,7 +247,8 @@ function SidebarContent({
   onLinkClick,
   onSosOpen,
 }: {
-  links: typeof nutritionistLinks;
+  sections?: NavSection[];
+  flatLinks?: NavLink[];
   location: ReturnType<typeof useLocation>;
   collapsed: boolean;
   isNutritionist: boolean;
@@ -150,79 +272,48 @@ function SidebarContent({
 
       {/* Nav links */}
       <ScrollArea className="flex-1 px-3 mt-4">
-        <nav className="space-y-0.5 pb-4">
-          {links.map((link) => {
-            const active = location.pathname === link.to;
-            const hasColor = 'color' in link && !isNutritionist;
-            const linkColor = (link as any).color as string | undefined;
-            const linkIconColor = (link as any).iconColor as string | undefined;
-
-            if (hasColor && !collapsed) {
-              return (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  onClick={onLinkClick}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all group border
-                    hover:translate-x-1 hover:scale-[1.02] active:scale-[0.98]
-                    ${
-                    active
-                      ? `bg-gradient-to-r ${linkColor} border-primary/20 shadow-sm`
-                      : "border-transparent hover:border-border hover:bg-muted/50"
-                  }`}
-                  style={{ transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)" }}
-                >
-                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${
-                    active
-                      ? "bg-card shadow-sm animate-pulse"
-                      : "bg-muted/50 group-hover:bg-card group-hover:shadow-sm"
-                  }`}>
-                    <link.icon className={`w-3.5 h-3.5 ${active ? linkIconColor : "text-muted-foreground group-hover:" + (linkIconColor || "text-primary")}`} />
-                  </div>
-                  <span className={`text-xs font-medium ${active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}>{t(link.labelKey)}</span>
-                  {active && <ChevronRight className="w-3.5 h-3.5 ml-auto text-primary animate-bounce" />}
-                </Link>
-              );
-            }
-
-            const isPremium = 'premium' in link && (link as any).premium;
-
-            return (
-              <Link
-                key={link.to}
-                to={link.to}
-                onClick={onLinkClick}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all group
-                  hover:translate-x-1 hover:scale-[1.02] active:scale-[0.98]
-                  ${isPremium && !active
-                    ? "border border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-transparent hover:from-amber-500/10"
-                    : ""
-                  }
-                  ${
-                  active
-                    ? isPremium ? "bg-gradient-to-r from-amber-500/15 to-amber-600/5 text-amber-500 border border-amber-500/30" : "bg-primary/10 text-primary"
-                    : !isPremium ? "text-muted-foreground hover:text-foreground hover:bg-muted" : ""
-                }`}
-                style={{ transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)" }}
-              >
-                <link.icon className={`w-4 h-4 flex-shrink-0 ${
-                  isPremium
+        <nav className="space-y-1 pb-4">
+          {sections ? sections.map((section, idx) => (
+            <div key={section.sectionKey} className={idx > 0 ? "mt-4" : ""}>
+              {!collapsed && (
+                <div className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider ${
+                  section.sectionKey === "nav.sectionMarketing"
                     ? "text-amber-500"
-                    : active ? "text-primary animate-pulse" : "group-hover:scale-110 transition-transform"
-                }`} />
-                {!collapsed && (
-                  <span className={`text-xs font-medium ${
-                    isPremium
-                      ? "bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent font-bold"
-                      : ""
-                  }`}>{t(link.labelKey)}</span>
-                )}
-                {active && !collapsed && <ChevronRight className={`w-3.5 h-3.5 ml-auto animate-bounce ${isPremium ? "text-amber-500" : "text-primary"}`} />}
-              </Link>
-            );
-          })}
+                    : "text-muted-foreground/60"
+                }`}>
+                  {t(section.sectionKey)}
+                </div>
+              )}
+              {collapsed && idx > 0 && (
+                <div className="mx-3 my-2 border-t border-border/30" />
+              )}
+              <div className="space-y-0.5">
+                {section.links.map((link) => (
+                  <RenderLink
+                    key={link.to}
+                    link={link}
+                    active={location.pathname === link.to}
+                    collapsed={collapsed}
+                    isNutritionist={isNutritionist}
+                    onLinkClick={onLinkClick}
+                    t={t}
+                  />
+                ))}
+              </div>
+            </div>
+          )) : flatLinks?.map((link) => (
+            <RenderLink
+              key={link.to}
+              link={link}
+              active={location.pathname === link.to}
+              collapsed={collapsed}
+              isNutritionist={isNutritionist}
+              onLinkClick={onLinkClick}
+              t={t}
+            />
+          ))}
 
-          {!isNutritionist && (
+          {!isNutritionist && !sections && (
             <>
               <Link
                 to="/analyze"
@@ -241,7 +332,7 @@ function SidebarContent({
               </button>
             </>
           )}
-          {isNutritionist && (
+          {(isNutritionist || sections) && (
             <button
               onClick={() => { onSosOpen?.(); onLinkClick?.(); }}
               className="flex items-center gap-3 px-3 py-2 rounded-xl bg-destructive/10 text-destructive border border-destructive/20 mt-3 w-full hover:bg-destructive/20 transition-all"
@@ -331,7 +422,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     setMobileOpen(false);
   }, [location.pathname]);
 
-  const links = isAdmin ? adminLinks : isNutritionist ? nutritionistLinks : patientLinks;
+  const sections = isAdmin ? adminSections : isNutritionist ? nutritionistSections : undefined;
+  const flatLinks = isPatient ? patientLinks : undefined;
 
   const toggleDark = () => {
     const newDark = !dark;
@@ -352,7 +444,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const onSosHandler = isPatient ? () => setSosOpen(true) : (isNutritionist || isAdmin) ? () => setSosInboxOpen(true) : undefined;
 
   const sidebarProps = {
-    links, location, isNutritionist, dark, toggleDark, initials, profileName, signOut,
+    sections, flatLinks, location, isNutritionist: isNutritionist || isAdmin, dark, toggleDark, initials, profileName, signOut,
     onSosOpen: onSosHandler,
   };
 
