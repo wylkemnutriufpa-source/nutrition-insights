@@ -13,7 +13,7 @@ import {
   MessageSquare, Lightbulb, ChefHat, ShoppingCart, Apple, Camera,
   Palette, Bell, BarChart3, Menu, X, Shield, Zap, Star, Bot,
   Scale, Droplets, Heart, Calculator, TrendingUp, BookOpen, DollarSign, Pill, Crown, Compass,
-  CalendarDays, Megaphone, Globe, UserCheck, Share2, Award
+  CalendarDays, Megaphone, Globe, UserCheck, Share2, Award, CreditCard
 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
