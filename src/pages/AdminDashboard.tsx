@@ -20,6 +20,11 @@ import {
 import { toast } from "sonner";
 import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
 import { FEATURE_REGISTRY, getFeaturesByCategory, type FeatureTier } from "@/lib/featureRegistry";
+import { useQuery } from "@tanstack/react-query";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Clock, User, Activity, LogIn, LogOut, RefreshCw, Trash2 as Trash2Icon, UserPlus as UserPlusIcon } from "lucide-react";
 
 // ─── Types ───
 interface PlatformMetrics {
