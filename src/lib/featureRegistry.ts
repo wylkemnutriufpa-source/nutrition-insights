@@ -91,6 +91,7 @@ export const FEATURE_REGISTRY: FeatureDefinition[] = [
   { name: "health_quiz", label: "Quiz de Saúde", description: "Questionário interativo de avaliação de saúde", icon: Heart, category: "Ferramentas", defaultTier: "basic" },
   { name: "weight_calculator", label: "Calculadora de Peso", description: "Calculadora de peso ideal e composição corporal", icon: Dumbbell, category: "Ferramentas", defaultTier: "basic" },
   { name: "water_calculator", label: "Calculadora de Água", description: "Cálculo de necessidade hídrica diária", icon: Heart, category: "Ferramentas", defaultTier: "basic" },
+  { name: "onboarding_pipeline", label: "Onboarding Automático", description: "Pipeline automatizado: anamnese → dados corporais → preferências → pré-plano IA → aprovação profissional com critérios de programação", icon: Zap, category: "IA & Automação", defaultTier: "premium", addedVersion: "4.0" },
 ];
 
 /** Retorna os nomes de todas as features registradas */
