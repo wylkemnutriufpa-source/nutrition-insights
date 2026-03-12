@@ -162,14 +162,6 @@ export default function BiquiniBrancoProtocol() {
           </Button>
         ))}
 
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => { setIsLocked(true); toast.info("Protocolo bloqueado."); }}
-          className="ml-auto text-muted-foreground gap-1"
-        >
-          <Lock className="w-3 h-3" /> Bloquear
-        </Button>
       </div>
 
       {/* Phase content */}
