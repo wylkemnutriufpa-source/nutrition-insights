@@ -63,7 +63,6 @@ const patientLinks = [
   { to: "/weekly-goals", icon: Target, labelKey: "nav.goals", color: "from-info/20 to-info/5", iconColor: "text-info" },
   { to: "/appointments", icon: Activity, labelKey: "nav.agenda", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
   { to: "/chat", icon: MessageSquare, labelKey: "nav.chat", color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
-  { to: "/autobot", icon: Bot, labelKey: "nav.autobot", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
   { to: "/meals", icon: Leaf, labelKey: "nav.meals", color: "from-success/20 to-success/5", iconColor: "text-success" },
   { to: "/recipes", icon: ChefHat, labelKey: "nav.recipes", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
   { to: "/shopping-list", icon: ShoppingCart, labelKey: "nav.shopping", color: "from-info/20 to-info/5", iconColor: "text-info" },

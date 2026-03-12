@@ -165,6 +165,11 @@ export default function ClientDashboard() {
           </div>
         </motion.div>
 
+        {/* Nutritionist Status Banner */}
+        <motion.div variants={item}>
+          <NutritionistStatusBanner patientId={user?.id} />
+        </motion.div>
+
         {/* Action Buttons */}
         <motion.div variants={item} className="flex flex-wrap gap-2">
           <SubscriptionCard />
