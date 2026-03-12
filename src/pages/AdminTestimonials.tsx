@@ -28,7 +28,7 @@ export default function AdminTestimonials() {
   useEffect(() => {
     if (!user) return;
     const fetch = async () => {
-      const { data } = await (supabase.from("testimonials" as any) as any).select("*").order("created_at", { ascending: false });
+      const { data } = await supabase.from("testimonials").select("*").order("created_at", { ascending: false });
       if (data) {
         const enriched = await Promise.all(
           data.map(async (t: any) => {
