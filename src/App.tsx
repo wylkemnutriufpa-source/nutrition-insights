@@ -144,7 +144,7 @@ function RootRoute() {
       </div>
     );
   }
-  if (!user) return <Landing />;
+  if (!user) return <GatewayPage />;
   return <Index />;
 }
 
