@@ -37,7 +37,7 @@ export default function ProgramJoinRequest({ open, onOpenChange }: ProgramJoinRe
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [promo, setPromo] = useState<PromoConfig>({ enabled: false, date: "", price: "" });
+  const [promo, setPromo] = useState<PromoConfig>({ enabled: false, date: "", price: "", programId: "" });
 
   const [enrolledIds, setEnrolledIds] = useState<string[]>([]);
   const [pendingIds, setPendingIds] = useState<string[]>([]);
