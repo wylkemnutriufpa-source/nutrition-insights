@@ -65,7 +65,7 @@ export default function GatewayPage() {
   const { data } = useSiteSettings();
   const map = data?.map;
 
-  const headline = getSetting(map, "gateway_headline", "A nova geração do acompanhamento nutricional inteligente.");
+  const headline = getSetting(map, "gateway_headline", "A plataforma completa de performance: nutrição + treino + inteligência.");
   const subheadline = getSetting(map, "gateway_subheadline", "Escolha como deseja entrar no ecossistema FitJourney.");
   const stats: { label: string; value: string }[] = getSetting(map, "gateway_stats", defaultStats);
 
