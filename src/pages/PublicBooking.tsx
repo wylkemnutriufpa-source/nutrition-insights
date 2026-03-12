@@ -53,6 +53,8 @@ export default function PublicBooking() {
 
       if (!pub) { setNotFound(true); setLoading(false); return; }
       setProfile(pub);
+      setBookingPrice(Number(pub.booking_price) || 0);
+      setPaymentRequired(pub.booking_payment_required === true);
 
       const { data: pData } = await supabase
         .from("profiles")
