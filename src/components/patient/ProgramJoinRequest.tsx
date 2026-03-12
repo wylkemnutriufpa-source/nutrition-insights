@@ -27,6 +27,7 @@ interface PromoConfig {
   enabled: boolean;
   date: string;
   price: string;
+  programId: string; // "" or "all" = all programs, otherwise specific program ID
 }
 
 export default function ProgramJoinRequest({ open, onOpenChange }: ProgramJoinRequestProps) {
@@ -36,7 +37,7 @@ export default function ProgramJoinRequest({ open, onOpenChange }: ProgramJoinRe
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [promo, setPromo] = useState<PromoConfig>({ enabled: false, date: "", price: "" });
+  const [promo, setPromo] = useState<PromoConfig>({ enabled: false, date: "", price: "", programId: "" });
 
   const [enrolledIds, setEnrolledIds] = useState<string[]>([]);
   const [pendingIds, setPendingIds] = useState<string[]>([]);
@@ -51,7 +52,7 @@ export default function ProgramJoinRequest({ open, onOpenChange }: ProgramJoinRe
     const { data } = await (supabase as any)
       .from("site_settings")
       .select("setting_key, setting_value")
-      .in("setting_key", ["promo_alert_enabled", "promo_alert_date", "promo_alert_price"]);
+      .in("setting_key", ["promo_alert_enabled", "promo_alert_date", "promo_alert_price", "promo_alert_program_id"]);
     if (data) {
       const map: Record<string, string> = {};
       data.forEach((r: any) => { map[r.setting_key] = typeof r.setting_value === "string" ? r.setting_value : String(r.setting_value); });
@@ -59,6 +60,7 @@ export default function ProgramJoinRequest({ open, onOpenChange }: ProgramJoinRe
         enabled: map["promo_alert_enabled"] === "true",
         date: map["promo_alert_date"] || "",
         price: map["promo_alert_price"] || "300",
+        programId: map["promo_alert_program_id"] || "",
       });
     }
   }
@@ -153,7 +155,7 @@ export default function ProgramJoinRequest({ open, onOpenChange }: ProgramJoinRe
           <>
             {/* Promo Alert */}
             <AnimatePresence>
-              {promo.enabled && selected && (
+              {promo.enabled && selected && (promo.programId === "" || promo.programId === "all" || promo.programId === selected) && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}

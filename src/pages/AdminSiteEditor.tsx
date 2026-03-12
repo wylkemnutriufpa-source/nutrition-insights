@@ -9,6 +9,10 @@ import { useSiteSettingsRaw, useUpdateSiteSetting, SiteSetting } from "@/hooks/u
 import { toast } from "sonner";
 import { Settings, Palette, Globe, Search, Save, Type, Image, BarChart3, MessageSquare, HelpCircle, DollarSign, Share2, Megaphone } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 const categoryConfig: Record<string, { label: string; icon: any; description: string }> = {
   branding: { label: "Branding & Identidade", icon: Palette, description: "Logo, cores, nome da marca e redes sociais" },
@@ -42,6 +46,14 @@ export default function AdminSiteEditor() {
   const updateMutation = useUpdateSiteSetting();
   const [editValues, setEditValues] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<string | null>(null);
+
+  const { data: allPrograms } = useQuery({
+    queryKey: ["admin-programs-list"],
+    queryFn: async () => {
+      const { data } = await supabase.from("programs").select("id, title").eq("is_active", true).order("title");
+      return (data || []) as { id: string; title: string }[];
+    },
+  });
 
   useEffect(() => {
     if (settings) {
@@ -112,6 +124,121 @@ export default function AdminSiteEditor() {
             {categories.map((cat) => {
               const config = categoryConfig[cat];
               const items = grouped[cat] || [];
+
+              // Custom promotions tab
+              if (cat === "promotions") {
+                const isEnabled = editValues["promo_alert_enabled"] === "true";
+                const promoDate = editValues["promo_alert_date"] || "";
+                const promoPrice = editValues["promo_alert_price"] || "";
+                const promoProgramId = editValues["promo_alert_program_id"] || "";
+
+                const savePromoField = async (key: string) => {
+                  setSaving(key);
+                  try {
+                    await updateMutation.mutateAsync({ key, value: editValues[key] });
+                    toast.success("Salvo!");
+                  } catch {
+                    toast.error("Erro ao salvar");
+                  } finally {
+                    setSaving(null);
+                  }
+                };
+
+                return (
+                  <TabsContent key={cat} value={cat} className="space-y-4">
+                    <Card className="glass shadow-card">
+                      <CardHeader>
+                        <CardTitle className="font-display text-lg flex items-center gap-2">
+                          <Megaphone className="w-5 h-5 text-primary" />
+                          Alerta Promocional
+                        </CardTitle>
+                        <p className="text-sm text-muted-foreground">Configure o aviso de promoção exibido ao paciente ao solicitar entrada em um programa.</p>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        {/* Toggle */}
+                        <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border/50">
+                          <div>
+                            <Label className="font-medium">Ativar Alerta</Label>
+                            <p className="text-xs text-muted-foreground">Quando ativo, o paciente verá o aviso ao selecionar o programa</p>
+                          </div>
+                          <Switch
+                            checked={isEnabled}
+                            onCheckedChange={async (checked) => {
+                              const val = checked ? "true" : "false";
+                              setEditValues((prev) => ({ ...prev, promo_alert_enabled: val }));
+                              setSaving("promo_alert_enabled");
+                              await updateMutation.mutateAsync({ key: "promo_alert_enabled", value: val });
+                              setSaving(null);
+                              toast.success(checked ? "Alerta ativado!" : "Alerta desativado!");
+                            }}
+                          />
+                        </div>
+
+                        {/* Program selector */}
+                        <div className="p-4 rounded-xl bg-muted/30 border border-border/50 space-y-2">
+                          <Label className="font-medium">Programa Alvo</Label>
+                          <p className="text-xs text-muted-foreground">Escolha em qual programa o alerta será exibido</p>
+                          <div className="flex gap-2">
+                            <Select
+                              value={promoProgramId}
+                              onValueChange={(val) => setEditValues((prev) => ({ ...prev, promo_alert_program_id: val }))}
+                            >
+                              <SelectTrigger className="flex-1">
+                                <SelectValue placeholder="Selecione um programa..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="all">Todos os programas</SelectItem>
+                                {allPrograms?.map((p) => (
+                                  <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button size="sm" onClick={() => savePromoField("promo_alert_program_id")} disabled={saving === "promo_alert_program_id"} className="gap-1.5">
+                              <Save className="w-3.5 h-3.5" />
+                              Salvar
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Date */}
+                        <div className="p-4 rounded-xl bg-muted/30 border border-border/50 space-y-2">
+                          <Label className="font-medium">Data Limite da Promoção</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              type="date"
+                              value={promoDate}
+                              onChange={(e) => setEditValues((prev) => ({ ...prev, promo_alert_date: e.target.value }))}
+                              className="flex-1"
+                            />
+                            <Button size="sm" onClick={() => savePromoField("promo_alert_date")} disabled={saving === "promo_alert_date"} className="gap-1.5">
+                              <Save className="w-3.5 h-3.5" />
+                              Salvar
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Price */}
+                        <div className="p-4 rounded-xl bg-muted/30 border border-border/50 space-y-2">
+                          <Label className="font-medium">Preço Após Promoção (R$)</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              type="number"
+                              value={promoPrice}
+                              onChange={(e) => setEditValues((prev) => ({ ...prev, promo_alert_price: e.target.value }))}
+                              className="flex-1"
+                            />
+                            <Button size="sm" onClick={() => savePromoField("promo_alert_price")} disabled={saving === "promo_alert_price"} className="gap-1.5">
+                              <Save className="w-3.5 h-3.5" />
+                              Salvar
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                );
+              }
+
               return (
                 <TabsContent key={cat} value={cat} className="space-y-4">
                   <Card className="glass shadow-card">
