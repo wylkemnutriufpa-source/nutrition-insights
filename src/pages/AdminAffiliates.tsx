@@ -174,7 +174,6 @@ export default function AdminAffiliates() {
     qc.invalidateQueries({ queryKey: ["admin-all-commissions"] });
     toast.success(`${pendingIds.length} comissões aprovadas!`);
   };
-  const totalPaid = allCommissions.filter((c: any) => c.status === "paid").reduce((s: number, c: any) => s + Number(c.commission_amount), 0);
 
   return (
     <DashboardLayout>
