@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import confetti from "@/lib/confetti";
 import { usePatientPoints } from "@/hooks/usePatientPoints";
 import { useTranslation } from "react-i18next";
+import ShareProgressButton from "@/components/social/ShareProgressButton";
 
 interface ChecklistTask {
   id: string;
@@ -314,9 +315,11 @@ export default function Checklist() {
     return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
   });
 
+  const shareRef = useRef<HTMLDivElement>(null);
+
   return (
     <DashboardLayout>
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-6" ref={shareRef}>
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -354,6 +357,7 @@ export default function Checklist() {
             >
               <Plus className="w-4 h-4" /> {t("common.newTask")}
             </Button>
+            <ShareProgressButton captureRef={shareRef} context="checklist" />
           </div>
         </div>
 

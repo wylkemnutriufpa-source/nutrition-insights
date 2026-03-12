@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +23,7 @@ import {
 import PrestigeBadge from "@/components/prestige/PrestigeBadge";
 import PodiumBadge from "@/components/prestige/PodiumBadge";
 import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
+import ShareProgressButton from "@/components/social/ShareProgressButton";
 
 type Period = "daily" | "weekly" | "monthly" | "annual";
 
@@ -417,8 +418,8 @@ export default function GlobalRanking() {
   const [hasPremium, setHasPremium] = useState<boolean | null>(null);
   const [nutritionistId, setNutritionistId] = useState<string | null>(null);
   const [showChart, setShowChart] = useState(true);
+  const shareRef = useRef<HTMLDivElement>(null);
 
-  // ── Premium & tenant check ──
   useEffect(() => {
     if (!user) return;
     if (isAdmin) { setHasPremium(true); return; }
@@ -545,9 +546,10 @@ export default function GlobalRanking() {
     );
   }
 
+
   return (
     <DashboardLayout>
-      <div className="space-y-5 max-w-4xl mx-auto pb-10">
+      <div className="space-y-5 max-w-4xl mx-auto pb-10" ref={shareRef}>
         {/* ── Header ── */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
@@ -559,6 +561,7 @@ export default function GlobalRanking() {
             </p>
           </div>
           <div className="flex items-center gap-3">
+            <ShareProgressButton captureRef={shareRef} context="ranking" />
             <OnlinePatientsWidget variant="badge" />
             <TooltipProvider>
               <Tooltip>
