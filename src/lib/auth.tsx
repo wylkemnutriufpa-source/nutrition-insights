@@ -130,6 +130,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (event === "SIGNED_IN" && session?.user) {
           logAudit("login", "auth", session.user.id, { email: session.user.email ?? "" });
+          
+          // Check for affiliate ref code and create referral
+          const refCode = localStorage.getItem("fitjourney_ref");
+          if (refCode && session.user.email) {
+            // Create referral in background (don't block auth flow)
+            (async () => {
+              try {
+                const { data: affiliate } = await supabase.rpc("lookup_affiliate_by_code", { _code: refCode });
+                if (affiliate && affiliate.length > 0) {
+                  const aff = affiliate[0];
+                  // Anti-fraud: block self-referral
+                  if (aff.affiliate_id !== session.user.id) {
+                    // Check if referral already exists
+                    const { data: existing } = await supabase
+                      .from("affiliate_referrals")
+                      .select("id")
+                      .eq("referred_email", session.user.email!.toLowerCase())
+                      .limit(1);
+                    if (!existing || existing.length === 0) {
+                      await supabase.from("affiliate_referrals").insert({
+                        affiliate_id: aff.affiliate_id,
+                        referred_email: session.user.email!.toLowerCase(),
+                        referral_code_used: refCode,
+                        referred_user_id: session.user.id,
+                        referred_type: "patient",
+                        status: "registered",
+                      });
+                    }
+                    localStorage.removeItem("fitjourney_ref");
+                    localStorage.removeItem("fitjourney_ref_at");
+                  }
+                }
+              } catch (e) {
+                console.error("Error creating affiliate referral:", e);
+              }
+            })();
+          }
         }
         if (event === "SIGNED_OUT") {
           logAudit("logout", "auth");
