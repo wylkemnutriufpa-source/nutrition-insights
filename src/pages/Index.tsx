@@ -191,10 +191,12 @@ function PatientDashboardContent() {
         </div>
       </motion.div>
 
-      {/* AI Motivation */}
-      <motion.div variants={item}>
-        <AIMotivationCard streak={stats?.current_streak || 0} checklistProgress={checklistProgress} />
-      </motion.div>
+      {/* Emotional Feedback System */}
+      {user && (
+        <motion.div variants={item}>
+          <EmotionalFeedback userId={user.id} />
+        </motion.div>
+      )}
 
       {/* Gamification */}
       <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -202,11 +204,27 @@ function PatientDashboardContent() {
         <ExpandablePanel title="Streak"><StreakCounter current={stats?.current_streak || 0} longest={stats?.longest_streak || 0} /></ExpandablePanel>
       </motion.div>
 
+      {/* Discipline + Metabolic Scores */}
+      {user && (
+        <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <DisciplineScore userId={user.id} />
+          <MetabolicScore userId={user.id} />
+        </motion.div>
+      )}
+
       {/* Daily Score + Weekly Progress */}
       <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <DailyScoreCard tasks={checklistTasks.map(t => ({ category: t.category, completed: t.completed }))} />
         {user && <WeeklyProgressBar userId={user.id} />}
       </motion.div>
+
+      {/* Weekly Medals + Body Evolution */}
+      {user && (
+        <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <WeeklyMedals userId={user.id} />
+          <BodyEvolutionTimeline userId={user.id} />
+        </motion.div>
+      )}
 
       {/* Quick Stats */}
       <motion.div variants={item} className="grid grid-cols-2 md:grid-cols-4 gap-4">
