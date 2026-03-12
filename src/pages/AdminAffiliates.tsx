@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, Users, DollarSign, TrendingUp, Award, Edit2, Power, Eye, Undo2, CheckCircle2, Banknote } from "lucide-react";
+import { Plus, Users, DollarSign, TrendingUp, Award, Edit2, Power, Eye, Undo2, CheckCircle2, Banknote, Download, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
