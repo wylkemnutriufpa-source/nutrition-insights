@@ -67,6 +67,13 @@ serve(async (req) => {
         });
       }
 
+      // Get dynamic commission tier based on referral count
+      const { data: tierData } = await supabase.rpc("get_affiliate_commission_tier", {
+        _affiliate_id: affiliate.id,
+      });
+
+      const tier = tierData && tierData.length > 0 ? tierData[0] : null;
+
       // Check if first_payment commission already exists for this referral
       const { data: existingFirst } = await supabase
         .from("affiliate_commissions")
@@ -77,12 +84,21 @@ serve(async (req) => {
 
       const isFirstPayment = !existingFirst || existingFirst.length === 0;
       const commissionType = isFirstPayment ? "first_payment" : "recurring";
-      const commissionPercent = isFirstPayment
-        ? affiliate.first_payment_commission_percent
-        : affiliate.recurring_commission_percent;
+
+      // Use tier-based commission if available, fallback to affiliate's stored values
+      const commissionPercent = tier
+        ? (isFirstPayment ? Number(tier.first_payment_percent) : Number(tier.recurring_percent))
+        : (isFirstPayment ? affiliate.first_payment_commission_percent : affiliate.recurring_commission_percent);
 
       const grossAmount = amount || 0;
       const commissionAmount = Math.round((grossAmount * commissionPercent) / 100 * 100) / 100;
+
+      log("Tier-based commission", {
+        tier_name: tier?.tier_name,
+        tier_level: tier?.tier_level,
+        commissionPercent,
+        is_premium: tier?.is_premium,
+      });
 
       // Duplicate invoice check
       const { data: existingInvoice } = await supabase
@@ -99,7 +115,7 @@ serve(async (req) => {
         });
       }
 
-      // Create commission
+      // Create commission with status "pending" - will be approved next month
       const { error: commError } = await supabase
         .from("affiliate_commissions")
         .insert({
@@ -111,7 +127,7 @@ serve(async (req) => {
           gross_amount: grossAmount,
           commission_percent: commissionPercent,
           commission_amount: commissionAmount,
-          status: "pending",
+          status: "pending", // Always pending - paid next month after verification
         });
 
       if (commError) {
@@ -127,20 +143,24 @@ serve(async (req) => {
           .eq("id", referral.id);
       }
 
-      log("Commission created", { commissionType, commissionAmount, affiliate_id: affiliate.id });
+      log("Commission created", {
+        commissionType, commissionAmount, commissionPercent,
+        tier_name: tier?.tier_name, affiliate_id: affiliate.id
+      });
 
       return new Response(JSON.stringify({
         ok: true,
         commission: true,
         commission_type: commissionType,
         commission_amount: commissionAmount,
+        commission_percent: commissionPercent,
+        tier: tier?.tier_name,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     if (event_type === "customer.subscription.deleted" && customer_email) {
-      // Mark referral as cancelled
       const { error } = await supabase
         .from("affiliate_referrals")
         .update({ status: "cancelled" })
@@ -155,7 +175,6 @@ serve(async (req) => {
     }
 
     if (event_type === "charge.refunded" && invoice_id) {
-      // Reverse commissions for this invoice
       const { error } = await supabase
         .from("affiliate_commissions")
         .update({ status: "reversed" })
