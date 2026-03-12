@@ -131,6 +131,7 @@ const adminSections: NavSection[] = [
       { to: "/branding", icon: Palette, labelKey: "nav.branding" },
       { to: "/admin/testimonials", icon: Star, labelKey: "nav.testimonials" },
       { to: "/admin/growth", icon: TrendingUp, labelKey: "nav.growthDashboard" },
+      { to: "/admin/affiliates", icon: Award, labelKey: "nav.affiliates", premium: true },
     ],
   },
   {

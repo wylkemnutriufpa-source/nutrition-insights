@@ -268,6 +268,10 @@ const App = () => (
               <Route path="/admin/pricing" element={<AdminRoute><AdminPricing /></AdminRoute>} />
               <Route path="/admin/patient-features" element={<AdminRoute><AdminPatientFeatures /></AdminRoute>} />
               <Route path="/admin/audit-logs" element={<AdminRoute><AuditLogs /></AdminRoute>} />
+              <Route path="/admin/affiliates" element={<AdminRoute><AdminAffiliates /></AdminRoute>} />
+
+              {/* Ambassador */}
+              <Route path="/ambassador" element={<ProtectedRoute><AmbassadorDashboard /></ProtectedRoute>} />
 
               {/* Global Ranking */}
               <Route path="/ranking" element={<ProtectedRoute><GlobalRanking /></ProtectedRoute>} />
