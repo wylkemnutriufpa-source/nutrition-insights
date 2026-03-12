@@ -82,6 +82,9 @@ import Planner from "./pages/Planner";
 import OnboardingPipeline from "./pages/OnboardingPipeline";
 import AmbassadorDashboard from "./pages/AmbassadorDashboard";
 import AdminAffiliates from "./pages/AdminAffiliates";
+import GatewayPage from "./pages/GatewayPage";
+import PatientLanding from "./pages/PatientLanding";
+import AffiliateLanding from "./pages/AffiliateLanding";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
