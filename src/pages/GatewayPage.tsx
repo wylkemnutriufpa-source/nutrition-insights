@@ -93,7 +93,7 @@ export default function GatewayPage() {
         </motion.div>
 
         {/* 3 Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl w-full mb-24">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 max-w-6xl w-full mb-24">
           {cardMeta.map((card) => {
             const defaults = defaultCards[card.settingPrefix as keyof typeof defaultCards];
             const title = getSetting(map, `${card.settingPrefix}_title`, defaults.title);
