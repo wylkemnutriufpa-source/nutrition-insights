@@ -385,7 +385,7 @@ export default function Checklist() {
             <CheckCircle2 className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
             <h3 className="font-display font-semibold text-lg mb-1">{t("checklist.noTasks")}</h3>
             <p className="text-muted-foreground text-sm mb-4">{t("checklist.noTasksDescription")}</p>
-            <Button variant="outline" onClick={() => { setDate(new Date().toISOString().split("T")[0]); }} className="gap-2">
+            <Button variant="outline" onClick={() => { setDate(getLocalDate()); }} className="gap-2">
               <Calendar className="w-4 h-4" /> {t("common.goToToday")}
             </Button>
           </div>
