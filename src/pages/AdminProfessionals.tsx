@@ -301,6 +301,100 @@ function ResetPasswordDialog({
   );
 }
 
+// ─── Promote Patient Dialog ───
+function PromotePatientDialog({
+  open, onOpenChange, onPromoted
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onPromoted: () => void;
+}) {
+  const [email, setEmail] = useState("");
+  const [targetRole, setTargetRole] = useState<string>("nutritionist");
+  const [saving, setSaving] = useState(false);
+
+  const handlePromote = async () => {
+    if (!email) {
+      toast.error("Informe o email do paciente");
+      return;
+    }
+    setSaving(true);
+    try {
+      const { data, error } = await supabase.rpc("promote_patient_to_professional" as any, {
+        _patient_email: email,
+        _target_role: targetRole,
+      });
+      if (error) throw error;
+
+      const result = data as any;
+      if (!result?.success) {
+        const msgs: Record<string, string> = {
+          user_not_found: "Nenhum usuário encontrado com esse email.",
+          not_a_patient: "Esse usuário não possui o papel de paciente.",
+          already_has_role: `Esse usuário já possui o papel de ${targetRole === "nutritionist" ? "nutricionista" : "personal trainer"}.`,
+        };
+        toast.error(msgs[result?.error] || "Erro desconhecido");
+        setSaving(false);
+        return;
+      }
+
+      toast.success(`${result.full_name || email} promovido a ${targetRole === "nutritionist" ? "Nutricionista" : "Personal Trainer"}!`);
+      setEmail("");
+      onOpenChange(false);
+      onPromoted();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao promover");
+    }
+    setSaving(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="font-display flex items-center gap-2">
+            <ArrowUpCircle className="w-5 h-5 text-primary" /> Promover Paciente
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Promova um paciente já cadastrado para <strong>Nutricionista</strong> ou <strong>Personal Trainer</strong>. 
+            O papel de paciente será mantido.
+          </p>
+          <div>
+            <Label className="text-xs">Email do paciente *</Label>
+            <Input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="paciente@email.com"
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Promover para *</Label>
+            <Select value={targetRole} onValueChange={setTargetRole}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="nutritionist">
+                  <span className="flex items-center gap-2"><Salad className="w-4 h-4 text-emerald-500" /> Nutricionista</span>
+                </SelectItem>
+                <SelectItem value="personal">
+                  <span className="flex items-center gap-2"><Dumbbell className="w-4 h-4 text-blue-500" /> Personal Trainer</span>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Button onClick={handlePromote} disabled={saving} className="w-full gap-2">
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowUpCircle className="w-4 h-4" />}
+            Promover Paciente
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
 // ─── Professional Detail Card ───
 function ProfessionalDetailPanel({ professional, onClose }: { professional: Professional; onClose: () => void }) {
   return (
