@@ -209,7 +209,74 @@ Deno.serve(async (req) => {
         return true;
       }
 
-      // ─── PHASE 1 → PHASE 2 (Protocol 2 Ready) ───
+      // ─── PHASE READINESS CHECK ───
+      // When a patient in an active phase has submitted weight + photos + enough tasks,
+      // mark them as ready for the next phase
+      async function checkPhaseReadiness(
+        currentStatus: string,
+        currentPhaseNum: number,
+        nextReadyStatus: string
+      ) {
+        if (enrollment.status !== currentStatus) return false;
+
+        const referenceDate = enrollment.onboarding_completed_at || enrollment.started_at;
+
+        // Need recent weight AND photos (after phase started)
+        const { data: currentCycle } = await supabase
+          .from("protocol_cycles")
+          .select("started_at")
+          .eq("enrollment_id", enrollment.id)
+          .eq("phase", currentPhaseNum)
+          .eq("status", "active")
+          .single();
+
+        const phaseStart = currentCycle?.started_at || referenceDate;
+
+        const hasRecentWeight =
+          enrollment.last_weight_at &&
+          new Date(enrollment.last_weight_at).getTime() > new Date(phaseStart).getTime();
+        const hasRecentPhotos =
+          enrollment.last_photos_at &&
+          new Date(enrollment.last_photos_at).getTime() > new Date(phaseStart).getTime();
+
+        if (!hasRecentWeight || !hasRecentPhotos) return false;
+
+        // Check adherence (minimum 10 completed tasks since phase started)
+        const { count: taskCount } = await supabase
+          .from("checklist_tasks")
+          .select("*", { count: "exact", head: true })
+          .eq("patient_id", enrollment.patient_id)
+          .eq("completed", true)
+          .gte("date", phaseStart);
+
+        if ((taskCount || 0) < 10) return false;
+
+        // Check minimum 14 days in current phase
+        const daysInPhase = Math.floor((now.getTime() - new Date(phaseStart).getTime()) / 86400000);
+        if (daysInPhase < 14) return false;
+
+        // Mark as ready for next phase
+        await supabase
+          .from("program_enrollments")
+          .update({ status: nextReadyStatus })
+          .eq("id", enrollment.id);
+
+        return true;
+      }
+
+      // Phase 1 → ready for Phase 2
+      const readyFor2 = await checkPhaseReadiness("protocol_1_active", 1, "protocol_2_ready");
+      if (readyFor2) { results.advanced++; continue; }
+
+      // Phase 2 → ready for Phase 3
+      const readyFor3 = await checkPhaseReadiness("protocol_2_active", 2, "protocol_3_ready");
+      if (readyFor3) { results.advanced++; continue; }
+
+      // Phase 3 → ready for Phase 4
+      const readyFor4 = await checkPhaseReadiness("protocol_3_active", 3, "protocol_4_ready");
+      if (readyFor4) { results.advanced++; continue; }
+
+      // ─── PHASE 1 → PHASE 2 (Protocol 2 Ready → Active) ───
       const advancedTo2 = await checkAndAdvancePhase(
         enrollment,
         "protocol_2_ready",
