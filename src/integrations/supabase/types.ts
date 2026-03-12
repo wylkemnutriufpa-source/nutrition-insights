@@ -4251,6 +4251,18 @@ export type Database = {
       find_patient_by_email: { Args: { _email: string }; Returns: string }
       fix_all_null_tokens: { Args: never; Returns: undefined }
       fix_user_null_tokens: { Args: { _user_id: string }; Returns: undefined }
+      get_affiliate_commission_tier: {
+        Args: { _affiliate_id: string }
+        Returns: {
+          first_payment_percent: number
+          is_premium: boolean
+          next_tier_at: number
+          recurring_percent: number
+          tier_level: number
+          tier_name: string
+          total_converted: number
+        }[]
+      }
       get_ranking_by_period: {
         Args: { _limit?: number; _nutritionist_id?: string; _period: string }
         Returns: {
