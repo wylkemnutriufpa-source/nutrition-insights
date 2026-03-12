@@ -174,6 +174,7 @@ const patientLinks = [
   { to: "/feedbacks", icon: MessageSquare, labelKey: "nav.feedbacks", color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
   { to: "/achievements", icon: Trophy, labelKey: "nav.achievements", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
   { to: "/challenges", icon: Target, labelKey: "nav.challenges", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
+  { to: "/ambassador", icon: Award, labelKey: "nav.ambassador", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
 ];
 
 function RenderLink({ link, active, collapsed, isNutritionist, onLinkClick, t }: {
