@@ -1979,6 +1979,51 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_points_archive: {
+        Row: {
+          action_key: string
+          archived_at: string
+          archived_by: string | null
+          earned_at: string
+          id: string
+          metadata: Json | null
+          original_id: string | null
+          patient_id: string
+          points: number
+          professional_id: string | null
+          source_id: string | null
+          source_type: string | null
+        }
+        Insert: {
+          action_key: string
+          archived_at?: string
+          archived_by?: string | null
+          earned_at: string
+          id?: string
+          metadata?: Json | null
+          original_id?: string | null
+          patient_id: string
+          points: number
+          professional_id?: string | null
+          source_id?: string | null
+          source_type?: string | null
+        }
+        Update: {
+          action_key?: string
+          archived_at?: string
+          archived_by?: string | null
+          earned_at?: string
+          id?: string
+          metadata?: Json | null
+          original_id?: string | null
+          patient_id?: string
+          points?: number
+          professional_id?: string | null
+          source_id?: string | null
+          source_type?: string | null
+        }
+        Relationships: []
+      }
       patient_prestige: {
         Row: {
           assigned_at: string
@@ -4440,6 +4485,7 @@ export type Database = {
         Args: { _period_type?: string }
         Returns: undefined
       }
+      reset_all_ranking_points: { Args: never; Returns: Json }
       reset_professional_password: {
         Args: { _new_password: string; _user_id: string }
         Returns: undefined
