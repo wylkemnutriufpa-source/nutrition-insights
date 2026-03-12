@@ -80,6 +80,7 @@ const nutritionistSections: NavSection[] = [
       { to: "/branding", icon: Palette, labelKey: "nav.branding" },
       { to: "/my-public-profile", icon: Globe, labelKey: "nav.myPublicProfile" },
       { to: "/my-referrals", icon: Share2, labelKey: "nav.myReferrals" },
+      { to: "/ambassador", icon: Award, labelKey: "nav.ambassador", premium: true },
     ],
   },
   {
