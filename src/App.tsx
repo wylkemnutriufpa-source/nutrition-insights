@@ -88,6 +88,10 @@ import GatewayPage from "./pages/GatewayPage";
 import PatientLanding from "./pages/PatientLanding";
 import AffiliateLanding from "./pages/AffiliateLanding";
 import AdminLandingPages from "./pages/AdminLandingPages";
+import PersonalDashboard from "./pages/PersonalDashboard";
+import PersonalStudents from "./pages/PersonalStudents";
+import PersonalWorkouts from "./pages/PersonalWorkouts";
+import PatientWorkouts from "./pages/PatientWorkouts";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
