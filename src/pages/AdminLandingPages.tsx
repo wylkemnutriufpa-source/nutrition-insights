@@ -8,11 +8,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { useSiteSettingsRaw, useUpdateSiteSetting, SiteSetting } from "@/hooks/useSiteSettings";
 import { toast } from "sonner";
-import { Save, ExternalLink, Layout, Users, DollarSign, Eye } from "lucide-react";
+import { Save, ExternalLink, Layout, Users, DollarSign, Eye, Dumbbell } from "lucide-react";
 
 const tabs = [
   { key: "landing_gateway", label: "Gateway (Principal)", icon: Layout, previewPath: "/" },
   { key: "landing_paciente", label: "Landing Paciente", icon: Users, previewPath: "/landing-paciente" },
+  { key: "landing_personal", label: "Landing Personal", icon: Dumbbell, previewPath: "/landing-personal" },
   { key: "landing_afiliado", label: "Landing Afiliado", icon: DollarSign, previewPath: "/landing-afiliado" },
 ];
 
