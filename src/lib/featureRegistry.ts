@@ -60,6 +60,7 @@ export const FEATURE_REGISTRY: FeatureDefinition[] = [
   // Comunicação
   { name: "chat", label: "Chat", description: "Comunicação direta com pacientes via chat", icon: MessageSquare, category: "Comunicação", defaultTier: "basic" },
   { name: "appointments", label: "Agenda", description: "Agendamento de consultas e compromissos", icon: Calendar, category: "Comunicação", defaultTier: "basic" },
+  { name: "planner", label: "Meu Planejador", description: "Calendário integrado de compromissos, lembretes, pagamentos e metas compartilhado entre profissional e paciente", icon: Calendar, category: "Comunicação", defaultTier: "basic", addedVersion: "4.0" },
   { name: "notifications_push", label: "Push Notifications", description: "Envio de notificações push para pacientes", icon: Bell, category: "Comunicação", defaultTier: "premium" },
   { name: "feedbacks", label: "Feedbacks", description: "Sistema de feedback bidirecional", icon: MessageSquare, category: "Comunicação", defaultTier: "basic" },
   { name: "global_tips", label: "Dicas Globais", description: "Publicação de dicas para todos os pacientes", icon: BookOpen, category: "Comunicação", defaultTier: "basic" },

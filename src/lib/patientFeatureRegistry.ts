@@ -47,6 +47,7 @@ export const PATIENT_FEATURE_REGISTRY: PatientFeatureDefinition[] = [
   { key: "checkin", label: "Check-in Semanal", description: "Enviar check-in com peso, fotos e feedback", icon: ClipboardCheck, category: "Comunicação" },
   { key: "feedback", label: "Feedbacks", description: "Enviar feedbacks ao nutricionista", icon: MessageSquare, category: "Comunicação" },
   { key: "notifications", label: "Notificações", description: "Receber notificações e alertas", icon: Bell, category: "Comunicação" },
+  { key: "planner", label: "Meu Planejador", description: "Calendário pessoal com lembretes do nutricionista", icon: ClipboardCheck, category: "Comunicação" },
 
   // Saúde & Ferramentas
   { key: "anamnesis", label: "Anamnese", description: "Preencher formulário de anamnese", icon: ClipboardCheck, category: "Saúde & Ferramentas" },
