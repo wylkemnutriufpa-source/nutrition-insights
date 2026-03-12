@@ -98,6 +98,7 @@ const adminLinks = [
   { to: "/food-database", icon: Apple, labelKey: "nav.foods" },
   { to: "/branding", icon: Palette, labelKey: "nav.branding" },
   { to: "/global-tips", icon: Lightbulb, labelKey: "nav.tips" },
+  { to: "/curiosidades", icon: Sparkles, labelKey: "nav.curiosidades" },
   { to: "/professional-guide", icon: Compass, labelKey: "nav.professionalGuide" },
   { to: "/user-guide", icon: BookOpen, labelKey: "nav.patientGuide" },
   { to: "/admin/pricing", icon: DollarSign, labelKey: "nav.pricing" },
