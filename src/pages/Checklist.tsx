@@ -116,7 +116,7 @@ export default function Checklist() {
 
   // Auto-seed default tasks if empty today
   useEffect(() => {
-    const isToday = date === new Date().toISOString().split("T")[0];
+    const isToday = date === getLocalDate();
     if (!loading && tasks.length === 0 && isToday && user && !seeding) {
       seedDefaultTasks();
     }
