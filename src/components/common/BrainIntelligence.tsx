@@ -273,7 +273,7 @@ export default function BrainIntelligence({ collapsed = false }: { collapsed?: b
               transition={{ type: "spring", damping: 28, stiffness: 320 }}
             >
               {/* Glass background */}
-              <div className="absolute inset-0 rounded-2xl" style={{
+              <div className="absolute inset-0 md:rounded-r-2xl" style={{
                 background: "linear-gradient(135deg, hsl(220 25% 12% / 0.97), hsl(220 30% 8% / 0.99))",
                 backdropFilter: "blur(24px)",
               }} />
