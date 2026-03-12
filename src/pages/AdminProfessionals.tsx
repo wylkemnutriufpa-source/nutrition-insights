@@ -725,6 +725,12 @@ export default function AdminProfessionals() {
         onOpenChange={setResetDialogOpen}
         professional={resetTarget}
       />
+
+      <PromotePatientDialog
+        open={promoteDialogOpen}
+        onOpenChange={setPromoteDialogOpen}
+        onPromoted={fetchData}
+      />
     </DashboardLayout>
   );
 }
