@@ -1007,6 +1007,19 @@ export default function AdminDashboard() {
                   </CardContent>
                 </Card>
               </div>
+
+              {/* ─── Simulação de Progresso ─── */}
+              <Card className="glass shadow-card">
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-primary" />
+                    Simulação de Progresso
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <PatientProgressSimulation patients={[]} loading={false} />
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* ─── Professionals ─── */}
