@@ -355,6 +355,17 @@ export default function PublicBooking() {
                       onChange={e => setForm(p => ({ ...p, message: e.target.value }))}
                       rows={2} maxLength={2000}
                     />
+
+                    {paymentRequired && bookingPrice > 0 && (
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-accent/10 border border-accent/20">
+                        <CreditCard className="w-4 h-4 text-accent shrink-0" />
+                        <div className="text-xs">
+                          <span className="font-medium">Pagamento antecipado: </span>
+                          <span className="text-primary font-bold">R$ {bookingPrice.toFixed(2).replace(".", ",")}</span>
+                        </div>
+                      </div>
+                    )}
+
                     <Button
                       type="submit"
                       className="w-full gradient-primary shadow-glow gap-2"
@@ -362,10 +373,14 @@ export default function PublicBooking() {
                     >
                       {submitting ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : paymentRequired && bookingPrice > 0 ? (
+                        <CreditCard className="w-4 h-4" />
                       ) : (
                         <Send className="w-4 h-4" />
                       )}
-                      Solicitar Agendamento
+                      {paymentRequired && bookingPrice > 0
+                        ? `Pagar e Agendar — R$ ${bookingPrice.toFixed(2).replace(".", ",")}`
+                        : "Solicitar Agendamento"}
                     </Button>
                   </form>
 
