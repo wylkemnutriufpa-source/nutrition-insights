@@ -1025,6 +1025,9 @@ export default function AdminDashboard() {
 
               {/* ─── Simulador de Faturamento Pacientes ─── */}
               <PatientRevenueSimulator />
+
+              {/* ─── Simulador de Faturamento Afiliados ─── */}
+              <AffiliateRevenueSimulator />
             </TabsContent>
 
             {/* ─── Professionals ─── */}
