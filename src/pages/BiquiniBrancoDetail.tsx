@@ -359,6 +359,7 @@ export default function BiquiniBrancoDetail() {
             <TabsTrigger value="patients" className="gap-1"><Users className="w-4 h-4" /> Pacientes</TabsTrigger>
             <TabsTrigger value="evolution" className="gap-1"><BarChart3 className="w-4 h-4" /> Evolução</TabsTrigger>
             <TabsTrigger value="ai" className="gap-1"><Brain className="w-4 h-4" /> Insights IA</TabsTrigger>
+            <TabsTrigger value="protocol" className="gap-1"><Shield className="w-4 h-4" /> Protocolo Exclusivo</TabsTrigger>
           </TabsList>
 
           {/* ── PHASES TAB ── */}
