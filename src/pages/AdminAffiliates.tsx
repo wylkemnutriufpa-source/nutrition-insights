@@ -94,7 +94,7 @@ export default function AdminAffiliates() {
       toast.success("Embaixador criado!");
       qc.invalidateQueries({ queryKey: ["admin-affiliates"] });
       setCreateOpen(false);
-      setForm({ full_name: "", email: "", affiliate_type: "regular", first_payment_commission_percent: "30", recurring_commission_percent: "5" });
+      setForm({ full_name: "", email: "", affiliate_type: "regular", first_payment_commission_percent: "20", recurring_commission_percent: "5" });
     },
     onError: (e: any) => toast.error(e.message),
   });
