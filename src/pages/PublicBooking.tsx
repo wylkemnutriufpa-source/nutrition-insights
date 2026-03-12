@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   Calendar as CalIcon, Clock, User, Loader2, Send,
-  CheckCircle2, ChevronLeft, ChevronRight, Video, MapPin
+  CheckCircle2, ChevronLeft, ChevronRight, Video, MapPin, CreditCard, Lock
 } from "lucide-react";
 import { format, addDays, isSameDay, startOfWeek, addWeeks, isAfter, isBefore, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
