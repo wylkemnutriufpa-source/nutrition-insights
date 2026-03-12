@@ -446,7 +446,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [sosOpen, setSosOpen] = useState(false);
   const [sosInboxOpen, setSosInboxOpen] = useState(false);
 
-  const isPatient = !isNutritionist && !isAdmin;
+  const isPatient = !isNutritionist && !isPersonal && !isAdmin;
 
   // Track presence for all logged-in users
   usePresenceTracker();
