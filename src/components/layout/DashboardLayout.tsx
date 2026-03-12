@@ -277,9 +277,15 @@ function SidebarContent({
             <div key={section.sectionKey} className={idx > 0 ? "mt-4" : ""}>
               {!collapsed && (
                 <div className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider ${
-                  section.sectionKey === "nav.sectionMarketing"
-                    ? "text-amber-500"
-                    : "text-muted-foreground/60"
+                  ({
+                    "nav.sectionMain": "text-emerald-400",
+                    "nav.sectionClinical": "text-sky-400",
+                    "nav.sectionNutrition": "text-violet-400",
+                    "nav.sectionAnalytics": "text-cyan-400",
+                    "nav.sectionMarketing": "text-amber-500",
+                    "nav.sectionContent": "text-rose-400",
+                    "nav.sectionAdmin": "text-red-400",
+                  } as Record<string, string>)[section.sectionKey] || "text-muted-foreground/60"
                 }`}>
                   {t(section.sectionKey)}
                 </div>
