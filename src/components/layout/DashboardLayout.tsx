@@ -30,33 +30,117 @@ import BrainIntelligence from "@/components/common/BrainIntelligence";
 import { AlertTriangle } from "lucide-react";
 import ProtocolBlockedModal from "@/components/biquini/ProtocolBlockedModal";
 
-const nutritionistLinks = [
-  { to: "/", icon: LayoutDashboard, labelKey: "nav.dashboard" },
-  { to: "/ranking", icon: Trophy, labelKey: "nav.ranking", premium: true },
-  { to: "/programs", icon: Rocket, labelKey: "nav.programs", premium: true },
-  { to: "/patients", icon: Users, labelKey: "nav.patients" },
-  { to: "/checkin-panel", icon: ClipboardCheck, labelKey: "nav.checkins" },
-  { to: "/appointments", icon: Activity, labelKey: "nav.agenda" },
-  { to: "/planner", icon: CalendarDays, labelKey: "nav.planner" },
-  { to: "/chat", icon: MessageSquare, labelKey: "nav.chat" },
-  { to: "/weekly-goals", icon: Target, labelKey: "nav.goals" },
-  { to: "/protocols", icon: FileText, labelKey: "nav.protocols" },
-  { to: "/automation", icon: Bot, labelKey: "nav.automation" },
-  { to: "/meal-plans", icon: UtensilsCrossed, labelKey: "nav.mealPlans" },
-  { to: "/diet-templates", icon: BookOpen, labelKey: "nav.templates" },
-  { to: "/recipes", icon: ChefHat, labelKey: "nav.recipes" },
-  { to: "/food-database", icon: Apple, labelKey: "nav.foods" },
-  { to: "/reports", icon: BarChart3, labelKey: "nav.reports" },
-  { to: "/clinical-intelligence", icon: Activity, labelKey: "nav.clinicalIntel" },
-  { to: "/weekly-report", icon: FileBarChart, labelKey: "nav.weeklyReport" },
-  { to: "/financial", icon: DollarSign, labelKey: "nav.financial" },
-  { to: "/supplements", icon: Pill, labelKey: "nav.supplements" },
-  { to: "/global-tips", icon: Lightbulb, labelKey: "nav.tips" },
-  { to: "/curiosidades", icon: Sparkles, labelKey: "nav.curiosidades" },
-  { to: "/professional-guide", icon: Compass, labelKey: "nav.professionalGuide" },
-  { to: "/user-guide", icon: BookOpen, labelKey: "nav.patientGuide" },
-  { to: "/feedbacks", icon: MessageSquare, labelKey: "nav.feedbacks" },
-  { to: "/branding", icon: Palette, labelKey: "nav.branding" },
+type NavLink = { to: string; icon: any; labelKey: string; premium?: boolean; color?: string; iconColor?: string };
+type NavSection = { sectionKey: string; links: NavLink[] };
+
+const nutritionistSections: NavSection[] = [
+  {
+    sectionKey: "nav.sectionMain",
+    links: [
+      { to: "/", icon: LayoutDashboard, labelKey: "nav.dashboard" },
+      { to: "/ranking", icon: Trophy, labelKey: "nav.ranking", premium: true },
+      { to: "/programs", icon: Rocket, labelKey: "nav.programs", premium: true },
+      { to: "/patients", icon: Users, labelKey: "nav.patients" },
+      { to: "/checkin-panel", icon: ClipboardCheck, labelKey: "nav.checkins" },
+      { to: "/appointments", icon: Activity, labelKey: "nav.agenda" },
+      { to: "/planner", icon: CalendarDays, labelKey: "nav.planner" },
+      { to: "/chat", icon: MessageSquare, labelKey: "nav.chat" },
+    ],
+  },
+  {
+    sectionKey: "nav.sectionClinical",
+    links: [
+      { to: "/weekly-goals", icon: Target, labelKey: "nav.goals" },
+      { to: "/protocols", icon: FileText, labelKey: "nav.protocols" },
+      { to: "/automation", icon: Bot, labelKey: "nav.automation" },
+      { to: "/supplements", icon: Pill, labelKey: "nav.supplements" },
+    ],
+  },
+  {
+    sectionKey: "nav.sectionNutrition",
+    links: [
+      { to: "/meal-plans", icon: UtensilsCrossed, labelKey: "nav.mealPlans" },
+      { to: "/diet-templates", icon: BookOpen, labelKey: "nav.templates" },
+      { to: "/recipes", icon: ChefHat, labelKey: "nav.recipes" },
+      { to: "/food-database", icon: Apple, labelKey: "nav.foods" },
+    ],
+  },
+  {
+    sectionKey: "nav.sectionAnalytics",
+    links: [
+      { to: "/reports", icon: BarChart3, labelKey: "nav.reports" },
+      { to: "/clinical-intelligence", icon: Activity, labelKey: "nav.clinicalIntel" },
+      { to: "/weekly-report", icon: FileBarChart, labelKey: "nav.weeklyReport" },
+      { to: "/financial", icon: DollarSign, labelKey: "nav.financial" },
+    ],
+  },
+  {
+    sectionKey: "nav.sectionMarketing",
+    links: [
+      { to: "/branding", icon: Palette, labelKey: "nav.branding" },
+      { to: "/my-public-profile", icon: Globe, labelKey: "nav.myPublicProfile" },
+      { to: "/my-referrals", icon: Share2, labelKey: "nav.myReferrals" },
+    ],
+  },
+  {
+    sectionKey: "nav.sectionContent",
+    links: [
+      { to: "/global-tips", icon: Lightbulb, labelKey: "nav.tips" },
+      { to: "/curiosidades", icon: Sparkles, labelKey: "nav.curiosidades" },
+      { to: "/feedbacks", icon: MessageSquare, labelKey: "nav.feedbacks" },
+      { to: "/professional-guide", icon: Compass, labelKey: "nav.professionalGuide" },
+      { to: "/user-guide", icon: BookOpen, labelKey: "nav.patientGuide" },
+    ],
+  },
+];
+
+const adminSections: NavSection[] = [
+  {
+    sectionKey: "nav.sectionAdmin",
+    links: [
+      { to: "/admin", icon: Shield, labelKey: "nav.adminPanel" },
+      { to: "/admin/resources", icon: LayoutDashboard, labelKey: "nav.resources" },
+      { to: "/admin/features", icon: Zap, labelKey: "nav.featureFlags" },
+      { to: "/admin/pricing", icon: DollarSign, labelKey: "nav.pricing" },
+      { to: "/admin/patient-features", icon: Crown, labelKey: "nav.patientFeatures" },
+    ],
+  },
+  {
+    sectionKey: "nav.sectionMain",
+    links: [
+      { to: "/ranking", icon: Trophy, labelKey: "nav.ranking", premium: true },
+      { to: "/programs", icon: Rocket, labelKey: "nav.programs", premium: true },
+      { to: "/patients", icon: Users, labelKey: "nav.patients" },
+      { to: "/appointments", icon: Activity, labelKey: "nav.agenda" },
+      { to: "/planner", icon: CalendarDays, labelKey: "nav.planner" },
+      { to: "/chat", icon: MessageSquare, labelKey: "nav.chat" },
+      { to: "/automation", icon: Bot, labelKey: "nav.automation" },
+    ],
+  },
+  {
+    sectionKey: "nav.sectionAnalytics",
+    links: [
+      { to: "/reports", icon: BarChart3, labelKey: "nav.reports" },
+      { to: "/food-database", icon: Apple, labelKey: "nav.foods" },
+    ],
+  },
+  {
+    sectionKey: "nav.sectionMarketing",
+    links: [
+      { to: "/branding", icon: Palette, labelKey: "nav.branding" },
+      { to: "/admin/testimonials", icon: Star, labelKey: "nav.testimonials" },
+      { to: "/admin/growth", icon: TrendingUp, labelKey: "nav.growthDashboard" },
+    ],
+  },
+  {
+    sectionKey: "nav.sectionContent",
+    links: [
+      { to: "/global-tips", icon: Lightbulb, labelKey: "nav.tips" },
+      { to: "/curiosidades", icon: Sparkles, labelKey: "nav.curiosidades" },
+      { to: "/professional-guide", icon: Compass, labelKey: "nav.professionalGuide" },
+      { to: "/user-guide", icon: BookOpen, labelKey: "nav.patientGuide" },
+    ],
+  },
 ];
 
 const patientLinks = [
@@ -87,29 +171,6 @@ const patientLinks = [
   { to: "/feedbacks", icon: MessageSquare, labelKey: "nav.feedbacks", color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
   { to: "/achievements", icon: Trophy, labelKey: "nav.achievements", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
   { to: "/challenges", icon: Target, labelKey: "nav.challenges", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
-];
-
-const adminLinks = [
-  { to: "/admin", icon: Shield, labelKey: "nav.adminPanel" },
-  { to: "/ranking", icon: Trophy, labelKey: "nav.ranking", premium: true },
-  { to: "/programs", icon: Rocket, labelKey: "nav.programs", premium: true },
-  { to: "/admin/resources", icon: LayoutDashboard, labelKey: "nav.resources" },
-  { to: "/admin/features", icon: Zap, labelKey: "nav.featureFlags" },
-  { to: "/admin/testimonials", icon: Star, labelKey: "nav.testimonials" },
-  { to: "/patients", icon: Users, labelKey: "nav.patients" },
-  { to: "/appointments", icon: Activity, labelKey: "nav.agenda" },
-  { to: "/planner", icon: CalendarDays, labelKey: "nav.planner" },
-  { to: "/chat", icon: MessageSquare, labelKey: "nav.chat" },
-  { to: "/automation", icon: Bot, labelKey: "nav.automation" },
-  { to: "/reports", icon: BarChart3, labelKey: "nav.reports" },
-  { to: "/food-database", icon: Apple, labelKey: "nav.foods" },
-  { to: "/branding", icon: Palette, labelKey: "nav.branding" },
-  { to: "/global-tips", icon: Lightbulb, labelKey: "nav.tips" },
-  { to: "/curiosidades", icon: Sparkles, labelKey: "nav.curiosidades" },
-  { to: "/professional-guide", icon: Compass, labelKey: "nav.professionalGuide" },
-  { to: "/user-guide", icon: BookOpen, labelKey: "nav.patientGuide" },
-  { to: "/admin/pricing", icon: DollarSign, labelKey: "nav.pricing" },
-  { to: "/admin/patient-features", icon: Crown, labelKey: "nav.patientFeatures" },
 ];
 
 function SidebarContent({
