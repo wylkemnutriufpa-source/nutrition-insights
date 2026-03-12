@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import confetti from "@/lib/confetti";
 import { usePatientPoints } from "@/hooks/usePatientPoints";
 import { useTranslation } from "react-i18next";
+import ShareProgressButton from "@/components/social/ShareProgressButton";
 
 interface ChecklistTask {
   id: string;
