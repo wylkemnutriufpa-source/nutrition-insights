@@ -746,8 +746,8 @@ function NutritionistDashboardContent() {
 
       {/* ── Simulador de Faturamento Afiliados ── */}
       <motion.div variants={item}>
-        <ExpandablePanel title="Simulador de Faturamento — Afiliados">
-          <AffiliateRevenueSimulator compact />
+        <ExpandablePanel title="Simulador de Faturamento — Pacientes">
+          <PatientRevenueSimulator />
         </ExpandablePanel>
       </motion.div>
 
