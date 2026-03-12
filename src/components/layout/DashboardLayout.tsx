@@ -461,7 +461,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     setMobileOpen(false);
   }, [location.pathname]);
 
-  const sections = isAdmin ? adminSections : isNutritionist ? nutritionistSections : undefined;
+  const sections = isAdmin ? adminSections : isNutritionist ? nutritionistSections : isPersonal ? personalSections : undefined;
   const flatLinks = isPatient ? patientLinks : undefined;
 
   const toggleDark = () => {
