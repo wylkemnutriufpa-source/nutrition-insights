@@ -245,8 +245,14 @@ const App = () => (
               <Route path="/automation" element={<NutritionistRoute><AutomationCenter /></NutritionistRoute>} />
               <Route path="/checkin-panel" element={<NutritionistRoute><CheckinPanel /></NutritionistRoute>} />
 
+              {/* Personal Trainer routes */}
+              <Route path="/personal/students" element={<PersonalRoute><PersonalStudents /></PersonalRoute>} />
+              <Route path="/personal/workouts" element={<PersonalRoute><PersonalWorkouts /></PersonalRoute>} />
+              <Route path="/personal/workouts/new" element={<PersonalRoute><PersonalWorkouts /></PersonalRoute>} />
+
               {/* Patient portal */}
               <Route path="/client/dashboard" element={<PatientRoute><ClientDashboard /></PatientRoute>} />
+              <Route path="/my-workouts" element={<ProtectedRoute><PatientWorkouts /></ProtectedRoute>} />
 
               {/* Patient-only routes */}
               <Route path="/meals" element={<ProtectedRoute><Meals /></ProtectedRoute>} />
