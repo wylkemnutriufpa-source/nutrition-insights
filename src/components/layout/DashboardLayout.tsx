@@ -104,6 +104,7 @@ const adminSections: NavSection[] = [
       { to: "/admin/features", icon: Zap, labelKey: "nav.featureFlags" },
       { to: "/admin/pricing", icon: DollarSign, labelKey: "nav.pricing" },
       { to: "/admin/patient-features", icon: Crown, labelKey: "nav.patientFeatures" },
+      { to: "/admin/landing-pages", icon: LayoutDashboard, labelKey: "nav.landingPages" },
     ],
   },
   {
