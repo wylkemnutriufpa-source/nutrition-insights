@@ -5,6 +5,8 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, Calendar, Flame, Trophy, Target, Activity } from "lucide-react";
 import ShareProgressButton from "@/components/social/ShareProgressButton";
+import JourneyPhases from "@/components/gamification/JourneyPhases";
+import BeforeAfterReport from "@/components/social/BeforeAfterReport";
 
 interface JourneyStats {
   totalMeals: number;
