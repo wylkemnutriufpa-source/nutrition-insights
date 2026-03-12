@@ -558,7 +558,68 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ══════════ TESTIMONIALS ══════════ */}
+      {/* ══════════ RANKING PREVIEW ══════════ */}
+      {topRanking.length > 0 && (
+        <section className="py-28 px-4 bg-muted/20 border-y border-border/30">
+          <div className="max-w-4xl mx-auto">
+            <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-16">
+              <span className="inline-block px-4 py-1.5 rounded-full glass-premium text-accent text-xs font-bold mb-5 gradient-border uppercase tracking-widest">
+                <Trophy className="w-3.5 h-3.5 inline mr-1" /> Ranking ao Vivo
+              </span>
+              <h2 className="font-display text-3xl md:text-5xl font-bold mb-4">
+                Pacientes <span className="text-gradient-animated">engajados</span> de verdade
+              </h2>
+              <p className="text-muted-foreground text-lg">Veja o ranking em tempo real. Gamificação que gera resultados.</p>
+            </motion.div>
+
+            <div className="space-y-3 max-w-lg mx-auto">
+              {topRanking.map((entry, i) => {
+                const medals = ["🥇", "🥈", "🥉"];
+                return (
+                  <motion.div
+                    key={entry.rank_position}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                    className={`glass-premium rounded-xl p-4 flex items-center gap-4 gradient-border ${i < 3 ? "ring-1 ring-accent/20" : ""}`}
+                  >
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center font-display font-bold text-lg shrink-0"
+                      style={{ backgroundColor: i < 3 ? (entry.plan_color || "hsl(var(--accent))") + "15" : undefined }}
+                    >
+                      {i < 3 ? medals[i] : <span className="text-muted-foreground text-sm">#{entry.rank_position}</span>}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-display font-semibold text-sm truncate"
+                          style={entry.crown_enabled ? { color: entry.plan_color } : undefined}
+                        >
+                          {entry.display_name}
+                        </span>
+                        {entry.crown_enabled && <Crown className="w-3.5 h-3.5" style={{ color: entry.plan_color }} />}
+                        {entry.badge_icon && <span className="text-xs">{entry.badge_icon}</span>}
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="font-display font-bold text-primary">{entry.total_points.toLocaleString()}</p>
+                      <p className="text-[10px] text-muted-foreground">pontos</p>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mt-10">
+              <Link to="/auth">
+                <Button variant="outline" className="gap-2 h-12 px-8 font-semibold">
+                  <Flame className="w-4 h-4 text-accent" /> Quero participar do ranking
+                </Button>
+              </Link>
+            </motion.div>
+          </div>
+        </section>
+      )}
+
       <section id="testimonials" className="py-28 px-4 relative noise-overlay">
         <div className="max-w-6xl mx-auto relative z-10">
           <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-20">
