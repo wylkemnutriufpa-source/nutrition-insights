@@ -1,0 +1,1 @@
+ALTER TABLE public.program_enrollments ADD COLUMN IF NOT EXISTS completed_at timestamptz;

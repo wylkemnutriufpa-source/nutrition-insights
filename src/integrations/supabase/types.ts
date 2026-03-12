@@ -2510,6 +2510,7 @@ export type Database = {
         Row: {
           blocked_reason: string | null
           clinical_questions: Json | null
+          completed_at: string | null
           created_at: string | null
           current_phase: number
           has_measurements: boolean | null
@@ -2539,6 +2540,7 @@ export type Database = {
         Insert: {
           blocked_reason?: string | null
           clinical_questions?: Json | null
+          completed_at?: string | null
           created_at?: string | null
           current_phase?: number
           has_measurements?: boolean | null
@@ -2568,6 +2570,7 @@ export type Database = {
         Update: {
           blocked_reason?: string | null
           clinical_questions?: Json | null
+          completed_at?: string | null
           created_at?: string | null
           current_phase?: number
           has_measurements?: boolean | null
