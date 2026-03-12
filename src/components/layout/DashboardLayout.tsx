@@ -25,6 +25,7 @@ import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
 import SOSModal from "@/components/patient/SOSModal";
 import SOSInbox from "@/components/patient/SOSInbox";
 import LanguageSelector from "@/components/common/LanguageSelector";
+import BrainIntelligence from "@/components/common/BrainIntelligence";
 import { AlertTriangle } from "lucide-react";
 
 const nutritionistLinks = [
