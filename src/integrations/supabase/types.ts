@@ -421,6 +421,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          image_url: string | null
           is_read: boolean
           message: string
           receiver_id: string
@@ -429,6 +430,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          image_url?: string | null
           is_read?: boolean
           message: string
           receiver_id: string
@@ -437,6 +439,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          image_url?: string | null
           is_read?: boolean
           message?: string
           receiver_id?: string
@@ -2894,6 +2897,39 @@ export type Database = {
           p256dh?: string
           user_agent?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      quick_reply_templates: {
+        Row: {
+          category: string
+          created_at: string
+          icon: string
+          id: string
+          is_active: boolean
+          message: string
+          priority: number
+          trigger_signal: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          message: string
+          priority?: number
+          trigger_signal: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          message?: string
+          priority?: number
+          trigger_signal?: string
         }
         Relationships: []
       }
