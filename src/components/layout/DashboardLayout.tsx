@@ -76,6 +76,7 @@ const patientLinks = [
   { to: "/library", icon: BookOpen, labelKey: "nav.library", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
   { to: "/supplements", icon: Pill, labelKey: "nav.supplements", color: "from-success/20 to-success/5", iconColor: "text-success" },
   { to: "/anamnesis", icon: ClipboardCheck, labelKey: "nav.anamnesis", color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
+  { to: "/onboarding", icon: Zap, labelKey: "nav.onboarding", color: "from-primary/20 to-accent/5", iconColor: "text-primary" },
   { to: "/food-database", icon: Apple, labelKey: "nav.foods", color: "from-info/20 to-info/5", iconColor: "text-info" },
   { to: "/weight-calculator", icon: Scale, labelKey: "nav.idealWeight", color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
   { to: "/water-calculator", icon: Droplets, labelKey: "nav.hydration", color: "from-info/20 to-info/5", iconColor: "text-info" },
