@@ -55,7 +55,8 @@
     "patientFeatures": "Patient Features",
     "auditLogs": "Audit Logs",
     "sosInbox": "🆘 SOS Inbox",
-    "sos": "🆘 SOS"
+    "sos": "🆘 SOS",
+    "planner": "My Planner"
   },
   "auth": {
     "tagline": "Your smart & gamified fitness journey",
