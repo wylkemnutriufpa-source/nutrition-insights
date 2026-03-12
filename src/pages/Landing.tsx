@@ -189,9 +189,12 @@ export default function Landing() {
       {/* ══════════ NAV ══════════ */}
       <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${navScrolled ? "glass border-b border-border/30 shadow-card" : "bg-transparent"}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center group">
-            <FitJourneyLogo size="sm" />
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link to="/" className="flex items-center group">
+              <FitJourneyLogo size="sm" />
+            </Link>
+            <BrainIntelligence />
+          </div>
 
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
             {[["#features", "Recursos"], ["#how", "Como Funciona"], ["#pricing", "Preços"], ["#testimonials", "Depoimentos"], ["#faq", "FAQ"]].map(([href, label]) => (
