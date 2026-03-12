@@ -47,6 +47,14 @@ export default function AdminSiteEditor() {
   const [editValues, setEditValues] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<string | null>(null);
 
+  const { data: allPrograms } = useQuery({
+    queryKey: ["admin-programs-list"],
+    queryFn: async () => {
+      const { data } = await supabase.from("programs").select("id, title").eq("is_active", true).order("title");
+      return (data || []) as { id: string; title: string }[];
+    },
+  });
+
   useEffect(() => {
     if (settings) {
       const vals: Record<string, string> = {};
