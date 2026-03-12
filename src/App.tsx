@@ -247,6 +247,7 @@ const App = () => (
               <Route path="/checkin-panel" element={<NutritionistRoute><CheckinPanel /></NutritionistRoute>} />
 
               {/* Personal Trainer routes */}
+              <Route path="/personal/dashboard" element={<PersonalRoute><PersonalDashboard /></PersonalRoute>} />
               <Route path="/personal/students" element={<PersonalRoute><PersonalStudents /></PersonalRoute>} />
               <Route path="/personal/workouts" element={<PersonalRoute><PersonalWorkouts /></PersonalRoute>} />
               <Route path="/personal/workouts/new" element={<PersonalRoute><PersonalWorkouts /></PersonalRoute>} />
