@@ -126,8 +126,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Listen for subsequent auth changes (sign in/out, token refresh)
     const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        // Skip the initial session event — already handled above
         if (event === "INITIAL_SESSION") return;
+
+        if (event === "SIGNED_IN" && session?.user) {
+          logAudit("login", "auth", session.user.id, { email: session.user.email ?? "" });
+        }
+        if (event === "SIGNED_OUT") {
+          logAudit("logout", "auth");
+        }
 
         setSession(session);
         setUser(session?.user ?? null);
