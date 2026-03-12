@@ -139,6 +139,42 @@ export default function AdminAffiliates() {
   const totalPending = allCommissions.filter((c: any) => c.status === "pending").reduce((s: number, c: any) => s + Number(c.commission_amount), 0);
   const totalApproved = allCommissions.filter((c: any) => c.status === "approved").reduce((s: number, c: any) => s + Number(c.commission_amount), 0);
   const totalPaid = allCommissions.filter((c: any) => c.status === "paid").reduce((s: number, c: any) => s + Number(c.commission_amount), 0);
+  const unresolvedFlags = riskFlags.filter((f: any) => !f.resolved).length;
+
+  const exportCSV = () => {
+    const rows = [["Embaixador","Tipo","Venda Bruta","Comissão %","Comissão R$","Status","Data"]];
+    allCommissions.forEach((c: any) => {
+      rows.push([
+        c.affiliates?.full_name || "",
+        c.commission_type === "first_payment" ? "1a Venda" : "Recorrente",
+        Number(c.gross_amount).toFixed(2),
+        Number(c.commission_percent).toFixed(0),
+        Number(c.commission_amount).toFixed(2),
+        c.status,
+        format(new Date(c.created_at), "dd/MM/yyyy", { locale: ptBR }),
+      ]);
+    });
+    const csv = rows.map(r => r.join(";")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `comissoes_${format(new Date(), "yyyy-MM-dd")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("CSV exportado!");
+  };
+
+  const batchApprove = async () => {
+    const pendingIds = allCommissions.filter((c: any) => c.status === "pending").map((c: any) => c.id);
+    if (pendingIds.length === 0) { toast.info("Nenhuma comissão pendente"); return; }
+    for (const id of pendingIds) {
+      await supabase.from("affiliate_commissions").update({ status: "approved" }).eq("id", id);
+    }
+    qc.invalidateQueries({ queryKey: ["admin-all-commissions"] });
+    toast.success(`${pendingIds.length} comissões aprovadas!`);
+  };
+  const totalPaid = allCommissions.filter((c: any) => c.status === "paid").reduce((s: number, c: any) => s + Number(c.commission_amount), 0);
 
   return (
     <DashboardLayout>
