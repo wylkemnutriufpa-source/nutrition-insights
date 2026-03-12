@@ -4561,7 +4561,7 @@ export type Database = {
         | "nutritionist"
         | "premium_ambassador"
         | "custom"
-      app_role: "nutritionist" | "patient" | "admin"
+      app_role: "nutritionist" | "patient" | "admin" | "personal"
       challenge_status: "active" | "completed" | "expired"
       commission_status:
         | "pending"
@@ -4726,7 +4726,7 @@ export const Constants = {
         "premium_ambassador",
         "custom",
       ],
-      app_role: ["nutritionist", "patient", "admin"],
+      app_role: ["nutritionist", "patient", "admin", "personal"],
       challenge_status: ["active", "completed", "expired"],
       commission_status: [
         "pending",
