@@ -515,6 +515,7 @@ export default function AdminAffiliates() {
               </CardContent>
             </Card>
           </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
