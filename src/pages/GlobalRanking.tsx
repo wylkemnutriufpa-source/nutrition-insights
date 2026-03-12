@@ -460,7 +460,7 @@ export default function GlobalRanking() {
   // ── Load ranking ──
   const loadRanking = useCallback(async (p: Period) => {
     setLoading(true);
-    const params: any = { _period: p, _limit: 20 };
+    const params: any = { _period: p, _limit: 500 };
     if (nutritionistId && !isAdmin) params._nutritionist_id = nutritionistId;
     const { data, error } = await supabase.rpc("get_ranking_by_period", params);
     if (!error && data) setRanking(data as RankEntry[]);
