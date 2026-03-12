@@ -546,7 +546,6 @@ export default function GlobalRanking() {
     );
   }
 
-  const shareRef = useRef<HTMLDivElement>(null);
 
   return (
     <DashboardLayout>
