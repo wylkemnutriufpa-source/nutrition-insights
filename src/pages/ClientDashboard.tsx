@@ -55,6 +55,18 @@ interface ChecklistStats {
   completed: number;
 }
 
+interface WorkoutInfo {
+  planTitle: string;
+  routineCount: number;
+  recentCompletions: Array<{
+    id: string;
+    routine_name: string;
+    completed_at: string;
+    perceived_effort: number | null;
+  }>;
+  hasPersonal: boolean;
+}
+
 const container = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.06 } },
