@@ -64,6 +64,20 @@ const item = {
   show: { opacity: 1, y: 0 },
 };
 
+interface BiquiniEnrollment {
+  id: string;
+  program_id: string;
+  status: string;
+  current_phase: number;
+  blocked_reason: string | null;
+  next_weight_due_at: string | null;
+  next_full_review_due_at: string | null;
+  initial_weight: number | null;
+  initial_kcal_target: number | null;
+  onboarding_completed_at: string | null;
+  started_at: string;
+}
+
 export default function ClientDashboard() {
   const { user, profile } = useAuth();
   const [programs, setPrograms] = useState<ProgramInfo[]>([]);
@@ -72,6 +86,8 @@ export default function ClientDashboard() {
   const [checklistStats, setChecklistStats] = useState<ChecklistStats>({ total: 0, completed: 0 });
   const [loading, setLoading] = useState(true);
   const [programJoinOpen, setProgramJoinOpen] = useState(false);
+  const [biquiniEnrollment, setBiquiniEnrollment] = useState<BiquiniEnrollment | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     if (!user) return;
