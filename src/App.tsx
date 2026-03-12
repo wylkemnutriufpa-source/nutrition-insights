@@ -76,6 +76,7 @@ import AdminPatientFeatures from "./pages/AdminPatientFeatures";
 import UserGuide from "./pages/UserGuide";
 import ProfessionalGuide from "./pages/ProfessionalGuide";
 import AuditLogs from "./pages/AuditLogs";
+import Curiosidades from "./pages/Curiosidades";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -229,6 +230,7 @@ const App = () => (
               <Route path="/health-quiz" element={<ProtectedRoute><HealthCheckQuiz /></ProtectedRoute>} />
               <Route path="/checkin" element={<ProtectedRoute><Checkin /></ProtectedRoute>} />
               <Route path="/user-guide" element={<ProtectedRoute><UserGuide /></ProtectedRoute>} />
+              <Route path="/curiosidades" element={<ProtectedRoute><Curiosidades /></ProtectedRoute>} />
 
               {/* Admin routes */}
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
