@@ -57,6 +57,7 @@ export const PATIENT_FEATURE_REGISTRY: PatientFeatureDefinition[] = [
   { key: "weight_calculator", label: "Calculadora de Peso", description: "Calcular peso ideal e composição", icon: Dumbbell, category: "Saúde & Ferramentas" },
   { key: "water_calculator", label: "Calculadora de Água", description: "Calcular necessidade hídrica", icon: Heart, category: "Saúde & Ferramentas" },
   { key: "weekly_report", label: "Relatório Semanal", description: "Ver relatório semanal de progresso", icon: BarChart3, category: "Saúde & Ferramentas" },
+  { key: "onboarding_pipeline", label: "Onboarding Automático", description: "Pipeline guiado: anamnese, dados corporais, preferências e plano IA", icon: Zap, category: "Saúde & Ferramentas" },
 ];
 
 export function getPatientFeaturesByCategory(): Record<string, PatientFeatureDefinition[]> {

@@ -1257,6 +1257,107 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_pipelines: {
+        Row: {
+          anamnesis_completed: boolean | null
+          approved_at: string | null
+          approved_by: string | null
+          body_data_completed: boolean | null
+          cooking_preference: string | null
+          created_at: string | null
+          food_preferences: Json | null
+          generated_plan_data: Json | null
+          generated_plan_id: string | null
+          height: number | null
+          id: string
+          meal_count: number | null
+          nutritionist_id: string
+          patient_id: string
+          photo_back_url: string | null
+          photo_front_url: string | null
+          photo_side_url: string | null
+          plan_approved: boolean | null
+          plan_generated: boolean | null
+          preferences_completed: boolean | null
+          rejection_reason: string | null
+          scheduling_criteria: Json | null
+          sleep_time: string | null
+          status: string
+          updated_at: string | null
+          use_scheduling_criteria: boolean | null
+          wake_time: string | null
+          weight: number | null
+        }
+        Insert: {
+          anamnesis_completed?: boolean | null
+          approved_at?: string | null
+          approved_by?: string | null
+          body_data_completed?: boolean | null
+          cooking_preference?: string | null
+          created_at?: string | null
+          food_preferences?: Json | null
+          generated_plan_data?: Json | null
+          generated_plan_id?: string | null
+          height?: number | null
+          id?: string
+          meal_count?: number | null
+          nutritionist_id: string
+          patient_id: string
+          photo_back_url?: string | null
+          photo_front_url?: string | null
+          photo_side_url?: string | null
+          plan_approved?: boolean | null
+          plan_generated?: boolean | null
+          preferences_completed?: boolean | null
+          rejection_reason?: string | null
+          scheduling_criteria?: Json | null
+          sleep_time?: string | null
+          status?: string
+          updated_at?: string | null
+          use_scheduling_criteria?: boolean | null
+          wake_time?: string | null
+          weight?: number | null
+        }
+        Update: {
+          anamnesis_completed?: boolean | null
+          approved_at?: string | null
+          approved_by?: string | null
+          body_data_completed?: boolean | null
+          cooking_preference?: string | null
+          created_at?: string | null
+          food_preferences?: Json | null
+          generated_plan_data?: Json | null
+          generated_plan_id?: string | null
+          height?: number | null
+          id?: string
+          meal_count?: number | null
+          nutritionist_id?: string
+          patient_id?: string
+          photo_back_url?: string | null
+          photo_front_url?: string | null
+          photo_side_url?: string | null
+          plan_approved?: boolean | null
+          plan_generated?: boolean | null
+          preferences_completed?: boolean | null
+          rejection_reason?: string | null
+          scheduling_criteria?: Json | null
+          sleep_time?: string | null
+          status?: string
+          updated_at?: string | null
+          use_scheduling_criteria?: boolean | null
+          wake_time?: string | null
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_pipelines_generated_plan_id_fkey"
+            columns: ["generated_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_anamnesis: {
         Row: {
           answers: Json

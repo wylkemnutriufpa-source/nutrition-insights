@@ -27,6 +27,7 @@ import SmartAlertsBanner from "@/components/patient/SmartAlertsBanner";
 import PlanScheduler from "@/components/plans/PlanScheduler";
 import DocumentUpload from "@/components/common/DocumentUpload";
 import ClinicalDecisionSupport from "@/components/patient/ClinicalDecisionSupport";
+import OnboardingApprovalQueue from "@/components/patient/OnboardingApprovalQueue";
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
@@ -593,6 +594,7 @@ export default function PatientDetail() {
             { key: "radar", label: "Radar Metabólico", icon: TrendingUp, color: "from-destructive/20 to-destructive/5", iconColor: "text-destructive" },
             { key: "recipes", label: "Receitas", icon: ChefHat, color: "from-primary/20 to-accent/5", iconColor: "text-primary" },
             { key: "clinical-decision", label: "Decisão Clínica", icon: Stethoscope, color: "from-destructive/20 to-primary/5", iconColor: "text-destructive" },
+            { key: "onboarding", label: "Onboarding", icon: Zap, color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
           ];
 
           return (
@@ -1153,6 +1155,14 @@ export default function PatientDetail() {
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Suporte à Decisão Clínica</DialogTitle></DialogHeader>
                   <ClinicalDecisionSupport patientId={patientId!} nutritionistId={user!.id} />
+                </DialogContent>
+              </Dialog>
+
+              {/* Onboarding Pipeline Modal */}
+              <Dialog open={openSection === "onboarding"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display">Onboarding Automático</DialogTitle></DialogHeader>
+                  <OnboardingApprovalQueue patientId={patientId!} patientName={profile?.full_name || "Paciente"} />
                 </DialogContent>
               </Dialog>
             </>
