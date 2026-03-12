@@ -44,7 +44,7 @@ export default function AdminSubscriptionMonitor() {
       const [profileRes, countRes, paymentRes] = await Promise.all([
         supabase.from("profiles").select("full_name").eq("user_id", nId).single(),
         supabase.from("nutritionist_patients").select("id", { count: "exact", head: true }).eq("nutritionist_id", nId).eq("status", "active"),
-        supabase.from("payments").select("status, amount, plan_slug, paid_at").eq("user_id", nId).order("paid_at", { ascending: false }).limit(1),
+        supabase.from("payments").select("status, amount, paid_at").eq("user_id", nId).order("paid_at", { ascending: false }).limit(1),
       ]);
 
       const lastPayment = paymentRes.data?.[0];
@@ -52,7 +52,7 @@ export default function AdminSubscriptionMonitor() {
         user_id: nId,
         full_name: profileRes.data?.full_name || "Nutricionista",
         subscribed: lastPayment?.status === "paid",
-        subscription_tier: lastPayment?.plan_slug || null,
+        subscription_tier: null,
         subscription_end: null,
         is_trial: false,
         trial_end: null,
