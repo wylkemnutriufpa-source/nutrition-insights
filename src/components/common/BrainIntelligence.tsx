@@ -266,7 +266,7 @@ export default function BrainIntelligence({ collapsed = false }: { collapsed?: b
             />
 
             <motion.div
-              className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl"
+              className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl"
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -292,7 +292,7 @@ export default function BrainIntelligence({ collapsed = false }: { collapsed?: b
                 {neuralParticles.map((p, i) => <NeuralParticle key={i} {...p} />)}
               </div>
 
-              <div className="relative z-10 p-6 space-y-5">
+              <div className="relative z-10 p-6 space-y-4">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -319,162 +319,164 @@ export default function BrainIntelligence({ collapsed = false }: { collapsed?: b
                   </button>
                 </div>
 
-                {/* Block 1: Motor Clínico Status */}
-                <div className="rounded-xl p-4 space-y-3" style={{
-                  background: "hsl(220 30% 15% / 0.6)",
-                  border: "1px solid hsl(150 60% 40% / 0.15)",
-                }}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Activity className="w-4 h-4 text-emerald-400" />
-                    <span className="text-sm font-semibold text-white/90">Status do Motor Clínico</span>
-                    <motion.div
-                      className="w-2 h-2 rounded-full bg-emerald-400 ml-auto"
-                      animate={{ opacity: [1, 0.3, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      { label: "Dados analisados", value: systemMetrics.totalDataAnalyzed.toLocaleString("pt-BR"), color: "text-cyan-300" },
-                      { label: "Padrões detectados", value: systemMetrics.patternsDetected.toString(), color: "text-emerald-300" },
-                      { label: "Alertas preventivos", value: systemMetrics.preventiveAlerts.toString(), color: "text-amber-300" },
-                      { label: "Índice de evolução", value: `+${systemMetrics.globalEvolution}%`, color: "text-cyan-300" },
-                    ].map((m, i) => (
-                      <motion.div
-                        key={m.label}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 + i * 0.08 }}
-                        className="space-y-1"
-                      >
-                        <p className="text-[10px] uppercase tracking-wider text-white/40">{m.label}</p>
-                        <p className={`text-lg font-display font-bold ${m.color}`}>{m.value}</p>
-                      </motion.div>
-                    ))}
-                  </div>
-
-                  {/* Activity bar */}
-                  <div className="h-1 rounded-full overflow-hidden bg-white/5 mt-2">
-                    <motion.div
-                      className="h-full rounded-full"
-                      style={{
-                        background: "linear-gradient(90deg, hsl(150 80% 50%), hsl(170 70% 50%), hsl(150 80% 50%))",
-                        backgroundSize: "200% 100%",
-                      }}
-                      animate={{ backgroundPosition: ["0% 0%", "200% 0%"] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                      initial={{ width: "0%" }}
-                      whileInView={{ width: "100%" }}
-                    />
-                  </div>
-                </div>
-
-                {/* Block 2: Mini Chart */}
-                <div className="rounded-xl p-4 space-y-3" style={{
-                  background: "hsl(220 30% 15% / 0.6)",
-                  border: "1px solid hsl(170 60% 40% / 0.12)",
-                }}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <BarChart3 className="w-4 h-4 text-cyan-400" />
-                    <span className="text-sm font-semibold text-white/90">Tendência Semanal</span>
-                  </div>
-
-                  {weeklyTrend.length > 0 && <MiniLineChart data={weeklyTrend} />}
-
-                  <div className="flex items-center justify-center gap-6 mt-1">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-3 h-0.5 rounded-full" style={{ background: "hsl(170 80% 50%)" }} />
-                      <span className="text-[10px] text-white/40">Adesão</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-3 h-0.5 rounded-full" style={{ background: "hsl(200 70% 55%)", opacity: 0.7 }} />
-                      <span className="text-[10px] text-white/40">Engajamento</span>
-                    </div>
-                  </div>
-
-                  {weeklyTrend.length > 0 && (
-                    <div className="flex justify-between px-1">
-                      {weeklyTrend.map(d => (
-                        <span key={d.label} className="text-[9px] text-white/25">{d.label}</span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Block 2b: Personal Metrics (patient only) */}
-                {isPatient && (
-                  <div className="rounded-xl p-4 space-y-3" style={{
-                    background: "hsl(220 30% 15% / 0.6)",
-                    border: "1px solid hsl(200 60% 40% / 0.15)",
-                  }}>
-                    <div className="flex items-center gap-2 mb-3">
-                      <TrendingUp className="w-4 h-4 text-emerald-400" />
-                      <span className="text-sm font-semibold text-white/90">Seus Indicadores</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <p className="text-[10px] uppercase tracking-wider text-white/40">Consistência</p>
-                        <p className="text-lg font-display font-bold text-cyan-300">{personalMetrics.consistencyScore}%</p>
-                        <div className="h-1 rounded-full bg-white/5 overflow-hidden">
+                {/* Horizontal 2-column layout */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Left column */}
+                  <div className="space-y-4">
+                    {/* Block 1: Motor Clínico Status */}
+                    <div className="rounded-xl p-4 space-y-3" style={{
+                      background: "hsl(220 30% 15% / 0.6)",
+                      border: "1px solid hsl(150 60% 40% / 0.15)",
+                    }}>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Activity className="w-4 h-4 text-emerald-400" />
+                        <span className="text-sm font-semibold text-white/90">Status do Motor Clínico</span>
+                        <motion.div
+                          className="w-2 h-2 rounded-full bg-emerald-400 ml-auto"
+                          animate={{ opacity: [1, 0.3, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        {[
+                          { label: "Dados analisados", value: systemMetrics.totalDataAnalyzed.toLocaleString("pt-BR"), color: "text-cyan-300" },
+                          { label: "Padrões detectados", value: systemMetrics.patternsDetected.toString(), color: "text-emerald-300" },
+                          { label: "Alertas preventivos", value: systemMetrics.preventiveAlerts.toString(), color: "text-amber-300" },
+                          { label: "Índice de evolução", value: `+${systemMetrics.globalEvolution}%`, color: "text-cyan-300" },
+                        ].map((m, i) => (
                           <motion.div
-                            className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-emerald-400"
-                            initial={{ width: 0 }}
-                            animate={{ width: `${personalMetrics.consistencyScore}%` }}
-                            transition={{ duration: 1.5, ease: "easeOut" }}
+                            key={m.label}
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 + i * 0.08 }}
+                            className="space-y-1"
+                          >
+                            <p className="text-[10px] uppercase tracking-wider text-white/40">{m.label}</p>
+                            <p className={`text-lg font-display font-bold ${m.color}`}>{m.value}</p>
+                          </motion.div>
+                        ))}
+                      </div>
+                      <div className="h-1 rounded-full overflow-hidden bg-white/5 mt-2">
+                        <motion.div
+                          className="h-full rounded-full"
+                          style={{
+                            background: "linear-gradient(90deg, hsl(150 80% 50%), hsl(170 70% 50%), hsl(150 80% 50%))",
+                            backgroundSize: "200% 100%",
+                          }}
+                          animate={{ backgroundPosition: ["0% 0%", "200% 0%"] }}
+                          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                          initial={{ width: "0%" }}
+                          whileInView={{ width: "100%" }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Block 3: Deterministic Insight */}
+                    <div className="rounded-xl p-4" style={{
+                      background: "linear-gradient(135deg, hsl(150 60% 25% / 0.15), hsl(170 70% 30% / 0.1))",
+                      border: "1px solid hsl(150 60% 40% / 0.12)",
+                    }}>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Lightbulb className="w-4 h-4 text-amber-400" />
+                        <span className="text-sm font-semibold text-white/90">Insight Clínico</span>
+                      </div>
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={activeInsight}
+                          initial={{ opacity: 0, x: 10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -10 }}
+                          transition={{ duration: 0.4 }}
+                          className="flex items-start gap-3"
+                        >
+                          <span className="text-xl flex-shrink-0 mt-0.5">{insight.icon}</span>
+                          <p className="text-sm text-white/70 leading-relaxed">{insight.text}</p>
+                        </motion.div>
+                      </AnimatePresence>
+                      <div className="flex items-center justify-center gap-1 mt-3">
+                        {clinicalInsights.map((_, i) => (
+                          <div
+                            key={i}
+                            className={`w-1 h-1 rounded-full transition-all duration-300 ${i === activeInsight ? "bg-emerald-400 w-3" : "bg-white/20"}`}
                           />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right column */}
+                  <div className="space-y-4">
+                    {/* Block 2: Mini Chart */}
+                    <div className="rounded-xl p-4 space-y-3" style={{
+                      background: "hsl(220 30% 15% / 0.6)",
+                      border: "1px solid hsl(170 60% 40% / 0.12)",
+                    }}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <BarChart3 className="w-4 h-4 text-cyan-400" />
+                        <span className="text-sm font-semibold text-white/90">Tendência Semanal</span>
+                      </div>
+                      {weeklyTrend.length > 0 && <MiniLineChart data={weeklyTrend} />}
+                      <div className="flex items-center justify-center gap-6 mt-1">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-3 h-0.5 rounded-full" style={{ background: "hsl(170 80% 50%)" }} />
+                          <span className="text-[10px] text-white/40">Adesão</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-3 h-0.5 rounded-full" style={{ background: "hsl(200 70% 55%)", opacity: 0.7 }} />
+                          <span className="text-[10px] text-white/40">Engajamento</span>
                         </div>
                       </div>
-                      <div className="space-y-1">
-                        <p className="text-[10px] uppercase tracking-wider text-white/40">Tendência</p>
-                        <p className={`text-lg font-display font-bold ${trendColor[personalMetrics.evolutionTrend]}`}>
-                          {trendLabel[personalMetrics.evolutionTrend]}
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[10px] uppercase tracking-wider text-white/40">Engajamento</p>
-                        <p className="text-lg font-display font-bold text-emerald-300">
-                          {personalMetrics.engagementScore > 70 ? "Alto" : personalMetrics.engagementScore > 40 ? "Médio" : "Baixo"}
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[10px] uppercase tracking-wider text-white/40">Ritmo metabólico</p>
-                        <p className="text-lg font-display font-bold text-amber-300">{rhythmLabel[personalMetrics.metabolicRhythm]}</p>
-                      </div>
+                      {weeklyTrend.length > 0 && (
+                        <div className="flex justify-between px-1">
+                          {weeklyTrend.map(d => (
+                            <span key={d.label} className="text-[9px] text-white/25">{d.label}</span>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
 
-                {/* Block 3: Deterministic Insight */}
-                <div className="rounded-xl p-4" style={{
-                  background: "linear-gradient(135deg, hsl(150 60% 25% / 0.15), hsl(170 70% 30% / 0.1))",
-                  border: "1px solid hsl(150 60% 40% / 0.12)",
-                }}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Lightbulb className="w-4 h-4 text-amber-400" />
-                    <span className="text-sm font-semibold text-white/90">Insight Clínico</span>
-                  </div>
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={activeInsight}
-                      initial={{ opacity: 0, x: 10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -10 }}
-                      transition={{ duration: 0.4 }}
-                      className="flex items-start gap-3"
-                    >
-                      <span className="text-xl flex-shrink-0 mt-0.5">{insight.icon}</span>
-                      <p className="text-sm text-white/70 leading-relaxed">{insight.text}</p>
-                    </motion.div>
-                  </AnimatePresence>
-                  {/* Dots indicator */}
-                  <div className="flex items-center justify-center gap-1 mt-3">
-                    {clinicalInsights.map((_, i) => (
-                      <div
-                        key={i}
-                        className={`w-1 h-1 rounded-full transition-all duration-300 ${i === activeInsight ? "bg-emerald-400 w-3" : "bg-white/20"}`}
-                      />
-                    ))}
+                    {/* Block 2b: Personal Metrics (patient only) */}
+                    {isPatient && (
+                      <div className="rounded-xl p-4 space-y-3" style={{
+                        background: "hsl(220 30% 15% / 0.6)",
+                        border: "1px solid hsl(200 60% 40% / 0.15)",
+                      }}>
+                        <div className="flex items-center gap-2 mb-3">
+                          <TrendingUp className="w-4 h-4 text-emerald-400" />
+                          <span className="text-sm font-semibold text-white/90">Seus Indicadores</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <p className="text-[10px] uppercase tracking-wider text-white/40">Consistência</p>
+                            <p className="text-lg font-display font-bold text-cyan-300">{personalMetrics.consistencyScore}%</p>
+                            <div className="h-1 rounded-full bg-white/5 overflow-hidden">
+                              <motion.div
+                                className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-emerald-400"
+                                initial={{ width: 0 }}
+                                animate={{ width: `${personalMetrics.consistencyScore}%` }}
+                                transition={{ duration: 1.5, ease: "easeOut" }}
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-[10px] uppercase tracking-wider text-white/40">Tendência</p>
+                            <p className={`text-lg font-display font-bold ${trendColor[personalMetrics.evolutionTrend]}`}>
+                              {trendLabel[personalMetrics.evolutionTrend]}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-[10px] uppercase tracking-wider text-white/40">Engajamento</p>
+                            <p className="text-lg font-display font-bold text-emerald-300">
+                              {personalMetrics.engagementScore > 70 ? "Alto" : personalMetrics.engagementScore > 40 ? "Médio" : "Baixo"}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-[10px] uppercase tracking-wider text-white/40">Ritmo metabólico</p>
+                            <p className="text-lg font-display font-bold text-amber-300">{rhythmLabel[personalMetrics.metabolicRhythm]}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
