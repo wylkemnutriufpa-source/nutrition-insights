@@ -798,6 +798,7 @@ export default function AdminDashboard() {
               <TabsTrigger value="features"><Zap className="w-3.5 h-3.5 mr-1" /> Feature Flags</TabsTrigger>
               <TabsTrigger value="reports"><FileText className="w-3.5 h-3.5 mr-1" /> Relatórios</TabsTrigger>
               <TabsTrigger value="admin"><Crown className="w-3.5 h-3.5 mr-1" /> Admin</TabsTrigger>
+              <TabsTrigger value="audit"><Shield className="w-3.5 h-3.5 mr-1" /> Auditoria</TabsTrigger>
             </TabsList>
 
             {/* ─── Metrics ─── */}
