@@ -1,127 +1,311 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Users, Stethoscope, Award, ArrowRight, Sparkles } from "lucide-react";
+import {
+  Users,
+  Stethoscope,
+  DollarSign,
+  ArrowRight,
+  Sparkles,
+  Brain,
+  Trophy,
+  BotMessageSquare,
+  Crown,
+  Zap,
+  ShieldCheck,
+  HeartPulse,
+  TrendingUp,
+} from "lucide-react";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
+import { Button } from "@/components/ui/button";
 
-const roles = [
+/* ─── Floating particle ─── */
+function Particle({ delay, x, y, size }: { delay: number; x: string; y: string; size: number }) {
+  return (
+    <motion.div
+      className="absolute rounded-full pointer-events-none"
+      style={{
+        left: x,
+        top: y,
+        width: size,
+        height: size,
+        background: "radial-gradient(circle, hsl(152 58% 50% / 0.35), transparent 70%)",
+      }}
+      animate={{ y: [0, -30, 0], opacity: [0.2, 0.6, 0.2] }}
+      transition={{ duration: 5 + delay, repeat: Infinity, delay, ease: "easeInOut" }}
+    />
+  );
+}
+
+const particles = [
+  { delay: 0, x: "10%", y: "20%", size: 6 },
+  { delay: 1.2, x: "85%", y: "15%", size: 4 },
+  { delay: 0.5, x: "50%", y: "70%", size: 5 },
+  { delay: 2, x: "25%", y: "80%", size: 3 },
+  { delay: 0.8, x: "70%", y: "45%", size: 7 },
+  { delay: 1.5, x: "90%", y: "75%", size: 4 },
+  { delay: 0.3, x: "15%", y: "55%", size: 5 },
+  { delay: 2.5, x: "60%", y: "25%", size: 3 },
+  { delay: 1, x: "40%", y: "90%", size: 6 },
+  { delay: 1.8, x: "78%", y: "88%", size: 4 },
+];
+
+const cards = [
   {
-    title: "Sou Paciente",
-    subtitle: "Quero transformar minha saúde com acompanhamento inteligente",
-    icon: Users,
-    to: "/para-pacientes",
-    gradient: "from-emerald-500 to-teal-600",
-    glow: "shadow-emerald-500/30",
+    title: "Sou Profissional",
+    icon: Stethoscope,
+    description:
+      "Gerencie pacientes, protocolos, planos alimentares e inteligência clínica em um único painel.",
+    cta: "Entrar como profissional",
+    to: "/landing",
+    gradient: "from-violet-500 to-purple-600",
+    glowColor: "hsl(263 70% 55% / 0.25)",
+    borderHover: "hover:border-violet-500/40",
     delay: 0.2,
   },
   {
-    title: "Sou Profissional",
-    subtitle: "Quero escalar minha clínica com inteligência artificial",
-    icon: Stethoscope,
-    to: "/landing",
-    gradient: "from-violet-500 to-purple-600",
-    glow: "shadow-violet-500/30",
+    title: "Sou Paciente",
+    icon: Users,
+    description:
+      "Acompanhe sua evolução, ganhe pontos, siga seu plano alimentar e transforme seus resultados com tecnologia.",
+    cta: "Começar minha jornada",
+    to: "/landing-paciente",
+    gradient: "from-emerald-500 to-teal-600",
+    glowColor: "hsl(152 58% 50% / 0.25)",
+    borderHover: "hover:border-emerald-500/40",
     delay: 0.4,
   },
   {
-    title: "Quero ser Embaixador",
-    subtitle: "Quero ganhar comissões indicando o FitJourney",
-    icon: Award,
-    to: "/para-embaixadores",
+    title: "Sou Afiliado / Indicação",
+    icon: DollarSign,
+    description:
+      "Indique o FitJourney e ganhe comissões recorrentes ajudando pessoas a transformarem suas vidas.",
+    cta: "Quero indicar e ganhar",
+    to: "/landing-afiliado",
     gradient: "from-amber-500 to-orange-600",
-    glow: "shadow-amber-500/30",
+    glowColor: "hsl(38 92% 55% / 0.25)",
+    borderHover: "hover:border-amber-500/40",
     delay: 0.6,
+  },
+];
+
+const pillars = [
+  {
+    icon: Brain,
+    title: "Inteligência clínica determinística",
+    description:
+      "Motor de regras que analisa adesão, check-ins e evolução para gerar alertas e insights em tempo real — sem depender de LLMs.",
+  },
+  {
+    icon: Trophy,
+    title: "Gamificação real de adesão",
+    description:
+      "XP, streaks, medalhas, rankings e conquistas que transformam a rotina nutricional em uma experiência viciante.",
+  },
+  {
+    icon: BotMessageSquare,
+    title: "Automação completa de acompanhamento",
+    description:
+      "Regras inteligentes que disparam lembretes, alertas de risco e ações automáticas para cada paciente.",
+  },
+  {
+    icon: Crown,
+    title: "Experiência premium para pacientes",
+    description:
+      "Interface de app moderno com checklist diário, análise de refeições por IA, receitas e plano alimentar interativo.",
   },
 ];
 
 export default function GatewayPage() {
   return (
-    <div className="min-h-screen bg-[#0a0a14] relative overflow-hidden flex flex-col items-center justify-center px-4">
-      {/* Animated orbs */}
-      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-emerald-500/5 blur-[120px] animate-pulse" />
-      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-violet-500/5 blur-[100px] animate-pulse" style={{ animationDelay: "1s" }} />
-      <div className="absolute top-1/2 right-1/3 w-[300px] h-[300px] rounded-full bg-amber-500/5 blur-[80px] animate-pulse" style={{ animationDelay: "2s" }} />
-
-      {/* Logo */}
-      <motion.div
-        initial={{ opacity: 0, y: -30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="mb-8"
-      >
-        <FitJourneyLogo collapsed={false} size="lg" />
-      </motion.div>
-
-      {/* Headline */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.1 }}
-        className="text-center mb-12 max-w-2xl"
-      >
-        <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight">
-          A plataforma que transforma{" "}
-          <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
-            nutrição em resultados
-          </span>
-        </h1>
-        <p className="text-white/50 text-base md:text-lg">
-          Escolha seu perfil para descobrir como o FitJourney pode transformar sua jornada.
-        </p>
-      </motion.div>
-
-      {/* Role Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl w-full">
-        {roles.map((role) => (
-          <motion.div
-            key={role.title}
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: role.delay }}
-          >
-            <Link
-              to={role.to}
-              className={`group relative block rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-8 
-                hover:border-white/20 hover:bg-white/[0.06] transition-all duration-500 
-                hover:shadow-2xl hover:${role.glow} hover:-translate-y-2`}
-            >
-              {/* Icon */}
-              <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${role.gradient} flex items-center justify-center mb-6 
-                group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
-                <role.icon className="w-7 h-7 text-white" />
-              </div>
-
-              {/* Text */}
-              <h2 className="text-xl font-bold text-white mb-2 group-hover:text-white/90">
-                {role.title}
-              </h2>
-              <p className="text-white/40 text-sm leading-relaxed mb-6">
-                {role.subtitle}
-              </p>
-
-              {/* CTA */}
-              <div className={`flex items-center gap-2 text-sm font-semibold bg-gradient-to-r ${role.gradient} bg-clip-text text-transparent`}>
-                Explorar
-                <ArrowRight className="w-4 h-4 text-white/60 group-hover:translate-x-1 transition-transform" />
-              </div>
-
-              {/* Shimmer effect */}
-              <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 shimmer-sweep" />
-              </div>
-            </Link>
-          </motion.div>
-        ))}
+    <div className="min-h-screen relative overflow-hidden bg-[#060a10]">
+      {/* ─── Gradient background ─── */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#071a12] via-[#060a10] to-[#0a1128]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[600px] rounded-full bg-emerald-600/[0.07] blur-[150px]" />
+        <div className="absolute bottom-0 right-0 w-[600px] h-[500px] rounded-full bg-blue-700/[0.06] blur-[120px]" />
       </div>
 
-      {/* Footer */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.2 }}
-        className="text-white/20 text-xs mt-16 flex items-center gap-1"
-      >
-        <Sparkles className="w-3 h-3" /> Powered by FitJourney — Nutrição Inteligente
-      </motion.p>
+      {/* Floating particles */}
+      {particles.map((p, i) => (
+        <Particle key={i} {...p} />
+      ))}
+
+      <div className="relative z-10 flex flex-col items-center px-4 py-12 md:py-20">
+        {/* ─── Logo ─── */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+          className="mb-10"
+        >
+          <FitJourneyLogo collapsed={false} size="lg" />
+        </motion.div>
+
+        {/* ─── Headline ─── */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.1 }}
+          className="text-center max-w-3xl mb-14"
+        >
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-5">
+            A nova geração do acompanhamento{" "}
+            <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
+              nutricional inteligente
+            </span>
+          </h1>
+          <p className="text-white/50 text-base md:text-lg lg:text-xl max-w-2xl mx-auto">
+            Escolha como deseja entrar no ecossistema FitJourney.
+          </p>
+        </motion.div>
+
+        {/* ─── 3 Profile Cards ─── */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl w-full mb-24">
+          {cards.map((card) => (
+            <motion.div
+              key={card.title}
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: card.delay }}
+            >
+              <Link
+                to={card.to}
+                className={`group relative flex flex-col h-full rounded-2xl border border-white/[0.08] 
+                  bg-white/[0.025] backdrop-blur-xl p-8 lg:p-10
+                  ${card.borderHover} hover:bg-white/[0.05] transition-all duration-500
+                  hover:shadow-2xl hover:-translate-y-2`}
+                style={{
+                  boxShadow: `0 0 0 transparent`,
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.boxShadow = `0 20px 60px -15px ${card.glowColor}`;
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.boxShadow = `0 0 0 transparent`;
+                }}
+              >
+                {/* Icon */}
+                <div
+                  className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${card.gradient} flex items-center justify-center mb-6
+                    group-hover:scale-110 transition-transform duration-300 shadow-lg`}
+                >
+                  <card.icon className="w-8 h-8 text-white" />
+                </div>
+
+                {/* Text */}
+                <h2 className="text-2xl font-bold text-white mb-3">{card.title}</h2>
+                <p className="text-white/40 text-sm leading-relaxed mb-8 flex-1">
+                  {card.description}
+                </p>
+
+                {/* CTA */}
+                <div
+                  className={`flex items-center gap-2 text-sm font-semibold bg-gradient-to-r ${card.gradient} bg-clip-text text-transparent`}
+                >
+                  {card.cta}
+                  <ArrowRight className="w-4 h-4 text-white/50 group-hover:translate-x-2 transition-transform duration-300" />
+                </div>
+
+                {/* Shimmer */}
+                <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 shimmer-sweep" />
+                </div>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* ─── "Por que o FitJourney é diferente?" ─── */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.7 }}
+          className="w-full max-w-6xl mb-20"
+        >
+          <div className="text-center mb-12">
+            <h2 className="text-2xl md:text-4xl font-bold text-white mb-3">
+              Por que o FitJourney é{" "}
+              <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+                diferente?
+              </span>
+            </h2>
+            <p className="text-white/40 text-sm md:text-base max-w-xl mx-auto">
+              Tecnologia de ponta unida à ciência da nutrição para resultados reais.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {pillars.map((pillar, i) => (
+              <motion.div
+                key={pillar.title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.12 }}
+                className="group rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur p-6 hover:bg-white/[0.04] hover:border-white/[0.12] transition-all duration-300"
+              >
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-4 group-hover:bg-emerald-500/20 transition-colors">
+                  <pillar.icon className="w-6 h-6 text-emerald-400" />
+                </div>
+                <h3 className="text-white font-semibold text-base mb-2">{pillar.title}</h3>
+                <p className="text-white/35 text-sm leading-relaxed">{pillar.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* ─── Stats bar ─── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="w-full max-w-4xl mb-20 grid grid-cols-2 md:grid-cols-4 gap-4"
+        >
+          {[
+            { icon: HeartPulse, label: "Pacientes ativos", value: "2.500+" },
+            { icon: Zap, label: "Planos gerados por IA", value: "12.000+" },
+            { icon: ShieldCheck, label: "Profissionais", value: "350+" },
+            { icon: TrendingUp, label: "Taxa de adesão", value: "87%" },
+          ].map((stat, i) => (
+            <div
+              key={stat.label}
+              className="flex flex-col items-center text-center rounded-xl border border-white/[0.06] bg-white/[0.02] p-5"
+            >
+              <stat.icon className="w-5 h-5 text-emerald-400 mb-2" />
+              <span className="text-2xl font-bold text-white">{stat.value}</span>
+              <span className="text-white/35 text-xs mt-1">{stat.label}</span>
+            </div>
+          ))}
+        </motion.div>
+
+        {/* ─── Final CTA ─── */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-16"
+        >
+          <Link to="/auth">
+            <Button
+              size="lg"
+              className="h-14 px-10 text-base font-bold rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 
+                hover:from-emerald-400 hover:to-teal-500 text-white shadow-xl shadow-emerald-600/20 
+                hover:shadow-emerald-500/30 transition-all duration-300 hover:scale-105"
+            >
+              <Sparkles className="w-5 h-5 mr-2" />
+              Entrar no ecossistema FitJourney agora
+            </Button>
+          </Link>
+        </motion.div>
+
+        {/* ─── Footer ─── */}
+        <p className="text-white/15 text-xs flex items-center gap-1">
+          <Sparkles className="w-3 h-3" /> Powered by FitJourney — Nutrição Inteligente
+        </p>
+      </div>
     </div>
   );
 }
