@@ -183,7 +183,18 @@ export default function Chat() {
             <h2 className="font-display font-bold flex items-center gap-2">
               <MessageSquare className="w-5 h-5 text-primary" /> Central de Conversas
             </h2>
-            <p className="text-[10px] text-muted-foreground mt-1">Acompanhamento humano inteligente</p>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-[10px] text-muted-foreground">Acompanhamento humano inteligente</p>
+              {(() => {
+                const onlineContacts = contacts.filter(c => c.is_online).length;
+                return onlineContacts > 0 ? (
+                  <span className="flex items-center gap-1 text-[10px] font-medium text-emerald-500">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    {onlineContacts} online
+                  </span>
+                ) : null;
+              })()}
+            </div>
           </div>
           <div className="flex-1 overflow-y-auto">
             {contacts.map(c => (
