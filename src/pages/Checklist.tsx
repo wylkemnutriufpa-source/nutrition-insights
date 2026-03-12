@@ -277,12 +277,12 @@ export default function Checklist() {
 
   const completedCount = tasks.filter((t) => t.completed).length;
   const progress = tasks.length > 0 ? (completedCount / tasks.length) * 100 : 0;
-  const isToday = date === new Date().toISOString().split("T")[0];
+  const isToday = date === getLocalDate();
 
   const changeDate = (offset: number) => {
-    const d = new Date(date);
+    const d = new Date(date + "T12:00:00");
     d.setDate(d.getDate() + offset);
-    setDate(d.toISOString().split("T")[0]);
+    setDate(getLocalDate(d));
   };
 
   const grouped = tasks.reduce((acc, t) => {
