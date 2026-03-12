@@ -437,7 +437,7 @@ function SidebarContent({
 }
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { profile, isNutritionist, isAdmin, signOut } = useAuth();
+  const { profile, isNutritionist, isPersonal, isAdmin, signOut } = useAuth();
   const location = useLocation();
   const isMobile = useIsMobile();
   const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
