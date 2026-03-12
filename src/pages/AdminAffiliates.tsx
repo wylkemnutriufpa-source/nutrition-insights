@@ -47,7 +47,20 @@ export default function AdminAffiliates() {
         .from("affiliate_commissions")
         .select("*, affiliates(full_name, referral_code)")
         .order("created_at", { ascending: false })
-        .limit(200);
+        .limit(500);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const { data: riskFlags = [] } = useQuery({
+    queryKey: ["admin-risk-flags"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("affiliate_risk_flags")
+        .select("*, affiliates(full_name, referral_code)")
+        .order("created_at", { ascending: false })
+        .limit(100);
       if (error) throw error;
       return data || [];
     },
