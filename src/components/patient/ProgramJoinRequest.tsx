@@ -155,7 +155,7 @@ export default function ProgramJoinRequest({ open, onOpenChange }: ProgramJoinRe
           <>
             {/* Promo Alert */}
             <AnimatePresence>
-              {promo.enabled && selected && (
+              {promo.enabled && selected && (promo.programId === "" || promo.programId === "all" || promo.programId === selected) && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
