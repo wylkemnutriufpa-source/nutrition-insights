@@ -205,6 +205,7 @@ const App = () => (
             <Routes>
               <Route path="/landing" element={<Landing />} />
               <Route path="/landing-paciente" element={<PatientLanding />} />
+              <Route path="/landing-personal" element={<Landing />} />
               <Route path="/landing-afiliado" element={<AffiliateLanding />} />
               <Route path="/biquini-branco" element={<BiquiniBrancoLanding />} />
               <Route path="/auth" element={<Auth />} />
