@@ -183,6 +183,27 @@ export default function ClientDashboard() {
           {/* Ranking Widget */}
           <RankingWidget />
 
+          {/* Participar de Projetos - ao lado do Ranking */}
+          <motion.button
+            whileHover={{ y: -3, scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setProgramJoinOpen(true)}
+            className="relative glass-premium rounded-xl p-4 cursor-pointer shimmer-sweep h-full border border-amber-500/30 hover:border-amber-400/60 transition-all duration-300 overflow-hidden group"
+          >
+            {/* Glow effect */}
+            <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-amber-500/20 via-yellow-400/30 to-amber-500/20 blur-sm opacity-60 group-hover:opacity-100 transition-opacity duration-500 animate-pulse" />
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-amber-500/5 via-yellow-400/10 to-amber-600/5 group-hover:from-amber-500/10 group-hover:via-yellow-400/15 group-hover:to-amber-600/10 transition-all duration-300" />
+            <div className="relative flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/25 to-amber-600/10 flex items-center justify-center shadow-[0_0_15px_rgba(245,158,11,0.3)] group-hover:shadow-[0_0_25px_rgba(245,158,11,0.5)] transition-shadow duration-300">
+                <Rocket className="w-5 h-5 text-amber-400" />
+              </div>
+              <div className="text-left min-w-0">
+                <p className="text-[10px] uppercase tracking-wider font-bold bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent">✨ Projetos</p>
+                <p className="text-sm font-display font-bold bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 bg-clip-text text-transparent truncate">Participar</p>
+              </div>
+            </div>
+          </motion.button>
+
           <Link to="/checklist">
             <motion.div whileHover={{ y: -3, scale: 1.02 }} whileTap={{ scale: 0.98 }} className="glass-premium rounded-xl p-4 cursor-pointer metric-glow transition-all duration-300 shimmer-sweep h-full">
               <div className="flex items-center gap-3">
@@ -241,30 +262,6 @@ export default function ClientDashboard() {
           </Link>
         </motion.div>
 
-        {/* Participar de Projetos - Destaque Dourado */}
-        <motion.div variants={item}>
-          <motion.button
-            whileHover={{ y: -3, scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setProgramJoinOpen(true)}
-            className="w-full glass-premium rounded-xl p-5 cursor-pointer shimmer-sweep border border-warning/30 hover:border-warning/50 transition-all duration-300 relative overflow-hidden group"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-warning/5 via-warning/10 to-warning/5 opacity-60 group-hover:opacity-100 transition-opacity" />
-            <div className="relative flex items-center justify-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 flex items-center justify-center">
-                <Rocket className="w-5.5 h-5.5 text-amber-500" />
-              </div>
-              <div className="text-left">
-                <p className="text-xs uppercase tracking-widest font-bold bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent">
-                  ✨ Projetos Disponíveis
-                </p>
-                <p className="text-sm font-display font-bold bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 bg-clip-text text-transparent">
-                  Participar de um Projeto
-                </p>
-              </div>
-            </div>
-          </motion.button>
-        </motion.div>
 
         <div className="grid md:grid-cols-2 gap-6">
           {/* Active Programs */}
