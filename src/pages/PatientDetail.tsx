@@ -135,7 +135,29 @@ export default function PatientDetail() {
     setUpgrading(false);
   };
 
-  const activateProtocol = async (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!patientId) return;
+    setSavingProfile(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          full_name: editProfileForm.full_name.trim(),
+          phone: editProfileForm.phone.trim() || null,
+        })
+        .eq("user_id", patientId);
+      if (error) throw error;
+      toast.success("Cadastro atualizado com sucesso!");
+      setOpenSection(null);
+      invalidate();
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao atualizar cadastro");
+    }
+    setSavingProfile(false);
+  };
+
+
     e.preventDefault();
     if (!user || !patientId) return;
     const { data, error } = await supabase.from("patient_protocols").insert({
