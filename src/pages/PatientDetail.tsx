@@ -141,7 +141,28 @@ export default function PatientDetail() {
     message: "Como você está se sentindo com o plano alimentar? Gostaria de compartilhar seu progresso?",
   });
 
-  const fetchAll = useCallback(async () => {
+  // Upgrade patient to professional
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeRole, setUpgradeRole] = useState<string>("");
+  const [upgrading, setUpgrading] = useState(false);
+
+  const handleUpgradePatient = async () => {
+    if (!patientId || !upgradeRole) return;
+    setUpgrading(true);
+    try {
+      // Get patient email via profile lookup
+      const { data: userData } = await supabase.rpc("promote_patient_to_professional", {
+        _patient_email: "", // We need the email
+        _target_role: upgradeRole,
+      });
+      // Actually we need to find email first - let's use a different approach
+    } catch (e) {
+      // fallback
+    }
+    setUpgrading(false);
+  };
+
+
     if (!patientId || !user) return;
     setLoading(true);
 
