@@ -1,6 +1,8 @@
+import "react-i18next";
+import type { ReactNode } from "react";
+
 // Fix react-i18next ReactI18NextChildren type incompatibility with Radix UI
-// This overrides the problematic type at the global level
+// See: https://github.com/i18next/react-i18next/issues/1543
 declare module "react-i18next" {
-  // Force ReactI18NextChildren to be ReactNode-compatible
-  type ReactI18NextChildren = React.ReactNode;
+  type ReactI18NextChildren = ReactNode;
 }
