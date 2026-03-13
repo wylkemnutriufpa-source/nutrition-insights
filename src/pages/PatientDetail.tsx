@@ -162,7 +162,7 @@ export default function PatientDetail() {
     setUpgrading(false);
   };
 
-
+  const fetchAll = useCallback(async () => {
     if (!patientId || !user) return;
     setLoading(true);
 
