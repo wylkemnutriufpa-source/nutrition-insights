@@ -21,7 +21,8 @@ import NotificationBell from "@/components/notifications/NotificationBell";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePresenceTracker } from "@/hooks/usePresenceTracker";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
-import CommandPalette from "@/components/common/CommandPalette";
+import CommandPalette, { openCommandPalette } from "@/components/common/CommandPalette";
+import { Search } from "lucide-react";
 import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
 import SOSModal from "@/components/patient/SOSModal";
 import SOSInbox from "@/components/patient/SOSInbox";
@@ -532,6 +533,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </Button>
               </Link>
             )}
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={openCommandPalette}>
+              <Search className="w-4 h-4" />
+            </Button>
             <NotificationBell />
           </div>
         </div>
@@ -587,6 +591,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </Button>
               </Link>
             )}
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={openCommandPalette} title="Buscar (Ctrl+K)">
+              <Search className="w-4 h-4" />
+            </Button>
             <NotificationBell />
           </div>
         </div>
