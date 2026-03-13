@@ -196,11 +196,14 @@ function AuditLogsEmbed() {
 }
 
 // ─── Platform Metrics Card ───
-function MetricCard({ label, value, icon: Icon, color, prefix }: {
-  label: string; value: number; icon: any; color: string; prefix?: string;
+function MetricCard({ label, value, icon: Icon, color, prefix, onClick }: {
+  label: string; value: number; icon: any; color: string; prefix?: string; onClick?: () => void;
 }) {
   return (
-    <Card className="glass shadow-card">
+    <Card
+      className={`glass shadow-card ${onClick ? "cursor-pointer hover:shadow-glow hover:scale-[1.02] transition-all" : ""}`}
+      onClick={onClick}
+    >
       <CardContent className="flex items-center gap-4 py-6">
         <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
           <Icon className={`w-6 h-6 ${color}`} />
@@ -210,6 +213,7 @@ function MetricCard({ label, value, icon: Icon, color, prefix }: {
             {prefix}{typeof value === "number" ? value.toLocaleString("pt-BR") : value}
           </p>
           <p className="text-sm text-muted-foreground">{label}</p>
+          {onClick && <p className="text-[10px] text-primary mt-0.5">Clique para detalhes →</p>}
         </div>
       </CardContent>
     </Card>
