@@ -270,6 +270,8 @@ export default function ImportPatients() {
       
       if (totalResults.created > 0) {
         toast.success(`${totalResults.created} pacientes importados com sucesso!`);
+        // Invalidate patients cache so they show immediately
+        queryClient.invalidateQueries({ queryKey: ["patients"] });
         // Re-check which emails are now imported
         const emails = allPatients.filter(p => p.email).map(p => p.email.toLowerCase());
         try {
