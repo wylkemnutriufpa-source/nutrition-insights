@@ -43,6 +43,8 @@ import { queryKeys } from "@/hooks/queries/queryKeys";
 import { MissionCreator } from "@/components/gamification/MissionCreator";
 import { SmartRecommendationsPanel } from "@/components/dashboard/SmartRecommendationsPanel";
 import type { PatientSignals } from "@/components/dashboard/SmartRecommendationsPanel";
+import { MomentumIndicator } from "@/components/gamification/MomentumIndicator";
+import { JourneyTimelineFeed } from "@/components/gamification/JourneyTimelineFeed";
 
 export default function PatientDetail() {
   const { patientId } = useParams<{ patientId: string }>();
