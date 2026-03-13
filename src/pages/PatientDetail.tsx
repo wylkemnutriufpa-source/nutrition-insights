@@ -213,6 +213,9 @@ export default function PatientDetail() {
   const savePlan = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !patientId) return;
+    const paymentValue = parseFloat(planForm.value) || 0;
+    const patientName = profile?.full_name || "Paciente";
+
     if (patientSubscription) {
       const { error } = await supabase.from("subscriptions").update({
         plan_name: planForm.plan_name,
@@ -232,6 +235,25 @@ export default function PatientDetail() {
       if (error) { toast.error(error.message); return; }
       toast.success("Plano atribuído!");
     }
+
+    // Registrar transação financeira automaticamente quando valor > 0
+    if (paymentValue > 0) {
+      const { error: finError } = await supabase.from("financial_transactions").insert({
+        nutritionist_id: user.id,
+        type: "income",
+        description: `Plano ${planForm.plan_name} - ${patientName}`,
+        amount: paymentValue,
+        date: planForm.started_at || new Date().toISOString().split("T")[0],
+        status: "paid",
+        category: "paciente",
+      });
+      if (finError) {
+        console.error("Erro ao registrar transação financeira:", finError);
+      } else {
+        toast.success(`R$ ${paymentValue.toFixed(2)} registrado no financeiro!`, { icon: "💰" });
+      }
+    }
+
     if (selectedPrestigePlanId) {
       await supabase.from("patient_prestige").delete().eq("patient_id", patientId);
       const { error: prestigeErr } = await supabase.from("patient_prestige").insert({
