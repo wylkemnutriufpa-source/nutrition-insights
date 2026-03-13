@@ -146,14 +146,18 @@ export default function DietTemplates() {
 
   const fetchPhysicalAssessment = async () => {
     if (!patientId) return;
-    const { data } = await supabase
-      .from("physical_assessments" as any)
-      .select("calories_target, protein_target, carbs_target, fat_target, tdee, bmr, assessment_date")
-      .eq("patient_id", patientId)
-      .order("assessment_date", { ascending: false })
-      .limit(1)
-      .single();
-    if (data) setPhysicalAssessment(data as any);
+    try {
+      const { data } = await supabase
+        .from("physical_assessments")
+        .select("calories_target, protein_target, carbs_target, fat_target, tdee, bmr, assessment_date")
+        .eq("patient_id", patientId)
+        .order("assessment_date", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data) setPhysicalAssessment(data as any);
+    } catch (e) {
+      console.warn("[DietTemplates] fetchPhysicalAssessment error:", e);
+    }
   };
 
   const fetchTemplates = async () => {
