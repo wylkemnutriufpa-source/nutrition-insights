@@ -661,12 +661,12 @@ export default function Patients() {
                   {activePatients.length} ativos · {patients.length - activePatients.length} inativos · ordenados por prioridade
                 </p>
               </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => bulkToggle("active")} disabled={bulkToggleMutation.isPending} className="gap-1.5 text-xs">
-                  <ToggleRight className="w-3.5 h-3.5" /> Ativar Todos
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button variant="outline" size="sm" onClick={() => openBulkManage("activate")} className="gap-1.5 text-xs">
+                  <ToggleRight className="w-3.5 h-3.5" /> Ativar
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => bulkToggle("inactive")} disabled={bulkToggleMutation.isPending} className="gap-1.5 text-xs">
-                  <ToggleLeft className="w-3.5 h-3.5" /> Desativar Todos
+                <Button variant="outline" size="sm" onClick={() => openBulkManage("deactivate")} className="gap-1.5 text-xs text-destructive border-destructive/30 hover:bg-destructive/10">
+                  <ToggleLeft className="w-3.5 h-3.5" /> Desativar
                 </Button>
                 <Dialog open={open} onOpenChange={setOpen}>
                   <DialogTrigger asChild>
