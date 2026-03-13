@@ -72,7 +72,7 @@ export default function ProtocolFitJourneyToggle() {
   async function handleSave() {
     if (!user) return;
     setSaving(true);
-    const payload = { ...settings, nutritionist_id: user.id, updated_at: new Date().toISOString() } as any;
+    const payload = { ...settings, nutritionist_id: user.id, updated_at: new Date().toISOString() };
 
     if (hasRecord) {
       await supabase.from("protocol_master_settings" as any).update(payload).eq("nutritionist_id", user.id);
