@@ -11,16 +11,16 @@ import { useSiteSettings, getSetting } from "@/hooks/useSiteSettings";
 
 const features = [
   { icon: CheckCircle2, title: "Checklist Diário Inteligente", desc: "Tarefas personalizadas pelo seu nutricionista, com gamificação e pontos.", color: "text-emerald-400", bg: "bg-emerald-500/10" },
-  { icon: UtensilsCrossed, title: "Plano Alimentar Digital", desc: "Seu plano completo no celular, com acompanhamento de adesão em tempo real.", color: "text-teal-400", bg: "bg-teal-500/10" },
+  { icon: Shield, title: "Protocolo FitJourney™", desc: "Motor clínico exclusivo que gera seu plano alimentar de forma inteligente e personalizada, baseado nos seus dados reais.", color: "text-teal-400", bg: "bg-teal-500/10" },
+  { icon: UtensilsCrossed, title: "Plano Alimentar Digital", desc: "Seu plano completo no celular, com acompanhamento de adesão em tempo real.", color: "text-cyan-400", bg: "bg-cyan-500/10" },
   { icon: Brain, title: "IA para Análise de Refeições", desc: "Tire foto da sua refeição e receba análise nutricional instantânea.", color: "text-violet-400", bg: "bg-violet-500/10" },
   { icon: Trophy, title: "Ranking & Gamificação", desc: "Ganhe pontos, suba no ranking, conquiste medalhas e badges exclusivos.", color: "text-amber-400", bg: "bg-amber-500/10" },
-  { icon: TrendingUp, title: "Evolução Corporal", desc: "Acompanhe peso, medidas e composição corporal com gráficos detalhados.", color: "text-cyan-400", bg: "bg-cyan-500/10" },
-  { icon: MessageSquare, title: "Chat Direto com Nutricionista", desc: "Comunicação em tempo real com seu profissional, sem sair do app.", color: "text-blue-400", bg: "bg-blue-500/10" },
+  { icon: TrendingUp, title: "Evolução Corporal", desc: "Acompanhe peso, medidas e composição corporal com gráficos detalhados.", color: "text-blue-400", bg: "bg-blue-500/10" },
+  { icon: MessageSquare, title: "Chat Direto com Nutricionista", desc: "Comunicação em tempo real com seu profissional, sem sair do app.", color: "text-sky-400", bg: "bg-sky-500/10" },
   { icon: Target, title: "Metas Semanais", desc: "Objetivos claros e mensuráveis definidos pelo seu nutricionista.", color: "text-rose-400", bg: "bg-rose-500/10" },
   { icon: Camera, title: "Fotos de Progresso", desc: "Registro visual da sua transformação com comparativo antes/depois.", color: "text-pink-400", bg: "bg-pink-500/10" },
   { icon: Flame, title: "Streak & Disciplina", desc: "Mantenha sua sequência diária e veja seu score de disciplina subir.", color: "text-orange-400", bg: "bg-orange-500/10" },
   { icon: Heart, title: "Check-in de Saúde", desc: "Registre como está se sentindo e receba dicas personalizadas.", color: "text-red-400", bg: "bg-red-500/10" },
-  { icon: BarChart3, title: "Relatórios de Evolução", desc: "Veja sua jornada completa com dados e insights detalhados.", color: "text-sky-400", bg: "bg-sky-500/10" },
   { icon: Crown, title: "Programa Prestige", desc: "Acesse benefícios exclusivos com planos premium de acompanhamento.", color: "text-yellow-400", bg: "bg-yellow-500/10" },
 ];
 
