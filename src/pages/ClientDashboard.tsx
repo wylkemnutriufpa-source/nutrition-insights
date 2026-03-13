@@ -440,6 +440,11 @@ export default function ClientDashboard() {
           <AdherenceEvolutionChart />
         </motion.div>
 
+        {/* Journey Timeline Feed */}
+        <motion.div variants={item}>
+          <JourneyTimelineFeed compact />
+        </motion.div>
+
         {/* Workout Section - integrated when patient has personal trainer */}
         {workoutInfo.hasPersonal && workoutInfo.recentCompletions.length > 0 && (
           <motion.div variants={item}>
