@@ -146,21 +146,30 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
       } as any)
       .eq("id", pipeline.id);
 
-    // Activate the meal plan with 30-day duration and proper status
-    if (pipeline.generated_plan_id) {
-      const startDate = new Date();
-      const endDate = new Date();
-      endDate.setDate(endDate.getDate() + 30);
+      // First approve, then publish (respects trigger validation)
+      if (pipeline.generated_plan_id) {
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + 30);
 
-      await supabase
-        .from("meal_plans")
-        .update({
-          is_active: true,
-          plan_status: "published_to_patient",
-          start_date: startDate.toISOString().split("T")[0],
-          end_date: endDate.toISOString().split("T")[0],
-        } as any)
-        .eq("id", pipeline.generated_plan_id);
+        // Step 1: Move to approved
+        await supabase
+          .from("meal_plans")
+          .update({
+            plan_status: "approved",
+          } as any)
+          .eq("id", pipeline.generated_plan_id);
+
+        // Step 2: Move to published_to_patient
+        await supabase
+          .from("meal_plans")
+          .update({
+            is_active: true,
+            plan_status: "published_to_patient",
+            start_date: startDate.toISOString().split("T")[0],
+            end_date: endDate.toISOString().split("T")[0],
+          } as any)
+          .eq("id", pipeline.generated_plan_id);
 
       // Schedule criteria if enabled
       if (useScheduling) {
