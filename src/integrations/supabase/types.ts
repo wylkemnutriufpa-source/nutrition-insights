@@ -2140,7 +2140,7 @@ export type Database = {
           protocol_id: string
           schedule_criteria: Json | null
           start_date: string
-          status: string
+          status: Database["public"]["Enums"]["protocol_status"]
           updated_at: string
         }
         Insert: {
@@ -2152,7 +2152,7 @@ export type Database = {
           protocol_id: string
           schedule_criteria?: Json | null
           start_date: string
-          status?: string
+          status?: Database["public"]["Enums"]["protocol_status"]
           updated_at?: string
         }
         Update: {
@@ -2164,7 +2164,7 @@ export type Database = {
           protocol_id?: string
           schedule_criteria?: Json | null
           start_date?: string
-          status?: string
+          status?: Database["public"]["Enums"]["protocol_status"]
           updated_at?: string
         }
         Relationships: [
@@ -4911,6 +4911,7 @@ export type Database = {
         | "pix"
         | "manual"
       payout_status: "pending" | "processing" | "paid" | "failed"
+      protocol_status: "active" | "paused" | "completed" | "cancelled"
       referral_status: "lead" | "registered" | "paying" | "cancelled"
     }
     CompositeTypes: {
@@ -5073,6 +5074,7 @@ export const Constants = {
       ],
       payment_gateway: ["stripe", "mercado_pago", "pagseguro", "pix", "manual"],
       payout_status: ["pending", "processing", "paid", "failed"],
+      protocol_status: ["active", "paused", "completed", "cancelled"],
       referral_status: ["lead", "registered", "paying", "cancelled"],
     },
   },
