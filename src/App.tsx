@@ -93,6 +93,7 @@ const AdminAffiliates = lazy(() => import("./pages/AdminAffiliates"));
 const PatientLanding = lazy(() => import("./pages/PatientLanding"));
 const AffiliateLanding = lazy(() => import("./pages/AffiliateLanding"));
 const AdminLandingPages = lazy(() => import("./pages/AdminLandingPages"));
+const AdminMenuConfig = lazy(() => import("./pages/AdminMenuConfig"));
 const PersonalDashboard = lazy(() => import("./pages/PersonalDashboard"));
 const PersonalStudents = lazy(() => import("./pages/PersonalStudents"));
 const PersonalWorkouts = lazy(() => import("./pages/PersonalWorkouts"));
