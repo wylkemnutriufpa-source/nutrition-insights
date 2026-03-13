@@ -427,10 +427,10 @@ export default function DietTemplates() {
             {filtered.map((template) => {
               const adjustedCal = getAdjustedCalories(template);
               const isAdjusted = (anamnesis || physicalAssessment) && adjustedCal !== template.base_calories;
-              const totalTemplateCals = template.meals.reduce(
-                (s, m) => s + m.foods.reduce((fs, f) => fs + f.calories, 0),
+               const totalTemplateCals = (template.meals || []).reduce(
+                (s, m) => s + (m.foods || []).reduce((fs, f) => fs + (f.calories || 0), 0),
                 0
-              );
+               );
 
               return (
                 <motion.div
