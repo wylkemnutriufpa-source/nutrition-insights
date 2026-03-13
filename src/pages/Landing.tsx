@@ -55,6 +55,7 @@ function AnimatedCounter({ value, suffix = "" }: { value: string; suffix?: strin
 /* ─── data ─── */
 const features = [
   { icon: Brain, title: "IA Integrada", desc: "Análise de refeições por foto, geração automática de planos alimentares e receitas personalizadas com inteligência artificial.", tag: "Core" },
+  { icon: Shield, title: "Protocolo FitJourney™", desc: "Motor clínico 100% determinístico: onboarding guiado, cálculos automáticos (TMB/TDEE), geração de pré-planos com scoring inteligente e auditabilidade total.", tag: "Exclusivo" },
   { icon: Users, title: "Gestão de Pacientes", desc: "Cadastro completo, anamnese inteligente, timeline de eventos, scoring de engajamento e prontuário digital.", tag: "Gestão" },
   { icon: BarChart3, title: "Avaliação Física Completa", desc: "Dobras cutâneas (Jackson-Pollock 7), circunferências, composição corporal, IMC, TMB e TDEE automático.", tag: "Clínico" },
   { icon: Utensils, title: "Planos Alimentares", desc: "Crie planos detalhados por dia/refeição com metas de macros, templates reutilizáveis e agendamento inteligente.", tag: "Nutrição" },
@@ -63,7 +64,6 @@ const features = [
   { icon: FileText, title: "Protocolos & Programas", desc: "Crie protocolos reutilizáveis e programas como 'Projeto Biquíni' com inscrição em massa de pacientes.", tag: "Automação" },
   { icon: Camera, title: "Análise Corporal por Foto", desc: "Upload de fotos (frente, lado, costas) com análise de IA: tipo corporal, % gordura e evolução visual.", tag: "IA" },
   { icon: Pill, title: "Prescrição de Suplementos", desc: "Prescreva suplementos com dosagem, frequência, horário, marca e motivo. Paciente visualiza tudo.", tag: "Clínico" },
-  { icon: MessageSquare, title: "Chat em Tempo Real", desc: "Comunicação direta e segura com pacientes. Indicador de lidas, histórico completo e notificações push.", tag: "Comunicação" },
   { icon: Target, title: "Metas Semanais", desc: "Defina metas de hidratação, passos, sono, treino. Acompanhe progresso visual por paciente.", tag: "Engajamento" },
   { icon: DollarSign, title: "Financeiro Integrado", desc: "Controle pagamentos, assinaturas e planos. Multi-gateway: Stripe, Mercado Pago, PIX e manual.", tag: "Negócio" },
 ];

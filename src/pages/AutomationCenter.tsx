@@ -17,7 +17,9 @@ import { toast } from "sonner";
 import {
   Bot, Plus, Trash2, Clock, AlertTriangle, CheckCircle2,
   Bell, ListChecks, Lightbulb, Zap, BookOpen, ChevronDown, ChevronUp,
+  Lock, Shield,
 } from "lucide-react";
+import ProtocolMasterDocumentation from "@/components/admin/ProtocolMasterDocumentation";
 
 const TRIGGER_TYPES = [
   { value: "checklist.low_detected", label: "Baixa aderência ao checklist" },
@@ -287,7 +289,8 @@ const TUTORIAL_STEPS = [
 ];
 
 export default function AutomationCenter() {
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
+  const isAdmin = roles?.includes("admin");
   const [rules, setRules] = useState<AutomationRule[]>([]);
   const [runs, setRuns] = useState<AutomationRun[]>([]);
   const [loading, setLoading] = useState(true);
@@ -527,11 +530,23 @@ export default function AutomationCenter() {
 
         {/* ── Tabs ── */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-3 w-fit">
+          <TabsList className={`grid w-fit ${isAdmin ? "grid-cols-4" : "grid-cols-3"}`}>
+            {isAdmin && (
+              <TabsTrigger value="protocol" className="gap-2">
+                <Lock className="w-4 h-4" /> Protocolo FJ
+              </TabsTrigger>
+            )}
             <TabsTrigger value="templates" className="gap-2"><Zap className="w-4 h-4" /> Templates</TabsTrigger>
             <TabsTrigger value="rules" className="gap-2"><Bot className="w-4 h-4" /> Regras ({rules.length})</TabsTrigger>
             <TabsTrigger value="history" className="gap-2"><Clock className="w-4 h-4" /> Histórico</TabsTrigger>
           </TabsList>
+
+          {/* ── PROTOCOL TAB (Admin Only) ── */}
+          {isAdmin && (
+            <TabsContent value="protocol" className="mt-4">
+              <ProtocolMasterDocumentation />
+            </TabsContent>
+          )}
 
           {/* ── TEMPLATES TAB ── */}
           <TabsContent value="templates" className="mt-4">
