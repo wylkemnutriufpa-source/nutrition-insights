@@ -5303,6 +5303,16 @@ export type Database = {
         | "reversed"
         | "cancelled"
       commission_type: "first_payment" | "recurring"
+      meal_plan_status:
+        | "draft"
+        | "draft_auto_generated"
+        | "under_professional_review"
+        | "approved"
+        | "published_to_patient"
+        | "revision_requested"
+        | "archived"
+        | "expired"
+        | "replaced"
       meal_type:
         | "breakfast"
         | "morning_snack"
@@ -5317,6 +5327,12 @@ export type Database = {
         | "pix"
         | "manual"
       payout_status: "pending" | "processing" | "paid" | "failed"
+      plan_generation_source:
+        | "manual"
+        | "protocol_fitjourney"
+        | "anamnesis"
+        | "physical_assessment"
+        | "mixed"
       protocol_status:
         | "pending"
         | "active"
@@ -5475,6 +5491,17 @@ export const Constants = {
         "cancelled",
       ],
       commission_type: ["first_payment", "recurring"],
+      meal_plan_status: [
+        "draft",
+        "draft_auto_generated",
+        "under_professional_review",
+        "approved",
+        "published_to_patient",
+        "revision_requested",
+        "archived",
+        "expired",
+        "replaced",
+      ],
       meal_type: [
         "breakfast",
         "morning_snack",
@@ -5485,6 +5512,13 @@ export const Constants = {
       ],
       payment_gateway: ["stripe", "mercado_pago", "pagseguro", "pix", "manual"],
       payout_status: ["pending", "processing", "paid", "failed"],
+      plan_generation_source: [
+        "manual",
+        "protocol_fitjourney",
+        "anamnesis",
+        "physical_assessment",
+        "mixed",
+      ],
       protocol_status: [
         "pending",
         "active",

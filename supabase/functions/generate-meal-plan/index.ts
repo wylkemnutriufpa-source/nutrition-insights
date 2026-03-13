@@ -8,6 +8,9 @@ const corsHeaders = {
 };
 
 // ──── Constants ────
+const ENGINE_VERSION = "2.1.0";
+const PROTOCOL_VERSION = "fitjourney_master_v1";
+
 const MEAL_KCAL_SPLIT: Record<string, number> = {
   breakfast: 0.20,
   morning_snack: 0.10,
@@ -34,6 +37,15 @@ const GOAL_KCAL_ADJUSTMENT: Record<string, number> = {
   athletic_performance: 200,
 };
 
+const GOAL_STRATEGY: Record<string, { calorie: string; macro: string }> = {
+  lose_weight: { calorie: "calorie_deficit", macro: "high_protein_cut" },
+  maintain: { calorie: "maintenance", macro: "balanced" },
+  gain_muscle: { calorie: "calorie_surplus_moderate", macro: "high_protein_bulk" },
+  gain_weight: { calorie: "calorie_surplus_high", macro: "high_carb_bulk" },
+  improve_health: { calorie: "slight_deficit", macro: "anti_inflammatory" },
+  athletic_performance: { calorie: "calorie_surplus_moderate", macro: "performance_endurance" },
+};
+
 // ──── TMB Calculator (Mifflin-St Jeor) ────
 function calculateTMB(weight: number, height: number, age: number, sex: string): number {
   if (sex === "female") return Math.round(10 * weight + 6.25 * height - 5 * age - 161);
@@ -41,11 +53,13 @@ function calculateTMB(weight: number, height: number, age: number, sex: string):
 }
 
 // ──── TDEE + Goal-adjusted target ────
-function calculateTargetKcal(tmb: number, activityLevel: string, goal: string): number {
+function calculateTDEE(tmb: number, activityLevel: string): number {
   const multiplier = ACTIVITY_MULTIPLIERS[activityLevel] || 1.375;
-  const tdee = Math.round(tmb * multiplier);
+  return Math.round(tmb * multiplier);
+}
+
+function calculateTargetKcal(tdee: number, goal: string): number {
   const adjustment = GOAL_KCAL_ADJUSTMENT[goal] || 0;
-  // Clamp to safe range
   return Math.max(1000, Math.min(3500, tdee + adjustment));
 }
 
@@ -87,8 +101,8 @@ function mapGoalToConditions(goal: string): string[] {
 function scoreTemplate(
   template: any, goal: string, restrictions: string[],
   conditions: string[], kcalTarget: number, cookingPref: string
-): { score: number; reasons: string[] } {
-  let score = 0;
+): { score: number; breakdown: { goal_match: number; restriction_match: number; calorie_match: number; clinical_match: number; preference_match: number }; reasons: string[] } {
+  let goalScore = 0, restrictionScore = 0, calorieScore = 0, clinicalScore = 0, preferenceScore = 0;
   const reasons: string[] = [];
   const tConds = (template.conditions || []) as string[];
   const tTags = (template.tags || []) as string[];
@@ -96,38 +110,39 @@ function scoreTemplate(
 
   // 1. Goal match (highest weight)
   for (const gc of goalConds) {
-    if (tConds.some((c: string) => c.toLowerCase().includes(gc))) { score += 10; reasons.push(`Objetivo "${gc}" compatível`); }
-    if (tTags.some((t: string) => t.toLowerCase().includes(gc))) score += 5;
+    if (tConds.some((c: string) => c.toLowerCase().includes(gc))) { goalScore += 10; reasons.push(`Objetivo "${gc}" compatível`); }
+    if (tTags.some((t: string) => t.toLowerCase().includes(gc))) goalScore += 5;
   }
 
   // 2. Medical conditions match
   for (const cond of conditions) {
-    if (tConds.some((c: string) => c.toLowerCase().includes(cond.toLowerCase()))) { score += 15; reasons.push(`Condição "${cond}" contemplada`); }
-    if (tTags.some((t: string) => t.toLowerCase().includes(cond.toLowerCase()))) score += 8;
+    if (tConds.some((c: string) => c.toLowerCase().includes(cond.toLowerCase()))) { clinicalScore += 15; reasons.push(`Condição "${cond}" contemplada`); }
+    if (tTags.some((t: string) => t.toLowerCase().includes(cond.toLowerCase()))) clinicalScore += 8;
   }
 
   // 3. Dietary restrictions
   if (restrictions.includes("vegetarian") || restrictions.includes("vegan")) {
-    if (template.slug?.includes("veg")) { score += 20; reasons.push("Template vegetariano/vegano"); }
-    else score -= 5;
+    if (template.slug?.includes("veg")) { restrictionScore += 20; reasons.push("Template vegetariano/vegano"); }
+    else restrictionScore -= 5;
   }
-  if (restrictions.includes("gluten_free") && tTags.includes("sem_gluten")) { score += 10; reasons.push("Sem glúten"); }
-  if (restrictions.includes("lactose_free") && tTags.includes("sem_lactose")) { score += 10; reasons.push("Sem lactose"); }
+  if (restrictions.includes("gluten_free") && tTags.includes("sem_gluten")) { restrictionScore += 10; reasons.push("Sem glúten"); }
+  if (restrictions.includes("lactose_free") && tTags.includes("sem_lactose")) { restrictionScore += 10; reasons.push("Sem lactose"); }
 
-  // 4. Calorie proximity (closer = much better)
+  // 4. Calorie proximity
   const calDiff = Math.abs((template.base_calories || 2000) - kcalTarget);
-  if (calDiff < 100) { score += 15; reasons.push(`Calorias muito próximas (±${calDiff})`); }
-  else if (calDiff < 200) { score += 10; reasons.push(`Calorias próximas (±${calDiff})`); }
-  else if (calDiff < 400) score += 5;
-  else if (calDiff > 600) score -= 5;
+  if (calDiff < 100) { calorieScore += 15; reasons.push(`Calorias muito próximas (±${calDiff})`); }
+  else if (calDiff < 200) { calorieScore += 10; reasons.push(`Calorias próximas (±${calDiff})`); }
+  else if (calDiff < 400) calorieScore += 5;
+  else if (calDiff > 600) calorieScore -= 5;
 
   // 5. Cooking preference match
-  if (cookingPref === "quick" && (template.slug?.includes("pratico") || tTags.includes("pratico"))) { score += 8; reasons.push("Cardápio prático"); }
+  if (cookingPref === "quick" && (template.slug?.includes("pratico") || tTags.includes("pratico"))) { preferenceScore += 8; reasons.push("Cardápio prático"); }
 
-  // 6. "Dieta flexível" bonus (universal compatibility)
-  if (template.slug?.includes("flexivel") || tTags.includes("flexivel")) score += 3;
+  // 6. "Dieta flexível" bonus
+  if (template.slug?.includes("flexivel") || tTags.includes("flexivel")) preferenceScore += 3;
 
-  return { score, reasons };
+  const score = goalScore + restrictionScore + calorieScore + clinicalScore + preferenceScore;
+  return { score, breakdown: { goal_match: goalScore, restriction_match: restrictionScore, calorie_match: calorieScore, clinical_match: clinicalScore, preference_match: preferenceScore }, reasons };
 }
 
 // ──── Filter food by restrictions ────
@@ -164,7 +179,6 @@ function generatePlanFromTemplate(
         !isDisliked(f.name || "", f.portion || "", disliked)
       );
 
-      // Try substitutions if all filtered out
       if (allowedFoods.length === 0) {
         for (const f of foods) {
           for (const sub of (f.substitutions || []) as string[]) {
@@ -177,7 +191,6 @@ function generatePlanFromTemplate(
       }
       if (allowedFoods.length === 0) allowedFoods = foods;
 
-      // Day variation: rotate substitutions
       const dayFoods = allowedFoods.map((f: any) => {
         if (day > 0 && day % 2 === 0 && (f.substitutions || []).length > 0 && !f._substituted) {
           const subIdx = (day - 1) % f.substitutions.length;
@@ -236,6 +249,54 @@ function generateTips(answers: Record<string, any>): { tip: string; category: st
   if (answers.bowel_function === "irregular" || answers.bowel_function === "constipated")
     tips.push({ tip: "Aumente fibras e água para regularizar intestino.", category: "digestion", icon: "🌿" });
   return tips;
+}
+
+// ──── Build standardized generation_metadata ────
+function buildGenerationMetadata(
+  tmb: number, tdee: number, tdeeFactor: number, kcalTarget: number, goal: string,
+  macros: { protein: number; carbs: number; fat: number }, weight: number, height: number,
+  age: number, sex: string, activityLevel: string, dataSource: string,
+  bestTemplate: any, scoredTemplates: any[], restrictions: string[],
+  medicalConditions: string[], cookingPref: string, disliked: string[]
+): Record<string, any> {
+  const strategy = GOAL_STRATEGY[goal] || { calorie: "unknown", macro: "unknown" };
+  return {
+    engine_version: ENGINE_VERSION,
+    protocol_version: PROTOCOL_VERSION,
+    bmr_formula: "mifflin_st_jeor",
+    bmr_value: tmb,
+    tdee_factor: tdeeFactor,
+    tdee_value: tdee,
+    goal,
+    goal_strategy: strategy.calorie,
+    calorie_target: kcalTarget,
+    macro_strategy: strategy.macro,
+    macros: {
+      protein_g: macros.protein,
+      carbs_g: macros.carbs,
+      fat_g: macros.fat,
+    },
+    patient_data: { weight, height, age, sex, activity_level: activityLevel },
+    template_selected: {
+      id: bestTemplate.id,
+      slug: bestTemplate.slug,
+      name: bestTemplate.name,
+      version: bestTemplate.template_version || 1,
+    },
+    template_score: bestTemplate._score,
+    score_breakdown: bestTemplate._breakdown,
+    alternatives: scoredTemplates.slice(1, 4).map((t: any) => ({
+      id: t.id, slug: t.slug, name: t.name, score: t._score,
+    })),
+    data_sources: dataSource === "physical_assessment"
+      ? ["anamnesis", "physical_assessment"]
+      : ["anamnesis"],
+    restrictions,
+    medical_conditions: medicalConditions,
+    cooking_preference: cookingPref,
+    disliked_foods: disliked,
+    generated_at: new Date().toISOString(),
+  };
 }
 
 serve(async (req) => {
@@ -309,7 +370,9 @@ serve(async (req) => {
     const activityLevel = answers.activity_level || "light";
 
     const tmb = calculateTMB(weight, height, age, sex);
-    const kcalTarget = calculateTargetKcal(tmb, activityLevel, goal);
+    const tdeeFactor = ACTIVITY_MULTIPLIERS[activityLevel] || 1.375;
+    const tdee = calculateTDEE(tmb, activityLevel);
+    const kcalTarget = calculateTargetKcal(tdee, goal);
     const macros = calculateMacros(kcalTarget, goal, weight);
 
     // Check physical assessment override
@@ -359,8 +422,8 @@ serve(async (req) => {
 
     const scoredTemplates = templates
       .map((t: any) => {
-        const { score, reasons } = scoreTemplate(t, goal, restrictions, medicalConditions, finalKcal, cookingPref);
-        return { ...t, _score: score, _reasons: reasons };
+        const { score, breakdown, reasons } = scoreTemplate(t, goal, restrictions, medicalConditions, finalKcal, cookingPref);
+        return { ...t, _score: score, _breakdown: breakdown, _reasons: reasons };
       })
       .sort((a: any, b: any) => b._score - a._score);
 
@@ -369,7 +432,14 @@ serve(async (req) => {
     // ── 7. Generate plan items deterministically ──
     const planItems = generatePlanFromTemplate(bestTemplate, finalKcal, finalMacros, restrictions, disliked);
 
-    // ── 8. Create or reuse meal plan ──
+    // ── 8. Build standardized generation_metadata ──
+    const generationMetadata = buildGenerationMetadata(
+      tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
+      age, sex, activityLevel, dataSource, bestTemplate, scoredTemplates,
+      restrictions, medicalConditions, cookingPref, disliked
+    );
+
+    // ── 9. Create or update meal plan ──
     let finalMealPlanId = meal_plan_id;
     const startDate = new Date().toISOString().split("T")[0];
 
@@ -382,42 +452,19 @@ serve(async (req) => {
         .from("meal_plans")
         .insert({
           title: `Plano Personalizado — ${bestTemplate.name}`,
-          description: `Gerado pelo Protocolo FitJourney. Template: ${bestTemplate.name}. Meta: ${finalKcal}kcal/dia.`,
+          description: `Gerado pelo Protocolo FitJourney v${ENGINE_VERSION}. Template: ${bestTemplate.name}. Meta: ${finalKcal}kcal/dia.`,
           patient_id,
           nutritionist_id: nutritionistId,
           start_date: startDate,
           end_date: endDate.toISOString().split("T")[0],
-          is_active: false, // NOT active until approved
+          is_active: false,
           plan_status: "draft_auto_generated",
           template_id: bestTemplate.id,
           template_slug: bestTemplate.slug,
           template_version: 1,
           generation_source: "protocol_fitjourney",
           generated_by: userId,
-          generation_metadata: {
-            tmb,
-            tdee: Math.round(tmb * (ACTIVITY_MULTIPLIERS[activityLevel] || 1.375)),
-            kcal_target: finalKcal,
-            macros: finalMacros,
-            goal,
-            restrictions,
-            medical_conditions: medicalConditions,
-            disliked_foods: disliked,
-            cooking_preference: cookingPref,
-            activity_level: activityLevel,
-            weight,
-            height,
-            age,
-            sex,
-            data_source: dataSource,
-            template_score: bestTemplate._score,
-            template_reasons: bestTemplate._reasons,
-            alternatives: scoredTemplates.slice(1, 4).map((t: any) => ({
-              id: t.id, slug: t.slug, name: t.name, score: t._score, reasons: t._reasons,
-            })),
-            generated_at: new Date().toISOString(),
-            version: "2.0",
-          },
+          generation_metadata: generationMetadata,
         })
         .select("id")
         .single();
@@ -425,25 +472,33 @@ serve(async (req) => {
       if (planErr || !newPlan) throw new Error("Falha ao criar plano alimentar: " + planErr?.message);
       finalMealPlanId = newPlan.id;
     } else if (finalMealPlanId) {
-      // Update existing plan with audit metadata
+      // ── SAFE REGENERATION: Archive previous version before overwriting ──
+      // Get existing plan data
+      const { data: existingPlan } = await serviceClient
+        .from("meal_plans")
+        .select("plan_status, template_id, generation_metadata")
+        .eq("id", finalMealPlanId)
+        .single();
+
+      // Block regeneration of already approved/published plans
+      if (existingPlan?.plan_status === "published_to_patient" || existingPlan?.plan_status === "approved") {
+        return new Response(JSON.stringify({
+          error: "Não é possível regenerar plano já aprovado/publicado. Crie um novo plano.",
+          code: "PLAN_ALREADY_APPROVED",
+        }), {
+          status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Update existing plan with new metadata
       await serviceClient.from("meal_plans").update({
         plan_status: "draft_auto_generated",
         template_id: bestTemplate.id,
         template_slug: bestTemplate.slug,
+        template_version: 1,
         generation_source: "protocol_fitjourney",
         generated_by: userId,
-        generation_metadata: {
-          tmb,
-          tdee: Math.round(tmb * (ACTIVITY_MULTIPLIERS[activityLevel] || 1.375)),
-          kcal_target: finalKcal,
-          macros: finalMacros,
-          goal,
-          data_source: dataSource,
-          template_score: bestTemplate._score,
-          template_reasons: bestTemplate._reasons,
-          generated_at: new Date().toISOString(),
-          version: "2.0",
-        },
+        generation_metadata: generationMetadata,
       }).eq("id", finalMealPlanId);
     }
 
@@ -453,13 +508,23 @@ serve(async (req) => {
       });
     }
 
-    // ── 9. Delete existing items and insert new (transactional) ──
-    await serviceClient.from("meal_plan_items").delete().eq("meal_plan_id", finalMealPlanId);
+    // ── 10. SAFE item replacement: delete then insert in sequence ──
+    // If delete succeeds but insert fails, we still have the metadata to regenerate
+    const { error: deleteErr } = await serviceClient.from("meal_plan_items").delete().eq("meal_plan_id", finalMealPlanId);
+    if (deleteErr) throw new Error("Falha ao limpar itens anteriores: " + deleteErr.message);
+
     const itemsToInsert = planItems.map((item: any) => ({ ...item, meal_plan_id: finalMealPlanId }));
     const { error: insertErr } = await serviceClient.from("meal_plan_items").insert(itemsToInsert);
-    if (insertErr) throw new Error("Falha ao inserir itens: " + insertErr.message);
+    if (insertErr) {
+      // Rollback: mark plan as needing regeneration
+      await serviceClient.from("meal_plans").update({
+        plan_status: "draft",
+        description: "ERRO: Itens falharam ao inserir. Regenere o plano.",
+      }).eq("id", finalMealPlanId);
+      throw new Error("Falha ao inserir itens (plano marcado para regeneração): " + insertErr.message);
+    }
 
-    // ── 10. Save computed values to anamnesis ──
+    // ── 11. Save computed values to anamnesis ──
     await serviceClient.from("patient_anamnesis").update({
       computed_tmb: tmb,
       computed_kcal_target: finalKcal,
@@ -468,14 +533,14 @@ serve(async (req) => {
       computed_fat: finalMacros.fat,
     }).eq("id", anamnesis.id);
 
-    // ── 11. Deterministic tips ──
+    // ── 12. Deterministic tips ──
     const tips = generateTips(mergedAnswers);
     await serviceClient.from("patient_tips").delete().eq("user_id", patient_id);
     if (tips.length > 0) {
       await serviceClient.from("patient_tips").insert(tips.map((t) => ({ user_id: patient_id, ...t })));
     }
 
-    // ── 12. Timeline event with full audit ──
+    // ── 13. Timeline event with FULL audit metadata ──
     await serviceClient.from("patient_timeline").insert({
       patient_id,
       event_type: "meal_plan",
@@ -483,29 +548,39 @@ serve(async (req) => {
       description: `Template: "${bestTemplate.name}" | Meta: ${finalKcal}kcal/dia | ${finalMacros.protein}g prot / ${finalMacros.carbs}g carb / ${finalMacros.fat}g gord | Fonte: ${dataSource}`,
       metadata: {
         type: "plan_generated",
-        protocol: "fitjourney_master",
+        protocol: PROTOCOL_VERSION,
+        engine_version: ENGINE_VERSION,
         meal_plan_id: finalMealPlanId,
         template_id: bestTemplate.id,
         template_slug: bestTemplate.slug,
         template_name: bestTemplate.name,
         template_score: bestTemplate._score,
+        score_breakdown: bestTemplate._breakdown,
         items_count: planItems.length,
         data_source: dataSource,
+        bmr_formula: "mifflin_st_jeor",
         tmb,
+        tdee,
+        tdee_factor: tdeeFactor,
         kcal_target: finalKcal,
         macros: finalMacros,
         goal,
+        goal_strategy: (GOAL_STRATEGY[goal] || {}).calorie,
         restrictions,
-        version: "2.0",
+        medical_conditions: medicalConditions,
       },
       created_by: userId,
     });
 
-    // ── 13. Explainability response ──
+    // ── 14. Explainability response ──
     const explainability = {
+      engine_version: ENGINE_VERSION,
+      protocol_version: PROTOCOL_VERSION,
       calculation: {
+        bmr_formula: "mifflin_st_jeor",
         tmb,
-        tdee: Math.round(tmb * (ACTIVITY_MULTIPLIERS[activityLevel] || 1.375)),
+        tdee_factor: tdeeFactor,
+        tdee,
         goal_adjustment: GOAL_KCAL_ADJUSTMENT[goal] || 0,
         final_kcal: finalKcal,
         data_source: dataSource,
@@ -514,12 +589,14 @@ serve(async (req) => {
         weight, height, age, sex,
         activity_level: activityLevel,
         goal,
+        goal_strategy: (GOAL_STRATEGY[goal] || {}).calorie,
+        macro_strategy: (GOAL_STRATEGY[goal] || {}).macro,
         restrictions: restrictions.length > 0 ? restrictions : ["nenhuma"],
         medical_conditions: medicalConditions.length > 0 ? medicalConditions : ["nenhuma"],
         disliked_foods: disliked.length > 0 ? disliked : ["nenhum"],
         cooking_preference: cookingPref || "sem preferência",
       },
-      macros: finalMacros,
+      macros: { protein: finalMacros.protein, carbs: finalMacros.carbs, fat: finalMacros.fat },
       selected_template: {
         id: bestTemplate.id,
         slug: bestTemplate.slug,
@@ -527,11 +604,13 @@ serve(async (req) => {
         category: bestTemplate.category,
         base_calories: bestTemplate.base_calories,
         score: bestTemplate._score,
+        score_breakdown: bestTemplate._breakdown,
         reasons: bestTemplate._reasons,
       },
       alternative_templates: scoredTemplates.slice(1, 4).map((t: any) => ({
         id: t.id, slug: t.slug, name: t.name,
-        base_calories: t.base_calories, score: t._score, reasons: t._reasons,
+        base_calories: t.base_calories, score: t._score,
+        score_breakdown: t._breakdown, reasons: t._reasons,
       })),
     };
 
