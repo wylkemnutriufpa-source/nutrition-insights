@@ -55,4 +55,11 @@ export const queryKeys = {
   notifications: {
     unread: (userId: string) => ["notifications", "unread", userId] as const,
   },
+
+  // Engagement & Missions
+  engagement: {
+    adherence: (patientId: string) => ["engagement", "adherence", patientId] as const,
+    missions: (patientId: string) => ["engagement", "missions", patientId] as const,
+    signals: (patientId: string) => ["engagement", "signals", patientId] as const,
+  },
 } as const;
