@@ -36,6 +36,7 @@ import SystemUsageCard from "@/components/dashboard/SystemUsageCard";
 import NutritionCopilot from "@/components/dashboard/NutritionCopilot";
 import ChurnRiskPanel from "@/components/dashboard/ChurnRiskPanel";
 import StagnationAlerts from "@/components/dashboard/StagnationAlerts";
+import ClinicalRiskDashboardContent from "@/components/dashboard/ClinicalRiskDashboardContent";
 
 import PatientProgressSimulation from "@/components/dashboard/PatientProgressSimulation";
 import PatientRevenueSimulator from "@/components/dashboard/PatientRevenueSimulator";
@@ -592,6 +593,7 @@ function NutritionistDashboardContent() {
           { key: "clinical", icon: Heart, label: "Clínico" },
           { key: "analytics", icon: BarChart3, label: "Analytics" },
           { key: "strategy", icon: Brain, label: "IA Estratégica" },
+          { key: "risk", icon: Shield, label: "Risco Clínico" },
         ].map((tab) => (
           <button
             key={tab.key}
@@ -618,6 +620,8 @@ function NutritionistDashboardContent() {
         <AnalyticsDashboard />
       ) : activeTab === "strategy" ? (
         <AIStrategyCenter />
+      ) : activeTab === "risk" ? (
+        <ClinicalRiskDashboardContent />
       ) : (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
       {/* ── Premium Header ── */}
@@ -705,23 +709,6 @@ function NutritionistDashboardContent() {
         />
       </motion.div>
 
-      {/* ── Clinical Risk Dashboard Link ── */}
-      <motion.div variants={item}>
-        <Link to="/clinical-risk">
-          <div className="glass rounded-xl p-4 flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer border border-destructive/10">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
-                <Shield className="w-5 h-5 text-destructive" />
-              </div>
-              <div>
-                <p className="font-display font-semibold">Painel de Risco Clínico</p>
-                <p className="text-xs text-muted-foreground">Priorização e monitoramento ativo de pacientes</p>
-              </div>
-            </div>
-            <ArrowRight className="w-5 h-5 text-muted-foreground" />
-          </div>
-        </Link>
-      </motion.div>
 
       {/* ── Main Grid: Attention + Insights + Risk ── */}
       <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
