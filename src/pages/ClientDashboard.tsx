@@ -422,6 +422,11 @@ export default function ClientDashboard() {
           )}
         </motion.div>
 
+        {/* Daily Missions & Adherence Score */}
+        <motion.div variants={item}>
+          <DailyMissionsWidget />
+        </motion.div>
+
         {/* Workout Section - integrated when patient has personal trainer */}
         {workoutInfo.hasPersonal && workoutInfo.recentCompletions.length > 0 && (
           <motion.div variants={item}>
