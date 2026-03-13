@@ -27,7 +27,7 @@ const AI_FEATURE_KEYS = [
   { key: "analyze_meal", label: "Análise de Refeição" },
   { key: "generate_recipe", label: "Gerador de Receitas" },
   { key: "body_analysis", label: "Análise Corporal" },
-  { key: "autobot_chat", label: "AutoBot Chat" },
+  
   { key: "anamnesis_insights", label: "Anamnese IA" },
   { key: "weekly_report", label: "Relatório Semanal" },
   { key: "clinical_decision", label: "Decisão Clínica IA" },
