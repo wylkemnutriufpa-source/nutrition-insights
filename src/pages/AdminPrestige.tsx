@@ -48,7 +48,7 @@ const DEFAULT_PLANS = [
 ];
 
 export default function AdminPrestige() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [plans, setPlans] = useState<any[]>([]);
   const [rules, setRules] = useState<PointRule[]>([]);
   const [saving, setSaving] = useState(false);
