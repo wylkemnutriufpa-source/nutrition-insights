@@ -92,7 +92,12 @@ export function useToggleChecklistTask() {
       if (context?.previous) {
         queryClient.setQueryData(context.key, context.previous);
       }
+      // Don't show error for debounced calls
+      if (_err instanceof Error && _err.message === "__debounced__") return;
       if (navigator.onLine) toast.error("Erro ao atualizar tarefa");
+    },
+    onSettled: (_data, _err, vars) => {
+      inflightRef.current.delete(vars.task.id);
     },
   });
 }
