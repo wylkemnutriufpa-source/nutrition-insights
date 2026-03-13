@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Crown, Zap, Save, Plus, Trash2, X, Sparkles, Loader2, Users, Search, UserPlus, UserMinus, RotateCcw } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import PrestigeBadge from "@/components/prestige/PrestigeBadge";
+import PatientPickerDropdown from "@/components/common/PatientPickerDropdown";
 import type { PrestigePlan } from "@/hooks/usePrestige";
 
 interface PointRule {
@@ -47,7 +48,7 @@ const DEFAULT_PLANS = [
 ];
 
 export default function AdminPrestige() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [plans, setPlans] = useState<any[]>([]);
   const [rules, setRules] = useState<PointRule[]>([]);
   const [saving, setSaving] = useState(false);
@@ -76,20 +77,27 @@ export default function AdminPrestige() {
     if (membersLoaded) return;
     
     const [patientsRes, membersRes] = await Promise.all([
-      supabase
-        .from("nutritionist_patients")
-        .select("patient_id, profiles!nutritionist_patients_patient_id_fkey(user_id, full_name)")
-        .eq("nutritionist_id", user?.id || "")
-        .eq("status", "active"),
+      // Admin sees all patients; nutritionist sees only their own
+      isAdmin
+        ? supabase.from("profiles").select("user_id, full_name")
+        : supabase
+            .from("nutritionist_patients")
+            .select("patient_id")
+            .eq("nutritionist_id", user?.id || "")
+            .eq("status", "active"),
       supabase
         .from("patient_prestige")
         .select("id, patient_id, plan_id")
         .eq("is_active", true),
     ]);
 
-    // Fallback: if join doesn't work, load profiles separately
     let patientList: PatientInfo[] = [];
-    if (patientsRes.data) {
+    if (isAdmin) {
+      patientList = (patientsRes.data || []).map((p: any) => ({
+        user_id: p.user_id,
+        full_name: p.full_name || "Sem nome",
+      })).sort((a, b) => a.full_name.localeCompare(b.full_name));
+    } else if (patientsRes.data) {
       const patientIds = patientsRes.data.map((p: any) => p.patient_id);
       const { data: profiles } = await supabase
         .from("profiles")
@@ -253,11 +261,8 @@ export default function AdminPrestige() {
 
   // Get unassigned patients for a given plan's search
   const getAvailablePatients = (planId: string) => {
-    const search = (memberSearch[planId] || "").toLowerCase();
     const assignedIds = new Set(members.map(m => m.patient_id));
-    return allPatients
-      .filter(p => !assignedIds.has(p.user_id))
-      .filter(p => !search || p.full_name.toLowerCase().includes(search));
+    return allPatients.filter(p => !assignedIds.has(p.user_id));
   };
 
   const getPlanMembers = (planId: string) => {
@@ -494,43 +499,12 @@ export default function AdminPrestige() {
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        {/* Search to add */}
-                        <div className="relative">
-                          <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-muted-foreground" />
-                          <Input
-                            placeholder="Buscar paciente para adicionar..."
-                            value={search}
-                            onChange={e => setMemberSearch(prev => ({ ...prev, [plan.id]: e.target.value }))}
-                            className="pl-8 h-9 text-sm"
-                          />
-                        </div>
-
-                        {/* Available patients dropdown */}
-                        {search.length > 0 && (
-                          <ScrollArea className="max-h-40 border border-border rounded-lg">
-                            <div className="p-1">
-                              {available.length === 0 ? (
-                                <p className="text-xs text-muted-foreground text-center py-3">Nenhum paciente disponível</p>
-                              ) : (
-                                available.slice(0, 20).map(patient => (
-                                  <button
-                                    key={patient.user_id}
-                                    onClick={() => assignPatient(patient.user_id, plan.id)}
-                                    disabled={assigning === patient.user_id}
-                                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left hover:bg-primary/10 transition-all text-sm group"
-                                  >
-                                    {assigning === patient.user_id ? (
-                                      <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
-                                    ) : (
-                                      <UserPlus className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
-                                    )}
-                                    <span className="flex-1 truncate">{patient.full_name}</span>
-                                  </button>
-                                ))
-                              )}
-                            </div>
-                          </ScrollArea>
-                        )}
+                      {/* Search to add */}
+                        <PatientPickerDropdown
+                          patients={available.map(p => ({ id: p.user_id, name: p.full_name }))}
+                          onSelect={(patientId) => assignPatient(patientId, plan.id)}
+                          loading={assigning}
+                        />
 
                         <Separator />
 
