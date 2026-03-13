@@ -1,12 +1,9 @@
+// Fix react-i18next type incompatibility with Radix UI components
+// See: https://github.com/i18next/react-i18next/issues/1543
 import "react-i18next";
-import { ReactNode } from "react";
 
 declare module "react-i18next" {
   interface CustomTypeOptions {
-    // Fixes type incompatibility between react-i18next and @radix-ui
-    defaultNS: "translation";
+    allowObjectInHTMLChildren: false;
   }
-
-  // Override ReactI18NextChildren to be compatible with ReactNode
-  export type ReactI18NextChildren = ReactNode;
 }
