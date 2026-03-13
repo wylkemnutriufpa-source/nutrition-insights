@@ -601,6 +601,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={openCommandPalette} title="Buscar (Ctrl+K)">
               <Search className="w-4 h-4" />
             </Button>
+            {showOnboardingBadge && (
+              <Button variant="ghost" size="icon" className="h-8 w-8 relative" onClick={openOnboardingManually} title="Tour de onboarding">
+                <GraduationCap className="w-4 h-4 text-primary" />
+                <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-destructive rounded-full animate-pulse" />
+              </Button>
+            )}
             <NotificationBell />
           </div>
         </div>
