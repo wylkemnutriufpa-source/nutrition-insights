@@ -963,7 +963,18 @@ export default function Anamnesis() {
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
-              onClick={() => setStep((s) => Math.max(0, s - 1))}
+              onClick={() => {
+                // Skip back over conditional time questions that were skipped
+                const prevStep = step - 1;
+                const prevQ = questions[prevStep];
+                const shouldSkip = (
+                  (prevQ?.id === "morning_snack_time" && answers.has_morning_snack === "never") ||
+                  (prevQ?.id === "afternoon_snack_time" && answers.has_afternoon_snack === "never") ||
+                  (prevQ?.id === "dinner_time" && answers.has_dinner === "never") ||
+                  (prevQ?.id === "supper_time" && answers.has_supper === "never")
+                );
+                setStep(Math.max(0, shouldSkip ? prevStep - 1 : prevStep));
+              }}
               disabled={step === 0}
               className="gap-1"
             >

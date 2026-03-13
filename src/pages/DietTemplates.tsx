@@ -22,6 +22,14 @@ interface DietTemplate {
   description: string;
   icon: string;
   category: string;
+  goal_category?: string;
+  diet_style?: string;
+  complexity_level?: string;
+  food_access_level?: string;
+  clinical_tags?: string[];
+  caloric_versions?: Record<string, any>;
+  weekly_variation_strategy?: Record<string, any>;
+  meal_distribution?: Record<string, any>;
   conditions: string[];
   base_calories: number;
   macro_ratio: { protein: number; carbs: number; fat: number };
