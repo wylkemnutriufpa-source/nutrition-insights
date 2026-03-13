@@ -17,7 +17,7 @@ import {
   MessageSquare, Lightbulb, ChefHat, ShoppingCart, Apple, Camera,
   Palette, Bell, BarChart3, Shield, Bot, Scale, Droplets, Heart,
   BookOpen, DollarSign, Pill, Compass, Search, TrendingUp, Zap, Star, Crown,
-  User, Dumbbell, CalendarDays
+  User, Dumbbell, CalendarDays, CreditCard
 } from "lucide-react";
 
 const allRoutes = [
