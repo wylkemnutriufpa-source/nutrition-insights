@@ -33,7 +33,7 @@ import OnboardingApprovalQueue from "@/components/patient/OnboardingApprovalQueu
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
-  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope, Crown, UserCog
+  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope, Crown, UserCog, Pencil
 } from "lucide-react";
 import PrestigeBadge from "@/components/prestige/PrestigeBadge";
 import PrestigeName from "@/components/prestige/PrestigeName";
@@ -101,6 +101,11 @@ export default function PatientDetail() {
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeRole, setUpgradeRole] = useState<string>("");
   const [upgrading, setUpgrading] = useState(false);
+  const [editProfileForm, setEditProfileForm] = useState({
+    full_name: profile?.full_name || "",
+    phone: profile?.phone || "",
+  });
+  const [savingProfile, setSavingProfile] = useState(false);
 
   // Invalidation helper
   const invalidate = () => {
@@ -128,6 +133,28 @@ export default function PatientDetail() {
       toast.error(e.message || "Erro ao promover paciente");
     }
     setUpgrading(false);
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!patientId) return;
+    setSavingProfile(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          full_name: editProfileForm.full_name.trim(),
+          phone: editProfileForm.phone.trim() || null,
+        })
+        .eq("user_id", patientId);
+      if (error) throw error;
+      toast.success("Cadastro atualizado com sucesso!");
+      setOpenSection(null);
+      invalidate();
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao atualizar cadastro");
+    }
+    setSavingProfile(false);
   };
 
   const activateProtocol = async (e: React.FormEvent) => {
@@ -500,6 +527,7 @@ export default function PatientDetail() {
             { key: "recipes", label: "Receitas", icon: ChefHat, color: "from-primary/20 to-accent/5", iconColor: "text-primary" },
             { key: "clinical-decision", label: "Decisão Clínica", icon: Stethoscope, color: "from-destructive/20 to-primary/5", iconColor: "text-destructive" },
             { key: "onboarding", label: "Onboarding", icon: Zap, color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
+            { key: "edit-profile", label: "Editar Cadastro", icon: Pencil, color: "from-info/20 to-info/5", iconColor: "text-info" },
           ];
 
           return (
@@ -988,6 +1016,54 @@ export default function PatientDetail() {
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Onboarding Automático</DialogTitle></DialogHeader>
                   <OnboardingApprovalQueue patientId={patientId!} patientName={profile?.full_name || "Paciente"} />
+                </DialogContent>
+              </Dialog>
+
+              {/* Edit Profile Modal */}
+              <Dialog open={openSection === "edit-profile"} onOpenChange={(v) => {
+                if (!v) setOpenSection(null);
+                else {
+                  setEditProfileForm({
+                    full_name: profile?.full_name || "",
+                    phone: profile?.phone || "",
+                  });
+                }
+              }}>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="font-display flex items-center gap-2">
+                      <Pencil className="w-5 h-5 text-info" /> Editar Cadastro
+                    </DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleSaveProfile} className="space-y-4">
+                    <div>
+                      <Label>Nome Completo</Label>
+                      <Input
+                        value={editProfileForm.full_name}
+                        onChange={(e) => setEditProfileForm({ ...editProfileForm, full_name: e.target.value })}
+                        placeholder="Nome do paciente"
+                        required
+                        maxLength={100}
+                      />
+                    </div>
+                    <div>
+                      <Label>Telefone</Label>
+                      <Input
+                        value={editProfileForm.phone}
+                        onChange={(e) => setEditProfileForm({ ...editProfileForm, phone: e.target.value })}
+                        placeholder="(99) 99999-9999"
+                        maxLength={20}
+                      />
+                    </div>
+                    <div>
+                      <Label>Email</Label>
+                      <Input value={patientEmail} disabled className="bg-muted" />
+                      <p className="text-xs text-muted-foreground mt-1">O email não pode ser alterado por aqui.</p>
+                    </div>
+                    <Button type="submit" className="w-full" disabled={savingProfile || !editProfileForm.full_name.trim()}>
+                      {savingProfile ? "Salvando..." : "Salvar Alterações"}
+                    </Button>
+                  </form>
                 </DialogContent>
               </Dialog>
             </>
