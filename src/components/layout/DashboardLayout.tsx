@@ -135,6 +135,7 @@ const adminSections: NavSection[] = [
     sectionKey: "nav.sectionAnalytics",
     links: [
       { to: "/reports", icon: BarChart3, labelKey: "nav.reports" },
+      { to: "/financial", icon: DollarSign, labelKey: "nav.financial", iconColor: "text-emerald-500" },
       { to: "/food-database", icon: Apple, labelKey: "nav.foods" },
     ],
   },
