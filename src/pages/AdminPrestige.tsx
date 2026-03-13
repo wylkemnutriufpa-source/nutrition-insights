@@ -77,20 +77,27 @@ export default function AdminPrestige() {
     if (membersLoaded) return;
     
     const [patientsRes, membersRes] = await Promise.all([
-      supabase
-        .from("nutritionist_patients")
-        .select("patient_id, profiles!nutritionist_patients_patient_id_fkey(user_id, full_name)")
-        .eq("nutritionist_id", user?.id || "")
-        .eq("status", "active"),
+      // Admin sees all patients; nutritionist sees only their own
+      isAdmin
+        ? supabase.from("profiles").select("user_id, full_name")
+        : supabase
+            .from("nutritionist_patients")
+            .select("patient_id")
+            .eq("nutritionist_id", user?.id || "")
+            .eq("status", "active"),
       supabase
         .from("patient_prestige")
         .select("id, patient_id, plan_id")
         .eq("is_active", true),
     ]);
 
-    // Fallback: if join doesn't work, load profiles separately
     let patientList: PatientInfo[] = [];
-    if (patientsRes.data) {
+    if (isAdmin) {
+      patientList = (patientsRes.data || []).map((p: any) => ({
+        user_id: p.user_id,
+        full_name: p.full_name || "Sem nome",
+      })).sort((a, b) => a.full_name.localeCompare(b.full_name));
+    } else if (patientsRes.data) {
       const patientIds = patientsRes.data.map((p: any) => p.patient_id);
       const { data: profiles } = await supabase
         .from("profiles")
