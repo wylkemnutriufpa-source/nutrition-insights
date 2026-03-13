@@ -23,14 +23,14 @@ export default function SubscriptionGuard({
   requiredTier,
   inline = false,
 }: SubscriptionGuardProps) {
-  const { subscription, isNutritionist, isAdmin } = useAuth();
+  const { subscription, isNutritionist, isPersonal, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   // Admins always have access
   if (isAdmin) return <>{children}</>;
 
   // Only block nutritionists (patients don't have subscriptions)
-  if (!isNutritionist) return <>{children}</>;
+  if (!isNutritionist && !isPersonal) return <>{children}</>;
 
   // Check subscription status
   const isBlocked = !subscription.subscribed && !subscription.is_trial;
