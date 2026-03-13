@@ -1498,11 +1498,18 @@ export type Database = {
           created_at: string
           description: string | null
           end_date: string | null
+          generated_by: string | null
+          generation_metadata: Json | null
+          generation_source: string | null
           id: string
           is_active: boolean
           nutritionist_id: string
           patient_id: string
+          plan_status: string
           start_date: string
+          template_id: string | null
+          template_slug: string | null
+          template_version: number | null
           title: string
           updated_at: string
         }
@@ -1510,11 +1517,18 @@ export type Database = {
           created_at?: string
           description?: string | null
           end_date?: string | null
+          generated_by?: string | null
+          generation_metadata?: Json | null
+          generation_source?: string | null
           id?: string
           is_active?: boolean
           nutritionist_id: string
           patient_id: string
+          plan_status?: string
           start_date: string
+          template_id?: string | null
+          template_slug?: string | null
+          template_version?: number | null
           title: string
           updated_at?: string
         }
@@ -1522,11 +1536,18 @@ export type Database = {
           created_at?: string
           description?: string | null
           end_date?: string | null
+          generated_by?: string | null
+          generation_metadata?: Json | null
+          generation_source?: string | null
           id?: string
           is_active?: boolean
           nutritionist_id?: string
           patient_id?: string
+          plan_status?: string
           start_date?: string
+          template_id?: string | null
+          template_slug?: string | null
+          template_version?: number | null
           title?: string
           updated_at?: string
         }
@@ -3783,6 +3804,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      protocol_master_settings: {
+        Row: {
+          apply_to_existing_patients: boolean
+          apply_to_new_patients: boolean
+          apply_to_programs: boolean
+          auto_generate_plan: boolean
+          created_at: string
+          id: string
+          is_enabled: boolean
+          nutritionist_id: string
+          plan_validity_days: number
+          require_approval: boolean
+          updated_at: string
+        }
+        Insert: {
+          apply_to_existing_patients?: boolean
+          apply_to_new_patients?: boolean
+          apply_to_programs?: boolean
+          auto_generate_plan?: boolean
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          nutritionist_id: string
+          plan_validity_days?: number
+          require_approval?: boolean
+          updated_at?: string
+        }
+        Update: {
+          apply_to_existing_patients?: boolean
+          apply_to_new_patients?: boolean
+          apply_to_programs?: boolean
+          auto_generate_plan?: boolean
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          nutritionist_id?: string
+          plan_validity_days?: number
+          require_approval?: boolean
+          updated_at?: string
+        }
+        Relationships: []
       }
       protocol_tasks: {
         Row: {

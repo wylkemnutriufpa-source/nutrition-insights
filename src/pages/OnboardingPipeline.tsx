@@ -41,7 +41,7 @@ const STEPS = [
   { id: "anamnesis", label: "Anamnese", icon: ClipboardCheck, description: "Preencha seu questionário de saúde" },
   { id: "body_data", label: "Dados Corporais", icon: Scale, description: "Peso, altura e fotos" },
   { id: "preferences", label: "Preferências", icon: Utensils, description: "Horários e alimentos favoritos" },
-  { id: "plan_generation", label: "Pré-Plano", icon: Sparkles, description: "IA gera seu plano personalizado" },
+  { id: "plan_generation", label: "Pré-Plano", icon: Sparkles, description: "Protocolo FitJourney gera seu plano" },
   { id: "approval", label: "Aprovação", icon: ThumbsUp, description: "Profissional revisa e aprova" },
 ];
 
@@ -174,21 +174,10 @@ export default function OnboardingPipeline() {
     if (!pipeline || !user) return;
     setGenerating(true);
     try {
-      // Get anamnesis data
-      const { data: anamnesis } = await supabase
-        .from("patient_anamnesis")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      // Call the generate-meal-plan edge function
       const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
         body: {
           patientId: user.id,
           nutritionistId: pipeline.nutritionist_id,
-          anamnesisData: anamnesis?.answers || {},
           weight: pipeline.weight,
           height: pipeline.height,
           wakeTime: pipeline.wake_time,
@@ -201,24 +190,25 @@ export default function OnboardingPipeline() {
       });
 
       if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "Falha na geração");
 
-      // Update pipeline with generated plan
+      // Update pipeline
       await supabase
         .from("onboarding_pipelines" as any)
         .update({
           plan_generated: true,
-          generated_plan_id: data?.mealPlanId || null,
+          generated_plan_id: data.mealPlanId || null,
           generated_plan_data: data,
           status: "pending_approval",
         } as any)
         .eq("id", pipeline.id);
 
-      // Notify nutritionist with direct link
+      // Notify nutritionist
       const patientName = (await supabase.from("profiles").select("full_name").eq("user_id", user.id).single()).data?.full_name || "Paciente";
       await supabase.from("notifications").insert({
         user_id: pipeline.nutritionist_id,
         title: "🔔 Pré-Plano Aguardando Aprovação",
-        message: `O paciente ${patientName} completou o onboarding e um pré-plano alimentar de 30 dias foi gerado. Clique para revisar e aprovar.`,
+        message: `${patientName} completou o onboarding. Pré-plano de ${data.explainability?.calculation?.final_kcal || ''}kcal gerado via Protocolo FitJourney.`,
         type: "warning",
         action_url: `/patients/${user.id}?tab=onboarding`,
       });
@@ -495,7 +485,7 @@ export default function OnboardingPipeline() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <p className="text-muted-foreground">
-                    Com base nos seus dados, a IA vai gerar um plano alimentar personalizado. Após a geração, o profissional revisará e aprovará.
+                    Com base nos seus dados, o Protocolo FitJourney vai calcular TMB, TDEE e gerar um plano alimentar 100% personalizado. Após a geração, o profissional revisará e aprovará.
                   </p>
                   <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                     <div className="flex justify-between text-sm"><span>Peso:</span><span className="font-medium">{pipeline.weight} kg</span></div>
@@ -507,7 +497,7 @@ export default function OnboardingPipeline() {
                     {generating ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                        Gerando plano com IA...
+                        Gerando plano...
                       </>
                     ) : (
                       <>

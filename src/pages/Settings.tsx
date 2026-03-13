@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { User, Lock, Save, Bell, BellOff, Trophy, Eye, Camera } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import AvatarPicker from "@/components/profile/AvatarPicker";
+import ProtocolFitJourneyToggle from "@/components/admin/ProtocolFitJourneyToggle";
 import { useTranslation } from "react-i18next";
 
 export default function Settings() {
@@ -271,6 +272,9 @@ export default function Settings() {
             </CardContent>
           </Card>
         )}
+
+        {/* Protocol FitJourney - only for professionals */}
+        <ProtocolFitJourneyToggle />
       </motion.div>
     </DashboardLayout>
   );
