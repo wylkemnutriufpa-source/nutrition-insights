@@ -453,7 +453,7 @@ export default function PatientDetail() {
                   </div>
                   <div>
                     <Label>Status</Label>
-                    <Select value={activateForm.status} onValueChange={(v) => setActivateForm({ ...activateForm, status: v })}>
+                    <Select value={activateForm.status} onValueChange={(v) => setActivateForm({ ...activateForm, status: v as "active" | "paused" | "completed" | "cancelled" })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="active">🟢 Ativo agora</SelectItem>
