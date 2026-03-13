@@ -1,0 +1,2 @@
+UPDATE menu_items SET label = 'Features Profissionais', label_key = 'nav.professionalFeatures' WHERE route = '/admin/features';
+UPDATE menu_items SET label = 'Features por Plano', label_key = 'nav.planFeatures' WHERE route = '/admin/patient-features';
