@@ -5,34 +5,58 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Clock } from "lucide-react";
+import { Sparkles, Clock, Filter } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useState } from "react";
 
-const EVENT_STYLES: Record<string, { bg: string; border: string }> = {
-  mission_completed: { bg: "bg-amber-500/10", border: "border-amber-500/30" },
-  checkin: { bg: "bg-blue-500/10", border: "border-blue-500/30" },
-  meal_logged: { bg: "bg-green-500/10", border: "border-green-500/30" },
-  achievement: { bg: "bg-purple-500/10", border: "border-purple-500/30" },
-  streak_milestone: { bg: "bg-orange-500/10", border: "border-orange-500/30" },
-  motivation: { bg: "bg-pink-500/10", border: "border-pink-500/30" },
-  body_assessment: { bg: "bg-cyan-500/10", border: "border-cyan-500/30" },
-  protocol_started: { bg: "bg-indigo-500/10", border: "border-indigo-500/30" },
-  weight_change: { bg: "bg-teal-500/10", border: "border-teal-500/30" },
+const EVENT_STYLES: Record<string, { bg: string; border: string; label: string }> = {
+  mission_completed: { bg: "bg-amber-500/10", border: "border-amber-500/30", label: "Missão" },
+  checkin: { bg: "bg-blue-500/10", border: "border-blue-500/30", label: "Check-in" },
+  meal_logged: { bg: "bg-green-500/10", border: "border-green-500/30", label: "Refeição" },
+  achievement: { bg: "bg-purple-500/10", border: "border-purple-500/30", label: "Conquista" },
+  streak_milestone: { bg: "bg-orange-500/10", border: "border-orange-500/30", label: "Streak" },
+  motivation: { bg: "bg-pink-500/10", border: "border-pink-500/30", label: "Motivação" },
+  body_assessment: { bg: "bg-cyan-500/10", border: "border-cyan-500/30", label: "Avaliação" },
+  protocol_started: { bg: "bg-indigo-500/10", border: "border-indigo-500/30", label: "Protocolo" },
+  protocol_changed: { bg: "bg-indigo-500/10", border: "border-indigo-500/30", label: "Protocolo" },
+  weight_change: { bg: "bg-teal-500/10", border: "border-teal-500/30", label: "Peso" },
+  program_enrolled: { bg: "bg-violet-500/10", border: "border-violet-500/30", label: "Programa" },
+  phase_transition: { bg: "bg-fuchsia-500/10", border: "border-fuchsia-500/30", label: "Fase" },
+  adherence_drop: { bg: "bg-red-500/10", border: "border-red-500/30", label: "Alerta" },
+  adherence_recovery: { bg: "bg-emerald-500/10", border: "border-emerald-500/30", label: "Recuperação" },
+  streak_broken: { bg: "bg-red-400/10", border: "border-red-400/30", label: "Streak" },
+  recommendation: { bg: "bg-sky-500/10", border: "border-sky-500/30", label: "Dica" },
+  blocked: { bg: "bg-red-600/10", border: "border-red-600/30", label: "Bloqueio" },
+  unblocked: { bg: "bg-emerald-600/10", border: "border-emerald-600/30", label: "Desbloqueio" },
+  evolution_milestone: { bg: "bg-yellow-500/10", border: "border-yellow-500/30", label: "Marco" },
+  photo_submitted: { bg: "bg-cyan-400/10", border: "border-cyan-400/30", label: "Foto" },
+  note: { bg: "bg-muted/50", border: "border-border", label: "Nota" },
 };
 
+const EVENT_CATEGORIES = [
+  { key: "all", label: "Todos" },
+  { key: "clinical", label: "Clínico", types: ["checkin", "weight_change", "body_assessment", "photo_submitted", "protocol_started", "protocol_changed"] },
+  { key: "engagement", label: "Engajamento", types: ["mission_completed", "streak_milestone", "streak_broken", "adherence_drop", "adherence_recovery"] },
+  { key: "progress", label: "Progresso", types: ["achievement", "evolution_milestone", "phase_transition", "program_enrolled"] },
+  { key: "nutrition", label: "Nutrição", types: ["meal_logged", "recommendation"] },
+];
+
 interface JourneyTimelineFeedProps {
-  patientId?: string; // if not provided, uses logged-in user
+  patientId?: string;
   maxEvents?: number;
   compact?: boolean;
+  showFilters?: boolean;
+  title?: string;
 }
 
-export function JourneyTimelineFeed({ patientId, maxEvents = 30, compact = false }: JourneyTimelineFeedProps) {
+export function JourneyTimelineFeed({ patientId, maxEvents = 30, compact = false, showFilters = false, title }: JourneyTimelineFeedProps) {
   const { user } = useAuth();
   const targetId = patientId || user?.id;
+  const [activeFilter, setActiveFilter] = useState("all");
 
   const { data: events = [], isLoading } = useQuery({
-    queryKey: ["journey-events", targetId],
+    queryKey: ["journey-events", targetId, maxEvents],
     enabled: !!targetId,
     staleTime: 60 * 1000,
     queryFn: async () => {
@@ -46,8 +70,16 @@ export function JourneyTimelineFeed({ patientId, maxEvents = 30, compact = false
     },
   });
 
+  // Filter events
+  const filteredEvents = activeFilter === "all"
+    ? events
+    : events.filter(e => {
+        const cat = EVENT_CATEGORIES.find(c => c.key === activeFilter);
+        return cat?.types?.includes(e.event_type);
+      });
+
   // Group events by date
-  const grouped = events.reduce<Record<string, typeof events>>((acc, event) => {
+  const grouped = filteredEvents.reduce<Record<string, typeof events>>((acc, event) => {
     const date = new Date(event.created_at).toLocaleDateString("pt-BR");
     if (!acc[date]) acc[date] = [];
     acc[date].push(event);
@@ -73,7 +105,9 @@ export function JourneyTimelineFeed({ patientId, maxEvents = 30, compact = false
       <Card>
         <CardContent className="py-8 text-center">
           <Sparkles className="h-10 w-10 mx-auto mb-3 text-primary/30" />
-          <p className="text-sm text-muted-foreground">Sua jornada está começando!</p>
+          <p className="text-sm text-muted-foreground">
+            {patientId ? "Nenhum evento registrado para este paciente." : "Sua jornada está começando!"}
+          </p>
           <p className="text-xs text-muted-foreground mt-1">Complete tarefas e registre refeições para construir sua história.</p>
         </CardContent>
       </Card>
@@ -85,11 +119,30 @@ export function JourneyTimelineFeed({ patientId, maxEvents = 30, compact = false
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-primary" />
-          {compact ? "Jornada" : "Sua Jornada de Transformação"}
+          {title || (compact ? "Jornada" : "Timeline de Jornada")}
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ScrollArea className={compact ? "max-h-[300px]" : "max-h-[500px]"}>
+        {/* Filters */}
+        {showFilters && (
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            {EVENT_CATEGORIES.map(cat => (
+              <button
+                key={cat.key}
+                onClick={() => setActiveFilter(cat.key)}
+                className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                  activeFilter === cat.key
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <ScrollArea className={compact ? "max-h-[300px]" : "max-h-[600px]"}>
           <div className="relative pl-6">
             {/* Timeline line */}
             <div className="absolute left-2 top-2 bottom-2 w-px bg-border" />
@@ -102,23 +155,29 @@ export function JourneyTimelineFeed({ patientId, maxEvents = 30, compact = false
                       <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                     </div>
                     <span className="text-xs font-semibold text-muted-foreground">{date}</span>
+                    <span className="text-[10px] text-muted-foreground/60">({dayEvents.length} eventos)</span>
                   </div>
 
                   {dayEvents.map((event, i) => {
-                    const styles = EVENT_STYLES[event.event_type] || { bg: "bg-muted/50", border: "border-border" };
+                    const styles = EVENT_STYLES[event.event_type] || { bg: "bg-muted/50", border: "border-border", label: "Evento" };
                     return (
                       <motion.div
                         key={event.id}
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.05 }}
+                        transition={{ delay: i * 0.03 }}
                         className={`relative mb-2 ml-2 p-2.5 rounded-lg border ${styles.border} ${styles.bg} ${event.is_highlight ? "ring-1 ring-primary/30" : ""}`}
                       >
                         <div className="absolute -left-[22px] w-2 h-2 rounded-full bg-muted-foreground/30 top-3.5" />
                         <div className="flex items-start gap-2">
                           <span className="text-lg flex-shrink-0">{event.icon}</span>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium leading-tight">{event.title}</p>
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-sm font-medium leading-tight">{event.title}</p>
+                              {!compact && (
+                                <Badge variant="outline" className="text-[9px] px-1.5 py-0">{styles.label}</Badge>
+                              )}
+                            </div>
                             {event.description && !compact && (
                               <p className="text-xs text-muted-foreground mt-0.5">{event.description}</p>
                             )}
@@ -140,6 +199,13 @@ export function JourneyTimelineFeed({ patientId, maxEvents = 30, compact = false
             </AnimatePresence>
           </div>
         </ScrollArea>
+
+        {filteredEvents.length === 0 && events.length > 0 && (
+          <div className="text-center py-4">
+            <Filter className="h-6 w-6 mx-auto mb-2 text-muted-foreground/40" />
+            <p className="text-xs text-muted-foreground">Nenhum evento nesta categoria.</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

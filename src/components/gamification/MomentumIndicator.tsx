@@ -3,9 +3,9 @@ import { useAdherenceScore } from "@/hooks/queries/useEngagement";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import { Flame, Scale, AlertTriangle, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Flame, Scale, AlertTriangle, TrendingUp, TrendingDown, Minus, ShieldAlert } from "lucide-react";
 
-type MomentumLevel = "fire" | "stable" | "risk";
+type MomentumLevel = "fire" | "stable" | "declining" | "critical";
 
 interface MomentumData {
   level: MomentumLevel;
@@ -36,8 +36,12 @@ function calculateMomentum(history: Array<{ total_score: number | null; streak_d
   const trend = avgRecent - avgOlder;
   const streakDays = Number(history[0]?.streak_days) || 0;
 
-  // Fire: high recent score AND improving or stable AND streak
-  if (avgRecent >= 65 && trend >= -5 && streakDays >= 3) {
+  // Count active days in last 7
+  const activeDays = recent.filter(d => (Number(d.total_score) || 0) > 0).length;
+  const consistency = activeDays / Math.max(recent.length, 1);
+
+  // 🔥 Alto: high score AND improving/stable AND streak AND consistent
+  if (avgRecent >= 65 && trend >= -5 && streakDays >= 3 && consistency >= 0.6) {
     return {
       level: "fire", label: "Em Alta", icon: Flame, emoji: "🔥",
       color: "text-orange-500", bgGradient: "from-orange-500/15 to-amber-500/5",
@@ -46,19 +50,33 @@ function calculateMomentum(history: Array<{ total_score: number | null; streak_d
     };
   }
 
-  // Risk: low score OR big drop OR no streak
-  if (avgRecent < 35 || trend < -20 || (streakDays === 0 && avgRecent < 50)) {
+  // 🚨 Crítico: very low score OR massive drop OR no activity
+  if (avgRecent < 20 || (trend < -30 && avgRecent < 40) || (activeDays <= 1 && history.length >= 7)) {
     return {
-      level: "risk", label: "Em Risco", icon: AlertTriangle, emoji: "⚠️",
+      level: "critical", label: "Crítico", icon: ShieldAlert, emoji: "🚨",
+      color: "text-red-600", bgGradient: "from-red-600/15 to-red-600/5",
+      description: activeDays <= 1
+        ? "Quase sem atividade nos últimos 7 dias. Precisamos conversar!"
+        : trend < -30
+          ? `Queda de ${Math.abs(Math.round(trend))}% na aderência. Intervenção necessária.`
+          : `Score em ${Math.round(avgRecent)}%. Momento de reengajar!`,
+      score: avgRecent, trend, streakDays,
+    };
+  }
+
+  // 📉 Em Queda: declining trend OR broken streak with mediocre score
+  if (trend < -10 || (streakDays === 0 && avgRecent < 50) || (avgRecent < 45 && trend < -5)) {
+    return {
+      level: "declining", label: "Em Queda", icon: AlertTriangle, emoji: "📉",
       color: "text-red-500", bgGradient: "from-red-500/15 to-red-500/5",
-      description: trend < -20
+      description: trend < -10
         ? `Aderência caiu ${Math.abs(Math.round(trend))}% esta semana. Hora de retomar!`
         : `Score em ${Math.round(avgRecent)}%. Que tal começar com uma micro-meta?`,
       score: avgRecent, trend, streakDays,
     };
   }
 
-  // Stable: everything else
+  // ⚖️ Estável: everything else
   return {
     level: "stable", label: "Estável", icon: Scale, emoji: "⚖️",
     color: "text-yellow-500", bgGradient: "from-yellow-500/15 to-yellow-500/5",
@@ -67,8 +85,16 @@ function calculateMomentum(history: Array<{ total_score: number | null; streak_d
   };
 }
 
-export function MomentumIndicator({ variant = "card" }: { variant?: "card" | "badge" | "inline" }) {
-  const { data: history = [] } = useAdherenceScore();
+interface MomentumIndicatorProps {
+  variant?: "card" | "badge" | "inline";
+  patientId?: string;
+  adherenceHistory?: Array<{ total_score: number | null; streak_days: number | null; date: string }>;
+}
+
+export function MomentumIndicator({ variant = "card", patientId, adherenceHistory }: MomentumIndicatorProps) {
+  // If adherenceHistory is provided externally (e.g. nutritionist view), use it directly
+  const { data: ownHistory = [] } = useAdherenceScore();
+  const history = adherenceHistory ?? ownHistory;
   const momentum = useMemo(() => calculateMomentum(history), [history]);
   const Icon = momentum.icon;
   const TrendIcon = momentum.trend > 5 ? TrendingUp : momentum.trend < -5 ? TrendingDown : Minus;
@@ -101,8 +127,8 @@ export function MomentumIndicator({ variant = "card" }: { variant?: "card" | "ba
         <CardContent className="py-4">
           <div className="flex items-center gap-4">
             <motion.div
-              animate={momentum.level === "fire" ? { scale: [1, 1.15, 1] } : {}}
-              transition={{ repeat: Infinity, duration: 1.5 }}
+              animate={momentum.level === "fire" ? { scale: [1, 1.15, 1] } : momentum.level === "critical" ? { rotate: [0, -5, 5, 0] } : {}}
+              transition={{ repeat: Infinity, duration: momentum.level === "critical" ? 2 : 1.5 }}
               className="text-4xl"
             >
               {momentum.emoji}
