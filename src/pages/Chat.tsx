@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, Send, ArrowLeft, Check, CheckCheck } from "lucide-react";
+import { MessageSquare, Send, ArrowLeft, Check, CheckCheck, Clock } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import NutritionistStatusIndicator from "@/components/chat/NutritionistStatusIndicator";
 import QuickReplySuggestions from "@/components/chat/QuickReplySuggestions";
