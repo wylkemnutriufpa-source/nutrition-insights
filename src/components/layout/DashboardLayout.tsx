@@ -23,7 +23,7 @@ import { usePresenceTracker } from "@/hooks/usePresenceTracker";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import CommandPalette, { openCommandPalette } from "@/components/common/CommandPalette";
 import { Search } from "lucide-react";
-import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
+import OnboardingWizard, { useOnboardingNotification, openOnboardingManually } from "@/components/onboarding/OnboardingWizard";
 import SOSModal from "@/components/patient/SOSModal";
 import SOSInbox from "@/components/patient/SOSInbox";
 import LanguageSelector from "@/components/common/LanguageSelector";
