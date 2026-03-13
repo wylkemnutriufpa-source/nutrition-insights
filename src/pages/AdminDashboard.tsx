@@ -952,10 +952,10 @@ export default function AdminDashboard() {
             {/* ─── Metrics ─── */}
             <TabsContent value="metrics" className="mt-4 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                <MetricCard label="Profissionais" value={metrics.totalProfessionals} icon={UserCheck} color="text-primary" />
-                <MetricCard label="Pacientes" value={metrics.totalPatients} icon={Users} color="text-primary" />
-                <MetricCard label="Assinaturas Ativas" value={metrics.activeSubscriptions} icon={Star} color="text-accent" />
-                <MetricCard label="Receita Mensal" value={metrics.monthlyRevenue} icon={DollarSign} color="text-primary" prefix="R$" />
+                <MetricCard label="Profissionais" value={metrics.totalProfessionals} icon={UserCheck} color="text-primary" onClick={() => setDrillDown("professionals")} />
+                <MetricCard label="Pacientes" value={metrics.totalPatients} icon={Users} color="text-primary" onClick={() => setDrillDown("patients")} />
+                <MetricCard label="Assinaturas Ativas" value={metrics.activeSubscriptions} icon={Star} color="text-accent" onClick={() => setDrillDown("subscriptions")} />
+                <MetricCard label="Receita Mensal" value={metrics.monthlyRevenue} icon={DollarSign} color="text-primary" prefix="R$" onClick={() => setDrillDown("revenue")} />
                 <OnlinePatientsWidget variant="card" />
               </div>
 
