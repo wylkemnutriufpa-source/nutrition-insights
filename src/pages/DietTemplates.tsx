@@ -535,9 +535,9 @@ export default function DietTemplates() {
 
                 {/* Meal preview */}
                 <div className="space-y-4 mt-2">
-                  {previewTemplate.meals.map((meal, mi) => {
+                  {(Array.isArray(previewTemplate.meals) && previewTemplate.meals.length > 0) ? previewTemplate.meals.map((meal, mi) => {
                     const multiplier = getCalorieMultiplier(previewTemplate);
-                    const mealCals = meal.foods.reduce((s, f) => s + Math.round(f.calories * multiplier), 0);
+                    const mealCals = (meal.foods || []).reduce((s, f) => s + Math.round((f.calories || 0) * multiplier), 0);
 
                     return (
                       <div key={mi} className="glass rounded-lg p-4">
