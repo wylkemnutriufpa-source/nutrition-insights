@@ -23,7 +23,7 @@ export default function SubscriptionGuard({
   requiredTier,
   inline = false,
 }: SubscriptionGuardProps) {
-  const { subscription, isNutritionist, isAdmin } = useAuth();
+  const { subscription, isNutritionist, isPersonal, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   // Admins always have access
