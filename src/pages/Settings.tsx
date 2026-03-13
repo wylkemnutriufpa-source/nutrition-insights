@@ -272,6 +272,9 @@ export default function Settings() {
             </CardContent>
           </Card>
         )}
+
+        {/* Protocol FitJourney - only for professionals */}
+        <ProtocolFitJourneyToggle />
       </motion.div>
     </DashboardLayout>
   );
