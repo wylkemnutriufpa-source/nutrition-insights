@@ -6,10 +6,27 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const rateMap = new Map<string, { count: number; resetAt: number }>();
+function rateLimit(key: string, max: number, windowMs: number): boolean {
+  const now = Date.now();
+  const entry = rateMap.get(key);
+  if (!entry || entry.resetAt < now) { rateMap.set(key, { count: 1, resetAt: now + windowMs }); return true; }
+  if (entry.count >= max) return false;
+  entry.count++;
+  return true;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    if (!rateLimit(`report:${clientIP}`, 3, 60_000)) {
+      return new Response(
+        JSON.stringify({ error: "Muitas requisições. Tente novamente em 1 minuto." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60" } }
+      );
+    }
     const { patient_id, report_type, nutritionist_id } = await req.json();
     if (!patient_id || !nutritionist_id) throw new Error("patient_id and nutritionist_id required");
 
