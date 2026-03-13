@@ -289,7 +289,8 @@ const TUTORIAL_STEPS = [
 ];
 
 export default function AutomationCenter() {
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
+  const isAdmin = roles?.includes("admin");
   const [rules, setRules] = useState<AutomationRule[]>([]);
   const [runs, setRuns] = useState<AutomationRun[]>([]);
   const [loading, setLoading] = useState(true);
