@@ -292,8 +292,8 @@ export default function DietTemplates() {
       // Build meal plan items for all 7 days
       const items: any[] = [];
       for (let day = 0; day <= 6; day++) {
-        for (const meal of template.meals) {
-          const adjustedFoods = meal.foods.map((f) => adjustFood(f, multiplier));
+        for (const meal of (Array.isArray(template.meals) ? template.meals : [])) {
+          const adjustedFoods = (meal.foods || []).map((f) => adjustFood(f, multiplier));
           const totalCals = adjustedFoods.reduce((s, f) => s + f.calories, 0);
           const totalProtein = adjustedFoods.reduce((s, f) => s + f.protein, 0);
           const totalCarbs = adjustedFoods.reduce((s, f) => s + f.carbs, 0);
