@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Crown, Zap, Save, Plus, Trash2, X, Sparkles, Loader2, Users, Search, UserPlus, UserMinus, RotateCcw } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import PrestigeBadge from "@/components/prestige/PrestigeBadge";
+import PatientPickerDropdown from "@/components/common/PatientPickerDropdown";
 import type { PrestigePlan } from "@/hooks/usePrestige";
 
 interface PointRule {
