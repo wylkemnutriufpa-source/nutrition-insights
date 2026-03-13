@@ -100,6 +100,7 @@ const PersonalWorkouts = lazy(() => import("./pages/PersonalWorkouts"));
 const PatientWorkouts = lazy(() => import("./pages/PatientWorkouts"));
 const PersonalLanding = lazy(() => import("./pages/PersonalLanding"));
 const FitnessAnamnesis = lazy(() => import("./pages/FitnessAnamnesis"));
+const ClinicalRiskDashboard = lazy(() => import("./pages/ClinicalRiskDashboard"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -258,6 +259,7 @@ const App = () => (
               <Route path="/professional-guide" element={<NutritionistRoute><LP section="Guia"><ProfessionalGuide /></LP></NutritionistRoute>} />
               <Route path="/automation" element={<NutritionistRoute><LP section="Automação"><AutomationCenter /></LP></NutritionistRoute>} />
               <Route path="/checkin-panel" element={<NutritionistRoute><LP section="Check-ins"><CheckinPanel /></LP></NutritionistRoute>} />
+              <Route path="/clinical-risk" element={<NutritionistRoute><LP section="Risco Clínico"><ClinicalRiskDashboard /></LP></NutritionistRoute>} />
 
               {/* Personal Trainer routes */}
               <Route path="/personal/dashboard" element={<PersonalRoute><LP section="Personal"><PersonalDashboard /></LP></PersonalRoute>} />
