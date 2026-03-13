@@ -53,6 +53,23 @@ export default function BodyAnalysis() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [selected, setSelected] = useState<BodyAnalysisRecord | null>(null);
   const [notes, setNotes] = useState("");
+  const { saveDraft, loadDraft, clearDraft, hasDraft } = useFormDraft<{ notes: string }>(
+    `body_analysis_${patientId}`
+  );
+
+  // Restore draft on mount
+  useEffect(() => {
+    const draft = loadDraft();
+    if (draft?.notes) {
+      setNotes(draft.notes);
+      toast.info("Rascunho de notas restaurado 📝");
+    }
+  }, [loadDraft]);
+
+  // Auto-save notes draft
+  useEffect(() => {
+    if (notes) saveDraft({ notes });
+  }, [notes, saveDraft]);
 
   // Image files
   const [frontFile, setFrontFile] = useState<File | null>(null);
