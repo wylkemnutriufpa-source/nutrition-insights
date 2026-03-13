@@ -6,33 +6,32 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const rateMap = new Map<string, { count: number; resetAt: number }>();
-function rateLimit(key: string, max: number, windowMs: number): boolean {
-  const now = Date.now();
-  const entry = rateMap.get(key);
-  if (!entry || entry.resetAt < now) { rateMap.set(key, { count: 1, resetAt: now + windowMs }); return true; }
-  if (entry.count >= max) return false;
-  entry.count++;
-  return true;
-}
-
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    if (!rateLimit(`report:${clientIP}`, 3, 60_000)) {
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Database-backed rate limiting (3 req/60s per IP)
+    const { data: allowed } = await supabase.rpc("check_rate_limit", {
+      _function_name: "generate-report",
+      _client_key: clientIP,
+      _max_requests: 3,
+      _window_seconds: 60,
+    });
+    if (allowed === false) {
       return new Response(
         JSON.stringify({ error: "Muitas requisições. Tente novamente em 1 minuto." }),
         { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60" } }
       );
     }
+
     const { patient_id, report_type, nutritionist_id } = await req.json();
     if (!patient_id || !nutritionist_id) throw new Error("patient_id and nutritionist_id required");
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Fetch patient data
     const [profileRes, anamnesisRes, assessmentsRes, mealsRes, mealPlansRes, bodyRes] = await Promise.all([
@@ -158,7 +157,7 @@ ${mealPlan ? `<div class="section">
 </div>
 
 <div class="footer">
-  <p>Relatório gerado automaticamente pelo NutriTrack • ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}</p>
+  <p>Relatório gerado automaticamente pelo FitJourney • ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}</p>
   <p>Este documento é confidencial e destinado exclusivamente ao profissional e paciente envolvidos.</p>
 </div>
 </body>
