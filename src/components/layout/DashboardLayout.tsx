@@ -13,7 +13,7 @@ import {
   MessageSquare, Lightbulb, ChefHat, ShoppingCart, Apple, Camera,
   Palette, Bell, BarChart3, Menu, X, Shield, Zap, Star, Bot,
   Scale, Droplets, Heart, Calculator, TrendingUp, BookOpen, DollarSign, Pill, Crown, Compass,
-  CalendarDays, Megaphone, Globe, UserCheck, Share2, Award, CreditCard, Dumbbell
+  CalendarDays, Megaphone, Globe, UserCheck, Share2, Award, CreditCard, Dumbbell, GraduationCap
 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -23,7 +23,7 @@ import { usePresenceTracker } from "@/hooks/usePresenceTracker";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import CommandPalette, { openCommandPalette } from "@/components/common/CommandPalette";
 import { Search } from "lucide-react";
-import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
+import OnboardingWizard, { useOnboardingNotification, openOnboardingManually } from "@/components/onboarding/OnboardingWizard";
 import SOSModal from "@/components/patient/SOSModal";
 import SOSInbox from "@/components/patient/SOSInbox";
 import LanguageSelector from "@/components/common/LanguageSelector";
@@ -455,6 +455,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sosOpen, setSosOpen] = useState(false);
   const [sosInboxOpen, setSosInboxOpen] = useState(false);
+  const { showBadge: showOnboardingBadge } = useOnboardingNotification();
 
   const isPatient = !isNutritionist && !isPersonal && !isAdmin;
 
@@ -536,6 +537,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <Button variant="ghost" size="icon" className="h-9 w-9" onClick={openCommandPalette}>
               <Search className="w-4 h-4" />
             </Button>
+            {showOnboardingBadge && (
+              <Button variant="ghost" size="icon" className="h-9 w-9 relative" onClick={openOnboardingManually}>
+                <GraduationCap className="w-4 h-4 text-primary" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full animate-pulse" />
+              </Button>
+            )}
             <NotificationBell />
           </div>
         </div>
@@ -594,6 +601,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={openCommandPalette} title="Buscar (Ctrl+K)">
               <Search className="w-4 h-4" />
             </Button>
+            {showOnboardingBadge && (
+              <Button variant="ghost" size="icon" className="h-8 w-8 relative" onClick={openOnboardingManually} title="Tour de onboarding">
+                <GraduationCap className="w-4 h-4 text-primary" />
+                <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-destructive rounded-full animate-pulse" />
+              </Button>
+            )}
             <NotificationBell />
           </div>
         </div>

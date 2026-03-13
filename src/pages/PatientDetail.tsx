@@ -31,7 +31,7 @@ import OnboardingApprovalQueue from "@/components/patient/OnboardingApprovalQueu
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
-  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope, Crown
+  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope, Crown, UserCog
 } from "lucide-react";
 import PrestigeBadge from "@/components/prestige/PrestigeBadge";
 import PrestigeName from "@/components/prestige/PrestigeName";
@@ -87,7 +87,7 @@ interface PatientProtocol {
 export default function PatientDetail() {
   const { patientId } = useParams<{ patientId: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
 
   const [profile, setProfile] = useState<PatientProfile | null>(null);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
@@ -140,6 +140,36 @@ export default function PatientDetail() {
     days: "3",
     message: "Como você está se sentindo com o plano alimentar? Gostaria de compartilhar seu progresso?",
   });
+
+  // Upgrade patient to professional (admin only)
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeRole, setUpgradeRole] = useState<string>("");
+  const [upgrading, setUpgrading] = useState(false);
+
+  const handleUpgradePatient = async () => {
+    if (!patientId || !upgradeRole) return;
+    setUpgrading(true);
+    try {
+      const { data, error } = await supabase.rpc("promote_patient_to_professional", {
+        _patient_email: patientEmail,
+        _target_role: upgradeRole,
+      });
+      if (error) throw error;
+      const result = data as any;
+      if (result?.success) {
+        toast.success(`Paciente promovido a ${upgradeRole === "nutritionist" ? "Nutricionista" : "Personal Trainer"} com sucesso!`);
+        setUpgradeOpen(false);
+        setUpgradeRole("");
+      } else {
+        toast.error(result?.error === "already_has_role" ? "Paciente já possui essa role" : result?.error || "Erro ao promover");
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao promover paciente");
+    }
+    setUpgrading(false);
+  };
+
+  const [patientEmail, setPatientEmail] = useState("");
 
   const fetchAll = useCallback(async () => {
     if (!patientId || !user) return;
@@ -235,6 +265,12 @@ export default function PatientDetail() {
     } else {
       setCurrentPrestigePlan(null);
       setSelectedPrestigePlanId("");
+    }
+
+    // Fetch patient email for admin upgrade feature
+    if (isAdmin && patientId) {
+      const { data: emailData } = await supabase.rpc("get_user_email_by_id", { _user_id: patientId });
+      if (emailData) setPatientEmail(emailData);
     }
 
     setLoading(false);
@@ -503,6 +539,55 @@ export default function PatientDetail() {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+            {isAdmin && (
+              <Dialog open={upgradeOpen} onOpenChange={setUpgradeOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="gap-2 border-primary/30 text-primary hover:bg-primary/10">
+                    <UserCog className="w-4 h-4" /> Upgrade para Profissional
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Promover Paciente a Profissional</DialogTitle>
+                  </DialogHeader>
+                  <p className="text-sm text-muted-foreground">
+                    Escolha o tipo de profissional para <strong>{profile?.full_name}</strong>:
+                  </p>
+                  <div className="grid grid-cols-2 gap-3 mt-4">
+                    <button
+                      onClick={() => setUpgradeRole("nutritionist")}
+                      className={`p-4 rounded-xl border-2 text-center space-y-2 transition-all ${
+                        upgradeRole === "nutritionist" ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <UtensilsCrossed className="w-8 h-8 mx-auto text-primary" />
+                      <p className="font-semibold text-sm">Nutricionista</p>
+                    </button>
+                    <button
+                      onClick={() => setUpgradeRole("personal")}
+                      className={`p-4 rounded-xl border-2 text-center space-y-2 transition-all ${
+                        upgradeRole === "personal" ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <Activity className="w-8 h-8 mx-auto text-primary" />
+                      <p className="font-semibold text-sm">Personal Trainer</p>
+                    </button>
+                  </div>
+                  <div className="flex gap-3 mt-4">
+                    <Button variant="outline" onClick={() => setUpgradeOpen(false)} className="flex-1">
+                      Cancelar
+                    </Button>
+                    <Button
+                      onClick={handleUpgradePatient}
+                      disabled={!upgradeRole || upgrading}
+                      className="flex-1 gap-2"
+                    >
+                      {upgrading ? "Promovendo..." : "Confirmar Promoção"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
             <Button
               variant="outline"
               className="gap-2"
