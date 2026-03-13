@@ -1073,6 +1073,30 @@ export type Database = {
         }
         Relationships: []
       }
+      edge_function_rate_limits: {
+        Row: {
+          client_key: string
+          function_name: string
+          id: string
+          request_count: number
+          window_start: string
+        }
+        Insert: {
+          client_key: string
+          function_name: string
+          id?: string
+          request_count?: number
+          window_start?: string
+        }
+        Update: {
+          client_key?: string
+          function_name?: string
+          id?: string
+          request_count?: number
+          window_start?: string
+        }
+        Relationships: []
+      }
       enrollment_photos: {
         Row: {
           created_at: string | null
@@ -4717,6 +4741,15 @@ export type Database = {
       check_ai_usage: {
         Args: { _feature_key: string; _plan_tier?: string; _user_id: string }
         Returns: Json
+      }
+      check_rate_limit: {
+        Args: {
+          _client_key: string
+          _function_name: string
+          _max_requests: number
+          _window_seconds: number
+        }
+        Returns: boolean
       }
       create_nutritionist_account: {
         Args: { _email: string; _full_name: string; _password: string }
