@@ -28,6 +28,16 @@ export default function Auth() {
   const [rememberMe, setRememberMe] = useState(true);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
 
+  // Show error if redirected from no-role sign-out
+  useEffect(() => {
+    const error = searchParams.get("error");
+    if (error === "no_account") {
+      toast.error("Sua conta Google não está cadastrada no sistema. Solicite acesso ao seu profissional.", { duration: 8000 });
+      // Clean URL
+      window.history.replaceState({}, "", "/auth");
+    }
+  }, [searchParams]);
+
   // Capture affiliate ref code from URL and persist to localStorage
   useEffect(() => {
     const refCode = searchParams.get("ref");
