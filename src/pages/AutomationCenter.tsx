@@ -17,7 +17,9 @@ import { toast } from "sonner";
 import {
   Bot, Plus, Trash2, Clock, AlertTriangle, CheckCircle2,
   Bell, ListChecks, Lightbulb, Zap, BookOpen, ChevronDown, ChevronUp,
+  Lock, Shield,
 } from "lucide-react";
+import ProtocolMasterDocumentation from "@/components/admin/ProtocolMasterDocumentation";
 
 const TRIGGER_TYPES = [
   { value: "checklist.low_detected", label: "Baixa aderência ao checklist" },
