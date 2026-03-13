@@ -40,6 +40,7 @@ import PatientProgressSimulation from "@/components/dashboard/PatientProgressSim
 import PatientRevenueSimulator from "@/components/dashboard/PatientRevenueSimulator";
 import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
 import ChatDashboardWidget from "@/components/chat/ChatDashboardWidget";
+import { TreatmentInsightsPanel } from "@/components/dashboard/TreatmentInsightsPanel";
 import ExpandablePanel from "@/components/common/ExpandablePanel";
 import {
   UtensilsCrossed, Users, TrendingUp, Target, Sparkles, Plus,
