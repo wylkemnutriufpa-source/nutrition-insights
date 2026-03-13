@@ -157,12 +157,21 @@ export default function DietTemplates() {
   };
 
   const fetchTemplates = async () => {
-    const { data } = await supabase
-      .from("diet_templates" as any)
-      .select("*")
-      .eq("is_active", true)
-      .order("name");
-    setTemplates((data as any) || []);
+    try {
+      const { data, error } = await supabase
+        .from("diet_templates")
+        .select("*")
+        .eq("is_active", true)
+        .order("name");
+      console.log("[DietTemplates] fetch result:", { count: data?.length, error, sample: data?.[0]?.name });
+      if (error) {
+        console.error("[DietTemplates] fetch error:", error);
+        toast.error("Erro ao carregar templates: " + error.message);
+      }
+      setTemplates((data as any) || []);
+    } catch (e) {
+      console.error("[DietTemplates] unexpected error:", e);
+    }
     setLoading(false);
   };
 
