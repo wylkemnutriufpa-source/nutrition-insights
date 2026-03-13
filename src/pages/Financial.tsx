@@ -594,22 +594,29 @@ export default function Financial() {
 function TransactionList({
   transactions,
   type,
+  label,
+  emptyMessage,
+  icon,
   onAdd,
   onEdit,
   onDelete,
 }: {
   transactions: Transaction[];
   type: "income" | "expense";
+  label?: string;
+  emptyMessage?: string;
+  icon?: React.ReactNode;
   onAdd: () => void;
   onEdit: (tx: Transaction) => void;
   onDelete: (id: string) => void;
 }) {
   const isIncome = type === "income";
+  const title = label || (isIncome ? "Receitas" : "Despesas");
   return (
     <Card className="glass shadow-card">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="font-display text-lg">
-          {isIncome ? "Receitas" : "Despesas"}
+          {title}
         </CardTitle>
         <Button size="sm" onClick={onAdd} className="gap-1">
           <Plus className="w-4 h-4" /> Adicionar
