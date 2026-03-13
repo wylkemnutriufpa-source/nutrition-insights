@@ -1592,6 +1592,57 @@ export type Database = {
         }
         Relationships: []
       }
+      menu_items: {
+        Row: {
+          category: string
+          color: string | null
+          created_at: string
+          icon: string
+          icon_color: string | null
+          id: string
+          is_active: boolean
+          label: string
+          label_key: string
+          order_default: number
+          premium_only: boolean
+          premium_priority_boost: boolean
+          role_visibility: string[]
+          route: string
+        }
+        Insert: {
+          category?: string
+          color?: string | null
+          created_at?: string
+          icon?: string
+          icon_color?: string | null
+          id?: string
+          is_active?: boolean
+          label: string
+          label_key: string
+          order_default?: number
+          premium_only?: boolean
+          premium_priority_boost?: boolean
+          role_visibility?: string[]
+          route: string
+        }
+        Update: {
+          category?: string
+          color?: string | null
+          created_at?: string
+          icon?: string
+          icon_color?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string
+          label_key?: string
+          order_default?: number
+          premium_only?: boolean
+          premium_priority_boost?: boolean
+          role_visibility?: string[]
+          route?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           action_url: string | null
@@ -4560,6 +4611,41 @@ export type Database = {
           },
         ]
       }
+      user_menu_usage: {
+        Row: {
+          clicks_count: number
+          id: string
+          last_access_at: string
+          menu_item_id: string
+          usage_score: number
+          user_id: string
+        }
+        Insert: {
+          clicks_count?: number
+          id?: string
+          last_access_at?: string
+          menu_item_id: string
+          usage_score?: number
+          user_id: string
+        }
+        Update: {
+          clicks_count?: number
+          id?: string
+          last_access_at?: string
+          menu_item_id?: string
+          usage_score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_menu_usage_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_presence: {
         Row: {
           device_info: string | null
@@ -5061,6 +5147,7 @@ export type Database = {
         Args: { _date?: string; _patient_protocol_id: string }
         Returns: number
       }
+      track_menu_click: { Args: { _menu_item_id: string }; Returns: undefined }
     }
     Enums: {
       achievement_type:

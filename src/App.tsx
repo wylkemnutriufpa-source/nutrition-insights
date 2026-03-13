@@ -93,6 +93,7 @@ const AdminAffiliates = lazy(() => import("./pages/AdminAffiliates"));
 const PatientLanding = lazy(() => import("./pages/PatientLanding"));
 const AffiliateLanding = lazy(() => import("./pages/AffiliateLanding"));
 const AdminLandingPages = lazy(() => import("./pages/AdminLandingPages"));
+const AdminMenuConfig = lazy(() => import("./pages/AdminMenuConfig"));
 const PersonalDashboard = lazy(() => import("./pages/PersonalDashboard"));
 const PersonalStudents = lazy(() => import("./pages/PersonalStudents"));
 const PersonalWorkouts = lazy(() => import("./pages/PersonalWorkouts"));
@@ -305,6 +306,7 @@ const App = () => (
               <Route path="/admin/audit-logs" element={<AdminRoute><LP section="Admin"><AuditLogs /></LP></AdminRoute>} />
               <Route path="/admin/affiliates" element={<AdminRoute><LP section="Admin"><AdminAffiliates /></LP></AdminRoute>} />
               <Route path="/admin/landing-pages" element={<AdminRoute><LP section="Admin"><AdminLandingPages /></LP></AdminRoute>} />
+              <Route path="/admin/menu-config" element={<AdminRoute><LP section="Admin"><AdminMenuConfig /></LP></AdminRoute>} />
 
               {/* Public pricing */}
               <Route path="/pricing" element={<LP section="Pricing"><Pricing /></LP>} />
