@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -47,6 +48,7 @@ const filterOptions: { key: FilterType; label: string; icon: typeof Users }[] = 
 
 export default function ImportPatients() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [allPatients, setAllPatients] = useState<PatientRow[]>([]);
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState<{ current: number; total: number; created: number; errors: number } | null>(null);
@@ -268,6 +270,8 @@ export default function ImportPatients() {
       
       if (totalResults.created > 0) {
         toast.success(`${totalResults.created} pacientes importados com sucesso!`);
+        // Invalidate patients cache so they show immediately
+        queryClient.invalidateQueries({ queryKey: ["patients"] });
         // Re-check which emails are now imported
         const emails = allPatients.filter(p => p.email).map(p => p.email.toLowerCase());
         try {
