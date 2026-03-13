@@ -157,7 +157,7 @@ export default function PatientDetail() {
     setSavingProfile(false);
   };
 
-
+  const activateProtocol = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !patientId) return;
     const { data, error } = await supabase.from("patient_protocols").insert({
