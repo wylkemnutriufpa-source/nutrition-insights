@@ -91,17 +91,26 @@ export function openCommandPalette() {
   window.dispatchEvent(new CustomEvent("open-command-palette"));
 }
 
-interface PatientResult {
+interface ProfileResult {
   user_id: string;
   full_name: string;
+  role: string;
 }
+
+const roleLabels: Record<string, string> = {
+  admin: "Admin",
+  nutritionist: "Nutricionista",
+  personal: "Personal",
+  patient: "Paciente",
+};
 
 export default function CommandPalette() {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const { user, isNutritionist, isPatient, isAdmin, isPersonal } = useAuth();
-  const [patients, setPatients] = useState<PatientResult[]>([]);
-  const [patientsLoaded, setPatientsLoaded] = useState(false);
+  const [patients, setPatients] = useState<ProfileResult[]>([]);
+  const [professionals, setProfessionals] = useState<ProfileResult[]>([]);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -119,16 +128,53 @@ export default function CommandPalette() {
     };
   }, []);
 
-  // Load patients when palette opens (for professionals/admin)
+  // Load profiles when palette opens
   useEffect(() => {
-    if (!isOpen || patientsLoaded || isPatient) return;
-    if (!isNutritionist && !isAdmin && !isPersonal) return;
+    if (!isOpen || dataLoaded) return;
+    if (isPatient && !isAdmin && !isNutritionist && !isPersonal) {
+      setDataLoaded(true);
+      return;
+    }
 
     (async () => {
       if (isAdmin) {
-        const { data } = await supabase.from("profiles").select("user_id, full_name").order("full_name").limit(500);
-        setPatients((data || []).map(p => ({ user_id: p.user_id, full_name: p.full_name || "Sem nome" })));
+        // Admin: load ALL profiles + their roles
+        const [profilesRes, rolesRes] = await Promise.all([
+          supabase.from("profiles").select("user_id, full_name").order("full_name").limit(1000),
+          supabase.from("user_roles").select("user_id, role").limit(2000),
+        ]);
+        const profiles = profilesRes.data || [];
+        const roles = rolesRes.data || [];
+
+        // Build role map
+        const roleMap = new Map<string, string[]>();
+        roles.forEach((r: any) => {
+          const existing = roleMap.get(r.user_id) || [];
+          existing.push(r.role);
+          roleMap.set(r.user_id, existing);
+        });
+
+        const patientList: ProfileResult[] = [];
+        const proList: ProfileResult[] = [];
+
+        profiles.forEach((p) => {
+          const userRoles = roleMap.get(p.user_id) || ["patient"];
+          const name = p.full_name || "Sem nome";
+          const isPro = userRoles.some((r: string) => ["nutritionist", "personal", "admin"].includes(r));
+
+          if (isPro) {
+            const mainRole = userRoles.includes("admin") ? "admin" : userRoles.includes("nutritionist") ? "nutritionist" : "personal";
+            proList.push({ user_id: p.user_id, full_name: name, role: mainRole });
+          }
+          if (userRoles.includes("patient") || !isPro) {
+            patientList.push({ user_id: p.user_id, full_name: name, role: "patient" });
+          }
+        });
+
+        setPatients(patientList);
+        setProfessionals(proList);
       } else {
+        // Nutritionist / Personal: only their linked patients
         const { data: links } = await supabase
           .from("nutritionist_patients")
           .select("patient_id")
@@ -137,12 +183,12 @@ export default function CommandPalette() {
         if (links && links.length > 0) {
           const ids = links.map(l => l.patient_id);
           const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", ids);
-          setPatients((profiles || []).map(p => ({ user_id: p.user_id, full_name: p.full_name || "Sem nome" })));
+          setPatients((profiles || []).map(p => ({ user_id: p.user_id, full_name: p.full_name || "Sem nome", role: "patient" })));
         }
       }
-      setPatientsLoaded(true);
+      setDataLoaded(true);
     })();
-  }, [isOpen, patientsLoaded, isPatient, isNutritionist, isAdmin, isPersonal, user?.id]);
+  }, [isOpen, dataLoaded, isPatient, isNutritionist, isAdmin, isPersonal, user?.id]);
 
   const userRoles = useMemo(() => {
     const r: string[] = [];
@@ -172,13 +218,34 @@ export default function CommandPalette() {
         <CommandList>
           <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
 
+          {/* Professionals for admin */}
+          {professionals.length > 0 && (
+            <>
+              <CommandGroup heading="Profissionais">
+                {professionals.map((p) => (
+                  <CommandItem
+                    key={`pro-${p.user_id}`}
+                    value={`profissional ${p.full_name} ${roleLabels[p.role] || p.role}`}
+                    onSelect={() => handleSelect(`/patients/${p.user_id}`)}
+                    className="cursor-pointer"
+                  >
+                    <Shield className="mr-2 h-4 w-4 text-muted-foreground" />
+                    <span>{p.full_name}</span>
+                    <span className="ml-auto text-xs text-muted-foreground">{roleLabels[p.role]}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+              <CommandSeparator />
+            </>
+          )}
+
           {/* Patient results for professionals */}
           {patients.length > 0 && (
             <>
               <CommandGroup heading="Pacientes">
                 {patients.map((p) => (
                   <CommandItem
-                    key={p.user_id}
+                    key={`pat-${p.user_id}`}
                     value={`paciente ${p.full_name}`}
                     onSelect={() => handleSelect(`/patients/${p.user_id}`)}
                     className="cursor-pointer"
