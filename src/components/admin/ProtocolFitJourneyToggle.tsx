@@ -31,11 +31,21 @@ const DEFAULT: Settings = {
 };
 
 export default function ProtocolFitJourneyToggle() {
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
   const [settings, setSettings] = useState<Settings>(DEFAULT);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasRecord, setHasRecord] = useState(false);
+
+  // Only show for nutritionists/admins
+  const isNutritionist = roles?.includes("nutritionist") || roles?.includes("admin");
+  
+  useEffect(() => {
+    if (user && isNutritionist) fetchSettings();
+    else setLoading(false);
+  }, [user, isNutritionist]);
+
+  if (!isNutritionist) return null;
 
   useEffect(() => {
     if (user) fetchSettings();
