@@ -427,6 +427,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     <div className="min-h-screen flex bg-background particles-bg">
       <CommandPalette />
       <OnboardingWizard />
+      <SmartResumeModal />
       {/* Desktop Sidebar */}
       <motion.aside
         initial={false}
