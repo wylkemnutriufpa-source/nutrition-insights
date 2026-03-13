@@ -146,7 +146,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
       } as any)
       .eq("id", pipeline.id);
 
-    // Activate the meal plan with 30-day duration
+    // Activate the meal plan with 30-day duration and proper status
     if (pipeline.generated_plan_id) {
       const startDate = new Date();
       const endDate = new Date();
@@ -156,16 +156,16 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
         .from("meal_plans")
         .update({
           is_active: true,
+          plan_status: "published_to_patient",
           start_date: startDate.toISOString().split("T")[0],
           end_date: endDate.toISOString().split("T")[0],
-        })
+        } as any)
         .eq("id", pipeline.generated_plan_id);
 
-      // If scheduling criteria enabled, create a plan_schedule
+      // Schedule criteria if enabled
       if (useScheduling) {
         const activateDate = new Date();
         activateDate.setDate(activateDate.getDate() + (criteria.checklist_days || 14));
-
         await supabase
           .from("plan_schedules" as any)
           .insert({
@@ -181,12 +181,12 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
     await supabase.from("notifications").insert({
       user_id: patientId,
       title: "Plano Alimentar Aprovado! 🎉",
-      message: "Seu plano alimentar foi revisado e aprovado pelo profissional. Acesse agora em 'Minha Dieta'.",
+      message: "Seu plano foi revisado e aprovado. Acesse em 'Minha Dieta'. Validade: 30 dias.",
       type: "success",
       action_url: "/my-diet",
     });
 
-    toast.success("Plano aprovado e ativado com sucesso!");
+    toast.success("Plano aprovado e publicado com sucesso!");
     fetchPipeline();
     setProcessing(false);
   }
