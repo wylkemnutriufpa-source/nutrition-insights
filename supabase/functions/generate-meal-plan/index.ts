@@ -7,215 +7,168 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// ──── Food database (Brazilian foods) with tags for AI matching ────
-interface FoodItem {
-  title: string;
-  desc: string;
-  kcal: number;
-  p: number;
-  c: number;
-  f: number;
-  tags: string[];
-  subs: string[];
-  benefits: string[];  // AI-matchable benefit keywords
-}
-
-const FOODS: Record<string, FoodItem[]> = {
-  breakfast: [
-    { title: "Pão integral com queijo", desc: "2 fatias de pão integral + 2 fatias de queijo branco", kcal: 250, p: 12, c: 30, f: 8, tags: ["quick"], subs: ["Tapioca com queijo", "Crepioca"], benefits: ["fibra", "energia_matinal", "saciedade"] },
-    { title: "Mingau de aveia com banana", desc: "40g aveia + 1 banana + 200ml leite", kcal: 320, p: 10, c: 50, f: 8, tags: ["homemade"], subs: ["Overnight oats", "Vitamina de frutas"], benefits: ["fibra", "digestão", "energia_sustentada", "saciedade"] },
-    { title: "Ovos mexidos com torrada", desc: "2 ovos mexidos + 2 torradas integrais", kcal: 280, p: 18, c: 22, f: 14, tags: ["quick", "low_carb"], subs: ["Omelete", "Ovo cozido com pão"], benefits: ["proteína", "saciedade", "low_carb", "massa_muscular"] },
-    { title: "Iogurte com granola", desc: "200ml iogurte natural + 30g granola + frutas", kcal: 260, p: 10, c: 38, f: 6, tags: ["quick"], subs: ["Açaí com granola", "Smoothie bowl"], benefits: ["probiótico", "digestão", "imunidade", "praticidade"] },
-    { title: "Smoothie verde proteico", desc: "Espinafre + banana + whey + leite vegetal", kcal: 290, p: 22, c: 32, f: 6, tags: ["quick"], subs: ["Vitamina verde", "Shake detox"], benefits: ["anti_inflamatório", "energia", "proteína", "micronutrientes"] },
-    { title: "Tapioca com ovo e tomate", desc: "1 tapioca + 2 ovos + tomate picado", kcal: 270, p: 16, c: 28, f: 10, tags: ["quick", "gluten_free"], subs: ["Crepioca", "Panqueca de banana"], benefits: ["sem_glúten", "proteína", "energia_rápida"] },
-  ],
-  morning_snack: [
-    { title: "Fruta + castanhas", desc: "1 maçã + 5 castanhas do Pará", kcal: 180, p: 4, c: 22, f: 10, tags: ["quick"], subs: ["Banana + amendoim", "Mix de nuts"], benefits: ["selênio", "antioxidante", "saciedade", "gordura_boa"] },
-    { title: "Iogurte grego", desc: "170g iogurte grego + mel", kcal: 150, p: 12, c: 16, f: 4, tags: ["quick"], subs: ["Coalhada", "Vitamina"], benefits: ["probiótico", "proteína", "digestão", "saciedade"] },
-    { title: "Sanduíche natural", desc: "Pão de forma + frango desfiado + alface", kcal: 200, p: 14, c: 20, f: 6, tags: ["homemade"], subs: ["Wrap integral", "Torrada com pasta de atum"], benefits: ["proteína", "fibra", "saciedade"] },
-    { title: "Mix de frutas secas e sementes", desc: "30g mix de frutas secas + sementes de abóbora", kcal: 160, p: 5, c: 18, f: 8, tags: ["quick"], subs: ["Barra de cereais caseira", "Trail mix"], benefits: ["energia_sustentada", "fibra", "minerais", "praticidade"] },
-  ],
-  lunch: [
-    { title: "Arroz + feijão + frango grelhado", desc: "100g arroz + 80g feijão + 120g frango + salada", kcal: 480, p: 35, c: 55, f: 10, tags: ["homemade"], subs: ["Arroz + lentilha + peixe", "Arroz + feijão + carne moída"], benefits: ["proteína", "ferro", "fibra", "completo"] },
-    { title: "Macarrão integral com carne", desc: "100g macarrão integral + molho + 100g carne moída magra", kcal: 450, p: 28, c: 52, f: 12, tags: ["homemade"], subs: ["Lasanha light", "Espaguete com frango"], benefits: ["fibra", "proteína", "energia_sustentada"] },
-    { title: "Bowl de frango com legumes", desc: "120g frango + quinoa + legumes salteados", kcal: 420, p: 32, c: 40, f: 12, tags: ["gourmet"], subs: ["Buddha bowl", "Salada completa com proteína"], benefits: ["proteína", "micronutrientes", "anti_inflamatório", "low_carb"] },
-    { title: "Peixe assado com purê", desc: "150g tilápia + purê de batata doce + brócolis", kcal: 400, p: 30, c: 42, f: 8, tags: ["homemade"], subs: ["Salmão grelhado", "Atum com batata"], benefits: ["ômega3", "anti_inflamatório", "proteína", "digestão"] },
-    { title: "Salada completa com grão-de-bico", desc: "Folhas verdes + grão-de-bico + ovo cozido + azeite", kcal: 380, p: 22, c: 35, f: 16, tags: ["quick"], subs: ["Salada com lentilha", "Tabule com proteína"], benefits: ["fibra", "proteína_vegetal", "saciedade", "digestão"] },
-    { title: "Strogonoff light de frango", desc: "120g frango + creme de leite light + arroz integral", kcal: 460, p: 30, c: 48, f: 14, tags: ["homemade"], subs: ["Frango ao molho mostarda", "Escondidinho light"], benefits: ["proteína", "conforto", "saciedade"] },
-  ],
-  afternoon_snack: [
-    { title: "Banana com pasta de amendoim", desc: "1 banana + 1 colher de pasta de amendoim", kcal: 220, p: 6, c: 28, f: 10, tags: ["quick"], subs: ["Torrada com abacate", "Frutas com chocolate amargo"], benefits: ["energia_rápida", "gordura_boa", "saciedade", "pré_treino"] },
-    { title: "Batata doce com canela", desc: "100g batata doce cozida + canela", kcal: 130, p: 2, c: 28, f: 0, tags: ["quick"], subs: ["Mandioca cozida", "Milho cozido"], benefits: ["energia_sustentada", "fibra", "anti_inflamatório", "pré_treino"] },
-    { title: "Shake proteico", desc: "1 scoop whey + 200ml leite + 1 banana", kcal: 280, p: 26, c: 30, f: 6, tags: ["quick"], subs: ["Vitamina proteica", "Iogurte com whey"], benefits: ["proteína", "massa_muscular", "recuperação", "pós_treino"] },
-    { title: "Torrada com abacate e ovo", desc: "2 torradas + ½ abacate + 1 ovo cozido", kcal: 260, p: 12, c: 22, f: 16, tags: ["quick"], subs: ["Guacamole com torrada", "Abacate com granola"], benefits: ["gordura_boa", "saciedade", "energia_sustentada", "hormonal"] },
-  ],
-  dinner: [
-    { title: "Sopa de legumes com frango", desc: "Caldo de legumes com 100g frango desfiado", kcal: 280, p: 22, c: 25, f: 8, tags: ["homemade"], subs: ["Creme de abóbora", "Sopa de lentilha"], benefits: ["digestão", "leve", "hidratação", "anti_inflamatório", "sono"] },
-    { title: "Omelete de legumes + salada", desc: "3 ovos + legumes + salada verde", kcal: 300, p: 22, c: 10, f: 18, tags: ["quick", "low_carb"], subs: ["Crepioca", "Wrap de ovo"], benefits: ["low_carb", "proteína", "saciedade", "leve"] },
-    { title: "Salada completa com atum", desc: "Folhas verdes + atum + grão-de-bico + tomate", kcal: 320, p: 26, c: 22, f: 12, tags: ["quick"], subs: ["Salada com frango", "Salada com salmão"], benefits: ["ômega3", "proteína", "leve", "digestão"] },
-    { title: "Frango grelhado com legumes", desc: "120g frango + abobrinha + cenoura refogada", kcal: 310, p: 28, c: 18, f: 10, tags: ["homemade"], subs: ["Peixe com legumes", "Carne magra com salada"], benefits: ["proteína", "micronutrientes", "leve", "massa_muscular"] },
-  ],
-  evening_snack: [
-    { title: "Chá + torrada integral", desc: "Chá de camomila + 1 torrada com requeijão light", kcal: 100, p: 4, c: 14, f: 3, tags: ["quick"], subs: ["Leite quente com canela", "Chá com biscoito integral"], benefits: ["sono", "relaxamento", "leve", "digestão"] },
-    { title: "Frutas vermelhas", desc: "100g morango + mirtilo", kcal: 60, p: 1, c: 14, f: 0, tags: ["quick"], subs: ["Gelatina zero", "Maçã assada com canela"], benefits: ["antioxidante", "anti_inflamatório", "leve", "imunidade"] },
-    { title: "Leite morno com cúrcuma", desc: "200ml leite + ½ colher de cúrcuma + mel", kcal: 120, p: 6, c: 16, f: 4, tags: ["quick"], subs: ["Golden milk vegetal", "Chá de ervas com mel"], benefits: ["anti_inflamatório", "sono", "imunidade", "relaxamento"] },
-  ],
+// ──── Meal type labels ────
+const MEAL_TYPE_ORDER = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
+const MEAL_KCAL_SPLIT: Record<string, number> = {
+  breakfast: 0.2,
+  morning_snack: 0.1,
+  lunch: 0.3,
+  afternoon_snack: 0.1,
+  dinner: 0.22,
+  evening_snack: 0.08,
 };
 
-// ──── AI Insight → Benefit keywords mapping ────
-function mapInsightsToBenefits(insights: any): string[] {
-  const benefits: string[] = [];
-  const focuses = [
-    ...(insights.nutrition_focus || []),
-    ...(insights.behavior_focus || []),
-    ...(insights.movement_focus || []),
-    ...(insights.main_pains || []),
-  ].map((s: string) => s.toLowerCase());
-
-  const text = focuses.join(" ");
-
-  // Map common focus areas to food benefit tags
-  if (text.match(/proteín|massa muscular|hipertrofia|ganho/)) benefits.push("proteína", "massa_muscular");
-  if (text.match(/fibra|intestin|digestão|constipação/)) benefits.push("fibra", "digestão", "probiótico");
-  if (text.match(/inflama|dor|articular|inchaço/)) benefits.push("anti_inflamatório", "ômega3");
-  if (text.match(/sono|dormir|insônia|descanso/)) benefits.push("sono", "relaxamento");
-  if (text.match(/energia|dispos|cansaço|fadiga/)) benefits.push("energia_sustentada", "energia_rápida");
-  if (text.match(/saciedade|fome|compulsão|ansiedade/)) benefits.push("saciedade", "gordura_boa", "fibra");
-  if (text.match(/imunidade|defesa|gripe/)) benefits.push("imunidade", "antioxidante", "micronutrientes");
-  if (text.match(/emagre|perda|gordura corporal|déficit/)) benefits.push("low_carb", "saciedade", "leve");
-  if (text.match(/hidrat|água|líquido/)) benefits.push("hidratação");
-  if (text.match(/treino|exercício|atividade física|musculação/)) benefits.push("pré_treino", "pós_treino", "recuperação");
-  if (text.match(/hormonal|tireóide|menopausa/)) benefits.push("hormonal", "anti_inflamatório", "micronutrientes");
-  if (text.match(/glúten/)) benefits.push("sem_glúten");
-
-  return [...new Set(benefits)];
+// ──── Map anamnesis goal to template conditions ────
+function mapGoalToConditions(goal: string): string[] {
+  const map: Record<string, string[]> = {
+    lose_weight: ["emagrecimento", "sobrepeso", "obesidade", "deficit"],
+    gain_muscle: ["hipertrofia", "ganho_massa", "atleta"],
+    maintain: ["manutencao", "equilibrio", "reeducacao"],
+    gain_weight: ["baixo peso", "ganho de massa", "hipercalórico"],
+    improve_health: ["anti_inflamatorio", "longevidade", "cardiovascular"],
+    athletic_performance: ["corrida", "ciclismo", "resistência", "endurance"],
+  };
+  return map[goal] || ["manutencao", "equilibrio"];
 }
 
-// ──── Score food based on AI insights ────
-function scoreFoodForInsights(food: FoodItem, priorityBenefits: string[]): number {
-  if (priorityBenefits.length === 0) return 0;
+// ──── Score a template against patient data ────
+function scoreTemplate(
+  template: any,
+  goal: string,
+  restrictions: string[],
+  conditions: string[],
+  kcalTarget: number,
+): number {
   let score = 0;
-  for (const b of food.benefits) {
-    if (priorityBenefits.includes(b)) score += 2;
+  const templateConditions = (template.conditions || []) as string[];
+  const templateTags = (template.tags || []) as string[];
+  const goalConditions = mapGoalToConditions(goal);
+
+  // Goal match (highest weight)
+  for (const gc of goalConditions) {
+    if (templateConditions.some((c: string) => c.toLowerCase().includes(gc.toLowerCase()))) score += 10;
+    if (templateTags.some((t: string) => t.toLowerCase().includes(gc.toLowerCase()))) score += 5;
   }
+
+  // Medical conditions match
+  for (const cond of conditions) {
+    if (templateConditions.some((c: string) => c.toLowerCase().includes(cond.toLowerCase()))) score += 15;
+    if (templateTags.some((t: string) => t.toLowerCase().includes(cond.toLowerCase()))) score += 8;
+  }
+
+  // Dietary restrictions match
+  if (restrictions.includes("vegetarian") || restrictions.includes("vegan")) {
+    if (template.slug === "vegana" || template.slug === "vegetariana") score += 20;
+  }
+  if (restrictions.includes("gluten_free")) {
+    if (templateTags.includes("sem_gluten")) score += 10;
+  }
+  if (restrictions.includes("lactose_free")) {
+    if (templateTags.includes("sem_lactose")) score += 10;
+  }
+
+  // Calorie proximity (closer = better)
+  const calDiff = Math.abs((template.base_calories || 2000) - kcalTarget);
+  if (calDiff < 200) score += 5;
+  else if (calDiff < 400) score += 3;
+  else if (calDiff < 600) score += 1;
+
   return score;
 }
 
-// ──── Generate personalized note based on insights ────
-function generateInsightNote(food: FoodItem, insights: any): string {
-  const matchedBenefits = food.benefits.filter(b => {
-    const text = JSON.stringify(insights).toLowerCase();
-    return text.includes(b.replace("_", " "));
-  });
-
-  if (matchedBenefits.length === 0) return "";
-
-  const benefitLabels: Record<string, string> = {
-    proteína: "🔋 Rico em proteína para seus objetivos",
-    fibra: "🌾 Fonte de fibra para saúde digestiva",
-    digestão: "🫄 Favorece a digestão",
-    anti_inflamatório: "🍃 Propriedades anti-inflamatórias",
-    saciedade: "✅ Aumenta a saciedade",
-    energia_sustentada: "⚡ Energia de longa duração",
-    sono: "😴 Favorece o sono reparador",
-    ômega3: "🐟 Fonte de ômega-3",
-    imunidade: "🛡️ Fortalece a imunidade",
-    low_carb: "📉 Baixo carboidrato",
-    massa_muscular: "💪 Suporte para massa muscular",
-    probiótico: "🦠 Rico em probióticos",
-    gordura_boa: "🥑 Gorduras saudáveis",
-    antioxidante: "🫐 Rico em antioxidantes",
-  };
-
-  const notes = matchedBenefits
-    .map(b => benefitLabels[b])
-    .filter(Boolean)
-    .slice(0, 2);
-
-  return notes.length > 0 ? `\n\n💡 Personalizado para você:\n${notes.join("\n")}` : "";
+// ──── Filter foods based on dietary restrictions ────
+function isFoodAllowed(foodName: string, foodDesc: string, restrictions: string[]): boolean {
+  const text = `${foodName} ${foodDesc}`.toLowerCase();
+  if (restrictions.includes("vegetarian") && text.match(/frango|carne|atum|peixe|tilápia|salmão|sardinha|patinho|boi|porco|peru|bacon/)) return false;
+  if (restrictions.includes("vegan") && text.match(/frango|carne|atum|peixe|ovo|leite|queijo|iogurte|whey|requeijão|mel|manteiga|ricota|cottage|kefir|coalhada|peru|salmão|sardinha|patinho|boi/)) return false;
+  if (restrictions.includes("gluten_free") && text.match(/pão|torrada|macarrão|aveia|granola|biscoito|trigo|wrap/)) return false;
+  if (restrictions.includes("lactose_free") && text.match(/leite|queijo|iogurte|requeijão|coalhada|kefir|manteiga|ricota|cottage/)) return false;
+  return true;
 }
 
-// ──── Plan generator (now insight-aware) ────
-function generatePlan(
-  answers: Record<string, any>,
+// ──── Check disliked foods ────
+function isDisliked(foodName: string, foodDesc: string, disliked: string[]): boolean {
+  const text = `${foodName} ${foodDesc}`.toLowerCase();
+  return disliked.some(d => text.includes(d));
+}
+
+// ──── Generate plan items from a template ────
+function generatePlanFromTemplate(
+  template: any,
   kcalTarget: number,
-  _protein: number,
-  _carbs: number,
-  _fat: number,
-  insights: any | null,
-) {
-  const mealTypes = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"] as const;
-  const mealKcalSplit = {
-    breakfast: 0.2,
-    morning_snack: 0.1,
-    lunch: 0.3,
-    afternoon_snack: 0.1,
-    dinner: 0.22,
-    evening_snack: 0.08,
-  };
-
-  const restrictions = answers.restrictions || [];
-  const cookPref = answers.cooking_preference || "any";
-  const disliked = (answers.disliked_foods || "").toLowerCase().split(",").map((s: string) => s.trim()).filter(Boolean);
-  const favorites = (answers.favorite_foods || "").toLowerCase().split(",").map((s: string) => s.trim()).filter(Boolean);
-
-  // Get priority benefits from AI insights
-  const priorityBenefits = insights ? mapInsightsToBenefits(insights) : [];
-
+  protein: number,
+  carbs: number,
+  fat: number,
+  restrictions: string[],
+  disliked: string[],
+): any[] {
+  const meals = (template.meals || []) as any[];
   const items: any[] = [];
+  const templateBaseKcal = template.base_calories || 2000;
+  const kcalRatio = kcalTarget / templateBaseKcal;
 
   for (let day = 0; day < 7; day++) {
-    for (const mealType of mealTypes) {
-      const foods = FOODS[mealType] || [];
-      let candidates = foods.filter((f) => {
-        if (cookPref !== "any" && !f.tags.includes(cookPref) && !f.tags.includes("quick")) return false;
-        if (restrictions.includes("vegetarian") && f.desc.toLowerCase().match(/frango|carne|atum|peixe|tilápia|salmão|sardinha/)) return false;
-        if (restrictions.includes("vegan") && f.desc.toLowerCase().match(/frango|carne|atum|peixe|ovo|leite|queijo|iogurte|whey|requeijão/)) return false;
-        if (restrictions.includes("gluten_free") && f.desc.toLowerCase().match(/pão|torrada|macarrão|aveia|granola|biscoito/)) return false;
-        if (restrictions.includes("lactose_free") && f.desc.toLowerCase().match(/leite|queijo|iogurte|requeijão/)) return false;
-        if (disliked.some((d: string) => f.title.toLowerCase().includes(d) || f.desc.toLowerCase().includes(d))) return false;
-        return true;
+    for (const mealTemplate of meals) {
+      const mealType = mealTemplate.meal_type || "lunch";
+      const foods = (mealTemplate.foods || []) as any[];
+      const targetKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT[mealType] || 0.15));
+
+      // Filter foods by restrictions and dislikes
+      let allowedFoods = foods.filter((f: any) =>
+        isFoodAllowed(f.name || "", f.portion || "", restrictions) &&
+        !isDisliked(f.name || "", f.portion || "", disliked)
+      );
+
+      // If all foods filtered out, use substitutions
+      if (allowedFoods.length === 0) {
+        for (const f of foods) {
+          const subs = (f.substitutions || []) as string[];
+          for (const sub of subs) {
+            if (isFoodAllowed(sub, "", restrictions) && !isDisliked(sub, "", disliked)) {
+              allowedFoods.push({ ...f, name: sub, portion: f.portion, _substituted: true });
+              break;
+            }
+          }
+        }
+      }
+
+      // Still empty? fallback to original
+      if (allowedFoods.length === 0) allowedFoods = foods;
+
+      // For day variation: rotate substitutions on some days
+      const dayFoods = allowedFoods.map((f: any, idx: number) => {
+        if (day > 0 && day % 2 === 0 && (f.substitutions || []).length > 0 && !f._substituted) {
+          const subIdx = (day - 1) % f.substitutions.length;
+          const subName = f.substitutions[subIdx];
+          if (isFoodAllowed(subName, "", restrictions) && !isDisliked(subName, "", disliked)) {
+            return { ...f, name: subName, _rotated: true };
+          }
+        }
+        return f;
       });
 
-      if (candidates.length === 0) candidates = foods;
+      // Build description
+      const foodLines = dayFoods.map((f: any) => `• ${f.name} — ${f.portion || ""}`).join("\n");
+      const subsLines = dayFoods
+        .filter((f: any) => (f.substitutions || []).length > 0 && !f._rotated)
+        .map((f: any) => `• ${f.name}: ${f.substitutions.slice(0, 2).join(", ")}`)
+        .join("\n");
 
-      // Score and sort by AI insight relevance
-      if (priorityBenefits.length > 0) {
-        candidates = candidates
-          .map(f => ({ ...f, _score: scoreFoodForInsights(f, priorityBenefits) }))
-          .sort((a, b) => b._score - a._score);
-      }
+      const description = `${foodLines}${subsLines ? `\n\n🔄 Substituições:\n${subsLines}` : ""}`;
 
-      // Boost favorites
-      if (favorites.length > 0) {
-        candidates.sort((a, b) => {
-          const aFav = favorites.some((fv: string) => a.title.toLowerCase().includes(fv) || a.desc.toLowerCase().includes(fv)) ? 1 : 0;
-          const bFav = favorites.some((fv: string) => b.title.toLowerCase().includes(fv) || b.desc.toLowerCase().includes(fv)) ? 1 : 0;
-          return bFav - aFav;
-        });
-      }
-
-      // Pick food — rotate through top candidates by day for variety
-      const topN = Math.min(candidates.length, Math.max(3, candidates.length));
-      const picked = candidates[day % topN];
-      const targetKcal = Math.round(kcalTarget * mealKcalSplit[mealType]);
-      const ratio = targetKcal / (picked.kcal || 300);
-
-      // Build description with insight notes
-      let description = `${picked.desc}\n\n🔄 Substituições:\n• ${picked.subs.join("\n• ")}`;
-      if (insights) {
-        description += generateInsightNote(picked, insights);
-      }
+      // Calculate macros scaled to target
+      const totalFoodKcal = dayFoods.reduce((sum: number, f: any) => sum + (f.calories || 0), 0) || 1;
+      const mealRatio = targetKcal / totalFoodKcal;
 
       items.push({
         meal_type: mealType,
         day_of_week: day,
-        title: picked.title,
+        title: mealTemplate.title || mealType,
         description,
         calories_target: targetKcal,
-        protein_target: Math.round(picked.p * ratio),
-        carbs_target: Math.round(picked.c * ratio),
-        fat_target: Math.round(picked.f * ratio),
+        protein_target: Math.round(dayFoods.reduce((s: number, f: any) => s + (f.protein || 0), 0) * mealRatio),
+        carbs_target: Math.round(dayFoods.reduce((s: number, f: any) => s + (f.carbs || 0), 0) * mealRatio),
+        fat_target: Math.round(dayFoods.reduce((s: number, f: any) => s + (f.fat || 0), 0) * mealRatio),
       });
     }
   }
@@ -223,7 +176,7 @@ function generatePlan(
   return items;
 }
 
-// ──── Tips engine ────
+// ──── Tips engine (deterministic from anamnesis) ────
 function generateTips(answers: Record<string, any>): { tip: string; category: string; icon: string }[] {
   const tips: { tip: string; category: string; icon: string }[] = [];
 
@@ -252,6 +205,14 @@ function generateTips(answers: Record<string, any>): { tip: string; category: st
     tips.push({ tip: "Distribua a proteína ao longo do dia, não concentre tudo em uma refeição.", category: "nutrition", icon: "💪" });
   }
 
+  if (answers.meals_per_day && answers.meals_per_day < 4) {
+    tips.push({ tip: "Tente fazer pelo menos 4 refeições por dia para manter o metabolismo ativo e evitar compulsão.", category: "nutrition", icon: "🕐" });
+  }
+
+  if (answers.bowel_function === "irregular" || answers.bowel_function === "constipated") {
+    tips.push({ tip: "Aumente o consumo de fibras (verduras, frutas com casca, aveia) e beba mais água para regularizar o intestino.", category: "digestion", icon: "🌿" });
+  }
+
   return tips;
 }
 
@@ -274,9 +235,13 @@ serve(async (req) => {
       });
     }
 
-    const { patient_id, meal_plan_id } = await req.json();
+    const body = await req.json();
+    // Support both entry paths
+    const patient_id = body.patient_id || body.patientId;
+    const meal_plan_id = body.meal_plan_id;
+    const isPipeline = body.isPipeline || false;
 
-    // Get anamnesis
+    // ── 1. Get anamnesis ──
     const { data: anamnesis } = await supabase
       .from("patient_anamnesis")
       .select("*")
@@ -293,21 +258,12 @@ serve(async (req) => {
       });
     }
 
-    // ── Fetch AI insights for this patient ──
     const serviceClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { data: aiInsights } = await serviceClient
-      .from("anamnesis_ai_insights")
-      .select("*")
-      .eq("user_id", patient_id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
-
-    // ── Fetch latest physical assessment (priority over anamnesis) ──
+    // ── 2. Get physical assessment (priority for macros) ──
     const { data: physicalAssessment } = await serviceClient
       .from("physical_assessments")
       .select("calories_target, protein_target, carbs_target, fat_target, tdee, bmr, weight, body_fat_percentage")
@@ -316,31 +272,102 @@ serve(async (req) => {
       .limit(1)
       .single();
 
-    // Physical assessment targets take priority, then anamnesis, then defaults
+    // ── 3. Calculate macros: physical assessment > anamnesis > defaults ──
     const kcal = physicalAssessment?.calories_target || anamnesis.computed_kcal_target || 2000;
     const protein = physicalAssessment?.protein_target || anamnesis.computed_protein || 100;
     const carbs = physicalAssessment?.carbs_target || anamnesis.computed_carbs || 250;
     const fat = physicalAssessment?.fat_target || anamnesis.computed_fat || 60;
-    const answers = anamnesis.answers as Record<string, any>;
+    const answers = (anamnesis.answers || {}) as Record<string, any>;
     const dataSource = physicalAssessment?.calories_target ? "physical_assessment" : "anamnesis";
 
-    // Generate meal plan items (now with AI insights)
-    const planItems = generatePlan(answers, kcal, protein, carbs, fat, aiInsights);
+    // Pipeline overrides
+    const pipelineOverrides = isPipeline ? {
+      cooking_preference: body.cookingPreference,
+      food_preferences: body.foodPreferences,
+      wake_time: body.wakeTime,
+      sleep_time: body.sleepTime,
+      meal_count: body.mealCount,
+    } : {};
+    const mergedAnswers = { ...answers, ...pipelineOverrides };
 
-    // Delete existing items for this plan
-    await supabase.from("meal_plan_items").delete().eq("meal_plan_id", meal_plan_id);
+    // ── 4. Fetch ALL active diet templates from DB ──
+    const { data: templates, error: tplErr } = await serviceClient
+      .from("diet_templates")
+      .select("*")
+      .eq("is_active", true);
 
-    // Insert new items
-    const itemsToInsert = planItems.map((item) => ({
+    if (tplErr || !templates || templates.length === 0) {
+      return new Response(JSON.stringify({ error: "Nenhum template de dieta disponível" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── 5. Score and select best template ──
+    const goal = mergedAnswers.goal || "maintain";
+    const restrictions = mergedAnswers.restrictions || [];
+    const medicalConditions = mergedAnswers.medical_conditions || mergedAnswers.health_conditions || [];
+    const disliked = (mergedAnswers.disliked_foods || "").toLowerCase().split(",").map((s: string) => s.trim()).filter(Boolean);
+
+    const scoredTemplates = templates
+      .map((t: any) => ({ ...t, _score: scoreTemplate(t, goal, restrictions, medicalConditions, kcal) }))
+      .sort((a: any, b: any) => b._score - a._score);
+
+    const bestTemplate = scoredTemplates[0];
+
+    // ── 6. Generate plan items from selected template ──
+    const planItems = generatePlanFromTemplate(
+      bestTemplate,
+      kcal,
+      protein,
+      carbs,
+      fat,
+      restrictions,
+      disliked,
+    );
+
+    // ── 7. Handle plan creation for pipeline mode ──
+    let finalMealPlanId = meal_plan_id;
+
+    if (isPipeline && !meal_plan_id) {
+      const nutritionistId = body.nutritionistId;
+      const { data: newPlan, error: planErr } = await serviceClient
+        .from("meal_plans")
+        .insert({
+          title: `Plano Personalizado — ${bestTemplate.name}`,
+          description: `Gerado automaticamente com base na anamnese. Template: ${bestTemplate.name}. Meta calórica: ${kcal}kcal.`,
+          patient_id,
+          nutritionist_id: nutritionistId,
+          start_date: new Date().toISOString().split("T")[0],
+          is_active: true,
+        })
+        .select("id")
+        .single();
+
+      if (planErr || !newPlan) throw new Error("Falha ao criar plano alimentar");
+      finalMealPlanId = newPlan.id;
+    }
+
+    if (!finalMealPlanId) {
+      return new Response(JSON.stringify({ error: "meal_plan_id é obrigatório" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── 8. Delete existing items and insert new ones ──
+    await supabase.from("meal_plan_items").delete().eq("meal_plan_id", finalMealPlanId);
+
+    const itemsToInsert = planItems.map((item: any) => ({
       ...item,
-      meal_plan_id,
+      meal_plan_id: finalMealPlanId,
     }));
 
     const { error: insertErr } = await supabase.from("meal_plan_items").insert(itemsToInsert);
     if (insertErr) throw insertErr;
 
-    // Generate and insert tips
-    const tips = generateTips(answers);
+    // ── 9. Generate deterministic tips ──
+    const tips = generateTips(mergedAnswers);
     await serviceClient.from("patient_tips").delete().eq("user_id", patient_id);
     if (tips.length > 0) {
       await serviceClient.from("patient_tips").insert(
@@ -348,36 +375,42 @@ serve(async (req) => {
       );
     }
 
-    // Add timeline event for AI-powered plan
-    if (aiInsights) {
-      await serviceClient.from("patient_timeline").insert({
-        patient_id,
-        event_type: "meal_plan",
-        title: "Plano Alimentar Inteligente Gerado",
-        description: `Plano personalizado com base nos insights da IA: ${aiInsights.primary_goal || "objetivo definido"}. Nível de atenção: ${aiInsights.risk_level || "baixo"}.`,
-        metadata: {
-          type: "ai_plan_generated",
-          meal_plan_id,
-          insight_id: aiInsights.id,
-          items_count: planItems.length,
-        },
-        created_by: user.id,
-      });
-    }
+    // ── 10. Add timeline event ──
+    await serviceClient.from("patient_timeline").insert({
+      patient_id,
+      event_type: "meal_plan",
+      title: "Plano Alimentar Gerado",
+      description: `Plano baseado no template "${bestTemplate.name}" com meta de ${kcal}kcal/dia. Fonte dos dados: ${dataSource === "physical_assessment" ? "avaliação física" : "anamnese"}.`,
+      metadata: {
+        type: "plan_generated",
+        meal_plan_id: finalMealPlanId,
+        template_used: bestTemplate.slug,
+        template_name: bestTemplate.name,
+        items_count: planItems.length,
+        data_source: dataSource,
+      },
+      created_by: user.id,
+    });
 
     return new Response(
       JSON.stringify({
         success: true,
+        mealPlanId: finalMealPlanId,
         items_count: planItems.length,
         tips_count: tips.length,
         macros: { kcal, protein, carbs, fat },
         data_source: dataSource,
-        ai_personalized: !!aiInsights,
-        insight_used: aiInsights ? {
-          risk_level: aiInsights.risk_level,
-          primary_goal: aiInsights.primary_goal,
-          nutrition_focus: aiInsights.nutrition_focus,
-        } : null,
+        template_used: {
+          slug: bestTemplate.slug,
+          name: bestTemplate.name,
+          score: bestTemplate._score,
+          category: bestTemplate.category,
+        },
+        alternatives: scoredTemplates.slice(1, 4).map((t: any) => ({
+          slug: t.slug,
+          name: t.name,
+          score: t._score,
+        })),
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
