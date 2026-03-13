@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { queryKeys } from "./queryKeys";
 import { toast } from "sonner";
+import { offlineQueue } from "@/lib/offlineSync";
 
 export interface ChatContact {
   user_id: string;
@@ -21,6 +22,8 @@ export interface Message {
   is_read: boolean;
   created_at: string;
   image_url?: string | null;
+  _pending?: boolean; // Optimistic offline flag
+  _tempId?: string;
 }
 
 export function useChatContacts() {
@@ -102,7 +105,23 @@ export function useChatMessages(contactId: string | null) {
         .update({ is_read: true })
         .eq("sender_id", contactId!).eq("receiver_id", userId).eq("is_read", false);
 
-      return (data || []) as Message[];
+      // Merge pending offline messages for this contact
+      const pendingChat = offlineQueue.getPendingChatMessages()
+        .filter(a => a.data.receiver_id === contactId && a.data.sender_id === userId);
+
+      const serverMessages = (data || []) as Message[];
+      const offlineMessages: Message[] = pendingChat.map(a => ({
+        id: a.tempId || a.id,
+        sender_id: a.data.sender_id,
+        receiver_id: a.data.receiver_id,
+        message: a.data.message,
+        is_read: false,
+        created_at: new Date(a.timestamp).toISOString(),
+        _pending: true,
+        _tempId: a.tempId,
+      }));
+
+      return [...serverMessages, ...offlineMessages];
     },
   });
 }
@@ -113,19 +132,67 @@ export function useSendMessage() {
 
   return useMutation({
     mutationFn: async ({ receiverId, message }: { receiverId: string; message: string }) => {
+      const tempId = `temp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+      // Optimistic: add to cache immediately
+      const optimisticMsg: Message = {
+        id: tempId,
+        sender_id: user!.id,
+        receiver_id: receiverId,
+        message,
+        is_read: false,
+        created_at: new Date().toISOString(),
+        _pending: !navigator.onLine,
+        _tempId: tempId,
+      };
+
+      queryClient.setQueryData<Message[]>(
+        queryKeys.chat.messages(user?.id ?? "", receiverId),
+        (old) => [...(old || []), optimisticMsg]
+      );
+
+      if (!navigator.onLine) {
+        // Queue for later
+        offlineQueue.add({
+          type: "chat_message",
+          table: "chat_messages",
+          id: tempId,
+          tempId,
+          data: { sender_id: user!.id, receiver_id: receiverId, message },
+          timestamp: Date.now(),
+        });
+        return optimisticMsg;
+      }
+
+      // Online: send immediately
       const { data, error } = await supabase.from("chat_messages").insert({
         sender_id: user!.id, receiver_id: receiverId, message,
       }).select().single();
       if (error) throw error;
+
+      // Replace optimistic message with real one
+      queryClient.setQueryData<Message[]>(
+        queryKeys.chat.messages(user?.id ?? "", receiverId),
+        (old) => (old || []).map(m => m.id === tempId ? { ...data, _pending: false } as Message : m)
+      );
+
       return data as Message;
     },
-    onSuccess: (data, variables) => {
-      queryClient.setQueryData<Message[]>(
-        queryKeys.chat.messages(user?.id ?? "", variables.receiverId),
-        (old) => [...(old || []), data]
-      );
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.contacts(user?.id ?? "") });
     },
-    onError: () => toast.error("Erro ao enviar mensagem"),
+    onError: (_err, variables) => {
+      // On error, queue offline
+      const tempId = `retry_${Date.now()}`;
+      offlineQueue.add({
+        type: "chat_message",
+        table: "chat_messages",
+        id: tempId,
+        tempId,
+        data: { sender_id: user!.id, receiver_id: variables.receiverId, message: variables.message },
+        timestamp: Date.now(),
+      });
+      toast.error("Sem conexão — mensagem será enviada ao reconectar");
+    },
   });
 }

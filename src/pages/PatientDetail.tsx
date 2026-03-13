@@ -77,7 +77,7 @@ export default function PatientDetail() {
     protocol_id: "",
     start_date: new Date().toISOString().split("T")[0],
     end_date: "",
-    status: "active",
+    status: "active" as "active" | "paused" | "completed" | "cancelled",
   });
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteForm, setNoteForm] = useState({ title: "", description: "", event_type: "note" });
