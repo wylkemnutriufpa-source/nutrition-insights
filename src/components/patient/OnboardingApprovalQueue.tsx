@@ -146,11 +146,19 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
       } as any)
       .eq("id", pipeline.id);
 
-    // Activate the meal plan
+    // Activate the meal plan with 30-day duration
     if (pipeline.generated_plan_id) {
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + 30);
+
       await supabase
         .from("meal_plans")
-        .update({ is_active: true })
+        .update({
+          is_active: true,
+          start_date: startDate.toISOString().split("T")[0],
+          end_date: endDate.toISOString().split("T")[0],
+        })
         .eq("id", pipeline.generated_plan_id);
 
       // If scheduling criteria enabled, create a plan_schedule

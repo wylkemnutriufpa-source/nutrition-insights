@@ -213,11 +213,12 @@ export default function OnboardingPipeline() {
         } as any)
         .eq("id", pipeline.id);
 
-      // Notify nutritionist
+      // Notify nutritionist with direct link
+      const patientName = (await supabase.from("profiles").select("full_name").eq("user_id", user.id).single()).data?.full_name || "Paciente";
       await supabase.from("notifications").insert({
         user_id: pipeline.nutritionist_id,
-        title: "Pré-Plano Gerado - Aguardando Aprovação 📋",
-        message: `Um pré-plano alimentar foi gerado automaticamente e aguarda sua revisão e aprovação.`,
+        title: "🔔 Pré-Plano Aguardando Aprovação",
+        message: `O paciente ${patientName} completou o onboarding e um pré-plano alimentar de 30 dias foi gerado. Clique para revisar e aprovar.`,
         type: "warning",
         action_url: `/patients/${user.id}?tab=onboarding`,
       });

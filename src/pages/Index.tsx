@@ -83,6 +83,23 @@ function PatientDashboardContent() {
   const recentMeals = dashData?.recentMeals ?? [];
   const unreadMessages = dashData?.unreadMessages ?? 0;
 
+  // Auto-redirect to onboarding if patient has an active pipeline
+  useEffect(() => {
+    if (!user) return;
+    const checkPipeline = async () => {
+      const { data } = await supabase
+        .from("onboarding_pipelines" as any)
+        .select("id, status")
+        .eq("patient_id", user.id)
+        .not("status", "eq", "completed")
+        .maybeSingle();
+      if (data && (data as any).status !== "completed") {
+        navigate("/onboarding", { replace: true });
+      }
+    };
+    checkPipeline();
+  }, [user, navigate]);
+
   // Show anamnesis modal if no anamnesis after data loads
   useEffect(() => {
     if (!dashLoading && !anamnesis) setShowAnamnesisModal(true);
