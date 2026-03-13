@@ -292,14 +292,23 @@ export default function OnboardingPipeline() {
               const done = i < currentStep;
               const active = i === currentStep;
               return (
-                <div key={step.id} className={`flex flex-col items-center gap-1 ${active ? "text-primary" : done ? "text-success" : "text-muted-foreground"}`}>
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${
-                    done ? "bg-success border-success text-success-foreground" : active ? "border-primary bg-primary/10" : "border-muted"
+                <motion.div
+                  key={step.id}
+                  initial={{ scale: 0.9 }}
+                  animate={{ scale: done ? 1 : active ? 1.08 : 0.95 }}
+                  className={`flex flex-col items-center gap-1 ${active ? "text-primary" : done ? "text-emerald-400" : "text-muted-foreground"}`}
+                >
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
+                    done
+                      ? "bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.4)]"
+                      : active
+                      ? "border-primary bg-primary/10 animate-pulse shadow-[0_0_10px_rgba(var(--primary),0.3)]"
+                      : "border-muted bg-muted/30"
                   }`}>
                     {done ? <CheckCircle2 className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
                   </div>
                   <span className="text-[10px] sm:text-xs font-medium text-center">{step.label}</span>
-                </div>
+                </motion.div>
               );
             })}
           </div>
