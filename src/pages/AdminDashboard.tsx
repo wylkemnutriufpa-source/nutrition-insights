@@ -838,6 +838,7 @@ export default function AdminDashboard() {
   const [plans, setPlans] = useState<PricingPlan[]>([]);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [promoteEmail, setPromoteEmail] = useState("");
+  const [drillDown, setDrillDown] = useState<"professionals" | "patients" | "subscriptions" | "revenue" | null>(null);
 
   const fetchAll = useCallback(async () => {
     if (!user) return;
