@@ -963,6 +963,23 @@ export default function PatientDetail() {
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Suporte à Decisão Clínica</DialogTitle></DialogHeader>
                   <ClinicalDecisionSupport patientId={patientId!} nutritionistId={user!.id} />
+                  <div className="border-t border-border pt-6 space-y-4">
+                    <SmartRecommendationsPanel signals={{
+                      adherenceScore: 0,
+                      adherenceTrend: 0,
+                      streakDays: 0,
+                      mealsPerDay: 0,
+                      checklistPct: 0,
+                    } as PatientSignals} />
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* Missions Modal */}
+              <Dialog open={openSection === "missions"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display">Missões do Paciente</DialogTitle></DialogHeader>
+                  <MissionCreator patientId={patientId!} patientName={profile?.full_name || undefined} />
                 </DialogContent>
               </Dialog>
 
