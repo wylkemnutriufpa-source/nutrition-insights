@@ -50,6 +50,29 @@ export default function Checkin() {
   const [previewSide, setPreviewSide] = useState<string | null>(null);
   const [previewBack, setPreviewBack] = useState<string | null>(null);
 
+  // Draft persistence
+  const { loadDraft, saveDraft, clearDraft, hasDraft } = useFormDraft<{ weight: string; feedback: string; difficulty: string }>(
+    `checkin_${user?.id || "anon"}`
+  );
+
+  // Restore draft on mount
+  useEffect(() => {
+    const draft = loadDraft();
+    if (draft) {
+      if (draft.weight) setWeight(draft.weight);
+      if (draft.feedback) setFeedback(draft.feedback);
+      if (draft.difficulty) setDifficulty(draft.difficulty);
+    }
+  }, [loadDraft]);
+
+  // Auto-save on changes
+  useEffect(() => {
+    saveDraft({ weight, feedback, difficulty });
+  }, [weight, feedback, difficulty, saveDraft]);
+  const [previewFront, setPreviewFront] = useState<string | null>(null);
+  const [previewSide, setPreviewSide] = useState<string | null>(null);
+  const [previewBack, setPreviewBack] = useState<string | null>(null);
+
   useEffect(() => {
     if (!user) return;
     const fetchData = async () => {
