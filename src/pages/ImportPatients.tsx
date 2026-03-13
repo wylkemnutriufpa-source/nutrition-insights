@@ -48,6 +48,7 @@ const filterOptions: { key: FilterType; label: string; icon: typeof Users }[] = 
 
 export default function ImportPatients() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [allPatients, setAllPatients] = useState<PatientRow[]>([]);
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState<{ current: number; total: number; created: number; errors: number } | null>(null);
