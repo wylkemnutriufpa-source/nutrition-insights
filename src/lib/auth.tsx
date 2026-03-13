@@ -196,6 +196,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setProfile(null);
               setRoles([]);
               setLoading(false);
+              // Redirect to auth with error
+              window.location.href = "/auth?error=no_account";
               return;
             }
 
