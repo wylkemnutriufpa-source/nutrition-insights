@@ -4,116 +4,122 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/lib/auth";
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Helmet, HelmetProvider } from "react-helmet-async";
-import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import ResetPassword from "./pages/ResetPassword";
-import Meals from "./pages/Meals";
-import Achievements from "./pages/Achievements";
-import Challenges from "./pages/Challenges";
-import Patients from "./pages/Patients";
-import PatientDetail from "./pages/PatientDetail";
-import MealPlans from "./pages/MealPlans";
-import MealPlanEditor from "./pages/MealPlanEditor";
-import Anamnesis from "./pages/Anamnesis";
-import AnalyzeMeal from "./pages/AnalyzeMeal";
-import Settings from "./pages/Settings";
-import Protocols from "./pages/Protocols";
-import Programs from "./pages/Programs";
-import ProgramDetail from "./pages/ProgramDetail";
-import BiquiniBrancoDetail from "./pages/BiquiniBrancoDetail";
-import Checklist from "./pages/Checklist";
-import DietTemplates from "./pages/DietTemplates";
-import PhysicalAssessment from "./pages/PhysicalAssessment";
-import Feedbacks from "./pages/Feedbacks";
-import GlobalTips from "./pages/GlobalTips";
-import Recipes from "./pages/Recipes";
-import ShoppingList from "./pages/ShoppingList";
-import FoodDatabase from "./pages/FoodDatabase";
-import BodyAnalysis from "./pages/BodyAnalysis";
-import Branding from "./pages/Branding";
-import Notifications from "./pages/Notifications";
-import Reports from "./pages/Reports";
-import ClinicalIntelligence from "./pages/ClinicalIntelligence";
-import Chat from "./pages/Chat";
-import Appointments from "./pages/Appointments";
-import Landing from "./pages/Landing";
-import WeeklyGoals from "./pages/WeeklyGoals";
-import NotFound from "./pages/NotFound";
-import AdminDashboard from "./pages/AdminDashboard";
-import AdminFeatureControl from "./pages/AdminFeatureControl";
-import AdminTestimonials from "./pages/AdminTestimonials";
-import AdminSiteEditor from "./pages/AdminSiteEditor";
-import AdminResourceCenter from "./pages/AdminResourceCenter";
-import AutomationCenter from "./pages/AutomationCenter";
-import WeightCalculator from "./pages/WeightCalculator";
-import WaterCalculator from "./pages/WaterCalculator";
-import HealthCheckQuiz from "./pages/HealthCheckQuiz";
-// AutoBot removed - replaced by real-time chat
-import Journey from "./pages/Journey";
-import Library from "./pages/Library";
-import Financial from "./pages/Financial";
-import WeeklyReport from "./pages/WeeklyReport";
-import Supplements from "./pages/Supplements";
-import Pricing from "./pages/Pricing";
-import PatientMealPlan from "./pages/PatientMealPlan";
-import BiquiniBrancoLanding from "./pages/BiquiniBrancoLanding";
-import Checkin from "./pages/Checkin";
-import CheckinPanel from "./pages/CheckinPanel";
-import ClientDashboard from "./pages/ClientDashboard";
-import ImportPatients from "./pages/ImportPatients";
-import AdminProfessionals from "./pages/AdminProfessionals";
-import AdminBookingSettings from "./pages/AdminBookingSettings";
-import AdminSubscriptionMonitor from "./pages/AdminSubscriptionMonitor";
-import PublicProfile from "./pages/PublicProfile";
-import PublicBooking from "./pages/PublicBooking";
-import PublicProgram from "./pages/PublicProgram";
-import GrowthDashboard from "./pages/GrowthDashboard";
-import MyPublicProfile from "./pages/MyPublicProfile";
-import MyReferrals from "./pages/MyReferrals";
-import GlobalRanking from "./pages/GlobalRanking";
-import AdminPrestige from "./pages/AdminPrestige";
-import AdminPricing from "./pages/AdminPricing";
-import AdminPatientFeatures from "./pages/AdminPatientFeatures";
-import UserGuide from "./pages/UserGuide";
-import ProfessionalGuide from "./pages/ProfessionalGuide";
-import AuditLogs from "./pages/AuditLogs";
-import Curiosidades from "./pages/Curiosidades";
-import Planner from "./pages/Planner";
-import OnboardingPipeline from "./pages/OnboardingPipeline";
-import AmbassadorDashboard from "./pages/AmbassadorDashboard";
-import AdminAffiliates from "./pages/AdminAffiliates";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import PageLoader from "@/components/common/PageLoader";
+
+// ── Eager-loaded (critical path) ────────────────────────────
 import GatewayPage from "./pages/GatewayPage";
-import PatientLanding from "./pages/PatientLanding";
-import AffiliateLanding from "./pages/AffiliateLanding";
-import AdminLandingPages from "./pages/AdminLandingPages";
-import PersonalDashboard from "./pages/PersonalDashboard";
-import PersonalStudents from "./pages/PersonalStudents";
-import PersonalWorkouts from "./pages/PersonalWorkouts";
-import PatientWorkouts from "./pages/PatientWorkouts";
-import PersonalLanding from "./pages/PersonalLanding";
-import FitnessAnamnesis from "./pages/FitnessAnamnesis";
-const queryClient = new QueryClient();
+import Auth from "./pages/Auth";
+import NotFound from "./pages/NotFound";
+
+// ── Lazy-loaded pages ───────────────────────────────────────
+const Index = lazy(() => import("./pages/Index"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Meals = lazy(() => import("./pages/Meals"));
+const Achievements = lazy(() => import("./pages/Achievements"));
+const Challenges = lazy(() => import("./pages/Challenges"));
+const Patients = lazy(() => import("./pages/Patients"));
+const PatientDetail = lazy(() => import("./pages/PatientDetail"));
+const MealPlans = lazy(() => import("./pages/MealPlans"));
+const MealPlanEditor = lazy(() => import("./pages/MealPlanEditor"));
+const Anamnesis = lazy(() => import("./pages/Anamnesis"));
+const AnalyzeMeal = lazy(() => import("./pages/AnalyzeMeal"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Protocols = lazy(() => import("./pages/Protocols"));
+const Programs = lazy(() => import("./pages/Programs"));
+const ProgramDetail = lazy(() => import("./pages/ProgramDetail"));
+const BiquiniBrancoDetail = lazy(() => import("./pages/BiquiniBrancoDetail"));
+const Checklist = lazy(() => import("./pages/Checklist"));
+const DietTemplates = lazy(() => import("./pages/DietTemplates"));
+const PhysicalAssessment = lazy(() => import("./pages/PhysicalAssessment"));
+const Feedbacks = lazy(() => import("./pages/Feedbacks"));
+const GlobalTips = lazy(() => import("./pages/GlobalTips"));
+const Recipes = lazy(() => import("./pages/Recipes"));
+const ShoppingList = lazy(() => import("./pages/ShoppingList"));
+const FoodDatabase = lazy(() => import("./pages/FoodDatabase"));
+const BodyAnalysis = lazy(() => import("./pages/BodyAnalysis"));
+const Branding = lazy(() => import("./pages/Branding"));
+const Notifications = lazy(() => import("./pages/Notifications"));
+const Reports = lazy(() => import("./pages/Reports"));
+const ClinicalIntelligence = lazy(() => import("./pages/ClinicalIntelligence"));
+const Chat = lazy(() => import("./pages/Chat"));
+const Appointments = lazy(() => import("./pages/Appointments"));
+const Landing = lazy(() => import("./pages/Landing"));
+const WeeklyGoals = lazy(() => import("./pages/WeeklyGoals"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const AdminFeatureControl = lazy(() => import("./pages/AdminFeatureControl"));
+const AdminTestimonials = lazy(() => import("./pages/AdminTestimonials"));
+const AdminSiteEditor = lazy(() => import("./pages/AdminSiteEditor"));
+const AdminResourceCenter = lazy(() => import("./pages/AdminResourceCenter"));
+const AutomationCenter = lazy(() => import("./pages/AutomationCenter"));
+const WeightCalculator = lazy(() => import("./pages/WeightCalculator"));
+const WaterCalculator = lazy(() => import("./pages/WaterCalculator"));
+const HealthCheckQuiz = lazy(() => import("./pages/HealthCheckQuiz"));
+const Journey = lazy(() => import("./pages/Journey"));
+const Library = lazy(() => import("./pages/Library"));
+const Financial = lazy(() => import("./pages/Financial"));
+const WeeklyReport = lazy(() => import("./pages/WeeklyReport"));
+const Supplements = lazy(() => import("./pages/Supplements"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+const PatientMealPlan = lazy(() => import("./pages/PatientMealPlan"));
+const BiquiniBrancoLanding = lazy(() => import("./pages/BiquiniBrancoLanding"));
+const Checkin = lazy(() => import("./pages/Checkin"));
+const CheckinPanel = lazy(() => import("./pages/CheckinPanel"));
+const ClientDashboard = lazy(() => import("./pages/ClientDashboard"));
+const ImportPatients = lazy(() => import("./pages/ImportPatients"));
+const AdminProfessionals = lazy(() => import("./pages/AdminProfessionals"));
+const AdminBookingSettings = lazy(() => import("./pages/AdminBookingSettings"));
+const AdminSubscriptionMonitor = lazy(() => import("./pages/AdminSubscriptionMonitor"));
+const PublicProfile = lazy(() => import("./pages/PublicProfile"));
+const PublicBooking = lazy(() => import("./pages/PublicBooking"));
+const PublicProgram = lazy(() => import("./pages/PublicProgram"));
+const GrowthDashboard = lazy(() => import("./pages/GrowthDashboard"));
+const MyPublicProfile = lazy(() => import("./pages/MyPublicProfile"));
+const MyReferrals = lazy(() => import("./pages/MyReferrals"));
+const GlobalRanking = lazy(() => import("./pages/GlobalRanking"));
+const AdminPrestige = lazy(() => import("./pages/AdminPrestige"));
+const AdminPricing = lazy(() => import("./pages/AdminPricing"));
+const AdminPatientFeatures = lazy(() => import("./pages/AdminPatientFeatures"));
+const UserGuide = lazy(() => import("./pages/UserGuide"));
+const ProfessionalGuide = lazy(() => import("./pages/ProfessionalGuide"));
+const AuditLogs = lazy(() => import("./pages/AuditLogs"));
+const Curiosidades = lazy(() => import("./pages/Curiosidades"));
+const Planner = lazy(() => import("./pages/Planner"));
+const OnboardingPipeline = lazy(() => import("./pages/OnboardingPipeline"));
+const AmbassadorDashboard = lazy(() => import("./pages/AmbassadorDashboard"));
+const AdminAffiliates = lazy(() => import("./pages/AdminAffiliates"));
+const PatientLanding = lazy(() => import("./pages/PatientLanding"));
+const AffiliateLanding = lazy(() => import("./pages/AffiliateLanding"));
+const AdminLandingPages = lazy(() => import("./pages/AdminLandingPages"));
+const PersonalDashboard = lazy(() => import("./pages/PersonalDashboard"));
+const PersonalStudents = lazy(() => import("./pages/PersonalStudents"));
+const PersonalWorkouts = lazy(() => import("./pages/PersonalWorkouts"));
+const PatientWorkouts = lazy(() => import("./pages/PatientWorkouts"));
+const PersonalLanding = lazy(() => import("./pages/PersonalLanding"));
+const FitnessAnamnesis = lazy(() => import("./pages/FitnessAnamnesis"));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
+  if (loading) return <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
   return <>{children}</>;
 }
 
 function NutritionistRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isNutritionist, isAdmin } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  if (loading) return <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
   if (!isNutritionist && !isAdmin) return <Navigate to="/" replace />;
   return <>{children}</>;
@@ -121,7 +127,7 @@ function NutritionistRoute({ children }: { children: React.ReactNode }) {
 
 function PersonalRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isPersonal, isAdmin } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  if (loading) return <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
   if (!isPersonal && !isAdmin) return <Navigate to="/" replace />;
   return <>{children}</>;
@@ -129,7 +135,7 @@ function PersonalRoute({ children }: { children: React.ReactNode }) {
 
 function ProfessionalRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isNutritionist, isPersonal, isAdmin } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  if (loading) return <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
   if (!isNutritionist && !isPersonal && !isAdmin) return <Navigate to="/" replace />;
   return <>{children}</>;
@@ -137,7 +143,7 @@ function ProfessionalRoute({ children }: { children: React.ReactNode }) {
 
 function PatientRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isPatient } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  if (loading) return <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
   if (!isPatient) return <Navigate to="/" replace />;
   return <>{children}</>;
@@ -145,13 +151,11 @@ function PatientRoute({ children }: { children: React.ReactNode }) {
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isAdmin } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  if (loading) return <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
   if (!isAdmin) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
-
-
 
 function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -162,16 +166,10 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 
 function RootRoute() {
   const { user, loading, isPersonal } = useAuth();
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  if (loading) return <PageLoader />;
   if (!user) return <GatewayPage />;
-  if (isPersonal) return <PersonalDashboard />;
-  return <Index />;
+  if (isPersonal) return <Suspense fallback={<PageLoader />}><PersonalDashboard /></Suspense>;
+  return <Suspense fallback={<PageLoader />}><Index /></Suspense>;
 }
 
 function DarkModeInit() {
@@ -187,6 +185,17 @@ function DarkModeInit() {
     }
   }, []);
   return null;
+}
+
+/** Wraps a lazy page in Suspense + ErrorBoundary */
+function LP({ children, section }: { children: React.ReactNode; section?: string }) {
+  return (
+    <ErrorBoundary section={section}>
+      <Suspense fallback={<PageLoader />}>
+        {children}
+      </Suspense>
+    </ErrorBoundary>
+  );
 }
 
 const App = () => (
@@ -205,119 +214,115 @@ const App = () => (
           <AuthProvider>
             <DarkModeInit />
             <Routes>
-              <Route path="/landing" element={<Landing />} />
-              <Route path="/landing-paciente" element={<PatientLanding />} />
-              <Route path="/landing-personal" element={<PersonalLanding />} />
-              <Route path="/landing-afiliado" element={<AffiliateLanding />} />
-              <Route path="/biquini-branco" element={<BiquiniBrancoLanding />} />
+              {/* Public landing pages */}
+              <Route path="/landing" element={<LP section="Landing"><Landing /></LP>} />
+              <Route path="/landing-paciente" element={<LP section="Landing"><PatientLanding /></LP>} />
+              <Route path="/landing-personal" element={<LP section="Landing"><PersonalLanding /></LP>} />
+              <Route path="/landing-afiliado" element={<LP section="Landing"><AffiliateLanding /></LP>} />
+              <Route path="/biquini-branco" element={<LP section="Landing"><BiquiniBrancoLanding /></LP>} />
               <Route path="/auth" element={<Auth />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/reset-password" element={<LP section="Auth"><ResetPassword /></LP>} />
               <Route path="/" element={<RootRoute />} />
-              
-              {/* Shared routes (both roles) */}
-              <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
-              <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
-              <Route path="/planner" element={<ProtectedRoute><Planner /></ProtectedRoute>} />
-              <Route path="/weekly-goals" element={<ProtectedRoute><WeeklyGoals /></ProtectedRoute>} />
-              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-              <Route path="/food-database" element={<ProtectedRoute><FoodDatabase /></ProtectedRoute>} />
-              <Route path="/recipes" element={<ProtectedRoute><Recipes /></ProtectedRoute>} />
-              <Route path="/feedbacks" element={<ProtectedRoute><Feedbacks /></ProtectedRoute>} />
-              <Route path="/supplements" element={<ProtectedRoute><Supplements /></ProtectedRoute>} />
+
+              {/* Shared routes */}
+              <Route path="/chat" element={<ProtectedRoute><LP section="Chat"><Chat /></LP></ProtectedRoute>} />
+              <Route path="/appointments" element={<ProtectedRoute><LP section="Agenda"><Appointments /></LP></ProtectedRoute>} />
+              <Route path="/planner" element={<ProtectedRoute><LP section="Planner"><Planner /></LP></ProtectedRoute>} />
+              <Route path="/weekly-goals" element={<ProtectedRoute><LP section="Metas"><WeeklyGoals /></LP></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><LP section="Configurações"><Settings /></LP></ProtectedRoute>} />
+              <Route path="/notifications" element={<ProtectedRoute><LP section="Notificações"><Notifications /></LP></ProtectedRoute>} />
+              <Route path="/food-database" element={<ProtectedRoute><LP section="Alimentos"><FoodDatabase /></LP></ProtectedRoute>} />
+              <Route path="/recipes" element={<ProtectedRoute><LP section="Receitas"><Recipes /></LP></ProtectedRoute>} />
+              <Route path="/feedbacks" element={<ProtectedRoute><LP section="Feedbacks"><Feedbacks /></LP></ProtectedRoute>} />
+              <Route path="/supplements" element={<ProtectedRoute><LP section="Suplementos"><Supplements /></LP></ProtectedRoute>} />
 
               {/* Nutritionist-only routes */}
-              <Route path="/patients" element={<NutritionistRoute><Patients /></NutritionistRoute>} />
-              <Route path="/patients/:patientId" element={<NutritionistRoute><PatientDetail /></NutritionistRoute>} />
-              <Route path="/protocols" element={<NutritionistRoute><Protocols /></NutritionistRoute>} />
-              <Route path="/programs" element={<NutritionistRoute><Programs /></NutritionistRoute>} />
-              <Route path="/programs/:programId" element={<NutritionistRoute><ProgramDetail /></NutritionistRoute>} />
-              <Route path="/programs/:programId/biquini-branco" element={<NutritionistRoute><BiquiniBrancoDetail /></NutritionistRoute>} />
-              <Route path="/meal-plans" element={<NutritionistRoute><MealPlans /></NutritionistRoute>} />
-              <Route path="/meal-plans/:id" element={<NutritionistRoute><MealPlanEditor /></NutritionistRoute>} />
-              <Route path="/diet-templates" element={<NutritionistRoute><DietTemplates /></NutritionistRoute>} />
-              <Route path="/physical-assessment" element={<NutritionistRoute><PhysicalAssessment /></NutritionistRoute>} />
-              <Route path="/body-analysis" element={<NutritionistRoute><BodyAnalysis /></NutritionistRoute>} />
-              <Route path="/branding" element={<NutritionistRoute><Branding /></NutritionistRoute>} />
-              <Route path="/reports" element={<NutritionistRoute><Reports /></NutritionistRoute>} />
-              <Route path="/clinical-intelligence" element={<NutritionistRoute><ClinicalIntelligence /></NutritionistRoute>} />
-              <Route path="/weekly-report" element={<NutritionistRoute><WeeklyReport /></NutritionistRoute>} />
-              <Route path="/financial" element={<NutritionistRoute><Financial /></NutritionistRoute>} />
-              <Route path="/global-tips" element={<ProtectedRoute><GlobalTips /></ProtectedRoute>} />
-              <Route path="/professional-guide" element={<NutritionistRoute><ProfessionalGuide /></NutritionistRoute>} />
-              <Route path="/automation" element={<NutritionistRoute><AutomationCenter /></NutritionistRoute>} />
-              <Route path="/checkin-panel" element={<NutritionistRoute><CheckinPanel /></NutritionistRoute>} />
+              <Route path="/patients" element={<NutritionistRoute><LP section="Pacientes"><Patients /></LP></NutritionistRoute>} />
+              <Route path="/patients/:patientId" element={<NutritionistRoute><LP section="Pacientes"><PatientDetail /></LP></NutritionistRoute>} />
+              <Route path="/protocols" element={<NutritionistRoute><LP section="Protocolos"><Protocols /></LP></NutritionistRoute>} />
+              <Route path="/programs" element={<NutritionistRoute><LP section="Projetos"><Programs /></LP></NutritionistRoute>} />
+              <Route path="/programs/:programId" element={<NutritionistRoute><LP section="Projetos"><ProgramDetail /></LP></NutritionistRoute>} />
+              <Route path="/programs/:programId/biquini-branco" element={<NutritionistRoute><LP section="Projetos"><BiquiniBrancoDetail /></LP></NutritionistRoute>} />
+              <Route path="/meal-plans" element={<NutritionistRoute><LP section="Planos"><MealPlans /></LP></NutritionistRoute>} />
+              <Route path="/meal-plans/:id" element={<NutritionistRoute><LP section="Planos"><MealPlanEditor /></LP></NutritionistRoute>} />
+              <Route path="/diet-templates" element={<NutritionistRoute><LP section="Templates"><DietTemplates /></LP></NutritionistRoute>} />
+              <Route path="/physical-assessment" element={<NutritionistRoute><LP section="Avaliação"><PhysicalAssessment /></LP></NutritionistRoute>} />
+              <Route path="/body-analysis" element={<NutritionistRoute><LP section="Análise Corporal"><BodyAnalysis /></LP></NutritionistRoute>} />
+              <Route path="/branding" element={<NutritionistRoute><LP section="Branding"><Branding /></LP></NutritionistRoute>} />
+              <Route path="/reports" element={<NutritionistRoute><LP section="Relatórios"><Reports /></LP></NutritionistRoute>} />
+              <Route path="/clinical-intelligence" element={<NutritionistRoute><LP section="Inteligência Clínica"><ClinicalIntelligence /></LP></NutritionistRoute>} />
+              <Route path="/weekly-report" element={<NutritionistRoute><LP section="Relatórios"><WeeklyReport /></LP></NutritionistRoute>} />
+              <Route path="/financial" element={<NutritionistRoute><LP section="Financeiro"><Financial /></LP></NutritionistRoute>} />
+              <Route path="/global-tips" element={<ProtectedRoute><LP section="Dicas"><GlobalTips /></LP></ProtectedRoute>} />
+              <Route path="/professional-guide" element={<NutritionistRoute><LP section="Guia"><ProfessionalGuide /></LP></NutritionistRoute>} />
+              <Route path="/automation" element={<NutritionistRoute><LP section="Automação"><AutomationCenter /></LP></NutritionistRoute>} />
+              <Route path="/checkin-panel" element={<NutritionistRoute><LP section="Check-ins"><CheckinPanel /></LP></NutritionistRoute>} />
 
               {/* Personal Trainer routes */}
-              <Route path="/personal/dashboard" element={<PersonalRoute><PersonalDashboard /></PersonalRoute>} />
-              <Route path="/personal/students" element={<PersonalRoute><PersonalStudents /></PersonalRoute>} />
-              <Route path="/personal/workouts" element={<PersonalRoute><PersonalWorkouts /></PersonalRoute>} />
-              <Route path="/personal/workouts/new" element={<PersonalRoute><PersonalWorkouts /></PersonalRoute>} />
-              <Route path="/fitness-anamnesis" element={<ProtectedRoute><FitnessAnamnesis /></ProtectedRoute>} />
+              <Route path="/personal/dashboard" element={<PersonalRoute><LP section="Personal"><PersonalDashboard /></LP></PersonalRoute>} />
+              <Route path="/personal/students" element={<PersonalRoute><LP section="Alunos"><PersonalStudents /></LP></PersonalRoute>} />
+              <Route path="/personal/workouts" element={<PersonalRoute><LP section="Treinos"><PersonalWorkouts /></LP></PersonalRoute>} />
+              <Route path="/personal/workouts/new" element={<PersonalRoute><LP section="Treinos"><PersonalWorkouts /></LP></PersonalRoute>} />
+              <Route path="/fitness-anamnesis" element={<ProtectedRoute><LP section="Anamnese Fitness"><FitnessAnamnesis /></LP></ProtectedRoute>} />
 
               {/* Patient portal */}
-              <Route path="/client/dashboard" element={<PatientRoute><ClientDashboard /></PatientRoute>} />
-              <Route path="/my-workouts" element={<ProtectedRoute><PatientWorkouts /></ProtectedRoute>} />
+              <Route path="/client/dashboard" element={<PatientRoute><LP section="Dashboard"><ClientDashboard /></LP></PatientRoute>} />
+              <Route path="/my-workouts" element={<ProtectedRoute><LP section="Treinos"><PatientWorkouts /></LP></ProtectedRoute>} />
 
               {/* Patient-only routes */}
-              <Route path="/meals" element={<ProtectedRoute><Meals /></ProtectedRoute>} />
-              <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
-              <Route path="/challenges" element={<ProtectedRoute><Challenges /></ProtectedRoute>} />
-              <Route path="/checklist" element={<ProtectedRoute><Checklist /></ProtectedRoute>} />
-              <Route path="/anamnesis" element={<ProtectedRoute><Anamnesis /></ProtectedRoute>} />
-              <Route path="/onboarding" element={<ProtectedRoute><OnboardingPipeline /></ProtectedRoute>} />
-              <Route path="/analyze" element={<ProtectedRoute><AnalyzeMeal /></ProtectedRoute>} />
-              <Route path="/shopping-list" element={<ProtectedRoute><ShoppingList /></ProtectedRoute>} />
-              <Route path="/my-diet" element={<ProtectedRoute><PatientMealPlan /></ProtectedRoute>} />
-              {/* autobot removed - replaced by real-time chat */}
-              <Route path="/journey" element={<ProtectedRoute><Journey /></ProtectedRoute>} />
-              <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
-              <Route path="/weight-calculator" element={<ProtectedRoute><WeightCalculator /></ProtectedRoute>} />
-              <Route path="/water-calculator" element={<ProtectedRoute><WaterCalculator /></ProtectedRoute>} />
-              <Route path="/health-quiz" element={<ProtectedRoute><HealthCheckQuiz /></ProtectedRoute>} />
-              <Route path="/checkin" element={<ProtectedRoute><Checkin /></ProtectedRoute>} />
-              <Route path="/user-guide" element={<ProtectedRoute><UserGuide /></ProtectedRoute>} />
-              <Route path="/curiosidades" element={<ProtectedRoute><Curiosidades /></ProtectedRoute>} />
+              <Route path="/meals" element={<ProtectedRoute><LP section="Refeições"><Meals /></LP></ProtectedRoute>} />
+              <Route path="/achievements" element={<ProtectedRoute><LP section="Conquistas"><Achievements /></LP></ProtectedRoute>} />
+              <Route path="/challenges" element={<ProtectedRoute><LP section="Desafios"><Challenges /></LP></ProtectedRoute>} />
+              <Route path="/checklist" element={<ProtectedRoute><LP section="Checklist"><Checklist /></LP></ProtectedRoute>} />
+              <Route path="/anamnesis" element={<ProtectedRoute><LP section="Anamnese"><Anamnesis /></LP></ProtectedRoute>} />
+              <Route path="/onboarding" element={<ProtectedRoute><LP section="Onboarding"><OnboardingPipeline /></LP></ProtectedRoute>} />
+              <Route path="/analyze" element={<ProtectedRoute><LP section="Análise"><AnalyzeMeal /></LP></ProtectedRoute>} />
+              <Route path="/shopping-list" element={<ProtectedRoute><LP section="Compras"><ShoppingList /></LP></ProtectedRoute>} />
+              <Route path="/my-diet" element={<ProtectedRoute><LP section="Dieta"><PatientMealPlan /></LP></ProtectedRoute>} />
+              <Route path="/journey" element={<ProtectedRoute><LP section="Jornada"><Journey /></LP></ProtectedRoute>} />
+              <Route path="/library" element={<ProtectedRoute><LP section="Biblioteca"><Library /></LP></ProtectedRoute>} />
+              <Route path="/weight-calculator" element={<ProtectedRoute><LP section="Calculadora"><WeightCalculator /></LP></ProtectedRoute>} />
+              <Route path="/water-calculator" element={<ProtectedRoute><LP section="Calculadora"><WaterCalculator /></LP></ProtectedRoute>} />
+              <Route path="/health-quiz" element={<ProtectedRoute><LP section="Quiz"><HealthCheckQuiz /></LP></ProtectedRoute>} />
+              <Route path="/checkin" element={<ProtectedRoute><LP section="Check-in"><Checkin /></LP></ProtectedRoute>} />
+              <Route path="/user-guide" element={<ProtectedRoute><LP section="Guia"><UserGuide /></LP></ProtectedRoute>} />
+              <Route path="/curiosidades" element={<ProtectedRoute><LP section="Curiosidades"><Curiosidades /></LP></ProtectedRoute>} />
 
               {/* Admin routes */}
-              <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-              <Route path="/admin/features" element={<AdminRoute><AdminFeatureControl /></AdminRoute>} />
-              <Route path="/admin/testimonials" element={<AdminRoute><AdminTestimonials /></AdminRoute>} />
-              <Route path="/admin/site-editor" element={<AdminRoute><AdminSiteEditor /></AdminRoute>} />
-              <Route path="/admin/resources" element={<AdminRoute><AdminResourceCenter /></AdminRoute>} />
-              <Route path="/admin/import-patients" element={<NutritionistRoute><ImportPatients /></NutritionistRoute>} />
-              <Route path="/admin/profissionais" element={<AdminRoute><AdminProfessionals /></AdminRoute>} />
-              <Route path="/admin/booking-settings" element={<AdminRoute><AdminBookingSettings /></AdminRoute>} />
-              <Route path="/admin/subscription-monitor" element={<AdminRoute><AdminSubscriptionMonitor /></AdminRoute>} />
+              <Route path="/admin" element={<AdminRoute><LP section="Admin"><AdminDashboard /></LP></AdminRoute>} />
+              <Route path="/admin/features" element={<AdminRoute><LP section="Admin"><AdminFeatureControl /></LP></AdminRoute>} />
+              <Route path="/admin/testimonials" element={<AdminRoute><LP section="Admin"><AdminTestimonials /></LP></AdminRoute>} />
+              <Route path="/admin/site-editor" element={<AdminRoute><LP section="Admin"><AdminSiteEditor /></LP></AdminRoute>} />
+              <Route path="/admin/resources" element={<AdminRoute><LP section="Admin"><AdminResourceCenter /></LP></AdminRoute>} />
+              <Route path="/admin/import-patients" element={<NutritionistRoute><LP section="Importação"><ImportPatients /></LP></NutritionistRoute>} />
+              <Route path="/admin/profissionais" element={<AdminRoute><LP section="Admin"><AdminProfessionals /></LP></AdminRoute>} />
+              <Route path="/admin/booking-settings" element={<AdminRoute><LP section="Admin"><AdminBookingSettings /></LP></AdminRoute>} />
+              <Route path="/admin/subscription-monitor" element={<AdminRoute><LP section="Admin"><AdminSubscriptionMonitor /></LP></AdminRoute>} />
+              <Route path="/admin/growth" element={<AdminRoute><LP section="Admin"><GrowthDashboard /></LP></AdminRoute>} />
+              <Route path="/admin/prestige" element={<AdminRoute><LP section="Admin"><AdminPrestige /></LP></AdminRoute>} />
+              <Route path="/admin/pricing" element={<AdminRoute><LP section="Admin"><AdminPricing /></LP></AdminRoute>} />
+              <Route path="/admin/patient-features" element={<AdminRoute><LP section="Admin"><AdminPatientFeatures /></LP></AdminRoute>} />
+              <Route path="/admin/audit-logs" element={<AdminRoute><LP section="Admin"><AuditLogs /></LP></AdminRoute>} />
+              <Route path="/admin/affiliates" element={<AdminRoute><LP section="Admin"><AdminAffiliates /></LP></AdminRoute>} />
+              <Route path="/admin/landing-pages" element={<AdminRoute><LP section="Admin"><AdminLandingPages /></LP></AdminRoute>} />
 
               {/* Public pricing */}
-              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/pricing" element={<LP section="Pricing"><Pricing /></LP>} />
 
-              {/* FitJourney Network - Public pages */}
-              <Route path="/p/:slug" element={<PublicProfile />} />
-              <Route path="/p/:slug/agendar" element={<PublicBooking />} />
-              <Route path="/program/:programId/public" element={<PublicProgram />} />
+              {/* Public pages */}
+              <Route path="/p/:slug" element={<LP section="Perfil"><PublicProfile /></LP>} />
+              <Route path="/p/:slug/agendar" element={<LP section="Agendamento"><PublicBooking /></LP>} />
+              <Route path="/program/:programId/public" element={<LP section="Projeto"><PublicProgram /></LP>} />
 
-              {/* FitJourney Network - Nutritionist pages */}
-              <Route path="/my-public-profile" element={<NutritionistRoute><MyPublicProfile /></NutritionistRoute>} />
-
-              {/* FitJourney Network - Patient referrals */}
-              <Route path="/my-referrals" element={<ProtectedRoute><MyReferrals /></ProtectedRoute>} />
-
-              {/* FitJourney Network - Admin growth */}
-              <Route path="/admin/growth" element={<AdminRoute><GrowthDashboard /></AdminRoute>} />
-              <Route path="/admin/prestige" element={<AdminRoute><AdminPrestige /></AdminRoute>} />
-              <Route path="/admin/pricing" element={<AdminRoute><AdminPricing /></AdminRoute>} />
-              <Route path="/admin/patient-features" element={<AdminRoute><AdminPatientFeatures /></AdminRoute>} />
-              <Route path="/admin/audit-logs" element={<AdminRoute><AuditLogs /></AdminRoute>} />
-              <Route path="/admin/affiliates" element={<AdminRoute><AdminAffiliates /></AdminRoute>} />
-              <Route path="/admin/landing-pages" element={<AdminRoute><AdminLandingPages /></AdminRoute>} />
+              {/* Network pages */}
+              <Route path="/my-public-profile" element={<NutritionistRoute><LP section="Perfil"><MyPublicProfile /></LP></NutritionistRoute>} />
+              <Route path="/my-referrals" element={<ProtectedRoute><LP section="Indicações"><MyReferrals /></LP></ProtectedRoute>} />
 
               {/* Ambassador */}
-              <Route path="/ambassador" element={<ProtectedRoute><AmbassadorDashboard /></ProtectedRoute>} />
+              <Route path="/ambassador" element={<ProtectedRoute><LP section="Embaixador"><AmbassadorDashboard /></LP></ProtectedRoute>} />
 
               {/* Global Ranking */}
-              <Route path="/ranking" element={<ProtectedRoute><GlobalRanking /></ProtectedRoute>} />
+              <Route path="/ranking" element={<ProtectedRoute><LP section="Ranking"><GlobalRanking /></LP></ProtectedRoute>} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>
