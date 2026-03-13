@@ -103,6 +103,3 @@ verify_jwt = false
 
 [functions.generate-recipe]
 verify_jwt = false
-
-[functions.autobot-chat]
-verify_jwt = false
