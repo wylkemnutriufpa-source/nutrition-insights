@@ -111,7 +111,12 @@ export default function CommandPalette() {
       }
     };
     document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
+    const openHandler = () => setIsOpen(true);
+    window.addEventListener("open-command-palette", openHandler);
+    return () => {
+      document.removeEventListener("keydown", down);
+      window.removeEventListener("open-command-palette", openHandler);
+    };
   }, []);
 
   // Load patients when palette opens (for professionals/admin)
