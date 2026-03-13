@@ -180,10 +180,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Use setTimeout to avoid deadlock with Supabase auth internals
           setTimeout(async () => {
             if (!mounted) return;
-            await Promise.all([
+            const [, rolesResult] = await Promise.all([
               fetchProfile(session.user.id),
-              fetchRoles(session.user.id),
+              supabase.from("user_roles").select("role").eq("user_id", session.user.id),
             ]);
+            const userRoles = rolesResult.data?.map((r) => r.role) || [];
+            setRoles(userRoles);
+
+            // Block users with no roles (e.g. Google sign-in without prior registration)
+            if (userRoles.length === 0) {
+              console.warn("User has no roles, signing out:", session.user.email);
+              await supabase.auth.signOut();
+              setSession(null);
+              setUser(null);
+              setProfile(null);
+              setRoles([]);
+              setLoading(false);
+              return;
+            }
+
             if (mounted) {
               setLoading(false);
               checkSubscription();
