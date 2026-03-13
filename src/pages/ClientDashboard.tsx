@@ -310,6 +310,11 @@ export default function ClientDashboard() {
           </motion.div>
         )}
 
+        {/* Momentum Indicator */}
+        <motion.div variants={item}>
+          <MomentumIndicator variant="card" />
+        </motion.div>
+
         {/* Nutritionist Status Banner */}
         <motion.div variants={item}>
           <NutritionistStatusBanner patientId={user?.id} />
