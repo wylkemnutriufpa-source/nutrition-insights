@@ -84,7 +84,10 @@ export default function PatientPickerDropdown({
                     ) : (
                       <UserPlus className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
                     )}
-                    <span className="flex-1 truncate">{patient.name}</span>
+                    <div className="flex-1 min-w-0">
+                      <span className="truncate block">{patient.name}</span>
+                      {patient.email && <span className="text-xs text-muted-foreground truncate block">{patient.email}</span>}
+                    </div>
                   </button>
                 ))
               )}
