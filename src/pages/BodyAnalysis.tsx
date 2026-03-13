@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadWithRetry } from "@/lib/uploadWithRetry";
+import { useFormDraft } from "@/hooks/useFormDraft";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,6 +53,23 @@ export default function BodyAnalysis() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [selected, setSelected] = useState<BodyAnalysisRecord | null>(null);
   const [notes, setNotes] = useState("");
+  const { saveDraft, loadDraft, clearDraft, hasDraft } = useFormDraft<{ notes: string }>(
+    `body_analysis_${patientId}`
+  );
+
+  // Restore draft on mount
+  useEffect(() => {
+    const draft = loadDraft();
+    if (draft?.notes) {
+      setNotes(draft.notes);
+      toast.info("Rascunho de notas restaurado 📝");
+    }
+  }, [loadDraft]);
+
+  // Auto-save notes draft
+  useEffect(() => {
+    if (notes) saveDraft({ notes });
+  }, [notes, saveDraft]);
 
   // Image files
   const [frontFile, setFrontFile] = useState<File | null>(null);
@@ -69,12 +88,15 @@ export default function BodyAnalysis() {
   useEffect(() => { fetchAnalyses(); }, [patientId]);
 
   const uploadImage = async (file: File, path: string): Promise<string | null> => {
-    const ext = file.name.split(".").pop();
-    const filePath = `${path}/${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("body-images").upload(filePath, file);
-    if (error) { toast.error("Erro no upload: " + error.message); return null; }
-    const { data: urlData } = supabase.storage.from("body-images").getPublicUrl(filePath);
-    return urlData.publicUrl;
+    return uploadWithRetry({
+      bucket: "body-images",
+      path,
+      file,
+      maxRetries: 3,
+      onProgress: (attempt, max) => {
+        if (attempt > 1) toast.info(`Retry upload (${attempt}/${max})...`);
+      },
+    });
   };
 
   const handleSubmit = async () => {
@@ -109,6 +131,7 @@ export default function BodyAnalysis() {
     if (error) { toast.error(error.message); return; }
 
     toast.success("Fotos salvas! Iniciando análise IA...");
+    clearDraft();
     setNewDialogOpen(false);
     setAnalyzing(true);
 

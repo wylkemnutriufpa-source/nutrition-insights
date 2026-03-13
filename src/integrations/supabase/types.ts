@@ -4911,7 +4911,12 @@ export type Database = {
         | "pix"
         | "manual"
       payout_status: "pending" | "processing" | "paid" | "failed"
-      protocol_status: "active" | "paused" | "completed" | "cancelled"
+      protocol_status:
+        | "pending"
+        | "active"
+        | "paused"
+        | "completed"
+        | "cancelled"
       referral_status: "lead" | "registered" | "paying" | "cancelled"
     }
     CompositeTypes: {
@@ -5074,7 +5079,13 @@ export const Constants = {
       ],
       payment_gateway: ["stripe", "mercado_pago", "pagseguro", "pix", "manual"],
       payout_status: ["pending", "processing", "paid", "failed"],
-      protocol_status: ["active", "paused", "completed", "cancelled"],
+      protocol_status: [
+        "pending",
+        "active",
+        "paused",
+        "completed",
+        "cancelled",
+      ],
       referral_status: ["lead", "registered", "paying", "cancelled"],
     },
   },

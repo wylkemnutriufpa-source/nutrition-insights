@@ -1,3 +1,4 @@
+import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -39,9 +40,15 @@ export function useChecklistTasks(date: string) {
 export function useToggleChecklistTask() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const inflightRef = React.useRef<Set<string>>(new Set());
 
   return useMutation({
     mutationFn: async ({ task, date }: { task: ChecklistTask; date: string }) => {
+      // Client-side rate limit: prevent double-toggle on same task
+      if (inflightRef.current.has(task.id)) {
+        throw new Error("__debounced__");
+      }
+      inflightRef.current.add(task.id);
       const newCompleted = !task.completed;
       const update = {
         completed: newCompleted,
@@ -85,7 +92,12 @@ export function useToggleChecklistTask() {
       if (context?.previous) {
         queryClient.setQueryData(context.key, context.previous);
       }
+      // Don't show error for debounced calls
+      if (_err instanceof Error && _err.message === "__debounced__") return;
       if (navigator.onLine) toast.error("Erro ao atualizar tarefa");
+    },
+    onSettled: (_data, _err, vars) => {
+      inflightRef.current.delete(vars.task.id);
     },
   });
 }
