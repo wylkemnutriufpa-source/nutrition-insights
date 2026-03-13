@@ -67,7 +67,7 @@ class OfflineQueue {
         } else if (action.type === "meal_completion") {
           const { error } = await supabase
             .from("meal_item_completions")
-            .upsert(action.data, { onConflict: "patient_id,meal_plan_item_id,date" });
+            .upsert(action.data as any);
           if (error) throw error;
         }
         synced++;
