@@ -539,6 +539,55 @@ export default function PatientDetail() {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+            {isAdmin && (
+              <Dialog open={upgradeOpen} onOpenChange={setUpgradeOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="gap-2 border-primary/30 text-primary hover:bg-primary/10">
+                    <UserCog className="w-4 h-4" /> Upgrade para Profissional
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Promover Paciente a Profissional</DialogTitle>
+                  </DialogHeader>
+                  <p className="text-sm text-muted-foreground">
+                    Escolha o tipo de profissional para <strong>{profile?.full_name}</strong>:
+                  </p>
+                  <div className="grid grid-cols-2 gap-3 mt-4">
+                    <button
+                      onClick={() => setUpgradeRole("nutritionist")}
+                      className={`p-4 rounded-xl border-2 text-center space-y-2 transition-all ${
+                        upgradeRole === "nutritionist" ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <UtensilsCrossed className="w-8 h-8 mx-auto text-primary" />
+                      <p className="font-semibold text-sm">Nutricionista</p>
+                    </button>
+                    <button
+                      onClick={() => setUpgradeRole("personal")}
+                      className={`p-4 rounded-xl border-2 text-center space-y-2 transition-all ${
+                        upgradeRole === "personal" ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <Activity className="w-8 h-8 mx-auto text-primary" />
+                      <p className="font-semibold text-sm">Personal Trainer</p>
+                    </button>
+                  </div>
+                  <div className="flex gap-3 mt-4">
+                    <Button variant="outline" onClick={() => setUpgradeOpen(false)} className="flex-1">
+                      Cancelar
+                    </Button>
+                    <Button
+                      onClick={handleUpgradePatient}
+                      disabled={!upgradeRole || upgrading}
+                      className="flex-1 gap-2"
+                    >
+                      {upgrading ? "Promovendo..." : "Confirmar Promoção"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
             <Button
               variant="outline"
               className="gap-2"
