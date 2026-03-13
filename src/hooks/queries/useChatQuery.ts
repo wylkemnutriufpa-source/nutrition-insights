@@ -1,0 +1,131 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { queryKeys } from "./queryKeys";
+import { toast } from "sonner";
+
+export interface ChatContact {
+  user_id: string;
+  full_name: string;
+  unread: number;
+  last_message?: string;
+  last_time?: string;
+  is_online?: boolean;
+}
+
+export interface Message {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+  image_url?: string | null;
+}
+
+export function useChatContacts() {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: queryKeys.chat.contacts(user?.id ?? ""),
+    enabled: !!user,
+    staleTime: 30 * 1000,
+    queryFn: async () => {
+      const userId = user!.id;
+      const { data: links } = await supabase.from("nutritionist_patients")
+        .select("nutritionist_id, patient_id").eq("status", "active")
+        .or(`nutritionist_id.eq.${userId},patient_id.eq.${userId}`);
+      if (!links?.length) return [];
+
+      const otherIds = links.map(l => l.nutritionist_id === userId ? l.patient_id : l.nutritionist_id);
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", otherIds);
+
+      const { data: presenceData } = await (supabase as any)
+        .from("user_presence")
+        .select("user_id, is_online, last_seen_at")
+        .in("user_id", otherIds);
+
+      const presenceMap = new Map<string, boolean>();
+      (presenceData || []).forEach((p: any) => {
+        const diffMin = (Date.now() - new Date(p.last_seen_at).getTime()) / 60000;
+        presenceMap.set(p.user_id, p.is_online && diffMin < 2);
+      });
+
+      const contactList: ChatContact[] = [];
+      for (const p of profiles || []) {
+        const { count } = await supabase.from("chat_messages")
+          .select("id", { count: "exact", head: true })
+          .eq("sender_id", p.user_id).eq("receiver_id", userId).eq("is_read", false);
+
+        const { data: lastMsg } = await supabase.from("chat_messages")
+          .select("message, created_at")
+          .or(`and(sender_id.eq.${userId},receiver_id.eq.${p.user_id}),and(sender_id.eq.${p.user_id},receiver_id.eq.${userId})`)
+          .order("created_at", { ascending: false }).limit(1);
+
+        contactList.push({
+          user_id: p.user_id,
+          full_name: p.full_name || "Sem nome",
+          unread: count || 0,
+          last_message: lastMsg?.[0]?.message,
+          last_time: lastMsg?.[0]?.created_at,
+          is_online: presenceMap.get(p.user_id) || false,
+        });
+      }
+
+      contactList.sort((a, b) => {
+        if (a.is_online && !b.is_online) return -1;
+        if (!a.is_online && b.is_online) return 1;
+        return (b.last_time || "").localeCompare(a.last_time || "");
+      });
+
+      return contactList;
+    },
+  });
+}
+
+export function useChatMessages(contactId: string | null) {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: queryKeys.chat.messages(user?.id ?? "", contactId ?? ""),
+    enabled: !!user && !!contactId,
+    staleTime: 10 * 1000,
+    queryFn: async () => {
+      const userId = user!.id;
+      const { data } = await supabase.from("chat_messages")
+        .select("*")
+        .or(`and(sender_id.eq.${userId},receiver_id.eq.${contactId}),and(sender_id.eq.${contactId},receiver_id.eq.${userId})`)
+        .order("created_at", { ascending: true });
+
+      // Mark as read
+      await supabase.from("chat_messages")
+        .update({ is_read: true })
+        .eq("sender_id", contactId!).eq("receiver_id", userId).eq("is_read", false);
+
+      return (data || []) as Message[];
+    },
+  });
+}
+
+export function useSendMessage() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ receiverId, message }: { receiverId: string; message: string }) => {
+      const { data, error } = await supabase.from("chat_messages").insert({
+        sender_id: user!.id, receiver_id: receiverId, message,
+      }).select().single();
+      if (error) throw error;
+      return data as Message;
+    },
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData<Message[]>(
+        queryKeys.chat.messages(user?.id ?? "", variables.receiverId),
+        (old) => [...(old || []), data]
+      );
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.contacts(user?.id ?? "") });
+    },
+    onError: () => toast.error("Erro ao enviar mensagem"),
+  });
+}

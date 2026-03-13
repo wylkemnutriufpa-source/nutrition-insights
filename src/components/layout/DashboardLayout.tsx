@@ -1,4 +1,5 @@
 import { ReactNode, useEffect } from "react";
+import OfflineSyncBanner from "@/components/common/OfflineSyncBanner";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -547,14 +548,17 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
 
+        {/* Offline sync banner */}
+        <OfflineSyncBanner />
+
         {/* Main content */}
         <main className="pt-14">
           <motion.div
             key={location.pathname}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25 }}
-            className="p-4 max-w-7xl mx-auto"
+            transition={{ duration: 0.2 }}
+            className="p-3 sm:p-4 max-w-7xl mx-auto pb-20"
           >
             {children}
           </motion.div>
@@ -610,11 +614,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <NotificationBell />
           </div>
         </div>
+        <OfflineSyncBanner />
         <motion.div
           key={location.pathname}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25 }}
+          transition={{ duration: 0.2 }}
           className="p-6 pt-14 max-w-7xl mx-auto"
         >
           {children}
