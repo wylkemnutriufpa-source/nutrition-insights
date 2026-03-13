@@ -235,26 +235,22 @@ serve(async (req) => {
       } catch (_) { /* ignore */ }
 
       if (customerEmail) {
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("user_id")
-          .ilike("email", customerEmail)
-          .maybeSingle();
+        const { data: userId } = await supabase.rpc("get_user_id_by_email", { _email: customerEmail });
 
-        if (profileData?.user_id) {
+        if (userId) {
           const productId = subscription.items.data[0]?.price?.product as string;
           const planName = PRODUCT_TIERS[productId] || "Premium";
 
           // Create notification for user about plan change
           await supabase.from("notifications").insert({
-            user_id: profileData.user_id,
+            user_id: userId,
             title: "📋 Plano atualizado",
             message: `Seu plano foi atualizado para ${planName}. Status: ${subscription.status}.`,
             type: "subscription",
             action_url: "/settings",
           });
 
-          log("User notified of plan update", { userId: profileData.user_id, planName });
+          log("User notified of plan update", { userId, planName });
         }
       }
     }
