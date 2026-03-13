@@ -499,6 +499,10 @@ export default function Patients() {
   const [layout, setLayout] = useState<"grid" | "list">("grid");
   const [prestigeFilter, setPrestigeFilter] = useState<string>("all");
   const [onlineFilter, setOnlineFilter] = useState(false);
+  const [bulkManageOpen, setBulkManageOpen] = useState(false);
+  const [bulkSelected, setBulkSelected] = useState<Set<string>>(new Set());
+  const [bulkSearch, setBulkSearch] = useState("");
+  const [bulkMode, setBulkMode] = useState<"deactivate" | "activate">("deactivate");
   const { onlineUsers } = useOnlinePatients();
   const onlineSet = useMemo(() => new Set(onlineUsers.map(u => u.user_id)), [onlineUsers]);
 
