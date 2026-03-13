@@ -705,6 +705,11 @@ function NutritionistDashboardContent() {
         />
       </motion.div>
 
+      {/* ── Clinical Alerts Engine ── */}
+      <motion.div variants={item}>
+        <ClinicalAlertsPanel />
+      </motion.div>
+
       {/* ── Main Grid: Attention + Insights + Risk ── */}
       <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <ExpandablePanel title="Precisam de Atenção"><AttentionPatientsPanel patients={attentionPatients} loading={aiLoading} /></ExpandablePanel>
