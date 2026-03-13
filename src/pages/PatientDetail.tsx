@@ -287,7 +287,7 @@ export default function PatientDetail() {
 
   const riskFactors: { label: string; level: "low" | "medium" | "high" }[] = [];
   if (anamnesis?.answers) {
-    const a = anamnesis.answers;
+    const a = anamnesis.answers as any;
     if (a.health_conditions?.includes("diabetes")) riskFactors.push({ label: "Diabetes", level: "high" });
     if (a.health_conditions?.includes("hypertension")) riskFactors.push({ label: "Hipertensão", level: "high" });
     if (a.health_conditions?.includes("high_cholesterol")) riskFactors.push({ label: "Colesterol alto", level: "medium" });
