@@ -139,13 +139,19 @@ export default function CommandPalette() {
 
     (async () => {
       if (isAdmin) {
-        // Admin: load ALL profiles + their roles
+        // Admin: load ALL profiles + their roles + emails
         const [profilesRes, rolesRes] = await Promise.all([
           supabase.from("profiles").select("user_id, full_name").order("full_name").limit(1000),
           supabase.from("user_roles").select("user_id, role").limit(2000),
         ]);
         const profiles = profilesRes.data || [];
         const roles = rolesRes.data || [];
+
+        // Fetch emails for all users
+        const allIds = profiles.map((p: any) => p.user_id);
+        const { data: emailsData } = await supabase.rpc("get_patient_emails", { _patient_ids: allIds });
+        const emailMap = new Map<string, string>();
+        ((emailsData as any[]) || []).forEach((e: any) => emailMap.set(e.user_id, e.email));
 
         // Build role map
         const roleMap = new Map<string, string[]>();
@@ -161,14 +167,15 @@ export default function CommandPalette() {
         profiles.forEach((p) => {
           const userRoles = roleMap.get(p.user_id) || ["patient"];
           const name = p.full_name || "Sem nome";
+          const email = emailMap.get(p.user_id);
           const isPro = userRoles.some((r: string) => ["nutritionist", "personal", "admin"].includes(r));
 
           if (isPro) {
             const mainRole = userRoles.includes("admin") ? "admin" : userRoles.includes("nutritionist") ? "nutritionist" : "personal";
-            proList.push({ user_id: p.user_id, full_name: name, role: mainRole });
+            proList.push({ user_id: p.user_id, full_name: name, email, role: mainRole });
           }
           if (userRoles.includes("patient") || !isPro) {
-            patientList.push({ user_id: p.user_id, full_name: name, role: "patient" });
+            patientList.push({ user_id: p.user_id, full_name: name, email, role: "patient" });
           }
         });
 
@@ -183,8 +190,18 @@ export default function CommandPalette() {
           .eq("status", "active");
         if (links && links.length > 0) {
           const ids = links.map(l => l.patient_id);
-          const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", ids);
-          setPatients((profiles || []).map(p => ({ user_id: p.user_id, full_name: p.full_name || "Sem nome", role: "patient" })));
+          const [profilesRes, emailsRes] = await Promise.all([
+            supabase.from("profiles").select("user_id, full_name").in("user_id", ids),
+            supabase.rpc("get_patient_emails", { _patient_ids: ids }),
+          ]);
+          const emailMap = new Map<string, string>();
+          ((emailsRes.data as any[]) || []).forEach((e: any) => emailMap.set(e.user_id, e.email));
+          setPatients((profilesRes.data || []).map(p => ({ 
+            user_id: p.user_id, 
+            full_name: p.full_name || "Sem nome", 
+            email: emailMap.get(p.user_id),
+            role: "patient" 
+          })));
         }
       }
       setDataLoaded(true);

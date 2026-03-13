@@ -176,6 +176,7 @@ export function usePatientsList() {
         const stats = statsMap.get(p.patient_id);
         return {
           ...p,
+          email: emailMap.get(p.patient_id) || undefined,
           profile: profile && profile.full_name ? profile : { full_name: "Paciente sem nome", avatar_url: null },
           stats: stats || null,
           checklistAdherence: adherence,
