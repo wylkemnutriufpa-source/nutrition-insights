@@ -1097,6 +1097,45 @@ export type Database = {
         }
         Relationships: []
       }
+      engagement_signals: {
+        Row: {
+          created_at: string | null
+          detected_at: string | null
+          id: string
+          is_resolved: boolean | null
+          nutritionist_id: string
+          patient_id: string
+          resolved_at: string | null
+          severity: string
+          signal_data: Json | null
+          signal_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          detected_at?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          nutritionist_id: string
+          patient_id: string
+          resolved_at?: string | null
+          severity?: string
+          signal_data?: Json | null
+          signal_type: string
+        }
+        Update: {
+          created_at?: string | null
+          detected_at?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          nutritionist_id?: string
+          patient_id?: string
+          resolved_at?: string | null
+          severity?: string
+          signal_data?: Json | null
+          signal_type?: string
+        }
+        Relationships: []
+      }
       enrollment_photos: {
         Row: {
           created_at: string | null
@@ -1878,6 +1917,48 @@ export type Database = {
           },
         ]
       }
+      patient_daily_adherence: {
+        Row: {
+          checkin_score: number | null
+          checklist_score: number | null
+          created_at: string | null
+          date: string
+          id: string
+          meals_score: number | null
+          patient_id: string
+          plan_score: number | null
+          streak_days: number | null
+          streak_score: number | null
+          total_score: number | null
+        }
+        Insert: {
+          checkin_score?: number | null
+          checklist_score?: number | null
+          created_at?: string | null
+          date?: string
+          id?: string
+          meals_score?: number | null
+          patient_id: string
+          plan_score?: number | null
+          streak_days?: number | null
+          streak_score?: number | null
+          total_score?: number | null
+        }
+        Update: {
+          checkin_score?: number | null
+          checklist_score?: number | null
+          created_at?: string | null
+          date?: string
+          id?: string
+          meals_score?: number | null
+          patient_id?: string
+          plan_score?: number | null
+          streak_days?: number | null
+          streak_score?: number | null
+          total_score?: number | null
+        }
+        Relationships: []
+      }
       patient_documents: {
         Row: {
           assessment_id: string | null
@@ -1966,6 +2047,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      patient_missions: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          current_value: number | null
+          description: string | null
+          duration_hours: number | null
+          expires_at: string | null
+          icon: string | null
+          id: string
+          is_global: boolean | null
+          mission_type: string
+          nutritionist_id: string | null
+          patient_id: string
+          started_at: string | null
+          status: string | null
+          target_value: number
+          title: string
+          xp_reward: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          current_value?: number | null
+          description?: string | null
+          duration_hours?: number | null
+          expires_at?: string | null
+          icon?: string | null
+          id?: string
+          is_global?: boolean | null
+          mission_type: string
+          nutritionist_id?: string | null
+          patient_id: string
+          started_at?: string | null
+          status?: string | null
+          target_value?: number
+          title: string
+          xp_reward?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          current_value?: number | null
+          description?: string | null
+          duration_hours?: number | null
+          expires_at?: string | null
+          icon?: string | null
+          id?: string
+          is_global?: boolean | null
+          mission_type?: string
+          nutritionist_id?: string | null
+          patient_id?: string
+          started_at?: string | null
+          status?: string | null
+          target_value?: number
+          title?: string
+          xp_reward?: number | null
+        }
+        Relationships: []
       }
       patient_plan_features: {
         Row: {
