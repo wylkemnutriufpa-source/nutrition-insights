@@ -43,6 +43,7 @@ import ChatDashboardWidget from "@/components/chat/ChatDashboardWidget";
 import { TreatmentInsightsPanel } from "@/components/dashboard/TreatmentInsightsPanel";
 import ExpandablePanel from "@/components/common/ExpandablePanel";
 import PatientMomentumSummary from "@/components/dashboard/PatientMomentumSummary";
+import {
   UtensilsCrossed, Users, TrendingUp, Target, Sparkles, Plus,
   CheckCircle2, Circle, AlertTriangle, Activity, FileText, Rocket,
   Calendar, ArrowRight, Clock, ClipboardList, Heart, Brain,
