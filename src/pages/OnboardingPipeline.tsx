@@ -41,7 +41,7 @@ const STEPS = [
   { id: "anamnesis", label: "Anamnese", icon: ClipboardCheck, description: "Preencha seu questionário de saúde" },
   { id: "body_data", label: "Dados Corporais", icon: Scale, description: "Peso, altura e fotos" },
   { id: "preferences", label: "Preferências", icon: Utensils, description: "Horários e alimentos favoritos" },
-  { id: "plan_generation", label: "Pré-Plano", icon: Sparkles, description: "IA gera seu plano personalizado" },
+  { id: "plan_generation", label: "Pré-Plano", icon: Sparkles, description: "Protocolo FitJourney gera seu plano" },
   { id: "approval", label: "Aprovação", icon: ThumbsUp, description: "Profissional revisa e aprova" },
 ];
 
