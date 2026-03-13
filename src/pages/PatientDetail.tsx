@@ -141,7 +141,7 @@ export default function PatientDetail() {
     message: "Como você está se sentindo com o plano alimentar? Gostaria de compartilhar seu progresso?",
   });
 
-  // Upgrade patient to professional
+  // Upgrade patient to professional (admin only)
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeRole, setUpgradeRole] = useState<string>("");
   const [upgrading, setUpgrading] = useState(false);
@@ -150,17 +150,26 @@ export default function PatientDetail() {
     if (!patientId || !upgradeRole) return;
     setUpgrading(true);
     try {
-      // Get patient email via profile lookup
-      const { data: userData } = await supabase.rpc("promote_patient_to_professional", {
-        _patient_email: "", // We need the email
+      const { data, error } = await supabase.rpc("promote_patient_to_professional", {
+        _patient_email: patientEmail,
         _target_role: upgradeRole,
       });
-      // Actually we need to find email first - let's use a different approach
-    } catch (e) {
-      // fallback
+      if (error) throw error;
+      const result = data as any;
+      if (result?.success) {
+        toast.success(`Paciente promovido a ${upgradeRole === "nutritionist" ? "Nutricionista" : "Personal Trainer"} com sucesso!`);
+        setUpgradeOpen(false);
+        setUpgradeRole("");
+      } else {
+        toast.error(result?.error === "already_has_role" ? "Paciente já possui essa role" : result?.error || "Erro ao promover");
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao promover paciente");
     }
     setUpgrading(false);
   };
+
+  const [patientEmail, setPatientEmail] = useState("");
 
   const fetchAll = useCallback(async () => {
     if (!patientId || !user) return;
