@@ -174,21 +174,10 @@ export default function OnboardingPipeline() {
     if (!pipeline || !user) return;
     setGenerating(true);
     try {
-      // Get anamnesis data
-      const { data: anamnesis } = await supabase
-        .from("patient_anamnesis")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      // Call the generate-meal-plan edge function
       const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
         body: {
           patientId: user.id,
           nutritionistId: pipeline.nutritionist_id,
-          anamnesisData: anamnesis?.answers || {},
           weight: pipeline.weight,
           height: pipeline.height,
           wakeTime: pipeline.wake_time,
@@ -201,24 +190,25 @@ export default function OnboardingPipeline() {
       });
 
       if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "Falha na geração");
 
-      // Update pipeline with generated plan
+      // Update pipeline
       await supabase
         .from("onboarding_pipelines" as any)
         .update({
           plan_generated: true,
-          generated_plan_id: data?.mealPlanId || null,
+          generated_plan_id: data.mealPlanId || null,
           generated_plan_data: data,
           status: "pending_approval",
         } as any)
         .eq("id", pipeline.id);
 
-      // Notify nutritionist with direct link
+      // Notify nutritionist
       const patientName = (await supabase.from("profiles").select("full_name").eq("user_id", user.id).single()).data?.full_name || "Paciente";
       await supabase.from("notifications").insert({
         user_id: pipeline.nutritionist_id,
         title: "🔔 Pré-Plano Aguardando Aprovação",
-        message: `O paciente ${patientName} completou o onboarding e um pré-plano alimentar de 30 dias foi gerado. Clique para revisar e aprovar.`,
+        message: `${patientName} completou o onboarding. Pré-plano de ${data.explainability?.calculation?.final_kcal || ''}kcal gerado via Protocolo FitJourney.`,
         type: "warning",
         action_url: `/patients/${user.id}?tab=onboarding`,
       });
