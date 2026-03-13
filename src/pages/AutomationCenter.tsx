@@ -530,11 +530,23 @@ export default function AutomationCenter() {
 
         {/* ── Tabs ── */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-3 w-fit">
+          <TabsList className={`grid w-fit ${isAdmin ? "grid-cols-4" : "grid-cols-3"}`}>
+            {isAdmin && (
+              <TabsTrigger value="protocol" className="gap-2">
+                <Lock className="w-4 h-4" /> Protocolo FJ
+              </TabsTrigger>
+            )}
             <TabsTrigger value="templates" className="gap-2"><Zap className="w-4 h-4" /> Templates</TabsTrigger>
             <TabsTrigger value="rules" className="gap-2"><Bot className="w-4 h-4" /> Regras ({rules.length})</TabsTrigger>
             <TabsTrigger value="history" className="gap-2"><Clock className="w-4 h-4" /> Histórico</TabsTrigger>
           </TabsList>
+
+          {/* ── PROTOCOL TAB (Admin Only) ── */}
+          {isAdmin && (
+            <TabsContent value="protocol" className="mt-4">
+              <ProtocolMasterDocumentation />
+            </TabsContent>
+          )}
 
           {/* ── TEMPLATES TAB ── */}
           <TabsContent value="templates" className="mt-4">
