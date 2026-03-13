@@ -69,9 +69,6 @@ export default function Checkin() {
   useEffect(() => {
     saveDraft({ weight, feedback, difficulty });
   }, [weight, feedback, difficulty, saveDraft]);
-  const [previewFront, setPreviewFront] = useState<string | null>(null);
-  const [previewSide, setPreviewSide] = useState<string | null>(null);
-  const [previewBack, setPreviewBack] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
