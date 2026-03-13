@@ -243,12 +243,15 @@ export default function CommandPalette() {
                 {professionals.map((p) => (
                   <CommandItem
                     key={`pro-${p.user_id}`}
-                    value={`profissional ${p.full_name} ${roleLabels[p.role] || p.role}`}
+                    value={`profissional ${p.full_name} ${p.email || ''} ${roleLabels[p.role] || p.role}`}
                     onSelect={() => handleSelect(`/patients/${p.user_id}`)}
                     className="cursor-pointer"
                   >
                     <Shield className="mr-2 h-4 w-4 text-muted-foreground" />
-                    <span>{p.full_name}</span>
+                    <div className="flex flex-col">
+                      <span>{p.full_name}</span>
+                      {p.email && <span className="text-xs text-muted-foreground">{p.email}</span>}
+                    </div>
                     <span className="ml-auto text-xs text-muted-foreground">{roleLabels[p.role]}</span>
                   </CommandItem>
                 ))}
