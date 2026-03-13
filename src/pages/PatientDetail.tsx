@@ -559,7 +559,7 @@ export default function PatientDetail() {
                           <div className="flex justify-between"><span className="text-muted-foreground">Carboidratos</span><span className="font-medium">{anamnesis.computed_carbs}g</span></div>
                           <div className="flex justify-between"><span className="text-muted-foreground">Gorduras</span><span className="font-medium">{anamnesis.computed_fat}g</span></div>
                           <div className="pt-2 border-t border-border">
-                            <span className="text-xs text-muted-foreground">Objetivo: {anamnesis.answers?.goal || "—"}</span>
+                            <span className="text-xs text-muted-foreground">Objetivo: {(anamnesis.answers as any)?.goal || "—"}</span>
                           </div>
                         </div>
                       ) : (
