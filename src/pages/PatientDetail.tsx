@@ -40,6 +40,9 @@ import PrestigeName from "@/components/prestige/PrestigeName";
 import type { PrestigePlan } from "@/hooks/usePrestige";
 import { usePatientDetail, useTogglePatientDetailStatus, useDeletePatientLink } from "@/hooks/queries/usePatientDetail";
 import { queryKeys } from "@/hooks/queries/queryKeys";
+import { MissionCreator } from "@/components/gamification/MissionCreator";
+import { SmartRecommendationsPanel } from "@/components/dashboard/SmartRecommendationsPanel";
+import type { PatientSignals } from "@/components/dashboard/SmartRecommendationsPanel";
 
 export default function PatientDetail() {
   const { patientId } = useParams<{ patientId: string }>();
