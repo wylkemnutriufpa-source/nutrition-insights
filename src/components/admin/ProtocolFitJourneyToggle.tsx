@@ -77,7 +77,7 @@ export default function ProtocolFitJourneyToggle() {
     if (hasRecord) {
       await supabase.from("protocol_master_settings").update(payload).eq("nutritionist_id", user.id);
     } else {
-      await supabase.from("protocol_master_settings" as any).insert(payload);
+      await supabase.from("protocol_master_settings").insert(payload);
       setHasRecord(true);
     }
     toast.success("Protocolo FitJourney salvo!");
