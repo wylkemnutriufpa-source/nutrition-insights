@@ -238,7 +238,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
           <Sparkles className="w-12 h-12 text-primary mx-auto" />
           <h3 className="text-lg font-semibold">Onboarding Automático</h3>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Ative o fluxo automático para {patientName}. O paciente preencherá anamnese, dados corporais e preferências, e a IA gerará um pré-plano para sua aprovação.
+            Ative o fluxo automático para {patientName}. O paciente preencherá anamnese, dados corporais e preferências, e o Protocolo FitJourney gerará um pré-plano determinístico para sua aprovação.
           </p>
           <Button onClick={handleCreatePipeline} disabled={creating}>
             {creating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Zap className="w-4 h-4 mr-2" />}
