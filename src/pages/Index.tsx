@@ -36,6 +36,7 @@ import SystemUsageCard from "@/components/dashboard/SystemUsageCard";
 import NutritionCopilot from "@/components/dashboard/NutritionCopilot";
 import ChurnRiskPanel from "@/components/dashboard/ChurnRiskPanel";
 import StagnationAlerts from "@/components/dashboard/StagnationAlerts";
+import ClinicalRiskDashboardContent from "@/components/dashboard/ClinicalRiskDashboardContent";
 
 import PatientProgressSimulation from "@/components/dashboard/PatientProgressSimulation";
 import PatientRevenueSimulator from "@/components/dashboard/PatientRevenueSimulator";
