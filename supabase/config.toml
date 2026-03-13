@@ -40,6 +40,9 @@ verify_jwt = false
 [functions.smart-push-notifications]
 verify_jwt = false
 
+[functions.detect-clinical-alerts]
+verify_jwt = false
+
 # ═══════════════════════════════════════════
 # RELATÓRIOS E PLANOS (Determinístico + AI opcional)
 # ═══════════════════════════════════════════

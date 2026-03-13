@@ -36,6 +36,7 @@ import SystemUsageCard from "@/components/dashboard/SystemUsageCard";
 import NutritionCopilot from "@/components/dashboard/NutritionCopilot";
 import ChurnRiskPanel from "@/components/dashboard/ChurnRiskPanel";
 import StagnationAlerts from "@/components/dashboard/StagnationAlerts";
+import ClinicalAlertsPanel from "@/components/dashboard/ClinicalAlertsPanel";
 import PatientProgressSimulation from "@/components/dashboard/PatientProgressSimulation";
 import PatientRevenueSimulator from "@/components/dashboard/PatientRevenueSimulator";
 import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
@@ -702,6 +703,11 @@ function NutritionistDashboardContent() {
           patientCount={patientCount}
           evolutionData={evolutionData}
         />
+      </motion.div>
+
+      {/* ── Clinical Alerts Engine ── */}
+      <motion.div variants={item}>
+        <ClinicalAlertsPanel />
       </motion.div>
 
       {/* ── Main Grid: Attention + Insights + Risk ── */}

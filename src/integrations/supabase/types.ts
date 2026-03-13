@@ -851,6 +851,54 @@ export type Database = {
           },
         ]
       }
+      clinical_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string | null
+          description: string
+          id: string
+          is_active: boolean | null
+          metadata: Json | null
+          nutritionist_id: string
+          patient_id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          title: string
+          trigger_source: string
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string | null
+          description: string
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          nutritionist_id: string
+          patient_id: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          title: string
+          trigger_source?: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          nutritionist_id?: string
+          patient_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          title?: string
+          trigger_source?: string
+        }
+        Relationships: []
+      }
       clinical_rule_conditions: {
         Row: {
           created_at: string
