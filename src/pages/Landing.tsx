@@ -79,7 +79,7 @@ const defaultTestimonials = [
   { name: "Dra. Ana Costa", role: "Nutricionista Esportiva", text: "O FitJourney revolucionou meu atendimento. A IA me economiza 3h por dia e meus pacientes adoram a gamificação!", rating: 5, avatar: "AC" },
   { name: "Dr. Carlos Silva", role: "Nutricionista Clínico", text: "Meus pacientes nunca foram tão engajados. A adesão ao tratamento subiu 60% com os streaks e desafios.", rating: 5, avatar: "CS" },
   { name: "Dra. Mariana Luz", role: "Nutricionista Funcional", text: "Relatórios profissionais com 1 clique, análise corporal por IA, chat integrado. Tudo que eu precisava em um só lugar.", rating: 5, avatar: "ML" },
-  { name: "Dr. Rafael Mendes", role: "Nutricionista Comportamental", text: "O AutoBot responde meus pacientes 24/7 sobre dúvidas de nutrição. É como ter um assistente que nunca dorme.", rating: 5, avatar: "RM" },
+  { name: "Dr. Rafael Mendes", role: "Nutricionista Comportamental", text: "O chat em tempo real com meus pacientes mudou tudo. Consigo acompanhar de perto e resolver dúvidas na hora.", rating: 5, avatar: "RM" },
 ];
 
 const defaultPlans = [
@@ -120,7 +120,7 @@ const allFeaturesList = [
   "Dashboard inteligente", "Gestão de pacientes", "Anamnese com IA", "Planos alimentares",
   "Avaliação física completa", "Análise corporal por foto", "Protocolos reutilizáveis",
   "Programas em grupo", "Gamificação (XP/streaks)", "Desafios semanais", "Metas semanais",
-  "Chat em tempo real", "AutoBot IA 24/7", "Receitas com IA", "Banco TACO 600+ alimentos",
+  "Chat em tempo real", "Receitas com IA", "Banco TACO 600+ alimentos",
   "Lista de compras", "Suplementação", "Relatórios semanais", "Agenda de consultas",
   "Push notifications", "Branding personalizado", "Financeiro multi-gateway", "Feedbacks",
   "Dicas globais", "Biblioteca do paciente", "Calculadoras (peso/água)", "Health Check Quiz",
