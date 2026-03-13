@@ -533,6 +533,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </Button>
               </Link>
             )}
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={openCommandPalette}>
+              <Search className="w-4 h-4" />
+            </Button>
             <NotificationBell />
           </div>
         </div>
