@@ -1,8 +1,9 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import MetabolicRadar from "@/components/dashboard/MetabolicRadar";
 import { AnamnesisInsightsFull } from "@/components/patient/AnamnesisInsightsCard";
@@ -36,75 +38,40 @@ import {
 import PrestigeBadge from "@/components/prestige/PrestigeBadge";
 import PrestigeName from "@/components/prestige/PrestigeName";
 import type { PrestigePlan } from "@/hooks/usePrestige";
-
-interface PatientProfile {
-  full_name: string;
-  avatar_url: string | null;
-  phone: string | null;
-}
-
-interface TimelineEvent {
-  id: string;
-  event_type: string;
-  title: string;
-  description: string | null;
-  metadata: any;
-  created_at: string;
-  created_by: string | null;
-}
-
-interface Anamnesis {
-  id: string;
-  answers: any;
-  computed_tmb: number | null;
-  computed_kcal_target: number | null;
-  computed_protein: number | null;
-  computed_carbs: number | null;
-  computed_fat: number | null;
-  status: string;
-  created_at: string;
-}
-
-interface MealPlan {
-  id: string;
-  title: string;
-  description: string | null;
-  is_active: boolean;
-  start_date: string;
-  end_date: string | null;
-  created_at: string;
-}
-
-interface PatientProtocol {
-  id: string;
-  protocol_id: string;
-  status: string;
-  start_date: string;
-  end_date: string | null;
-  protocol_title?: string;
-}
+import { usePatientDetail, useTogglePatientDetailStatus, useDeletePatientLink } from "@/hooks/queries/usePatientDetail";
+import { queryKeys } from "@/hooks/queries/queryKeys";
 
 export default function PatientDetail() {
   const { patientId } = useParams<{ patientId: string }>();
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
+  const queryClient = useQueryClient();
 
-  const [profile, setProfile] = useState<PatientProfile | null>(null);
-  const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
-  const [anamnesis, setAnamnesis] = useState<Anamnesis | null>(null);
-  const [patientProtocols, setPatientProtocols] = useState<PatientProtocol[]>([]);
-  const [protocols, setProtocols] = useState<any[]>([]);
-  const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
-  const [recipes, setRecipes] = useState<any[]>([]);
-  const [checklistStats, setChecklistStats] = useState({ total: 0, completed: 0 });
-  const [mealPlanDocs, setMealPlanDocs] = useState<any[]>([]);
-  const [assessmentDocs, setAssessmentDocs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [patientStatus, setPatientStatus] = useState<string>("active");
-  const [npId, setNpId] = useState<string | null>(null);
-  const [togglingStatus, setTogglingStatus] = useState(false);
+  // React Query hook
+  const { data, isLoading, refetch } = usePatientDetail(patientId);
+  const toggleStatusMutation = useTogglePatientDetailStatus();
+  const deletePatientMutation = useDeletePatientLink();
 
-  // Activation dialog
+  // Derived data from query
+  const profile = data?.profile ?? null;
+  const timeline = data?.timeline ?? [];
+  const anamnesis = data?.anamnesis ?? null;
+  const patientProtocols = data?.patientProtocols ?? [];
+  const protocols = data?.protocols ?? [];
+  const checklistStats = data?.checklistStats ?? { total: 0, completed: 0 };
+  const patientSubscription = data?.patientSubscription ?? null;
+  const pricingPlans = data?.pricingPlans ?? [];
+  const mealPlans = data?.mealPlans ?? [];
+  const recipes = data?.recipes ?? [];
+  const mealPlanDocs = data?.mealPlanDocs ?? [];
+  const assessmentDocs = data?.assessmentDocs ?? [];
+  const patientStatus = data?.patientStatus ?? "active";
+  const npId = data?.npId ?? null;
+  const prestigePlans = data?.prestigePlans ?? [];
+  const currentPrestigePlan = data?.currentPrestigePlan ?? null;
+  const patientEmail = data?.patientEmail ?? "";
+
+  // Local UI state
   const [activateOpen, setActivateOpen] = useState(false);
   const [activateForm, setActivateForm] = useState({
     protocol_id: "",
@@ -112,39 +79,30 @@ export default function PatientDetail() {
     end_date: "",
     status: "active",
   });
-
-  // Timeline note dialog
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteForm, setNoteForm] = useState({ title: "", description: "", event_type: "note" });
-
-  // Plan management
   const [planOpen, setPlanOpen] = useState(false);
   const [openSection, setOpenSection] = useState<string | null>(null);
-  const [patientSubscription, setPatientSubscription] = useState<any>(null);
-  const [pricingPlans, setPricingPlans] = useState<any[]>([]);
+  const [selectedPrestigePlanId, setSelectedPrestigePlanId] = useState<string>(data?.currentPrestigePlanId ?? "");
   const [planForm, setPlanForm] = useState({
-    plan_name: "",
-    started_at: new Date().toISOString().split("T")[0],
-    expires_at: "",
+    plan_name: patientSubscription?.plan_name || "",
+    started_at: patientSubscription?.started_at?.split("T")[0] || new Date().toISOString().split("T")[0],
+    expires_at: patientSubscription?.expires_at?.split("T")[0] || "",
     value: "",
   });
-
-  // Prestige
-  const [prestigePlans, setPrestigePlans] = useState<PrestigePlan[]>([]);
-  const [selectedPrestigePlanId, setSelectedPrestigePlanId] = useState<string>("");
-  const [currentPrestigePlan, setCurrentPrestigePlan] = useState<PrestigePlan | null>(null);
-
-  // Feedback scheduling
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackForm, setFeedbackForm] = useState({
     days: "3",
     message: "Como você está se sentindo com o plano alimentar? Gostaria de compartilhar seu progresso?",
   });
-
-  // Upgrade patient to professional (admin only)
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeRole, setUpgradeRole] = useState<string>("");
   const [upgrading, setUpgrading] = useState(false);
+
+  // Invalidation helper
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.patients.detail(patientId ?? "") });
+  };
 
   const handleUpgradePatient = async () => {
     if (!patientId || !upgradeRole) return;
@@ -169,119 +127,9 @@ export default function PatientDetail() {
     setUpgrading(false);
   };
 
-  const [patientEmail, setPatientEmail] = useState("");
-
-  const fetchAll = useCallback(async () => {
-    if (!patientId || !user) return;
-    setLoading(true);
-
-    const [profileRes, timelineRes, anamnesisRes, ppRes, protocolsRes, checkRes, subRes, plansRes, mealPlansRes, recipesRes, npRes] = await Promise.all([
-      supabase.from("profiles").select("full_name, avatar_url, phone").eq("user_id", patientId).single(),
-      supabase.from("patient_timeline").select("*").eq("patient_id", patientId).order("created_at", { ascending: false }).limit(50),
-      supabase.from("patient_anamnesis").select("*").eq("user_id", patientId).order("created_at", { ascending: false }).limit(1),
-      supabase.from("patient_protocols").select("*").eq("patient_id", patientId).eq("nutritionist_id", user.id).order("created_at", { ascending: false }),
-      supabase.from("protocols").select("id, title").eq("created_by", user.id),
-      supabase.from("checklist_tasks").select("id, completed").eq("patient_id", patientId).eq("date", new Date().toISOString().split("T")[0]),
-      supabase.from("subscriptions").select("*").eq("user_id", patientId).order("created_at", { ascending: false }).limit(1),
-      supabase.from("pricing_plans").select("*").eq("is_active", true).order("sort_order"),
-      supabase.from("meal_plans").select("*").eq("patient_id", patientId).eq("nutritionist_id", user.id).order("created_at", { ascending: false }),
-      supabase.from("recipes").select("*").eq("nutritionist_id", user.id).eq("is_shared", true).order("created_at", { ascending: false }),
-      supabase.from("nutritionist_patients").select("id, status").eq("patient_id", patientId).eq("nutritionist_id", user.id).limit(1).single(),
-    ]);
-
-    if (npRes.data) {
-      setPatientStatus(npRes.data.status);
-      setNpId(npRes.data.id);
-    }
-
-    setProfile(profileRes.data);
-    setTimeline(timelineRes.data || []);
-    setAnamnesis(anamnesisRes.data?.[0] || null);
-    setProtocols(protocolsRes.data || []);
-    setChecklistStats({
-      total: checkRes.data?.length || 0,
-      completed: checkRes.data?.filter((t: any) => t.completed).length || 0,
-    });
-
-    // Enrich patient protocols with title
-    if (ppRes.data && protocolsRes.data) {
-      const enriched = ppRes.data.map((pp: any) => ({
-        ...pp,
-        protocol_title: protocolsRes.data?.find((p: any) => p.id === pp.protocol_id)?.title || "Protocolo",
-      }));
-      setPatientProtocols(enriched);
-    }
-
-    setPatientSubscription(subRes.data?.[0] || null);
-    setPricingPlans(plansRes.data || []);
-    setMealPlans(mealPlansRes.data || []);
-    setRecipes(recipesRes.data || []);
-
-    // Fetch documents for this patient
-    const { data: docs } = await supabase.from("patient_documents")
-      .select("*")
-      .eq("patient_id", patientId!)
-      .eq("nutritionist_id", user!.id)
-      .order("created_at", { ascending: false });
-    setMealPlanDocs((docs || []).filter((d: any) => d.document_type === "meal_plan"));
-    setAssessmentDocs((docs || []).filter((d: any) => d.document_type === "assessment"));
-
-    // Pre-fill plan form if subscription exists
-    if (subRes.data?.[0]) {
-      setPlanForm({
-        plan_name: subRes.data[0].plan_name,
-        started_at: subRes.data[0].started_at?.split("T")[0] || "",
-        expires_at: subRes.data[0].expires_at?.split("T")[0] || "",
-        value: "",
-      });
-    }
-
-    // Load prestige plans and current prestige
-    const [prestigePlansRes, patientPrestigeRes] = await Promise.all([
-      supabase.from("prestige_plans").select("*").eq("is_active", true).order("display_order"),
-      supabase.from("patient_prestige").select("*, prestige_plans(*)").eq("patient_id", patientId!).eq("is_active", true).maybeSingle(),
-    ]);
-    const pPlans = (prestigePlansRes.data || []).map((d: any) => ({
-      id: d.id, name: d.name, slug: d.slug, display_order: d.display_order, color: d.color,
-      badge_icon: d.badge_icon, badge_label: d.badge_label, crown_enabled: d.crown_enabled,
-      effect_type: d.effect_type, ranking_highlight: d.ranking_highlight,
-      ai_usage_multiplier: d.ai_usage_multiplier, features: d.features || [],
-      price_monthly: d.price_monthly, price_quarterly: d.price_quarterly,
-      price_semiannual: d.price_semiannual, price_annual: d.price_annual,
-    })) as PrestigePlan[];
-    setPrestigePlans(pPlans);
-
-    if (patientPrestigeRes.data?.prestige_plans) {
-      const pp = patientPrestigeRes.data.prestige_plans as any;
-      setCurrentPrestigePlan({
-        id: pp.id, name: pp.name, slug: pp.slug, display_order: pp.display_order, color: pp.color,
-        badge_icon: pp.badge_icon, badge_label: pp.badge_label, crown_enabled: pp.crown_enabled,
-        effect_type: pp.effect_type, ranking_highlight: pp.ranking_highlight,
-        ai_usage_multiplier: pp.ai_usage_multiplier, features: pp.features || [],
-        price_monthly: pp.price_monthly, price_quarterly: pp.price_quarterly,
-        price_semiannual: pp.price_semiannual, price_annual: pp.price_annual,
-      });
-      setSelectedPrestigePlanId(pp.id);
-    } else {
-      setCurrentPrestigePlan(null);
-      setSelectedPrestigePlanId("");
-    }
-
-    // Fetch patient email for admin upgrade feature
-    if (isAdmin && patientId) {
-      const { data: emailData } = await supabase.rpc("get_user_email_by_id", { _user_id: patientId });
-      if (emailData) setPatientEmail(emailData);
-    }
-
-    setLoading(false);
-  }, [patientId, user]);
-
-  useEffect(() => { fetchAll(); }, [fetchAll]);
-
   const activateProtocol = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !patientId) return;
-
     const { data, error } = await supabase.from("patient_protocols").insert({
       patient_id: patientId,
       protocol_id: activateForm.protocol_id,
@@ -290,15 +138,10 @@ export default function PatientDetail() {
       start_date: activateForm.start_date,
       end_date: activateForm.end_date || null,
     }).select().single();
-
     if (error) { toast.error(error.message); return; }
-
-    // If active, sync checklist tasks
     if (activateForm.status === "active" && data) {
       await supabase.rpc("sync_protocol_checklist", { _patient_protocol_id: data.id });
     }
-
-    // Add timeline event
     await supabase.from("patient_timeline").insert({
       patient_id: patientId,
       event_type: "protocol",
@@ -306,16 +149,14 @@ export default function PatientDetail() {
       description: protocols.find(p => p.id === activateForm.protocol_id)?.title,
       created_by: user.id,
     });
-
     toast.success(activateForm.status === "active" ? "Protocolo ativado! Checklist sincronizado." : "Protocolo programado!");
     setActivateOpen(false);
-    fetchAll();
+    invalidate();
   };
 
   const addTimelineNote = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !patientId) return;
-
     const { error } = await supabase.from("patient_timeline").insert({
       patient_id: patientId,
       event_type: noteForm.event_type,
@@ -323,13 +164,12 @@ export default function PatientDetail() {
       description: noteForm.description || null,
       created_by: user.id,
     });
-
     if (error) toast.error(error.message);
     else {
       toast.success("Nota adicionada!");
       setNoteOpen(false);
       setNoteForm({ title: "", description: "", event_type: "note" });
-      fetchAll();
+      invalidate();
     }
   };
 
@@ -341,7 +181,6 @@ export default function PatientDetail() {
   const savePlan = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !patientId) return;
-
     if (patientSubscription) {
       const { error } = await supabase.from("subscriptions").update({
         plan_name: planForm.plan_name,
@@ -361,10 +200,7 @@ export default function PatientDetail() {
       if (error) { toast.error(error.message); return; }
       toast.success("Plano atribuído!");
     }
-
-    // Sync prestige plan
     if (selectedPrestigePlanId) {
-      // Upsert: delete existing then insert
       await supabase.from("patient_prestige").delete().eq("patient_id", patientId);
       const { error: prestigeErr } = await supabase.from("patient_prestige").insert({
         patient_id: patientId,
@@ -372,25 +208,20 @@ export default function PatientDetail() {
         assigned_by: user.id,
         is_active: true,
       });
-      if (prestigeErr) {
-        console.error("Prestige assignment error:", prestigeErr);
-      } else {
+      if (!prestigeErr) {
         const selectedPlan = prestigePlans.find(p => p.id === selectedPrestigePlanId);
         toast.success(`Prestígio ${selectedPlan?.name || ''} aplicado! ${selectedPlan?.badge_icon || ''}`, { duration: 3000 });
       }
     }
-
     setPlanOpen(false);
-    fetchAll();
+    invalidate();
   };
 
   const scheduleFeedback = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !patientId) return;
-
     const scheduledDate = new Date();
     scheduledDate.setDate(scheduledDate.getDate() + parseInt(feedbackForm.days));
-
     const { error } = await supabase.from("notifications").insert({
       user_id: patientId,
       title: "📋 Feedback solicitado",
@@ -399,9 +230,7 @@ export default function PatientDetail() {
       action_url: "/feedbacks",
       metadata: { scheduled_by: user.id, scheduled_for: scheduledDate.toISOString() },
     });
-
     if (error) { toast.error(error.message); return; }
-
     await supabase.from("patient_timeline").insert({
       patient_id: patientId,
       event_type: "note",
@@ -409,36 +238,40 @@ export default function PatientDetail() {
       description: feedbackForm.message,
       created_by: user.id,
     });
-
     toast.success(`Feedback agendado para daqui ${feedbackForm.days} dias!`);
     setFeedbackOpen(false);
-    fetchAll();
+    invalidate();
   };
 
-  const togglePatientStatus = async () => {
+  const togglePatientStatus = () => {
     if (!npId) return;
-    setTogglingStatus(true);
-    const newStatus = patientStatus === "active" ? "inactive" : "active";
-    const { error } = await supabase.from("nutritionist_patients").update({ status: newStatus }).eq("id", npId);
-    if (error) { toast.error(error.message); setTogglingStatus(false); return; }
-    setPatientStatus(newStatus);
-    toast.success(newStatus === "active" ? "Paciente ativado!" : "Paciente desativado!");
-    setTogglingStatus(false);
+    toggleStatusMutation.mutate({ npId, currentStatus: patientStatus }, {
+      onSuccess: () => invalidate(),
+    });
   };
 
-  const deletePatient = async () => {
-    if (!npId || !user) return;
-    const { error } = await supabase.from("nutritionist_patients").delete().eq("id", npId);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Paciente removido com sucesso!");
-    navigate("/patients");
+  const deletePatient = () => {
+    if (!npId) return;
+    deletePatientMutation.mutate(npId, {
+      onSuccess: () => navigate("/patients"),
+    });
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="space-y-6">
+          <div className="flex items-center gap-4">
+            <Skeleton className="w-10 h-10 rounded" />
+            <Skeleton className="w-14 h-14 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-7 w-48" />
+              <Skeleton className="h-4 w-64" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}
+          </div>
         </div>
       </DashboardLayout>
     );
@@ -452,7 +285,6 @@ export default function PatientDetail() {
     measurement: { icon: TrendingUp, color: "text-accent" },
   };
 
-  // Compute risk score from anamnesis
   const riskFactors: { label: string; level: "low" | "medium" | "high" }[] = [];
   if (anamnesis?.answers) {
     const a = anamnesis.answers;
@@ -513,7 +345,7 @@ export default function PatientDetail() {
               variant={patientStatus === "active" ? "outline" : "default"}
               className="gap-2"
               onClick={togglePatientStatus}
-              disabled={togglingStatus}
+              disabled={toggleStatusMutation.isPending}
             >
               <Power className="w-4 h-4" />
               {patientStatus === "active" ? "Desativar" : "Ativar"}
@@ -588,29 +420,14 @@ export default function PatientDetail() {
                 </DialogContent>
               </Dialog>
             )}
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={() => navigate(`/physical-assessment?patientId=${patientId}`)}
-            >
-              <Activity className="w-4 h-4" />
-              Avaliação Física
+            <Button variant="outline" className="gap-2" onClick={() => navigate(`/physical-assessment?patientId=${patientId}`)}>
+              <Activity className="w-4 h-4" /> Avaliação Física
             </Button>
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={() => navigate(`/diet-templates?patientId=${patientId}`)}
-            >
-              <BookOpen className="w-4 h-4" />
-              Modelos de Dieta
+            <Button variant="outline" className="gap-2" onClick={() => navigate(`/diet-templates?patientId=${patientId}`)}>
+              <BookOpen className="w-4 h-4" /> Modelos de Dieta
             </Button>
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={() => navigate(`/anamnesis?patientId=${patientId}`)}
-            >
-              <Heart className="w-4 h-4" />
-              {anamnesis ? "Editar Anamnese" : "Preencher Anamnese"}
+            <Button variant="outline" className="gap-2" onClick={() => navigate(`/anamnesis?patientId=${patientId}`)}>
+              <Heart className="w-4 h-4" /> {anamnesis ? "Editar Anamnese" : "Preencher Anamnese"}
             </Button>
             <Dialog open={activateOpen} onOpenChange={setActivateOpen}>
               <DialogTrigger asChild>
@@ -720,14 +537,9 @@ export default function PatientDetail() {
                         <div className="space-y-2">
                           {riskFactors.map((rf, i) => (
                             <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
-                              <div className={`w-3 h-3 rounded-full ${
-                                rf.level === "high" ? "bg-destructive" : rf.level === "medium" ? "bg-warning" : "bg-success"
-                              }`} />
+                              <div className={`w-3 h-3 rounded-full ${rf.level === "high" ? "bg-destructive" : rf.level === "medium" ? "bg-warning" : "bg-success"}`} />
                               <span className="text-sm font-medium">{rf.label}</span>
-                              <span className={`ml-auto text-xs px-2 py-0.5 rounded-full ${
-                                rf.level === "high" ? "bg-destructive/10 text-destructive" :
-                                rf.level === "medium" ? "bg-warning/10 text-warning" : "bg-success/10 text-success"
-                              }`}>
+                              <span className={`ml-auto text-xs px-2 py-0.5 rounded-full ${rf.level === "high" ? "bg-destructive/10 text-destructive" : rf.level === "medium" ? "bg-warning/10 text-warning" : "bg-success/10 text-success"}`}>
                                 {rf.level === "high" ? "Alto" : rf.level === "medium" ? "Médio" : "Baixo"}
                               </span>
                             </div>
@@ -775,10 +587,7 @@ export default function PatientDetail() {
                       <h2 className="font-display text-xl font-bold flex items-center gap-2">
                         <Activity className="w-6 h-6 text-primary" /> Evolução Física
                       </h2>
-                      <Button
-                        onClick={() => { setOpenSection(null); navigate(`/physical-assessment?patientId=${patientId}`); }}
-                        className="gradient-primary gap-2 shadow-glow"
-                      >
+                      <Button onClick={() => { setOpenSection(null); navigate(`/physical-assessment?patientId=${patientId}`); }} className="gradient-primary gap-2 shadow-glow">
                         <Scale className="w-4 h-4" /> Nova Avaliação
                       </Button>
                     </div>
@@ -791,13 +600,7 @@ export default function PatientDetail() {
                       <h3 className="font-display text-lg font-semibold mb-4 flex items-center gap-2">
                         <Upload className="w-5 h-5 text-accent" /> Documentos da Avaliação
                       </h3>
-                      <DocumentUpload
-                        patientId={patientId!}
-                        nutritionistId={user!.id}
-                        documentType="assessment"
-                        documents={assessmentDocs}
-                        onUploadComplete={fetchAll}
-                      />
+                      <DocumentUpload patientId={patientId!} nutritionistId={user!.id} documentType="assessment" documents={assessmentDocs} onUploadComplete={invalidate} />
                     </div>
                   </div>
                 </DialogContent>
@@ -830,9 +633,7 @@ export default function PatientDetail() {
                           <Button size="sm" className="gap-1"><Plus className="w-4 h-4" /> Nota</Button>
                         </DialogTrigger>
                         <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle className="font-display">Adicionar Nota</DialogTitle>
-                          </DialogHeader>
+                          <DialogHeader><DialogTitle className="font-display">Adicionar Nota</DialogTitle></DialogHeader>
                           <form onSubmit={addTimelineNote} className="space-y-4">
                             <div>
                               <Label>Tipo</Label>
@@ -846,14 +647,8 @@ export default function PatientDetail() {
                                 </SelectContent>
                               </Select>
                             </div>
-                            <div>
-                              <Label>Título</Label>
-                              <Input value={noteForm.title} onChange={(e) => setNoteForm({ ...noteForm, title: e.target.value })} required />
-                            </div>
-                            <div>
-                              <Label>Descrição</Label>
-                              <Textarea value={noteForm.description} onChange={(e) => setNoteForm({ ...noteForm, description: e.target.value })} />
-                            </div>
+                            <div><Label>Título</Label><Input value={noteForm.title} onChange={(e) => setNoteForm({ ...noteForm, title: e.target.value })} required /></div>
+                            <div><Label>Descrição</Label><Textarea value={noteForm.description} onChange={(e) => setNoteForm({ ...noteForm, description: e.target.value })} /></div>
                             <Button type="submit" className="w-full gradient-primary">Salvar</Button>
                           </form>
                         </DialogContent>
@@ -867,7 +662,7 @@ export default function PatientDetail() {
                     ) : (
                       <div className="relative pl-8 space-y-4">
                         <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-border" />
-                        {timeline.map((event) => {
+                        {timeline.map((event: any) => {
                           const config = eventTypeConfig[event.event_type] || eventTypeConfig.note;
                           const Icon = config.icon;
                           return (
@@ -918,38 +713,6 @@ export default function PatientDetail() {
                                patientSubscription.status === "trial" ? "Trial" : patientSubscription.status}
                             </Badge>
                           </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">Início</span>
-                            <span className="text-sm">{new Date(patientSubscription.started_at).toLocaleDateString("pt-BR")}</span>
-                          </div>
-                          {patientSubscription.expires_at && (
-                            <>
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm text-muted-foreground">Vencimento</span>
-                                <span className="text-sm">{new Date(patientSubscription.expires_at).toLocaleDateString("pt-BR")}</span>
-                              </div>
-                              {(() => {
-                                const days = Math.ceil((new Date(patientSubscription.expires_at).getTime() - Date.now()) / 86400000);
-                                if (days > 0 && days <= 7) {
-                                  return (
-                                    <div className="p-3 rounded-lg bg-warning/10 border border-warning/20 flex items-center gap-2">
-                                      <AlertTriangle className="w-4 h-4 text-warning" />
-                                      <span className="text-xs text-warning font-medium">Mensalidade vence em {days} dia{days > 1 ? "s" : ""}!</span>
-                                    </div>
-                                  );
-                                }
-                                if (days <= 0) {
-                                  return (
-                                    <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 flex items-center gap-2">
-                                      <AlertTriangle className="w-4 h-4 text-destructive" />
-                                      <span className="text-xs text-destructive font-medium">Mensalidade vencida!</span>
-                                    </div>
-                                  );
-                                }
-                                return null;
-                              })()}
-                            </>
-                          )}
                           <Button size="sm" variant="outline" className="w-full mt-2" onClick={() => setPlanOpen(true)}>
                             Editar Plano
                           </Button>
@@ -968,7 +731,6 @@ export default function PatientDetail() {
                       <h3 className="font-display font-semibold flex items-center gap-2 mb-4">
                         <Send className="w-5 h-5 text-primary" /> Agendar Feedback
                       </h3>
-                      <p className="text-sm text-muted-foreground mb-4">Envie um lembrete para o paciente dar feedback sobre o acompanhamento.</p>
                       <form onSubmit={scheduleFeedback} className="space-y-3">
                         <div>
                           <Label>Enviar daqui a (dias)</Label>
@@ -1002,7 +764,6 @@ export default function PatientDetail() {
                         <div>
                           <Label>Plano</Label>
                           <Select value={planForm.plan_name} onValueChange={(v) => {
-                            // Auto-calculate end date
                             const monthsMap: Record<string, number> = { "Mensal": 1, "Trimestral": 3, "Semestral": 6, "Anual": 12 };
                             const months = monthsMap[v];
                             let newExpires = planForm.expires_at;
@@ -1011,7 +772,6 @@ export default function PatientDetail() {
                               end.setMonth(end.getMonth() + months);
                               newExpires = end.toISOString().split("T")[0];
                             }
-                            // Auto-fill value from prestige plan prices
                             let autoValue = planForm.value;
                             const pid = selectedPrestigePlanId || currentPrestigePlan?.id || (prestigePlans.length > 0 ? prestigePlans[0].id : "");
                             if (pid) {
@@ -1036,36 +796,10 @@ export default function PatientDetail() {
                         </div>
                         <div>
                           <Label>Valor (R$)</Label>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            placeholder="Ex: 150.00"
-                            value={planForm.value}
-                            onChange={(e) => setPlanForm({ ...planForm, value: e.target.value })}
-                          />
-                          {selectedPrestigePlanId && (() => {
-                            const sp = prestigePlans.find(p => p.id === selectedPrestigePlanId);
-                            return sp ? (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                Prestígio: <span style={{ color: sp.color }} className="font-semibold">{sp.badge_icon} {sp.name}</span>
-                              </p>
-                            ) : null;
-                          })()}
+                          <Input type="number" step="0.01" min="0" placeholder="Ex: 150.00" value={planForm.value} onChange={(e) => setPlanForm({ ...planForm, value: e.target.value })} />
                         </div>
                         <div className="grid grid-cols-2 gap-3">
-                          <div><Label>Data Início</Label><Input type="date" value={planForm.started_at} onChange={(e) => {
-                            const newStart = e.target.value;
-                            const monthsMap: Record<string, number> = { "Mensal": 1, "Trimestral": 3, "Semestral": 6, "Anual": 12 };
-                            const months = monthsMap[planForm.plan_name];
-                            if (months && newStart) {
-                              const end = new Date(newStart);
-                              end.setMonth(end.getMonth() + months);
-                              setPlanForm(f => ({ ...f, started_at: newStart, expires_at: end.toISOString().split("T")[0] }));
-                            } else {
-                              setPlanForm(f => ({ ...f, started_at: newStart }));
-                            }
-                          }} required /></div>
+                          <div><Label>Data Início</Label><Input type="date" value={planForm.started_at} onChange={(e) => setPlanForm({ ...planForm, started_at: e.target.value })} required /></div>
                           <div><Label>Data Fim</Label><Input type="date" value={planForm.expires_at} onChange={(e) => setPlanForm({ ...planForm, expires_at: e.target.value })} /></div>
                         </div>
                         <Button type="submit" className="w-full gradient-primary" disabled={!planForm.plan_name}>
@@ -1088,11 +822,9 @@ export default function PatientDetail() {
                         <p className="text-muted-foreground">Nenhum protocolo ativado.</p>
                       </div>
                     ) : (
-                      patientProtocols.map((pp) => (
+                      patientProtocols.map((pp: any) => (
                         <div key={pp.id} className="glass rounded-xl p-4 flex items-center gap-4">
-                          <div className={`w-3 h-3 rounded-full ${
-                            pp.status === "active" ? "bg-success" : pp.status === "scheduled" ? "bg-warning" : "bg-muted-foreground"
-                          }`} />
+                          <div className={`w-3 h-3 rounded-full ${pp.status === "active" ? "bg-success" : pp.status === "scheduled" ? "bg-warning" : "bg-muted-foreground"}`} />
                           <div className="flex-1">
                             <h4 className="font-medium text-sm">{pp.protocol_title}</h4>
                             <p className="text-xs text-muted-foreground">
@@ -1127,10 +859,7 @@ export default function PatientDetail() {
                   <DialogHeader><DialogTitle className="font-display">Planos Alimentares</DialogTitle></DialogHeader>
                   <div className="space-y-6">
                     <div className="flex items-center justify-end">
-                      <Button
-                        onClick={() => { setOpenSection(null); navigate(`/meal-plans?patientId=${patientId}`); }}
-                        className="gradient-primary gap-2 shadow-glow"
-                      >
+                      <Button onClick={() => { setOpenSection(null); navigate(`/meal-plans?patientId=${patientId}`); }} className="gradient-primary gap-2 shadow-glow">
                         <Plus className="w-4 h-4" /> Criar Plano
                       </Button>
                     </div>
@@ -1145,7 +874,7 @@ export default function PatientDetail() {
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        {mealPlans.map((plan) => (
+                        {mealPlans.map((plan: any) => (
                           <motion.div key={plan.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl overflow-hidden">
                             <div className="p-5 border-b border-border">
                               <div className="flex items-start justify-between gap-4">
@@ -1177,13 +906,7 @@ export default function PatientDetail() {
                       <h3 className="font-display text-lg font-semibold mb-4 flex items-center gap-2">
                         <Upload className="w-5 h-5 text-success" /> Documentos do Plano Alimentar
                       </h3>
-                      <DocumentUpload
-                        patientId={patientId!}
-                        nutritionistId={user!.id}
-                        documentType="meal_plan"
-                        documents={mealPlanDocs}
-                        onUploadComplete={fetchAll}
-                      />
+                      <DocumentUpload patientId={patientId!} nutritionistId={user!.id} documentType="meal_plan" documents={mealPlanDocs} onUploadComplete={invalidate} />
                     </div>
                   </div>
                 </DialogContent>
@@ -1205,15 +928,12 @@ export default function PatientDetail() {
                     <div className="text-center py-10 text-muted-foreground">
                       <ChefHat className="w-12 h-12 mx-auto mb-3 opacity-40" />
                       <p className="text-sm">Nenhuma receita compartilhada ainda.</p>
-                      <p className="text-xs mt-1">Compartilhe receitas na seção Receitas do painel.</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {recipes.map((recipe) => (
+                      {recipes.map((recipe: any) => (
                         <div key={recipe.id} className="rounded-xl border border-border bg-card p-4 hover:shadow-md transition-shadow">
-                          {recipe.image_url && (
-                            <img src={recipe.image_url} alt={recipe.title} className="w-full h-32 object-cover rounded-lg mb-3" />
-                          )}
+                          {recipe.image_url && <img src={recipe.image_url} alt={recipe.title} className="w-full h-32 object-cover rounded-lg mb-3" />}
                           <h4 className="font-semibold text-sm">{recipe.title}</h4>
                           {recipe.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{recipe.description}</p>}
                           <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
