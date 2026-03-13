@@ -37,6 +37,7 @@ import NutritionCopilot from "@/components/dashboard/NutritionCopilot";
 import ChurnRiskPanel from "@/components/dashboard/ChurnRiskPanel";
 import StagnationAlerts from "@/components/dashboard/StagnationAlerts";
 import ClinicalRiskDashboardContent from "@/components/dashboard/ClinicalRiskDashboardContent";
+import PendingApprovalsModal, { usePendingApprovals } from "@/components/patient/PendingApprovalsModal";
 
 import PatientProgressSimulation from "@/components/dashboard/PatientProgressSimulation";
 import PatientRevenueSimulator from "@/components/dashboard/PatientRevenueSimulator";
@@ -368,6 +369,17 @@ function NutritionistDashboardContent() {
   const [pendingCheckins, setPendingCheckins] = useState(0);
   const [unreadChats, setUnreadChats] = useState(0);
 
+  // Pending approvals modal
+  const pendingApprovalsCount = usePendingApprovals();
+  const [approvalsModalOpen, setApprovalsModalOpen] = useState(false);
+
+  // Auto-open modal when there are pending approvals
+  useEffect(() => {
+    if (pendingApprovalsCount > 0) {
+      setApprovalsModalOpen(true);
+    }
+  }, [pendingApprovalsCount]);
+
   // AI-powered
   const [aiInsights, setAiInsights] = useState<any[]>([]);
   const [attentionPatients, setAttentionPatients] = useState<any[]>([]);
@@ -587,6 +599,29 @@ function NutritionistDashboardContent() {
 
   return (
     <div className="space-y-6">
+      {/* Pending Approvals Modal */}
+      <PendingApprovalsModal open={approvalsModalOpen} onOpenChange={setApprovalsModalOpen} />
+
+      {/* Pending approvals banner */}
+      {pendingApprovalsCount > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 cursor-pointer"
+          onClick={() => setApprovalsModalOpen(true)}
+        >
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-amber-500" />
+            <span className="text-sm font-medium">
+              {pendingApprovalsCount} plano{pendingApprovalsCount > 1 ? "s" : ""} pendente{pendingApprovalsCount > 1 ? "s" : ""} de aprovação
+            </span>
+          </div>
+          <Button size="sm" variant="outline">
+            Revisar agora <ArrowRight className="w-4 h-4 ml-1" />
+          </Button>
+        </motion.div>
+      )}
+
       {/* ── Premium Tab Switcher ── */}
       <div className="flex items-center gap-1 glass-premium rounded-xl p-1.5 w-fit">
         {[
