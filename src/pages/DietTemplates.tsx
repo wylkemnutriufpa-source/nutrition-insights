@@ -190,24 +190,32 @@ export default function DietTemplates() {
   };
 
   const filtered = useMemo(() => {
-    let result = templates;
-    if (categoryFilter) result = result.filter((t) => t.category === categoryFilter);
+    let result = templates.map(t => ({
+      ...t,
+      meals: Array.isArray(t.meals) ? t.meals : [],
+      tags: Array.isArray(t.tags) ? t.tags : [],
+      conditions: Array.isArray(t.conditions) ? t.conditions : [],
+      macro_ratio: t.macro_ratio && typeof t.macro_ratio === 'object' ? t.macro_ratio : { protein: 30, carbs: 45, fat: 25 },
+    }));
+    if (categoryFilter) result = result.filter((t) => (t.goal_category || t.category) === categoryFilter);
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(
         (t) =>
           t.name.toLowerCase().includes(q) ||
-          t.description.toLowerCase().includes(q) ||
-          t.tags.some((tag) => tag.includes(q)) ||
-          t.conditions.some((c) => c.includes(q))
+          (t.description || "").toLowerCase().includes(q) ||
+          t.tags.some((tag: string) => tag.includes(q)) ||
+          t.conditions.some((c: string) => c.includes(q)) ||
+          (t.diet_style || "").toLowerCase().includes(q) ||
+          (t.clinical_tags || []).some((ct: string) => ct.includes(q))
       );
     }
     return result;
   }, [templates, search, categoryFilter]);
 
   const categories = useMemo(() => {
-    const cats = new Set(templates.map((t) => t.category));
-    return Array.from(cats);
+    const cats = new Set(templates.map((t) => t.goal_category || t.category));
+    return Array.from(cats).filter(Boolean);
   }, [templates]);
 
   // Physical assessment takes priority over anamnesis for calorie targets
