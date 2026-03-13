@@ -101,6 +101,11 @@ export default function PatientDetail() {
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeRole, setUpgradeRole] = useState<string>("");
   const [upgrading, setUpgrading] = useState(false);
+  const [editProfileForm, setEditProfileForm] = useState({
+    full_name: profile?.full_name || "",
+    phone: profile?.phone || "",
+  });
+  const [savingProfile, setSavingProfile] = useState(false);
 
   // Invalidation helper
   const invalidate = () => {
