@@ -25,7 +25,6 @@ const FEATURE_ROUTES: Record<string, string> = {
   ia_plan: "/analyze",
   automations: "/automation",
   recipe_generator: "/recipes",
-  chat: "/chat",
   ai_body_analysis: "/body-analysis",
   ai_anamnesis: "/anamnesis",
   weekly_report_ai: "/weekly-report",
