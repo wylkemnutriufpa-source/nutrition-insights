@@ -93,6 +93,7 @@ import PersonalStudents from "./pages/PersonalStudents";
 import PersonalWorkouts from "./pages/PersonalWorkouts";
 import PatientWorkouts from "./pages/PatientWorkouts";
 import PersonalLanding from "./pages/PersonalLanding";
+import FitnessAnamnesis from "./pages/FitnessAnamnesis";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -252,6 +253,7 @@ const App = () => (
               <Route path="/personal/students" element={<PersonalRoute><PersonalStudents /></PersonalRoute>} />
               <Route path="/personal/workouts" element={<PersonalRoute><PersonalWorkouts /></PersonalRoute>} />
               <Route path="/personal/workouts/new" element={<PersonalRoute><PersonalWorkouts /></PersonalRoute>} />
+              <Route path="/fitness-anamnesis" element={<ProtectedRoute><FitnessAnamnesis /></ProtectedRoute>} />
 
               {/* Patient portal */}
               <Route path="/client/dashboard" element={<PatientRoute><ClientDashboard /></PatientRoute>} />
