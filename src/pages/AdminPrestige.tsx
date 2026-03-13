@@ -254,11 +254,8 @@ export default function AdminPrestige() {
 
   // Get unassigned patients for a given plan's search
   const getAvailablePatients = (planId: string) => {
-    const search = (memberSearch[planId] || "").toLowerCase();
     const assignedIds = new Set(members.map(m => m.patient_id));
-    return allPatients
-      .filter(p => !assignedIds.has(p.user_id))
-      .filter(p => !search || p.full_name.toLowerCase().includes(search));
+    return allPatients.filter(p => !assignedIds.has(p.user_id));
   };
 
   const getPlanMembers = (planId: string) => {
