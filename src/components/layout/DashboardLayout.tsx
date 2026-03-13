@@ -358,6 +358,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <div className="min-h-screen bg-background particles-bg">
         <CommandPalette />
         <OnboardingWizard />
+        <SmartResumeModal />
         {/* Mobile Top Bar */}
         <div className="fixed top-0 left-0 right-0 z-50 h-14 glass-premium border-b border-border/50 flex items-center justify-between px-4">
           <div className="flex items-center gap-3">
