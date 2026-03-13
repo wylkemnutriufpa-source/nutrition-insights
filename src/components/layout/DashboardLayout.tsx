@@ -74,7 +74,6 @@ const nutritionistSections: NavSection[] = [
       { to: "/reports", icon: BarChart3, labelKey: "nav.reports" },
       { to: "/clinical-intelligence", icon: Activity, labelKey: "nav.clinicalIntel" },
       { to: "/weekly-report", icon: FileBarChart, labelKey: "nav.weeklyReport" },
-      { to: "/financial", icon: DollarSign, labelKey: "nav.financial" },
     ],
   },
   {
