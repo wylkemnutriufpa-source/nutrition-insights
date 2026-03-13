@@ -24,6 +24,7 @@ import PhaseTransitionModal from "@/components/biquini/PhaseTransitionModal";
 import BiquiniEnrollmentStatus from "@/components/biquini/BiquiniEnrollmentStatus";
 import BiquiniOnboardingWizard from "@/components/biquini/BiquiniOnboardingWizard";
 import { DailyMissionsWidget } from "@/components/gamification/DailyMissionsWidget";
+import { AdherenceEvolutionChart } from "@/components/gamification/AdherenceEvolutionChart";
 
 interface ProgramInfo {
   id: string;
@@ -425,6 +426,11 @@ export default function ClientDashboard() {
         {/* Daily Missions & Adherence Score */}
         <motion.div variants={item}>
           <DailyMissionsWidget />
+        </motion.div>
+
+        {/* Adherence Evolution Chart */}
+        <motion.div variants={item}>
+          <AdherenceEvolutionChart />
         </motion.div>
 
         {/* Workout Section - integrated when patient has personal trainer */}

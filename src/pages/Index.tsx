@@ -40,6 +40,7 @@ import PatientProgressSimulation from "@/components/dashboard/PatientProgressSim
 import PatientRevenueSimulator from "@/components/dashboard/PatientRevenueSimulator";
 import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
 import ChatDashboardWidget from "@/components/chat/ChatDashboardWidget";
+import { TreatmentInsightsPanel } from "@/components/dashboard/TreatmentInsightsPanel";
 import ExpandablePanel from "@/components/common/ExpandablePanel";
 import {
   UtensilsCrossed, Users, TrendingUp, Target, Sparkles, Plus,
@@ -690,6 +691,13 @@ function NutritionistDashboardContent() {
         <ExpandablePanel title="Precisam de Atenção"><AttentionPatientsPanel patients={attentionPatients} loading={aiLoading} /></ExpandablePanel>
         <ExpandablePanel title="Insights da IA"><AIInsightsPanel insights={aiInsights} loading={aiLoading} /></ExpandablePanel>
         <ExpandablePanel title="Painel de Risco"><RiskPanel patients={riskPatients} /></ExpandablePanel>
+      </motion.div>
+
+      {/* ── Treatment Insights (Behavioral Signals) ── */}
+      <motion.div variants={item}>
+        <ExpandablePanel title="Insights Comportamentais">
+          <TreatmentInsightsPanel />
+        </ExpandablePanel>
       </motion.div>
 
       {/* ── Patient Retention Risk (Churn Prediction) ── */}
