@@ -709,23 +709,6 @@ function NutritionistDashboardContent() {
         />
       </motion.div>
 
-      {/* ── Clinical Risk Dashboard Link ── */}
-      <motion.div variants={item}>
-        <Link to="/clinical-risk">
-          <div className="glass rounded-xl p-4 flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer border border-destructive/10">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
-                <Shield className="w-5 h-5 text-destructive" />
-              </div>
-              <div>
-                <p className="font-display font-semibold">Painel de Risco Clínico</p>
-                <p className="text-xs text-muted-foreground">Priorização e monitoramento ativo de pacientes</p>
-              </div>
-            </div>
-            <ArrowRight className="w-5 h-5 text-muted-foreground" />
-          </div>
-        </Link>
-      </motion.div>
 
       {/* ── Main Grid: Attention + Insights + Risk ── */}
       <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
