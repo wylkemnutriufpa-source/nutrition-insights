@@ -455,6 +455,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sosOpen, setSosOpen] = useState(false);
   const [sosInboxOpen, setSosInboxOpen] = useState(false);
+  const { showBadge: showOnboardingBadge } = useOnboardingNotification();
 
   const isPatient = !isNutritionist && !isPersonal && !isAdmin;
 
