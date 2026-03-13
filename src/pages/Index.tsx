@@ -369,6 +369,17 @@ function NutritionistDashboardContent() {
   const [pendingCheckins, setPendingCheckins] = useState(0);
   const [unreadChats, setUnreadChats] = useState(0);
 
+  // Pending approvals modal
+  const pendingApprovalsCount = usePendingApprovals();
+  const [approvalsModalOpen, setApprovalsModalOpen] = useState(false);
+
+  // Auto-open modal when there are pending approvals
+  useEffect(() => {
+    if (pendingApprovalsCount > 0) {
+      setApprovalsModalOpen(true);
+    }
+  }, [pendingApprovalsCount]);
+
   // AI-powered
   const [aiInsights, setAiInsights] = useState<any[]>([]);
   const [attentionPatients, setAttentionPatients] = useState<any[]>([]);
