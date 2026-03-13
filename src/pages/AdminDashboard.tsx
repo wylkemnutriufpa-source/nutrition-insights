@@ -15,7 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Shield, Users, UserCheck, Zap, Star, UserPlus, Settings, Globe,
   Eye, BarChart3, DollarSign, CreditCard, Crown, Loader2,
-  Search, ToggleLeft, Trash2, Ban, CheckCircle2, Plus, FileText, Download, Sparkles
+  Search, ToggleLeft, Trash2, Ban, CheckCircle2, Plus, FileText, Download, Sparkles,
+  Palette, LayoutGrid
 } from "lucide-react";
 import { toast } from "sonner";
 import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
@@ -28,6 +29,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Clock, User, Activity, LogIn, LogOut, RefreshCw, Trash2 as Trash2Icon, UserPlus as UserPlusIcon } from "lucide-react";
+import { ProfessionalsDrillDown, PatientsDrillDown, SubscriptionsDrillDown, RevenueDrillDown } from "@/components/admin/AdminDrillDownDialogs";
 
 // ─── Types ───
 interface PlatformMetrics {
@@ -194,11 +196,14 @@ function AuditLogsEmbed() {
 }
 
 // ─── Platform Metrics Card ───
-function MetricCard({ label, value, icon: Icon, color, prefix }: {
-  label: string; value: number; icon: any; color: string; prefix?: string;
+function MetricCard({ label, value, icon: Icon, color, prefix, onClick }: {
+  label: string; value: number; icon: any; color: string; prefix?: string; onClick?: () => void;
 }) {
   return (
-    <Card className="glass shadow-card">
+    <Card
+      className={`glass shadow-card ${onClick ? "cursor-pointer hover:shadow-glow hover:scale-[1.02] transition-all" : ""}`}
+      onClick={onClick}
+    >
       <CardContent className="flex items-center gap-4 py-6">
         <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
           <Icon className={`w-6 h-6 ${color}`} />
@@ -208,6 +213,7 @@ function MetricCard({ label, value, icon: Icon, color, prefix }: {
             {prefix}{typeof value === "number" ? value.toLocaleString("pt-BR") : value}
           </p>
           <p className="text-sm text-muted-foreground">{label}</p>
+          {onClick && <p className="text-[10px] text-primary mt-0.5">Clique para detalhes →</p>}
         </div>
       </CardContent>
     </Card>
@@ -832,6 +838,7 @@ export default function AdminDashboard() {
   const [plans, setPlans] = useState<PricingPlan[]>([]);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [promoteEmail, setPromoteEmail] = useState("");
+  const [drillDown, setDrillDown] = useState<"professionals" | "patients" | "subscriptions" | "revenue" | null>(null);
 
   const fetchAll = useCallback(async () => {
     if (!user) return;
@@ -945,10 +952,10 @@ export default function AdminDashboard() {
             {/* ─── Metrics ─── */}
             <TabsContent value="metrics" className="mt-4 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                <MetricCard label="Profissionais" value={metrics.totalProfessionals} icon={UserCheck} color="text-primary" />
-                <MetricCard label="Pacientes" value={metrics.totalPatients} icon={Users} color="text-primary" />
-                <MetricCard label="Assinaturas Ativas" value={metrics.activeSubscriptions} icon={Star} color="text-accent" />
-                <MetricCard label="Receita Mensal" value={metrics.monthlyRevenue} icon={DollarSign} color="text-primary" prefix="R$" />
+                <MetricCard label="Profissionais" value={metrics.totalProfessionals} icon={UserCheck} color="text-primary" onClick={() => setDrillDown("professionals")} />
+                <MetricCard label="Pacientes" value={metrics.totalPatients} icon={Users} color="text-primary" onClick={() => setDrillDown("patients")} />
+                <MetricCard label="Assinaturas Ativas" value={metrics.activeSubscriptions} icon={Star} color="text-accent" onClick={() => setDrillDown("subscriptions")} />
+                <MetricCard label="Receita Mensal" value={metrics.monthlyRevenue} icon={DollarSign} color="text-primary" prefix="R$" onClick={() => setDrillDown("revenue")} />
                 <OnlinePatientsWidget variant="card" />
               </div>
 
@@ -1005,6 +1012,24 @@ export default function AdminDashboard() {
                     <div>
                       <p className="font-display font-semibold">Planos Prestígio</p>
                       <p className="text-sm text-muted-foreground">Gerenciar tiers de pacientes</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/menu-config")}>
+                  <CardContent className="flex items-center gap-4 py-6">
+                    <LayoutGrid className="w-8 h-8 text-emerald-400" />
+                    <div>
+                      <p className="font-display font-semibold">Organizar Menus</p>
+                      <p className="text-sm text-muted-foreground">Editar menus, ícones e categorias</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/branding")}>
+                  <CardContent className="flex items-center gap-4 py-6">
+                    <Palette className="w-8 h-8 text-pink-400" />
+                    <div>
+                      <p className="font-display font-semibold">Cores e Layout</p>
+                      <p className="text-sm text-muted-foreground">Personalizar visual do sistema</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -1118,6 +1143,11 @@ export default function AdminDashboard() {
         onOpenChange={setCreateDialogOpen}
         onCreated={fetchAll}
       />
+
+      <ProfessionalsDrillDown open={drillDown === "professionals"} onOpenChange={(v) => !v && setDrillDown(null)} />
+      <PatientsDrillDown open={drillDown === "patients"} onOpenChange={(v) => !v && setDrillDown(null)} />
+      <SubscriptionsDrillDown open={drillDown === "subscriptions"} onOpenChange={(v) => !v && setDrillDown(null)} />
+      <RevenueDrillDown open={drillDown === "revenue"} onOpenChange={(v) => !v && setDrillDown(null)} />
     </DashboardLayout>
   );
 }
