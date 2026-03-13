@@ -599,6 +599,29 @@ function NutritionistDashboardContent() {
 
   return (
     <div className="space-y-6">
+      {/* Pending Approvals Modal */}
+      <PendingApprovalsModal open={approvalsModalOpen} onOpenChange={setApprovalsModalOpen} />
+
+      {/* Pending approvals banner */}
+      {pendingApprovalsCount > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 cursor-pointer"
+          onClick={() => setApprovalsModalOpen(true)}
+        >
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-amber-500" />
+            <span className="text-sm font-medium">
+              {pendingApprovalsCount} plano{pendingApprovalsCount > 1 ? "s" : ""} pendente{pendingApprovalsCount > 1 ? "s" : ""} de aprovação
+            </span>
+          </div>
+          <Button size="sm" variant="outline">
+            Revisar agora <ArrowRight className="w-4 h-4 ml-1" />
+          </Button>
+        </motion.div>
+      )}
+
       {/* ── Premium Tab Switcher ── */}
       <div className="flex items-center gap-1 glass-premium rounded-xl p-1.5 w-fit">
         {[
