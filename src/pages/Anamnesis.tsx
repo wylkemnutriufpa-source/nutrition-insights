@@ -989,7 +989,18 @@ export default function Anamnesis() {
 
           {step < questions.length - 1 ? (
             <Button
-              onClick={() => setStep((s) => s + 1)}
+              onClick={() => {
+                // Skip conditional time questions when user says "never"
+                const nextStep = step + 1;
+                const nextQ = questions[nextStep];
+                const shouldSkip = (
+                  (nextQ?.id === "morning_snack_time" && answers.has_morning_snack === "never") ||
+                  (nextQ?.id === "afternoon_snack_time" && answers.has_afternoon_snack === "never") ||
+                  (nextQ?.id === "dinner_time" && answers.has_dinner === "never") ||
+                  (nextQ?.id === "supper_time" && answers.has_supper === "never")
+                );
+                setStep(shouldSkip ? nextStep + 1 : nextStep);
+              }}
               disabled={!canNext()}
               className="gradient-primary gap-1 shadow-glow"
             >
@@ -1002,7 +1013,7 @@ export default function Anamnesis() {
               className="gradient-primary gap-2 shadow-glow"
             >
               <Sparkles className="w-4 h-4" />
-              {submitting ? "Salvando..." : "Concluir com IA ✨"}
+              {submitting ? "Salvando..." : "Concluir Anamnese ✨"}
             </Button>
           )}
         </div>
