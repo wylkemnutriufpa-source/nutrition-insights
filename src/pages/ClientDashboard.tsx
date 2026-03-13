@@ -428,6 +428,11 @@ export default function ClientDashboard() {
           <DailyMissionsWidget />
         </motion.div>
 
+        {/* Adherence Evolution Chart */}
+        <motion.div variants={item}>
+          <AdherenceEvolutionChart />
+        </motion.div>
+
         {/* Workout Section - integrated when patient has personal trainer */}
         {workoutInfo.hasPersonal && workoutInfo.recentCompletions.length > 0 && (
           <motion.div variants={item}>
