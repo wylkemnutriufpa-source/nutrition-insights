@@ -1,21 +1,50 @@
 project_id = "vkrcobprntictsxqmjjl"
 
-[functions.analyze-meal]
+# ═══════════════════════════════════════════
+# CORE DETERMINÍSTICO (Motor de Regras)
+# ═══════════════════════════════════════════
+
+[functions.clinical-rule-engine]
 verify_jwt = false
 
-[functions.generate-meal-plan]
+[functions.detect-adherence-patterns]
 verify_jwt = false
 
-[functions.analyze-anamnesis]
+[functions.detect-engagement-signals]
 verify_jwt = false
 
-[functions.autobot-chat]
+[functions.detect-patient-signals]
 verify_jwt = false
 
-[functions.analyze-body]
+[functions.check-patient-alerts]
 verify_jwt = false
 
-[functions.generate-recipe]
+[functions.check-plan-schedules]
+verify_jwt = false
+
+[functions.seed-daily-checklist]
+verify_jwt = false
+
+[functions.biquini-automation]
+verify_jwt = false
+
+[functions.clinical-insights]
+verify_jwt = false
+
+[functions.clinical-decision-support]
+verify_jwt = false
+
+[functions.program-insights]
+verify_jwt = false
+
+[functions.smart-push-notifications]
+verify_jwt = false
+
+# ═══════════════════════════════════════════
+# RELATÓRIOS E PLANOS (Determinístico + AI opcional)
+# ═══════════════════════════════════════════
+
+[functions.generate-weekly-report]
 verify_jwt = false
 
 [functions.generate-report]
@@ -24,19 +53,11 @@ verify_jwt = false
 [functions.generate-meal-plan]
 verify_jwt = false
 
-[functions.generate-weekly-report]
-verify_jwt = false
-
-[functions.check-patient-alerts]
-verify_jwt = false
+# ═══════════════════════════════════════════
+# PAGAMENTOS E WEBHOOKS
+# ═══════════════════════════════════════════
 
 [functions.process-payment]
-verify_jwt = false
-
-[functions.clinical-insights]
-verify_jwt = false
-
-[functions.program-insights]
 verify_jwt = false
 
 [functions.create-checkout]
@@ -46,4 +67,42 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.customer-portal]
+verify_jwt = false
+
+[functions.create-booking-payment]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.affiliate-webhook]
+verify_jwt = false
+
+# ═══════════════════════════════════════════
+# GESTÃO (Determinístico)
+# ═══════════════════════════════════════════
+
+[functions.import-patients]
+verify_jwt = false
+
+[functions.reset-patient-passwords]
+verify_jwt = false
+
+# ═══════════════════════════════════════════
+# PREMIUM AI (Camada opcional de inteligência)
+# ═══════════════════════════════════════════
+
+[functions.analyze-meal]
+verify_jwt = false
+
+[functions.analyze-body]
+verify_jwt = false
+
+[functions.analyze-anamnesis]
+verify_jwt = false
+
+[functions.generate-recipe]
+verify_jwt = false
+
+[functions.autobot-chat]
 verify_jwt = false
