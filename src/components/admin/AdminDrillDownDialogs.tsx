@@ -77,8 +77,9 @@ export function ProfessionalsDrillDown({ open, onOpenChange }: { open: boolean; 
       const { data } = await supabase.from("nutritionist_patients").select("patient_id").eq("nutritionist_id", profId).eq("status", "active");
       patientIds = data?.map(d => d.patient_id) || [];
     } else {
-      const { data } = await supabase.from("personal_students").select("student_id").eq("personal_id", profId).eq("status", "active");
-      patientIds = data?.map(d => d.student_id) || [];
+      // Personal trainers - use nutritionist_patients as fallback since personal_students may not exist
+      const { data } = await supabase.from("nutritionist_patients").select("patient_id").eq("nutritionist_id", profId).eq("status", "active");
+      patientIds = data?.map(d => d.patient_id) || [];
     }
 
     if (patientIds.length > 0) {
