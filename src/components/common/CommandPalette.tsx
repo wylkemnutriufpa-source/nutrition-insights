@@ -218,13 +218,34 @@ export default function CommandPalette() {
         <CommandList>
           <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
 
+          {/* Professionals for admin */}
+          {professionals.length > 0 && (
+            <>
+              <CommandGroup heading="Profissionais">
+                {professionals.map((p) => (
+                  <CommandItem
+                    key={`pro-${p.user_id}`}
+                    value={`profissional ${p.full_name} ${roleLabels[p.role] || p.role}`}
+                    onSelect={() => handleSelect(`/patients/${p.user_id}`)}
+                    className="cursor-pointer"
+                  >
+                    <Shield className="mr-2 h-4 w-4 text-muted-foreground" />
+                    <span>{p.full_name}</span>
+                    <span className="ml-auto text-xs text-muted-foreground">{roleLabels[p.role]}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+              <CommandSeparator />
+            </>
+          )}
+
           {/* Patient results for professionals */}
           {patients.length > 0 && (
             <>
               <CommandGroup heading="Pacientes">
                 {patients.map((p) => (
                   <CommandItem
-                    key={p.user_id}
+                    key={`pat-${p.user_id}`}
                     value={`paciente ${p.full_name}`}
                     onSelect={() => handleSelect(`/patients/${p.user_id}`)}
                     className="cursor-pointer"
