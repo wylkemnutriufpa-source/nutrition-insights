@@ -485,7 +485,7 @@ export default function OnboardingPipeline() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <p className="text-muted-foreground">
-                    Com base nos seus dados, a IA vai gerar um plano alimentar personalizado. Após a geração, o profissional revisará e aprovará.
+                    Com base nos seus dados, o Protocolo FitJourney vai calcular TMB, TDEE e gerar um plano alimentar 100% personalizado. Após a geração, o profissional revisará e aprovará.
                   </p>
                   <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                     <div className="flex justify-between text-sm"><span>Peso:</span><span className="font-medium">{pipeline.weight} kg</span></div>
