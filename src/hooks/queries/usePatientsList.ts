@@ -101,16 +101,11 @@ export function usePatientsList() {
 
       const patientIds = data.map(p => p.patient_id);
 
+      // BATCH queries instead of N+1 per patient (6 parallel queries total, not 3*N+3)
       const [profilesRes, statsRes, checklistRes, enrollmentsRes, prestigeRes, pPlansRes] = await Promise.all([
-        Promise.all(patientIds.map(id =>
-          supabase.from("profiles").select("full_name, avatar_url").eq("user_id", id).single()
-        )),
-        Promise.all(patientIds.map(id =>
-          supabase.from("player_stats").select("last_meal_date, total_xp, current_streak").eq("user_id", id).single()
-        )),
-        Promise.all(patientIds.map(id =>
-          supabase.from("checklist_tasks").select("id, completed").eq("patient_id", id).eq("date", today)
-        )),
+        supabase.from("profiles").select("user_id, full_name, avatar_url").in("user_id", patientIds),
+        supabase.from("player_stats").select("user_id, last_meal_date, total_xp, current_streak").in("user_id", patientIds),
+        supabase.from("checklist_tasks").select("patient_id, id, completed").in("patient_id", patientIds).eq("date", today),
         supabase.from("program_patients")
           .select("patient_id, program_id, programs(id, title)")
           .eq("status", "active")
@@ -121,6 +116,27 @@ export function usePatientsList() {
           .in("patient_id", patientIds),
         supabase.from("prestige_plans").select("*").eq("is_active", true).order("display_order"),
       ]);
+
+      // Build profile map by user_id
+      const profileMap = new Map<string, { full_name: string; avatar_url: string | null }>();
+      (profilesRes.data || []).forEach((p: any) => {
+        profileMap.set(p.user_id, { full_name: p.full_name, avatar_url: p.avatar_url });
+      });
+
+      // Build stats map by user_id
+      const statsMap = new Map<string, any>();
+      (statsRes.data || []).forEach((s: any) => {
+        statsMap.set(s.user_id, { last_meal_date: s.last_meal_date, total_xp: s.total_xp, current_streak: s.current_streak });
+      });
+
+      // Build checklist map by patient_id -> { total, completed }
+      const checklistMap = new Map<string, { total: number; completed: number }>();
+      (checklistRes.data || []).forEach((t: any) => {
+        const entry = checklistMap.get(t.patient_id) || { total: 0, completed: 0 };
+        entry.total += 1;
+        if (t.completed) entry.completed += 1;
+        checklistMap.set(t.patient_id, entry);
+      });
 
       // Build prestige map
       const prestigeMap = new Map<string, PrestigePlan>();
@@ -146,18 +162,17 @@ export function usePatientsList() {
         enrollmentMap.set(e.patient_id, list);
       });
 
-      const enriched: PatientInfo[] = data.map((p, i) => {
-        const checkTasks = checklistRes[i]?.data || [];
-        const total = checkTasks.length;
-        const completed = checkTasks.filter((t: any) => t.completed).length;
-        const adherence = total > 0 ? Math.round((completed / total) * 100) : 0;
-        const profile = profilesRes[i]?.data;
+      const enriched: PatientInfo[] = data.map((p) => {
+        const checkData = checklistMap.get(p.patient_id) || { total: 0, completed: 0 };
+        const adherence = checkData.total > 0 ? Math.round((checkData.completed / checkData.total) * 100) : 0;
+        const profile = profileMap.get(p.patient_id);
+        const stats = statsMap.get(p.patient_id);
         return {
           ...p,
           profile: profile && profile.full_name ? profile : { full_name: "Paciente sem nome", avatar_url: null },
-          stats: statsRes[i]?.data,
+          stats: stats || null,
           checklistAdherence: adherence,
-          priorityScore: computeScore(statsRes[i]?.data, { total, completed }),
+          priorityScore: computeScore(stats, checkData),
           programs: enrollmentMap.get(p.patient_id) || [],
           prestigePlan: prestigeMap.get(p.patient_id) || null,
         };
