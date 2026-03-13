@@ -25,6 +25,8 @@ import BiquiniEnrollmentStatus from "@/components/biquini/BiquiniEnrollmentStatu
 import BiquiniOnboardingWizard from "@/components/biquini/BiquiniOnboardingWizard";
 import { DailyMissionsWidget } from "@/components/gamification/DailyMissionsWidget";
 import { AdherenceEvolutionChart } from "@/components/gamification/AdherenceEvolutionChart";
+import { JourneyTimelineFeed } from "@/components/gamification/JourneyTimelineFeed";
+import { MomentumIndicator } from "@/components/gamification/MomentumIndicator";
 
 interface ProgramInfo {
   id: string;
