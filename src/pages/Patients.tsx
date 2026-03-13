@@ -565,7 +565,7 @@ export default function Patients() {
     setBulkManageOpen(false);
   };
 
-
+  const removeFromProgram = (patientId: string, programId: string, programTitle: string) => {
     const isBiquini = programTitle.toLowerCase().includes("biqu");
     if (isBiquini) {
       const pwd = prompt("🔒 Projeto protegido!\nDigite a senha do administrador para remover:");
