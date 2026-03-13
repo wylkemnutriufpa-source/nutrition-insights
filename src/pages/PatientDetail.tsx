@@ -1018,6 +1018,54 @@ export default function PatientDetail() {
                   <OnboardingApprovalQueue patientId={patientId!} patientName={profile?.full_name || "Paciente"} />
                 </DialogContent>
               </Dialog>
+
+              {/* Edit Profile Modal */}
+              <Dialog open={openSection === "edit-profile"} onOpenChange={(v) => {
+                if (!v) setOpenSection(null);
+                else {
+                  setEditProfileForm({
+                    full_name: profile?.full_name || "",
+                    phone: profile?.phone || "",
+                  });
+                }
+              }}>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="font-display flex items-center gap-2">
+                      <Pencil className="w-5 h-5 text-info" /> Editar Cadastro
+                    </DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleSaveProfile} className="space-y-4">
+                    <div>
+                      <Label>Nome Completo</Label>
+                      <Input
+                        value={editProfileForm.full_name}
+                        onChange={(e) => setEditProfileForm({ ...editProfileForm, full_name: e.target.value })}
+                        placeholder="Nome do paciente"
+                        required
+                        maxLength={100}
+                      />
+                    </div>
+                    <div>
+                      <Label>Telefone</Label>
+                      <Input
+                        value={editProfileForm.phone}
+                        onChange={(e) => setEditProfileForm({ ...editProfileForm, phone: e.target.value })}
+                        placeholder="(99) 99999-9999"
+                        maxLength={20}
+                      />
+                    </div>
+                    <div>
+                      <Label>Email</Label>
+                      <Input value={patientEmail} disabled className="bg-muted" />
+                      <p className="text-xs text-muted-foreground mt-1">O email não pode ser alterado por aqui.</p>
+                    </div>
+                    <Button type="submit" className="w-full" disabled={savingProfile || !editProfileForm.full_name.trim()}>
+                      {savingProfile ? "Salvando..." : "Salvar Alterações"}
+                    </Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </>
           );
         })()}
