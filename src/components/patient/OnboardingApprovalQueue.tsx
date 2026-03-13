@@ -326,45 +326,86 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
           <div className="space-y-4 border-t pt-4">
             <p className="text-sm font-medium">Pré-plano gerado pelo Protocolo FitJourney. Revise e decida:</p>
 
-            {/* Explainability Panel */}
-            {pipeline.generated_plan_data?.explainability && (
-              <div className="bg-muted/50 rounded-lg p-4 space-y-3 text-sm">
-                <p className="font-semibold flex items-center gap-2">
-                  <Target className="w-4 h-4 text-primary" /> Base da Sugestão
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <div><span className="text-muted-foreground">Objetivo:</span> <strong>{pipeline.generated_plan_data.explainability.patient_profile?.goal}</strong></div>
-                  <div><span className="text-muted-foreground">TMB:</span> <strong>{pipeline.generated_plan_data.explainability.calculation?.tmb} kcal</strong></div>
-                  <div><span className="text-muted-foreground">TDEE:</span> <strong>{pipeline.generated_plan_data.explainability.calculation?.tdee} kcal</strong></div>
-                  <div><span className="text-muted-foreground">Meta:</span> <strong>{pipeline.generated_plan_data.explainability.calculation?.final_kcal} kcal/dia</strong></div>
-                  <div><span className="text-muted-foreground">Proteína:</span> <strong>{pipeline.generated_plan_data.explainability.macros?.protein}g</strong></div>
-                  <div><span className="text-muted-foreground">Carboidratos:</span> <strong>{pipeline.generated_plan_data.explainability.macros?.carbs}g</strong></div>
-                  <div><span className="text-muted-foreground">Gordura:</span> <strong>{pipeline.generated_plan_data.explainability.macros?.fat}g</strong></div>
-                  <div><span className="text-muted-foreground">Fonte:</span> <strong>{pipeline.generated_plan_data.explainability.calculation?.data_source === "physical_assessment" ? "Avaliação Física" : "Anamnese"}</strong></div>
-                </div>
-                {pipeline.generated_plan_data.explainability.patient_profile?.restrictions?.length > 0 && 
-                 pipeline.generated_plan_data.explainability.patient_profile.restrictions[0] !== "nenhuma" && (
-                  <div><span className="text-muted-foreground">Restrições:</span> <strong>{pipeline.generated_plan_data.explainability.patient_profile.restrictions.join(", ")}</strong></div>
-                )}
-                <div className="border-t pt-2">
-                  <p className="text-xs text-muted-foreground mb-1">Template selecionado:</p>
-                  <Badge variant="secondary">{pipeline.generated_plan_data.explainability.selected_template?.name} (Score: {pipeline.generated_plan_data.explainability.selected_template?.score})</Badge>
-                  {pipeline.generated_plan_data.explainability.selected_template?.reasons?.map((r: string, i: number) => (
-                    <span key={i} className="text-xs text-muted-foreground block">✓ {r}</span>
-                  ))}
-                </div>
-                {pipeline.generated_plan_data.explainability.alternative_templates?.length > 0 && (
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Alternativas:</p>
-                    <div className="flex gap-1 flex-wrap">
-                      {pipeline.generated_plan_data.explainability.alternative_templates.map((t: any) => (
-                        <Badge key={t.slug} variant="outline" className="text-xs">{t.name} ({t.score}pts)</Badge>
-                      ))}
-                    </div>
+             {/* Explainability Panel */}
+            {pipeline.generated_plan_data?.explainability && (() => {
+              const ex = pipeline.generated_plan_data.explainability;
+              const calc = ex.calculation || {};
+              const profile = ex.patient_profile || {};
+              const macros = ex.macros || {};
+              const selected = ex.selected_template || {};
+              const alts = ex.alternative_templates || [];
+              return (
+                <div className="bg-muted/50 rounded-lg p-4 space-y-3 text-sm">
+                  <p className="font-semibold flex items-center gap-2">
+                    <Target className="w-4 h-4 text-primary" /> Base da Sugestão
+                  </p>
+                  <div className="text-[10px] text-muted-foreground">
+                    Motor v{ex.engine_version || "?"} • Protocolo {ex.protocol_version || "?"}
                   </div>
-                )}
-              </div>
-            )}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <div><span className="text-muted-foreground">Objetivo:</span> <strong>{profile.goal}</strong></div>
+                    <div><span className="text-muted-foreground">Estratégia:</span> <strong>{profile.goal_strategy || "—"}</strong></div>
+                    <div><span className="text-muted-foreground">Fórmula:</span> <strong>{calc.bmr_formula || "mifflin"}</strong></div>
+                    <div><span className="text-muted-foreground">TMB:</span> <strong>{calc.tmb} kcal</strong></div>
+                    <div><span className="text-muted-foreground">Fator TDEE:</span> <strong>×{calc.tdee_factor}</strong></div>
+                    <div><span className="text-muted-foreground">TDEE:</span> <strong>{calc.tdee} kcal</strong></div>
+                    <div><span className="text-muted-foreground">Ajuste:</span> <strong>{calc.goal_adjustment > 0 ? "+" : ""}{calc.goal_adjustment} kcal</strong></div>
+                    <div><span className="text-muted-foreground">Meta Final:</span> <strong className="text-primary">{calc.final_kcal} kcal/dia</strong></div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 border-t pt-2">
+                    <div className="text-center p-2 rounded bg-background"><span className="text-muted-foreground text-xs">Proteína</span><br/><strong>{macros.protein}g</strong></div>
+                    <div className="text-center p-2 rounded bg-background"><span className="text-muted-foreground text-xs">Carboidratos</span><br/><strong>{macros.carbs}g</strong></div>
+                    <div className="text-center p-2 rounded bg-background"><span className="text-muted-foreground text-xs">Gordura</span><br/><strong>{macros.fat}g</strong></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div><span className="text-muted-foreground">Fonte dados:</span> <strong>{calc.data_source === "physical_assessment" ? "Avaliação Física" : "Anamnese"}</strong></div>
+                    <div><span className="text-muted-foreground">Nível atividade:</span> <strong>{profile.activity_level}</strong></div>
+                  </div>
+                  {profile.restrictions?.length > 0 && profile.restrictions[0] !== "nenhuma" && (
+                    <div><span className="text-muted-foreground">Restrições:</span> <strong>{profile.restrictions.join(", ")}</strong></div>
+                  )}
+                  {profile.medical_conditions?.length > 0 && profile.medical_conditions[0] !== "nenhuma" && (
+                    <div><span className="text-muted-foreground">Condições clínicas:</span> <strong>{profile.medical_conditions.join(", ")}</strong></div>
+                  )}
+
+                  {/* Template Selection with Score Breakdown */}
+                  <div className="border-t pt-2 space-y-2">
+                    <p className="text-xs text-muted-foreground mb-1">Template selecionado:</p>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">{selected.name} ({selected.base_calories}kcal)</Badge>
+                      <Badge variant="outline">Score: {selected.score}</Badge>
+                    </div>
+                    {selected.score_breakdown && (
+                      <div className="grid grid-cols-3 sm:grid-cols-5 gap-1 text-[10px]">
+                        <span className="bg-background rounded px-1.5 py-0.5">Objetivo: {selected.score_breakdown.goal_match}</span>
+                        <span className="bg-background rounded px-1.5 py-0.5">Restrição: {selected.score_breakdown.restriction_match}</span>
+                        <span className="bg-background rounded px-1.5 py-0.5">Calorias: {selected.score_breakdown.calorie_match}</span>
+                        <span className="bg-background rounded px-1.5 py-0.5">Clínico: {selected.score_breakdown.clinical_match}</span>
+                        <span className="bg-background rounded px-1.5 py-0.5">Preferência: {selected.score_breakdown.preference_match}</span>
+                      </div>
+                    )}
+                    {selected.reasons?.map((r: string, i: number) => (
+                      <span key={i} className="text-xs text-muted-foreground block">✓ {r}</span>
+                    ))}
+                  </div>
+
+                  {/* Alternatives with score breakdown */}
+                  {alts.length > 0 && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Alternativas ranqueadas:</p>
+                      <div className="space-y-1">
+                        {alts.map((t: any, i: number) => (
+                          <div key={t.slug || i} className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs">{t.name} ({t.base_calories}kcal)</Badge>
+                            <span className="text-xs text-muted-foreground">{t.score}pts</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Link to edit */}
             {pipeline.generated_plan_id && (
