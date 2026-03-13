@@ -49,7 +49,7 @@ export default function ProtocolFitJourneyToggle() {
 
   async function fetchSettings() {
     const { data } = await supabase
-      .from("protocol_master_settings" as any)
+      .from("protocol_master_settings")
       .select("*")
       .eq("nutritionist_id", user!.id)
       .maybeSingle();
@@ -72,12 +72,12 @@ export default function ProtocolFitJourneyToggle() {
   async function handleSave() {
     if (!user) return;
     setSaving(true);
-    const payload = { ...settings, nutritionist_id: user.id, updated_at: new Date().toISOString() } as any;
+    const payload = { ...settings, nutritionist_id: user.id, updated_at: new Date().toISOString() };
 
     if (hasRecord) {
-      await supabase.from("protocol_master_settings" as any).update(payload).eq("nutritionist_id", user.id);
+      await supabase.from("protocol_master_settings").update(payload).eq("nutritionist_id", user.id);
     } else {
-      await supabase.from("protocol_master_settings" as any).insert(payload);
+      await supabase.from("protocol_master_settings").insert(payload);
       setHasRecord(true);
     }
     toast.success("Protocolo FitJourney salvo!");
