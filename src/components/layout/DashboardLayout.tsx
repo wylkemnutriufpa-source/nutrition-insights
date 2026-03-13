@@ -1,5 +1,6 @@
 import { ReactNode, useEffect } from "react";
 import OfflineSyncBanner from "@/components/common/OfflineSyncBanner";
+import SmartResumeModal from "@/components/common/SmartResumeModal";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
