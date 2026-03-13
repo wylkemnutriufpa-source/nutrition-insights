@@ -25,6 +25,8 @@ import BiquiniEnrollmentStatus from "@/components/biquini/BiquiniEnrollmentStatu
 import BiquiniOnboardingWizard from "@/components/biquini/BiquiniOnboardingWizard";
 import { DailyMissionsWidget } from "@/components/gamification/DailyMissionsWidget";
 import { AdherenceEvolutionChart } from "@/components/gamification/AdherenceEvolutionChart";
+import { JourneyTimelineFeed } from "@/components/gamification/JourneyTimelineFeed";
+import { MomentumIndicator } from "@/components/gamification/MomentumIndicator";
 
 interface ProgramInfo {
   id: string;
@@ -308,6 +310,11 @@ export default function ClientDashboard() {
           </motion.div>
         )}
 
+        {/* Momentum Indicator */}
+        <motion.div variants={item}>
+          <MomentumIndicator variant="card" />
+        </motion.div>
+
         {/* Nutritionist Status Banner */}
         <motion.div variants={item}>
           <NutritionistStatusBanner patientId={user?.id} />
@@ -431,6 +438,11 @@ export default function ClientDashboard() {
         {/* Adherence Evolution Chart */}
         <motion.div variants={item}>
           <AdherenceEvolutionChart />
+        </motion.div>
+
+        {/* Journey Timeline Feed */}
+        <motion.div variants={item}>
+          <JourneyTimelineFeed compact />
         </motion.div>
 
         {/* Workout Section - integrated when patient has personal trainer */}

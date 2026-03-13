@@ -2048,6 +2048,45 @@ export type Database = {
           },
         ]
       }
+      patient_journey_events: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          event_type: string
+          icon: string | null
+          id: string
+          is_highlight: boolean | null
+          metadata: Json | null
+          patient_id: string
+          title: string
+          xp_earned: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          event_type: string
+          icon?: string | null
+          id?: string
+          is_highlight?: boolean | null
+          metadata?: Json | null
+          patient_id: string
+          title: string
+          xp_earned?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          event_type?: string
+          icon?: string | null
+          id?: string
+          is_highlight?: boolean | null
+          metadata?: Json | null
+          patient_id?: string
+          title?: string
+          xp_earned?: number | null
+        }
+        Relationships: []
+      }
       patient_missions: {
         Row: {
           completed_at: string | null
