@@ -593,6 +593,7 @@ function NutritionistDashboardContent() {
           { key: "clinical", icon: Heart, label: "Clínico" },
           { key: "analytics", icon: BarChart3, label: "Analytics" },
           { key: "strategy", icon: Brain, label: "IA Estratégica" },
+          { key: "risk", icon: Shield, label: "Risco Clínico" },
         ].map((tab) => (
           <button
             key={tab.key}
@@ -619,6 +620,8 @@ function NutritionistDashboardContent() {
         <AnalyticsDashboard />
       ) : activeTab === "strategy" ? (
         <AIStrategyCenter />
+      ) : activeTab === "risk" ? (
+        <ClinicalRiskDashboardContent />
       ) : (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
       {/* ── Premium Header ── */}
