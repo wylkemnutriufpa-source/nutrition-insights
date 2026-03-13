@@ -4573,6 +4573,42 @@ export type Database = {
           },
         ]
       }
+      user_activity_log: {
+        Row: {
+          action_type: string
+          created_at: string
+          id: string
+          is_complete: boolean
+          metadata: Json | null
+          route: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          id?: string
+          is_complete?: boolean
+          metadata?: Json | null
+          route: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          id?: string
+          is_complete?: boolean
+          metadata?: Json | null
+          route?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_challenges: {
         Row: {
           challenge_id: string
@@ -4681,6 +4717,27 @@ export type Database = {
         Update: {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_sessions: {
+        Row: {
+          last_resume_shown_at: string | null
+          last_seen_at: string
+          session_count: number
+          user_id: string
+        }
+        Insert: {
+          last_resume_shown_at?: string | null
+          last_seen_at?: string
+          session_count?: number
+          user_id: string
+        }
+        Update: {
+          last_resume_shown_at?: string | null
+          last_seen_at?: string
+          session_count?: number
           user_id?: string
         }
         Relationships: []
@@ -5008,6 +5065,7 @@ export type Database = {
         Args: { _feature_key: string; _plan_tier?: string; _user_id: string }
         Returns: Json
       }
+      check_and_update_session: { Args: never; Returns: Json }
       check_rate_limit: {
         Args: {
           _client_key: string
@@ -5104,6 +5162,16 @@ export type Database = {
           _metadata?: Json
           _resource_id?: string
           _resource_type: string
+        }
+        Returns: undefined
+      }
+      log_user_activity: {
+        Args: {
+          _action_type: string
+          _is_complete?: boolean
+          _metadata?: Json
+          _route: string
+          _title: string
         }
         Returns: undefined
       }

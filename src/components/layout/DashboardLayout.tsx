@@ -1,5 +1,6 @@
 import { ReactNode, useEffect } from "react";
 import OfflineSyncBanner from "@/components/common/OfflineSyncBanner";
+import SmartResumeModal from "@/components/common/SmartResumeModal";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -357,6 +358,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <div className="min-h-screen bg-background particles-bg">
         <CommandPalette />
         <OnboardingWizard />
+        <SmartResumeModal />
         {/* Mobile Top Bar */}
         <div className="fixed top-0 left-0 right-0 z-50 h-14 glass-premium border-b border-border/50 flex items-center justify-between px-4">
           <div className="flex items-center gap-3">
@@ -425,6 +427,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     <div className="min-h-screen flex bg-background particles-bg">
       <CommandPalette />
       <OnboardingWizard />
+      <SmartResumeModal />
       {/* Desktop Sidebar */}
       <motion.aside
         initial={false}
