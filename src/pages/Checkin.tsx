@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useFormDraft } from "@/hooks/useFormDraft";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -48,6 +49,26 @@ export default function Checkin() {
   const [previewFront, setPreviewFront] = useState<string | null>(null);
   const [previewSide, setPreviewSide] = useState<string | null>(null);
   const [previewBack, setPreviewBack] = useState<string | null>(null);
+
+  // Draft persistence
+  const { loadDraft, saveDraft, clearDraft, hasDraft } = useFormDraft<{ weight: string; feedback: string; difficulty: string }>(
+    `checkin_${user?.id || "anon"}`
+  );
+
+  // Restore draft on mount
+  useEffect(() => {
+    const draft = loadDraft();
+    if (draft) {
+      if (draft.weight) setWeight(draft.weight);
+      if (draft.feedback) setFeedback(draft.feedback);
+      if (draft.difficulty) setDifficulty(draft.difficulty);
+    }
+  }, [loadDraft]);
+
+  // Auto-save on changes
+  useEffect(() => {
+    saveDraft({ weight, feedback, difficulty });
+  }, [weight, feedback, difficulty, saveDraft]);
 
   useEffect(() => {
     if (!user) return;
@@ -132,6 +153,7 @@ export default function Checkin() {
       if (error) throw error;
 
       toast.success("Check-in enviado! Seu nutricionista irá revisar.");
+      clearDraft();
       // Reset form
       setWeight("");
       setFeedback("");

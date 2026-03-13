@@ -77,7 +77,7 @@ export default function PatientDetail() {
     protocol_id: "",
     start_date: new Date().toISOString().split("T")[0],
     end_date: "",
-    status: "active",
+    status: "active" as "active" | "paused" | "completed" | "cancelled",
   });
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteForm, setNoteForm] = useState({ title: "", description: "", event_type: "note" });
@@ -453,7 +453,7 @@ export default function PatientDetail() {
                   </div>
                   <div>
                     <Label>Status</Label>
-                    <Select value={activateForm.status} onValueChange={(v) => setActivateForm({ ...activateForm, status: v })}>
+                    <Select value={activateForm.status} onValueChange={(v) => setActivateForm({ ...activateForm, status: v as "active" | "paused" | "completed" | "cancelled" })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="active">🟢 Ativo agora</SelectItem>

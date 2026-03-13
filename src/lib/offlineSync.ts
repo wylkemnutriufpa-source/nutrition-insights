@@ -4,11 +4,12 @@ const QUEUE_KEY = "fitjourney_offline_queue";
 const SYNC_STATUS_KEY = "fitjourney_sync_status";
 
 export interface OfflineAction {
-  type: "checklist_toggle" | "meal_completion";
+  type: "checklist_toggle" | "meal_completion" | "chat_message";
   table: string;
   id: string;
   data: Record<string, any>;
   timestamp: number;
+  tempId?: string; // For optimistic UI (chat)
 }
 
 export type SyncStatus = "idle" | "syncing" | "error" | "offline";
@@ -18,8 +19,10 @@ class OfflineQueue {
 
   add(action: OfflineAction) {
     const queue = this.getQueue();
-    // Dedup by type+id (keep latest)
-    const filtered = queue.filter(a => !(a.type === action.type && a.id === action.id));
+    // Dedup by type+id (keep latest) — but NOT for chat_message (each is unique)
+    const filtered = action.type === "chat_message"
+      ? queue
+      : queue.filter(a => !(a.type === action.type && a.id === action.id));
     filtered.push(action);
     localStorage.setItem(QUEUE_KEY, JSON.stringify(filtered));
     this.notify("offline", filtered.length);
@@ -35,6 +38,10 @@ class OfflineQueue {
 
   getPendingCount(): number {
     return this.getQueue().length;
+  }
+
+  getPendingChatMessages(): OfflineAction[] {
+    return this.getQueue().filter(a => a.type === "chat_message");
   }
 
   subscribe(cb: (status: SyncStatus, pending: number) => void) {
@@ -68,6 +75,30 @@ class OfflineQueue {
           const { error } = await supabase
             .from("meal_item_completions")
             .upsert(action.data as any);
+          if (error) throw error;
+        } else if (action.type === "chat_message") {
+          // Check if already sent (dedup by tempId)
+          if (action.tempId) {
+            const { data: existing } = await supabase
+              .from("chat_messages")
+              .select("id")
+              .eq("sender_id", action.data.sender_id)
+              .eq("receiver_id", action.data.receiver_id)
+              .eq("message", action.data.message)
+              .gte("created_at", new Date(action.timestamp - 60000).toISOString())
+              .limit(1);
+            if (existing && existing.length > 0) {
+              synced++;
+              continue; // Already sent, skip
+            }
+          }
+          const { error } = await supabase
+            .from("chat_messages")
+            .insert({
+              sender_id: action.data.sender_id,
+              receiver_id: action.data.receiver_id,
+              message: action.data.message,
+            });
           if (error) throw error;
         }
         synced++;
