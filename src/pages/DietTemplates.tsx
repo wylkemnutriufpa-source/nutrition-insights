@@ -146,14 +146,18 @@ export default function DietTemplates() {
 
   const fetchPhysicalAssessment = async () => {
     if (!patientId) return;
-    const { data } = await supabase
-      .from("physical_assessments" as any)
-      .select("calories_target, protein_target, carbs_target, fat_target, tdee, bmr, assessment_date")
-      .eq("patient_id", patientId)
-      .order("assessment_date", { ascending: false })
-      .limit(1)
-      .single();
-    if (data) setPhysicalAssessment(data as any);
+    try {
+      const { data } = await supabase
+        .from("physical_assessments")
+        .select("calories_target, protein_target, carbs_target, fat_target, tdee, bmr, assessment_date")
+        .eq("patient_id", patientId)
+        .order("assessment_date", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data) setPhysicalAssessment(data as any);
+    } catch (e) {
+      console.warn("[DietTemplates] fetchPhysicalAssessment error:", e);
+    }
   };
 
   const fetchTemplates = async () => {
@@ -177,25 +181,33 @@ export default function DietTemplates() {
 
   const fetchAnamnesis = async () => {
     if (!patientId) return;
-    const { data } = await supabase
-      .from("patient_anamnesis")
-      .select("computed_kcal_target, computed_protein, computed_carbs, computed_fat, answers")
-      .eq("user_id", patientId)
-      .eq("status", "completed")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
-    if (data) setAnamnesis(data as any);
+    try {
+      const { data } = await supabase
+        .from("patient_anamnesis")
+        .select("computed_kcal_target, computed_protein, computed_carbs, computed_fat, answers")
+        .eq("user_id", patientId)
+        .eq("status", "completed")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data) setAnamnesis(data as any);
+    } catch (e) {
+      console.warn("[DietTemplates] fetchAnamnesis error:", e);
+    }
   };
 
   const fetchPatientName = async () => {
     if (!patientId) return;
-    const { data } = await supabase
-      .from("profiles")
-      .select("full_name")
-      .eq("user_id", patientId)
-      .single();
-    if (data) setPatientName(data.full_name);
+    try {
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("user_id", patientId)
+        .maybeSingle();
+      if (data) setPatientName(data.full_name);
+    } catch (e) {
+      console.warn("[DietTemplates] fetchPatientName error:", e);
+    }
   };
 
   const filtered = useMemo(() => {
