@@ -47,10 +47,6 @@ export default function ProtocolFitJourneyToggle() {
 
   if (!isNutritionist) return null;
 
-  useEffect(() => {
-    if (user) fetchSettings();
-  }, [user]);
-
   async function fetchSettings() {
     const { data } = await supabase
       .from("protocol_master_settings" as any)
