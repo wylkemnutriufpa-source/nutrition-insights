@@ -68,49 +68,34 @@ function PatientDashboardContent() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [stats, setStats] = useState<PlayerStats | null>(null);
-  const [checklistTasks, setChecklistTasks] = useState<any[]>([]);
-  const [anamnesis, setAnamnesis] = useState<any>(null);
   const [showAnamnesisModal, setShowAnamnesisModal] = useState(false);
-  const [nextAppointment, setNextAppointment] = useState<any>(null);
-  const [recentMeals, setRecentMeals] = useState<any[]>([]);
-  const [unreadMessages, setUnreadMessages] = useState(0);
 
+  const { data: dashData, isLoading: dashLoading } = usePatientDashboard();
+
+  const stats = dashData?.stats ?? null;
+  const checklistTasks = dashData?.checklistTasks ?? [];
+  const anamnesis = dashData?.anamnesis ?? null;
+  const nextAppointment = dashData?.nextAppointment ?? null;
+  const recentMeals = dashData?.recentMeals ?? [];
+  const unreadMessages = dashData?.unreadMessages ?? 0;
+
+  // Show anamnesis modal if no anamnesis after data loads
   useEffect(() => {
-    if (!user) return;
-    const today = new Date().toISOString().split("T")[0];
+    if (!dashLoading && !anamnesis) setShowAnamnesisModal(true);
+  }, [dashLoading, anamnesis]);
 
-    Promise.all([
-      supabase.from("player_stats").select("*").eq("user_id", user.id).single(),
-      supabase.from("checklist_tasks").select("*").eq("patient_id", user.id).eq("date", today).order("category"),
-      supabase.from("patient_anamnesis").select("*").eq("user_id", user.id).eq("status", "completed").order("created_at", { ascending: false }).limit(1),
-      supabase.from("patient_appointments").select("*").eq("patient_id", user.id).gte("appointment_date", new Date().toISOString()).order("appointment_date").limit(1),
-      supabase.from("meals").select("*").eq("user_id", user.id).order("logged_at", { ascending: false }).limit(3),
-      supabase.from("chat_messages").select("id", { count: "exact", head: true }).eq("receiver_id", user.id).eq("is_read", false),
-    ]).then(([statsRes, checkRes, anamRes, aptRes, mealsRes, msgRes]) => {
-      setStats(statsRes.data);
-      setChecklistTasks(checkRes.data || []);
-      const anam = anamRes.data?.[0] || null;
-      setAnamnesis(anam);
-      if (!anam) setShowAnamnesisModal(true);
-      setNextAppointment(aptRes.data?.[0] || null);
-      setRecentMeals(mealsRes.data || []);
-      setUnreadMessages(msgRes.count || 0);
-    });
-  }, [user]);
-
-  const completedTasks = checklistTasks.filter((t) => t.completed).length;
+  const completedTasks = checklistTasks.filter((t: any) => t.completed).length;
   const checklistProgress = checklistTasks.length > 0 ? (completedTasks / checklistTasks.length) * 100 : 0;
 
+  const queryClient = useQueryClient();
   const toggleTask = async (task: any) => {
     const newCompleted = !task.completed;
     await supabase.from("checklist_tasks").update({
       completed: newCompleted,
       completed_at: newCompleted ? new Date().toISOString() : null,
     }).eq("id", task.id);
-    setChecklistTasks((prev) =>
-      prev.map((t) => t.id === task.id ? { ...t, completed: newCompleted } : t)
-    );
+    // Invalidate dashboard cache to reflect change
+    queryClient.invalidateQueries({ queryKey: ["dashboard", "patient"] });
   };
 
   return (
