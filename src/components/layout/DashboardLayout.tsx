@@ -548,14 +548,17 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
 
+        {/* Offline sync banner */}
+        <OfflineSyncBanner />
+
         {/* Main content */}
         <main className="pt-14">
           <motion.div
             key={location.pathname}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25 }}
-            className="p-4 max-w-7xl mx-auto"
+            transition={{ duration: 0.2 }}
+            className="p-3 sm:p-4 max-w-7xl mx-auto pb-20"
           >
             {children}
           </motion.div>
