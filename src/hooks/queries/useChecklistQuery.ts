@@ -1,0 +1,91 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { queryKeys } from "./queryKeys";
+import { toast } from "sonner";
+import { offlineQueue } from "@/lib/offlineSync";
+
+export interface ChecklistTask {
+  id: string;
+  title: string;
+  description: string | null;
+  icon: string;
+  category: string;
+  completed: boolean;
+  completed_at: string | null;
+  date: string;
+}
+
+export function useChecklistTasks(date: string) {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: queryKeys.checklist.tasks(user?.id ?? "", date),
+    enabled: !!user,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("checklist_tasks")
+        .select("*")
+        .eq("patient_id", user!.id)
+        .eq("date", date)
+        .order("category")
+        .order("created_at");
+      return (data || []) as ChecklistTask[];
+    },
+  });
+}
+
+export function useToggleChecklistTask() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ task, date }: { task: ChecklistTask; date: string }) => {
+      const newCompleted = !task.completed;
+      const update = {
+        completed: newCompleted,
+        completed_at: newCompleted ? new Date().toISOString() : null,
+      };
+
+      if (!navigator.onLine) {
+        // Queue for later sync
+        offlineQueue.add({
+          type: "checklist_toggle",
+          table: "checklist_tasks",
+          id: task.id,
+          data: update,
+          timestamp: Date.now(),
+        });
+        return { ...task, ...update };
+      }
+
+      const { error } = await supabase
+        .from("checklist_tasks")
+        .update(update)
+        .eq("id", task.id);
+      if (error) throw error;
+      return { ...task, ...update };
+    },
+    onMutate: async ({ task, date }) => {
+      // Optimistic update
+      const key = queryKeys.checklist.tasks(user?.id ?? "", date);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<ChecklistTask[]>(key);
+      queryClient.setQueryData<ChecklistTask[]>(key, (old) =>
+        (old || []).map((t) =>
+          t.id === task.id
+            ? { ...t, completed: !t.completed, completed_at: !t.completed ? new Date().toISOString() : null }
+            : t
+        )
+      );
+      return { previous, key };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(context.key, context.previous);
+      }
+      if (navigator.onLine) toast.error("Erro ao atualizar tarefa");
+    },
+  });
+}
