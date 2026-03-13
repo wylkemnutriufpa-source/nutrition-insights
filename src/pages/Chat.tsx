@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -6,117 +6,31 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, Send, ArrowLeft, Check, CheckCheck, Image as ImageIcon } from "lucide-react";
+import { MessageSquare, Send, ArrowLeft, Check, CheckCheck } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import NutritionistStatusIndicator from "@/components/chat/NutritionistStatusIndicator";
 import QuickReplySuggestions from "@/components/chat/QuickReplySuggestions";
-
-interface ChatContact {
-  user_id: string;
-  full_name: string;
-  unread: number;
-  last_message?: string;
-  last_time?: string;
-  is_online?: boolean;
-}
-
-interface Message {
-  id: string;
-  sender_id: string;
-  receiver_id: string;
-  message: string;
-  is_read: boolean;
-  created_at: string;
-  image_url?: string | null;
-}
+import { useChatContacts, useChatMessages, useSendMessage } from "@/hooks/queries";
+import type { Message } from "@/hooks/queries/useChatQuery";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/hooks/queries/queryKeys";
 
 export default function Chat() {
   const { user, isNutritionist, isPatient } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedId = searchParams.get("with");
-
-  const [contacts, setContacts] = useState<ChatContact[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [selectedName, setSelectedName] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
 
-  // Load contacts
-  useEffect(() => {
-    if (!user) return;
-    const loadContacts = async () => {
-      const { data: links } = await supabase.from("nutritionist_patients")
-        .select("nutritionist_id, patient_id").eq("status", "active")
-        .or(`nutritionist_id.eq.${user.id},patient_id.eq.${user.id}`);
-      if (!links?.length) return;
+  const { data: contacts = [], isLoading: contactsLoading } = useChatContacts();
+  const { data: messages = [], isLoading: messagesLoading } = useChatMessages(selectedId);
+  const sendMutation = useSendMessage();
 
-      const otherIds = links.map(l => l.nutritionist_id === user.id ? l.patient_id : l.nutritionist_id);
-      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", otherIds);
-
-      // Check online status
-      const { data: presenceData } = await (supabase as any)
-        .from("user_presence")
-        .select("user_id, is_online, last_seen_at")
-        .in("user_id", otherIds);
-
-      const presenceMap = new Map<string, boolean>();
-      (presenceData || []).forEach((p: any) => {
-        const diffMin = (Date.now() - new Date(p.last_seen_at).getTime()) / 60000;
-        presenceMap.set(p.user_id, p.is_online && diffMin < 2);
-      });
-
-      const contactList: ChatContact[] = [];
-      for (const p of profiles || []) {
-        const { count } = await supabase.from("chat_messages")
-          .select("id", { count: "exact", head: true })
-          .eq("sender_id", p.user_id).eq("receiver_id", user.id).eq("is_read", false);
-
-        const { data: lastMsg } = await supabase.from("chat_messages")
-          .select("message, created_at")
-          .or(`and(sender_id.eq.${user.id},receiver_id.eq.${p.user_id}),and(sender_id.eq.${p.user_id},receiver_id.eq.${user.id})`)
-          .order("created_at", { ascending: false }).limit(1);
-
-        contactList.push({
-          user_id: p.user_id,
-          full_name: p.full_name || "Sem nome",
-          unread: count || 0,
-          last_message: lastMsg?.[0]?.message,
-          last_time: lastMsg?.[0]?.created_at,
-          is_online: presenceMap.get(p.user_id) || false,
-        });
-      }
-      // Sort: online first, then by last message time
-      contactList.sort((a, b) => {
-        if (a.is_online && !b.is_online) return -1;
-        if (!a.is_online && b.is_online) return 1;
-        return (b.last_time || "").localeCompare(a.last_time || "");
-      });
-      setContacts(contactList);
-    };
-    loadContacts();
-  }, [user]);
-
-  // Load messages
-  useEffect(() => {
-    if (!user || !selectedId) return;
-    const contact = contacts.find(c => c.user_id === selectedId);
-    if (contact) setSelectedName(contact.full_name);
-
-    const loadMessages = async () => {
-      const { data } = await supabase.from("chat_messages")
-        .select("*")
-        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${selectedId}),and(sender_id.eq.${selectedId},receiver_id.eq.${user.id})`)
-        .order("created_at", { ascending: true });
-      setMessages(data || []);
-
-      await supabase.from("chat_messages")
-        .update({ is_read: true })
-        .eq("sender_id", selectedId).eq("receiver_id", user.id).eq("is_read", false);
-    };
-    loadMessages();
-  }, [user, selectedId, contacts]);
+  const selectedContact = contacts.find(c => c.user_id === selectedId);
+  const selectedName = selectedContact?.full_name || "";
 
   // Realtime subscription
   useEffect(() => {
@@ -128,24 +42,31 @@ export default function Chat() {
       }, (payload) => {
         const msg = payload.new as Message;
         if (msg.sender_id === selectedId) {
-          setMessages(prev => [...prev, msg]);
+          // Add to current messages cache
+          queryClient.setQueryData<Message[]>(
+            queryKeys.chat.messages(user.id, selectedId!),
+            (old) => [...(old || []), msg]
+          );
           supabase.from("chat_messages").update({ is_read: true }).eq("id", msg.id);
-        } else {
-          setContacts(prev => prev.map(c =>
-            c.user_id === msg.sender_id ? { ...c, unread: c.unread + 1, last_message: msg.message, last_time: msg.created_at } : c
-          ));
         }
+        // Refresh contacts for unread count
+        queryClient.invalidateQueries({ queryKey: queryKeys.chat.contacts(user.id) });
       })
       .on("postgres_changes", {
         event: "UPDATE", schema: "public", table: "chat_messages",
         filter: `sender_id=eq.${user.id}`,
       }, (payload) => {
         const updated = payload.new as Message;
-        setMessages(prev => prev.map(m => m.id === updated.id ? { ...m, is_read: updated.is_read } : m));
+        if (selectedId) {
+          queryClient.setQueryData<Message[]>(
+            queryKeys.chat.messages(user.id, selectedId),
+            (old) => (old || []).map(m => m.id === updated.id ? { ...m, is_read: updated.is_read } : m)
+          );
+        }
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [user, selectedId]);
+  }, [user, selectedId, queryClient]);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
@@ -153,13 +74,7 @@ export default function Chat() {
     const msg = text || input.trim();
     if (!user || !selectedId || !msg) return;
     setInput("");
-
-    const { data, error } = await supabase.from("chat_messages").insert({
-      sender_id: user.id, receiver_id: selectedId, message: msg,
-    }).select().single();
-
-    if (error) { toast.error("Erro ao enviar"); return; }
-    setMessages(prev => [...prev, data as Message]);
+    sendMutation.mutate({ receiverId: selectedId, message: msg });
   };
 
   const formatTime = (d: string) => {
@@ -172,7 +87,6 @@ export default function Chat() {
   };
 
   const initials = (name: string) => name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
-  const selectedContact = contacts.find(c => c.user_id === selectedId);
 
   return (
     <DashboardLayout>
@@ -197,7 +111,19 @@ export default function Chat() {
             </div>
           </div>
           <div className="flex-1 overflow-y-auto">
-            {contacts.map(c => (
+            {contactsLoading ? (
+              <div className="space-y-3 p-4">
+                {[1,2,3,4].map(i => (
+                  <div key={i} className="flex items-center gap-3">
+                    <Skeleton className="w-10 h-10 rounded-full" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-3 w-32" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : contacts.map(c => (
               <div
                 key={c.user_id}
                 onClick={() => setSearchParams({ with: c.user_id })}
@@ -209,7 +135,6 @@ export default function Chat() {
                   <Avatar className="w-10 h-10">
                     <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">{initials(c.full_name)}</AvatarFallback>
                   </Avatar>
-                  {/* Online indicator */}
                   <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-background ${
                     c.is_online ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground/30"
                   }`} />
@@ -226,7 +151,7 @@ export default function Chat() {
                 )}
               </div>
             ))}
-            {contacts.length === 0 && (
+            {!contactsLoading && contacts.length === 0 && (
               <div className="flex flex-col items-center justify-center py-12 px-4">
                 <MessageSquare className="w-12 h-12 text-muted-foreground/30 mb-3" />
                 <p className="text-sm text-muted-foreground text-center">Nenhum contato disponível</p>
@@ -264,41 +189,50 @@ export default function Chat() {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {messages.length === 0 && (
+              {messagesLoading ? (
+                <div className="space-y-4 py-8">
+                  {[1,2,3].map(i => (
+                    <div key={i} className={`flex ${i % 2 === 0 ? "justify-end" : "justify-start"}`}>
+                      <Skeleton className="h-12 w-48 rounded-2xl" />
+                    </div>
+                  ))}
+                </div>
+              ) : messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center">
                   <MessageSquare className="w-12 h-12 text-muted-foreground/20 mb-3" />
                   <p className="text-sm text-muted-foreground">Nenhuma mensagem ainda.</p>
                   <p className="text-xs text-muted-foreground mt-1">Envie uma mensagem para iniciar a conversa 💬</p>
                 </div>
-              )}
-              <AnimatePresence>
-                {messages.map(msg => {
-                  const isMine = msg.sender_id === user?.id;
-                  return (
-                    <motion.div
-                      key={msg.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className={`flex ${isMine ? "justify-end" : "justify-start"}`}
-                    >
-                      <div className={`max-w-[75%] px-3 py-2 rounded-2xl text-sm ${
-                        isMine
-                          ? "bg-primary text-primary-foreground rounded-br-sm"
-                          : "bg-muted rounded-bl-sm"
-                      }`}>
-                        {msg.image_url && (
-                          <img src={msg.image_url} alt="Imagem" className="rounded-lg mb-2 max-w-full max-h-48 object-cover" />
-                        )}
-                        <p className="whitespace-pre-wrap">{msg.message}</p>
-                        <div className={`flex items-center gap-1 mt-1 ${isMine ? "justify-end" : ""}`}>
-                          <span className="text-[10px] opacity-70">{formatTime(msg.created_at)}</span>
-                          {isMine && (msg.is_read ? <CheckCheck className="w-3 h-3 opacity-70" /> : <Check className="w-3 h-3 opacity-50" />)}
+              ) : (
+                <AnimatePresence>
+                  {messages.map(msg => {
+                    const isMine = msg.sender_id === user?.id;
+                    return (
+                      <motion.div
+                        key={msg.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`flex ${isMine ? "justify-end" : "justify-start"}`}
+                      >
+                        <div className={`max-w-[75%] px-3 py-2 rounded-2xl text-sm ${
+                          isMine
+                            ? "bg-primary text-primary-foreground rounded-br-sm"
+                            : "bg-muted rounded-bl-sm"
+                        }`}>
+                          {msg.image_url && (
+                            <img src={msg.image_url} alt="Imagem" className="rounded-lg mb-2 max-w-full max-h-48 object-cover" />
+                          )}
+                          <p className="whitespace-pre-wrap">{msg.message}</p>
+                          <div className={`flex items-center gap-1 mt-1 ${isMine ? "justify-end" : ""}`}>
+                            <span className="text-[10px] opacity-70">{formatTime(msg.created_at)}</span>
+                            {isMine && (msg.is_read ? <CheckCheck className="w-3 h-3 opacity-70" /> : <Check className="w-3 h-3 opacity-50" />)}
+                          </div>
                         </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+              )}
               <div ref={bottomRef} />
             </div>
 
@@ -318,7 +252,7 @@ export default function Chat() {
                 placeholder="Digite uma mensagem..."
                 className="flex-1"
               />
-              <Button onClick={() => sendMessage()} className="gradient-primary" disabled={!input.trim()}>
+              <Button onClick={() => sendMessage()} className="gradient-primary" disabled={!input.trim() || sendMutation.isPending}>
                 <Send className="w-4 h-4" />
               </Button>
             </div>
