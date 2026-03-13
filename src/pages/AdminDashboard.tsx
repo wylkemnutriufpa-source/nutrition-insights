@@ -1143,6 +1143,11 @@ export default function AdminDashboard() {
         onOpenChange={setCreateDialogOpen}
         onCreated={fetchAll}
       />
+
+      <ProfessionalsDrillDown open={drillDown === "professionals"} onOpenChange={(v) => !v && setDrillDown(null)} />
+      <PatientsDrillDown open={drillDown === "patients"} onOpenChange={(v) => !v && setDrillDown(null)} />
+      <SubscriptionsDrillDown open={drillDown === "subscriptions"} onOpenChange={(v) => !v && setDrillDown(null)} />
+      <RevenueDrillDown open={drillDown === "revenue"} onOpenChange={(v) => !v && setDrillDown(null)} />
     </DashboardLayout>
   );
 }
