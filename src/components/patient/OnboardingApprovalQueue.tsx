@@ -324,9 +324,49 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
         {/* Approval actions */}
         {pipeline.status === "pending_approval" && (
           <div className="space-y-4 border-t pt-4">
-            <p className="text-sm font-medium">O pré-plano foi gerado pela IA. Revise e decida:</p>
+            <p className="text-sm font-medium">Pré-plano gerado pelo Protocolo FitJourney. Revise e decida:</p>
 
-            {/* Link to edit the plan */}
+            {/* Explainability Panel */}
+            {pipeline.generated_plan_data?.explainability && (
+              <div className="bg-muted/50 rounded-lg p-4 space-y-3 text-sm">
+                <p className="font-semibold flex items-center gap-2">
+                  <Target className="w-4 h-4 text-primary" /> Base da Sugestão
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div><span className="text-muted-foreground">Objetivo:</span> <strong>{pipeline.generated_plan_data.explainability.patient_profile?.goal}</strong></div>
+                  <div><span className="text-muted-foreground">TMB:</span> <strong>{pipeline.generated_plan_data.explainability.calculation?.tmb} kcal</strong></div>
+                  <div><span className="text-muted-foreground">TDEE:</span> <strong>{pipeline.generated_plan_data.explainability.calculation?.tdee} kcal</strong></div>
+                  <div><span className="text-muted-foreground">Meta:</span> <strong>{pipeline.generated_plan_data.explainability.calculation?.final_kcal} kcal/dia</strong></div>
+                  <div><span className="text-muted-foreground">Proteína:</span> <strong>{pipeline.generated_plan_data.explainability.macros?.protein}g</strong></div>
+                  <div><span className="text-muted-foreground">Carboidratos:</span> <strong>{pipeline.generated_plan_data.explainability.macros?.carbs}g</strong></div>
+                  <div><span className="text-muted-foreground">Gordura:</span> <strong>{pipeline.generated_plan_data.explainability.macros?.fat}g</strong></div>
+                  <div><span className="text-muted-foreground">Fonte:</span> <strong>{pipeline.generated_plan_data.explainability.calculation?.data_source === "physical_assessment" ? "Avaliação Física" : "Anamnese"}</strong></div>
+                </div>
+                {pipeline.generated_plan_data.explainability.patient_profile?.restrictions?.length > 0 && 
+                 pipeline.generated_plan_data.explainability.patient_profile.restrictions[0] !== "nenhuma" && (
+                  <div><span className="text-muted-foreground">Restrições:</span> <strong>{pipeline.generated_plan_data.explainability.patient_profile.restrictions.join(", ")}</strong></div>
+                )}
+                <div className="border-t pt-2">
+                  <p className="text-xs text-muted-foreground mb-1">Template selecionado:</p>
+                  <Badge variant="secondary">{pipeline.generated_plan_data.explainability.selected_template?.name} (Score: {pipeline.generated_plan_data.explainability.selected_template?.score})</Badge>
+                  {pipeline.generated_plan_data.explainability.selected_template?.reasons?.map((r: string, i: number) => (
+                    <span key={i} className="text-xs text-muted-foreground block">✓ {r}</span>
+                  ))}
+                </div>
+                {pipeline.generated_plan_data.explainability.alternative_templates?.length > 0 && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Alternativas:</p>
+                    <div className="flex gap-1 flex-wrap">
+                      {pipeline.generated_plan_data.explainability.alternative_templates.map((t: any) => (
+                        <Badge key={t.slug} variant="outline" className="text-xs">{t.name} ({t.score}pts)</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Link to edit */}
             {pipeline.generated_plan_id && (
               <Button variant="outline" size="sm" asChild>
                 <a href={`/meal-plans/${pipeline.generated_plan_id}`}>
