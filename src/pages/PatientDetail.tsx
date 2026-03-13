@@ -87,7 +87,7 @@ interface PatientProtocol {
 export default function PatientDetail() {
   const { patientId } = useParams<{ patientId: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
 
   const [profile, setProfile] = useState<PatientProfile | null>(null);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
