@@ -15,7 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Shield, Users, UserCheck, Zap, Star, UserPlus, Settings, Globe,
   Eye, BarChart3, DollarSign, CreditCard, Crown, Loader2,
-  Search, ToggleLeft, Trash2, Ban, CheckCircle2, Plus, FileText, Download, Sparkles
+  Search, ToggleLeft, Trash2, Ban, CheckCircle2, Plus, FileText, Download, Sparkles,
+  Palette, LayoutGrid
 } from "lucide-react";
 import { toast } from "sonner";
 import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
@@ -28,6 +29,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Clock, User, Activity, LogIn, LogOut, RefreshCw, Trash2 as Trash2Icon, UserPlus as UserPlusIcon } from "lucide-react";
+import { ProfessionalsDrillDown, PatientsDrillDown, SubscriptionsDrillDown, RevenueDrillDown } from "@/components/admin/AdminDrillDownDialogs";
 
 // ─── Types ───
 interface PlatformMetrics {
