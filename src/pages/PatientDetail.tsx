@@ -656,8 +656,11 @@ export default function PatientDetail() {
               {/* Timeline Modal */}
               <Dialog open={openSection === "timeline"} onOpenChange={(v) => !v && setOpenSection(null)}>
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display">Timeline</DialogTitle></DialogHeader>
+                  <DialogHeader><DialogTitle className="font-display">Timeline de Jornada</DialogTitle></DialogHeader>
                   <div className="space-y-4">
+                    {/* Momentum Indicator for this patient */}
+                    <MomentumIndicator variant="card" patientId={patientId} />
+                    
                     <div className="flex justify-end">
                       <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
                         <DialogTrigger asChild>
@@ -685,34 +688,9 @@ export default function PatientDetail() {
                         </DialogContent>
                       </Dialog>
                     </div>
-                    {timeline.length === 0 ? (
-                      <div className="glass rounded-xl p-12 text-center">
-                        <Clock className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                        <p className="text-muted-foreground">Nenhum evento na timeline.</p>
-                      </div>
-                    ) : (
-                      <div className="relative pl-8 space-y-4">
-                        <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-border" />
-                        {timeline.map((event: any) => {
-                          const config = eventTypeConfig[event.event_type] || eventTypeConfig.note;
-                          const Icon = config.icon;
-                          return (
-                            <motion.div key={event.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="relative">
-                              <div className="absolute -left-5 w-6 h-6 rounded-full bg-card border-2 border-border flex items-center justify-center">
-                                <Icon className={`w-3 h-3 ${config.color}`} />
-                              </div>
-                              <div className="glass rounded-xl p-4 ml-4">
-                                <div className="flex items-center justify-between">
-                                  <h4 className="font-medium text-sm">{event.title}</h4>
-                                  <span className="text-xs text-muted-foreground">{new Date(event.created_at).toLocaleDateString("pt-BR")}</span>
-                                </div>
-                                {event.description && <p className="text-xs text-muted-foreground mt-1">{event.description}</p>}
-                              </div>
-                            </motion.div>
-                          );
-                        })}
-                      </div>
-                    )}
+                    
+                    {/* Journey Timeline Feed */}
+                    <JourneyTimelineFeed patientId={patientId} maxEvents={50} showFilters title="Eventos do Paciente" />
                   </div>
                 </DialogContent>
               </Dialog>
