@@ -86,6 +86,11 @@ const allRoutes = [
 const CommandPaletteContext = createContext<{ open: () => void }>({ open: () => {} });
 export const useCommandPalette = () => useContext(CommandPaletteContext);
 
+// Global event-based open (for components outside the context tree)
+export function openCommandPalette() {
+  window.dispatchEvent(new CustomEvent("open-command-palette"));
+}
+
 interface PatientResult {
   user_id: string;
   full_name: string;
