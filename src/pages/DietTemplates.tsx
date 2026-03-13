@@ -86,6 +86,13 @@ const CATEGORY_COLORS: Record<string, string> = {
   sport: "bg-blue-500/10 text-blue-500 border-blue-500/20",
   lifestyle: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
   special: "bg-purple-500/10 text-purple-500 border-purple-500/20",
+  emagrecimento: "bg-orange-500/10 text-orange-500 border-orange-500/20",
+  hipertrofia: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  recomposicao: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
+  manutencao: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+  performance: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
+  metabolico: "bg-pink-500/10 text-pink-500 border-pink-500/20",
+  clinico_especifico: "bg-red-500/10 text-red-500 border-red-500/20",
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -94,6 +101,13 @@ const CATEGORY_LABELS: Record<string, string> = {
   sport: "Esportivo",
   lifestyle: "Estilo de Vida",
   special: "Especial",
+  emagrecimento: "Emagrecimento",
+  hipertrofia: "Hipertrofia",
+  recomposicao: "Recomposição",
+  manutencao: "Manutenção",
+  performance: "Performance",
+  metabolico: "Metabólico",
+  clinico_especifico: "Clínico Específico",
 };
 
 export default function DietTemplates() {
