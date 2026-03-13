@@ -6,6 +6,8 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -497,6 +499,10 @@ export default function Patients() {
   const [layout, setLayout] = useState<"grid" | "list">("grid");
   const [prestigeFilter, setPrestigeFilter] = useState<string>("all");
   const [onlineFilter, setOnlineFilter] = useState(false);
+  const [bulkManageOpen, setBulkManageOpen] = useState(false);
+  const [bulkSelected, setBulkSelected] = useState<Set<string>>(new Set());
+  const [bulkSearch, setBulkSearch] = useState("");
+  const [bulkMode, setBulkMode] = useState<"deactivate" | "activate">("deactivate");
   const { onlineUsers } = useOnlinePatients();
   const onlineSet = useMemo(() => new Set(onlineUsers.map(u => u.user_id)), [onlineUsers]);
 
@@ -518,6 +524,45 @@ export default function Patients() {
     if (ids.length === 0) { toast.info(`Todos já estão ${newStatus === "active" ? "ativos" : "inativos"}`); return; }
     if (!confirm(`${newStatus === "active" ? "Ativar" : "Desativar"} ${ids.length} pacientes?`)) return;
     bulkToggleMutation.mutate({ ids, newStatus });
+  };
+
+  const openBulkManage = (mode: "deactivate" | "activate") => {
+    setBulkMode(mode);
+    setBulkSelected(new Set());
+    setBulkSearch("");
+    setBulkManageOpen(true);
+  };
+
+  const bulkManageList = useMemo(() => {
+    const source = bulkMode === "deactivate"
+      ? patients.filter(p => p.status === "active")
+      : patients.filter(p => p.status !== "active");
+    if (!bulkSearch.trim()) return source;
+    const q = bulkSearch.toLowerCase();
+    return source.filter(p =>
+      p.profile?.full_name?.toLowerCase().includes(q) || p.email?.toLowerCase().includes(q)
+    );
+  }, [patients, bulkMode, bulkSearch]);
+
+  const toggleBulkSelect = (id: string) => {
+    setBulkSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const selectAllBulk = () => {
+    const allIds = bulkManageList.map(p => p.id);
+    setBulkSelected(prev => prev.size === allIds.length ? new Set() : new Set(allIds));
+  };
+
+  const executeBulkAction = () => {
+    if (bulkSelected.size === 0) { toast.info("Selecione pelo menos um paciente"); return; }
+    const newStatus = bulkMode === "deactivate" ? "inactive" : "active";
+    if (!confirm(`${bulkMode === "deactivate" ? "Desativar" : "Ativar"} ${bulkSelected.size} pacientes?`)) return;
+    bulkToggleMutation.mutate({ ids: Array.from(bulkSelected), newStatus });
+    setBulkManageOpen(false);
   };
 
   const removeFromProgram = (patientId: string, programId: string, programTitle: string) => {
@@ -616,12 +661,12 @@ export default function Patients() {
                   {activePatients.length} ativos · {patients.length - activePatients.length} inativos · ordenados por prioridade
                 </p>
               </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => bulkToggle("active")} disabled={bulkToggleMutation.isPending} className="gap-1.5 text-xs">
-                  <ToggleRight className="w-3.5 h-3.5" /> Ativar Todos
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button variant="outline" size="sm" onClick={() => openBulkManage("activate")} className="gap-1.5 text-xs">
+                  <ToggleRight className="w-3.5 h-3.5" /> Ativar
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => bulkToggle("inactive")} disabled={bulkToggleMutation.isPending} className="gap-1.5 text-xs">
-                  <ToggleLeft className="w-3.5 h-3.5" /> Desativar Todos
+                <Button variant="outline" size="sm" onClick={() => openBulkManage("deactivate")} className="gap-1.5 text-xs text-destructive border-destructive/30 hover:bg-destructive/10">
+                  <ToggleLeft className="w-3.5 h-3.5" /> Desativar
                 </Button>
                 <Dialog open={open} onOpenChange={setOpen}>
                   <DialogTrigger asChild>
@@ -834,6 +879,92 @@ export default function Patients() {
           </>
         )}
       </div>
+
+      {/* Bulk Manage Dialog */}
+      <Dialog open={bulkManageOpen} onOpenChange={setBulkManageOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              {bulkMode === "deactivate" ? (
+                <><ToggleLeft className="w-5 h-5 text-destructive" /> Desativar Pacientes</>
+              ) : (
+                <><ToggleRight className="w-5 h-5 text-success" /> Ativar Pacientes</>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome ou email..."
+                value={bulkSearch}
+                onChange={e => setBulkSearch(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            <div className="flex items-center justify-between text-sm">
+              <button onClick={selectAllBulk} className="text-primary hover:underline text-xs">
+                {bulkSelected.size === bulkManageList.length ? "Desmarcar todos" : "Selecionar todos"}
+              </button>
+              <span className="text-muted-foreground text-xs">
+                {bulkSelected.size} de {bulkManageList.length} selecionados
+              </span>
+            </div>
+
+            <ScrollArea className="h-[350px] rounded-lg border border-border">
+              <div className="divide-y divide-border">
+                {bulkManageList.length === 0 ? (
+                  <div className="p-8 text-center text-muted-foreground text-sm">
+                    {bulkMode === "deactivate" ? "Nenhum paciente ativo encontrado" : "Nenhum paciente inativo encontrado"}
+                  </div>
+                ) : (
+                  bulkManageList.map(p => (
+                    <label
+                      key={p.id}
+                      className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-muted/50 ${
+                        bulkSelected.has(p.id) ? "bg-primary/5" : ""
+                      }`}
+                    >
+                      <Checkbox
+                        checked={bulkSelected.has(p.id)}
+                        onCheckedChange={() => toggleBulkSelect(p.id)}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {p.profile?.full_name || "Sem nome"}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">{p.email || "—"}</p>
+                      </div>
+                      {p.priorityScore !== undefined && p.status === "active" && (
+                        <Badge variant="outline" className="text-[10px] shrink-0">
+                          Score {p.priorityScore}
+                        </Badge>
+                      )}
+                    </label>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
+
+            <Button
+              onClick={executeBulkAction}
+              disabled={bulkSelected.size === 0 || bulkToggleMutation.isPending}
+              className={`w-full gap-2 ${bulkMode === "deactivate" ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground" : "gradient-primary"}`}
+            >
+              {bulkToggleMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : bulkMode === "deactivate" ? (
+                <ToggleLeft className="w-4 h-4" />
+              ) : (
+                <ToggleRight className="w-4 h-4" />
+              )}
+              {bulkMode === "deactivate" ? "Desativar" : "Ativar"} {bulkSelected.size} pacientes
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <AssignProgramDialog
         open={assignDialogOpen}
