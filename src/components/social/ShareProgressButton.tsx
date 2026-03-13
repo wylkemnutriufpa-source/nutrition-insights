@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { Share2, Download, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,11 +13,8 @@ import { useAuth } from "@/lib/auth";
 import html2canvas from "html2canvas";
 
 interface ShareProgressButtonProps {
-  /** CSS selector or ref for the area to capture */
   captureRef: React.RefObject<HTMLElement>;
-  /** Context label for the share text */
   context: "journey" | "ranking" | "achievements" | "checklist";
-  /** Optional custom share text */
   shareText?: string;
   className?: string;
 }
@@ -39,42 +36,52 @@ export default function ShareProgressButton({
   const [capturing, setCapturing] = useState(false);
 
   const captureScreen = useCallback(async (): Promise<Blob | null> => {
-    if (!captureRef.current) return null;
+    if (!captureRef.current) {
+      console.warn("ShareProgress: captureRef is null");
+      return null;
+    }
     try {
       const canvas = await html2canvas(captureRef.current, {
-        backgroundColor: null,
+        backgroundColor: "#0a0a14",
         scale: 2,
         useCORS: true,
+        allowTaint: true,
         logging: false,
+        // Ignore images that fail to load
+        onclone: (doc) => {
+          // Remove any problematic external images that may block capture
+          const images = doc.querySelectorAll("img");
+          images.forEach((img) => {
+            if (img.naturalWidth === 0) {
+              img.style.display = "none";
+            }
+          });
+        },
       });
-      return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
-    } catch {
+      return new Promise((resolve) => {
+        canvas.toBlob(
+          (b) => resolve(b),
+          "image/png"
+        );
+      });
+    } catch (err) {
+      console.error("html2canvas error:", err);
       return null;
     }
   }, [captureRef]);
 
   const awardSharePoints = useCallback(async () => {
     if (!user) return;
-    const today = new Date().toISOString().slice(0, 10);
-    // Check daily limit (max 2 shares per day)
-    const { count } = await supabase
-      .from("patient_points")
-      .select("id", { count: "exact", head: true })
-      .eq("patient_id", user.id)
-      .eq("action_key", "social_share")
-      .eq("period_day", today);
-
-    if ((count || 0) < 2) {
-      await supabase.from("patient_points").insert({
-        patient_id: user.id,
-        action_key: "social_share",
-        points: 10,
-        period_day: today,
-        period_week: `${new Date().getFullYear()}-W${String(Math.ceil((new Date().getDate()) / 7)).padStart(2, "0")}`,
-        period_month: today.slice(0, 7),
-        period_year: new Date().getFullYear(),
-        metadata: { context },
+    try {
+      await supabase.rpc("award_points", {
+        _patient_id: user.id,
+        _action_key: "social_share",
+        _metadata: { context },
+        _source_type: "social",
+        _source_id: `share_${context}_${Date.now()}`,
       });
+    } catch (e) {
+      console.error("Error awarding share points:", e);
     }
   }, [user, context]);
 
@@ -82,32 +89,48 @@ export default function ShareProgressButton({
     setCapturing(true);
     try {
       const blob = await captureScreen();
-      if (!blob) {
-        toast.error("Não foi possível capturar a tela");
-        return;
-      }
-
       const label = CONTEXT_LABELS[context];
       const text = shareText || `${label.title} 🚀 ${label.hashtag} #FitJourney`;
-      const file = new File([blob], "meu-progresso.png", { type: "image/png" });
 
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ text, files: [file] });
-        await awardSharePoints();
-        toast.success("Compartilhado com sucesso! 🎉");
-      } else {
-        // Fallback: try share without file
-        if (navigator.share) {
+      // Try Web Share API with file
+      if (blob && navigator.share) {
+        const file = new File([blob], "meu-progresso.png", { type: "image/png" });
+        
+        if (navigator.canShare?.({ files: [file] })) {
+          try {
+            await navigator.share({ text, files: [file] });
+            await awardSharePoints();
+            toast.success("Compartilhado com sucesso! 🎉");
+            return;
+          } catch (err: any) {
+            if (err?.name === "AbortError") return;
+            // Fall through to text-only share
+          }
+        }
+
+        // Try text-only share
+        try {
           await navigator.share({ text });
           await awardSharePoints();
           toast.success("Compartilhado com sucesso! 🎉");
-        } else {
-          toast.info("Use o botão de download para salvar a imagem");
+          return;
+        } catch (err: any) {
+          if (err?.name === "AbortError") return;
         }
+      }
+
+      // Fallback: copy text to clipboard
+      try {
+        await navigator.clipboard.writeText(text);
+        toast.success("Texto copiado! Cole nas suas redes sociais 📋");
+        await awardSharePoints();
+      } catch {
+        toast.info("Use o botão de download para salvar a imagem");
       }
     } catch (err: any) {
       if (err?.name !== "AbortError") {
-        toast.error("Erro ao compartilhar");
+        console.error("Share error:", err);
+        toast.error("Erro ao compartilhar. Tente baixar a imagem.");
       }
     } finally {
       setCapturing(false);
@@ -119,18 +142,21 @@ export default function ShareProgressButton({
     try {
       const blob = await captureScreen();
       if (!blob) {
-        toast.error("Não foi possível capturar a tela");
+        toast.error("Não foi possível capturar a tela. Tente novamente.");
         return;
       }
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `fitjourney-${context}-${Date.now()}.png`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
       await awardSharePoints();
       toast.success("Imagem salva! Compartilhe nas suas redes 📸");
-    } catch {
+    } catch (err) {
+      console.error("Download error:", err);
       toast.error("Erro ao salvar imagem");
     } finally {
       setCapturing(false);
