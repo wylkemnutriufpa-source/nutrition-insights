@@ -880,6 +880,92 @@ export default function Patients() {
         )}
       </div>
 
+      {/* Bulk Manage Dialog */}
+      <Dialog open={bulkManageOpen} onOpenChange={setBulkManageOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              {bulkMode === "deactivate" ? (
+                <><ToggleLeft className="w-5 h-5 text-destructive" /> Desativar Pacientes</>
+              ) : (
+                <><ToggleRight className="w-5 h-5 text-success" /> Ativar Pacientes</>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome ou email..."
+                value={bulkSearch}
+                onChange={e => setBulkSearch(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            <div className="flex items-center justify-between text-sm">
+              <button onClick={selectAllBulk} className="text-primary hover:underline text-xs">
+                {bulkSelected.size === bulkManageList.length ? "Desmarcar todos" : "Selecionar todos"}
+              </button>
+              <span className="text-muted-foreground text-xs">
+                {bulkSelected.size} de {bulkManageList.length} selecionados
+              </span>
+            </div>
+
+            <ScrollArea className="h-[350px] rounded-lg border border-border">
+              <div className="divide-y divide-border">
+                {bulkManageList.length === 0 ? (
+                  <div className="p-8 text-center text-muted-foreground text-sm">
+                    {bulkMode === "deactivate" ? "Nenhum paciente ativo encontrado" : "Nenhum paciente inativo encontrado"}
+                  </div>
+                ) : (
+                  bulkManageList.map(p => (
+                    <label
+                      key={p.id}
+                      className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-muted/50 ${
+                        bulkSelected.has(p.id) ? "bg-primary/5" : ""
+                      }`}
+                    >
+                      <Checkbox
+                        checked={bulkSelected.has(p.id)}
+                        onCheckedChange={() => toggleBulkSelect(p.id)}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {p.profile?.full_name || "Sem nome"}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">{p.email || "—"}</p>
+                      </div>
+                      {p.priorityScore !== undefined && p.status === "active" && (
+                        <Badge variant="outline" className="text-[10px] shrink-0">
+                          Score {p.priorityScore}
+                        </Badge>
+                      )}
+                    </label>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
+
+            <Button
+              onClick={executeBulkAction}
+              disabled={bulkSelected.size === 0 || bulkToggleMutation.isPending}
+              className={`w-full gap-2 ${bulkMode === "deactivate" ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground" : "gradient-primary"}`}
+            >
+              {bulkToggleMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : bulkMode === "deactivate" ? (
+                <ToggleLeft className="w-4 h-4" />
+              ) : (
+                <ToggleRight className="w-4 h-4" />
+              )}
+              {bulkMode === "deactivate" ? "Desativar" : "Ativar"} {bulkSelected.size} pacientes
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <AssignProgramDialog
         open={assignDialogOpen}
         onOpenChange={setAssignDialogOpen}
