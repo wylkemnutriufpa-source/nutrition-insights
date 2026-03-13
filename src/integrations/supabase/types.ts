@@ -4970,6 +4970,13 @@ export type Database = {
           total_converted: number
         }[]
       }
+      get_patient_emails: {
+        Args: { _patient_ids: string[] }
+        Returns: {
+          email: string
+          user_id: string
+        }[]
+      }
       get_ranking_by_period: {
         Args: { _limit?: number; _nutritionist_id?: string; _period: string }
         Returns: {
