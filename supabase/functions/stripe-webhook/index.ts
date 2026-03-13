@@ -73,19 +73,8 @@ serve(async (req) => {
       log("Checkout completed", { customerEmail, subscriptionId, amount: session.amount_total });
 
       if (customerEmail) {
-        // Find user by email
-        const { data: userData } = await supabase
-          .from("profiles")
-          .select("user_id, full_name")
-          .ilike("email", customerEmail)
-          .maybeSingle();
-
-        // Also try auth.users
-        let userId = userData?.user_id;
-        if (!userId) {
-          const { data: authUser } = await supabase.rpc("get_user_id_by_email", { _email: customerEmail });
-          userId = authUser;
-        }
+        // Find user by email via auth.users
+        const { data: userId } = await supabase.rpc("get_user_id_by_email", { _email: customerEmail });
 
         if (userId && session.amount_total) {
           const amount = session.amount_total / 100;
