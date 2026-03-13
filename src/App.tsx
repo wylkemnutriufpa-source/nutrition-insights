@@ -253,6 +253,7 @@ const App = () => (
               <Route path="/personal/students" element={<PersonalRoute><PersonalStudents /></PersonalRoute>} />
               <Route path="/personal/workouts" element={<PersonalRoute><PersonalWorkouts /></PersonalRoute>} />
               <Route path="/personal/workouts/new" element={<PersonalRoute><PersonalWorkouts /></PersonalRoute>} />
+              <Route path="/fitness-anamnesis" element={<ProtectedRoute><FitnessAnamnesis /></ProtectedRoute>} />
 
               {/* Patient portal */}
               <Route path="/client/dashboard" element={<PatientRoute><ClientDashboard /></PatientRoute>} />
