@@ -63,26 +63,96 @@ export default function SmartResumeModal() {
           transition={{ duration: 0.3, ease: "easeOut" }}
           className="bg-card rounded-2xl border border-border/50 overflow-hidden"
         >
-          {/* Header with gradient */}
-          <div className="bg-gradient-to-br from-primary/20 via-accent/10 to-primary/5 p-6 pb-4">
-            <motion.h2
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-xl font-bold text-foreground"
-            >
-              {data.greeting}
-            </motion.h2>
-            {data.hoursAway > 0 && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="text-sm text-muted-foreground mt-1"
-              >
-                Você esteve fora por {formatTimeAway(data.hoursAway)}
-              </motion.p>
-            )}
+          {/* Header with gradient + Brain Intelligence */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-[hsl(150_60%_15%/0.6)] via-[hsl(170_50%_12%/0.4)] to-primary/5 p-6 pb-4">
+            {/* Neural background particles */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <motion.div
+                  key={i}
+                  className="absolute rounded-full"
+                  style={{
+                    width: 3,
+                    height: 3,
+                    left: `${15 + i * 18}%`,
+                    top: `${20 + (i % 3) * 25}%`,
+                    background: "radial-gradient(circle, hsl(150 80% 55%), transparent)",
+                    boxShadow: "0 0 6px hsl(150 80% 55% / 0.5)",
+                  }}
+                  animate={{ opacity: [0, 0.7, 0], scale: [0.5, 1.2, 0.5] }}
+                  transition={{ duration: 3, repeat: Infinity, delay: i * 0.5, ease: "easeInOut" }}
+                />
+              ))}
+            </div>
+
+            <div className="relative flex items-start gap-4">
+              {/* Animated Brain Icon */}
+              <motion.div className="relative flex-shrink-0">
+                {/* Ambient glow */}
+                <motion.div
+                  className="absolute -inset-2 rounded-full"
+                  style={{
+                    background: "radial-gradient(circle, hsl(150 80% 50% / 0.3) 0%, hsl(140 70% 45% / 0.1) 50%, transparent 70%)",
+                  }}
+                  animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.7, 0.3] }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <motion.div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center relative z-10"
+                  style={{
+                    background: "linear-gradient(135deg, hsl(150 60% 30%), hsl(170 70% 35%))",
+                    boxShadow: "0 0 25px hsl(150 80% 50% / 0.35), inset 0 1px 1px rgba(255,255,255,0.2)",
+                  }}
+                  animate={{ rotate: [0, 5, -5, 0] }}
+                  transition={{ duration: 6, repeat: Infinity }}
+                >
+                  <span className="text-2xl leading-none select-none" style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.4))" }}>🧠</span>
+                </motion.div>
+                {/* Pulse ring */}
+                <motion.div
+                  className="absolute inset-0 rounded-xl"
+                  style={{ border: "1.5px solid hsl(150 70% 50% / 0.4)" }}
+                  animate={{ scale: [1, 1.5], opacity: [0.5, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+                />
+              </motion.div>
+
+              <div className="flex-1 min-w-0">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.05 }}
+                  className="flex items-center gap-1.5 mb-1"
+                >
+                  <span className="text-[10px] uppercase tracking-widest font-semibold text-emerald-400/80">
+                    Inteligência FitJourney
+                  </span>
+                  <motion.div
+                    className="w-1.5 h-1.5 rounded-full bg-emerald-400"
+                    animate={{ opacity: [1, 0.3, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  />
+                </motion.div>
+                <motion.h2
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="text-xl font-bold text-foreground"
+                >
+                  {data.greeting}
+                </motion.h2>
+                {data.hoursAway > 0 && (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-sm text-muted-foreground mt-1"
+                  >
+                    Você esteve fora por {formatTimeAway(data.hoursAway)}
+                  </motion.p>
+                )}
+              </div>
+            </div>
 
             {/* Streak badge */}
             {data.streakDays > 0 && (
