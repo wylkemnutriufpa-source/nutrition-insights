@@ -6,6 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 interface PatientOption {
   id: string;
   name: string;
+  email?: string;
 }
 
 interface PatientPickerDropdownProps {
