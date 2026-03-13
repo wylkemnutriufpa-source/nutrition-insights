@@ -693,6 +693,13 @@ function NutritionistDashboardContent() {
         <ExpandablePanel title="Painel de Risco"><RiskPanel patients={riskPatients} /></ExpandablePanel>
       </motion.div>
 
+      {/* ── Treatment Insights (Behavioral Signals) ── */}
+      <motion.div variants={item}>
+        <ExpandablePanel title="Insights Comportamentais">
+          <TreatmentInsightsPanel />
+        </ExpandablePanel>
+      </motion.div>
+
       {/* ── Patient Retention Risk (Churn Prediction) ── */}
       <motion.div variants={item}>
         <ExpandablePanel title="Risco de Abandono">
