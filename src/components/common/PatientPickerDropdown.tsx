@@ -27,7 +27,9 @@ export default function PatientPickerDropdown({
   const containerRef = useRef<HTMLDivElement>(null);
 
   const filtered = patients.filter(
-    (p) => !search || p.name.toLowerCase().includes(search.toLowerCase())
+    (p) => !search || 
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.email?.toLowerCase().includes(search.toLowerCase())
   );
 
   // Close on click outside

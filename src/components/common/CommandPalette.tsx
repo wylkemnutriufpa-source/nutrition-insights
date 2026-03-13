@@ -267,12 +267,15 @@ export default function CommandPalette() {
                 {patients.map((p) => (
                   <CommandItem
                     key={`pat-${p.user_id}`}
-                    value={`paciente ${p.full_name}`}
+                    value={`paciente ${p.full_name} ${p.email || ''}`}
                     onSelect={() => handleSelect(`/patients/${p.user_id}`)}
                     className="cursor-pointer"
                   >
                     <User className="mr-2 h-4 w-4 text-muted-foreground" />
-                    <span>{p.full_name}</span>
+                    <div className="flex flex-col">
+                      <span>{p.full_name}</span>
+                      {p.email && <span className="text-xs text-muted-foreground">{p.email}</span>}
+                    </div>
                   </CommandItem>
                 ))}
               </CommandGroup>
