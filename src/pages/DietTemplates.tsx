@@ -592,7 +592,12 @@ export default function DietTemplates() {
                         </div>
                       </div>
                     );
-                  })}
+                  }) : (
+                    <div className="glass rounded-lg p-6 text-center text-muted-foreground">
+                      <p className="text-sm">Este template define regras calóricas e de substituição, mas não possui refeições detalhadas pré-configuradas.</p>
+                      <p className="text-xs mt-2">Use-o como base para geração automática de planos.</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Apply button */}
