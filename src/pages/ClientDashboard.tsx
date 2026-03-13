@@ -24,6 +24,7 @@ import PhaseTransitionModal from "@/components/biquini/PhaseTransitionModal";
 import BiquiniEnrollmentStatus from "@/components/biquini/BiquiniEnrollmentStatus";
 import BiquiniOnboardingWizard from "@/components/biquini/BiquiniOnboardingWizard";
 import { DailyMissionsWidget } from "@/components/gamification/DailyMissionsWidget";
+import { AdherenceEvolutionChart } from "@/components/gamification/AdherenceEvolutionChart";
 
 interface ProgramInfo {
   id: string;
