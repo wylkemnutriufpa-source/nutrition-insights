@@ -526,7 +526,46 @@ export default function Patients() {
     bulkToggleMutation.mutate({ ids, newStatus });
   };
 
-  const removeFromProgram = (patientId: string, programId: string, programTitle: string) => {
+  const openBulkManage = (mode: "deactivate" | "activate") => {
+    setBulkMode(mode);
+    setBulkSelected(new Set());
+    setBulkSearch("");
+    setBulkManageOpen(true);
+  };
+
+  const bulkManageList = useMemo(() => {
+    const source = bulkMode === "deactivate"
+      ? patients.filter(p => p.status === "active")
+      : patients.filter(p => p.status !== "active");
+    if (!bulkSearch.trim()) return source;
+    const q = bulkSearch.toLowerCase();
+    return source.filter(p =>
+      p.profile?.full_name?.toLowerCase().includes(q) || p.email?.toLowerCase().includes(q)
+    );
+  }, [patients, bulkMode, bulkSearch]);
+
+  const toggleBulkSelect = (id: string) => {
+    setBulkSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const selectAllBulk = () => {
+    const allIds = bulkManageList.map(p => p.id);
+    setBulkSelected(prev => prev.size === allIds.length ? new Set() : new Set(allIds));
+  };
+
+  const executeBulkAction = () => {
+    if (bulkSelected.size === 0) { toast.info("Selecione pelo menos um paciente"); return; }
+    const newStatus = bulkMode === "deactivate" ? "inactive" : "active";
+    if (!confirm(`${bulkMode === "deactivate" ? "Desativar" : "Ativar"} ${bulkSelected.size} pacientes?`)) return;
+    bulkToggleMutation.mutate({ ids: Array.from(bulkSelected), newStatus });
+    setBulkManageOpen(false);
+  };
+
+
     const isBiquini = programTitle.toLowerCase().includes("biqu");
     if (isBiquini) {
       const pwd = prompt("🔒 Projeto protegido!\nDigite a senha do administrador para remover:");
