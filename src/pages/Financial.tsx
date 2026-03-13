@@ -625,13 +625,13 @@ function TransactionList({
       <CardContent>
         {transactions.length === 0 ? (
           <div className="text-center py-8">
-            {isIncome ? (
+            {icon || (isIncome ? (
               <ArrowUpCircle className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
             ) : (
               <ArrowDownCircle className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
-            )}
+            ))}
             <p className="text-sm text-muted-foreground">
-              Nenhuma {isIncome ? "receita" : "despesa"} registrada
+              {emptyMessage || `Nenhuma ${isIncome ? "receita" : "despesa"} registrada`}
             </p>
           </div>
         ) : (
