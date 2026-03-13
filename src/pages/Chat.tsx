@@ -207,11 +207,12 @@ export default function Chat() {
                 <AnimatePresence>
                   {messages.map(msg => {
                     const isMine = msg.sender_id === user?.id;
+                    const isPending = !!(msg as any)._pending;
                     return (
                       <motion.div
                         key={msg.id}
                         initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
+                        animate={{ opacity: isPending ? 0.6 : 1, y: 0 }}
                         className={`flex ${isMine ? "justify-end" : "justify-start"}`}
                       >
                         <div className={`max-w-[75%] px-3 py-2 rounded-2xl text-sm ${
@@ -224,8 +225,11 @@ export default function Chat() {
                           )}
                           <p className="whitespace-pre-wrap">{msg.message}</p>
                           <div className={`flex items-center gap-1 mt-1 ${isMine ? "justify-end" : ""}`}>
-                            <span className="text-[10px] opacity-70">{formatTime(msg.created_at)}</span>
-                            {isMine && (msg.is_read ? <CheckCheck className="w-3 h-3 opacity-70" /> : <Check className="w-3 h-3 opacity-50" />)}
+                            <span className="text-[10px] opacity-70">
+                              {isPending ? "Enviando..." : formatTime(msg.created_at)}
+                            </span>
+                            {isMine && !isPending && (msg.is_read ? <CheckCheck className="w-3 h-3 opacity-70" /> : <Check className="w-3 h-3 opacity-50" />)}
+                            {isMine && isPending && <Clock className="w-3 h-3 opacity-40" />}
                           </div>
                         </div>
                       </motion.div>

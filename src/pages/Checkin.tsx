@@ -156,6 +156,7 @@ export default function Checkin() {
       if (error) throw error;
 
       toast.success("Check-in enviado! Seu nutricionista irá revisar.");
+      clearDraft();
       // Reset form
       setWeight("");
       setFeedback("");
