@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import PhaseTransitionModal from "@/components/biquini/PhaseTransitionModal";
 import BiquiniEnrollmentStatus from "@/components/biquini/BiquiniEnrollmentStatus";
 import BiquiniOnboardingWizard from "@/components/biquini/BiquiniOnboardingWizard";
+import { DailyMissionsWidget } from "@/components/gamification/DailyMissionsWidget";
 
 interface ProgramInfo {
   id: string;
@@ -419,6 +420,11 @@ export default function ClientDashboard() {
               </motion.div>
             </Link>
           )}
+        </motion.div>
+
+        {/* Daily Missions & Adherence Score */}
+        <motion.div variants={item}>
+          <DailyMissionsWidget />
         </motion.div>
 
         {/* Workout Section - integrated when patient has personal trainer */}
