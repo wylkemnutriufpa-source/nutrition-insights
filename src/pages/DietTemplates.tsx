@@ -450,9 +450,14 @@ export default function DietTemplates() {
                         <h3 className="font-display font-semibold group-hover:text-primary transition-colors">
                           {template.name}
                         </h3>
-                        <Badge variant="outline" className={`text-[10px] mt-1 ${CATEGORY_COLORS[template.category] || ""}`}>
-                          {CATEGORY_LABELS[template.category] || template.category}
+                        <Badge variant="outline" className={`text-[10px] mt-1 ${CATEGORY_COLORS[template.goal_category || template.category] || ""}`}>
+                          {CATEGORY_LABELS[template.goal_category || template.category] || template.goal_category || template.category}
                         </Badge>
+                        {template.diet_style && (
+                          <Badge variant="outline" className="text-[10px] mt-1 ml-1">
+                            {template.diet_style.replace(/_/g, " ")}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
