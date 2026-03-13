@@ -131,6 +131,7 @@ export default function BodyAnalysis() {
     if (error) { toast.error(error.message); return; }
 
     toast.success("Fotos salvas! Iniciando análise IA...");
+    clearDraft();
     setNewDialogOpen(false);
     setAnalyzing(true);
 
