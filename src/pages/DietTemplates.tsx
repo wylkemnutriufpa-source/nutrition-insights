@@ -22,6 +22,14 @@ interface DietTemplate {
   description: string;
   icon: string;
   category: string;
+  goal_category?: string;
+  diet_style?: string;
+  complexity_level?: string;
+  food_access_level?: string;
+  clinical_tags?: string[];
+  caloric_versions?: Record<string, any>;
+  weekly_variation_strategy?: Record<string, any>;
+  meal_distribution?: Record<string, any>;
   conditions: string[];
   base_calories: number;
   macro_ratio: { protein: number; carbs: number; fat: number };
@@ -78,6 +86,13 @@ const CATEGORY_COLORS: Record<string, string> = {
   sport: "bg-blue-500/10 text-blue-500 border-blue-500/20",
   lifestyle: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
   special: "bg-purple-500/10 text-purple-500 border-purple-500/20",
+  emagrecimento: "bg-orange-500/10 text-orange-500 border-orange-500/20",
+  hipertrofia: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  recomposicao: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
+  manutencao: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+  performance: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
+  metabolico: "bg-pink-500/10 text-pink-500 border-pink-500/20",
+  clinico_especifico: "bg-red-500/10 text-red-500 border-red-500/20",
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -86,6 +101,13 @@ const CATEGORY_LABELS: Record<string, string> = {
   sport: "Esportivo",
   lifestyle: "Estilo de Vida",
   special: "Especial",
+  emagrecimento: "Emagrecimento",
+  hipertrofia: "Hipertrofia",
+  recomposicao: "Recomposição",
+  manutencao: "Manutenção",
+  performance: "Performance",
+  metabolico: "Metabólico",
+  clinico_especifico: "Clínico Específico",
 };
 
 export default function DietTemplates() {
@@ -168,24 +190,32 @@ export default function DietTemplates() {
   };
 
   const filtered = useMemo(() => {
-    let result = templates;
-    if (categoryFilter) result = result.filter((t) => t.category === categoryFilter);
+    let result = templates.map(t => ({
+      ...t,
+      meals: Array.isArray(t.meals) ? t.meals : [],
+      tags: Array.isArray(t.tags) ? t.tags : [],
+      conditions: Array.isArray(t.conditions) ? t.conditions : [],
+      macro_ratio: t.macro_ratio && typeof t.macro_ratio === 'object' ? t.macro_ratio : { protein: 30, carbs: 45, fat: 25 },
+    }));
+    if (categoryFilter) result = result.filter((t) => (t.goal_category || t.category) === categoryFilter);
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(
         (t) =>
           t.name.toLowerCase().includes(q) ||
-          t.description.toLowerCase().includes(q) ||
-          t.tags.some((tag) => tag.includes(q)) ||
-          t.conditions.some((c) => c.includes(q))
+          (t.description || "").toLowerCase().includes(q) ||
+          t.tags.some((tag: string) => tag.includes(q)) ||
+          t.conditions.some((c: string) => c.includes(q)) ||
+          (t.diet_style || "").toLowerCase().includes(q) ||
+          (t.clinical_tags || []).some((ct: string) => ct.includes(q))
       );
     }
     return result;
   }, [templates, search, categoryFilter]);
 
   const categories = useMemo(() => {
-    const cats = new Set(templates.map((t) => t.category));
-    return Array.from(cats);
+    const cats = new Set(templates.map((t) => t.goal_category || t.category));
+    return Array.from(cats).filter(Boolean);
   }, [templates]);
 
   // Physical assessment takes priority over anamnesis for calorie targets
@@ -262,8 +292,8 @@ export default function DietTemplates() {
       // Build meal plan items for all 7 days
       const items: any[] = [];
       for (let day = 0; day <= 6; day++) {
-        for (const meal of template.meals) {
-          const adjustedFoods = meal.foods.map((f) => adjustFood(f, multiplier));
+        for (const meal of (Array.isArray(template.meals) ? template.meals : [])) {
+          const adjustedFoods = (meal.foods || []).map((f) => adjustFood(f, multiplier));
           const totalCals = adjustedFoods.reduce((s, f) => s + f.calories, 0);
           const totalProtein = adjustedFoods.reduce((s, f) => s + f.protein, 0);
           const totalCarbs = adjustedFoods.reduce((s, f) => s + f.carbs, 0);
@@ -397,10 +427,10 @@ export default function DietTemplates() {
             {filtered.map((template) => {
               const adjustedCal = getAdjustedCalories(template);
               const isAdjusted = (anamnesis || physicalAssessment) && adjustedCal !== template.base_calories;
-              const totalTemplateCals = template.meals.reduce(
-                (s, m) => s + m.foods.reduce((fs, f) => fs + f.calories, 0),
+               const totalTemplateCals = (template.meals || []).reduce(
+                (s, m) => s + (m.foods || []).reduce((fs, f) => fs + (f.calories || 0), 0),
                 0
-              );
+               );
 
               return (
                 <motion.div
@@ -420,9 +450,14 @@ export default function DietTemplates() {
                         <h3 className="font-display font-semibold group-hover:text-primary transition-colors">
                           {template.name}
                         </h3>
-                        <Badge variant="outline" className={`text-[10px] mt-1 ${CATEGORY_COLORS[template.category] || ""}`}>
-                          {CATEGORY_LABELS[template.category] || template.category}
+                        <Badge variant="outline" className={`text-[10px] mt-1 ${CATEGORY_COLORS[template.goal_category || template.category] || ""}`}>
+                          {CATEGORY_LABELS[template.goal_category || template.category] || template.goal_category || template.category}
                         </Badge>
+                        {template.diet_style && (
+                          <Badge variant="outline" className="text-[10px] mt-1 ml-1">
+                            {template.diet_style.replace(/_/g, " ")}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -500,9 +535,9 @@ export default function DietTemplates() {
 
                 {/* Meal preview */}
                 <div className="space-y-4 mt-2">
-                  {previewTemplate.meals.map((meal, mi) => {
+                  {(Array.isArray(previewTemplate.meals) && previewTemplate.meals.length > 0) ? previewTemplate.meals.map((meal, mi) => {
                     const multiplier = getCalorieMultiplier(previewTemplate);
-                    const mealCals = meal.foods.reduce((s, f) => s + Math.round(f.calories * multiplier), 0);
+                    const mealCals = (meal.foods || []).reduce((s, f) => s + Math.round((f.calories || 0) * multiplier), 0);
 
                     return (
                       <div key={mi} className="glass rounded-lg p-4">
@@ -557,7 +592,12 @@ export default function DietTemplates() {
                         </div>
                       </div>
                     );
-                  })}
+                  }) : (
+                    <div className="glass rounded-lg p-6 text-center text-muted-foreground">
+                      <p className="text-sm">Este template define regras calóricas e de substituição, mas não possui refeições detalhadas pré-configuradas.</p>
+                      <p className="text-xs mt-2">Use-o como base para geração automática de planos.</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Apply button */}
