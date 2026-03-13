@@ -41,28 +41,49 @@ export default function ShareProgressButton({
       return null;
     }
     try {
-      const canvas = await html2canvas(captureRef.current, {
+      const el = captureRef.current;
+      const rect = el.getBoundingClientRect();
+
+      // Calculate the visible portion of the element within the viewport
+      const viewportW = window.innerWidth;
+      const viewportH = window.innerHeight;
+
+      const visibleTop = Math.max(0, -rect.top);
+      const visibleLeft = Math.max(0, -rect.left);
+      const visibleWidth = Math.min(rect.width, viewportW - Math.max(0, rect.left)) - visibleLeft;
+      const visibleHeight = Math.min(rect.height, viewportH - Math.max(0, rect.top)) - visibleTop;
+
+      const dpr = Math.min(window.devicePixelRatio || 1, 3);
+
+      const fullCanvas = await html2canvas(el, {
         backgroundColor: "#0a0a14",
-        scale: 2,
+        scale: dpr,
         useCORS: true,
         allowTaint: true,
         logging: false,
-        // Ignore images that fail to load
         onclone: (doc) => {
-          // Remove any problematic external images that may block capture
-          const images = doc.querySelectorAll("img");
-          images.forEach((img) => {
-            if (img.naturalWidth === 0) {
-              img.style.display = "none";
-            }
+          doc.querySelectorAll("img").forEach((img) => {
+            if (img.naturalWidth === 0) img.style.display = "none";
           });
         },
       });
+
+      // Crop to only the visible viewport area
+      const cropX = visibleLeft * dpr;
+      const cropY = visibleTop * dpr;
+      const cropW = visibleWidth * dpr;
+      const cropH = visibleHeight * dpr;
+
+      const croppedCanvas = document.createElement("canvas");
+      croppedCanvas.width = cropW;
+      croppedCanvas.height = cropH;
+      const ctx = croppedCanvas.getContext("2d");
+      if (!ctx) return null;
+
+      ctx.drawImage(fullCanvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+
       return new Promise((resolve) => {
-        canvas.toBlob(
-          (b) => resolve(b),
-          "image/png"
-        );
+        croppedCanvas.toBlob((b) => resolve(b), "image/png", 1.0);
       });
     } catch (err) {
       console.error("html2canvas error:", err);
