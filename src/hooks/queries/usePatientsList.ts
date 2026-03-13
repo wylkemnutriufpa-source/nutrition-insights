@@ -3,6 +3,79 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { queryKeys } from "./queryKeys";
 import { toast } from "sonner";
+import { logAudit } from "@/lib/auditLog";
+import type { PrestigePlan } from "@/hooks/usePrestige";
+
+export interface PatientInfo {
+  id: string;
+  patient_id: string;
+  status: string;
+  notes: string | null;
+  created_at: string;
+  expires_at?: string | null;
+  email?: string;
+  profile?: { full_name: string; avatar_url: string | null } | null;
+  priorityScore?: number;
+  stats?: { last_meal_date?: string; total_xp?: number; current_streak?: number } | null;
+  checklistAdherence?: number;
+  programs?: { id: string; title: string }[];
+  prestigePlan?: PrestigePlan | null;
+}
+
+export interface ProgramInfo {
+  id: string;
+  title: string;
+}
+
+function computeScore(stats: any, checklistData: any): number {
+  let score = 0;
+  if (checklistData) {
+    const total = checklistData.total || 0;
+    const completed = checklistData.completed || 0;
+    score += total > 0 ? Math.round((completed / total) * 40) : 20;
+  }
+  if (stats?.last_meal_date) {
+    const daysSince = Math.floor((Date.now() - new Date(stats.last_meal_date).getTime()) / 86400000);
+    score += daysSince <= 1 ? 20 : daysSince <= 3 ? 15 : daysSince <= 7 ? 10 : 5;
+  }
+  if (stats?.total_xp) {
+    score += stats.total_xp > 500 ? 20 : stats.total_xp > 100 ? 15 : 10;
+  }
+  if (stats?.current_streak !== undefined) {
+    score += stats.current_streak >= 7 ? 20 : stats.current_streak >= 3 ? 15 : stats.current_streak >= 1 ? 10 : 5;
+  }
+  return Math.min(100, Math.max(0, score));
+}
+
+// Recent patients tracking
+const RECENT_KEY = "fitjourney_recent_patients";
+const MAX_RECENT = 50;
+
+function getRecentPatients(): Record<string, { count: number; lastSeen: number }> {
+  try { return JSON.parse(localStorage.getItem(RECENT_KEY) || "{}"); } catch { return {}; }
+}
+
+export function trackPatientView(patientId: string) {
+  const recent = getRecentPatients();
+  const entry = recent[patientId] || { count: 0, lastSeen: 0 };
+  entry.count += 1;
+  entry.lastSeen = Date.now();
+  recent[patientId] = entry;
+  const sorted = Object.entries(recent).sort((a, b) => b[1].lastSeen - a[1].lastSeen).slice(0, MAX_RECENT);
+  localStorage.setItem(RECENT_KEY, JSON.stringify(Object.fromEntries(sorted)));
+}
+
+function getRecentScore(patientId: string): number {
+  const recent = getRecentPatients();
+  const entry = recent[patientId];
+  if (!entry) return 0;
+  const hoursSince = (Date.now() - entry.lastSeen) / 3600000;
+  const recency = Math.max(0, 100 - hoursSince * 2);
+  const frequency = Math.min(entry.count * 10, 50);
+  return recency + frequency;
+}
+
+export { computeScore, getRecentScore };
 
 export function usePatientsList() {
   const { user } = useAuth();
@@ -24,10 +97,9 @@ export function usePatientsList() {
       const { data: progs } = await supabase.from("programs")
         .select("id, title").eq("created_by", userId).eq("is_active", true);
 
-      if (!data) return { patients: [], programs: progs || [], prestigePlans: [] };
+      if (!data || data.length === 0) return { patients: [] as PatientInfo[], programs: (progs || []) as ProgramInfo[], prestigePlans: [] as PrestigePlan[] };
 
       const patientIds = data.map(p => p.patient_id);
-      if (patientIds.length === 0) return { patients: data, programs: progs || [], prestigePlans: [] };
 
       const [profilesRes, statsRes, checklistRes, enrollmentsRes, prestigeRes, pPlansRes] = await Promise.all([
         Promise.all(patientIds.map(id =>
@@ -50,46 +122,67 @@ export function usePatientsList() {
         supabase.from("prestige_plans").select("*").eq("is_active", true).order("display_order"),
       ]);
 
-      const enriched = data.map((p, i) => {
-        const profile = profilesRes[i].data;
-        const stats = statsRes[i].data;
-        const tasks = checklistRes[i].data || [];
-        const total = tasks.length;
-        const completed = tasks.filter((t: any) => t.completed).length;
-        const checklistAdherence = total > 0 ? Math.round((completed / total) * 100) : 0;
+      // Build prestige map
+      const prestigeMap = new Map<string, PrestigePlan>();
+      (prestigeRes.data || []).forEach((pp: any) => {
+        if (pp.prestige_plans) {
+          const d = pp.prestige_plans;
+          prestigeMap.set(pp.patient_id, {
+            id: d.id, name: d.name, slug: d.slug, display_order: d.display_order, color: d.color,
+            badge_icon: d.badge_icon, badge_label: d.badge_label, crown_enabled: d.crown_enabled,
+            effect_type: d.effect_type, ranking_highlight: d.ranking_highlight,
+            ai_usage_multiplier: d.ai_usage_multiplier, features: d.features || [],
+            price_monthly: d.price_monthly, price_quarterly: d.price_quarterly,
+            price_semiannual: d.price_semiannual, price_annual: d.price_annual,
+          });
+        }
+      });
 
-        const enrollments = (enrollmentsRes.data || [])
-          .filter((e: any) => e.patient_id === p.patient_id)
-          .map((e: any) => e.programs)
-          .filter(Boolean);
+      // Build enrollment map
+      const enrollmentMap = new Map<string, { id: string; title: string }[]>();
+      (enrollmentsRes.data || []).forEach((e: any) => {
+        const list = enrollmentMap.get(e.patient_id) || [];
+        if (e.programs) list.push({ id: e.programs.id, title: e.programs.title });
+        enrollmentMap.set(e.patient_id, list);
+      });
 
-        const prestige = (prestigeRes.data || []).find((pp: any) => pp.patient_id === p.patient_id);
-
+      const enriched: PatientInfo[] = data.map((p, i) => {
+        const checkTasks = checklistRes[i]?.data || [];
+        const total = checkTasks.length;
+        const completed = checkTasks.filter((t: any) => t.completed).length;
+        const adherence = total > 0 ? Math.round((completed / total) * 100) : 0;
+        const profile = profilesRes[i]?.data;
         return {
           ...p,
-          profile,
-          stats,
-          checklistAdherence,
-          programs: enrollments,
-          prestigePlan: prestige ? prestige.prestige_plans : null,
+          profile: profile && profile.full_name ? profile : { full_name: "Paciente sem nome", avatar_url: null },
+          stats: statsRes[i]?.data,
+          checklistAdherence: adherence,
+          priorityScore: computeScore(statsRes[i]?.data, { total, completed }),
+          programs: enrollmentMap.get(p.patient_id) || [],
+          prestigePlan: prestigeMap.get(p.patient_id) || null,
         };
       });
 
-      return {
-        patients: enriched,
-        programs: progs || [],
-        prestigePlans: (pPlansRes.data || []).map((d: any) => ({
-          id: d.id,
-          name: d.name,
-          slug: d.slug,
-          color: d.color,
-          icon: d.icon,
-          badge_icon: d.badge_icon,
-          crown_enabled: d.crown_enabled,
-          is_active: d.is_active,
-          display_order: d.display_order,
-        })),
-      };
+      // Sort: recently viewed first, then by priority score
+      enriched.sort((a, b) => {
+        const recentA = getRecentScore(a.patient_id);
+        const recentB = getRecentScore(b.patient_id);
+        if (recentA > 10 || recentB > 10) {
+          if (Math.abs(recentA - recentB) > 5) return recentB - recentA;
+        }
+        return (a.priorityScore || 0) - (b.priorityScore || 0);
+      });
+
+      const prestigePlans: PrestigePlan[] = (pPlansRes.data || []).map((d: any) => ({
+        id: d.id, name: d.name, slug: d.slug, display_order: d.display_order, color: d.color,
+        badge_icon: d.badge_icon, badge_label: d.badge_label, crown_enabled: d.crown_enabled,
+        effect_type: d.effect_type, ranking_highlight: d.ranking_highlight,
+        ai_usage_multiplier: d.ai_usage_multiplier, features: d.features || [],
+        price_monthly: d.price_monthly, price_quarterly: d.price_quarterly,
+        price_semiannual: d.price_semiannual, price_annual: d.price_annual,
+      }));
+
+      return { patients: enriched, programs: (progs || []) as ProgramInfo[], prestigePlans };
     },
   });
 }
@@ -106,11 +199,135 @@ export function useTogglePatientStatus() {
         .update({ status: newStatus })
         .eq("id", linkId);
       if (error) throw error;
+      logAudit("toggle_patient_status", "patient", linkId, { new_status: newStatus });
       return newStatus;
+    },
+    onSuccess: (newStatus) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.patients.all(user?.id ?? "") });
+      toast.success(
+        newStatus === "active"
+          ? "Paciente ativado — dados incluídos nas métricas"
+          : "Paciente desativado — excluído das métricas e leituras de IA"
+      );
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+}
+
+export function useAddPatient() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ email, name, password }: { email: string; name: string; password: string }) => {
+      const { data: patientId, error: createError } = await supabase
+        .rpc("create_patient_account", {
+          _email: email.trim().toLowerCase(),
+          _full_name: name.trim(),
+          _password: password,
+        });
+      if (createError) throw createError;
+      if (!patientId) throw new Error("Erro ao criar conta do paciente");
+
+      const { error: linkError } = await supabase.from("nutritionist_patients").insert({
+        nutritionist_id: user!.id, patient_id: patientId,
+      });
+      if (linkError) {
+        if (linkError.code === "23505") {
+          toast.info("Paciente já está na sua lista.");
+          return patientId;
+        }
+        throw linkError;
+      }
+      logAudit("create_patient", "patient", patientId as string, { email: email.trim().toLowerCase(), name: name.trim() });
+      return patientId;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.patients.all(user?.id ?? "") });
-      toast.success("Status atualizado!");
+      toast.success("Paciente cadastrado e vinculado! 🎉");
+    },
+    onError: (err: any) => toast.error("Erro: " + (err.message || "Tente novamente")),
+  });
+}
+
+export function useRemoveFromProgram() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ patientId, programId }: { patientId: string; programId: string }) => {
+      const { error } = await supabase.from("program_patients")
+        .delete()
+        .eq("patient_id", patientId)
+        .eq("program_id", programId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.patients.all(user?.id ?? "") });
+    },
+    onError: (err: any) => toast.error("Erro ao remover do programa"),
+  });
+}
+
+export function useUpdateExpiry() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ linkId, date }: { linkId: string; date: string | null }) => {
+      const { error } = await supabase.from("nutritionist_patients")
+        .update({ expires_at: date || null } as any)
+        .eq("id", linkId);
+      if (error) throw error;
+      return date;
+    },
+    onSuccess: (date) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.patients.all(user?.id ?? "") });
+      toast.success(date ? `Vencimento definido: ${new Date(date).toLocaleDateString("pt-BR")}` : "Vencimento removido");
+    },
+    onError: (err: any) => toast.error("Erro ao atualizar vencimento"),
+  });
+}
+
+export function useBulkToggle() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ ids, newStatus }: { ids: string[]; newStatus: "active" | "inactive" }) => {
+      const { error } = await supabase.from("nutritionist_patients")
+        .update({ status: newStatus })
+        .in("id", ids);
+      if (error) throw error;
+      return { count: ids.length, newStatus };
+    },
+    onSuccess: ({ count, newStatus }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.patients.all(user?.id ?? "") });
+      toast.success(`${count} pacientes ${newStatus === "active" ? "ativados" : "desativados"}`);
+    },
+    onError: () => toast.error("Erro ao atualizar"),
+  });
+}
+
+export function useAssignToProgram() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ patientId, programId }: { patientId: string; programId: string }) => {
+      const { error } = await supabase.from("program_patients").insert({
+        program_id: programId,
+        patient_id: patientId,
+        status: "active",
+      });
+      if (error) {
+        if (error.code === "23505") { toast.info("Paciente já está neste programa"); return; }
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.patients.all(user?.id ?? "") });
+      toast.success("Paciente adicionado ao programa!");
     },
     onError: (err: any) => toast.error(err.message),
   });
