@@ -1015,6 +1015,24 @@ export default function AdminDashboard() {
                     </div>
                   </CardContent>
                 </Card>
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/menu-config")}>
+                  <CardContent className="flex items-center gap-4 py-6">
+                    <LayoutGrid className="w-8 h-8 text-emerald-400" />
+                    <div>
+                      <p className="font-display font-semibold">Organizar Menus</p>
+                      <p className="text-sm text-muted-foreground">Editar menus, ícones e categorias</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/branding")}>
+                  <CardContent className="flex items-center gap-4 py-6">
+                    <Palette className="w-8 h-8 text-pink-400" />
+                    <div>
+                      <p className="font-display font-semibold">Cores e Layout</p>
+                      <p className="text-sm text-muted-foreground">Personalizar visual do sistema</p>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
 
               {/* ─── Simulação de Progresso ─── */}
