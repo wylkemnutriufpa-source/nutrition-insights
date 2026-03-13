@@ -39,9 +39,15 @@ export function useChecklistTasks(date: string) {
 export function useToggleChecklistTask() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const inflightRef = React.useRef<Set<string>>(new Set());
 
   return useMutation({
     mutationFn: async ({ task, date }: { task: ChecklistTask; date: string }) => {
+      // Client-side rate limit: prevent double-toggle on same task
+      if (inflightRef.current.has(task.id)) {
+        throw new Error("__debounced__");
+      }
+      inflightRef.current.add(task.id);
       const newCompleted = !task.completed;
       const update = {
         completed: newCompleted,
