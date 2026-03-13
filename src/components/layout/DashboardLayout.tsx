@@ -47,6 +47,7 @@ const nutritionistSections: NavSection[] = [
       { to: "/appointments", icon: Activity, labelKey: "nav.agenda" },
       { to: "/planner", icon: CalendarDays, labelKey: "nav.planner" },
       { to: "/chat", icon: MessageSquare, labelKey: "nav.chat" },
+      { to: "/financial", icon: DollarSign, labelKey: "nav.financial", iconColor: "text-emerald-500" },
     ],
   },
   {
