@@ -49,7 +49,7 @@ export default function ProtocolFitJourneyToggle() {
 
   async function fetchSettings() {
     const { data } = await supabase
-      .from("protocol_master_settings" as any)
+      .from("protocol_master_settings")
       .select("*")
       .eq("nutritionist_id", user!.id)
       .maybeSingle();
