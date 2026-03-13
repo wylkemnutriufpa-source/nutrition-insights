@@ -1076,48 +1076,78 @@ export type Database = {
       diet_templates: {
         Row: {
           base_calories: number
+          caloric_versions: Json
           category: string
+          clinical_tags: string[]
+          complexity_level: string
           conditions: string[]
           created_at: string
           description: string | null
+          diet_style: string
+          food_access_level: string
+          goal_category: string
           icon: string
           id: string
           is_active: boolean
           macro_ratio: Json
+          meal_distribution: Json
           meals: Json
           name: string
           slug: string
           tags: string[]
+          updated_at: string
+          version: number
+          weekly_variation_strategy: Json
         }
         Insert: {
           base_calories?: number
+          caloric_versions?: Json
           category?: string
+          clinical_tags?: string[]
+          complexity_level?: string
           conditions?: string[]
           created_at?: string
           description?: string | null
+          diet_style?: string
+          food_access_level?: string
+          goal_category?: string
           icon?: string
           id?: string
           is_active?: boolean
           macro_ratio?: Json
+          meal_distribution?: Json
           meals?: Json
           name: string
           slug: string
           tags?: string[]
+          updated_at?: string
+          version?: number
+          weekly_variation_strategy?: Json
         }
         Update: {
           base_calories?: number
+          caloric_versions?: Json
           category?: string
+          clinical_tags?: string[]
+          complexity_level?: string
           conditions?: string[]
           created_at?: string
           description?: string | null
+          diet_style?: string
+          food_access_level?: string
+          goal_category?: string
           icon?: string
           id?: string
           is_active?: boolean
           macro_ratio?: Json
+          meal_distribution?: Json
           meals?: Json
           name?: string
           slug?: string
           tags?: string[]
+          updated_at?: string
+          version?: number
+          weekly_variation_strategy?: Json
         }
         Relationships: []
       }
@@ -1353,6 +1383,102 @@ export type Database = {
           source?: string | null
         }
         Relationships: []
+      }
+      food_substitution_groups: {
+        Row: {
+          avg_calories_per_100g: number | null
+          avg_carbs_per_100g: number | null
+          avg_fat_per_100g: number | null
+          avg_protein_per_100g: number | null
+          created_at: string
+          group_key: string
+          group_name: string
+          id: string
+          macro_category: string
+        }
+        Insert: {
+          avg_calories_per_100g?: number | null
+          avg_carbs_per_100g?: number | null
+          avg_fat_per_100g?: number | null
+          avg_protein_per_100g?: number | null
+          created_at?: string
+          group_key: string
+          group_name: string
+          id?: string
+          macro_category: string
+        }
+        Update: {
+          avg_calories_per_100g?: number | null
+          avg_carbs_per_100g?: number | null
+          avg_fat_per_100g?: number | null
+          avg_protein_per_100g?: number | null
+          created_at?: string
+          group_key?: string
+          group_name?: string
+          id?: string
+          macro_category?: string
+        }
+        Relationships: []
+      }
+      food_substitution_members: {
+        Row: {
+          calories_per_portion: number | null
+          carbs_per_portion: number | null
+          clinical_notes: string | null
+          created_at: string
+          fat_per_portion: number | null
+          food_id: string | null
+          food_name: string
+          group_id: string
+          id: string
+          is_primary: boolean
+          portion_grams: number
+          protein_per_portion: number | null
+        }
+        Insert: {
+          calories_per_portion?: number | null
+          carbs_per_portion?: number | null
+          clinical_notes?: string | null
+          created_at?: string
+          fat_per_portion?: number | null
+          food_id?: string | null
+          food_name: string
+          group_id: string
+          id?: string
+          is_primary?: boolean
+          portion_grams?: number
+          protein_per_portion?: number | null
+        }
+        Update: {
+          calories_per_portion?: number | null
+          carbs_per_portion?: number | null
+          clinical_notes?: string | null
+          created_at?: string
+          fat_per_portion?: number | null
+          food_id?: string | null
+          food_name?: string
+          group_id?: string
+          id?: string
+          is_primary?: boolean
+          portion_grams?: number
+          protein_per_portion?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_substitution_members_food_id_fkey"
+            columns: ["food_id"]
+            isOneToOne: false
+            referencedRelation: "food_database"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_substitution_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "food_substitution_groups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       global_tips: {
         Row: {
