@@ -1,0 +1,2 @@
+INSERT INTO public.menu_items (label, label_key, route, icon, category, role_visibility, order_default, is_active)
+VALUES ('Protocolo FitJourney', 'menu.protocol_fitjourney', '/admin/protocol-fitjourney', 'Zap', 'ADMIN', ARRAY['admin'], 35, true);
