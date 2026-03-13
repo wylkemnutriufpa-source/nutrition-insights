@@ -445,10 +445,13 @@ export default function Financial() {
             </div>
 
             <Tabs defaultValue="subscriptions" className="w-full">
-              <TabsList className="w-full justify-start bg-card border border-border">
+              <TabsList className="w-full justify-start bg-card border border-border flex-wrap">
                 <TabsTrigger value="subscriptions">Pagamentos</TabsTrigger>
-                <TabsTrigger value="income">
-                  <ArrowUpCircle className="w-3.5 h-3.5 mr-1" /> Receitas
+                <TabsTrigger value="stripe-income">
+                  <CreditCard className="w-3.5 h-3.5 mr-1" /> Receitas Stripe
+                </TabsTrigger>
+                <TabsTrigger value="manual-income">
+                  <ArrowUpCircle className="w-3.5 h-3.5 mr-1" /> Receitas Manuais
                 </TabsTrigger>
                 <TabsTrigger value="expenses">
                   <ArrowDownCircle className="w-3.5 h-3.5 mr-1" /> Despesas
@@ -502,11 +505,27 @@ export default function Financial() {
                 </Card>
               </TabsContent>
 
-              {/* Income Tab */}
-              <TabsContent value="income" className="mt-4">
+              {/* Stripe Income Tab */}
+              <TabsContent value="stripe-income" className="mt-4">
                 <TransactionList
-                  transactions={transactions.filter((t) => t.type === "income")}
+                  transactions={transactions.filter((t) => t.type === "income" && t.category === "assinatura")}
                   type="income"
+                  label="Receitas Stripe"
+                  emptyMessage="Nenhuma receita via Stripe registrada"
+                  icon={<CreditCard className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />}
+                  onAdd={() => { setTxForm({ ...defaultTxForm, type: "income", category: "assinatura" }); setTxOpen(true); }}
+                  onEdit={editTransaction}
+                  onDelete={deleteTransaction}
+                />
+              </TabsContent>
+
+              {/* Manual Income Tab */}
+              <TabsContent value="manual-income" className="mt-4">
+                <TransactionList
+                  transactions={transactions.filter((t) => t.type === "income" && t.category !== "assinatura")}
+                  type="income"
+                  label="Receitas Manuais"
+                  emptyMessage="Nenhuma receita manual registrada"
                   onAdd={() => { setTxForm({ ...defaultTxForm, type: "income" }); setTxOpen(true); }}
                   onEdit={editTransaction}
                   onDelete={deleteTransaction}
@@ -575,22 +594,29 @@ export default function Financial() {
 function TransactionList({
   transactions,
   type,
+  label,
+  emptyMessage,
+  icon,
   onAdd,
   onEdit,
   onDelete,
 }: {
   transactions: Transaction[];
   type: "income" | "expense";
+  label?: string;
+  emptyMessage?: string;
+  icon?: React.ReactNode;
   onAdd: () => void;
   onEdit: (tx: Transaction) => void;
   onDelete: (id: string) => void;
 }) {
   const isIncome = type === "income";
+  const title = label || (isIncome ? "Receitas" : "Despesas");
   return (
     <Card className="glass shadow-card">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="font-display text-lg">
-          {isIncome ? "Receitas" : "Despesas"}
+          {title}
         </CardTitle>
         <Button size="sm" onClick={onAdd} className="gap-1">
           <Plus className="w-4 h-4" /> Adicionar
@@ -599,13 +625,13 @@ function TransactionList({
       <CardContent>
         {transactions.length === 0 ? (
           <div className="text-center py-8">
-            {isIncome ? (
+            {icon || (isIncome ? (
               <ArrowUpCircle className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
             ) : (
               <ArrowDownCircle className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
-            )}
+            ))}
             <p className="text-sm text-muted-foreground">
-              Nenhuma {isIncome ? "receita" : "despesa"} registrada
+              {emptyMessage || `Nenhuma ${isIncome ? "receita" : "despesa"} registrada`}
             </p>
           </div>
         ) : (
