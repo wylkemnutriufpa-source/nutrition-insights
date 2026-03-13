@@ -39,9 +39,7 @@ export function ProfessionalsDrillDown({ open, onOpenChange }: { open: boolean; 
         for (const id of ids) {
           const [profileRes, countRes] = await Promise.all([
             supabase.from("profiles").select("full_name, avatar_url, created_at").eq("user_id", id).single(),
-            type === "nutritionist"
-              ? supabase.from("nutritionist_patients").select("id", { count: "exact", head: true }).eq("nutritionist_id", id).eq("status", "active")
-              : supabase.from("personal_students").select("id", { count: "exact", head: true }).eq("personal_id", id).eq("status", "active"),
+            supabase.from("nutritionist_patients").select("id", { count: "exact", head: true }).eq("nutritionist_id", id).eq("status", "active"),
           ]);
           results.push({
             user_id: id,
