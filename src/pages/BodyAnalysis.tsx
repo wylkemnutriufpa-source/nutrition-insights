@@ -88,12 +88,15 @@ export default function BodyAnalysis() {
   useEffect(() => { fetchAnalyses(); }, [patientId]);
 
   const uploadImage = async (file: File, path: string): Promise<string | null> => {
-    const ext = file.name.split(".").pop();
-    const filePath = `${path}/${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("body-images").upload(filePath, file);
-    if (error) { toast.error("Erro no upload: " + error.message); return null; }
-    const { data: urlData } = supabase.storage.from("body-images").getPublicUrl(filePath);
-    return urlData.publicUrl;
+    return uploadWithRetry({
+      bucket: "body-images",
+      path,
+      file,
+      maxRetries: 3,
+      onProgress: (attempt, max) => {
+        if (attempt > 1) toast.info(`Retry upload (${attempt}/${max})...`);
+      },
+    });
   };
 
   const handleSubmit = async () => {
