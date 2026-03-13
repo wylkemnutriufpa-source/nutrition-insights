@@ -267,6 +267,12 @@ export default function PatientDetail() {
       setSelectedPrestigePlanId("");
     }
 
+    // Fetch patient email for admin upgrade feature
+    if (isAdmin && patientId) {
+      const { data: emailData } = await supabase.rpc("get_user_email_by_id", { _user_id: patientId });
+      if (emailData) setPatientEmail(emailData);
+    }
+
     setLoading(false);
   }, [patientId, user]);
 
