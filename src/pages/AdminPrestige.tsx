@@ -495,43 +495,12 @@ export default function AdminPrestige() {
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        {/* Search to add */}
-                        <div className="relative">
-                          <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-muted-foreground" />
-                          <Input
-                            placeholder="Buscar paciente para adicionar..."
-                            value={search}
-                            onChange={e => setMemberSearch(prev => ({ ...prev, [plan.id]: e.target.value }))}
-                            className="pl-8 h-9 text-sm"
-                          />
-                        </div>
-
-                        {/* Available patients dropdown */}
-                        {search.length > 0 && (
-                          <ScrollArea className="max-h-40 border border-border rounded-lg">
-                            <div className="p-1">
-                              {available.length === 0 ? (
-                                <p className="text-xs text-muted-foreground text-center py-3">Nenhum paciente disponível</p>
-                              ) : (
-                                available.slice(0, 20).map(patient => (
-                                  <button
-                                    key={patient.user_id}
-                                    onClick={() => assignPatient(patient.user_id, plan.id)}
-                                    disabled={assigning === patient.user_id}
-                                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left hover:bg-primary/10 transition-all text-sm group"
-                                  >
-                                    {assigning === patient.user_id ? (
-                                      <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
-                                    ) : (
-                                      <UserPlus className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
-                                    )}
-                                    <span className="flex-1 truncate">{patient.full_name}</span>
-                                  </button>
-                                ))
-                              )}
-                            </div>
-                          </ScrollArea>
-                        )}
+                      {/* Search to add */}
+                        <PatientPickerDropdown
+                          patients={available.map(p => ({ id: p.user_id, name: p.full_name }))}
+                          onSelect={(patientId) => assignPatient(patientId, plan.id)}
+                          loading={assigning}
+                        />
 
                         <Separator />
 
