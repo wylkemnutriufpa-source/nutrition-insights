@@ -591,6 +591,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </Button>
               </Link>
             )}
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={openCommandPalette} title="Buscar (Ctrl+K)">
+              <Search className="w-4 h-4" />
+            </Button>
             <NotificationBell />
           </div>
         </div>
