@@ -101,8 +101,8 @@ export function usePatientsList() {
 
       const patientIds = data.map(p => p.patient_id);
 
-      // BATCH queries instead of N+1 per patient (6 parallel queries total, not 3*N+3)
-      const [profilesRes, statsRes, checklistRes, enrollmentsRes, prestigeRes, pPlansRes] = await Promise.all([
+      // BATCH queries instead of N+1 per patient (7 parallel queries total)
+      const [profilesRes, statsRes, checklistRes, enrollmentsRes, prestigeRes, pPlansRes, emailsRes] = await Promise.all([
         supabase.from("profiles").select("user_id, full_name, avatar_url").in("user_id", patientIds),
         supabase.from("player_stats").select("user_id, last_meal_date, total_xp, current_streak").in("user_id", patientIds),
         supabase.from("checklist_tasks").select("patient_id, id, completed").in("patient_id", patientIds).eq("date", today),
@@ -115,7 +115,14 @@ export function usePatientsList() {
           .eq("is_active", true)
           .in("patient_id", patientIds),
         supabase.from("prestige_plans").select("*").eq("is_active", true).order("display_order"),
+        supabase.rpc("get_patient_emails", { _patient_ids: patientIds }),
       ]);
+
+      // Build email map
+      const emailMap = new Map<string, string>();
+      ((emailsRes.data as any[]) || []).forEach((e: any) => {
+        emailMap.set(e.user_id, e.email);
+      });
 
       // Build profile map by user_id
       const profileMap = new Map<string, { full_name: string; avatar_url: string | null }>();
