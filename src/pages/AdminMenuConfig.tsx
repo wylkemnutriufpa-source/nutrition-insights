@@ -1,17 +1,42 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { ArrowUp, ArrowDown, Save, RefreshCw, Settings } from "lucide-react";
-import { CATEGORY_LABELS } from "@/hooks/useSmartMenu";
-import { invalidateMenuCache } from "@/hooks/useSmartMenu";
+import {
+  Save, RefreshCw, Settings, GripVertical, Eye, EyeOff,
+  ArrowUp, ArrowDown, Crown, LayoutDashboard, Users,
+  UtensilsCrossed, Trophy, Target, FileBarChart, Leaf,
+  ClipboardCheck, FileText, Rocket, CheckCircle2, Activity,
+  MessageSquare, Lightbulb, ChefHat, ShoppingCart, Apple, Camera,
+  Palette, Bell, BarChart3, Shield, Zap, Star, Bot,
+  Scale, Droplets, Heart, Calculator, TrendingUp, BookOpen,
+  DollarSign, Pill, Compass, CalendarDays, Megaphone, Globe,
+  UserCheck, Share2, Award, CreditCard, Dumbbell, GraduationCap, Sparkles,
+  ChevronDown, ChevronUp, Search
+} from "lucide-react";
+import { CATEGORY_LABELS, CATEGORY_COLORS, invalidateMenuCache } from "@/hooks/useSmartMenu";
+import { Input } from "@/components/ui/input";
+import { motion, AnimatePresence } from "framer-motion";
+
+const ICON_MAP: Record<string, any> = {
+  LayoutDashboard, Users, UtensilsCrossed, Trophy, Target, FileBarChart,
+  Leaf, ClipboardCheck, FileText, Rocket, CheckCircle2, Activity,
+  MessageSquare, Lightbulb, ChefHat, ShoppingCart, Apple, Camera,
+  Palette, Bell, BarChart3, Shield, Zap, Star, Bot,
+  Scale, Droplets, Heart, Calculator, TrendingUp, BookOpen,
+  DollarSign, Pill, Crown, Compass, CalendarDays, Megaphone, Globe,
+  UserCheck, Share2, Award, CreditCard, Dumbbell, GraduationCap, Sparkles, Settings,
+};
+
+function getIcon(name: string) {
+  return ICON_MAP[name] || LayoutDashboard;
+}
 
 interface MenuItemRow {
   id: string;
@@ -30,13 +55,27 @@ interface MenuItemRow {
 }
 
 const ROLES = ["patient", "nutritionist", "personal", "admin"];
+const ROLE_LABELS: Record<string, string> = {
+  patient: "Paciente",
+  nutritionist: "Nutricionista",
+  personal: "Personal",
+  admin: "Admin",
+};
+const ROLE_COLORS: Record<string, string> = {
+  patient: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+  nutritionist: "bg-violet-500/10 text-violet-500 border-violet-500/20",
+  personal: "bg-orange-500/10 text-orange-500 border-orange-500/20",
+  admin: "bg-red-500/10 text-red-500 border-red-500/20",
+};
 const CATEGORIES = Object.keys(CATEGORY_LABELS);
 
 export default function AdminMenuConfig() {
   const [items, setItems] = useState<MenuItemRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [filterCategory, setFilterCategory] = useState<string>("ALL");
+  const [search, setSearch] = useState("");
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(CATEGORIES));
+  const [activeTab, setActiveTab] = useState("visual");
 
   const fetchItems = async () => {
     setLoading(true);
@@ -52,64 +91,61 @@ export default function AdminMenuConfig() {
   useEffect(() => { fetchItems(); }, []);
 
   const toggleActive = (id: string) => {
-    setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, is_active: !item.is_active } : item))
-    );
+    setItems(prev => prev.map(item => item.id === id ? { ...item, is_active: !item.is_active } : item));
   };
 
   const togglePremium = (id: string) => {
-    setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, premium_only: !item.premium_only } : item))
-    );
+    setItems(prev => prev.map(item => item.id === id ? { ...item, premium_only: !item.premium_only } : item));
   };
 
   const toggleRole = (id: string, role: string) => {
-    setItems((prev) =>
-      prev.map((item) => {
-        if (item.id !== id) return item;
-        const roles = item.role_visibility.includes(role)
-          ? item.role_visibility.filter((r) => r !== role)
-          : [...item.role_visibility, role];
-        return { ...item, role_visibility: roles };
-      })
-    );
+    setItems(prev => prev.map(item => {
+      if (item.id !== id) return item;
+      const roles = item.role_visibility.includes(role)
+        ? item.role_visibility.filter(r => r !== role)
+        : [...item.role_visibility, role];
+      return { ...item, role_visibility: roles };
+    }));
   };
 
   const changeCategory = (id: string, category: string) => {
-    setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, category } : item))
-    );
+    setItems(prev => prev.map(item => item.id === id ? { ...item, category } : item));
   };
 
-  const moveUp = (id: string) => {
-    setItems((prev) => {
-      const idx = prev.findIndex((i) => i.id === id);
+  const moveUp = (id: string, category: string) => {
+    setItems(prev => {
+      const catItems = prev.filter(i => i.category === category);
+      const otherItems = prev.filter(i => i.category !== category);
+      const idx = catItems.findIndex(i => i.id === id);
       if (idx <= 0) return prev;
-      const item = prev[idx];
-      const prevItem = prev[idx - 1];
-      if (item.category !== prevItem.category) return prev;
-      const updated = [...prev];
-      const tempOrder = item.order_default;
-      updated[idx] = { ...item, order_default: prevItem.order_default };
-      updated[idx - 1] = { ...prevItem, order_default: tempOrder };
-      updated.sort((a, b) => a.category.localeCompare(b.category) || a.order_default - b.order_default);
-      return updated;
+      const temp = catItems[idx].order_default;
+      catItems[idx] = { ...catItems[idx], order_default: catItems[idx - 1].order_default };
+      catItems[idx - 1] = { ...catItems[idx - 1], order_default: temp };
+      [catItems[idx], catItems[idx - 1]] = [catItems[idx - 1], catItems[idx]];
+      return [...otherItems, ...catItems].sort((a, b) => a.category.localeCompare(b.category) || a.order_default - b.order_default);
     });
   };
 
-  const moveDown = (id: string) => {
-    setItems((prev) => {
-      const idx = prev.findIndex((i) => i.id === id);
-      if (idx < 0 || idx >= prev.length - 1) return prev;
-      const item = prev[idx];
-      const nextItem = prev[idx + 1];
-      if (item.category !== nextItem.category) return prev;
-      const updated = [...prev];
-      const tempOrder = item.order_default;
-      updated[idx] = { ...item, order_default: nextItem.order_default };
-      updated[idx + 1] = { ...nextItem, order_default: tempOrder };
-      updated.sort((a, b) => a.category.localeCompare(b.category) || a.order_default - b.order_default);
-      return updated;
+  const moveDown = (id: string, category: string) => {
+    setItems(prev => {
+      const catItems = prev.filter(i => i.category === category);
+      const otherItems = prev.filter(i => i.category !== category);
+      const idx = catItems.findIndex(i => i.id === id);
+      if (idx < 0 || idx >= catItems.length - 1) return prev;
+      const temp = catItems[idx].order_default;
+      catItems[idx] = { ...catItems[idx], order_default: catItems[idx + 1].order_default };
+      catItems[idx + 1] = { ...catItems[idx + 1], order_default: temp };
+      [catItems[idx], catItems[idx + 1]] = [catItems[idx + 1], catItems[idx]];
+      return [...otherItems, ...catItems].sort((a, b) => a.category.localeCompare(b.category) || a.order_default - b.order_default);
+    });
+  };
+
+  const toggleCategoryExpanded = (cat: string) => {
+    setExpandedCategories(prev => {
+      const next = new Set(prev);
+      if (next.has(cat)) next.delete(cat);
+      else next.add(cat);
+      return next;
     });
   };
 
@@ -130,7 +166,7 @@ export default function AdminMenuConfig() {
           .eq("id", item.id);
       }
       invalidateMenuCache();
-      toast({ title: "Menu salvo!", description: "As configurações de menu foram atualizadas." });
+      toast({ title: "✅ Menu salvo!", description: "As configurações foram atualizadas com sucesso." });
     } catch (e) {
       toast({ title: "Erro ao salvar", description: String(e), variant: "destructive" });
     } finally {
@@ -138,149 +174,281 @@ export default function AdminMenuConfig() {
     }
   };
 
-  const filtered = filterCategory === "ALL" ? items : items.filter((i) => i.category === filterCategory);
+  // Group by category
+  const grouped = useMemo(() => {
+    const map: Record<string, MenuItemRow[]> = {};
+    const filtered = search
+      ? items.filter(i => i.label.toLowerCase().includes(search.toLowerCase()) || i.route.toLowerCase().includes(search.toLowerCase()))
+      : items;
+    filtered.forEach(item => {
+      if (!map[item.category]) map[item.category] = [];
+      map[item.category].push(item);
+    });
+    return map;
+  }, [items, search]);
+
+  const activeCount = items.filter(i => i.is_active).length;
+  const inactiveCount = items.filter(i => !i.is_active).length;
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-6 max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Settings className="w-6 h-6 text-primary" />
-              Configuração do Menu
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Settings className="w-5 h-5 text-primary" />
+              </div>
+              Organizador de Menu
             </h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Gerencie a visibilidade, ordem e categorias de todos os itens do menu para cada perfil.
+              Organize visualmente o que aparece no seu menu lateral. Ative, desative e reordene com facilidade.
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={fetchItems} disabled={loading}>
+            <Button variant="outline" size="sm" onClick={fetchItems} disabled={loading}>
               <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
               Recarregar
             </Button>
-            <Button onClick={saveAll} disabled={saving}>
+            <Button size="sm" onClick={saveAll} disabled={saving} className="shadow-glow">
               <Save className="w-4 h-4 mr-2" />
-              {saving ? "Salvando..." : "Salvar Tudo"}
+              {saving ? "Salvando..." : "Salvar Alterações"}
             </Button>
           </div>
         </div>
 
-        <div className="flex gap-2 flex-wrap">
-          <Badge
-            variant={filterCategory === "ALL" ? "default" : "outline"}
-            className="cursor-pointer"
-            onClick={() => setFilterCategory("ALL")}
-          >
-            Todos ({items.length})
-          </Badge>
-          {CATEGORIES.map((cat) => {
-            const count = items.filter((i) => i.category === cat).length;
-            if (count === 0) return null;
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-3">
+          <Card className="border-emerald-500/20 bg-emerald-500/5">
+            <CardContent className="p-4 flex items-center gap-3">
+              <Eye className="w-5 h-5 text-emerald-500" />
+              <div>
+                <p className="text-2xl font-bold text-emerald-500">{activeCount}</p>
+                <p className="text-xs text-muted-foreground">Visíveis</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-muted bg-muted/30">
+            <CardContent className="p-4 flex items-center gap-3">
+              <EyeOff className="w-5 h-5 text-muted-foreground" />
+              <div>
+                <p className="text-2xl font-bold">{inactiveCount}</p>
+                <p className="text-xs text-muted-foreground">Ocultos</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-violet-500/20 bg-violet-500/5">
+            <CardContent className="p-4 flex items-center gap-3">
+              <BarChart3 className="w-5 h-5 text-violet-500" />
+              <div>
+                <p className="text-2xl font-bold text-violet-500">{Object.keys(grouped).length}</p>
+                <p className="text-xs text-muted-foreground">Categorias</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar item do menu..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
+        {/* Category Sections */}
+        <div className="space-y-4">
+          {CATEGORIES.map(cat => {
+            const catItems = grouped[cat];
+            if (!catItems || catItems.length === 0) return null;
+            const isExpanded = expandedCategories.has(cat);
+            const activeInCat = catItems.filter(i => i.is_active).length;
+            const colorClass = CATEGORY_COLORS[cat] || "text-muted-foreground";
+
             return (
-              <Badge
-                key={cat}
-                variant={filterCategory === cat ? "default" : "outline"}
-                className="cursor-pointer"
-                onClick={() => setFilterCategory(cat)}
-              >
-                {CATEGORY_LABELS[cat]} ({count})
-              </Badge>
+              <Card key={cat} className="overflow-hidden">
+                <button
+                  onClick={() => toggleCategoryExpanded(cat)}
+                  className="w-full flex items-center justify-between px-5 py-4 hover:bg-muted/30 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-2 h-8 rounded-full ${colorClass.replace("text-", "bg-")}`} />
+                    <div className="text-left">
+                      <h3 className={`font-bold text-sm ${colorClass}`}>
+                        {CATEGORY_LABELS[cat]}
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        {activeInCat}/{catItems.length} itens visíveis
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Badge variant="secondary" className="text-xs">
+                      {catItems.length} itens
+                    </Badge>
+                    {isExpanded ? (
+                      <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    )}
+                  </div>
+                </button>
+
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-4 pb-4 space-y-2">
+                        {catItems.map((item, idx) => {
+                          const Icon = getIcon(item.icon);
+                          return (
+                            <div
+                              key={item.id}
+                              className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                                item.is_active
+                                  ? "bg-card border-border hover:border-primary/30 hover:shadow-sm"
+                                  : "bg-muted/20 border-transparent opacity-60 hover:opacity-80"
+                              }`}
+                            >
+                              {/* Reorder buttons */}
+                              <div className="flex flex-col gap-0.5">
+                                <button
+                                  onClick={() => moveUp(item.id, cat)}
+                                  className="p-0.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground"
+                                  disabled={idx === 0}
+                                >
+                                  <ArrowUp className="w-3 h-3" />
+                                </button>
+                                <button
+                                  onClick={() => moveDown(item.id, cat)}
+                                  className="p-0.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground"
+                                  disabled={idx === catItems.length - 1}
+                                >
+                                  <ArrowDown className="w-3 h-3" />
+                                </button>
+                              </div>
+
+                              {/* Icon */}
+                              <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                item.is_active ? "bg-primary/10" : "bg-muted"
+                              }`}>
+                                <Icon className={`w-4 h-4 ${
+                                  item.is_active ? (item.icon_color || "text-primary") : "text-muted-foreground"
+                                }`} />
+                              </div>
+
+                              {/* Label + route */}
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-sm font-medium truncate ${!item.is_active ? "line-through" : ""}`}>
+                                  {item.label}
+                                </p>
+                                <p className="text-[10px] text-muted-foreground truncate">{item.route}</p>
+                              </div>
+
+                              {/* Roles */}
+                              <div className="hidden sm:flex gap-1 flex-shrink-0">
+                                {ROLES.map(role => (
+                                  <button
+                                    key={role}
+                                    onClick={() => toggleRole(item.id, role)}
+                                    className={`text-[9px] px-1.5 py-0.5 rounded-full border font-medium transition-all ${
+                                      item.role_visibility.includes(role)
+                                        ? ROLE_COLORS[role]
+                                        : "bg-transparent border-border/50 text-muted-foreground/40"
+                                    }`}
+                                  >
+                                    {ROLE_LABELS[role].slice(0, 3).toUpperCase()}
+                                  </button>
+                                ))}
+                              </div>
+
+                              {/* Category selector */}
+                              <Select value={item.category} onValueChange={v => changeCategory(item.id, v)}>
+                                <SelectTrigger className="h-7 w-28 text-xs hidden lg:flex">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {CATEGORIES.map(c => (
+                                    <SelectItem key={c} value={c} className="text-xs">
+                                      {CATEGORY_LABELS[c]}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+
+                              {/* Premium */}
+                              {item.premium_only && (
+                                <Crown className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                              )}
+
+                              {/* Active toggle */}
+                              <Switch
+                                checked={item.is_active}
+                                onCheckedChange={() => toggleActive(item.id)}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </Card>
             );
           })}
         </div>
 
+        {/* Quick actions */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">
-              {filterCategory === "ALL" ? "Todos os itens" : CATEGORY_LABELS[filterCategory]}
-              <span className="text-muted-foreground font-normal ml-2">({filtered.length} itens)</span>
-            </CardTitle>
+            <CardTitle className="text-sm">Ações Rápidas</CardTitle>
           </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-10">Ativo</TableHead>
-                    <TableHead>Label</TableHead>
-                    <TableHead>Rota</TableHead>
-                    <TableHead>Ícone</TableHead>
-                    <TableHead>Categoria</TableHead>
-                    <TableHead className="text-center">Visibilidade</TableHead>
-                    <TableHead className="w-10">Premium</TableHead>
-                    <TableHead className="w-20">Ordem</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map((item) => (
-                    <TableRow key={item.id} className={!item.is_active ? "opacity-50" : ""}>
-                      <TableCell>
-                        <Switch checked={item.is_active} onCheckedChange={() => toggleActive(item.id)} />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={item.label}
-                          onChange={(e) =>
-                            setItems((prev) =>
-                              prev.map((i) => (i.id === item.id ? { ...i, label: e.target.value } : i))
-                            )
-                          }
-                          className="h-8 w-40"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <code className="text-xs bg-muted px-1 py-0.5 rounded">{item.route}</code>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-xs text-muted-foreground">{item.icon}</span>
-                      </TableCell>
-                      <TableCell>
-                        <Select value={item.category} onValueChange={(v) => changeCategory(item.id, v)}>
-                          <SelectTrigger className="h-8 w-32">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {CATEGORIES.map((cat) => (
-                              <SelectItem key={cat} value={cat}>
-                                {CATEGORY_LABELS[cat]}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1 flex-wrap">
-                          {ROLES.map((role) => (
-                            <Badge
-                              key={role}
-                              variant={item.role_visibility.includes(role) ? "default" : "outline"}
-                              className="cursor-pointer text-[10px] px-1.5 py-0"
-                              onClick={() => toggleRole(item.id, role)}
-                            >
-                              {role === "patient" ? "PAC" : role === "nutritionist" ? "NUT" : role === "personal" ? "PER" : "ADM"}
-                            </Badge>
-                          ))}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Switch checked={item.premium_only} onCheckedChange={() => togglePremium(item.id)} />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => moveUp(item.id)}>
-                            <ArrowUp className="w-3 h-3" />
-                          </Button>
-                          <span className="text-xs w-6 text-center">{item.order_default}</span>
-                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => moveDown(item.id)}>
-                            <ArrowDown className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+          <CardContent className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setExpandedCategories(new Set(CATEGORIES))}
+            >
+              Expandir Tudo
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setExpandedCategories(new Set())}
+            >
+              Recolher Tudo
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setItems(prev => prev.map(i => ({ ...i, is_active: true })));
+                toast({ title: "Todos ativados" });
+              }}
+            >
+              <Eye className="w-3 h-3 mr-1" />
+              Ativar Todos
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setItems(prev => prev.map(i => ({ ...i, is_active: false })));
+                toast({ title: "Todos desativados" });
+              }}
+            >
+              <EyeOff className="w-3 h-3 mr-1" />
+              Desativar Todos
+            </Button>
           </CardContent>
         </Card>
       </div>
