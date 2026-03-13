@@ -137,19 +137,8 @@ serve(async (req) => {
         const billingReason = (invoice as any).billing_reason;
         
         if (billingReason === "subscription_cycle") {
-          // Find user
-          const { data: users } = await supabase
-            .rpc("get_patient_emails", { _patient_ids: [] });
-          
-          // Use auth lookup
-          let userId: string | null = null;
-          const { data: profileData } = await supabase
-            .from("profiles")
-            .select("user_id")
-            .ilike("email", customerEmail)
-            .maybeSingle();
-          
-          userId = profileData?.user_id || null;
+          // Find user by email
+          const { data: userId } = await supabase.rpc("get_user_id_by_email", { _email: customerEmail });
 
           if (userId) {
             let planName = "Assinatura";
