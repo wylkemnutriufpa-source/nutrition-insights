@@ -57,7 +57,7 @@ export default function PublicProfile() {
         .select("*")
         .eq("slug", slug)
         .eq("is_public", true)
-        .single();
+        .maybeSingle();
 
       if (!pub) { setNotFound(true); setLoading(false); return; }
       setProfile(pub as PublicProfile);
