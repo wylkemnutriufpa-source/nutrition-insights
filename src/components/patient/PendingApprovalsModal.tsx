@@ -13,8 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
   AlertTriangle, CheckCircle2, XCircle, Loader2, User,
-  Target, Sparkles, ChevronRight, Scale, UtensilsCrossed,
-  ArrowRight, FileText, Eye
+  Target, Sparkles, ChevronRight, Scale,
+  FileText
 } from "lucide-react";
 
 interface PendingPipeline {
