@@ -7,16 +7,18 @@ interface FitJourneyLogoProps {
 }
 
 const sizes = {
-  sm: { icon: 78, text: "text-xl", container: 64 },
-  md: { icon: 90, text: "text-lg", container: 72 },
-  lg: { icon: 104, text: "text-2xl", container: 84 },
+  sm: { icon: 96, text: "text-xl", container: 64 },
+  md: { icon: 112, text: "text-lg", container: 72 },
+  lg: { icon: 128, text: "text-2xl", container: 84 },
 };
 
-const coinDepth = 6;
+const coinDepth = 14;
 
 export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJourneyLogoProps) {
   const s = sizes[size];
   const edgeOffset = s.icon / 2 - coinDepth / 2;
+  const faceDepth = coinDepth / 2;
+  const logoSrc = `${logoImg}?v=coin-face-2`;
 
   return (
     <div className="flex items-center gap-3">
@@ -41,32 +43,32 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
           <div
             className="absolute inset-0"
             style={{
-              transform: "translateZ(3px)",
+              transform: `translateZ(${faceDepth}px)`,
               backfaceVisibility: "hidden",
               WebkitBackfaceVisibility: "hidden",
             }}
           >
             <img
-              src={logoImg}
+              src={logoSrc}
               alt="FitJourney Logo"
-              className="w-full h-full object-contain"
-              style={{ filter: "drop-shadow(0 2px 6px hsl(var(--foreground) / 0.25))" }}
+              className="w-full h-full object-cover scale-[1.2]"
+              style={{ filter: "drop-shadow(0 2px 6px hsl(var(--foreground) / 0.2))" }}
             />
           </div>
 
           <div
             className="absolute inset-0"
             style={{
-              transform: "rotateY(180deg) translateZ(3px)",
+              transform: `rotateY(180deg) translateZ(${faceDepth}px)`,
               backfaceVisibility: "hidden",
               WebkitBackfaceVisibility: "hidden",
             }}
           >
             <img
-              src={logoImg}
+              src={logoSrc}
               alt="FitJourney Logo verso"
-              className="w-full h-full object-contain"
-              style={{ filter: "drop-shadow(0 2px 6px hsl(var(--foreground) / 0.25))" }}
+              className="w-full h-full object-cover scale-[1.2]"
+              style={{ filter: "drop-shadow(0 2px 6px hsl(var(--foreground) / 0.2))" }}
             />
           </div>
 
@@ -78,8 +80,8 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
               transform: `rotateY(90deg) translateZ(${edgeOffset}px)`,
               transformOrigin: "center",
               background:
-                "linear-gradient(180deg, hsl(var(--primary) / 0.9), hsl(var(--primary) / 0.5), hsl(var(--primary) / 0.9))",
-              boxShadow: "0 0 8px hsl(var(--primary) / 0.35)",
+                "linear-gradient(180deg, hsl(var(--border) / 0.95), hsl(var(--muted-foreground) / 0.45), hsl(var(--border) / 0.95))",
+              boxShadow: "0 0 6px hsl(var(--foreground) / 0.12)",
             }}
           />
 
@@ -91,8 +93,8 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
               transform: `rotateY(90deg) translateZ(${-edgeOffset}px)`,
               transformOrigin: "center",
               background:
-                "linear-gradient(180deg, hsl(var(--primary) / 0.9), hsl(var(--primary) / 0.5), hsl(var(--primary) / 0.9))",
-              boxShadow: "0 0 8px hsl(var(--primary) / 0.35)",
+                "linear-gradient(180deg, hsl(var(--border) / 0.95), hsl(var(--muted-foreground) / 0.45), hsl(var(--border) / 0.95))",
+              boxShadow: "0 0 6px hsl(var(--foreground) / 0.12)",
             }}
           />
         </motion.div>
