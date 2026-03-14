@@ -427,13 +427,22 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
                     </RadioGroup>
                   </div>
 
-                  {/* Primary: Analyze plan button */}
+                  {/* Primary: Analyze/Edit plan buttons */}
                   {selectedPipeline.generated_plan_id && (
-                    <Button variant="outline" className="w-full border-primary/50 text-primary hover:bg-primary/10" asChild>
-                      <a href={`/meal-plan-editor?plan=${selectedPipeline.generated_plan_id}`} target="_blank" rel="noopener noreferrer">
-                        <Eye className="w-4 h-4 mr-2" /> Analisar Plano Completo
-                      </a>
-                    </Button>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <Button
+                        variant="outline"
+                        className="w-full border-primary/50 text-primary hover:bg-primary/10"
+                        onClick={() => navigate(`/meal-plans/${selectedPipeline.generated_plan_id}`)}
+                      >
+                        <FileText className="w-4 h-4 mr-2" /> Editar Plano
+                      </Button>
+                      <Button variant="outline" className="w-full border-primary/50 text-primary hover:bg-primary/10" asChild>
+                        <a href={`/meal-plans/${selectedPipeline.generated_plan_id}`} target="_blank" rel="noopener noreferrer">
+                          <Eye className="w-4 h-4 mr-2" /> Analisar em Nova Aba
+                        </a>
+                      </Button>
+                    </div>
                   )}
 
                   {/* Action buttons */}
