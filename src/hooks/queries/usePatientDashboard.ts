@@ -15,7 +15,7 @@ export function usePatientDashboard() {
       const today = new Date().toISOString().split("T")[0];
 
       const [statsRes, checkRes, anamRes, aptRes, mealsRes, msgRes] = await Promise.all([
-        supabase.from("player_stats").select("*").eq("user_id", userId).single(),
+        supabase.from("player_stats").select("*").eq("user_id", userId).maybeSingle(),
         supabase.from("checklist_tasks").select("*").eq("patient_id", userId).eq("date", today).order("category"),
         supabase.from("patient_anamnesis").select("*").eq("user_id", userId).eq("status", "completed").order("created_at", { ascending: false }).limit(1),
         supabase.from("patient_appointments").select("*").eq("patient_id", userId).gte("appointment_date", new Date().toISOString()).order("appointment_date").limit(1),
