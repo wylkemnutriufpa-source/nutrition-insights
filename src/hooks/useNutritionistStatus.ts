@@ -26,7 +26,7 @@ export function useNutritionistStatus(patientId: string | undefined) {
       .eq("patient_id", patientId)
       .eq("status", "active")
       .limit(1)
-      .single()
+      .maybeSingle()
       .then(({ data }) => {
         if (data) setNutritionistId(data.nutritionist_id);
       });
