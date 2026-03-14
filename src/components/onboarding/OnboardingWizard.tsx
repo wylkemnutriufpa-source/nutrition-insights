@@ -88,7 +88,7 @@ export function useOnboardingNotification() {
           .from("professional_profiles")
           .select("onboarding_completed")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
         setShowBadge(data ? !data.onboarding_completed : true);
       } else {
         setShowBadge(true);
