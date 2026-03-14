@@ -299,7 +299,7 @@ export default function ClientDashboard() {
                       .from("program_enrollments")
                       .select("*")
                       .eq("id", biquiniEnrollment.id)
-                      .single()
+                      .maybeSingle()
                       .then(({ data }: any) => {
                         if (data) setBiquiniEnrollment(data);
                       });
