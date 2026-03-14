@@ -112,7 +112,7 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
           }}
         >
           <img
-            src={logoGif}
+            src={logoImg}
             alt="FitJourney Logo"
             className="rounded-full object-cover"
             style={{
