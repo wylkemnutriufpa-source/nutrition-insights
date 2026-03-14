@@ -158,7 +158,7 @@ function SidebarContent({
   return (
     <>
       {/* Logo */}
-      <div className="p-4 flex items-center justify-between">
+      <div className="p-4 flex flex-col gap-2">
         <FitJourneyLogo collapsed={collapsed} size="md" />
         <BrainIntelligence collapsed={collapsed} />
       </div>
