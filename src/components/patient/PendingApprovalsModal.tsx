@@ -339,14 +339,14 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
                     <Card className="border-dashed border-primary/40 bg-primary/5">
                       <CardContent className="py-3 text-center text-sm text-muted-foreground space-y-1">
                         <Sparkles className="w-4 h-4 inline mr-1 text-primary" />
-                        Plano gerado com sucesso. Clique em <strong>"Criar e Editar Plano"</strong> para criar o plano no sistema e editá-lo antes de aprovar.
+                        Dados do protocolo disponíveis. Clique em <strong>"Gerar e Editar Plano"</strong> para criar o plano completo com refeições e editá-lo.
                       </CardContent>
                     </Card>
                   ) : (
                     <Card className="border-dashed border-amber-500/40 bg-amber-500/5">
                       <CardContent className="py-3 text-center text-sm text-muted-foreground">
                         <AlertTriangle className="w-4 h-4 inline mr-1 text-amber-500" />
-                        Plano ainda não foi gerado. Rejeite ou aguarde a geração automática.
+                        Plano ainda não foi gerado. Clique em <strong>"Gerar Plano"</strong> para gerar com base na anamnese do paciente.
                       </CardContent>
                     </Card>
                   )}
