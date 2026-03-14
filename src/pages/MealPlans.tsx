@@ -4,12 +4,13 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ClipboardList, Plus, Calendar, ToggleLeft, ToggleRight, PencilLine } from "lucide-react";
+import { ClipboardList, Plus, Calendar, ToggleLeft, ToggleRight, PencilLine, Clock, CheckCircle2, FileText } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
 
