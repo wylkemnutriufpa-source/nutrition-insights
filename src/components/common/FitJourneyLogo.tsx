@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import logoImg from "@/assets/logo.jpg";
+import logoImg from "@/assets/logo.png";
 
 interface FitJourneyLogoProps {
   collapsed?: boolean;
