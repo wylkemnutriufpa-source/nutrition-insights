@@ -306,7 +306,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
               })}
             </div>
           ) : (
-            /* ── Detail view with Plan A / Plan B selection ── */
+            /* ── Detail view ── */
             <div className="space-y-5 py-2">
               <Button variant="ghost" size="sm" onClick={() => { setSelectedPipeline(null); setRejectMode(false); }}>
                 ← Voltar à lista
@@ -357,78 +357,78 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
 
               {!rejectMode ? (
                 <>
-                  {/* Plan selection */}
-                  <div className="space-y-3">
-                    <p className="text-sm font-semibold flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-primary" />
-                      Escolha o plano para {selectedPipeline.patient_name}:
-                    </p>
+                  {/* Plan selection - only if templates exist */}
+                  {(getSelectedTemplate(selectedPipeline) || getAlternatives(selectedPipeline).length > 0) && (
+                    <div className="space-y-3">
+                      <p className="text-sm font-semibold flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-primary" />
+                        Escolha o plano para {selectedPipeline.patient_name}:
+                      </p>
 
-                    <RadioGroup value={selectedPlan} onValueChange={setSelectedPlan} className="space-y-2">
-                      {/* Plan A - Selected template */}
-                      {(() => {
-                        const selected = getSelectedTemplate(selectedPipeline);
-                        if (!selected) return null;
-                        return (
-                          <Label
-                            htmlFor="plan_a"
-                            className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                              selectedPlan === "plan_a"
-                                ? "border-primary bg-primary/5"
-                                : "border-muted hover:border-muted-foreground/30"
-                            }`}
-                          >
-                            <RadioGroupItem value="plan_a" id="plan_a" className="mt-0.5" />
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-semibold">Opção A — {selected.name}</span>
-                                <Badge className="text-xs bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
-                                  Recomendado
-                                </Badge>
+                      <RadioGroup value={selectedPlan} onValueChange={setSelectedPlan} className="space-y-2">
+                        {(() => {
+                          const selected = getSelectedTemplate(selectedPipeline);
+                          if (!selected) return null;
+                          return (
+                            <Label
+                              htmlFor="plan_a"
+                              className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                                selectedPlan === "plan_a"
+                                  ? "border-primary bg-primary/5"
+                                  : "border-muted hover:border-muted-foreground/30"
+                              }`}
+                            >
+                              <RadioGroupItem value="plan_a" id="plan_a" className="mt-0.5" />
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-semibold">Opção A — {selected.name}</span>
+                                  <Badge className="text-xs bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+                                    Recomendado
+                                  </Badge>
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {selected.base_calories} kcal • Score: {selected.score} pontos
+                                </p>
+                                {selected.reasons?.map((r: string, i: number) => (
+                                  <span key={i} className="text-xs text-muted-foreground block mt-0.5">✓ {r}</span>
+                                ))}
                               </div>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {selected.base_calories} kcal • Score: {selected.score} pontos
-                              </p>
-                              {selected.reasons?.map((r: string, i: number) => (
-                                <span key={i} className="text-xs text-muted-foreground block mt-0.5">✓ {r}</span>
-                              ))}
-                            </div>
-                          </Label>
-                        );
-                      })()}
+                            </Label>
+                          );
+                        })()}
 
-                      {/* Plan B, C... - Alternative templates */}
-                      {getAlternatives(selectedPipeline).map((alt: any, idx: number) => {
-                        const value = `plan_alt_${idx}`;
-                        const letter = String.fromCharCode(66 + idx); // B, C, D...
-                        return (
-                          <Label
-                            key={value}
-                            htmlFor={value}
-                            className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                              selectedPlan === value
-                                ? "border-primary bg-primary/5"
-                                : "border-muted hover:border-muted-foreground/30"
-                            }`}
-                          >
-                            <RadioGroupItem value={value} id={value} className="mt-0.5" />
-                            <div className="flex-1">
-                              <span className="font-semibold">Opção {letter} — {alt.name}</span>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {alt.base_calories} kcal • Score: {alt.score} pontos
-                              </p>
-                              {alt.reasons?.map((r: string, i: number) => (
-                                <span key={i} className="text-xs text-muted-foreground block mt-0.5">✓ {r}</span>
-                              ))}
-                            </div>
-                          </Label>
-                        );
-                      })}
-                    </RadioGroup>
-                  </div>
+                        {getAlternatives(selectedPipeline).map((alt: any, idx: number) => {
+                          const value = `plan_alt_${idx}`;
+                          const letter = String.fromCharCode(66 + idx);
+                          return (
+                            <Label
+                              key={value}
+                              htmlFor={value}
+                              className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                                selectedPlan === value
+                                  ? "border-primary bg-primary/5"
+                                  : "border-muted hover:border-muted-foreground/30"
+                              }`}
+                            >
+                              <RadioGroupItem value={value} id={value} className="mt-0.5" />
+                              <div className="flex-1">
+                                <span className="font-semibold">Opção {letter} — {alt.name}</span>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {alt.base_calories} kcal • Score: {alt.score} pontos
+                                </p>
+                                {alt.reasons?.map((r: string, i: number) => (
+                                  <span key={i} className="text-xs text-muted-foreground block mt-0.5">✓ {r}</span>
+                                ))}
+                              </div>
+                            </Label>
+                          );
+                        })}
+                      </RadioGroup>
+                    </div>
+                  )}
 
-                  {/* Primary: Analyze/Edit plan buttons */}
-                  {selectedPipeline.generated_plan_id ? (
+                  {/* Analyze/Edit plan buttons */}
+                  {selectedPipeline.generated_plan_id && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <Button
                         variant="outline"
@@ -446,7 +446,9 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
                         </a>
                       </Button>
                     </div>
-                  ) : (
+                  )}
+
+                  {!selectedPipeline.generated_plan_id && (
                     <Card className="border-dashed border-amber-500/40 bg-amber-500/5">
                       <CardContent className="py-3 text-center text-sm text-muted-foreground">
                         <AlertTriangle className="w-4 h-4 inline mr-1 text-amber-500" />
@@ -454,17 +456,6 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
                       </CardContent>
                     </Card>
                   )}
-
-                  {/* Action buttons */}
-                  <div className="flex gap-3 pt-2">
-                    <Button onClick={handleApprove} className="flex-1" disabled={processing}>
-                      {processing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
-                      Aprovar {selectedPlan === "plan_a" ? "Opção A" : `Opção ${String.fromCharCode(66 + parseInt(selectedPlan.replace("plan_alt_", "")))}`}
-                    </Button>
-                    <Button variant="destructive" onClick={() => setRejectMode(true)} disabled={processing}>
-                      <XCircle className="w-4 h-4 mr-2" /> Rejeitar
-                    </Button>
-                  </div>
                 </>
               ) : (
                 /* Reject form */
@@ -492,6 +483,31 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
             </div>
           )}
         </ScrollArea>
+
+        {/* ── Sticky action buttons at bottom ── */}
+        {selectedPipeline && !rejectMode && (
+          <div className="border-t pt-4 -mx-6 px-6 flex gap-3">
+            {selectedPipeline.generated_plan_id && (
+              <Button
+                variant="outline"
+                className="border-primary/50 text-primary hover:bg-primary/10"
+                onClick={() => {
+                  onOpenChange(false);
+                  navigate(`/meal-plans/${selectedPipeline.generated_plan_id}`);
+                }}
+              >
+                <Eye className="w-4 h-4 mr-2" /> Analisar
+              </Button>
+            )}
+            <Button onClick={handleApprove} className="flex-1 gradient-primary shadow-glow" disabled={processing}>
+              {processing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
+              Aprovar e Publicar
+            </Button>
+            <Button variant="destructive" onClick={() => setRejectMode(true)} disabled={processing}>
+              <XCircle className="w-4 h-4 mr-2" /> Rejeitar
+            </Button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
