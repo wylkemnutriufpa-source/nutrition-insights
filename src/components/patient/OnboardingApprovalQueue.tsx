@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +16,7 @@ import { toast } from "sonner";
 import {
   CheckCircle2, XCircle, Clock, Sparkles, Edit2, ChevronDown,
   Scale, Target, MessageSquare, Loader2, CalendarClock, Zap,
-  ClipboardCheck
+  ClipboardCheck, FileText
 } from "lucide-react";
 
 interface OnboardingPipeline {
@@ -64,6 +65,7 @@ const DEFAULT_CRITERIA = {
 
 export default function OnboardingApprovalQueue({ patientId, patientName }: Props) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [pipeline, setPipeline] = useState<OnboardingPipeline | null>(null);
   const [loading, setLoading] = useState(true);
   const [rejectDialog, setRejectDialog] = useState(false);
@@ -417,13 +419,71 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
             })()}
 
             {/* Link to edit */}
-            {pipeline.generated_plan_id && (
-              <Button variant="outline" size="sm" asChild>
-                <a href={`/meal-plans/${pipeline.generated_plan_id}`}>
-                  <Edit2 className="w-4 h-4 mr-2" /> Revisar/Editar Plano
-                </a>
+            {pipeline.generated_plan_id ? (
+              <Button variant="outline" size="sm" className="w-full gap-2" onClick={() => navigate(`/meal-plans/${pipeline.generated_plan_id}`)}>
+                <FileText className="w-4 h-4" /> Analisar e Editar o Plano
               </Button>
-            )}
+            ) : pipeline.generated_plan_data ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full gap-2"
+                disabled={processing}
+                onClick={async () => {
+                  if (!pipeline || !user) return;
+                  setProcessing(true);
+                  try {
+                    const ex = pipeline.generated_plan_data?.explainability;
+                    const template = ex?.selected_template;
+                    const templateName = template?.name || "Plano Personalizado";
+                    const templateSlug = template?.slug || "custom";
+                    const kcal = template?.base_calories || ex?.calculation?.final_kcal || 0;
+
+                    const startDate = new Date();
+                    const endDate = new Date();
+                    endDate.setDate(endDate.getDate() + 30);
+
+                    const { data: newPlan, error: planError } = await supabase
+                      .from("meal_plans")
+                      .insert({
+                        nutritionist_id: user.id,
+                        patient_id: pipeline.patient_id,
+                        title: `Plano ${templateName}`,
+                        description: `Plano gerado via protocolo Master (${kcal}kcal)`,
+                        start_date: startDate.toISOString().split("T")[0],
+                        end_date: endDate.toISOString().split("T")[0],
+                        template_slug: templateSlug,
+                        generation_source: "protocol_master",
+                        generation_metadata: pipeline.generated_plan_data,
+                        plan_status: "under_professional_review",
+                        is_active: false,
+                      })
+                      .select("id")
+                      .single();
+
+                    if (planError || !newPlan) {
+                      toast.error("Erro ao criar plano: " + (planError?.message || "Tente novamente"));
+                      return;
+                    }
+
+                    await supabase
+                      .from("onboarding_pipelines" as any)
+                      .update({ generated_plan_id: newPlan.id } as any)
+                      .eq("id", pipeline.id);
+
+                    navigate(`/meal-plans/${newPlan.id}`);
+                    toast.success("Plano criado! Revise e aprove quando estiver pronto.");
+                  } catch (err: any) {
+                    toast.error("Erro: " + (err.message || "Tente novamente"));
+                  } finally {
+                    setProcessing(false);
+                  }
+                }}
+              >
+                {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                Criar e Editar o Plano
+              </Button>
+            ) : null}
 
             {/* Scheduling Criteria - same as Biquíni Branco */}
             <Collapsible open={criteriaOpen} onOpenChange={setCriteriaOpen}>
