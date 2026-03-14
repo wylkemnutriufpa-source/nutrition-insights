@@ -109,7 +109,7 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
 
         {/* 3D Coin — smooth Y-axis rotation */}
         <motion.div
-          className="relative z-10 rounded-full overflow-hidden"
+          className="relative z-10"
           style={{
             width: s.icon,
             height: s.icon,
