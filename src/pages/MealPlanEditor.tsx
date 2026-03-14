@@ -14,7 +14,8 @@ import {
   ArrowLeft, Plus, Trash2, Copy, GripVertical, Utensils,
   Sun, Coffee, Apple, Sandwich, Moon, Cookie, Save, ChevronLeft, ChevronRight,
   Flame, Beef, Wheat, Droplets, Leaf, PencilLine, X, Check, Sparkles, Loader2,
-  Bookmark, BookmarkCheck, FolderDown, FolderUp, BookOpen, CalendarDays, CalendarRange
+  Bookmark, BookmarkCheck, FolderDown, FolderUp, BookOpen, CalendarDays, CalendarRange,
+  AlertTriangle
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import PlanScheduler from "@/components/plans/PlanScheduler";
@@ -123,6 +124,9 @@ export default function MealPlanEditor() {
   const [savedPlans, setSavedPlans] = useState<any[]>([]);
   const [loadingSavedPlans, setLoadingSavedPlans] = useState(false);
 
+  const [emptyPlanWarning, setEmptyPlanWarning] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+
   const fetchData = useCallback(async () => {
     if (!id || !user) return;
     setLoading(true);
@@ -140,6 +144,11 @@ export default function MealPlanEditor() {
         .eq("user_id", planData.patient_id)
         .maybeSingle();
       setPatientName(profile?.full_name || "Paciente");
+
+      // Detect empty pipeline plan
+      if ((!itemsData || itemsData.length === 0) && planData.generation_source === "protocol_fitjourney") {
+        setEmptyPlanWarning(true);
+      }
     }
     setItems(itemsData || []);
 
@@ -485,6 +494,68 @@ export default function MealPlanEditor() {
           <p className="text-muted-foreground">Plano não encontrado.</p>
           <Button variant="ghost" onClick={() => navigate("/meal-plans")} className="mt-4">
             <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
+          </Button>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Empty pipeline plan detection - offer regeneration or redirect
+  if (emptyPlanWarning && items.length === 0) {
+    const handleRegenerate = async () => {
+      setRegenerating(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
+          body: {
+            patientId: plan.patient_id,
+            nutritionistId: user?.id,
+            isPipeline: true,
+            meal_plan_id: plan.id,
+          },
+        });
+        if (error) throw error;
+        if (!data?.success) throw new Error(data?.error || "Falha na geração");
+        toast.success(`Plano regenerado com ${data.items_count} itens!`);
+        setEmptyPlanWarning(false);
+        fetchData();
+      } catch (err: any) {
+        toast.error("Erro ao regenerar: " + (err.message || "Tente novamente"));
+      } finally {
+        setRegenerating(false);
+      }
+    };
+
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center py-20 space-y-6 max-w-lg mx-auto text-center">
+          <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center">
+            <AlertTriangle className="w-8 h-8 text-amber-500" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold">Plano sem refeições</h2>
+            <p className="text-sm text-muted-foreground">
+              Este plano foi criado pelo onboarding mas está sem itens. Isso pode acontecer quando os templates não possuem refeições cadastradas ou houve uma falha na geração.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Paciente: <strong>{patientName}</strong>
+            </p>
+          </div>
+          <div className="flex gap-3 w-full">
+            <Button variant="outline" onClick={() => navigate(-1)} className="flex-1">
+              <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
+            </Button>
+            <Button onClick={handleRegenerate} disabled={regenerating} className="flex-1">
+              {regenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
+              {regenerating ? "Gerando..." : "Regenerar Plano"}
+            </Button>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => { setEmptyPlanWarning(false); }}
+            className="text-muted-foreground"
+          >
+            Continuar mesmo assim (editor vazio)
           </Button>
         </div>
       </DashboardLayout>
