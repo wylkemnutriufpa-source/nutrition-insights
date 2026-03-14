@@ -123,6 +123,9 @@ export default function MealPlanEditor() {
   const [savedPlans, setSavedPlans] = useState<any[]>([]);
   const [loadingSavedPlans, setLoadingSavedPlans] = useState(false);
 
+  const [emptyPlanWarning, setEmptyPlanWarning] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+
   const fetchData = useCallback(async () => {
     if (!id || !user) return;
     setLoading(true);
@@ -140,6 +143,11 @@ export default function MealPlanEditor() {
         .eq("user_id", planData.patient_id)
         .maybeSingle();
       setPatientName(profile?.full_name || "Paciente");
+
+      // Detect empty pipeline plan
+      if ((!itemsData || itemsData.length === 0) && planData.generation_source === "protocol_fitjourney") {
+        setEmptyPlanWarning(true);
+      }
     }
     setItems(itemsData || []);
 
