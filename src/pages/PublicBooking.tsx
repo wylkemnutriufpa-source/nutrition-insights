@@ -49,7 +49,7 @@ export default function PublicBooking() {
         .select("*")
         .eq("slug", slug)
         .eq("is_public", true)
-        .single();
+        .maybeSingle();
 
       if (!pub) { setNotFound(true); setLoading(false); return; }
       setProfile(pub);
