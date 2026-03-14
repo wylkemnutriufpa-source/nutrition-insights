@@ -444,7 +444,12 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
                   </Button>
                 );
               }
-              return null;
+              return (
+                <div className="flex-1 flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm">
+                  <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+                  <span>Nenhum plano detectado para este paciente. O paciente precisa completar as etapas de onboarding primeiro.</span>
+                </div>
+              );
             })()}
             <Button variant="destructive" onClick={() => setRejectMode(true)} disabled={processing}>
               <XCircle className="w-4 h-4 mr-2" /> Rejeitar

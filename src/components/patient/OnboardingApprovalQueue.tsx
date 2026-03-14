@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import {
   CheckCircle2, XCircle, Clock, Sparkles, Edit2, ChevronDown,
   Scale, Target, MessageSquare, Loader2, CalendarClock, Zap,
-  ClipboardCheck, FileText
+  ClipboardCheck, FileText, AlertTriangle
 } from "lucide-react";
 
 interface OnboardingPipeline {
@@ -497,7 +497,12 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
                   </Button>
                 );
               }
-              return null;
+              return (
+                <div className="w-full flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm">
+                  <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+                  <span>Nenhum plano detectado. O paciente precisa completar o onboarding primeiro.</span>
+                </div>
+              );
             })()}
 
             {/* Scheduling Criteria - same as Biquíni Branco */}
