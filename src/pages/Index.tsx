@@ -473,7 +473,7 @@ function NutritionistDashboardContent() {
 
       for (const pid of patientIds2.slice(0, 30)) {
         const [profileRes, anamRes, statsRes, checkRes, mealsRes, assessRes] = await Promise.all([
-          supabase.from("profiles").select("full_name").eq("user_id", pid).single(),
+          supabase.from("profiles").select("full_name").eq("user_id", pid).maybeSingle(),
           supabase.from("patient_anamnesis").select("answers, status").eq("user_id", pid).order("created_at", { ascending: false }).limit(1),
           supabase.from("player_stats").select("*").eq("user_id", pid).single(),
           supabase.from("checklist_tasks").select("id, completed").eq("patient_id", pid).gte("date", periodDate.split("T")[0]),
