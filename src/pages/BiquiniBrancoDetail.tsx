@@ -102,7 +102,7 @@ export default function BiquiniBrancoDetail() {
     if (!programId || !user) return;
     setLoading(true);
 
-    const { data: prog } = await supabase.from("programs").select("*").eq("id", programId).single();
+    const { data: prog } = await supabase.from("programs").select("*").eq("id", programId).maybeSingle();
     if (!prog) { setLoading(false); return; }
     setProgram(prog);
 
