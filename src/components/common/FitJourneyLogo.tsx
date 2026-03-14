@@ -7,9 +7,9 @@ interface FitJourneyLogoProps {
 }
 
 const sizes = {
-  sm: { icon: 44, text: "text-lg" },
-  md: { icon: 52, text: "text-lg" },
-  lg: { icon: 64, text: "text-2xl" },
+  sm: { icon: 56, text: "text-lg" },
+  md: { icon: 68, text: "text-lg" },
+  lg: { icon: 80, text: "text-2xl" },
 };
 
 export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJourneyLogoProps) {
@@ -30,10 +30,13 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
           loop
           muted
           playsInline
-          className="w-full h-full object-cover"
+          className="object-cover"
           style={{
+            width: s.icon * 1.35,
+            height: s.icon * 1.35,
             mixBlendMode: "multiply",
             filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.18))",
+            imageRendering: "auto",
           }}
         />
       </div>
