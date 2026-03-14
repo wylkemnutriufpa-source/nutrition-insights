@@ -83,6 +83,11 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
           className="relative z-10 object-cover select-none"
           style={{ imageRendering: "auto", willChange: "auto" }}
         />
+
+        {/* Floating neural particles */}
+        {particles.map((p) => (
+          <FloatingParticle key={p.id} delay={p.delay} x={p.x} y={p.y} size={p.size} />
+        ))}
       </div>
 
       {!collapsed && (
