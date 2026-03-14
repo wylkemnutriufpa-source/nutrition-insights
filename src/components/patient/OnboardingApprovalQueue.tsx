@@ -75,6 +75,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
   const [useScheduling, setUseScheduling] = useState(false);
   const [criteria, setCriteria] = useState(DEFAULT_CRITERIA);
   const [creating, setCreating] = useState(false);
+  const [openingEditor, setOpeningEditor] = useState(false);
 
   useEffect(() => {
     fetchPipeline();
