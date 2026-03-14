@@ -663,7 +663,7 @@ export default function MealPlanEditor() {
                         title: "Novo plano alimentar ativado! 🎉",
                         message: `Seu plano "${plan.title}" foi aprovado e está ativo por 30 dias. Confira agora!`,
                         type: "meal_plan",
-                        action_url: "/patient-meal-plan",
+                        action_url: "/my-diet",
                       });
 
                       toast.success("Plano publicado e paciente notificado! 🎉");
