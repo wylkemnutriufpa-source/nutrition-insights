@@ -66,37 +66,48 @@ export default function CheckinPanel() {
   const fetchData = async () => {
     if (!user) return;
     setLoading(true);
+    try {
+      // Fetch check-ins
+      const { data: checkinsData, error: checkinsError } = await supabase
+        .from("patient_checkins")
+        .select("*")
+        .eq("nutritionist_id", user.id)
+        .order("created_at", { ascending: false });
 
-    // Fetch check-ins
-    const { data: checkinsData } = await supabase
-      .from("patient_checkins")
-      .select("*")
-      .eq("nutritionist_id", user.id)
-      .order("created_at", { ascending: false });
+      if (checkinsError) {
+        console.error("Error fetching checkins:", checkinsError);
+      }
 
-    // Get patient names
-    const patientIds = [...new Set(checkinsData?.map(c => c.patient_id) || [])];
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("user_id, full_name")
-      .in("user_id", patientIds);
+      // Get patient names
+      const patientIds = [...new Set(checkinsData?.map(c => c.patient_id) || [])];
+      let profiles: { user_id: string; full_name: string | null }[] = [];
+      if (patientIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("user_id, full_name")
+          .in("user_id", patientIds);
+        profiles = profilesData || [];
+      }
 
-    const profileMap = new Map(profiles?.map(p => [p.user_id, p.full_name]) || []);
-    const enriched = (checkinsData || []).map(c => ({
-      ...c,
-      patient_name: profileMap.get(c.patient_id) || "Paciente",
-    }));
+      const profileMap = new Map(profiles.map(p => [p.user_id, p.full_name]) || []);
+      const enriched = (checkinsData || []).map(c => ({
+        ...c,
+        patient_name: profileMap.get(c.patient_id) || "Paciente",
+      }));
 
-    setCheckins(enriched);
+      setCheckins(enriched);
 
-    // Fetch protocols
-    const { data: protocolsData } = await supabase
-      .from("protocols")
-      .select("id, title, category")
-      .eq("created_by", user.id);
-    setProtocols(protocolsData || []);
-
-    setLoading(false);
+      // Fetch protocols
+      const { data: protocolsData } = await supabase
+        .from("protocols")
+        .select("id, title, category")
+        .eq("created_by", user.id);
+      setProtocols(protocolsData || []);
+    } catch (err) {
+      console.error("CheckinPanel fetchData error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReview = async () => {
