@@ -559,6 +559,7 @@ export default function PatientDetail() {
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {sections.map((s) => {
                   const Icon = s.icon;
+                  const pendingPlansCount = s.key === "meal-plans" ? mealPlans.filter((p: any) => ["draft_auto_generated", "under_professional_review"].includes(p.plan_status)).length : 0;
                   return (
                     <motion.button
                       key={s.key}
@@ -572,6 +573,11 @@ export default function PatientDetail() {
                       </div>
                       <span className="text-xs font-medium text-foreground">{s.label}</span>
                       <Maximize2 className="absolute top-2 right-2 w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                      {pendingPlansCount > 0 && (
+                        <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center animate-pulse">
+                          {pendingPlansCount}
+                        </span>
+                      )}
                     </motion.button>
                   );
                 })}
