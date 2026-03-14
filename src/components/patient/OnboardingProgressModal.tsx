@@ -55,6 +55,8 @@ export default function OnboardingProgressModal() {
 
       setPipelineId(pipeline.id);
 
+      const allPatientStepsDone = !!pipeline.anamnesis_completed && !!pipeline.body_data_completed && !!pipeline.preferences_completed;
+
       const detectedSteps: PipelineStep[] = [
         {
           key: "anamnesis",
@@ -80,10 +82,21 @@ export default function OnboardingProgressModal() {
           completed: !!pipeline.preferences_completed,
           route: "/onboarding",
         },
+        {
+          key: "approval",
+          label: "Aprovação do Profissional",
+          description: allPatientStepsDone
+            ? "Suas etapas estão completas! Aguarde a aprovação do seu profissional."
+            : "Após completar as etapas, seu profissional revisará e aprovará seu plano.",
+          icon: CheckCircle2,
+          completed: !!pipeline.plan_approved,
+          route: "/dashboard", // stays on dashboard, patient can't do anything here
+        },
       ];
 
+      // If all patient steps are done but plan not approved, still show modal with waiting state
       const incomplete = detectedSteps.filter((s) => !s.completed);
-      if (incomplete.length === 0) return; // All done
+      if (incomplete.length === 0) return; // Everything done including approval
 
       setSteps(detectedSteps);
       setOpen(true);
