@@ -107,16 +107,13 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
           transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
         />
 
-        {/* 3D Coin — smooth Y-axis rotation */}
+        {/* 3D Coin — smooth Y-axis rotation with front & back faces */}
         <motion.div
           className="relative z-10"
           style={{
             width: s.icon,
             height: s.icon,
             transformStyle: "preserve-3d",
-            backfaceVisibility: "hidden",
-            boxShadow:
-              "0 0 20px hsl(152 58% 42% / 0.4), 0 4px 12px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.25)",
           }}
           animate={{
             rotateY: [0, 360],
@@ -127,12 +124,52 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
             ease: "linear",
           }}
         >
-          <img
-            src={logoImg}
-            alt="FitJourney Logo"
-            className="w-full h-full object-contain"
+          {/* Front face */}
+          <div
+            className="absolute inset-0"
             style={{
-              filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
+              backfaceVisibility: "hidden",
+              WebkitBackfaceVisibility: "hidden",
+            }}
+          >
+            <img
+              src={logoImg}
+              alt="FitJourney Logo"
+              className="w-full h-full object-contain"
+              style={{
+                filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
+              }}
+            />
+          </div>
+
+          {/* Back face (mirrored) */}
+          <div
+            className="absolute inset-0"
+            style={{
+              backfaceVisibility: "hidden",
+              WebkitBackfaceVisibility: "hidden",
+              transform: "rotateY(180deg)",
+            }}
+          >
+            <img
+              src={logoImg}
+              alt="FitJourney Logo Back"
+              className="w-full h-full object-contain"
+              style={{
+                filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
+              }}
+            />
+          </div>
+
+          {/* Coin edge (thickness) */}
+          <div
+            className="absolute rounded-full"
+            style={{
+              width: s.icon,
+              height: s.icon,
+              background: "linear-gradient(180deg, hsl(152 58% 45%), hsl(152 58% 30%), hsl(152 58% 45%))",
+              transform: "translateZ(-2px)",
+              boxShadow: "0 0 20px hsl(152 58% 42% / 0.4), 0 4px 12px rgba(0,0,0,0.3)",
             }}
           />
         </motion.div>
