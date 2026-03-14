@@ -16,7 +16,7 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
   const s = sizes[size];
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-0">
       <div
         className="relative flex-shrink-0 flex items-center justify-center"
         style={{ width: s.icon, height: s.icon }}
