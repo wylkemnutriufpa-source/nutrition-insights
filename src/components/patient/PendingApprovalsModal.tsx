@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import {
   AlertTriangle, CheckCircle2, XCircle, Loader2, User,
   Target, Sparkles, ChevronRight, Scale, UtensilsCrossed,
-  ArrowRight, FileText
+  ArrowRight, FileText, Eye
 } from "lucide-react";
 
 interface PendingPipeline {
