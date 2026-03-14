@@ -117,82 +117,138 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
     if (!selectedPipeline || !user) return;
     setProcessing(true);
 
-    const isAlternative = selectedPlan !== "plan_a";
-    const alternatives = getAlternatives(selectedPipeline);
-    const altIndex = isAlternative ? parseInt(selectedPlan.replace("plan_alt_", "")) : -1;
-    const chosenAlt = isAlternative && altIndex >= 0 ? alternatives[altIndex] : null;
+    try {
+      const isAlternative = selectedPlan !== "plan_a";
+      const alternatives = getAlternatives(selectedPipeline);
+      const altIndex = isAlternative ? parseInt(selectedPlan.replace("plan_alt_", "")) : -1;
+      const chosenAlt = isAlternative && altIndex >= 0 ? alternatives[altIndex] : null;
 
-    // If user chose an alternative, we need to regenerate the plan with that template
-    if (chosenAlt && selectedPipeline.generated_plan_id) {
-      // Update the meal plan with the alternative template info
+      let planId = selectedPipeline.generated_plan_id;
+
+      // If no plan_id exists but we have plan data, create the meal plan now
+      if (!planId && selectedPipeline.generated_plan_data) {
+        const ex = selectedPipeline.generated_plan_data?.explainability;
+        const template = chosenAlt || ex?.selected_template;
+        const templateName = template?.name || "Plano Personalizado";
+        const templateSlug = template?.slug || "custom";
+        const kcal = template?.base_calories || ex?.calculation?.final_kcal || 0;
+
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + 30);
+
+        const { data: newPlan, error: planError } = await supabase
+          .from("meal_plans")
+          .insert({
+            nutritionist_id: user.id,
+            patient_id: selectedPipeline.patient_id,
+            title: `Plano ${templateName}`,
+            description: `Plano gerado via protocolo Master (${kcal}kcal)${chosenAlt ? " — alternativa escolhida pelo profissional" : ""}`,
+            start_date: startDate.toISOString().split("T")[0],
+            end_date: endDate.toISOString().split("T")[0],
+            template_slug: templateSlug,
+            generation_source: "protocol_master",
+            generation_metadata: selectedPipeline.generated_plan_data,
+            plan_status: "approved",
+            is_active: true,
+          })
+          .select("id")
+          .single();
+
+        if (planError || !newPlan) {
+          toast.error("Erro ao criar plano: " + (planError?.message || "Tente novamente"));
+          setProcessing(false);
+          return;
+        }
+        planId = newPlan.id;
+
+        // Update pipeline with the new plan id
+        await supabase
+          .from("onboarding_pipelines" as any)
+          .update({ generated_plan_id: planId } as any)
+          .eq("id", selectedPipeline.id);
+
+        // Now publish it
+        await supabase
+          .from("meal_plans")
+          .update({ plan_status: "published_to_patient" } as any)
+          .eq("id", planId);
+      }
+
+      // If plan existed and user chose an alternative, update it
+      if (chosenAlt && planId && selectedPipeline.generated_plan_id) {
+        await supabase
+          .from("meal_plans")
+          .update({
+            template_slug: chosenAlt.slug,
+            generation_metadata: {
+              ...(selectedPipeline.generated_plan_data || {}),
+              switched_from_original: true,
+              original_template: getSelectedTemplate(selectedPipeline)?.slug,
+              chosen_alternative: chosenAlt.slug,
+              chosen_alternative_name: chosenAlt.name,
+            },
+            title: `Plano ${chosenAlt.name}`,
+            description: `Plano gerado via ${chosenAlt.name} (${chosenAlt.base_calories}kcal) — escolhido como alternativa pelo profissional`,
+          } as any)
+          .eq("id", planId);
+      }
+
+      // Update pipeline as approved
       await supabase
-        .from("meal_plans")
+        .from("onboarding_pipelines" as any)
         .update({
-          template_slug: chosenAlt.slug,
-          generation_metadata: {
-            ...(selectedPipeline.generated_plan_data || {}),
-            switched_from_original: true,
-            original_template: getSelectedTemplate(selectedPipeline)?.slug,
-            chosen_alternative: chosenAlt.slug,
-            chosen_alternative_name: chosenAlt.name,
-          },
-          title: `Plano ${chosenAlt.name}`,
-          description: `Plano gerado via ${chosenAlt.name} (${chosenAlt.base_calories}kcal) — escolhido como alternativa pelo profissional`,
+          plan_approved: true,
+          approved_by: user.id,
+          approved_at: new Date().toISOString(),
+          status: "completed",
         } as any)
-        .eq("id", selectedPipeline.generated_plan_id);
+        .eq("id", selectedPipeline.id);
+
+      // Approve + publish existing meal plan (if it already had a plan_id)
+      if (selectedPipeline.generated_plan_id && planId) {
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + 30);
+
+        await supabase
+          .from("meal_plans")
+          .update({ plan_status: "approved" } as any)
+          .eq("id", planId);
+
+        await supabase
+          .from("meal_plans")
+          .update({
+            is_active: true,
+            plan_status: "published_to_patient",
+            start_date: startDate.toISOString().split("T")[0],
+            end_date: endDate.toISOString().split("T")[0],
+          } as any)
+          .eq("id", planId);
+      }
+
+      // Notify patient
+      await supabase.from("notifications").insert({
+        user_id: selectedPipeline.patient_id,
+        title: "Plano Alimentar Aprovado! 🎉",
+        message: isAlternative
+          ? `Seu profissional escolheu o plano ${chosenAlt?.name || "alternativo"} para você. Acesse em 'Minha Dieta'. Validade: 30 dias.`
+          : "Seu plano foi revisado e aprovado. Acesse em 'Minha Dieta'. Validade: 30 dias.",
+        type: "success",
+        action_url: "/my-diet",
+      });
+
+      toast.success(`Plano de ${selectedPipeline.patient_name} aprovado!`);
+      setPipelines((prev) => prev.filter((p) => p.id !== selectedPipeline.id));
+      setSelectedPipeline(null);
+      setSelectedPlan("plan_a");
+
+      if (pipelines.length <= 1) onOpenChange(false);
+    } catch (err: any) {
+      toast.error("Erro ao aprovar: " + (err.message || "Tente novamente"));
+    } finally {
+      setProcessing(false);
     }
-
-    // Update pipeline as approved
-    await supabase
-      .from("onboarding_pipelines" as any)
-      .update({
-        plan_approved: true,
-        approved_by: user.id,
-        approved_at: new Date().toISOString(),
-        status: "completed",
-      } as any)
-      .eq("id", selectedPipeline.id);
-
-    // Approve + publish the meal plan
-    if (selectedPipeline.generated_plan_id) {
-      const startDate = new Date();
-      const endDate = new Date();
-      endDate.setDate(endDate.getDate() + 30);
-
-      await supabase
-        .from("meal_plans")
-        .update({ plan_status: "approved" } as any)
-        .eq("id", selectedPipeline.generated_plan_id);
-
-      await supabase
-        .from("meal_plans")
-        .update({
-          is_active: true,
-          plan_status: "published_to_patient",
-          start_date: startDate.toISOString().split("T")[0],
-          end_date: endDate.toISOString().split("T")[0],
-        } as any)
-        .eq("id", selectedPipeline.generated_plan_id);
-    }
-
-    // Notify patient
-    await supabase.from("notifications").insert({
-      user_id: selectedPipeline.patient_id,
-      title: "Plano Alimentar Aprovado! 🎉",
-      message: isAlternative
-        ? `Seu profissional escolheu o plano ${chosenAlt?.name || "alternativo"} para você. Acesse em 'Minha Dieta'. Validade: 30 dias.`
-        : "Seu plano foi revisado e aprovado. Acesse em 'Minha Dieta'. Validade: 30 dias.",
-      type: "success",
-      action_url: "/my-diet",
-    });
-
-    toast.success(`Plano de ${selectedPipeline.patient_name} aprovado!`);
-    setPipelines((prev) => prev.filter((p) => p.id !== selectedPipeline.id));
-    setSelectedPipeline(null);
-    setSelectedPlan("plan_a");
-    setProcessing(false);
-
-    if (pipelines.length <= 1) onOpenChange(false);
   }
 
   async function handleReject() {
