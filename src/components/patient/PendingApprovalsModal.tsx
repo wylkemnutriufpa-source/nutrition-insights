@@ -116,51 +116,48 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
     if (!selectedPipeline || !user) return;
     setProcessing(true);
     try {
-      const ex = selectedPipeline.generated_plan_data?.explainability;
-      const template = ex?.selected_template;
-      const templateName = template?.name || "Plano Personalizado";
-      const templateSlug = template?.slug || "custom";
-      const kcal = template?.base_calories || ex?.calculation?.final_kcal || 0;
+      toast.info("Gerando plano completo com itens... Aguarde.");
 
-      const startDate = new Date();
-      const endDate = new Date();
-      endDate.setDate(endDate.getDate() + 30);
+      // Call the edge function to generate the full plan with items
+      const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
+        body: {
+          patientId: selectedPipeline.patient_id,
+          nutritionistId: user.id,
+          weight: selectedPipeline.weight,
+          height: selectedPipeline.height,
+          mealCount: selectedPipeline.meal_count,
+          cookingPreference: selectedPipeline.cooking_preference,
+          isPipeline: true,
+        },
+      });
 
-      const { data: newPlan, error: planError } = await supabase
-        .from("meal_plans")
-        .insert({
-          nutritionist_id: user.id,
-          patient_id: selectedPipeline.patient_id,
-          title: `Plano ${templateName}`,
-          description: `Plano gerado via protocolo Master (${kcal}kcal)`,
-          start_date: startDate.toISOString().split("T")[0],
-          end_date: endDate.toISOString().split("T")[0],
-          template_slug: templateSlug,
-          generation_source: "protocol_master",
-          generation_metadata: selectedPipeline.generated_plan_data,
-          plan_status: "under_professional_review",
-          is_active: false,
-        })
-        .select("id")
-        .single();
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "Falha na geração do plano");
 
-      if (planError || !newPlan) {
-        toast.error("Erro ao criar plano: " + (planError?.message || "Tente novamente"));
-        setProcessing(false);
-        return;
-      }
+      const planId = data.mealPlanId;
+      if (!planId) throw new Error("ID do plano não retornado pela geração");
 
-      // Update pipeline with the plan id
+      // Update pipeline with the real plan id and full response data
       await supabase
         .from("onboarding_pipelines" as any)
-        .update({ generated_plan_id: newPlan.id } as any)
+        .update({
+          generated_plan_id: planId,
+          generated_plan_data: data,
+          plan_generated: true,
+        } as any)
         .eq("id", selectedPipeline.id);
 
+      // Set plan to review status
+      await supabase
+        .from("meal_plans")
+        .update({ plan_status: "under_professional_review" } as any)
+        .eq("id", planId);
+
       onOpenChange(false);
-      navigate(`/meal-plans/${newPlan.id}`);
-      toast.success("Plano criado! Revise e aprove quando estiver pronto.");
+      navigate(`/meal-plans/${planId}`);
+      toast.success(`Plano gerado com ${data.items_count} itens! Revise e aprove.`);
     } catch (err: any) {
-      toast.error("Erro: " + (err.message || "Tente novamente"));
+      toast.error("Erro ao gerar plano: " + (err.message || "Tente novamente"));
     } finally {
       setProcessing(false);
     }
@@ -342,14 +339,14 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
                     <Card className="border-dashed border-primary/40 bg-primary/5">
                       <CardContent className="py-3 text-center text-sm text-muted-foreground space-y-1">
                         <Sparkles className="w-4 h-4 inline mr-1 text-primary" />
-                        Plano gerado com sucesso. Clique em <strong>"Criar e Editar Plano"</strong> para criar o plano no sistema e editá-lo antes de aprovar.
+                        Dados do protocolo disponíveis. Clique em <strong>"Gerar e Editar Plano"</strong> para criar o plano completo com refeições e editá-lo.
                       </CardContent>
                     </Card>
                   ) : (
                     <Card className="border-dashed border-amber-500/40 bg-amber-500/5">
                       <CardContent className="py-3 text-center text-sm text-muted-foreground">
                         <AlertTriangle className="w-4 h-4 inline mr-1 text-amber-500" />
-                        Plano ainda não foi gerado. Rejeite ou aguarde a geração automática.
+                        Plano ainda não foi gerado. Clique em <strong>"Gerar Plano"</strong> para gerar com base na anamnese do paciente.
                       </CardContent>
                     </Card>
                   )}
@@ -403,15 +400,15 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
                   </Button>
                 );
               }
-              if (selectedPipeline.generated_plan_data) {
+              if (selectedPipeline.generated_plan_data || selectedPipeline.status === 'pending_approval') {
                 return (
                   <Button
                     className="flex-1 gradient-primary shadow-glow"
                     disabled={processing}
                     onClick={handleCreateAndEdit}
                   >
-                    {processing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <FileText className="w-4 h-4 mr-2" />}
-                    Analisar e Editar o Plano
+                    {processing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                    {processing ? "Gerando plano..." : "Gerar e Editar Plano"}
                   </Button>
                 );
               }
