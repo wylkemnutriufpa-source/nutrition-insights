@@ -16,27 +16,31 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
   const s = sizes[size];
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-2">
       <div
-        className="relative flex-shrink-0 flex items-center justify-center overflow-hidden"
+        className="relative flex-shrink-0 flex items-center justify-center"
         style={{ width: s.icon, height: s.icon }}
       >
         <motion.div
-          className="absolute inset-2 rounded-full"
+          className="pointer-events-none absolute -inset-2 rounded-full"
           style={{
-            background: "radial-gradient(circle, hsl(var(--primary) / 0.25) 0%, transparent 70%)",
+            background: "radial-gradient(circle, hsl(var(--primary) / 0.45) 0%, hsl(var(--primary) / 0.18) 45%, transparent 75%)",
+            filter: "blur(8px)",
           }}
-          animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          animate={{ scale: [0.95, 1.15, 0.95], opacity: [0.45, 0.95, 0.45] }}
+          transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
         />
+
         <motion.div
-          className="absolute inset-3 rounded-full"
+          className="pointer-events-none absolute -inset-3 rounded-full"
           style={{
-            background: "radial-gradient(circle, hsl(152 58% 45% / 0.2) 0%, transparent 65%)",
+            background: "radial-gradient(circle, hsl(var(--accent) / 0.35) 0%, hsl(var(--accent) / 0.12) 50%, transparent 78%)",
+            filter: "blur(12px)",
           }}
-          animate={{ scale: [1.05, 1.2, 1.05], opacity: [0.4, 0.7, 0.4] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+          animate={{ scale: [1, 1.22, 1], opacity: [0.3, 0.75, 0.3] }}
+          transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut", delay: 0.35 }}
         />
+
         <img
           src={logoPng}
           alt="FitJourney logo"
