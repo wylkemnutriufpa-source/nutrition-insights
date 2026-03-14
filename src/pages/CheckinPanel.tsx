@@ -76,10 +76,14 @@ export default function CheckinPanel() {
 
     // Get patient names
     const patientIds = [...new Set(checkinsData?.map(c => c.patient_id) || [])];
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("user_id, full_name")
-      .in("user_id", patientIds);
+    let profiles: { user_id: string; full_name: string | null }[] = [];
+    if (patientIds.length > 0) {
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", patientIds);
+      profiles = profilesData || [];
+    }
 
     const profileMap = new Map(profiles?.map(p => [p.user_id, p.full_name]) || []);
     const enriched = (checkinsData || []).map(c => ({
