@@ -643,7 +643,21 @@ export default function MealPlanEditor() {
                         .eq("id", plan.id);
                       if (error) throw error;
 
-                      // Step 3: notify patient
+                      // Step 3: update onboarding pipeline if linked
+                      if (user) {
+                        await supabase
+                          .from("onboarding_pipelines" as any)
+                          .update({
+                            plan_approved: true,
+                            approved_by: user.id,
+                            approved_at: new Date().toISOString(),
+                            status: "completed",
+                          } as any)
+                          .eq("generated_plan_id", plan.id)
+                          .eq("status", "pending_approval");
+                      }
+
+                      // Step 4: notify patient
                       await supabase.from("notifications").insert({
                         user_id: plan.patient_id,
                         title: "Novo plano alimentar ativado! 🎉",
