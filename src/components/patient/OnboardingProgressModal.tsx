@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
   ClipboardCheck, Scale, UtensilsCrossed, CheckCircle2,
-  AlertTriangle, ArrowRight, Sparkles,
+  AlertTriangle, ArrowRight, Sparkles, Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
