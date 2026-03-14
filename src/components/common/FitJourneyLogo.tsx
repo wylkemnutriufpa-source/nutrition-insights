@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import logoVideo from "@/assets/logo-video.mp4";
+import logoPng from "@/assets/logo.png";
 
 interface FitJourneyLogoProps {
   collapsed?: boolean;
@@ -7,9 +7,9 @@ interface FitJourneyLogoProps {
 }
 
 const sizes = {
-  sm: { icon: 56, text: "text-lg" },
-  md: { icon: 68, text: "text-lg" },
-  lg: { icon: 80, text: "text-2xl" },
+  sm: { icon: 40, text: "text-lg" },
+  md: { icon: 48, text: "text-lg" },
+  lg: { icon: 60, text: "text-2xl" },
 };
 
 export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJourneyLogoProps) {
@@ -22,21 +22,19 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
         style={{
           width: s.icon,
           height: s.icon,
+          boxShadow: "0 0 8px 1px hsl(152 58% 45% / 0.25)",
         }}
       >
-        <video
-          src={logoVideo}
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="object-cover"
+        <img
+          src={logoPng}
+          alt="FitJourney logo"
+          width={s.icon}
+          height={s.icon}
+          draggable={false}
+          className="object-cover select-none"
           style={{
-            width: s.icon * 1.35,
-            height: s.icon * 1.35,
-            mixBlendMode: "multiply",
-            filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.18))",
             imageRendering: "auto",
+            willChange: "auto",
           }}
         />
       </div>
