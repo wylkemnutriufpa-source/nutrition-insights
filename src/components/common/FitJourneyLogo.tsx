@@ -7,9 +7,9 @@ interface FitJourneyLogoProps {
 }
 
 const sizes = {
-  sm: { icon: 36, text: "text-xl", container: 52 },
-  md: { icon: 40, text: "text-lg", container: 58 },
-  lg: { icon: 48, text: "text-2xl", container: 68 },
+  sm: { icon: 44, text: "text-xl", container: 52 },
+  md: { icon: 50, text: "text-lg", container: 58 },
+  lg: { icon: 60, text: "text-2xl", container: 68 },
 };
 
 export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJourneyLogoProps) {
@@ -109,7 +109,7 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
 
         {/* 3D Coin — smooth Y-axis rotation */}
         <motion.div
-          className="relative z-10 rounded-full overflow-hidden"
+          className="relative z-10"
           style={{
             width: s.icon,
             height: s.icon,
@@ -130,7 +130,7 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
           <img
             src={logoImg}
             alt="FitJourney Logo"
-            className="w-full h-full object-cover rounded-full"
+            className="w-full h-full object-contain"
             style={{
               filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
             }}
