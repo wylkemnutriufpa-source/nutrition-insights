@@ -539,7 +539,7 @@ function TestimonialsTab() {
       if (data) {
         const enriched: Testimonial[] = [];
         for (const t of data) {
-          const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", t.patient_id).single();
+          const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", t.patient_id).maybeSingle();
           enriched.push({ ...t, patient_name: t.is_anonymous ? "Anônimo" : profile?.full_name || "Paciente" });
         }
         setTestimonials(enriched);
