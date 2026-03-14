@@ -77,7 +77,7 @@ export default function PatientCheckinsTab({ patientId }: PatientCheckinsTabProp
         .select("checkin_frequency")
         .eq("patient_id", patientId)
         .eq("nutritionist_id", user.id)
-        .single(),
+        .maybeSingle(),
     ]);
 
     setCheckins(checkinsRes.data || []);
