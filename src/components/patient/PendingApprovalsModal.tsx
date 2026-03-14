@@ -112,42 +112,47 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
     return ex.selected_template || null;
   }
 
+  async function generateOrRegeneratePlan(targetPlanId?: string) {
+    if (!selectedPipeline || !user) throw new Error("Pipeline inválido");
+
+    const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
+      body: {
+        patientId: selectedPipeline.patient_id,
+        nutritionistId: user.id,
+        weight: selectedPipeline.weight,
+        height: selectedPipeline.height,
+        mealCount: selectedPipeline.meal_count,
+        cookingPreference: selectedPipeline.cooking_preference,
+        isPipeline: true,
+        ...(targetPlanId ? { meal_plan_id: targetPlanId } : {}),
+      },
+    });
+
+    if (error) throw error;
+    if (!data?.success) throw new Error(data?.error || "Falha na geração do plano");
+
+    const planId = data?.mealPlanId || targetPlanId;
+    if (!planId) throw new Error("ID do plano não retornado pela geração");
+
+    await supabase
+      .from("onboarding_pipelines" as any)
+      .update({
+        generated_plan_id: planId,
+        generated_plan_data: data,
+        plan_generated: true,
+      } as any)
+      .eq("id", selectedPipeline.id);
+
+    return { planId, data };
+  }
+
   async function handleCreateAndEdit() {
     if (!selectedPipeline || !user) return;
     setProcessing(true);
     try {
       toast.info("Gerando plano completo com itens... Aguarde.");
+      const { planId, data } = await generateOrRegeneratePlan();
 
-      // Call the edge function to generate the full plan with items
-      const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
-        body: {
-          patientId: selectedPipeline.patient_id,
-          nutritionistId: user.id,
-          weight: selectedPipeline.weight,
-          height: selectedPipeline.height,
-          mealCount: selectedPipeline.meal_count,
-          cookingPreference: selectedPipeline.cooking_preference,
-          isPipeline: true,
-        },
-      });
-
-      if (error) throw error;
-      if (!data?.success) throw new Error(data?.error || "Falha na geração do plano");
-
-      const planId = data.mealPlanId;
-      if (!planId) throw new Error("ID do plano não retornado pela geração");
-
-      // Update pipeline with the real plan id and full response data
-      await supabase
-        .from("onboarding_pipelines" as any)
-        .update({
-          generated_plan_id: planId,
-          generated_plan_data: data,
-          plan_generated: true,
-        } as any)
-        .eq("id", selectedPipeline.id);
-
-      // Set plan to review status
       await supabase
         .from("meal_plans")
         .update({ plan_status: "under_professional_review" } as any)
@@ -158,6 +163,38 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
       toast.success(`Plano gerado com ${data.items_count} itens! Revise e aprove.`);
     } catch (err: any) {
       toast.error("Erro ao gerar plano: " + (err.message || "Tente novamente"));
+    } finally {
+      setProcessing(false);
+    }
+  }
+
+  async function handleOpenPlanForReview(planId: string) {
+    if (!selectedPipeline || !user) return;
+    setProcessing(true);
+    try {
+      const { count, error: countError } = await supabase
+        .from("meal_plan_items")
+        .select("id", { count: "exact", head: true })
+        .eq("meal_plan_id", planId);
+
+      if (countError) throw countError;
+
+      let resolvedPlanId = planId;
+      if (!count || count === 0) {
+        toast.info("Plano sem refeições detectado. Gerando itens automaticamente...");
+        const regenerated = await generateOrRegeneratePlan(planId);
+        resolvedPlanId = regenerated.planId;
+      }
+
+      await supabase
+        .from("meal_plans")
+        .update({ plan_status: "under_professional_review" } as any)
+        .eq("id", resolvedPlanId);
+
+      onOpenChange(false);
+      navigate(`/meal-plans/${resolvedPlanId}`);
+    } catch (err: any) {
+      toast.error("Erro ao abrir plano: " + (err.message || "Tente novamente"));
     } finally {
       setProcessing(false);
     }
