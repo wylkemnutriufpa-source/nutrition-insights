@@ -35,7 +35,7 @@ export default function Settings() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("show_in_ranking, ranking_nickname").eq("user_id", user.id).single()
+    supabase.from("profiles").select("show_in_ranking, ranking_nickname").eq("user_id", user.id).maybeSingle()
       .then(({ data }) => {
         if (data) {
           setShowInRanking(data.show_in_ranking || false);

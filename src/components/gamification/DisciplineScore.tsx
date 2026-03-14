@@ -40,7 +40,7 @@ export default function DisciplineScore({ userId }: DisciplineScoreProps) {
         .from("player_stats")
         .select("current_streak")
         .eq("user_id", userId)
-        .single(),
+        .maybeSingle(),
       // Meals this week
       supabase
         .from("meals")
