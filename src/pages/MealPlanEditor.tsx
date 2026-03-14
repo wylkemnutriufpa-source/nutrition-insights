@@ -95,8 +95,8 @@ export default function MealPlanEditor() {
   const [dialogDay, setDialogDay] = useState<number>(1);
   const [form, setForm] = useState<ItemForm>(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [approving, setApproving] = useState(false);
 
-  // Copy state
   const [copySource, setCopySource] = useState<{ day: number; mealType: MealType } | null>(null);
   const [generating, setGenerating] = useState(false);
 
@@ -566,7 +566,88 @@ export default function MealPlanEditor() {
           </div>
         </div>
 
-        {/* Document Upload Section */}
+        {/* Approve/Publish Banner for pending plans */}
+        {plan && plan.plan_status !== "published_to_patient" && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass rounded-xl p-4 border border-primary/30 bg-primary/5"
+          >
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Check className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">
+                    Status: {plan.plan_status === "approved" ? "Aprovado" : plan.plan_status === "draft_auto_generated" ? "Gerado por IA" : plan.plan_status === "under_professional_review" ? "Em Revisão" : "Rascunho"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {plan.plan_status === "approved"
+                      ? "Plano aprovado. Publique para o paciente visualizar."
+                      : "Revise o plano e aprove para ativá-lo para o paciente."}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {plan.plan_status !== "approved" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={approving || items.length === 0}
+                    onClick={async () => {
+                      setApproving(true);
+                      const { error } = await supabase
+                        .from("meal_plans")
+                        .update({ plan_status: "approved" } as any)
+                        .eq("id", plan.id);
+                      if (error) toast.error("Erro: " + error.message);
+                      else {
+                        toast.success("Plano aprovado! ✅");
+                        fetchData();
+                      }
+                      setApproving(false);
+                    }}
+                    className="gap-1.5"
+                  >
+                    {approving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                    Aprovar
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  disabled={approving || items.length === 0}
+                  onClick={async () => {
+                    setApproving(true);
+                    const startDate = new Date(plan.start_date);
+                    const endDate = new Date(startDate);
+                    endDate.setDate(endDate.getDate() + 30);
+                    const { error } = await supabase
+                      .from("meal_plans")
+                      .update({
+                        plan_status: "published_to_patient",
+                        is_active: true,
+                        start_date: startDate.toISOString().split("T")[0],
+                        end_date: endDate.toISOString().split("T")[0],
+                      } as any)
+                      .eq("id", plan.id);
+                    if (error) toast.error("Erro: " + error.message);
+                    else {
+                      toast.success("Plano publicado para o paciente! 🎉");
+                      fetchData();
+                    }
+                    setApproving(false);
+                  }}
+                  className="gradient-primary gap-1.5 shadow-glow"
+                >
+                  {approving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  Aprovar e Publicar
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {plan && user && (
           <div className="glass rounded-xl p-5">
             <h3 className="font-display font-semibold text-sm mb-3 flex items-center gap-2">
