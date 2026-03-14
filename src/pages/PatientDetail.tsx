@@ -907,32 +907,57 @@ export default function PatientDetail() {
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        {mealPlans.map((plan: any) => (
-                          <motion.div key={plan.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl overflow-hidden">
+                        {mealPlans.map((plan: any) => {
+                          const statusConfig: Record<string, { label: string; color: string; action?: string }> = {
+                            draft: { label: "Rascunho", color: "bg-muted text-muted-foreground" },
+                            draft_auto_generated: { label: "Pré-plano Gerado", color: "bg-amber-500/20 text-amber-600 dark:text-amber-400", action: "edit" },
+                            under_professional_review: { label: "⏳ Aguardando Aprovação", color: "bg-amber-500/20 text-amber-600 dark:text-amber-400 animate-pulse", action: "edit" },
+                            approved: { label: "✅ Aprovado", color: "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400" },
+                            published_to_patient: { label: "✅ Publicado", color: "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400" },
+                            rejected: { label: "❌ Rejeitado", color: "bg-destructive/20 text-destructive" },
+                            archived: { label: "Arquivado", color: "bg-muted text-muted-foreground" },
+                          };
+                          const st = statusConfig[plan.plan_status] || { label: plan.plan_status || "—", color: "bg-muted text-muted-foreground" };
+                          const isPending = ["draft_auto_generated", "under_professional_review"].includes(plan.plan_status);
+
+                          return (
+                          <motion.div key={plan.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`glass rounded-xl overflow-hidden ${isPending ? "ring-2 ring-amber-500/40" : ""}`}>
                             <div className="p-5 border-b border-border">
                               <div className="flex items-start justify-between gap-4">
                                 <div className="flex items-center gap-3">
-                                  <div className={`w-3 h-3 rounded-full ${plan.is_active ? "bg-success animate-pulse" : "bg-muted-foreground"}`} />
+                                  <div className={`w-3 h-3 rounded-full ${plan.is_active ? "bg-success animate-pulse" : isPending ? "bg-amber-500 animate-pulse" : "bg-muted-foreground"}`} />
                                   <div>
                                     <h3 className="font-display font-semibold">{plan.title}</h3>
-                                    <p className="text-xs text-muted-foreground">
-                                      {plan.is_active ? "Ativo" : "Inativo"} •
-                                      Início: {new Date(plan.start_date).toLocaleDateString("pt-BR")}
-                                      {plan.end_date && ` • Fim: ${new Date(plan.end_date).toLocaleDateString("pt-BR")}`}
-                                    </p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <Badge className={`text-[10px] ${st.color}`}>{st.label}</Badge>
+                                      <span className="text-xs text-muted-foreground">
+                                        Início: {new Date(plan.start_date).toLocaleDateString("pt-BR")}
+                                        {plan.end_date && ` • Fim: ${new Date(plan.end_date).toLocaleDateString("pt-BR")}`}
+                                      </span>
+                                    </div>
                                   </div>
                                 </div>
-                                <Button size="sm" variant="outline" onClick={() => { setOpenSection(null); navigate(`/meal-plans/${plan.id}`); }}>
-                                  <FileText className="w-3.5 h-3.5 mr-1" /> Ver Plano
-                                </Button>
+                                <div className="flex items-center gap-2">
+                                  {isPending && (
+                                    <Button size="sm" className="gradient-primary shadow-glow gap-1.5" onClick={() => { setOpenSection(null); navigate(`/meal-plans/${plan.id}`); }}>
+                                      <Pencil className="w-3.5 h-3.5" /> Revisar e Aprovar
+                                    </Button>
+                                  )}
+                                  <Button size="sm" variant="outline" onClick={() => { setOpenSection(null); navigate(`/meal-plans/${plan.id}`); }}>
+                                    <FileText className="w-3.5 h-3.5 mr-1" /> {isPending ? "Ver" : "Ver Plano"}
+                                  </Button>
+                                </div>
                               </div>
                               {plan.description && <p className="text-sm text-muted-foreground mt-2">{plan.description}</p>}
                             </div>
-                            <div className="p-5 bg-secondary/20">
-                              <PlanScheduler mealPlanId={plan.id} planTitle={plan.title} />
-                            </div>
+                            {!isPending && (
+                              <div className="p-5 bg-secondary/20">
+                                <PlanScheduler mealPlanId={plan.id} planTitle={plan.title} />
+                              </div>
+                            )}
                           </motion.div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                     <div className="border-t border-border pt-6">
