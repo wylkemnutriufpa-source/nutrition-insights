@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
   ClipboardCheck, Scale, UtensilsCrossed, CheckCircle2,
-  AlertTriangle, ArrowRight, Sparkles,
+  AlertTriangle, ArrowRight, Sparkles, Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -55,6 +55,8 @@ export default function OnboardingProgressModal() {
 
       setPipelineId(pipeline.id);
 
+      const allPatientStepsDone = !!pipeline.anamnesis_completed && !!pipeline.body_data_completed && !!pipeline.preferences_completed;
+
       const detectedSteps: PipelineStep[] = [
         {
           key: "anamnesis",
@@ -80,10 +82,21 @@ export default function OnboardingProgressModal() {
           completed: !!pipeline.preferences_completed,
           route: "/onboarding",
         },
+        {
+          key: "approval",
+          label: "Aprovação do Profissional",
+          description: allPatientStepsDone
+            ? "Suas etapas estão completas! Aguarde a aprovação do seu profissional."
+            : "Após completar as etapas, seu profissional revisará e aprovará seu plano.",
+          icon: CheckCircle2,
+          completed: !!pipeline.plan_approved,
+          route: "/dashboard", // stays on dashboard, patient can't do anything here
+        },
       ];
 
+      // If all patient steps are done but plan not approved, still show modal with waiting state
       const incomplete = detectedSteps.filter((s) => !s.completed);
-      if (incomplete.length === 0) return; // All done
+      if (incomplete.length === 0) return; // Everything done including approval
 
       setSteps(detectedSteps);
       setOpen(true);
@@ -141,24 +154,28 @@ export default function OnboardingProgressModal() {
               const Icon = step.icon;
               const isNext = !step.completed && step.key === firstIncomplete?.key;
               return (
-                <button
+              <button
                   key={step.key}
-                  onClick={() => !step.completed && handleGoToStep(step.route)}
-                  disabled={step.completed}
+                  onClick={() => {
+                    if (!step.completed && step.key !== "approval") handleGoToStep(step.route);
+                  }}
+                  disabled={step.completed || step.key === "approval"}
                   className={cn(
                     "w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors",
                     step.completed
                       ? "bg-muted/50 opacity-60"
-                      : isNext
-                        ? "bg-primary/10 border border-primary/30 hover:bg-primary/20"
-                        : "bg-muted/30 hover:bg-muted/50"
+                      : step.key === "approval"
+                        ? "bg-amber-500/10 border border-amber-500/30"
+                        : isNext
+                          ? "bg-primary/10 border border-primary/30 hover:bg-primary/20"
+                          : "bg-muted/30 hover:bg-muted/50"
                   )}
                 >
                   <div className={cn(
                     "flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center",
-                    step.completed ? "bg-accent text-accent-foreground" : "bg-primary/20 text-primary"
+                    step.completed ? "bg-accent text-accent-foreground" : step.key === "approval" ? "bg-amber-500/20 text-amber-500" : "bg-primary/20 text-primary"
                   )}>
-                    {step.completed ? <CheckCircle2 className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
+                    {step.completed ? <CheckCircle2 className="h-4 w-4" /> : step.key === "approval" ? <Clock className="h-4 w-4 animate-pulse" /> : <Icon className="h-4 w-4" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={cn(
@@ -169,7 +186,7 @@ export default function OnboardingProgressModal() {
                     </p>
                     <p className="text-xs text-muted-foreground truncate">{step.description}</p>
                   </div>
-                  {!step.completed && (
+                  {!step.completed && step.key !== "approval" && (
                     <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   )}
                 </button>
