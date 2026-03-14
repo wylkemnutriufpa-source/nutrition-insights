@@ -245,7 +245,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
                   >
                     <Card
                       className="cursor-pointer hover:border-primary/50 transition-colors"
-                      onClick={() => { setSelectedPipeline(p); setSelectedPlan("plan_a"); setRejectMode(false); }}
+                      onClick={() => { setSelectedPipeline(p); setRejectMode(false); }}
                     >
                       <CardContent className="py-4 flex items-center gap-4">
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
