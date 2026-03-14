@@ -93,8 +93,8 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
               transform: `rotateY(90deg) translateZ(${-edgeOffset}px)`,
               transformOrigin: "center",
               background:
-                "linear-gradient(180deg, hsl(var(--primary) / 0.9), hsl(var(--primary) / 0.5), hsl(var(--primary) / 0.9))",
-              boxShadow: "0 0 8px hsl(var(--primary) / 0.35)",
+                "linear-gradient(180deg, hsl(var(--border) / 0.95), hsl(var(--muted-foreground) / 0.45), hsl(var(--border) / 0.95))",
+              boxShadow: "0 0 6px hsl(var(--foreground) / 0.12)",
             }}
           />
         </motion.div>
