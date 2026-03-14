@@ -521,7 +521,7 @@ export default function FitnessAnamnesis() {
   // Fetch student name
   useEffect(() => {
     if (isPersonalMode && forStudentId) {
-      supabase.from("profiles").select("full_name").eq("user_id", forStudentId).single()
+      supabase.from("profiles").select("full_name").eq("user_id", forStudentId).maybeSingle()
         .then(({ data }) => setStudentName(data?.full_name || "Aluno"));
     }
   }, [isPersonalMode, forStudentId]);
