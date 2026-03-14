@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useMemo } from "react";
 import logoPng from "@/assets/logo.png";
 
 interface FitJourneyLogoProps {
@@ -7,10 +8,33 @@ interface FitJourneyLogoProps {
 }
 
 const sizes = {
-  sm: { icon: 80, text: "text-lg" },
-  md: { icon: 96, text: "text-xl" },
-  lg: { icon: 112, text: "text-2xl" },
+  sm: { icon: 80, text: "text-lg", particles: 6 },
+  md: { icon: 96, text: "text-xl", particles: 8 },
+  lg: { icon: 112, text: "text-2xl", particles: 10 },
 };
+
+function FloatingParticle({ delay, x, y, size }: { delay: number; x: number; y: number; size: number }) {
+  return (
+    <motion.div
+      className="absolute rounded-full pointer-events-none"
+      style={{
+        width: size,
+        height: size,
+        left: `${x}%`,
+        top: `${y}%`,
+        background: "radial-gradient(circle, hsl(var(--primary) / 0.8), transparent)",
+        boxShadow: `0 0 ${size * 2}px hsl(var(--primary) / 0.4)`,
+      }}
+      animate={{
+        opacity: [0, 0.9, 0],
+        scale: [0.4, 1.3, 0.4],
+        x: [0, (Math.random() - 0.5) * 12, 0],
+        y: [0, (Math.random() - 0.5) * 12, 0],
+      }}
+      transition={{ duration: 2.5 + Math.random() * 1.5, repeat: Infinity, delay, ease: "easeInOut" }}
+    />
+  );
+}
 
 export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJourneyLogoProps) {
   const s = sizes[size];
