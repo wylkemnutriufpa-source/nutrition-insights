@@ -34,7 +34,7 @@ export default function MyReferrals() {
     setCreating(true);
 
     // Get nutritionist
-    const { data: np } = await supabase.from("nutritionist_patients").select("nutritionist_id").eq("patient_id", user.id).eq("status", "active").limit(1).single();
+    const { data: np } = await supabase.from("nutritionist_patients").select("nutritionist_id").eq("patient_id", user.id).eq("status", "active").limit(1).maybeSingle();
 
     if (!np) { toast.error("Nenhum nutricionista vinculado."); setCreating(false); return; }
 

@@ -70,7 +70,7 @@ export default function MealPlans() {
             .from("profiles")
             .select("full_name")
             .eq("user_id", d.patient_id)
-            .single();
+            .maybeSingle();
           return { id: d.patient_id, name: profile?.full_name || "Paciente" };
         })
       );

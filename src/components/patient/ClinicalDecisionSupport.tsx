@@ -39,7 +39,7 @@ export default function ClinicalDecisionSupport({ patientId, nutritionistId }: P
         profileRes, anamnesisRes, checkinsRes, checklistRes,
         assessmentsRes, mealCompletionsRes, protocolsRes, availableProtocolsRes
       ] = await Promise.all([
-        supabase.from("profiles").select("full_name").eq("user_id", patientId).single(),
+        supabase.from("profiles").select("full_name").eq("user_id", patientId).maybeSingle(),
         supabase.from("patient_anamnesis").select("answers, computed_tmb, computed_kcal_target, computed_protein, computed_carbs, computed_fat, status").eq("user_id", patientId).order("created_at", { ascending: false }).limit(1),
         supabase.from("patient_checkins").select("weight, difficulty, feedback, status, created_at").eq("patient_id", patientId).order("created_at", { ascending: false }).limit(20),
         supabase.from("checklist_tasks").select("completed, date, category").eq("patient_id", patientId).order("date", { ascending: false }).limit(90),

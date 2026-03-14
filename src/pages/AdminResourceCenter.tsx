@@ -674,7 +674,7 @@ function UsersTab() {
       setNutName("");
       setNutPassword("");
       // Refresh list
-      const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", data).single();
+      const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", data).maybeSingle();
       setNutritionists(prev => [...prev, { user_id: data, full_name: profile?.full_name || nutName, patientCount: 0 }]);
     }
   };

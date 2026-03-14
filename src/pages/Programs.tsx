@@ -98,7 +98,7 @@ export default function Programs() {
     if (data) {
       const pts = await Promise.all(
         data.map(async (d: any) => {
-          const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", d.patient_id).single();
+          const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", d.patient_id).maybeSingle();
           return { id: d.patient_id, name: profile?.full_name || "Paciente" };
         })
       );

@@ -128,7 +128,7 @@ export default function MealPlanEditor() {
     setLoading(true);
 
     const [{ data: planData }, { data: itemsData }] = await Promise.all([
-      supabase.from("meal_plans").select("*").eq("id", id).single(),
+      supabase.from("meal_plans").select("*").eq("id", id).maybeSingle(),
       supabase.from("meal_plan_items").select("*").eq("meal_plan_id", id).order("created_at"),
     ]);
 

@@ -147,7 +147,7 @@ export default function BiquiniBrancoDetail() {
     if (allPtRes) {
       const pts = await Promise.all(
         allPtRes.map(async (d: any) => {
-          const { data: p } = await supabase.from("profiles").select("full_name").eq("user_id", d.patient_id).single();
+          const { data: p } = await supabase.from("profiles").select("full_name").eq("user_id", d.patient_id).maybeSingle();
           return { id: d.patient_id, name: p?.full_name || "Paciente" };
         })
       );

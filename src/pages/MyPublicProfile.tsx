@@ -34,7 +34,7 @@ export default function MyPublicProfile() {
     if (!user) return;
     (async () => {
       const [settingsRes, leadsRes] = await Promise.all([
-        supabase.from("public_profile_settings").select("*").eq("nutritionist_id", user.id).single(),
+        supabase.from("public_profile_settings").select("*").eq("nutritionist_id", user.id).maybeSingle(),
         supabase.from("lead_requests").select("*").eq("nutritionist_id", user.id).order("created_at", { ascending: false }).limit(20),
       ]);
 

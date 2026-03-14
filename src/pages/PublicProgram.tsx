@@ -29,7 +29,7 @@ export default function PublicProgram() {
     if (!programId) return;
     (async () => {
       const [progRes, phasesRes, enrolledRes] = await Promise.all([
-        supabase.from("programs").select("*").eq("id", programId).eq("is_active", true).single(),
+        supabase.from("programs").select("*").eq("id", programId).eq("is_active", true).maybeSingle(),
         supabase.from("program_phases").select("*").eq("program_id", programId).order("phase_number"),
         supabase.from("program_patients").select("id", { count: "exact", head: true }).eq("program_id", programId).eq("status", "active"),
       ]);

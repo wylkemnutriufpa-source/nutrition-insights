@@ -63,7 +63,7 @@ export default function PublicProfile() {
       setProfile(pub as PublicProfile);
 
       const [profileRes, programsRes] = await Promise.all([
-        supabase.from("profiles").select("full_name, avatar_url").eq("user_id", pub.nutritionist_id).single(),
+        supabase.from("profiles").select("full_name, avatar_url").eq("user_id", pub.nutritionist_id).maybeSingle(),
         supabase.from("programs").select("id, title, description, tag, image_url").eq("created_by", pub.nutritionist_id).eq("is_active", true),
       ]);
 

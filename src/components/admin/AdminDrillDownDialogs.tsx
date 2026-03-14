@@ -326,7 +326,7 @@ export function SubscriptionsDrillDown({ open, onOpenChange }: { open: boolean; 
       const results = [];
       for (const prof of allProfIds) {
         const [profileRes, paymentRes] = await Promise.all([
-          supabase.from("profiles").select("full_name").eq("user_id", prof.id).single(),
+          supabase.from("profiles").select("full_name").eq("user_id", prof.id).maybeSingle(),
           supabase.from("payments").select("status, amount, paid_at, metadata").eq("user_id", prof.id).order("paid_at", { ascending: false }).limit(1),
         ]);
         const lastPayment = paymentRes.data?.[0];
