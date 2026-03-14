@@ -48,7 +48,7 @@ export default function AdminBookingSettings() {
             .from("profiles")
             .select("full_name")
             .eq("user_id", p.nutritionist_id)
-            .single();
+            .maybeSingle();
           return { ...p, nutri_name: prof?.full_name || "Nutricionista" };
         })
       );

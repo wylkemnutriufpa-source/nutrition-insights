@@ -49,7 +49,7 @@ export default function PublicBooking() {
         .select("*")
         .eq("slug", slug)
         .eq("is_public", true)
-        .single();
+        .maybeSingle();
 
       if (!pub) { setNotFound(true); setLoading(false); return; }
       setProfile(pub);
@@ -60,7 +60,7 @@ export default function PublicBooking() {
         .from("profiles")
         .select("full_name, avatar_url")
         .eq("user_id", pub.nutritionist_id)
-        .single();
+        .maybeSingle();
 
       setProfileData(pData);
       setLoading(false);

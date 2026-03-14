@@ -123,7 +123,7 @@ export default function PhysicalAssessment() {
     supabase.from("patient_anamnesis")
       .select("answers, computed_tmb, computed_kcal_target, computed_protein, computed_carbs, computed_fat")
       .eq("user_id", patientId).eq("status", "completed")
-      .order("created_at", { ascending: false }).limit(1).single()
+      .order("created_at", { ascending: false }).limit(1).maybeSingle()
       .then(({ data }) => {
         if (data) {
           setAnamnesis(data as any);
