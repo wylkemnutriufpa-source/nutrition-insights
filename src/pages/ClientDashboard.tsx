@@ -21,6 +21,7 @@ import ProgramJoinRequest from "@/components/patient/ProgramJoinRequest";
 import SubscriptionCard from "@/components/patient/SubscriptionCard";
 import { Button } from "@/components/ui/button";
 import PhaseTransitionModal from "@/components/biquini/PhaseTransitionModal";
+import OnboardingProgressModal from "@/components/patient/OnboardingProgressModal";
 import BiquiniEnrollmentStatus from "@/components/biquini/BiquiniEnrollmentStatus";
 import BiquiniOnboardingWizard from "@/components/biquini/BiquiniOnboardingWizard";
 import { DailyMissionsWidget } from "@/components/gamification/DailyMissionsWidget";
@@ -237,8 +238,9 @@ export default function ClientDashboard() {
     );
   }
 
-  return (
+   return (
     <DashboardLayout>
+      <OnboardingProgressModal />
       <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
         {/* Premium Header */}
         <motion.div variants={item} className="relative overflow-hidden rounded-2xl gradient-border particles-bg">
