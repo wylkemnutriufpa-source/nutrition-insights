@@ -8,14 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
   AlertTriangle, CheckCircle2, XCircle, Loader2, User,
-  Target, Sparkles, ChevronRight, Scale, UtensilsCrossed,
-  ArrowRight, FileText, Eye
+  Target, Sparkles, ChevronRight, Scale,
+  FileText
 } from "lucide-react";
 
 interface PendingPipeline {
@@ -44,7 +43,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
   const [pipelines, setPipelines] = useState<PendingPipeline[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPipeline, setSelectedPipeline] = useState<PendingPipeline | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState<string>("plan_a");
+  
   const [processing, setProcessing] = useState(false);
   const [rejectMode, setRejectMode] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
@@ -113,143 +112,61 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
     return ex.selected_template || null;
   }
 
-  async function handleApprove() {
+  async function handleCreateAndEdit() {
     if (!selectedPipeline || !user) return;
     setProcessing(true);
-
     try {
-      const isAlternative = selectedPlan !== "plan_a";
-      const alternatives = getAlternatives(selectedPipeline);
-      const altIndex = isAlternative ? parseInt(selectedPlan.replace("plan_alt_", "")) : -1;
-      const chosenAlt = isAlternative && altIndex >= 0 ? alternatives[altIndex] : null;
+      const ex = selectedPipeline.generated_plan_data?.explainability;
+      const template = ex?.selected_template;
+      const templateName = template?.name || "Plano Personalizado";
+      const templateSlug = template?.slug || "custom";
+      const kcal = template?.base_calories || ex?.calculation?.final_kcal || 0;
 
-      let planId = selectedPipeline.generated_plan_id;
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + 30);
 
-      // If no plan_id exists but we have plan data, create the meal plan now
-      if (!planId && selectedPipeline.generated_plan_data) {
-        const ex = selectedPipeline.generated_plan_data?.explainability;
-        const template = chosenAlt || ex?.selected_template;
-        const templateName = template?.name || "Plano Personalizado";
-        const templateSlug = template?.slug || "custom";
-        const kcal = template?.base_calories || ex?.calculation?.final_kcal || 0;
+      const { data: newPlan, error: planError } = await supabase
+        .from("meal_plans")
+        .insert({
+          nutritionist_id: user.id,
+          patient_id: selectedPipeline.patient_id,
+          title: `Plano ${templateName}`,
+          description: `Plano gerado via protocolo Master (${kcal}kcal)`,
+          start_date: startDate.toISOString().split("T")[0],
+          end_date: endDate.toISOString().split("T")[0],
+          template_slug: templateSlug,
+          generation_source: "protocol_master",
+          generation_metadata: selectedPipeline.generated_plan_data,
+          plan_status: "under_professional_review",
+          is_active: false,
+        })
+        .select("id")
+        .single();
 
-        const startDate = new Date();
-        const endDate = new Date();
-        endDate.setDate(endDate.getDate() + 30);
-
-        const { data: newPlan, error: planError } = await supabase
-          .from("meal_plans")
-          .insert({
-            nutritionist_id: user.id,
-            patient_id: selectedPipeline.patient_id,
-            title: `Plano ${templateName}`,
-            description: `Plano gerado via protocolo Master (${kcal}kcal)${chosenAlt ? " — alternativa escolhida pelo profissional" : ""}`,
-            start_date: startDate.toISOString().split("T")[0],
-            end_date: endDate.toISOString().split("T")[0],
-            template_slug: templateSlug,
-            generation_source: "protocol_master",
-            generation_metadata: selectedPipeline.generated_plan_data,
-            plan_status: "approved",
-            is_active: true,
-          })
-          .select("id")
-          .single();
-
-        if (planError || !newPlan) {
-          toast.error("Erro ao criar plano: " + (planError?.message || "Tente novamente"));
-          setProcessing(false);
-          return;
-        }
-        planId = newPlan.id;
-
-        // Update pipeline with the new plan id
-        await supabase
-          .from("onboarding_pipelines" as any)
-          .update({ generated_plan_id: planId } as any)
-          .eq("id", selectedPipeline.id);
-
-        // Now publish it
-        await supabase
-          .from("meal_plans")
-          .update({ plan_status: "published_to_patient" } as any)
-          .eq("id", planId);
+      if (planError || !newPlan) {
+        toast.error("Erro ao criar plano: " + (planError?.message || "Tente novamente"));
+        setProcessing(false);
+        return;
       }
 
-      // If plan existed and user chose an alternative, update it
-      if (chosenAlt && planId && selectedPipeline.generated_plan_id) {
-        await supabase
-          .from("meal_plans")
-          .update({
-            template_slug: chosenAlt.slug,
-            generation_metadata: {
-              ...(selectedPipeline.generated_plan_data || {}),
-              switched_from_original: true,
-              original_template: getSelectedTemplate(selectedPipeline)?.slug,
-              chosen_alternative: chosenAlt.slug,
-              chosen_alternative_name: chosenAlt.name,
-            },
-            title: `Plano ${chosenAlt.name}`,
-            description: `Plano gerado via ${chosenAlt.name} (${chosenAlt.base_calories}kcal) — escolhido como alternativa pelo profissional`,
-          } as any)
-          .eq("id", planId);
-      }
-
-      // Update pipeline as approved
+      // Update pipeline with the plan id
       await supabase
         .from("onboarding_pipelines" as any)
-        .update({
-          plan_approved: true,
-          approved_by: user.id,
-          approved_at: new Date().toISOString(),
-          status: "completed",
-        } as any)
+        .update({ generated_plan_id: newPlan.id } as any)
         .eq("id", selectedPipeline.id);
 
-      // Approve + publish existing meal plan (if it already had a plan_id)
-      if (selectedPipeline.generated_plan_id && planId) {
-        const startDate = new Date();
-        const endDate = new Date();
-        endDate.setDate(endDate.getDate() + 30);
-
-        await supabase
-          .from("meal_plans")
-          .update({ plan_status: "approved" } as any)
-          .eq("id", planId);
-
-        await supabase
-          .from("meal_plans")
-          .update({
-            is_active: true,
-            plan_status: "published_to_patient",
-            start_date: startDate.toISOString().split("T")[0],
-            end_date: endDate.toISOString().split("T")[0],
-          } as any)
-          .eq("id", planId);
-      }
-
-      // Notify patient
-      await supabase.from("notifications").insert({
-        user_id: selectedPipeline.patient_id,
-        title: "Plano Alimentar Aprovado! 🎉",
-        message: isAlternative
-          ? `Seu profissional escolheu o plano ${chosenAlt?.name || "alternativo"} para você. Acesse em 'Minha Dieta'. Validade: 30 dias.`
-          : "Seu plano foi revisado e aprovado. Acesse em 'Minha Dieta'. Validade: 30 dias.",
-        type: "success",
-        action_url: "/my-diet",
-      });
-
-      toast.success(`Plano de ${selectedPipeline.patient_name} aprovado!`);
-      setPipelines((prev) => prev.filter((p) => p.id !== selectedPipeline.id));
-      setSelectedPipeline(null);
-      setSelectedPlan("plan_a");
-
-      if (pipelines.length <= 1) onOpenChange(false);
+      onOpenChange(false);
+      navigate(`/meal-plans/${newPlan.id}`);
+      toast.success("Plano criado! Revise e aprove quando estiver pronto.");
     } catch (err: any) {
-      toast.error("Erro ao aprovar: " + (err.message || "Tente novamente"));
+      toast.error("Erro: " + (err.message || "Tente novamente"));
     } finally {
       setProcessing(false);
     }
   }
+
+
 
   async function handleReject() {
     if (!selectedPipeline || !rejectReason.trim()) {
@@ -328,7 +245,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
                   >
                     <Card
                       className="cursor-pointer hover:border-primary/50 transition-colors"
-                      onClick={() => { setSelectedPipeline(p); setSelectedPlan("plan_a"); setRejectMode(false); }}
+                      onClick={() => { setSelectedPipeline(p); setRejectMode(false); }}
                     >
                       <CardContent className="py-4 flex items-center gap-4">
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
@@ -413,114 +330,29 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
 
               {!rejectMode ? (
                 <>
-                  {/* Plan selection - only if templates exist */}
-                  {(getSelectedTemplate(selectedPipeline) || getAlternatives(selectedPipeline).length > 0) && (
-                    <div className="space-y-3">
-                      <p className="text-sm font-semibold flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-primary" />
-                        Escolha o plano para {selectedPipeline.patient_name}:
-                      </p>
-
-                      <RadioGroup value={selectedPlan} onValueChange={setSelectedPlan} className="space-y-2">
-                        {(() => {
-                          const selected = getSelectedTemplate(selectedPipeline);
-                          if (!selected) return null;
-                          return (
-                            <Label
-                              htmlFor="plan_a"
-                              className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                                selectedPlan === "plan_a"
-                                  ? "border-primary bg-primary/5"
-                                  : "border-muted hover:border-muted-foreground/30"
-                              }`}
-                            >
-                              <RadioGroupItem value="plan_a" id="plan_a" className="mt-0.5" />
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-semibold">Opção A — {selected.name}</span>
-                                  <Badge className="text-xs bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
-                                    Recomendado
-                                  </Badge>
-                                </div>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {selected.base_calories} kcal • Score: {selected.score} pontos
-                                </p>
-                                {selected.reasons?.map((r: string, i: number) => (
-                                  <span key={i} className="text-xs text-muted-foreground block mt-0.5">✓ {r}</span>
-                                ))}
-                              </div>
-                            </Label>
-                          );
-                        })()}
-
-                        {getAlternatives(selectedPipeline).map((alt: any, idx: number) => {
-                          const value = `plan_alt_${idx}`;
-                          const letter = String.fromCharCode(66 + idx);
-                          return (
-                            <Label
-                              key={value}
-                              htmlFor={value}
-                              className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                                selectedPlan === value
-                                  ? "border-primary bg-primary/5"
-                                  : "border-muted hover:border-muted-foreground/30"
-                              }`}
-                            >
-                              <RadioGroupItem value={value} id={value} className="mt-0.5" />
-                              <div className="flex-1">
-                                <span className="font-semibold">Opção {letter} — {alt.name}</span>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {alt.base_calories} kcal • Score: {alt.score} pontos
-                                </p>
-                                {alt.reasons?.map((r: string, i: number) => (
-                                  <span key={i} className="text-xs text-muted-foreground block mt-0.5">✓ {r}</span>
-                                ))}
-                              </div>
-                            </Label>
-                          );
-                        })}
-                      </RadioGroup>
-                    </div>
+                  {/* Info card */}
+                  {selectedPipeline.generated_plan_id ? (
+                    <Card className="border-dashed border-primary/40 bg-primary/5">
+                      <CardContent className="py-3 text-center text-sm text-muted-foreground space-y-1">
+                        <Sparkles className="w-4 h-4 inline mr-1 text-primary" />
+                        Plano gerado com sucesso. Clique em <strong>"Analisar e Editar"</strong> para revisar, fazer ajustes e depois aprovar diretamente no editor.
+                      </CardContent>
+                    </Card>
+                  ) : selectedPipeline.generated_plan_data ? (
+                    <Card className="border-dashed border-primary/40 bg-primary/5">
+                      <CardContent className="py-3 text-center text-sm text-muted-foreground space-y-1">
+                        <Sparkles className="w-4 h-4 inline mr-1 text-primary" />
+                        Plano gerado com sucesso. Clique em <strong>"Criar e Editar Plano"</strong> para criar o plano no sistema e editá-lo antes de aprovar.
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <Card className="border-dashed border-amber-500/40 bg-amber-500/5">
+                      <CardContent className="py-3 text-center text-sm text-muted-foreground">
+                        <AlertTriangle className="w-4 h-4 inline mr-1 text-amber-500" />
+                        Plano ainda não foi gerado. Rejeite ou aguarde a geração automática.
+                      </CardContent>
+                    </Card>
                   )}
-
-                   {/* Analyze/Edit plan buttons */}
-                   {selectedPipeline.generated_plan_id && (
-                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                       <Button
-                         variant="outline"
-                         className="w-full border-primary/50 text-primary hover:bg-primary/10"
-                         onClick={() => {
-                           onOpenChange(false);
-                           navigate(`/meal-plans/${selectedPipeline.generated_plan_id}`);
-                         }}
-                       >
-                         <FileText className="w-4 h-4 mr-2" /> Editar Plano
-                       </Button>
-                       <Button variant="outline" className="w-full border-primary/50 text-primary hover:bg-primary/10" asChild>
-                         <a href={`/meal-plans/${selectedPipeline.generated_plan_id}`} target="_blank" rel="noopener noreferrer">
-                           <Eye className="w-4 h-4 mr-2" /> Analisar em Nova Aba
-                         </a>
-                       </Button>
-                     </div>
-                   )}
-
-                   {!selectedPipeline.generated_plan_id && selectedPipeline.generated_plan_data && (
-                     <Card className="border-dashed border-primary/40 bg-primary/5">
-                       <CardContent className="py-3 text-center text-sm text-muted-foreground space-y-2">
-                         <Sparkles className="w-4 h-4 inline mr-1 text-primary" />
-                         Plano gerado com sucesso. Aprove para criar e publicar automaticamente ao paciente.
-                       </CardContent>
-                     </Card>
-                   )}
-
-                   {!selectedPipeline.generated_plan_id && !selectedPipeline.generated_plan_data && (
-                     <Card className="border-dashed border-amber-500/40 bg-amber-500/5">
-                       <CardContent className="py-3 text-center text-sm text-muted-foreground">
-                         <AlertTriangle className="w-4 h-4 inline mr-1 text-amber-500" />
-                         Plano ainda não foi gerado. Aprove para gerar automaticamente ou crie manualmente.
-                       </CardContent>
-                     </Card>
-                   )}
                 </>
               ) : (
                 /* Reject form */
@@ -552,22 +384,28 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
         {/* ── Sticky action buttons at bottom ── */}
         {selectedPipeline && !rejectMode && (
           <div className="border-t pt-4 -mx-6 px-6 flex gap-3">
-            {selectedPipeline.generated_plan_id && (
+            {selectedPipeline.generated_plan_id ? (
               <Button
-                variant="outline"
-                className="border-primary/50 text-primary hover:bg-primary/10"
+                className="flex-1 gradient-primary shadow-glow"
                 onClick={() => {
                   onOpenChange(false);
                   navigate(`/meal-plans/${selectedPipeline.generated_plan_id}`);
                 }}
               >
-                <Eye className="w-4 h-4 mr-2" /> Analisar
+                <FileText className="w-4 h-4 mr-2" /> Analisar e Editar o Plano
               </Button>
-            )}
-            <Button onClick={handleApprove} className="flex-1 gradient-primary shadow-glow" disabled={processing}>
-              {processing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
-              Aprovar e Publicar
-            </Button>
+            ) : selectedPipeline.generated_plan_data ? (
+              <Button
+                className="flex-1 gradient-primary shadow-glow"
+                disabled={processing}
+                onClick={async () => {
+                  await handleCreateAndEdit();
+                }}
+              >
+                {processing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <FileText className="w-4 h-4 mr-2" />}
+                Criar e Editar Plano
+              </Button>
+            ) : null}
             <Button variant="destructive" onClick={() => setRejectMode(true)} disabled={processing}>
               <XCircle className="w-4 h-4 mr-2" /> Rejeitar
             </Button>
