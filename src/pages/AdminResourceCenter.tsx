@@ -633,7 +633,7 @@ function UsersTab() {
       const nutIds = nutRoles?.map(r => r.user_id) || [];
       const result: typeof nutritionists = [];
       for (const nutId of nutIds) {
-        const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", nutId).single();
+        const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", nutId).maybeSingle();
         const { count } = await supabase.from("nutritionist_patients").select("id", { count: "exact", head: true }).eq("nutritionist_id", nutId).eq("status", "active");
         result.push({ user_id: nutId, full_name: profile?.full_name || "Nutricionista", patientCount: count || 0 });
       }
