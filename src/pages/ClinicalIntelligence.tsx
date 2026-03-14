@@ -145,7 +145,7 @@ export default function ClinicalIntelligence() {
       // Parallel fetches
       const [profilesRes, anamnesisRes, checklistRes, checkinsRes, programsRes, allPrograms, allProtocols, enrollments] = await Promise.all([
         Promise.all(patientIds.map(id =>
-          supabase.from("profiles").select("user_id, full_name").eq("user_id", id).single()
+          supabase.from("profiles").select("user_id, full_name").eq("user_id", id).maybeSingle()
         )),
         Promise.all(patientIds.map(id =>
           supabase.from("patient_anamnesis").select("answers").eq("user_id", id).order("created_at", { ascending: false }).limit(1).maybeSingle()

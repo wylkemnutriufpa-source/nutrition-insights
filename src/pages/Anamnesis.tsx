@@ -525,7 +525,7 @@ export default function Anamnesis() {
   // Fetch patient name if nutritionist mode
   useEffect(() => {
     if (isNutritionistMode && forPatientId) {
-      supabase.from("profiles").select("full_name").eq("user_id", forPatientId).single()
+      supabase.from("profiles").select("full_name").eq("user_id", forPatientId).maybeSingle()
         .then(({ data }) => setPatientName(data?.full_name || "Paciente"));
     }
   }, [isNutritionistMode, forPatientId]);

@@ -342,7 +342,7 @@ function NutritionistSupplementsView() {
 
     const patientIds = (patientsRes.data || []).map((p: any) => p.patient_id);
     const profilesRes = await Promise.all(
-      patientIds.map(id => supabase.from("profiles").select("full_name").eq("user_id", id).single())
+      patientIds.map(id => supabase.from("profiles").select("full_name").eq("user_id", id).maybeSingle())
     );
 
     const pats = (patientsRes.data || []).map((p: any, i: number) => ({

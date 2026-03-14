@@ -204,7 +204,7 @@ export default function OnboardingPipeline() {
         .eq("id", pipeline.id);
 
       // Notify nutritionist
-      const patientName = (await supabase.from("profiles").select("full_name").eq("user_id", user.id).single()).data?.full_name || "Paciente";
+      const patientName = (await supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle()).data?.full_name || "Paciente";
       await supabase.from("notifications").insert({
         user_id: pipeline.nutritionist_id,
         title: "🔔 Pré-Plano Aguardando Aprovação",

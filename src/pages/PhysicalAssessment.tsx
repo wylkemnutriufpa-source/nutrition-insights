@@ -116,7 +116,7 @@ export default function PhysicalAssessment() {
     if (!patientId) return;
 
     // Patient name
-    supabase.from("profiles").select("full_name").eq("user_id", patientId).single()
+    supabase.from("profiles").select("full_name").eq("user_id", patientId).maybeSingle()
       .then(({ data }) => setPatientName(data?.full_name || "Paciente"));
 
     // Anamnesis

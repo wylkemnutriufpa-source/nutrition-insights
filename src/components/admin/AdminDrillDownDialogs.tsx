@@ -38,7 +38,7 @@ export function ProfessionalsDrillDown({ open, onOpenChange }: { open: boolean; 
         const results = [];
         for (const id of ids) {
           const [profileRes, countRes] = await Promise.all([
-            supabase.from("profiles").select("full_name, avatar_url, created_at").eq("user_id", id).single(),
+            supabase.from("profiles").select("full_name, avatar_url, created_at").eq("user_id", id).maybeSingle(),
             supabase.from("nutritionist_patients").select("id", { count: "exact", head: true }).eq("nutritionist_id", id).eq("status", "active"),
           ]);
           results.push({
@@ -326,7 +326,7 @@ export function SubscriptionsDrillDown({ open, onOpenChange }: { open: boolean; 
       const results = [];
       for (const prof of allProfIds) {
         const [profileRes, paymentRes] = await Promise.all([
-          supabase.from("profiles").select("full_name").eq("user_id", prof.id).single(),
+          supabase.from("profiles").select("full_name").eq("user_id", prof.id).maybeSingle(),
           supabase.from("payments").select("status, amount, paid_at, metadata").eq("user_id", prof.id).order("paid_at", { ascending: false }).limit(1),
         ]);
         const lastPayment = paymentRes.data?.[0];

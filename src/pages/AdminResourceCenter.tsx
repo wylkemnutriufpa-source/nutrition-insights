@@ -460,7 +460,7 @@ function FeaturesTab() {
       if (!nutRoles) { setLoading(false); return; }
       const result: NutritionistFeature[] = [];
       for (const r of nutRoles) {
-        const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", r.user_id).single();
+        const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", r.user_id).maybeSingle();
         const { data: featureRows } = await supabase
           .from("professional_feature_usage" as any)
           .select("feature_name, status")
@@ -539,7 +539,7 @@ function TestimonialsTab() {
       if (data) {
         const enriched: Testimonial[] = [];
         for (const t of data) {
-          const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", t.patient_id).single();
+          const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", t.patient_id).maybeSingle();
           enriched.push({ ...t, patient_name: t.is_anonymous ? "Anônimo" : profile?.full_name || "Paciente" });
         }
         setTestimonials(enriched);
@@ -633,7 +633,7 @@ function UsersTab() {
       const nutIds = nutRoles?.map(r => r.user_id) || [];
       const result: typeof nutritionists = [];
       for (const nutId of nutIds) {
-        const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", nutId).single();
+        const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", nutId).maybeSingle();
         const { count } = await supabase.from("nutritionist_patients").select("id", { count: "exact", head: true }).eq("nutritionist_id", nutId).eq("status", "active");
         result.push({ user_id: nutId, full_name: profile?.full_name || "Nutricionista", patientCount: count || 0 });
       }
@@ -674,7 +674,7 @@ function UsersTab() {
       setNutName("");
       setNutPassword("");
       // Refresh list
-      const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", data).single();
+      const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", data).maybeSingle();
       setNutritionists(prev => [...prev, { user_id: data, full_name: profile?.full_name || nutName, patientCount: 0 }]);
     }
   };

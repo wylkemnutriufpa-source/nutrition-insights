@@ -32,7 +32,7 @@ export default function AdminTestimonials() {
       if (data) {
         const enriched = await Promise.all(
           data.map(async (t: any) => {
-            const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", t.patient_id).single();
+            const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", t.patient_id).maybeSingle();
             return { ...t, patient_name: t.is_anonymous ? "Anônimo" : (profile?.full_name || "Paciente") };
           })
         );

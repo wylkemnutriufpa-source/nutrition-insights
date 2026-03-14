@@ -102,7 +102,7 @@ export default function BiquiniBrancoDetail() {
     if (!programId || !user) return;
     setLoading(true);
 
-    const { data: prog } = await supabase.from("programs").select("*").eq("id", programId).single();
+    const { data: prog } = await supabase.from("programs").select("*").eq("id", programId).maybeSingle();
     if (!prog) { setLoading(false); return; }
     setProgram(prog);
 
@@ -116,8 +116,8 @@ export default function BiquiniBrancoDetail() {
     const enriched: EnrolledPatient[] = [];
     for (const ep of (enrolled || [])) {
       const [profileRes, statsRes, progressRes] = await Promise.all([
-        supabase.from("profiles").select("full_name, avatar_url").eq("user_id", ep.patient_id).single(),
-        supabase.from("player_stats").select("total_xp, level, current_streak").eq("user_id", ep.patient_id).single(),
+        supabase.from("profiles").select("full_name, avatar_url").eq("user_id", ep.patient_id).maybeSingle(),
+        supabase.from("player_stats").select("total_xp, level, current_streak").eq("user_id", ep.patient_id).maybeSingle(),
         (supabase as any).from("program_patient_progress").select("*").eq("program_id", programId).eq("patient_id", ep.patient_id).order("week_number"),
       ]);
 
@@ -147,7 +147,7 @@ export default function BiquiniBrancoDetail() {
     if (allPtRes) {
       const pts = await Promise.all(
         allPtRes.map(async (d: any) => {
-          const { data: p } = await supabase.from("profiles").select("full_name").eq("user_id", d.patient_id).single();
+          const { data: p } = await supabase.from("profiles").select("full_name").eq("user_id", d.patient_id).maybeSingle();
           return { id: d.patient_id, name: p?.full_name || "Paciente" };
         })
       );

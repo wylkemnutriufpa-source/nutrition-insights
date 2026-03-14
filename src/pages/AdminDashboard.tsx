@@ -858,7 +858,7 @@ export default function AdminDashboard() {
     // Fetch nutritionist profiles
     const profs: ProfessionalInfo[] = [];
     for (const nutId of nutIds) {
-      const { data: profile } = await supabase.from("profiles").select("full_name, created_at").eq("user_id", nutId).single();
+      const { data: profile } = await supabase.from("profiles").select("full_name, created_at").eq("user_id", nutId).maybeSingle();
       const { count } = await supabase.from("nutritionist_patients")
         .select("id", { count: "exact", head: true })
         .eq("nutritionist_id", nutId).eq("status", "active");

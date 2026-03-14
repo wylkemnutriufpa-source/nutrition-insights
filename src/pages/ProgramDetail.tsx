@@ -82,7 +82,7 @@ export default function ProgramDetail() {
     setLoading(true);
 
     // Program data
-    const { data: prog } = await supabase.from("programs").select("*").eq("id", programId).single();
+    const { data: prog } = await supabase.from("programs").select("*").eq("id", programId).maybeSingle();
     if (!prog) { setLoading(false); return; }
     setProgram(prog);
 
@@ -95,8 +95,8 @@ export default function ProgramDetail() {
 
     for (const ep of (enrolled || [])) {
       const [profileRes, statsRes, checkRes, anamRes] = await Promise.all([
-        supabase.from("profiles").select("full_name, avatar_url").eq("user_id", ep.patient_id).single(),
-        supabase.from("player_stats").select("total_xp, level, current_streak").eq("user_id", ep.patient_id).single(),
+        supabase.from("profiles").select("full_name, avatar_url").eq("user_id", ep.patient_id).maybeSingle(),
+        supabase.from("player_stats").select("total_xp, level, current_streak").eq("user_id", ep.patient_id).maybeSingle(),
         supabase.from("checklist_tasks").select("id, completed").eq("patient_id", ep.patient_id).eq("date", today),
         supabase.from("patient_anamnesis").select("answers, computed_tmb, computed_kcal_target, computed_protein, computed_carbs, computed_fat")
           .eq("user_id", ep.patient_id).order("created_at", { ascending: false }).limit(1),
@@ -143,7 +143,7 @@ export default function ProgramDetail() {
     if (allPtRes.data) {
       const pts = await Promise.all(
         allPtRes.data.map(async (d: any) => {
-          const { data: p } = await supabase.from("profiles").select("full_name").eq("user_id", d.patient_id).single();
+          const { data: p } = await supabase.from("profiles").select("full_name").eq("user_id", d.patient_id).maybeSingle();
           return { id: d.patient_id, name: p?.full_name || "Paciente" };
         })
       );
