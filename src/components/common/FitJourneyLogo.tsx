@@ -7,9 +7,9 @@ interface FitJourneyLogoProps {
 }
 
 const sizes = {
-  sm: { icon: 36, text: "text-xl", container: 52 },
-  md: { icon: 40, text: "text-lg", container: 58 },
-  lg: { icon: 48, text: "text-2xl", container: 68 },
+  sm: { icon: 44, text: "text-xl", container: 52 },
+  md: { icon: 50, text: "text-lg", container: 58 },
+  lg: { icon: 60, text: "text-2xl", container: 68 },
 };
 
 export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJourneyLogoProps) {
