@@ -460,7 +460,7 @@ function FeaturesTab() {
       if (!nutRoles) { setLoading(false); return; }
       const result: NutritionistFeature[] = [];
       for (const r of nutRoles) {
-        const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", r.user_id).single();
+        const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", r.user_id).maybeSingle();
         const { data: featureRows } = await supabase
           .from("professional_feature_usage" as any)
           .select("feature_name, status")
