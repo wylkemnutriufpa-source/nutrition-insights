@@ -290,7 +290,7 @@ export default function CommandPalette() {
 
   return (
     <CommandPaletteContext.Provider value={{ open: openPalette }}>
-      <CommandDialog open={isOpen} onOpenChange={setIsOpen}>
+      <CommandDialog open={isOpen} onOpenChange={setIsOpen} shouldFilter={false}>
         <CommandInput
           placeholder="Buscar qualquer coisa: página, paciente, função..."
           value={searchQuery}
