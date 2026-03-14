@@ -18,24 +18,23 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
   return (
     <div className="flex items-center gap-3">
       <div
-        className="relative flex-shrink-0 flex items-center justify-center"
+        className="relative flex-shrink-0 flex items-center justify-center overflow-hidden"
         style={{ width: s.icon, height: s.icon }}
       >
-        {/* Floating energy layers */}
         <motion.div
-          className="absolute inset-0 rounded-full"
+          className="absolute inset-2 rounded-full"
           style={{
             background: "radial-gradient(circle, hsl(var(--primary) / 0.25) 0%, transparent 70%)",
           }}
-          animate={{ scale: [1, 1.25, 1], opacity: [0.5, 0.8, 0.5] }}
+          animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute inset-0 rounded-full"
+          className="absolute inset-3 rounded-full"
           style={{
             background: "radial-gradient(circle, hsl(152 58% 45% / 0.2) 0%, transparent 65%)",
           }}
-          animate={{ scale: [1.1, 1.35, 1.1], opacity: [0.4, 0.7, 0.4] }}
+          animate={{ scale: [1.05, 1.2, 1.05], opacity: [0.4, 0.7, 0.4] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
         />
         <img
