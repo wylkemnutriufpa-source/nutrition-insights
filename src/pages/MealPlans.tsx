@@ -121,7 +121,13 @@ export default function MealPlans() {
             <h1 className="font-display text-2xl font-bold flex items-center gap-2">
               <ClipboardList className="w-7 h-7 text-primary" /> Planos Alimentares
             </h1>
-            <p className="text-muted-foreground text-sm">{plans.filter(p => p.is_active).length} planos ativos</p>
+            <p className="text-muted-foreground text-sm">
+              {plans.filter(p => p.is_active).length} ativos
+              {(() => {
+                const pending = plans.filter(p => ["draft_auto_generated", "under_professional_review"].includes((p as any).plan_status));
+                return pending.length > 0 ? ` • ${pending.length} aguardando aprovação` : "";
+              })()}
+            </p>
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
