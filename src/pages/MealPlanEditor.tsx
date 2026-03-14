@@ -619,22 +619,43 @@ export default function MealPlanEditor() {
                   disabled={approving || items.length === 0}
                   onClick={async () => {
                     setApproving(true);
-                    const startDate = new Date(plan.start_date);
-                    const endDate = new Date(startDate);
-                    endDate.setDate(endDate.getDate() + 30);
-                    const { error } = await supabase
-                      .from("meal_plans")
-                      .update({
-                        plan_status: "published_to_patient",
-                        is_active: true,
-                        start_date: startDate.toISOString().split("T")[0],
-                        end_date: endDate.toISOString().split("T")[0],
-                      } as any)
-                      .eq("id", plan.id);
-                    if (error) toast.error("Erro: " + error.message);
-                    else {
-                      toast.success("Plano publicado para o paciente! 🎉");
+                    try {
+                      // Step 1: approve first if not yet approved (trigger requires approved -> published)
+                      if (plan.plan_status !== "approved") {
+                        const { error: approveErr } = await supabase
+                          .from("meal_plans")
+                          .update({ plan_status: "approved" } as any)
+                          .eq("id", plan.id);
+                        if (approveErr) throw approveErr;
+                      }
+                      // Step 2: publish
+                      const startDate = new Date();
+                      const endDate = new Date(startDate);
+                      endDate.setDate(endDate.getDate() + 30);
+                      const { error } = await supabase
+                        .from("meal_plans")
+                        .update({
+                          plan_status: "published_to_patient",
+                          is_active: true,
+                          start_date: startDate.toISOString().split("T")[0],
+                          end_date: endDate.toISOString().split("T")[0],
+                        } as any)
+                        .eq("id", plan.id);
+                      if (error) throw error;
+
+                      // Step 3: notify patient
+                      await supabase.from("notifications").insert({
+                        user_id: plan.patient_id,
+                        title: "Novo plano alimentar ativado! 🎉",
+                        message: `Seu plano "${plan.title}" foi aprovado e está ativo por 30 dias. Confira agora!`,
+                        type: "meal_plan",
+                        action_url: "/patient-meal-plan",
+                      });
+
+                      toast.success("Plano publicado e paciente notificado! 🎉");
                       fetchData();
+                    } catch (err: any) {
+                      toast.error("Erro: " + (err?.message || "Falha ao publicar"));
                     }
                     setApproving(false);
                   }}
