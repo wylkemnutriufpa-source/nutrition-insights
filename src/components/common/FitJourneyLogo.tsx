@@ -18,11 +18,11 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
   return (
     <div className="flex items-center gap-3">
       <div
-        className="flex-shrink-0"
+        className="flex-shrink-0 flex items-center justify-center"
         style={{
           width: s.icon,
           height: s.icon,
-          perspective: 600,
+          perspective: 800,
         }}
       >
         <motion.div
@@ -31,11 +31,16 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
             height: s.icon,
             transformStyle: "preserve-3d",
           }}
-          animate={{ rotateY: 360 }}
-          transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+          animate={{ rotateY: [0, 80, 0, -80, 0] }}
+          transition={{
+            duration: 5,
+            repeat: Infinity,
+            ease: "easeInOut",
+            times: [0, 0.25, 0.5, 0.75, 1],
+          }}
         >
           {/* Front face */}
-          <img
+          <motion.img
             src={logoImg}
             alt="FitJourney Logo"
             className="rounded-full object-cover absolute inset-0"
@@ -43,33 +48,31 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
               width: s.icon,
               height: s.icon,
               backfaceVisibility: "hidden",
-              filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.3))",
+              filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.25))",
             }}
-          />
-          {/* Back face */}
-          <img
-            src={logoImg}
-            alt=""
-            className="rounded-full object-cover absolute inset-0"
-            style={{
-              width: s.icon,
-              height: s.icon,
-              backfaceVisibility: "hidden",
-              transform: "rotateY(180deg)",
-              filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.3))",
+            animate={{ rotateY: [0, 80, 0, -80, 0] }}
+            transition={{
+              duration: 5,
+              repeat: Infinity,
+              ease: "easeInOut",
+              times: [0, 0.25, 0.5, 0.75, 1],
             }}
+            // Scale compensation: slightly scale up at side angles to counter perspective flattening
+            whileHover={{ scale: 1.05 }}
           />
-          {/* Edge / thickness layers */}
-          {Array.from({ length: 6 }).map((_, i) => (
+
+          {/* Edge / thickness layers for 3D depth */}
+          {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
               className="absolute inset-0 rounded-full"
               style={{
                 width: s.icon,
                 height: s.icon,
-                background: "linear-gradient(180deg, hsl(152 30% 45%), hsl(0 0% 65%), hsl(152 30% 40%))",
-                transform: `translateZ(${-1 - i * 0.6}px)`,
-                opacity: 0.7,
+                background:
+                  "linear-gradient(180deg, hsl(152 30% 50%), hsl(0 0% 72%), hsl(152 30% 42%))",
+                transform: `translateZ(${-1 - i * 0.5}px)`,
+                opacity: 0.55 - i * 0.04,
               }}
             />
           ))}
@@ -84,7 +87,8 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
         >
           <span
             style={{
-              background: "linear-gradient(180deg, hsl(220 25% 20%) 0%, hsl(220 20% 35%) 40%, hsl(220 15% 55%) 60%, hsl(220 25% 25%) 100%)",
+              background:
+                "linear-gradient(180deg, hsl(220 25% 20%) 0%, hsl(220 20% 35%) 40%, hsl(220 15% 55%) 60%, hsl(220 25% 25%) 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
             }}
@@ -93,7 +97,8 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
           </span>
           <span
             style={{
-              background: "linear-gradient(180deg, hsl(152 58% 35%) 0%, hsl(152 58% 50%) 30%, hsl(170 60% 60%) 60%, hsl(152 58% 38%) 100%)",
+              background:
+                "linear-gradient(180deg, hsl(152 58% 35%) 0%, hsl(152 58% 50%) 30%, hsl(170 60% 60%) 60%, hsl(152 58% 38%) 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
             }}
