@@ -1,4 +1,5 @@
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { useEffect } from "react";
 import logoImg from "@/assets/logo.png";
 
 interface FitJourneyLogoProps {
@@ -12,126 +13,132 @@ const sizes = {
   lg: { icon: 54, text: "text-2xl", container: 62 },
 };
 
-const DEPTH = 16; // coin thickness in px
-const SLICES = 36; // number of edge slices for smooth cylinder
-
 export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJourneyLogoProps) {
   const s = sizes[size];
-  const half = DEPTH / 2;
-  const radius = s.icon / 2;
+  const EDGE_WIDTH = 14;
 
-  // Generate edge slices to form a continuous cylinder
-  const edgeSlices = Array.from({ length: SLICES }, (_, i) => {
-    const angle = (i / SLICES) * 180; // 0-180 degrees (visible half)
-    const rad = (angle * Math.PI) / 180;
-    const z = Math.cos(rad) * half;
-    const x = Math.sin(rad) * half;
-    // Brightness varies to simulate lighting on cylinder
-    const lightness = 38 + Math.sin(rad) * 18;
-    return { angle, z, x, lightness };
+  // Animate angle 0→360 continuously
+  const angle = useMotionValue(0);
+
+  useEffect(() => {
+    const controls = animate(angle, 360, {
+      duration: 7,
+      repeat: Infinity,
+      ease: "linear",
+    });
+    return controls.stop;
+  }, [angle]);
+
+  // Clamp so the coin never goes thinner than ~30% — always readable
+  const clampedScale = useTransform(angle, (a) => {
+    const rad = (a * Math.PI) / 180;
+    const cos = Math.cos(rad);
+    return Math.max(0.3, Math.abs(cos));
   });
+
+  // Determine which face is showing (front vs back)
+  const isFront = useTransform(angle, (a) => {
+    const normalized = a % 360;
+    return normalized < 90 || normalized > 270;
+  });
+
+  // Edge visibility — shows when coin is angled
+  const edgeOpacity = useTransform(angle, (a) => {
+    const rad = (a * Math.PI) / 180;
+    const sin = Math.abs(Math.sin(rad));
+    return Math.min(1, sin * 1.8);
+  });
+
+  // Edge offset — shifts left/right based on rotation direction
+  const edgeX = useTransform(angle, (a) => {
+    const rad = (a * Math.PI) / 180;
+    return Math.sin(rad) * (EDGE_WIDTH * 0.5);
+  });
+
+  // Highlight position on the edge for metallic sheen
+  const edgeHighlight = useTransform(angle, (a) => {
+    const rad = (a * Math.PI) / 180;
+    const pos = (Math.sin(rad) + 1) / 2;
+    return `${pos * 100}%`;
+  });
+
+  // Shadow for grounding
+  const shadowBlur = useTransform(clampedScale, (s) => `0 ${4 + (1 - s) * 6}px ${8 + (1 - s) * 10}px rgba(0,0,0,${0.1 + (1 - s) * 0.15})`);
 
   return (
     <div className="flex items-center gap-3">
       <div
         className="relative flex-shrink-0 flex items-center justify-center"
-        style={{
-          width: s.container,
-          height: s.container,
-          perspective: 600,
-        }}
+        style={{ width: s.container, height: s.container }}
       >
+        {/* Shadow layer */}
         <motion.div
-          className="relative"
+          className="absolute rounded-full"
           style={{
             width: s.icon,
             height: s.icon,
-            transformStyle: "preserve-3d",
+            scaleX: clampedScale,
+            boxShadow: shadowBlur,
+            top: 2,
           }}
-          animate={{ rotateY: 360 }}
-          transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+        />
+
+        {/* Edge / thickness layer — always behind the face */}
+        <motion.div
+          className="absolute rounded-[6px]"
+          style={{
+            width: EDGE_WIDTH,
+            height: s.icon - 4,
+            opacity: edgeOpacity,
+            x: edgeX,
+            background: `linear-gradient(
+              90deg,
+              hsl(152 25% 28%) 0%,
+              hsl(152 35% 45%) 20%,
+              hsl(160 40% 62%) 45%,
+              hsl(152 30% 52%) 55%,
+              hsl(152 35% 45%) 80%,
+              hsl(152 25% 28%) 100%
+            )`,
+            boxShadow: "inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.2)",
+          }}
+        />
+
+        {/* Front face — the logo */}
+        <motion.div
+          className="absolute rounded-full overflow-hidden"
+          style={{
+            width: s.icon,
+            height: s.icon,
+            scaleX: clampedScale,
+          }}
         >
-          {/* Front face */}
-          <div
-            className="absolute inset-0 rounded-full overflow-hidden"
-            style={{
-              transform: `translateZ(${half}px)`,
-              backfaceVisibility: "hidden",
-              WebkitBackfaceVisibility: "hidden",
-            }}
-          >
+          <motion.div className="w-full h-full relative">
             <img
               src={logoImg}
               alt="FitJourney Logo"
               className="w-full h-full object-cover rounded-full"
             />
-            {/* Chrome rim on front face */}
+            {/* Chrome rim */}
             <div
               className="absolute inset-0 rounded-full pointer-events-none"
               style={{
-                boxShadow: "inset 0 0 0 1.5px rgba(255,255,255,0.35), inset 0 0 0 3px rgba(0,0,0,0.08)",
+                boxShadow:
+                  "inset 0 0 0 1.5px rgba(255,255,255,0.4), inset 0 0 0 3px rgba(0,0,0,0.06)",
               }}
             />
-          </div>
-
-          {/* Back face */}
-          <div
-            className="absolute inset-0 rounded-full overflow-hidden"
-            style={{
-              transform: `rotateY(180deg) translateZ(${half}px)`,
-              backfaceVisibility: "hidden",
-              WebkitBackfaceVisibility: "hidden",
-            }}
-          >
-            <img
-              src={logoImg}
-              alt="FitJourney Logo back"
-              className="w-full h-full object-cover rounded-full"
-            />
-            <div
+            {/* Specular highlight sweep */}
+            <motion.div
               className="absolute inset-0 rounded-full pointer-events-none"
               style={{
-                boxShadow: "inset 0 0 0 1.5px rgba(255,255,255,0.35), inset 0 0 0 3px rgba(0,0,0,0.08)",
+                background: useTransform(
+                  edgeHighlight,
+                  (pos) =>
+                    `linear-gradient(105deg, transparent 0%, transparent ${parseFloat(pos) - 15}%, rgba(255,255,255,0.18) ${pos}, transparent ${parseFloat(pos) + 15}%, transparent 100%)`
+                ),
               }}
             />
-          </div>
-
-          {/* Continuous cylindrical edge — many thin slices */}
-          {edgeSlices.map((slice, i) => (
-            <div
-              key={i}
-              className="absolute rounded-full"
-              style={{
-                width: 2,
-                height: s.icon - 2,
-                top: 1,
-                left: radius - 1,
-                transformOrigin: "center center",
-                transform: `rotateY(${slice.angle}deg) translateZ(${half}px)`,
-                background: `linear-gradient(180deg, 
-                  hsl(152 30% ${slice.lightness + 15}%) 0%, 
-                  hsl(152 40% ${slice.lightness}%) 30%,
-                  hsl(160 20% ${slice.lightness - 8}%) 50%,
-                  hsl(152 40% ${slice.lightness}%) 70%,
-                  hsl(152 30% ${slice.lightness + 15}%) 100%)`,
-              }}
-            />
-          ))}
-
-          {/* Chrome rim rings — top and bottom of the cylinder */}
-          <div
-            className="absolute rounded-full"
-            style={{
-              width: s.icon,
-              height: DEPTH,
-              top: -DEPTH / 2 + 1,
-              left: 0,
-              transform: `rotateX(90deg) translateZ(${radius - 1}px)`,
-              transformOrigin: "center center",
-              background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 30%, rgba(255,255,255,0.25) 50%, rgba(255,255,255,0.12) 70%, transparent 100%)",
-              pointerEvents: "none",
-            }}
-          />
+          </motion.div>
         </motion.div>
       </div>
 
@@ -143,7 +150,8 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
         >
           <span
             style={{
-              background: "linear-gradient(180deg, hsl(220 25% 20%) 0%, hsl(220 20% 35%) 40%, hsl(220 15% 55%) 60%, hsl(220 25% 25%) 100%)",
+              background:
+                "linear-gradient(180deg, hsl(220 25% 20%) 0%, hsl(220 20% 35%) 40%, hsl(220 15% 55%) 60%, hsl(220 25% 25%) 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.15))",
@@ -153,7 +161,8 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
           </span>
           <span
             style={{
-              background: "linear-gradient(180deg, hsl(152 58% 35%) 0%, hsl(152 58% 50%) 30%, hsl(170 60% 60%) 60%, hsl(152 58% 38%) 100%)",
+              background:
+                "linear-gradient(180deg, hsl(152 58% 35%) 0%, hsl(152 58% 50%) 30%, hsl(170 60% 60%) 60%, hsl(152 58% 38%) 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.1))",
