@@ -7,127 +7,148 @@ interface FitJourneyLogoProps {
 }
 
 const sizes = {
-  sm: { icon: "w-9 h-9", text: "text-xl", ring: "-inset-[3px]", orbit: 22, img: 24 },
-  md: { icon: "w-10 h-10", text: "text-lg", ring: "-inset-[3px]", orbit: 25, img: 28 },
-  lg: { icon: "w-12 h-12", text: "text-2xl", ring: "-inset-[4px]", orbit: 30, img: 34 },
+  sm: { icon: 36, text: "text-xl", container: 52 },
+  md: { icon: 40, text: "text-lg", container: 58 },
+  lg: { icon: 48, text: "text-2xl", container: 68 },
 };
-
-// Orbital particle that traces a tilted circular path
-function OrbitalParticle({ duration, delay, tilt, radius, particleSize, color }: {
-  duration: number; delay: number; tilt: number; radius: number; particleSize: number; color: string;
-}) {
-  return (
-    <motion.div
-      className="absolute inset-0 pointer-events-none"
-      style={{
-        transform: `rotateX(${tilt}deg)`,
-        transformStyle: "preserve-3d",
-      }}
-    >
-      <motion.div
-        className="absolute"
-        style={{
-          width: particleSize,
-          height: particleSize,
-          borderRadius: "50%",
-          background: `radial-gradient(circle, ${color}, transparent)`,
-          boxShadow: `0 0 ${particleSize * 2}px ${color}`,
-          top: "50%",
-          left: "50%",
-          marginTop: -particleSize / 2,
-          marginLeft: -particleSize / 2,
-          offsetPath: `circle(${radius}px at 0px 0px)`,
-          offsetRotate: "0deg",
-        }}
-        animate={{ offsetDistance: ["0%", "100%"] }}
-        transition={{
-          duration,
-          repeat: Infinity,
-          delay,
-          ease: "linear",
-        }}
-      />
-    </motion.div>
-  );
-}
 
 export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJourneyLogoProps) {
   const s = sizes[size];
 
-  const orbits = [
-    { duration: 3, delay: 0, tilt: 65, particleSize: 3, color: "hsl(152, 58%, 55%)" },
-    { duration: 3, delay: 1.5, tilt: 65, particleSize: 2.5, color: "hsl(170, 80%, 60%)" },
-    { duration: 4, delay: 0.3, tilt: -20, particleSize: 3.5, color: "hsl(45, 100%, 65%)" },
-    { duration: 4, delay: 2, tilt: -20, particleSize: 2, color: "hsl(152, 58%, 50%)" },
-    { duration: 3.5, delay: 0.8, tilt: 140, particleSize: 2.5, color: "hsl(200, 80%, 65%)" },
-    { duration: 3.5, delay: 2.5, tilt: 140, particleSize: 3, color: "hsl(170, 60%, 55%)" },
-  ];
-
   return (
     <div className="flex items-center gap-3">
-      {/* Icon with orbital particles */}
-      <div className="relative flex-shrink-0" style={{ perspective: 400 }}>
-        {/* Soft ambient glow */}
+      {/* 3D Coin Container */}
+      <div
+        className="relative flex-shrink-0 flex items-center justify-center"
+        style={{
+          width: s.container,
+          height: s.container,
+          perspective: 800,
+        }}
+      >
+        {/* Cinematic ambient glow */}
         <motion.div
-          className="absolute -inset-2 rounded-full"
+          className="absolute inset-0 rounded-full"
           style={{
-            background: "radial-gradient(circle, hsl(152 58% 42% / 0.2) 0%, transparent 70%)",
+            background: "radial-gradient(circle, hsl(152 58% 42% / 0.35) 0%, hsl(152 58% 42% / 0.1) 50%, transparent 70%)",
+            filter: "blur(8px)",
           }}
-          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+          animate={{
+            scale: [1, 1.3, 1],
+            opacity: [0.4, 0.7, 0.4],
+          }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         />
 
-        {/* Spinning conic gradient border */}
+        {/* Secondary glow pulse */}
         <motion.div
-          className={`absolute ${s.ring} rounded-full`}
+          className="absolute inset-0 rounded-full"
           style={{
-            background: "conic-gradient(from 0deg, hsl(152 58% 42%), transparent 40%, hsl(170 60% 45% / 0.8) 60%, transparent 80%, hsl(152 58% 42%))",
+            background: "radial-gradient(circle, hsl(170 80% 55% / 0.2) 0%, transparent 60%)",
+            filter: "blur(12px)",
+          }}
+          animate={{
+            scale: [1.1, 1.5, 1.1],
+            opacity: [0.2, 0.4, 0.2],
+          }}
+          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        />
+
+        {/* Energy particles */}
+        {[0, 1, 2, 3, 4].map((i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              width: i % 2 === 0 ? 3 : 2,
+              height: i % 2 === 0 ? 3 : 2,
+              background: `radial-gradient(circle, ${
+                i % 3 === 0
+                  ? "hsl(152, 58%, 55%)"
+                  : i % 3 === 1
+                  ? "hsl(170, 80%, 60%)"
+                  : "hsl(45, 100%, 70%)"
+              }, transparent)`,
+              boxShadow: `0 0 6px ${
+                i % 3 === 0
+                  ? "hsl(152, 58%, 55%)"
+                  : i % 3 === 1
+                  ? "hsl(170, 80%, 60%)"
+                  : "hsl(45, 100%, 70%)"
+              }`,
+              top: "50%",
+              left: "50%",
+            }}
+            animate={{
+              x: [0, Math.cos((i * 72 * Math.PI) / 180) * (s.container * 0.55), 0],
+              y: [0, Math.sin((i * 72 * Math.PI) / 180) * (s.container * 0.55), 0],
+              opacity: [0, 0.9, 0],
+              scale: [0, 1.2, 0],
+            }}
+            transition={{
+              duration: 3 + i * 0.4,
+              repeat: Infinity,
+              delay: i * 0.6,
+              ease: "easeInOut",
+            }}
+          />
+        ))}
+
+        {/* Spinning conic ring */}
+        <motion.div
+          className="absolute rounded-full"
+          style={{
+            inset: -3,
+            background:
+              "conic-gradient(from 0deg, hsl(152 58% 50% / 0.6), transparent 30%, hsl(170 60% 55% / 0.5) 50%, transparent 70%, hsl(45 100% 65% / 0.3) 85%, hsl(152 58% 50% / 0.6))",
             opacity: 0.5,
           }}
           animate={{ rotate: 360 }}
-          transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+          transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
         />
 
-        {/* Orbital particles */}
-        <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center">
-          {orbits.map((o, i) => (
-            <OrbitalParticle
-              key={i}
-              duration={o.duration}
-              delay={o.delay}
-              tilt={o.tilt}
-              radius={s.orbit}
-              particleSize={o.particleSize}
-              color={o.color}
-            />
-          ))}
-        </div>
-
-        {/* Main icon container - CIRCLE with GIF logo */}
-        <div
-          className={`${s.icon} rounded-full flex items-center justify-center relative z-10 overflow-hidden`}
+        {/* 3D Coin — smooth Y-axis rotation */}
+        <motion.div
+          className="relative z-10 rounded-full overflow-hidden"
           style={{
-            background: "linear-gradient(135deg, hsl(152 58% 42%), hsl(170 60% 45%), hsl(152 58% 48%))",
-            boxShadow: "0 0 20px hsl(152 58% 42% / 0.3), inset 0 1px 1px rgba(255,255,255,0.3)",
+            width: s.icon,
+            height: s.icon,
+            transformStyle: "preserve-3d",
+            backfaceVisibility: "hidden",
+            boxShadow:
+              "0 0 20px hsl(152 58% 42% / 0.4), 0 4px 12px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.25)",
+          }}
+          animate={{
+            rotateY: [0, 360],
+          }}
+          transition={{
+            duration: 6,
+            repeat: Infinity,
+            ease: "linear",
           }}
         >
-          <motion.img
+          <img
             src={logoImg}
             alt="FitJourney Logo"
-            className="rounded-full object-cover"
+            className="w-full h-full object-cover rounded-full"
             style={{
-              width: s.img,
-              height: s.img,
-              filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.25))",
-            }}
-            animate={{ rotateY: [0, 360] }}
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-              ease: "linear",
+              filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
             }}
           />
-        </div>
+        </motion.div>
+
+        {/* Specular highlight overlay */}
+        <motion.div
+          className="absolute z-20 rounded-full pointer-events-none"
+          style={{
+            width: s.icon,
+            height: s.icon,
+            background:
+              "linear-gradient(135deg, rgba(255,255,255,0.25) 0%, transparent 50%, rgba(255,255,255,0.08) 100%)",
+          }}
+          animate={{ opacity: [0.3, 0.6, 0.3] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        />
       </div>
 
       {/* Metallic 3D text */}
@@ -139,7 +160,8 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
         >
           <span
             style={{
-              background: "linear-gradient(180deg, hsl(220 25% 20%) 0%, hsl(220 20% 35%) 40%, hsl(220 15% 55%) 60%, hsl(220 25% 25%) 100%)",
+              background:
+                "linear-gradient(180deg, hsl(220 25% 20%) 0%, hsl(220 20% 35%) 40%, hsl(220 15% 55%) 60%, hsl(220 25% 25%) 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.15))",
@@ -149,7 +171,8 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
           </span>
           <span
             style={{
-              background: "linear-gradient(180deg, hsl(152 58% 35%) 0%, hsl(152 58% 50%) 30%, hsl(170 60% 60%) 60%, hsl(152 58% 38%) 100%)",
+              background:
+                "linear-gradient(180deg, hsl(152 58% 35%) 0%, hsl(152 58% 50%) 30%, hsl(170 60% 60%) 60%, hsl(152 58% 38%) 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.1))",
