@@ -39,6 +39,15 @@ function FloatingParticle({ delay, x, y, size }: { delay: number; x: number; y: 
 export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJourneyLogoProps) {
   const s = sizes[size];
 
+  const particles = useMemo(() =>
+    Array.from({ length: s.particles }, (_, i) => ({
+      id: i,
+      delay: i * 0.35,
+      x: 15 + Math.random() * 70,
+      y: 15 + Math.random() * 70,
+      size: 2 + Math.random() * 2.5,
+    })), [s.particles]);
+
   return (
     <div className="flex items-center gap-0">
       <div
