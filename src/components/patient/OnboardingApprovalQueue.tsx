@@ -65,6 +65,7 @@ const DEFAULT_CRITERIA = {
 
 export default function OnboardingApprovalQueue({ patientId, patientName }: Props) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [pipeline, setPipeline] = useState<OnboardingPipeline | null>(null);
   const [loading, setLoading] = useState(true);
   const [rejectDialog, setRejectDialog] = useState(false);
