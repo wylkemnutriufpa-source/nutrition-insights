@@ -425,6 +425,15 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
                     </RadioGroup>
                   </div>
 
+                  {/* Primary: Analyze plan button */}
+                  {selectedPipeline.generated_plan_id && (
+                    <Button variant="outline" className="w-full border-primary/50 text-primary hover:bg-primary/10" asChild>
+                      <a href={`/meal-plan-editor?plan=${selectedPipeline.generated_plan_id}`} target="_blank" rel="noopener noreferrer">
+                        <Eye className="w-4 h-4 mr-2" /> Analisar Plano Completo
+                      </a>
+                    </Button>
+                  )}
+
                   {/* Action buttons */}
                   <div className="flex gap-3 pt-2">
                     <Button onClick={handleApprove} className="flex-1" disabled={processing}>
@@ -435,15 +444,6 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
                       <XCircle className="w-4 h-4 mr-2" /> Rejeitar
                     </Button>
                   </div>
-
-                  {/* Link to full review */}
-                  {selectedPipeline.generated_plan_id && (
-                    <Button variant="outline" size="sm" className="w-full" asChild>
-                      <a href={`/meal-plans/${selectedPipeline.generated_plan_id}`}>
-                        <FileText className="w-4 h-4 mr-2" /> Revisar Plano Completo
-                      </a>
-                    </Button>
-                  )}
                 </>
               ) : (
                 /* Reject form */
