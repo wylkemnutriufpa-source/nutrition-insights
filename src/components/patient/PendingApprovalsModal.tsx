@@ -40,6 +40,7 @@ interface Props {
 
 export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [pipelines, setPipelines] = useState<PendingPipeline[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPipeline, setSelectedPipeline] = useState<PendingPipeline | null>(null);
