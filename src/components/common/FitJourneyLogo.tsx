@@ -7,9 +7,9 @@ interface FitJourneyLogoProps {
 }
 
 const sizes = {
-  sm: { icon: 48, text: "text-lg" },
-  md: { icon: 56, text: "text-lg" },
-  lg: { icon: 72, text: "text-2xl" },
+  sm: { icon: 52, text: "text-lg" },
+  md: { icon: 62, text: "text-lg" },
+  lg: { icon: 78, text: "text-2xl" },
 };
 
 export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJourneyLogoProps) {
@@ -18,11 +18,10 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
   return (
     <div className="flex items-center gap-3">
       <div
-        className="flex-shrink-0 flex items-center justify-center rounded-full overflow-hidden"
+        className="flex-shrink-0 flex items-center justify-center overflow-hidden"
         style={{
           width: s.icon,
           height: s.icon,
-          boxShadow: "0 0 8px 1px hsl(152 58% 45% / 0.25)",
         }}
       >
         <img
