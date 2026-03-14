@@ -226,11 +226,25 @@ export default function MealPlans() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {plans.map((p) => (
+            {plans.map((p) => {
+              const statusConfig: Record<string, { label: string; color: string }> = {
+                draft: { label: "Rascunho", color: "bg-muted text-muted-foreground" },
+                draft_auto_generated: { label: "⏳ Pré-plano Gerado", color: "bg-amber-500/20 text-amber-600 dark:text-amber-400" },
+                under_professional_review: { label: "⏳ Aguardando Aprovação", color: "bg-amber-500/20 text-amber-600 dark:text-amber-400" },
+                approved: { label: "✅ Aprovado", color: "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400" },
+                published_to_patient: { label: "✅ Publicado", color: "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400" },
+                rejected: { label: "❌ Rejeitado", color: "bg-destructive/20 text-destructive" },
+                archived: { label: "Arquivado", color: "bg-muted text-muted-foreground" },
+              };
+              const planStatus = (p as any).plan_status || "draft";
+              const st = statusConfig[planStatus] || { label: planStatus, color: "bg-muted text-muted-foreground" };
+              const isPending = ["draft_auto_generated", "under_professional_review"].includes(planStatus);
+
+              return (
               <motion.div
                 key={p.id}
                 whileHover={{ y: -2 }}
-                className="glass rounded-xl p-5 shadow-card cursor-pointer"
+                className={`glass rounded-xl p-5 shadow-card cursor-pointer ${isPending ? "ring-2 ring-amber-500/40" : ""}`}
                 onClick={() => navigate(`/meal-plans/${p.id}`)}
               >
                 <div className="flex items-start justify-between">
@@ -242,6 +256,15 @@ export default function MealPlans() {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
+                    {isPending && (
+                      <Button
+                        size="sm"
+                        className="gradient-primary shadow-glow gap-1.5"
+                        onClick={(e) => { e.stopPropagation(); navigate(`/meal-plans/${p.id}`); }}
+                      >
+                        <FileText className="w-3.5 h-3.5" /> Revisar
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
@@ -250,28 +273,34 @@ export default function MealPlans() {
                     >
                       <PencilLine className="w-4 h-4" />
                     </Button>
-                    <button onClick={(e) => { e.stopPropagation(); toggleActive(p.id, p.is_active); }}>
-                      {p.is_active ? (
-                        <ToggleRight className="w-6 h-6 text-success" />
-                      ) : (
-                        <ToggleLeft className="w-6 h-6 text-muted-foreground" />
-                      )}
-                    </button>
+                    {!isPending && (
+                      <button onClick={(e) => { e.stopPropagation(); toggleActive(p.id, p.is_active); }}>
+                        {p.is_active ? (
+                          <ToggleRight className="w-6 h-6 text-success" />
+                        ) : (
+                          <ToggleLeft className="w-6 h-6 text-muted-foreground" />
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
-                <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
+                <div className="flex items-center gap-2 mt-3 flex-wrap">
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Calendar className="w-3 h-3" />
                     {new Date(p.start_date).toLocaleDateString("pt-BR")}
                   </span>
-                  <span className={`px-2 py-0.5 rounded-full ${
-                    p.is_active ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
-                  }`}>
-                    {p.is_active ? "Ativo" : "Inativo"}
-                  </span>
+                  <Badge className={`text-[10px] ${st.color}`}>{st.label}</Badge>
+                  {planStatus === "published_to_patient" && (
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+                      p.is_active ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
+                    }`}>
+                      {p.is_active ? "Ativo" : "Inativo"}
+                    </span>
+                  )}
                 </div>
               </motion.div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
