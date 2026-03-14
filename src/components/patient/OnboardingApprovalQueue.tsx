@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import {
   CheckCircle2, XCircle, Clock, Sparkles, Edit2, ChevronDown,
   Scale, Target, MessageSquare, Loader2, CalendarClock, Zap,
-  ClipboardCheck, FileText
+  ClipboardCheck, FileText, AlertTriangle
 } from "lucide-react";
 
 interface OnboardingPipeline {
