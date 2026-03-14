@@ -413,114 +413,29 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
 
               {!rejectMode ? (
                 <>
-                  {/* Plan selection - only if templates exist */}
-                  {(getSelectedTemplate(selectedPipeline) || getAlternatives(selectedPipeline).length > 0) && (
-                    <div className="space-y-3">
-                      <p className="text-sm font-semibold flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-primary" />
-                        Escolha o plano para {selectedPipeline.patient_name}:
-                      </p>
-
-                      <RadioGroup value={selectedPlan} onValueChange={setSelectedPlan} className="space-y-2">
-                        {(() => {
-                          const selected = getSelectedTemplate(selectedPipeline);
-                          if (!selected) return null;
-                          return (
-                            <Label
-                              htmlFor="plan_a"
-                              className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                                selectedPlan === "plan_a"
-                                  ? "border-primary bg-primary/5"
-                                  : "border-muted hover:border-muted-foreground/30"
-                              }`}
-                            >
-                              <RadioGroupItem value="plan_a" id="plan_a" className="mt-0.5" />
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-semibold">Opção A — {selected.name}</span>
-                                  <Badge className="text-xs bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
-                                    Recomendado
-                                  </Badge>
-                                </div>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {selected.base_calories} kcal • Score: {selected.score} pontos
-                                </p>
-                                {selected.reasons?.map((r: string, i: number) => (
-                                  <span key={i} className="text-xs text-muted-foreground block mt-0.5">✓ {r}</span>
-                                ))}
-                              </div>
-                            </Label>
-                          );
-                        })()}
-
-                        {getAlternatives(selectedPipeline).map((alt: any, idx: number) => {
-                          const value = `plan_alt_${idx}`;
-                          const letter = String.fromCharCode(66 + idx);
-                          return (
-                            <Label
-                              key={value}
-                              htmlFor={value}
-                              className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                                selectedPlan === value
-                                  ? "border-primary bg-primary/5"
-                                  : "border-muted hover:border-muted-foreground/30"
-                              }`}
-                            >
-                              <RadioGroupItem value={value} id={value} className="mt-0.5" />
-                              <div className="flex-1">
-                                <span className="font-semibold">Opção {letter} — {alt.name}</span>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {alt.base_calories} kcal • Score: {alt.score} pontos
-                                </p>
-                                {alt.reasons?.map((r: string, i: number) => (
-                                  <span key={i} className="text-xs text-muted-foreground block mt-0.5">✓ {r}</span>
-                                ))}
-                              </div>
-                            </Label>
-                          );
-                        })}
-                      </RadioGroup>
-                    </div>
+                  {/* Info card */}
+                  {selectedPipeline.generated_plan_id ? (
+                    <Card className="border-dashed border-primary/40 bg-primary/5">
+                      <CardContent className="py-3 text-center text-sm text-muted-foreground space-y-1">
+                        <Sparkles className="w-4 h-4 inline mr-1 text-primary" />
+                        Plano gerado com sucesso. Clique em <strong>"Analisar e Editar"</strong> para revisar, fazer ajustes e depois aprovar diretamente no editor.
+                      </CardContent>
+                    </Card>
+                  ) : selectedPipeline.generated_plan_data ? (
+                    <Card className="border-dashed border-primary/40 bg-primary/5">
+                      <CardContent className="py-3 text-center text-sm text-muted-foreground space-y-1">
+                        <Sparkles className="w-4 h-4 inline mr-1 text-primary" />
+                        Plano gerado com sucesso. Clique em <strong>"Criar e Editar Plano"</strong> para criar o plano no sistema e editá-lo antes de aprovar.
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <Card className="border-dashed border-amber-500/40 bg-amber-500/5">
+                      <CardContent className="py-3 text-center text-sm text-muted-foreground">
+                        <AlertTriangle className="w-4 h-4 inline mr-1 text-amber-500" />
+                        Plano ainda não foi gerado. Rejeite ou aguarde a geração automática.
+                      </CardContent>
+                    </Card>
                   )}
-
-                   {/* Analyze/Edit plan buttons */}
-                   {selectedPipeline.generated_plan_id && (
-                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                       <Button
-                         variant="outline"
-                         className="w-full border-primary/50 text-primary hover:bg-primary/10"
-                         onClick={() => {
-                           onOpenChange(false);
-                           navigate(`/meal-plans/${selectedPipeline.generated_plan_id}`);
-                         }}
-                       >
-                         <FileText className="w-4 h-4 mr-2" /> Editar Plano
-                       </Button>
-                       <Button variant="outline" className="w-full border-primary/50 text-primary hover:bg-primary/10" asChild>
-                         <a href={`/meal-plans/${selectedPipeline.generated_plan_id}`} target="_blank" rel="noopener noreferrer">
-                           <Eye className="w-4 h-4 mr-2" /> Analisar em Nova Aba
-                         </a>
-                       </Button>
-                     </div>
-                   )}
-
-                   {!selectedPipeline.generated_plan_id && selectedPipeline.generated_plan_data && (
-                     <Card className="border-dashed border-primary/40 bg-primary/5">
-                       <CardContent className="py-3 text-center text-sm text-muted-foreground space-y-2">
-                         <Sparkles className="w-4 h-4 inline mr-1 text-primary" />
-                         Plano gerado com sucesso. Aprove para criar e publicar automaticamente ao paciente.
-                       </CardContent>
-                     </Card>
-                   )}
-
-                   {!selectedPipeline.generated_plan_id && !selectedPipeline.generated_plan_data && (
-                     <Card className="border-dashed border-amber-500/40 bg-amber-500/5">
-                       <CardContent className="py-3 text-center text-sm text-muted-foreground">
-                         <AlertTriangle className="w-4 h-4 inline mr-1 text-amber-500" />
-                         Plano ainda não foi gerado. Aprove para gerar automaticamente ou crie manualmente.
-                       </CardContent>
-                     </Card>
-                   )}
                 </>
               ) : (
                 /* Reject form */
@@ -552,22 +467,28 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
         {/* ── Sticky action buttons at bottom ── */}
         {selectedPipeline && !rejectMode && (
           <div className="border-t pt-4 -mx-6 px-6 flex gap-3">
-            {selectedPipeline.generated_plan_id && (
+            {selectedPipeline.generated_plan_id ? (
               <Button
-                variant="outline"
-                className="border-primary/50 text-primary hover:bg-primary/10"
+                className="flex-1 gradient-primary shadow-glow"
                 onClick={() => {
                   onOpenChange(false);
                   navigate(`/meal-plans/${selectedPipeline.generated_plan_id}`);
                 }}
               >
-                <Eye className="w-4 h-4 mr-2" /> Analisar
+                <FileText className="w-4 h-4 mr-2" /> Analisar e Editar o Plano
               </Button>
-            )}
-            <Button onClick={handleApprove} className="flex-1 gradient-primary shadow-glow" disabled={processing}>
-              {processing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
-              Aprovar e Publicar
-            </Button>
+            ) : selectedPipeline.generated_plan_data ? (
+              <Button
+                className="flex-1 gradient-primary shadow-glow"
+                disabled={processing}
+                onClick={async () => {
+                  await handleCreateAndEdit();
+                }}
+              >
+                {processing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <FileText className="w-4 h-4 mr-2" />}
+                Criar e Editar Plano
+              </Button>
+            ) : null}
             <Button variant="destructive" onClick={() => setRejectMode(true)} disabled={processing}>
               <XCircle className="w-4 h-4 mr-2" /> Rejeitar
             </Button>
