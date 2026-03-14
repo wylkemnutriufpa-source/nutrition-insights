@@ -7,31 +7,30 @@ interface FitJourneyLogoProps {
 }
 
 const sizes = {
-  sm: { icon: 96, text: "text-xl", container: 64 },
-  md: { icon: 112, text: "text-lg", container: 72 },
-  lg: { icon: 128, text: "text-2xl", container: 84 },
+  sm: { icon: 40, text: "text-xl", container: 40 },
+  md: { icon: 48, text: "text-lg", container: 48 },
+  lg: { icon: 60, text: "text-2xl", container: 60 },
 };
 
-const coinDepth = 14;
+const coinDepth = 6;
 
 export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJourneyLogoProps) {
   const s = sizes[size];
   const edgeOffset = s.icon / 2 - coinDepth / 2;
   const faceDepth = coinDepth / 2;
-  const logoSrc = `${logoImg}?v=coin-face-2`;
 
   return (
     <div className="flex items-center gap-3">
       <div
-        className="relative flex-shrink-0 flex items-center justify-center overflow-visible"
+        className="relative flex-shrink-0 flex items-center justify-center"
         style={{
           width: s.container,
           height: s.container,
-          perspective: 1200,
+          perspective: 800,
         }}
       >
         <motion.div
-          className="relative z-10"
+          className="relative"
           style={{
             width: s.icon,
             height: s.icon,
@@ -40,8 +39,9 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
           animate={{ rotateY: 360 }}
           transition={{ duration: 5.8, repeat: Infinity, ease: "linear" }}
         >
+          {/* Front face */}
           <div
-            className="absolute inset-0"
+            className="absolute inset-0 rounded-full overflow-hidden"
             style={{
               transform: `translateZ(${faceDepth}px)`,
               backfaceVisibility: "hidden",
@@ -49,15 +49,15 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
             }}
           >
             <img
-              src={logoSrc}
+              src={logoImg}
               alt="FitJourney Logo"
-              className="w-full h-full object-cover scale-[1.2]"
-              style={{ filter: "drop-shadow(0 2px 6px hsl(var(--foreground) / 0.2))" }}
+              className="w-full h-full object-cover"
             />
           </div>
 
+          {/* Back face */}
           <div
-            className="absolute inset-0"
+            className="absolute inset-0 rounded-full overflow-hidden"
             style={{
               transform: `rotateY(180deg) translateZ(${faceDepth}px)`,
               backfaceVisibility: "hidden",
@@ -65,36 +65,33 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
             }}
           >
             <img
-              src={logoSrc}
+              src={logoImg}
               alt="FitJourney Logo verso"
-              className="w-full h-full object-cover scale-[1.2]"
-              style={{ filter: "drop-shadow(0 2px 6px hsl(var(--foreground) / 0.2))" }}
+              className="w-full h-full object-cover"
             />
           </div>
 
+          {/* Coin edges */}
           <div
             className="absolute top-1/2 -translate-y-1/2 rounded-full"
             style={{
               width: coinDepth,
-              height: s.icon * 0.96,
+              height: s.icon * 0.92,
               transform: `rotateY(90deg) translateZ(${edgeOffset}px)`,
               transformOrigin: "center",
               background:
-                "linear-gradient(180deg, hsl(var(--border) / 0.95), hsl(var(--muted-foreground) / 0.45), hsl(var(--border) / 0.95))",
-              boxShadow: "0 0 6px hsl(var(--foreground) / 0.12)",
+                "linear-gradient(180deg, hsl(152 58% 42% / 0.9), hsl(152 58% 30% / 0.5), hsl(152 58% 42% / 0.9))",
             }}
           />
-
           <div
             className="absolute top-1/2 -translate-y-1/2 rounded-full"
             style={{
               width: coinDepth,
-              height: s.icon * 0.96,
+              height: s.icon * 0.92,
               transform: `rotateY(90deg) translateZ(${-edgeOffset}px)`,
               transformOrigin: "center",
               background:
-                "linear-gradient(180deg, hsl(var(--border) / 0.95), hsl(var(--muted-foreground) / 0.45), hsl(var(--border) / 0.95))",
-              boxShadow: "0 0 6px hsl(var(--foreground) / 0.12)",
+                "linear-gradient(180deg, hsl(152 58% 42% / 0.9), hsl(152 58% 30% / 0.5), hsl(152 58% 42% / 0.9))",
             }}
           />
         </motion.div>
