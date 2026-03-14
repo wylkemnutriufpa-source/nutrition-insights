@@ -95,8 +95,8 @@ export default function ProgramDetail() {
 
     for (const ep of (enrolled || [])) {
       const [profileRes, statsRes, checkRes, anamRes] = await Promise.all([
-        supabase.from("profiles").select("full_name, avatar_url").eq("user_id", ep.patient_id).single(),
-        supabase.from("player_stats").select("total_xp, level, current_streak").eq("user_id", ep.patient_id).single(),
+        supabase.from("profiles").select("full_name, avatar_url").eq("user_id", ep.patient_id).maybeSingle(),
+        supabase.from("player_stats").select("total_xp, level, current_streak").eq("user_id", ep.patient_id).maybeSingle(),
         supabase.from("checklist_tasks").select("id, completed").eq("patient_id", ep.patient_id).eq("date", today),
         supabase.from("patient_anamnesis").select("answers, computed_tmb, computed_kcal_target, computed_protein, computed_carbs, computed_fat")
           .eq("user_id", ep.patient_id).order("created_at", { ascending: false }).limit(1),
