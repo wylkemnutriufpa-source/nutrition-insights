@@ -246,7 +246,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
           </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 -mx-6 px-6">
+        <ScrollArea className="flex-1 -mx-6 px-6" style={{ maxHeight: "calc(85vh - 120px)" }}>
           {loading ? (
             <div className="flex justify-center py-12">
               <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
