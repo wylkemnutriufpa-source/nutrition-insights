@@ -310,14 +310,13 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader || "" } } }
     );
 
-    const token = authHeader?.replace('Bearer ', '') || '';
-    const { data: claimsData, error: claimsErr } = await supabase.auth.getClaims(token);
-    if (claimsErr || !claimsData?.claims) {
+    const { data: { user: authUser }, error: authErr } = await supabase.auth.getUser();
+    if (authErr || !authUser) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const userId = claimsData.claims.sub;
+    const userId = authUser.id;
 
     const body = await req.json();
     const patient_id = body.patient_id || body.patientId;
