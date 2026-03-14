@@ -43,7 +43,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
   const [pipelines, setPipelines] = useState<PendingPipeline[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPipeline, setSelectedPipeline] = useState<PendingPipeline | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState<string>("plan_a");
+  
   const [processing, setProcessing] = useState(false);
   const [rejectMode, setRejectMode] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
