@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import logoImg from "@/assets/logo.png";
+import logoVideo from "@/assets/logo-video.mp4";
 
 interface FitJourneyLogoProps {
   collapsed?: boolean;
@@ -18,65 +18,24 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
   return (
     <div className="flex items-center gap-3">
       <div
-        className="flex-shrink-0 flex items-center justify-center"
+        className="flex-shrink-0 flex items-center justify-center rounded-full overflow-hidden"
         style={{
           width: s.icon,
           height: s.icon,
-          perspective: 800,
         }}
       >
-        <motion.div
+        <video
+          src={logoVideo}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover"
           style={{
-            width: s.icon,
-            height: s.icon,
-            transformStyle: "preserve-3d",
+            mixBlendMode: "multiply",
+            filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.18))",
           }}
-          animate={{ rotateY: [0, 80, 0, -80, 0] }}
-          transition={{
-            duration: 5,
-            repeat: Infinity,
-            ease: "easeInOut",
-            times: [0, 0.25, 0.5, 0.75, 1],
-          }}
-        >
-          {/* Front face */}
-          <motion.img
-            src={logoImg}
-            alt="FitJourney Logo"
-            className="rounded-full object-cover absolute inset-0"
-            style={{
-              width: s.icon,
-              height: s.icon,
-              backfaceVisibility: "hidden",
-              filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.25))",
-            }}
-            animate={{ rotateY: [0, 80, 0, -80, 0] }}
-            transition={{
-              duration: 5,
-              repeat: Infinity,
-              ease: "easeInOut",
-              times: [0, 0.25, 0.5, 0.75, 1],
-            }}
-            // Scale compensation: slightly scale up at side angles to counter perspective flattening
-            whileHover={{ scale: 1.05 }}
-          />
-
-          {/* Edge / thickness layers for 3D depth */}
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div
-              key={i}
-              className="absolute inset-0 rounded-full"
-              style={{
-                width: s.icon,
-                height: s.icon,
-                background:
-                  "linear-gradient(180deg, hsl(152 30% 50%), hsl(0 0% 72%), hsl(152 30% 42%))",
-                transform: `translateZ(${-1 - i * 0.5}px)`,
-                opacity: 0.55 - i * 0.04,
-              }}
-            />
-          ))}
-        </motion.div>
+        />
       </div>
 
       {!collapsed && (
