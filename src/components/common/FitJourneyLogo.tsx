@@ -93,12 +93,12 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
             x: edgeX,
             background: `linear-gradient(
               90deg,
-              hsl(152 25% 28%) 0%,
-              hsl(152 35% 45%) 20%,
-              hsl(160 40% 62%) 45%,
-              hsl(152 30% 52%) 55%,
-              hsl(152 35% 45%) 80%,
-              hsl(152 25% 28%) 100%
+              hsl(0 0% 45%) 0%,
+              hsl(0 0% 65%) 20%,
+              hsl(0 0% 82%) 45%,
+              hsl(0 0% 70%) 55%,
+              hsl(0 0% 65%) 80%,
+              hsl(0 0% 45%) 100%
             )`,
             boxShadow: "inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.2)",
           }}
