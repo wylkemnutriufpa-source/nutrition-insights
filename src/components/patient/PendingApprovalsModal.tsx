@@ -218,8 +218,12 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
       } as any)
       .eq("id", selectedPipeline.id);
 
+    // Archive the generated plan instead of deleting (protect approved plans)
     if (selectedPipeline.generated_plan_id) {
-      await supabase.from("meal_plans").delete().eq("id", selectedPipeline.generated_plan_id);
+      await supabase.from("meal_plans")
+        .update({ plan_status: "rejected", is_active: false } as any)
+        .eq("id", selectedPipeline.generated_plan_id)
+        .in("plan_status", ["draft", "draft_auto_generated", "under_professional_review"]);
     }
 
     await supabase.from("notifications").insert({

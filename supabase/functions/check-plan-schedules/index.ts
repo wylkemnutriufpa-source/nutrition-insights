@@ -132,14 +132,16 @@ Deno.serve(async (req) => {
           .update({ is_active: true })
           .eq("id", schedule.meal_plan_id);
 
-        // Deactivate previous plans if configured
+        // Deactivate previous plans if configured (only non-published ones)
         if (criteria.auto_deactivate_previous) {
           await supabase
             .from("meal_plans")
             .update({ is_active: false })
             .eq("patient_id", patientId)
             .eq("is_active", true)
-            .neq("id", schedule.meal_plan_id);
+            .neq("id", schedule.meal_plan_id)
+            .neq("plan_status", "published_to_patient")
+            .neq("plan_status", "approved");
         }
 
         // Send notification
