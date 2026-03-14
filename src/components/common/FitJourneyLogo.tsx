@@ -30,10 +30,13 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
           loop
           muted
           playsInline
-          className="w-full h-full object-cover"
+          className="object-cover"
           style={{
+            width: s.icon * 1.35,
+            height: s.icon * 1.35,
             mixBlendMode: "multiply",
             filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.18))",
+            imageRendering: "auto",
           }}
         />
       </div>
