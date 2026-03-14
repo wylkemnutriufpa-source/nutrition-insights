@@ -59,16 +59,16 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
           <div
             className="absolute inset-0"
             style={{
-              transform: "rotateY(180deg) translateZ(3px)",
+              transform: `rotateY(180deg) translateZ(${faceDepth}px)`,
               backfaceVisibility: "hidden",
               WebkitBackfaceVisibility: "hidden",
             }}
           >
             <img
-              src={logoImg}
+              src={logoSrc}
               alt="FitJourney Logo verso"
-              className="w-full h-full object-contain"
-              style={{ filter: "drop-shadow(0 2px 6px hsl(var(--foreground) / 0.25))" }}
+              className="w-full h-full object-cover scale-[1.2]"
+              style={{ filter: "drop-shadow(0 2px 6px hsl(var(--foreground) / 0.2))" }}
             />
           </div>
 
