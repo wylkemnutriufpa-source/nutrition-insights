@@ -18,23 +18,34 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
   return (
     <div className="flex items-center gap-3">
       <div
-        className="flex-shrink-0 flex items-center justify-center overflow-hidden"
-        style={{
-          width: s.icon,
-          height: s.icon,
-        }}
+        className="relative flex-shrink-0 flex items-center justify-center"
+        style={{ width: s.icon, height: s.icon }}
       >
+        {/* Floating energy layers */}
+        <motion.div
+          className="absolute inset-0 rounded-full"
+          style={{
+            background: "radial-gradient(circle, hsl(var(--primary) / 0.25) 0%, transparent 70%)",
+          }}
+          animate={{ scale: [1, 1.25, 1], opacity: [0.5, 0.8, 0.5] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute inset-0 rounded-full"
+          style={{
+            background: "radial-gradient(circle, hsl(152 58% 45% / 0.2) 0%, transparent 65%)",
+          }}
+          animate={{ scale: [1.1, 1.35, 1.1], opacity: [0.4, 0.7, 0.4] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+        />
         <img
           src={logoPng}
           alt="FitJourney logo"
           width={s.icon}
           height={s.icon}
           draggable={false}
-          className="object-cover select-none"
-          style={{
-            imageRendering: "auto",
-            willChange: "auto",
-          }}
+          className="relative z-10 object-cover select-none"
+          style={{ imageRendering: "auto", willChange: "auto" }}
         />
       </div>
 
