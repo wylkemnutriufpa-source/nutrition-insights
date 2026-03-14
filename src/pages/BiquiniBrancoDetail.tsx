@@ -116,8 +116,8 @@ export default function BiquiniBrancoDetail() {
     const enriched: EnrolledPatient[] = [];
     for (const ep of (enrolled || [])) {
       const [profileRes, statsRes, progressRes] = await Promise.all([
-        supabase.from("profiles").select("full_name, avatar_url").eq("user_id", ep.patient_id).single(),
-        supabase.from("player_stats").select("total_xp, level, current_streak").eq("user_id", ep.patient_id).single(),
+        supabase.from("profiles").select("full_name, avatar_url").eq("user_id", ep.patient_id).maybeSingle(),
+        supabase.from("player_stats").select("total_xp, level, current_streak").eq("user_id", ep.patient_id).maybeSingle(),
         (supabase as any).from("program_patient_progress").select("*").eq("program_id", programId).eq("patient_id", ep.patient_id).order("week_number"),
       ]);
 
