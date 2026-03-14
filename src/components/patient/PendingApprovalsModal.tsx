@@ -400,15 +400,15 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
                   </Button>
                 );
               }
-              if (selectedPipeline.generated_plan_data) {
+              if (selectedPipeline.generated_plan_data || selectedPipeline.status === 'pending_approval') {
                 return (
                   <Button
                     className="flex-1 gradient-primary shadow-glow"
                     disabled={processing}
                     onClick={handleCreateAndEdit}
                   >
-                    {processing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <FileText className="w-4 h-4 mr-2" />}
-                    Analisar e Editar o Plano
+                    {processing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                    {processing ? "Gerando plano..." : "Gerar e Editar Plano"}
                   </Button>
                 );
               }
