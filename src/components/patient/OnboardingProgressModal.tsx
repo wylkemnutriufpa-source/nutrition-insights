@@ -156,7 +156,7 @@ export default function OnboardingProgressModal() {
                 >
                   <div className={cn(
                     "flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center",
-                    step.completed ? "bg-green-500/20 text-green-600" : "bg-primary/20 text-primary"
+                    step.completed ? "bg-accent text-accent-foreground" : "bg-primary/20 text-primary"
                   )}>
                     {step.completed ? <CheckCircle2 className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
                   </div>

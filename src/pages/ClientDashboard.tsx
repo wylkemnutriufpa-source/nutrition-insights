@@ -238,8 +238,9 @@ export default function ClientDashboard() {
     );
   }
 
-  return (
+   return (
     <DashboardLayout>
+      <OnboardingProgressModal />
       <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
         {/* Premium Header */}
         <motion.div variants={item} className="relative overflow-hidden rounded-2xl gradient-border particles-bg">
