@@ -40,7 +40,7 @@ export default function WeeklyMedals({ userId }: WeeklyMedalsProps) {
         .from("player_stats")
         .select("current_streak")
         .eq("user_id", userId)
-        .single(),
+        .maybeSingle(),
       supabase
         .from("patient_points")
         .select("points")

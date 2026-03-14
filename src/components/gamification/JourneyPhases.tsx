@@ -26,7 +26,7 @@ export default function JourneyPhases() {
     weekAgo.setDate(weekAgo.getDate() - 30);
 
     Promise.all([
-      supabase.from("player_stats").select("*").eq("user_id", user.id).single(),
+      supabase.from("player_stats").select("*").eq("user_id", user.id).maybeSingle(),
       supabase.from("meals").select("id", { count: "exact", head: true }).eq("user_id", user.id),
       supabase.from("checklist_tasks").select("completed").eq("patient_id", user.id).gte("date", weekAgo.toISOString().split("T")[0]),
       supabase.from("user_achievements").select("id", { count: "exact", head: true }).eq("user_id", user.id),

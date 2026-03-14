@@ -431,7 +431,7 @@ export default function GlobalRanking() {
         .eq("patient_id", user.id)
         .eq("status", "active")
         .limit(1)
-        .single()
+        .maybeSingle()
         .then(({ data }) => { if (data) setNutritionistId(data.nutritionist_id); });
       return;
     }

@@ -146,7 +146,7 @@ export default function AnalyzeMeal() {
         .from("player_stats")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (stats) {
         const today = new Date().toISOString().split("T")[0];

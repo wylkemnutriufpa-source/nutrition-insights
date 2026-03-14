@@ -141,7 +141,7 @@ export default function ProtocolBlockedModal() {
         .eq("patient_id", user.id)
         .eq("status", "active")
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (npData) {
         await supabase.from("patient_checkins").insert({

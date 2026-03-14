@@ -88,7 +88,7 @@ export function useOnboardingNotification() {
           .from("professional_profiles")
           .select("onboarding_completed")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
         setShowBadge(data ? !data.onboarding_completed : true);
       } else {
         setShowBadge(true);
@@ -162,7 +162,7 @@ export default function OnboardingWizard() {
           .from("professional_profiles")
           .select("onboarding_completed")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
         if (data && !data.onboarding_completed) setOpen(true);
         else if (!data) {
           await supabase.from("professional_profiles").insert({ user_id: user.id, onboarding_completed: false });

@@ -45,7 +45,7 @@ export default function BeforeAfterReport() {
         .from("player_stats")
         .select("current_streak, level, total_xp")
         .eq("user_id", user.id)
-        .single(),
+        .maybeSingle(),
       supabase
         .from("checklist_tasks")
         .select("completed")

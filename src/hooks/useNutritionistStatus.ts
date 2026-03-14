@@ -26,7 +26,7 @@ export function useNutritionistStatus(patientId: string | undefined) {
       .eq("patient_id", patientId)
       .eq("status", "active")
       .limit(1)
-      .single()
+      .maybeSingle()
       .then(({ data }) => {
         if (data) setNutritionistId(data.nutritionist_id);
       });
@@ -41,7 +41,7 @@ export function useNutritionistStatus(patientId: string | undefined) {
         .from("user_presence")
         .select("is_online, last_seen_at")
         .eq("user_id", nutritionistId)
-        .single();
+        .maybeSingle();
 
       if (!data) {
         setStatus({ isOnline: false, lastSeen: null, label: "Offline — responderá em breve", color: "gray" });

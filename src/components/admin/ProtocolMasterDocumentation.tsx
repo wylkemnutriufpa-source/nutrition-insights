@@ -181,7 +181,7 @@ export default function ProtocolMasterDocumentation() {
 
   // Load from site_settings
   useEffect(() => {
-    (supabase as any).from("site_settings").select("*").eq("setting_key", "protocol_master_steps").single()
+    (supabase as any).from("site_settings").select("*").eq("setting_key", "protocol_master_steps").maybeSingle()
       .then(({ data }: any) => {
         if (data?.setting_value && Array.isArray(data.setting_value)) {
           setSteps(data.setting_value);

@@ -29,7 +29,7 @@ export default function EmotionalFeedback({ userId }: EmotionalFeedbackProps) {
         .from("player_stats")
         .select("current_streak, longest_streak, total_xp, level")
         .eq("user_id", userId)
-        .single(),
+        .maybeSingle(),
       supabase
         .from("checklist_tasks")
         .select("completed")
