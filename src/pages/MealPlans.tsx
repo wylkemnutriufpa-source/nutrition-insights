@@ -52,6 +52,14 @@ export default function MealPlans() {
           return { ...p, patient_name: profile?.full_name || "Paciente" };
         })
       );
+      // Sort: pending approval first, then by date
+      const priorityStatuses = ["under_professional_review", "draft_auto_generated"];
+      enriched.sort((a, b) => {
+        const aP = priorityStatuses.includes((a as any).plan_status) ? 0 : 1;
+        const bP = priorityStatuses.includes((b as any).plan_status) ? 0 : 1;
+        if (aP !== bP) return aP - bP;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
       setPlans(enriched);
     }
     setLoading(false);
