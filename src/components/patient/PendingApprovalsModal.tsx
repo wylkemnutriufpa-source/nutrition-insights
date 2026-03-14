@@ -424,16 +424,11 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
                 return (
                   <Button
                     className="flex-1 gradient-primary shadow-glow"
-                    onClick={async () => {
-                      await supabase.from("meal_plans").update({ plan_status: "under_professional_review" } as any).eq("id", planId);
-                      if (!selectedPipeline.generated_plan_id) {
-                        await supabase.from("onboarding_pipelines" as any).update({ generated_plan_id: planId } as any).eq("id", selectedPipeline.id);
-                      }
-                      onOpenChange(false);
-                      navigate(`/meal-plans/${planId}`);
-                    }}
+                    disabled={processing}
+                    onClick={() => handleOpenPlanForReview(planId)}
                   >
-                    <FileText className="w-4 h-4 mr-2" /> Analisar e Editar o Plano
+                    {processing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <FileText className="w-4 h-4 mr-2" />}
+                    Analisar e Editar o Plano
                   </Button>
                 );
               }

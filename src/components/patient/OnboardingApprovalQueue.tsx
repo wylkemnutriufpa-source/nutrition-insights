@@ -489,18 +489,11 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
                 return (
                   <Button
                     className="w-full gap-2 gradient-primary shadow-glow"
-                    onClick={() => {
-                      // Update status to under_professional_review
-                      supabase.from("meal_plans").update({ plan_status: "under_professional_review" } as any).eq("id", planId).then(() => {
-                        // Save generated_plan_id if it wasn't saved before
-                        if (!pipeline.generated_plan_id) {
-                          supabase.from("onboarding_pipelines" as any).update({ generated_plan_id: planId } as any).eq("id", pipeline.id);
-                        }
-                        navigate(`/meal-plans/${planId}`);
-                      });
-                    }}
+                    disabled={openingEditor}
+                    onClick={() => ensurePlanReadyAndOpen(planId)}
                   >
-                    <FileText className="w-4 h-4" /> Analisar e Editar o Plano
+                    {openingEditor ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                    {openingEditor ? "Abrindo plano..." : "Analisar e Editar o Plano"}
                   </Button>
                 );
               }
