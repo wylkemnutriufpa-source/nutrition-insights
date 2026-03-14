@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Leaf } from "lucide-react";
+import logoGif from "@/assets/logo.gif";
 
 interface FitJourneyLogoProps {
   collapsed?: boolean;
@@ -7,9 +7,9 @@ interface FitJourneyLogoProps {
 }
 
 const sizes = {
-  sm: { icon: "w-9 h-9", leaf: "w-4 h-4", text: "text-xl", ring: "-inset-[3px]", orbit: 22 },
-  md: { icon: "w-10 h-10", leaf: "w-5 h-5", text: "text-lg", ring: "-inset-[3px]", orbit: 25 },
-  lg: { icon: "w-12 h-12", leaf: "w-6 h-6", text: "text-2xl", ring: "-inset-[4px]", orbit: 30 },
+  sm: { icon: "w-9 h-9", text: "text-xl", ring: "-inset-[3px]", orbit: 22, img: 24 },
+  md: { icon: "w-10 h-10", text: "text-lg", ring: "-inset-[3px]", orbit: 25, img: 28 },
+  lg: { icon: "w-12 h-12", text: "text-2xl", ring: "-inset-[4px]", orbit: 30, img: 34 },
 };
 
 // Orbital particle that traces a tilted circular path
@@ -103,25 +103,24 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
           ))}
         </div>
 
-        {/* Main icon container - CIRCLE */}
+        {/* Main icon container - CIRCLE with GIF logo */}
         <div
-          className={`${s.icon} rounded-full flex items-center justify-center relative z-10`}
+          className={`${s.icon} rounded-full flex items-center justify-center relative z-10 overflow-hidden`}
           style={{
             background: "linear-gradient(135deg, hsl(152 58% 42%), hsl(170 60% 45%), hsl(152 58% 48%))",
             boxShadow: "0 0 20px hsl(152 58% 42% / 0.3), inset 0 1px 1px rgba(255,255,255,0.3)",
           }}
         >
-          {/* 3D spinning leaf */}
-          <motion.div
-            animate={{ rotateY: 360 }}
-            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-            style={{ perspective: 200 }}
-          >
-            <Leaf
-              className={`${s.leaf} text-primary-foreground`}
-              style={{ filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.25))" }}
-            />
-          </motion.div>
+          <img
+            src={logoGif}
+            alt="FitJourney Logo"
+            className="rounded-full object-cover"
+            style={{
+              width: s.img,
+              height: s.img,
+              filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.25))",
+            }}
+          />
         </div>
       </div>
 
