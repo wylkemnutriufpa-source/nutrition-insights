@@ -95,8 +95,8 @@ export default function MealPlanEditor() {
   const [dialogDay, setDialogDay] = useState<number>(1);
   const [form, setForm] = useState<ItemForm>(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [approving, setApproving] = useState(false);
 
-  // Copy state
   const [copySource, setCopySource] = useState<{ day: number; mealType: MealType } | null>(null);
   const [generating, setGenerating] = useState(false);
 
