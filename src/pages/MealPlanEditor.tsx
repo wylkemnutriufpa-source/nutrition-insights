@@ -138,7 +138,7 @@ export default function MealPlanEditor() {
         .from("profiles")
         .select("full_name")
         .eq("user_id", planData.patient_id)
-        .single();
+        .maybeSingle();
       setPatientName(profile?.full_name || "Paciente");
     }
     setItems(itemsData || []);

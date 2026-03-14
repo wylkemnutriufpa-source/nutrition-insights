@@ -427,35 +427,44 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
                     </div>
                   )}
 
-                  {/* Analyze/Edit plan buttons */}
-                  {selectedPipeline.generated_plan_id && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <Button
-                        variant="outline"
-                        className="w-full border-primary/50 text-primary hover:bg-primary/10"
-                        onClick={() => {
-                          onOpenChange(false);
-                          navigate(`/meal-plans/${selectedPipeline.generated_plan_id}`);
-                        }}
-                      >
-                        <FileText className="w-4 h-4 mr-2" /> Editar Plano
-                      </Button>
-                      <Button variant="outline" className="w-full border-primary/50 text-primary hover:bg-primary/10" asChild>
-                        <a href={`/meal-plans/${selectedPipeline.generated_plan_id}`} target="_blank" rel="noopener noreferrer">
-                          <Eye className="w-4 h-4 mr-2" /> Analisar em Nova Aba
-                        </a>
-                      </Button>
-                    </div>
-                  )}
+                   {/* Analyze/Edit plan buttons */}
+                   {selectedPipeline.generated_plan_id && (
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                       <Button
+                         variant="outline"
+                         className="w-full border-primary/50 text-primary hover:bg-primary/10"
+                         onClick={() => {
+                           onOpenChange(false);
+                           navigate(`/meal-plans/${selectedPipeline.generated_plan_id}`);
+                         }}
+                       >
+                         <FileText className="w-4 h-4 mr-2" /> Editar Plano
+                       </Button>
+                       <Button variant="outline" className="w-full border-primary/50 text-primary hover:bg-primary/10" asChild>
+                         <a href={`/meal-plans/${selectedPipeline.generated_plan_id}`} target="_blank" rel="noopener noreferrer">
+                           <Eye className="w-4 h-4 mr-2" /> Analisar em Nova Aba
+                         </a>
+                       </Button>
+                     </div>
+                   )}
 
-                  {!selectedPipeline.generated_plan_id && (
-                    <Card className="border-dashed border-amber-500/40 bg-amber-500/5">
-                      <CardContent className="py-3 text-center text-sm text-muted-foreground">
-                        <AlertTriangle className="w-4 h-4 inline mr-1 text-amber-500" />
-                        Plano ainda não foi gerado. Aprove para gerar automaticamente ou crie manualmente.
-                      </CardContent>
-                    </Card>
-                  )}
+                   {!selectedPipeline.generated_plan_id && selectedPipeline.generated_plan_data && (
+                     <Card className="border-dashed border-primary/40 bg-primary/5">
+                       <CardContent className="py-3 text-center text-sm text-muted-foreground space-y-2">
+                         <Sparkles className="w-4 h-4 inline mr-1 text-primary" />
+                         Plano gerado com sucesso. Aprove para criar e publicar automaticamente ao paciente.
+                       </CardContent>
+                     </Card>
+                   )}
+
+                   {!selectedPipeline.generated_plan_id && !selectedPipeline.generated_plan_data && (
+                     <Card className="border-dashed border-amber-500/40 bg-amber-500/5">
+                       <CardContent className="py-3 text-center text-sm text-muted-foreground">
+                         <AlertTriangle className="w-4 h-4 inline mr-1 text-amber-500" />
+                         Plano ainda não foi gerado. Aprove para gerar automaticamente ou crie manualmente.
+                       </CardContent>
+                     </Card>
+                   )}
                 </>
               ) : (
                 /* Reject form */

@@ -60,7 +60,7 @@ export default function PublicBooking() {
         .from("profiles")
         .select("full_name, avatar_url")
         .eq("user_id", pub.nutritionist_id)
-        .single();
+        .maybeSingle();
 
       setProfileData(pData);
       setLoading(false);
