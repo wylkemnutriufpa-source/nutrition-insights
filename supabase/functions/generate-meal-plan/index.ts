@@ -168,6 +168,32 @@ function generatePlanFromTemplate(
   const meals = (template.meals || []) as any[];
   const items: any[] = [];
 
+  // Fallback: if template has no meals defined, generate basic structure
+  if (meals.length === 0) {
+    const defaultMealTypes = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
+    for (let day = 0; day < 7; day++) {
+      for (const mealType of defaultMealTypes) {
+        const targetKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT[mealType] || 0.15));
+        const mealMacroRatio = targetKcal / kcalTarget;
+        items.push({
+          meal_type: mealType,
+          day_of_week: day,
+          title: mealType === "breakfast" ? "Café da Manhã" :
+                 mealType === "morning_snack" ? "Lanche da Manhã" :
+                 mealType === "lunch" ? "Almoço" :
+                 mealType === "afternoon_snack" ? "Lanche da Tarde" :
+                 mealType === "dinner" ? "Jantar" : "Ceia",
+          description: "Refeição a ser personalizada pelo profissional.",
+          calories_target: targetKcal,
+          protein_target: Math.round(macros.protein * mealMacroRatio),
+          carbs_target: Math.round(macros.carbs * mealMacroRatio),
+          fat_target: Math.round(macros.fat * mealMacroRatio),
+        });
+      }
+    }
+    return items;
+  }
+
   for (let day = 0; day < 7; day++) {
     for (const mealTemplate of meals) {
       const mealType = mealTemplate.meal_type || "lunch";
