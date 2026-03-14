@@ -111,7 +111,7 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
             boxShadow: "0 0 20px hsl(152 58% 42% / 0.3), inset 0 1px 1px rgba(255,255,255,0.3)",
           }}
         >
-          <img
+          <motion.img
             src={logoImg}
             alt="FitJourney Logo"
             className="rounded-full object-cover"
@@ -119,6 +119,12 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
               width: s.img,
               height: s.img,
               filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.25))",
+            }}
+            animate={{ rotateY: [0, 360] }}
+            transition={{
+              duration: 6,
+              repeat: Infinity,
+              ease: "linear",
             }}
           />
         </div>
