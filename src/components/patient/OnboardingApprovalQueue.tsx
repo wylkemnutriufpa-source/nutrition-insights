@@ -240,6 +240,69 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
     setProcessing(false);
   }
 
+  async function ensurePlanReadyAndOpen(planId: string) {
+    if (!pipeline || !user) return;
+    setOpeningEditor(true);
+    try {
+      const { count, error: countError } = await supabase
+        .from("meal_plan_items")
+        .select("id", { count: "exact", head: true })
+        .eq("meal_plan_id", planId);
+
+      if (countError) throw countError;
+
+      let resolvedPlanId = planId;
+      if (!count || count === 0) {
+        toast.info("Plano sem refeições detectado. Gerando itens automaticamente...");
+
+        const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
+          body: {
+            patientId: pipeline.patient_id,
+            nutritionistId: user.id,
+            weight: pipeline.weight,
+            height: pipeline.height,
+            mealCount: pipeline.meal_count,
+            cookingPreference: pipeline.cooking_preference,
+            isPipeline: true,
+            meal_plan_id: planId,
+          },
+        });
+
+        if (error) throw error;
+        if (!data?.success) throw new Error(data?.error || "Falha ao regenerar plano");
+
+        resolvedPlanId = data?.mealPlanId || planId;
+
+        await supabase
+          .from("onboarding_pipelines" as any)
+          .update({
+            generated_plan_id: resolvedPlanId,
+            generated_plan_data: data,
+            plan_generated: true,
+          } as any)
+          .eq("id", pipeline.id);
+      }
+
+      await supabase
+        .from("meal_plans")
+        .update({ plan_status: "under_professional_review" } as any)
+        .eq("id", resolvedPlanId);
+
+      if (!pipeline.generated_plan_id || pipeline.generated_plan_id !== resolvedPlanId) {
+        await supabase
+          .from("onboarding_pipelines" as any)
+          .update({ generated_plan_id: resolvedPlanId } as any)
+          .eq("id", pipeline.id);
+      }
+
+      navigate(`/meal-plans/${resolvedPlanId}`);
+    } catch (err: any) {
+      toast.error("Erro ao abrir plano: " + (err.message || "Tente novamente"));
+    } finally {
+      setOpeningEditor(false);
+    }
+  }
+
   if (loading) return <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>;
 
   // No pipeline - show activation button
