@@ -80,7 +80,7 @@ export default function Checkin() {
         .select("nutritionist_id")
         .eq("patient_id", user.id)
         .eq("status", "active")
-        .single();
+        .maybeSingle();
       
       if (np) setNutritionistId(np.nutritionist_id);
 
