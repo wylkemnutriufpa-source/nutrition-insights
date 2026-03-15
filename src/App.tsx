@@ -115,6 +115,7 @@ const ClinicalPredictions = lazy(() => import("./pages/ClinicalPredictions"));
 const ClinicalSimulation = lazy(() => import("./pages/ClinicalSimulation"));
 const ClinicalLab = lazy(() => import("./pages/ClinicalLab"));
 const ClinicalAutomation = lazy(() => import("./pages/ClinicalAutomation"));
+const GlobalAdaptiveIntelligence = lazy(() => import("./pages/GlobalAdaptiveIntelligence"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -337,6 +338,7 @@ const App = () => (
               <Route path="/admin/protocol-biquini-branco" element={<AdminRoute><LP section="Admin"><AdminProtocolBiquiniBranco /></LP></AdminRoute>} />
               <Route path="/admin/nutrition-protocols" element={<AdminRoute><LP section="Admin"><AdminNutritionProtocols /></LP></AdminRoute>} />
               <Route path="/admin/enterprise" element={<AdminRoute><LP section="Admin"><ClinicalEnterprise /></LP></AdminRoute>} />
+              <Route path="/admin/adaptive-intelligence" element={<AdminRoute><LP section="Admin"><GlobalAdaptiveIntelligence /></LP></AdminRoute>} />
 
               {/* Public pricing */}
               <Route path="/pricing" element={<LP section="Pricing"><Pricing /></LP>} />

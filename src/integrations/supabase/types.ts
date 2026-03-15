@@ -2206,6 +2206,81 @@ export type Database = {
           },
         ]
       }
+      global_clinical_learning_state: {
+        Row: {
+          adjustment_reason: string | null
+          created_at: string
+          current_weight: number
+          engine_component: string
+          engine_version: string
+          evidence_strength: number | null
+          id: string
+          last_updated_at: string
+          parameter_name: string
+          previous_weight: number | null
+          sample_size: number | null
+        }
+        Insert: {
+          adjustment_reason?: string | null
+          created_at?: string
+          current_weight?: number
+          engine_component: string
+          engine_version?: string
+          evidence_strength?: number | null
+          id?: string
+          last_updated_at?: string
+          parameter_name: string
+          previous_weight?: number | null
+          sample_size?: number | null
+        }
+        Update: {
+          adjustment_reason?: string | null
+          created_at?: string
+          current_weight?: number
+          engine_component?: string
+          engine_version?: string
+          evidence_strength?: number | null
+          id?: string
+          last_updated_at?: string
+          parameter_name?: string
+          previous_weight?: number | null
+          sample_size?: number | null
+        }
+        Relationships: []
+      }
+      global_evidence_signals: {
+        Row: {
+          computed_at: string
+          confidence: number | null
+          engine_version: string
+          id: string
+          sample_size: number | null
+          signal_name: string
+          signal_trend: string | null
+          signal_value: number
+        }
+        Insert: {
+          computed_at?: string
+          confidence?: number | null
+          engine_version?: string
+          id?: string
+          sample_size?: number | null
+          signal_name: string
+          signal_trend?: string | null
+          signal_value?: number
+        }
+        Update: {
+          computed_at?: string
+          confidence?: number | null
+          engine_version?: string
+          id?: string
+          sample_size?: number | null
+          signal_name?: string
+          signal_trend?: string | null
+          signal_value?: number
+        }
+        Relationships: []
+      }
       global_tips: {
         Row: {
           category: string
@@ -5488,6 +5563,51 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_maturity_history: {
+        Row: {
+          computed_at: string
+          engine_version: string
+          global_dropout_rate: number | null
+          id: string
+          maturity_level: string
+          maturity_score: number
+          population_stability: number | null
+          prediction_accuracy: number | null
+          result_consistency: number | null
+          therapeutic_efficacy: number | null
+          total_interventions_analyzed: number | null
+          total_patients_analyzed: number | null
+        }
+        Insert: {
+          computed_at?: string
+          engine_version?: string
+          global_dropout_rate?: number | null
+          id?: string
+          maturity_level?: string
+          maturity_score?: number
+          population_stability?: number | null
+          prediction_accuracy?: number | null
+          result_consistency?: number | null
+          therapeutic_efficacy?: number | null
+          total_interventions_analyzed?: number | null
+          total_patients_analyzed?: number | null
+        }
+        Update: {
+          computed_at?: string
+          engine_version?: string
+          global_dropout_rate?: number | null
+          id?: string
+          maturity_level?: string
+          maturity_score?: number
+          population_stability?: number | null
+          prediction_accuracy?: number | null
+          result_consistency?: number | null
+          therapeutic_efficacy?: number | null
+          total_interventions_analyzed?: number | null
+          total_patients_analyzed?: number | null
+        }
+        Relationships: []
+      }
       player_stats: {
         Row: {
           current_streak: number
@@ -7043,6 +7163,57 @@ export type Database = {
           rank_position?: number | null
           snapshot_date?: string
           total_points?: number
+        }
+        Relationships: []
+      }
+      recalibration_audit_log: {
+        Row: {
+          adjustment_percent: number
+          approved_by: string | null
+          created_at: string
+          engine_component: string
+          engine_version: string
+          evidence_strength: number | null
+          id: string
+          new_weight: number
+          old_weight: number
+          parameter_name: string
+          reason: string
+          rollback_at: string | null
+          sample_size: number | null
+          status: string
+        }
+        Insert: {
+          adjustment_percent: number
+          approved_by?: string | null
+          created_at?: string
+          engine_component: string
+          engine_version?: string
+          evidence_strength?: number | null
+          id?: string
+          new_weight: number
+          old_weight: number
+          parameter_name: string
+          reason: string
+          rollback_at?: string | null
+          sample_size?: number | null
+          status?: string
+        }
+        Update: {
+          adjustment_percent?: number
+          approved_by?: string | null
+          created_at?: string
+          engine_component?: string
+          engine_version?: string
+          evidence_strength?: number | null
+          id?: string
+          new_weight?: number
+          old_weight?: number
+          parameter_name?: string
+          reason?: string
+          rollback_at?: string | null
+          sample_size?: number | null
+          status?: string
         }
         Relationships: []
       }
