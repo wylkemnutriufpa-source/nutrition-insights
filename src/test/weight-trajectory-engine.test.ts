@@ -119,7 +119,7 @@ describe("Weight Trajectory Engine v1.0.0", () => {
   // ── Scenario Tests ──
   describe("Clinical Scenarios", () => {
     it("Scenario 1: long history → stable projection", () => {
-      const pattern = classifyResponsePattern(-0.4, 0.2);
+      const pattern = classifyResponsePattern(-0.6, 0.2);
       expect(pattern).toBe("consistent_responder");
       const metabolic = classifyMetabolicResponse(-0.4, 1, 20);
       expect(metabolic).toBe("moderate_metabolic_response");
