@@ -1182,12 +1182,15 @@ export default function MealPlanEditor() {
                       <span className="text-[10px] text-muted-foreground">{cellItems.length} itens</span>
                     </div>
                     <div className="p-3 space-y-2">
-                      {cellItems.map((item) => (
+                      {cellItems.map((item) => {
+                        const catDot = getCategoryDot(item.title);
+                        return (
                         <div
                           key={item.id}
                           className="flex items-center gap-3 p-2.5 rounded-lg bg-secondary/40 hover:bg-secondary/60 transition-colors cursor-pointer group/item relative"
                           onClick={() => openEditDialog(item)}
                         >
+                          {catDot && <span className={`w-2 h-2 rounded-full ${catDot} shrink-0`} />}
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">{item.title}</p>
                             {item.description && <p className="text-xs text-muted-foreground truncate">{item.description}</p>}
@@ -1198,11 +1201,17 @@ export default function MealPlanEditor() {
                               {item.fat_target && <span className="flex items-center gap-0.5"><Droplets className="w-3 h-3 text-blue-400" />{Number(item.fat_target).toFixed(0)}g</span>}
                             </div>
                           </div>
-                          <button onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }} className="opacity-0 group-hover/item:opacity-100 p-1 rounded hover:bg-destructive/10 transition-opacity">
-                            <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                          </button>
+                          <div className="flex gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                            <button onClick={(e) => { e.stopPropagation(); openDrawerPanel(item); }} className="p-1 rounded hover:bg-accent/50" title="Painel inteligente">
+                              <ArrowRightLeft className="w-3.5 h-3.5 text-muted-foreground" />
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }} className="p-1 rounded hover:bg-destructive/10">
+                              <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                            </button>
+                          </div>
                         </div>
-                      ))}
+                      );
+                      })}
 
                       {/* Quick-add inline for daily view */}
                       {quickAddKey === cellKey ? (
