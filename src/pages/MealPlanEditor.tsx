@@ -361,6 +361,53 @@ export default function MealPlanEditor() {
     setDragOver(null);
   };
 
+  // Inline edit: save title directly
+  const handleInlineEdit = async (itemId: string, newTitle: string) => {
+    if (!newTitle.trim()) { setInlineEditId(null); return; }
+    setInlineEditSaving(true);
+    const match = findFoodMatch(newTitle.trim());
+    const updatePayload: any = { title: newTitle.trim() };
+    if (match) {
+      updatePayload.calories_target = match.calories;
+      updatePayload.protein_target = match.protein;
+      updatePayload.carbs_target = match.carbs;
+      updatePayload.fat_target = match.fat;
+      updatePayload.description = match.portion;
+    }
+    const { error } = await supabase.from("meal_plan_items").update(updatePayload).eq("id", itemId);
+    setInlineEditSaving(false);
+    setInlineEditId(null);
+    if (error) toast.error("Erro ao editar");
+    else {
+      toast.success(match ? "Atualizado com macros ✨" : "Atualizado!");
+      fetchData();
+    }
+  };
+
+  // Open drawer panel for detailed view
+  const openDrawerPanel = (item: MealPlanItem) => {
+    setDrawerItem(item);
+    setDrawerOpen(true);
+  };
+
+  // Handle substitution from drawer
+  const handleSubstitute = async (item: MealPlanItem, food: FoodItem) => {
+    const { error } = await supabase.from("meal_plan_items").update({
+      title: food.name,
+      description: food.portion,
+      calories_target: food.calories,
+      protein_target: food.protein,
+      carbs_target: food.carbs,
+      fat_target: food.fat,
+    }).eq("id", item.id);
+    if (error) toast.error("Erro ao substituir");
+    else {
+      toast.success(`Substituído por ${food.name} ✨`);
+      setDrawerOpen(false);
+      fetchData();
+    }
+  };
+
 
   const handleQuickAdd = async (day: number, mealType: MealType) => {
     if (!id || !quickAddText.trim()) return;
