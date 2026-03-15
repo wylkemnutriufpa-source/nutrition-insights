@@ -1600,6 +1600,106 @@ export default function MealPlanEditor() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Smart Drawer Panel */}
+      <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
+        <SheetContent className="sm:max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="font-display flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-primary" /> Painel Inteligente
+            </SheetTitle>
+          </SheetHeader>
+          {drawerItem && (
+            <div className="space-y-4 mt-4">
+              {/* Current item info */}
+              <div className="glass rounded-xl p-4 space-y-2">
+                <h3 className="font-semibold text-sm">{drawerItem.title}</h3>
+                {drawerItem.description && (
+                  <p className="text-xs text-muted-foreground">{drawerItem.description}</p>
+                )}
+                <div className="grid grid-cols-4 gap-2 text-[10px]">
+                  <div className="text-center p-2 rounded-lg bg-secondary/40">
+                    <Flame className="w-3.5 h-3.5 mx-auto text-orange-400 mb-0.5" />
+                    <p className="font-semibold">{drawerItem.calories_target || 0}</p>
+                    <p className="text-muted-foreground">kcal</p>
+                  </div>
+                  <div className="text-center p-2 rounded-lg bg-secondary/40">
+                    <Beef className="w-3.5 h-3.5 mx-auto text-red-400 mb-0.5" />
+                    <p className="font-semibold">{Number(drawerItem.protein_target || 0).toFixed(0)}g</p>
+                    <p className="text-muted-foreground">prot</p>
+                  </div>
+                  <div className="text-center p-2 rounded-lg bg-secondary/40">
+                    <Wheat className="w-3.5 h-3.5 mx-auto text-amber-500 mb-0.5" />
+                    <p className="font-semibold">{Number(drawerItem.carbs_target || 0).toFixed(0)}g</p>
+                    <p className="text-muted-foreground">carb</p>
+                  </div>
+                  <div className="text-center p-2 rounded-lg bg-secondary/40">
+                    <Droplets className="w-3.5 h-3.5 mx-auto text-blue-400 mb-0.5" />
+                    <p className="font-semibold">{Number(drawerItem.fat_target || 0).toFixed(0)}g</p>
+                    <p className="text-muted-foreground">gord</p>
+                  </div>
+                </div>
+                <MacroBalanceBar
+                  protein={Number(drawerItem.protein_target) || 0}
+                  carbs={Number(drawerItem.carbs_target) || 0}
+                  fat={Number(drawerItem.fat_target) || 0}
+                  calories={drawerItem.calories_target || 0}
+                />
+              </div>
+
+              {/* Quick edit button */}
+              <Button
+                variant="outline"
+                className="w-full gap-2"
+                onClick={() => {
+                  setDrawerOpen(false);
+                  openEditDialog(drawerItem);
+                }}
+              >
+                <PencilLine className="w-4 h-4" /> Editar no Modal Detalhado
+              </Button>
+
+              {/* Substitution suggestions */}
+              <div>
+                <h4 className="text-xs font-semibold mb-2 flex items-center gap-1.5">
+                  <ArrowRightLeft className="w-3.5 h-3.5 text-primary" />
+                  Substituir por Equivalente
+                </h4>
+                <FoodSubstitutions
+                  currentFood={drawerItem.title}
+                  onSelect={(food) => handleSubstitute(drawerItem, food)}
+                />
+              </div>
+
+              {/* Search in database */}
+              <div>
+                <h4 className="text-xs font-semibold mb-2">Buscar na Base de Alimentos</h4>
+                <FoodAutocomplete
+                  value=""
+                  onChange={() => {}}
+                  onSelect={(food) => handleSubstitute(drawerItem, food)}
+                  placeholder="Buscar alimento..."
+                />
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex gap-2 pt-2 border-t border-border">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="flex-1 gap-1.5"
+                  onClick={async () => {
+                    await handleDeleteItem(drawerItem.id);
+                    setDrawerOpen(false);
+                  }}
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Remover
+                </Button>
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </DashboardLayout>
   );
 }
