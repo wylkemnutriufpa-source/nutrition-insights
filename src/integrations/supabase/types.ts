@@ -977,6 +977,105 @@ export type Database = {
           },
         ]
       }
+      clinic_portfolio_state: {
+        Row: {
+          avg_adherence: number | null
+          avg_metabolic_evolution: number | null
+          avg_plan_efficacy: number | null
+          critical_count: number | null
+          dropout_rate: number | null
+          engine_version: string | null
+          high_priority_count: number | null
+          id: string
+          last_calculated_at: string | null
+          nutritionist_id: string
+          patients_at_risk_percent: number | null
+          portfolio_classification: string | null
+          portfolio_health_score: number | null
+          total_patients: number | null
+        }
+        Insert: {
+          avg_adherence?: number | null
+          avg_metabolic_evolution?: number | null
+          avg_plan_efficacy?: number | null
+          critical_count?: number | null
+          dropout_rate?: number | null
+          engine_version?: string | null
+          high_priority_count?: number | null
+          id?: string
+          last_calculated_at?: string | null
+          nutritionist_id: string
+          patients_at_risk_percent?: number | null
+          portfolio_classification?: string | null
+          portfolio_health_score?: number | null
+          total_patients?: number | null
+        }
+        Update: {
+          avg_adherence?: number | null
+          avg_metabolic_evolution?: number | null
+          avg_plan_efficacy?: number | null
+          critical_count?: number | null
+          dropout_rate?: number | null
+          engine_version?: string | null
+          high_priority_count?: number | null
+          id?: string
+          last_calculated_at?: string | null
+          nutritionist_id?: string
+          patients_at_risk_percent?: number | null
+          portfolio_classification?: string | null
+          portfolio_health_score?: number | null
+          total_patients?: number | null
+        }
+        Relationships: []
+      }
+      clinical_action_recommendations: {
+        Row: {
+          acted_at: string | null
+          acted_by: string | null
+          created_at: string | null
+          engine_version: string | null
+          expected_clinical_impact: string | null
+          id: string
+          nutritionist_id: string
+          patient_id: string
+          reason: string
+          recommended_action: string
+          status: string | null
+          supporting_data: Json | null
+          urgency_level: string | null
+        }
+        Insert: {
+          acted_at?: string | null
+          acted_by?: string | null
+          created_at?: string | null
+          engine_version?: string | null
+          expected_clinical_impact?: string | null
+          id?: string
+          nutritionist_id: string
+          patient_id: string
+          reason: string
+          recommended_action: string
+          status?: string | null
+          supporting_data?: Json | null
+          urgency_level?: string | null
+        }
+        Update: {
+          acted_at?: string | null
+          acted_by?: string | null
+          created_at?: string | null
+          engine_version?: string | null
+          expected_clinical_impact?: string | null
+          id?: string
+          nutritionist_id?: string
+          patient_id?: string
+          reason?: string
+          recommended_action?: string
+          status?: string | null
+          supporting_data?: Json | null
+          urgency_level?: string | null
+        }
+        Relationships: []
+      }
       clinical_alerts: {
         Row: {
           alert_type: string
@@ -2595,6 +2694,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      patient_clinical_priority_state: {
+        Row: {
+          cluster_risk_component: number | null
+          dropout_risk_component: number | null
+          engine_version: string | null
+          id: string
+          last_calculated_at: string | null
+          last_professional_contact_at: string | null
+          main_priority_reason: string | null
+          nutritionist_id: string
+          patient_id: string
+          plan_efficacy_component: number | null
+          priority_level: string | null
+          priority_score: number | null
+          risk_score_component: number | null
+          therapeutic_failure_component: number | null
+          time_without_intervention_component: number | null
+        }
+        Insert: {
+          cluster_risk_component?: number | null
+          dropout_risk_component?: number | null
+          engine_version?: string | null
+          id?: string
+          last_calculated_at?: string | null
+          last_professional_contact_at?: string | null
+          main_priority_reason?: string | null
+          nutritionist_id: string
+          patient_id: string
+          plan_efficacy_component?: number | null
+          priority_level?: string | null
+          priority_score?: number | null
+          risk_score_component?: number | null
+          therapeutic_failure_component?: number | null
+          time_without_intervention_component?: number | null
+        }
+        Update: {
+          cluster_risk_component?: number | null
+          dropout_risk_component?: number | null
+          engine_version?: string | null
+          id?: string
+          last_calculated_at?: string | null
+          last_professional_contact_at?: string | null
+          main_priority_reason?: string | null
+          nutritionist_id?: string
+          patient_id?: string
+          plan_efficacy_component?: number | null
+          priority_level?: string | null
+          priority_score?: number | null
+          risk_score_component?: number | null
+          therapeutic_failure_component?: number | null
+          time_without_intervention_component?: number | null
+        }
+        Relationships: []
       }
       patient_clinical_snapshots: {
         Row: {
@@ -5919,6 +6072,48 @@ export type Database = {
           last_seen_at?: string
           session_count?: number
           user_id?: string
+        }
+        Relationships: []
+      }
+      weekly_clinical_orchestration_plan: {
+        Row: {
+          created_at: string | null
+          engine_version: string | null
+          id: string
+          nutritionist_id: string
+          prioritized_patients: Json | null
+          suggested_focus_actions: Json | null
+          total_critical: number | null
+          total_high: number | null
+          total_medium: number | null
+          week_start: string
+          workload_balance_score: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          engine_version?: string | null
+          id?: string
+          nutritionist_id: string
+          prioritized_patients?: Json | null
+          suggested_focus_actions?: Json | null
+          total_critical?: number | null
+          total_high?: number | null
+          total_medium?: number | null
+          week_start: string
+          workload_balance_score?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          engine_version?: string | null
+          id?: string
+          nutritionist_id?: string
+          prioritized_patients?: Json | null
+          suggested_focus_actions?: Json | null
+          total_critical?: number | null
+          total_high?: number | null
+          total_medium?: number | null
+          week_start?: string
+          workload_balance_score?: number | null
         }
         Relationships: []
       }

@@ -64,7 +64,9 @@ verify_jwt = false
 [functions.compute-semi-autonomous-protocol-transitions]
 verify_jwt = false
 
-# RELATÓRIOS E PLANOS (Determinístico + AI opcional)
+[functions.compute-clinical-portfolio-orchestration]
+verify_jwt = false
+
 # ═══════════════════════════════════════════
 
 [functions.generate-weekly-report]
