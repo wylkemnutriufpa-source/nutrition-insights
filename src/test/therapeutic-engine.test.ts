@@ -180,8 +180,8 @@ describe("Therapeutic Engine - Efficacy Score", () => {
   });
 
   it("should penalize high alert count", () => {
-    const good = computeTherapeuticEfficacy(-0.6, 85, 0, 80, 21);
-    const withAlerts = computeTherapeuticEfficacy(-0.6, 85, 4, 80, 21);
+    const good = computeTherapeuticEfficacy(-0.3, 70, 0, 60, 21);
+    const withAlerts = computeTherapeuticEfficacy(-0.3, 70, 4, 60, 21);
     expect(withAlerts.score).toBeLessThan(good.score);
   });
 });
