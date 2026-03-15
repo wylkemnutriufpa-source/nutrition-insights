@@ -480,7 +480,7 @@ async function saveDailySnapshots(supabase: any, patientIds: string[]) {
       calorie_avg: calorieAvg,
       risk_score: score,
       active_alerts_count: alertCountMap[pid] || 0,
-      clinical_risk_level: score >= 60 ? "critical" : score >= 30 ? "attention" : score >= 10 ? "risk" : "stable",
+      clinical_risk_level: score >= 60 ? "critical" : score >= 30 ? "risk" : score >= 10 ? "attention" : "stable",
     };
   });
 
