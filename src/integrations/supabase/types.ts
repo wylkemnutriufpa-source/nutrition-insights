@@ -2163,6 +2163,48 @@ export type Database = {
           },
         ]
       }
+      patient_clinical_snapshots: {
+        Row: {
+          active_alerts_count: number | null
+          adherence_score: number | null
+          calorie_avg: number | null
+          clinical_risk_level: string | null
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          patient_id: string
+          risk_score: number | null
+          snapshot_date: string
+          weight: number | null
+        }
+        Insert: {
+          active_alerts_count?: number | null
+          adherence_score?: number | null
+          calorie_avg?: number | null
+          clinical_risk_level?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          patient_id: string
+          risk_score?: number | null
+          snapshot_date?: string
+          weight?: number | null
+        }
+        Update: {
+          active_alerts_count?: number | null
+          adherence_score?: number | null
+          calorie_avg?: number | null
+          clinical_risk_level?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          patient_id?: string
+          risk_score?: number | null
+          snapshot_date?: string
+          weight?: number | null
+        }
+        Relationships: []
+      }
       patient_daily_adherence: {
         Row: {
           checkin_score: number | null
@@ -3500,6 +3542,8 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          clinical_risk_level: string | null
+          clinical_risk_score: number | null
           created_at: string
           full_name: string
           id: string
@@ -3511,6 +3555,8 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          clinical_risk_level?: string | null
+          clinical_risk_score?: number | null
           created_at?: string
           full_name?: string
           id?: string
@@ -3522,6 +3568,8 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          clinical_risk_level?: string | null
+          clinical_risk_score?: number | null
           created_at?: string
           full_name?: string
           id?: string
@@ -5339,6 +5387,10 @@ export type Database = {
       find_patient_by_email: { Args: { _email: string }; Returns: string }
       fix_all_null_tokens: { Args: never; Returns: undefined }
       fix_user_null_tokens: { Args: { _user_id: string }; Returns: undefined }
+      flag_plan_review_needed: {
+        Args: { _patient_id: string; _reason?: string }
+        Returns: Json
+      }
       get_affiliate_commission_tier: {
         Args: { _affiliate_id: string }
         Returns: {
@@ -5429,6 +5481,10 @@ export type Database = {
           referral_code: string
         }[]
       }
+      mark_patient_contacted: {
+        Args: { _contact_method?: string; _patient_id: string }
+        Returns: Json
+      }
       promote_patient_to_professional: {
         Args: { _patient_email: string; _target_role?: string }
         Returns: Json
@@ -5448,6 +5504,10 @@ export type Database = {
       reset_professional_password: {
         Args: { _new_password: string; _user_id: string }
         Returns: undefined
+      }
+      resolve_alert: {
+        Args: { _alert_id: string; _resolution_note?: string }
+        Returns: Json
       }
       sync_protocol_checklist: {
         Args: { _date?: string; _patient_protocol_id: string }
