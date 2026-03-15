@@ -356,11 +356,11 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
         {/* Steps overview */}
         <div className="grid grid-cols-5 gap-2">
           {[
-            { label: "Anamnese", done: pipeline.anamnesis_completed, icon: "📋" },
-            { label: "Corpo", done: pipeline.body_data_completed, icon: "⚖️" },
-            { label: "Prefs", done: pipeline.preferences_completed, icon: "🍽️" },
-            { label: "Plano", done: pipeline.plan_generated, icon: "✨" },
-            { label: "Aprovado", done: pipeline.plan_approved, icon: "👍" },
+            { label: "Anamnese", done: pipeline.anamnesis_completed, icon: "📋", key: "anamnesis" },
+            { label: "Corpo", done: pipeline.body_data_completed, icon: "⚖️", key: "body" },
+            { label: "Prefs", done: pipeline.preferences_completed, icon: "🍽️", key: "prefs" },
+            { label: "Plano", done: pipeline.plan_generated, icon: "✨", key: "plan" },
+            { label: "Aprovado", done: pipeline.plan_approved, icon: "👍", key: "approved" },
           ].map((s, i) => {
             const isNext = !s.done && (i === 0 || [
               pipeline.anamnesis_completed,
@@ -369,18 +369,25 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
               pipeline.plan_generated,
               pipeline.plan_approved,
             ][i - 1]);
+            const isClickable = (s.key === "plan" || s.key === "approved") && pipeline.plan_generated && !pipeline.plan_approved;
             return (
               <motion.div
                 key={i}
                 initial={{ scale: 0.9 }}
                 animate={{ scale: s.done ? 1 : isNext ? 1.05 : 0.95 }}
+                onClick={() => {
+                  if (isClickable) {
+                    const planId = pipeline.generated_plan_id || pipeline.generated_plan_data?.mealPlanId;
+                    if (planId) ensurePlanReadyAndOpen(planId);
+                  }
+                }}
                 className={`text-center p-2.5 rounded-lg text-xs font-semibold border-2 transition-all duration-300 ${
                   s.done
                     ? "bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.3)]"
                     : isNext
                     ? "bg-amber-500/15 border-amber-500/60 text-amber-400 animate-pulse"
                     : "bg-muted/50 border-muted text-muted-foreground"
-                }`}
+                } ${isClickable ? "cursor-pointer hover:scale-105" : ""}`}
               >
                 <span className="text-base">{s.done ? "✅" : isNext ? "⏳" : s.icon}</span>
                 <div className="mt-1">{s.label}</div>
