@@ -3950,6 +3950,72 @@ export type Database = {
           },
         ]
       }
+      patient_predicted_outcomes: {
+        Row: {
+          calculation_metadata: Json | null
+          confidence_classification: string
+          created_at: string
+          dropout_classification: string
+          engine_version: string
+          goal_classification: string
+          id: string
+          main_prediction_driver: string
+          patient_id: string
+          predicted_dropout_probability: number
+          predicted_goal_achievement_probability: number
+          predicted_regression_probability: number
+          predicted_stagnation_probability: number
+          predicted_time_to_next_intervention_days: number
+          prediction_confidence_score: number
+          prediction_window_days: number
+          regression_classification: string
+          stagnation_classification: string
+          updated_at: string
+        }
+        Insert: {
+          calculation_metadata?: Json | null
+          confidence_classification?: string
+          created_at?: string
+          dropout_classification?: string
+          engine_version?: string
+          goal_classification?: string
+          id?: string
+          main_prediction_driver?: string
+          patient_id: string
+          predicted_dropout_probability?: number
+          predicted_goal_achievement_probability?: number
+          predicted_regression_probability?: number
+          predicted_stagnation_probability?: number
+          predicted_time_to_next_intervention_days?: number
+          prediction_confidence_score?: number
+          prediction_window_days?: number
+          regression_classification?: string
+          stagnation_classification?: string
+          updated_at?: string
+        }
+        Update: {
+          calculation_metadata?: Json | null
+          confidence_classification?: string
+          created_at?: string
+          dropout_classification?: string
+          engine_version?: string
+          goal_classification?: string
+          id?: string
+          main_prediction_driver?: string
+          patient_id?: string
+          predicted_dropout_probability?: number
+          predicted_goal_achievement_probability?: number
+          predicted_regression_probability?: number
+          predicted_stagnation_probability?: number
+          predicted_time_to_next_intervention_days?: number
+          prediction_confidence_score?: number
+          prediction_window_days?: number
+          regression_classification?: string
+          stagnation_classification?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       patient_prestige: {
         Row: {
           assigned_at: string
