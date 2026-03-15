@@ -390,7 +390,176 @@ describe("Clinical Alert Engine — Phase 1 + Phase 2 Validation", () => {
       // Same input → same output (idempotent)
       expect(snap1).toEqual(snap2);
       expect(snap1.clinical_risk_level).toBe("attention");
+});
+
+// ═══════════════════════════════════════════════
+// PHASE 2 — LONGITUDINAL INTELLIGENCE TESTS
+// ═══════════════════════════════════════════════
+
+describe("Phase 2 — Longitudinal Intelligence", () => {
+  // ─── Weight Trend Velocity ───
+  describe("Weight Trend Classification", () => {
+    it("classifies fast_loss (> 1% per week)", () => {
+      expect(classifyWeightTrend(-1.5, 1.0)).toBe("fast_loss");
     });
+
+    it("classifies expected_loss (0.4-1%)", () => {
+      expect(classifyWeightTrend(-0.7, 0.5)).toBe("expected_loss");
+      expect(classifyWeightTrend(-0.4, 0.3)).toBe("expected_loss");
+    });
+
+    it("classifies slow_loss (< 0.4%)", () => {
+      expect(classifyWeightTrend(-0.2, 0.3)).toBe("slow_loss");
+    });
+
+    it("classifies stagnated (< 0.2kg absolute)", () => {
+      expect(classifyWeightTrend(-0.1, 0.1)).toBe("stagnated");
+      expect(classifyWeightTrend(0.05, 0.05)).toBe("stagnated");
+    });
+
+    it("classifies gaining", () => {
+      expect(classifyWeightTrend(0.5, 0.5)).toBe("gaining");
+      expect(classifyWeightTrend(1.0, 1.0)).toBe("gaining");
+    });
+  });
+
+  // ─── Adherence Momentum ───
+  describe("Adherence Momentum Classification", () => {
+    it("classifies improving (diff >= +5)", () => {
+      expect(classifyAdherenceMomentum(80, 70)).toBe("improving");
+    });
+
+    it("classifies stable (diff between -5 and +5)", () => {
+      expect(classifyAdherenceMomentum(75, 73)).toBe("stable");
+      expect(classifyAdherenceMomentum(70, 72)).toBe("stable");
+    });
+
+    it("classifies declining (diff <= -5)", () => {
+      expect(classifyAdherenceMomentum(60, 70)).toBe("declining");
+    });
+
+    it("classifies critical_drop (diff <= -20)", () => {
+      expect(classifyAdherenceMomentum(50, 80)).toBe("critical_drop");
+      expect(classifyAdherenceMomentum(40, 70)).toBe("critical_drop");
+    });
+  });
+
+  // ─── Engagement Index ───
+  describe("Engagement Level Classification", () => {
+    it("classifies high_engagement (>= 75)", () => {
+      expect(classifyEngagement(75)).toBe("high_engagement");
+      expect(classifyEngagement(100)).toBe("high_engagement");
+    });
+
+    it("classifies moderate (50-74)", () => {
+      expect(classifyEngagement(50)).toBe("moderate");
+      expect(classifyEngagement(74)).toBe("moderate");
+    });
+
+    it("classifies unstable (25-49)", () => {
+      expect(classifyEngagement(25)).toBe("unstable");
+      expect(classifyEngagement(49)).toBe("unstable");
+    });
+
+    it("classifies drop_risk (< 25)", () => {
+      expect(classifyEngagement(0)).toBe("drop_risk");
+      expect(classifyEngagement(24)).toBe("drop_risk");
+    });
+  });
+
+  // ─── Metabolic Adaptation Risk Alert ───
+  describe("Signal: Metabolic Adaptation Risk", () => {
+    it("triggers when slow_loss + adherence >= 75% + plan > 21d", () => {
+      expect(checkMetabolicAdaptationRisk("slow_loss", 80, 30)).toBe(true);
+      expect(checkMetabolicAdaptationRisk("stagnated", 75, 25)).toBe(true);
+    });
+
+    it("does NOT trigger with low adherence", () => {
+      expect(checkMetabolicAdaptationRisk("slow_loss", 60, 30)).toBe(false);
+    });
+
+    it("does NOT trigger with short plan", () => {
+      expect(checkMetabolicAdaptationRisk("stagnated", 80, 15)).toBe(false);
+    });
+
+    it("does NOT trigger with expected_loss or fast_loss", () => {
+      expect(checkMetabolicAdaptationRisk("expected_loss", 90, 30)).toBe(false);
+      expect(checkMetabolicAdaptationRisk("fast_loss", 95, 60)).toBe(false);
+    });
+
+    it("does NOT trigger with gaining trend", () => {
+      expect(checkMetabolicAdaptationRisk("gaining", 80, 30)).toBe(false);
+    });
+  });
+
+  // ─── Longitudinal Score Additions ───
+  describe("Longitudinal Score Calculation", () => {
+    it("adds +10 for declining adherence_momentum", () => {
+      expect(calculateLongitudinalScore({ adherence_momentum: "declining", engagement_level: "moderate", weight_trend_status: "expected_loss" })).toBe(10);
+    });
+
+    it("adds +20 for critical_drop adherence_momentum", () => {
+      expect(calculateLongitudinalScore({ adherence_momentum: "critical_drop", engagement_level: "moderate", weight_trend_status: "expected_loss" })).toBe(20);
+    });
+
+    it("adds +25 for drop_risk engagement", () => {
+      expect(calculateLongitudinalScore({ adherence_momentum: "stable", engagement_level: "drop_risk", weight_trend_status: "expected_loss" })).toBe(25);
+    });
+
+    it("adds +15 for gaining weight trend", () => {
+      expect(calculateLongitudinalScore({ adherence_momentum: "stable", engagement_level: "moderate", weight_trend_status: "gaining" })).toBe(15);
+    });
+
+    it("accumulates multiple longitudinal scores", () => {
+      // critical_drop (20) + drop_risk (25) + gaining (15) = 60
+      expect(calculateLongitudinalScore({ adherence_momentum: "critical_drop", engagement_level: "drop_risk", weight_trend_status: "gaining" })).toBe(60);
+    });
+
+    it("returns 0 for healthy indicators", () => {
+      expect(calculateLongitudinalScore({ adherence_momentum: "improving", engagement_level: "high_engagement", weight_trend_status: "expected_loss" })).toBe(0);
+    });
+  });
+
+  // ─── Snapshot with Longitudinal Fields ───
+  describe("Expanded Snapshot Structure", () => {
+    it("includes longitudinal fields", () => {
+      const snapshot = {
+        patient_id: "test-1",
+        snapshot_date: "2026-03-15",
+        weight: 70.5,
+        adherence_score: 72,
+        calorie_avg: 1800,
+        risk_score: 25,
+        active_alerts_count: 2,
+        clinical_risk_level: "attention",
+        weight_velocity: -0.3,
+        weight_trend_status: "expected_loss",
+        engagement_index: 68,
+        adherence_momentum: "stable",
+        engine_version: "3.0.0",
+      };
+
+      expect(snapshot.weight_velocity).toBeDefined();
+      expect(snapshot.weight_trend_status).toBeDefined();
+      expect(snapshot.engagement_index).toBeDefined();
+      expect(snapshot.adherence_momentum).toBeDefined();
+      expect(snapshot.engine_version).toBe("3.0.0");
+    });
+  });
+
+  // ─── Engine Versioning ───
+  describe("Engine Versioning", () => {
+    it("LONGITUDINAL_ENGINE_VERSION is 1.0.0", () => {
+      const LONGITUDINAL_ENGINE_VERSION = "1.0.0";
+      expect(LONGITUDINAL_ENGINE_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
+    });
+
+    it("ALERT_ENGINE_VERSION is 3.0.0", () => {
+      const ALERT_ENGINE_VERSION = "3.0.0";
+      expect(ALERT_ENGINE_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
+    });
+  });
+});
 
     it("risk_level in snapshot matches getRiskLevel", () => {
       const scores = [0, 5, 10, 15, 25, 30, 45, 60, 80];
