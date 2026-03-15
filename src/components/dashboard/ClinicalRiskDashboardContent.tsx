@@ -42,6 +42,24 @@ interface PatientRisk {
   adherence_score_prev_7d?: number;
   engagement_index?: number;
   engagement_level?: string;
+  // Adaptive indicators
+  caloric_response_status?: string;
+  stagnation_risk_level?: string;
+  therapeutic_effectiveness?: string;
+  adjustment_suggestions?: AdjustmentSuggestion[];
+}
+
+interface AdjustmentSuggestion {
+  id: string;
+  suggestion_type: string;
+  status: string;
+  current_value?: number;
+  suggested_value?: number;
+  delta_percent?: number;
+  clinical_reason: string;
+  confidence: string;
+  metadata: any;
+  created_at: string;
 }
 
 interface ClinicalAlert {
