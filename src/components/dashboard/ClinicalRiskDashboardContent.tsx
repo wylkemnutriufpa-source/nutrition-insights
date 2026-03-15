@@ -647,6 +647,93 @@ function PatientRiskModal({
               </div>
             </section>
 
+            {/* Adaptive Intelligence */}
+            {(patient.caloric_response_status || patient.stagnation_risk_level || (patient.adjustment_suggestions && patient.adjustment_suggestions.length > 0)) && (
+              <section>
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                  <Activity className="w-3.5 h-3.5" /> Motor Adaptativo
+                </h3>
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  {patient.caloric_response_status && (
+                    <IndicatorCard
+                      label="Resposta Calórica"
+                      value={caloricResponseLabels[patient.caloric_response_status]?.label || patient.caloric_response_status}
+                      icon={Flame}
+                      status={caloricResponseLabels[patient.caloric_response_status]?.status || "neutral"}
+                    />
+                  )}
+                  {patient.stagnation_risk_level && (
+                    <IndicatorCard
+                      label="Risco Estagnação"
+                      value={stagnationLabels[patient.stagnation_risk_level]?.label || patient.stagnation_risk_level}
+                      icon={AlertTriangle}
+                      status={stagnationLabels[patient.stagnation_risk_level]?.status || "neutral"}
+                    />
+                  )}
+                  {patient.therapeutic_effectiveness && (
+                    <IndicatorCard
+                      label="Eficácia do Plano"
+                      value={effectivenessLabels[patient.therapeutic_effectiveness]?.label || patient.therapeutic_effectiveness}
+                      icon={Shield}
+                      status={effectivenessLabels[patient.therapeutic_effectiveness]?.status || "neutral"}
+                    />
+                  )}
+                </div>
+
+                {patient.adjustment_suggestions && patient.adjustment_suggestions.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-[11px] font-semibold text-muted-foreground">Sugestões de Ajuste</p>
+                    {patient.adjustment_suggestions.map((sug) => (
+                      <div key={sug.id} className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+                        <div className="flex items-start gap-2">
+                          <TrendingUp className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Badge variant="outline" className="text-[10px]">
+                                {sug.suggestion_type === "caloric_adjustment" ? "Ajuste Calórico" : "Troca de Template"}
+                              </Badge>
+                              <Badge variant="outline" className="text-[10px]">
+                                Confiança: {sug.confidence === "high" ? "Alta" : sug.confidence === "medium" ? "Média" : "Baixa"}
+                              </Badge>
+                            </div>
+                            <p className="text-xs leading-relaxed">{sug.clinical_reason}</p>
+                            {sug.current_value && sug.suggested_value && (
+                              <p className="text-[10px] font-mono bg-muted/30 rounded px-1.5 py-0.5 inline-block mt-1">
+                                {sug.current_value} kcal → {sug.suggested_value} kcal ({sug.delta_percent! > 0 ? "+" : ""}{sug.delta_percent}%)
+                              </p>
+                            )}
+                            {sug.metadata && (
+                              <p className="text-[10px] text-muted-foreground mt-1">
+                                Resp. calórica: {sug.metadata.caloric_response} · Adesão 28d: {sug.metadata.adherence_28d}% · Plano: {sug.metadata.plan_active_days}d
+                              </p>
+                            )}
+                            <div className="flex gap-2 mt-2">
+                              <Button
+                                variant="default"
+                                size="sm"
+                                className="h-6 text-[10px] gap-1"
+                                onClick={(e) => { e.stopPropagation(); handleApproveSuggestion(sug.id); }}
+                              >
+                                <CheckCheck className="w-3 h-3" /> Aprovar
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 text-[10px] gap-1"
+                                onClick={(e) => { e.stopPropagation(); handleRejectSuggestion(sug.id); }}
+                              >
+                                <X className="w-3 h-3" /> Rejeitar
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
+
             <section>
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Indicadores Clássicos</h3>
               <div className="grid grid-cols-2 gap-3">
