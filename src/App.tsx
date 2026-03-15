@@ -117,6 +117,7 @@ const ClinicalLab = lazy(() => import("./pages/ClinicalLab"));
 const ClinicalAutomation = lazy(() => import("./pages/ClinicalAutomation"));
 const GlobalAdaptiveIntelligence = lazy(() => import("./pages/GlobalAdaptiveIntelligence"));
 const WeightTrajectory = lazy(() => import("./pages/WeightTrajectory"));
+const MetabolicTwin = lazy(() => import("./pages/MetabolicTwin"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
