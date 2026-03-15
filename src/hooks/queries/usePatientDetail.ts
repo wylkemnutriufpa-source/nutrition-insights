@@ -22,7 +22,7 @@ export function usePatientDetail(patientId: string | undefined) {
         supabase.from("checklist_tasks").select("id, completed").eq("patient_id", patientId!).eq("date", new Date().toISOString().split("T")[0]),
         supabase.from("subscriptions").select("*").eq("user_id", patientId!).order("created_at", { ascending: false }).limit(1),
         supabase.from("pricing_plans").select("*").eq("is_active", true).order("sort_order"),
-        supabase.from("meal_plans").select("*").eq("patient_id", patientId!).eq("nutritionist_id", user!.id).order("created_at", { ascending: false }),
+        supabase.from("meal_plans").select("*").eq("patient_id", patientId!).order("created_at", { ascending: false }),
         supabase.from("recipes").select("*").eq("nutritionist_id", user!.id).eq("is_shared", true).order("created_at", { ascending: false }),
         supabase.from("nutritionist_patients").select("id, status").eq("patient_id", patientId!).eq("nutritionist_id", user!.id).limit(1).maybeSingle(),
       ]);
