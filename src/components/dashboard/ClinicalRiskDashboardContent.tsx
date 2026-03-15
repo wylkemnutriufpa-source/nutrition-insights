@@ -50,8 +50,11 @@ interface ClinicalAlert {
 const severityConfig: Record<string, { bg: string; text: string; label: string; dot: string }> = {
   critical: { bg: "bg-destructive/10 border-destructive/30", text: "text-destructive", label: "Crítico", dot: "bg-destructive" },
   high: { bg: "bg-destructive/5 border-destructive/20", text: "text-destructive/80", label: "Alto", dot: "bg-destructive/70" },
+  risk: { bg: "bg-warning/5 border-warning/20", text: "text-warning", label: "Em Risco", dot: "bg-warning" },
+  attention: { bg: "bg-yellow-500/5 border-yellow-500/20", text: "text-yellow-600", label: "Atenção", dot: "bg-yellow-500" },
   medium: { bg: "bg-warning/5 border-warning/20", text: "text-warning", label: "Médio", dot: "bg-warning" },
   low: { bg: "bg-muted/50 border-border", text: "text-muted-foreground", label: "Baixo", dot: "bg-muted-foreground" },
+  stable: { bg: "bg-muted/30 border-border", text: "text-muted-foreground", label: "Estável", dot: "bg-success" },
 };
 
 const alertTypeIcons: Record<string, any> = {
