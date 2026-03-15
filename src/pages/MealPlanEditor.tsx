@@ -1044,8 +1044,6 @@ export default function MealPlanEditor() {
                               );
                               })}
                             </AnimatePresence>
-                              ))}
-                            </AnimatePresence>
                           </div>
 
                           {/* Quick-add inline */}
