@@ -9,7 +9,7 @@ import {
   AlertTriangle, Shield, Users, Activity, TrendingDown, Scale,
   UserX, Utensils, Clock, Flame, CheckCircle2, Eye, MessageSquare,
   CalendarDays, FileText, Filter, Search, X,
-  BarChart3, Phone, CheckCheck, RefreshCw
+  BarChart3, Phone, CheckCheck, RefreshCw, Brain, TrendingUp, Zap, HeartPulse
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +35,13 @@ interface PatientRisk {
   alerts: ClinicalAlert[];
   calorie_target?: number;
   avg_calories?: number;
+  // Longitudinal indicators
+  weight_trend_status?: string;
+  weight_velocity_kg_week?: number;
+  adherence_momentum?: string;
+  adherence_score_prev_7d?: number;
+  engagement_index?: number;
+  engagement_level?: string;
 }
 
 interface ClinicalAlert {
@@ -65,6 +72,30 @@ const alertTypeIcons: Record<string, any> = {
   possible_abandonment: UserX,
   metabolic_signal: Activity,
   caloric_excess: Flame,
+  metabolic_adaptation_risk: Brain,
+};
+
+const weightTrendLabels: Record<string, { label: string; color: string; icon: any }> = {
+  fast_loss: { label: "Perda rápida", color: "text-warning", icon: TrendingDown },
+  expected_loss: { label: "Perda esperada", color: "text-success", icon: TrendingDown },
+  slow_loss: { label: "Perda lenta", color: "text-warning", icon: TrendingDown },
+  stagnated: { label: "Estagnado", color: "text-destructive", icon: Scale },
+  gaining: { label: "Ganhando", color: "text-destructive", icon: TrendingUp },
+  unknown: { label: "—", color: "text-muted-foreground", icon: Scale },
+};
+
+const momentumLabels: Record<string, { label: string; color: string }> = {
+  improving: { label: "↑ Melhorando", color: "text-success" },
+  stable: { label: "→ Estável", color: "text-muted-foreground" },
+  declining: { label: "↓ Caindo", color: "text-warning" },
+  critical_drop: { label: "⚠ Queda Crítica", color: "text-destructive" },
+};
+
+const engagementLabels: Record<string, { label: string; color: string }> = {
+  high_engagement: { label: "Alto", color: "text-success" },
+  moderate: { label: "Moderado", color: "text-muted-foreground" },
+  unstable: { label: "Instável", color: "text-warning" },
+  drop_risk: { label: "Risco", color: "text-destructive" },
 };
 
 function getRiskSeverity(score: number): string {
@@ -108,7 +139,7 @@ export default function ClinicalRiskDashboardContent() {
 
       const [alertsRes, profilesRes, checklistRes, sessionsRes, plansRes, assessRes] = await Promise.all([
         supabase.from("clinical_alerts").select("*").eq("nutritionist_id", userId).eq("is_active", true).order("created_at", { ascending: false }),
-        supabase.from("profiles").select("user_id, full_name, avatar_url").in("user_id", patientIds),
+        supabase.from("profiles").select("user_id, full_name, avatar_url, weight_trend_status, weight_velocity_kg_week, adherence_momentum, adherence_score_7d, adherence_score_prev_7d, engagement_index, engagement_level").in("user_id", patientIds),
         supabase.from("checklist_tasks").select("patient_id, completed").in("patient_id", patientIds).gte("date", sevenDaysAgo.split("T")[0]),
         supabase.from("user_sessions").select("user_id, last_seen_at").in("user_id", patientIds),
         supabase.from("meal_plans").select("patient_id, plan_status, generation_metadata").in("patient_id", patientIds).eq("is_active", true).order("created_at", { ascending: false }),
@@ -168,6 +199,12 @@ export default function ClinicalRiskDashboardContent() {
           alerts,
           calorie_target: meta?.calorie_target,
           avg_calories: undefined,
+          weight_trend_status: profile?.weight_trend_status || "unknown",
+          weight_velocity_kg_week: profile?.weight_velocity_kg_week || 0,
+          adherence_momentum: profile?.adherence_momentum || "stable",
+          adherence_score_prev_7d: profile?.adherence_score_prev_7d || 0,
+          engagement_index: profile?.engagement_index || 0,
+          engagement_level: profile?.engagement_level || "moderate",
         };
       });
 
@@ -189,7 +226,8 @@ export default function ClinicalRiskDashboardContent() {
       : 0;
     const fiveDaysAgo = new Date(Date.now() - 5 * 86400000);
     const noLogin = patients.filter(p => !p.last_seen || new Date(p.last_seen) < fiveDaysAgo).length;
-    return { critical, risk, attention, stable, avgAdherence, noLogin };
+    const metabolicRisk = patients.filter(p => p.weight_trend_status === "stagnated" || p.weight_trend_status === "slow_loss").length;
+    return { critical, risk, attention, stable, avgAdherence, noLogin, metabolicRisk };
   }, [patients]);
 
   const filtered = useMemo(() => {
@@ -209,7 +247,6 @@ export default function ClinicalRiskDashboardContent() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-display text-xl font-bold tracking-tight">Risco Clínico</h2>
@@ -221,22 +258,21 @@ export default function ClinicalRiskDashboardContent() {
         </Badge>
       </div>
 
-      {/* KPI Cards */}
       {isLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <KpiCard icon={Flame} label="Críticos" value={kpis.critical} color="destructive" />
           <KpiCard icon={AlertTriangle} label="Em Risco" value={kpis.risk} color="warning" />
           <KpiCard icon={Shield} label="Atenção" value={kpis.attention} color="primary" />
           <KpiCard icon={BarChart3} label="Adesão Média" value={`${kpis.avgAdherence}%`} color="primary" />
           <KpiCard icon={UserX} label="Sem Login > 5d" value={kpis.noLogin} color="muted" />
+          <KpiCard icon={Brain} label="Risco Metabólico" value={kpis.metabolicRisk} color="warning" />
         </div>
       )}
 
-      {/* Filters */}
       <div className="flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -250,9 +286,9 @@ export default function ClinicalRiskDashboardContent() {
           <SelectContent>
             <SelectItem value="all">Todas</SelectItem>
             <SelectItem value="critical">Crítico</SelectItem>
-            <SelectItem value="high">Alto</SelectItem>
-            <SelectItem value="medium">Médio</SelectItem>
-            <SelectItem value="low">Baixo</SelectItem>
+            <SelectItem value="risk">Em Risco</SelectItem>
+            <SelectItem value="attention">Atenção</SelectItem>
+            <SelectItem value="stable">Estável</SelectItem>
           </SelectContent>
         </Select>
         <Select value={filterPlanStatus} onValueChange={setFilterPlanStatus}>
@@ -275,7 +311,6 @@ export default function ClinicalRiskDashboardContent() {
         )}
       </div>
 
-      {/* Patient List */}
       {isLoading ? (
         <div className="space-y-2">
           {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}
@@ -288,12 +323,13 @@ export default function ClinicalRiskDashboardContent() {
         </div>
       ) : (
         <div className="space-y-1.5">
-          <div className="hidden md:grid grid-cols-[2fr,1fr,1fr,1fr,1fr,80px] gap-3 px-4 py-2 text-xs text-muted-foreground font-medium uppercase tracking-wider">
+          <div className="hidden lg:grid grid-cols-[2fr,1fr,1fr,1fr,1fr,1fr,80px] gap-3 px-4 py-2 text-xs text-muted-foreground font-medium uppercase tracking-wider">
             <span>Paciente</span>
-            <span>Peso</span>
-            <span>Adesão 7d</span>
+            <span>Tendência Peso</span>
+            <span>Adesão</span>
+            <span>Momentum</span>
+            <span>Engajamento</span>
             <span>Último Acesso</span>
-            <span>Plano</span>
             <span className="text-right">Risco</span>
           </div>
 
@@ -303,16 +339,19 @@ export default function ClinicalRiskDashboardContent() {
             const daysSinceLogin = patient.last_seen
               ? Math.floor((Date.now() - new Date(patient.last_seen).getTime()) / 86400000)
               : null;
+            const wt = weightTrendLabels[patient.weight_trend_status || "unknown"] || weightTrendLabels.unknown;
+            const mom = momentumLabels[patient.adherence_momentum || "stable"] || momentumLabels.stable;
+            const eng = engagementLabels[patient.engagement_level || "moderate"] || engagementLabels.moderate;
 
             return (
               <motion.div
                 key={patient.patient_id}
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`rounded-xl border p-3 md:p-4 cursor-pointer transition-all ${getRowBg(patient.risk_score)} ${config.bg}`}
+                className={`rounded-xl border p-3 lg:p-4 cursor-pointer transition-all ${getRowBg(patient.risk_score)} ${config.bg}`}
                 onClick={() => setSelectedPatient(patient)}
               >
-                <div className="grid grid-cols-[1fr,auto] md:grid-cols-[2fr,1fr,1fr,1fr,1fr,80px] gap-2 md:gap-3 items-center">
+                <div className="grid grid-cols-[1fr,auto] lg:grid-cols-[2fr,1fr,1fr,1fr,1fr,1fr,80px] gap-2 lg:gap-3 items-center">
                   <div className="flex items-center gap-3">
                     <Avatar className="w-9 h-9">
                       <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">
@@ -321,8 +360,8 @@ export default function ClinicalRiskDashboardContent() {
                     </Avatar>
                     <div className="min-w-0">
                       <p className="font-medium text-sm truncate">{patient.name}</p>
-                      {patient.goal && (
-                        <p className="text-[10px] text-muted-foreground capitalize">{patient.goal.replace(/_/g, " ")}</p>
+                      {patient.last_weight && (
+                        <p className="text-[10px] text-muted-foreground">{patient.last_weight} kg</p>
                       )}
                     </div>
                     {patient.alerts.length > 0 && (
@@ -333,35 +372,41 @@ export default function ClinicalRiskDashboardContent() {
                     )}
                   </div>
 
-                  <div className="hidden md:block">
-                    <span className="text-sm">{patient.last_weight ? `${patient.last_weight} kg` : "—"}</span>
+                  <div className="hidden lg:flex items-center gap-1.5">
+                    <wt.icon className={`w-3.5 h-3.5 ${wt.color}`} />
+                    <span className={`text-xs font-medium ${wt.color}`}>{wt.label}</span>
                   </div>
 
-                  <div className="hidden md:block">
+                  <div className="hidden lg:block">
                     {patient.adherence_7d >= 0 ? (
                       <div className="flex items-center gap-2">
-                        <Progress value={patient.adherence_7d} className="h-2 w-16" />
-                        <span className={`text-sm font-medium ${patient.adherence_7d < 60 ? "text-destructive" : patient.adherence_7d < 80 ? "text-warning" : "text-success"}`}>
+                        <Progress value={patient.adherence_7d} className="h-2 w-14" />
+                        <span className={`text-xs font-medium ${patient.adherence_7d < 60 ? "text-destructive" : patient.adherence_7d < 80 ? "text-warning" : "text-success"}`}>
                           {patient.adherence_7d}%
                         </span>
                       </div>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">Sem dados</span>
-                    )}
-                  </div>
-
-                  <div className="hidden md:block">
-                    {daysSinceLogin !== null ? (
-                      <span className={`text-sm ${daysSinceLogin > 5 ? "text-destructive font-medium" : daysSinceLogin > 3 ? "text-warning" : "text-muted-foreground"}`}>
-                        {daysSinceLogin === 0 ? "Hoje" : daysSinceLogin === 1 ? "Ontem" : `${daysSinceLogin}d atrás`}
-                      </span>
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
                     )}
                   </div>
 
-                  <div className="hidden md:block">
-                    <PlanStatusBadge status={patient.plan_status} />
+                  <div className="hidden lg:block">
+                    <span className={`text-xs font-medium ${mom.color}`}>{mom.label}</span>
+                  </div>
+
+                  <div className="hidden lg:flex items-center gap-1.5">
+                    <Zap className={`w-3 h-3 ${eng.color}`} />
+                    <span className={`text-xs ${eng.color}`}>{patient.engagement_index}</span>
+                  </div>
+
+                  <div className="hidden lg:block">
+                    {daysSinceLogin !== null ? (
+                      <span className={`text-xs ${daysSinceLogin > 5 ? "text-destructive font-medium" : daysSinceLogin > 3 ? "text-warning" : "text-muted-foreground"}`}>
+                        {daysSinceLogin === 0 ? "Hoje" : daysSinceLogin === 1 ? "Ontem" : `${daysSinceLogin}d`}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-end gap-1.5">
@@ -370,10 +415,11 @@ export default function ClinicalRiskDashboardContent() {
                   </div>
                 </div>
 
-                <div className="flex md:hidden gap-3 mt-2 text-xs text-muted-foreground">
+                <div className="flex lg:hidden gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
                   {patient.adherence_7d >= 0 && <span>Adesão: {patient.adherence_7d}%</span>}
-                  {daysSinceLogin !== null && <span>Login: {daysSinceLogin}d</span>}
-                  {patient.last_weight && <span>{patient.last_weight}kg</span>}
+                  <span className={wt.color}>{wt.label}</span>
+                  <span className={mom.color}>{mom.label}</span>
+                  <span>Eng: {patient.engagement_index}</span>
                 </div>
               </motion.div>
             );
@@ -381,7 +427,6 @@ export default function ClinicalRiskDashboardContent() {
         </div>
       )}
 
-      {/* Detail Modal */}
       <PatientRiskModal
         patient={selectedPatient}
         onClose={() => setSelectedPatient(null)}
@@ -434,13 +479,14 @@ function PatientRiskModal({
   if (!patient) return null;
   const sev = getRiskSeverity(patient.risk_score);
   const config = severityConfig[sev];
+  const wt = weightTrendLabels[patient.weight_trend_status || "unknown"] || weightTrendLabels.unknown;
+  const mom = momentumLabels[patient.adherence_momentum || "stable"] || momentumLabels.stable;
+  const eng = engagementLabels[patient.engagement_level || "moderate"] || engagementLabels.moderate;
 
   const handleResolveAlert = async (alertId: string) => {
     setResolving(alertId);
     try {
-      const { data, error } = await supabase.rpc("resolve_alert", {
-        _alert_id: alertId,
-      });
+      const { data, error } = await supabase.rpc("resolve_alert", { _alert_id: alertId });
       if (error) throw error;
       toast.success("Alerta resolvido com sucesso");
       queryClient.invalidateQueries({ queryKey: ["clinical-risk-dashboard"] });
@@ -491,14 +537,21 @@ function PatientRiskModal({
       checkin_frequency: "Frequência de registros",
       login_recency: "Último acesso",
       caloric_intake: "Ingestão calórica",
+      metabolic_adaptation: "Adaptação metabólica",
     };
     const dirLabels: Record<string, string> = {
       below_expected: "abaixo do esperado",
       above_expected: "acima do esperado",
       stagnant: "estagnado",
+      metabolic_plateau: "platô metabólico detectado",
     };
     const label = metricLabels[meta.metric] || meta.metric;
     const dir = dirLabels[meta.direction] || "";
+
+    if (meta.metric === "metabolic_adaptation") {
+      return `${label}: Adesão ${meta.measured_value}% com tendência ${meta.weight_trend} · Plano ativo há ${meta.plan_active_days}d · Janela de análise: ${meta.analysis_window_days}d`;
+    }
+
     return `${label}: ${meta.measured_value}${meta.metric === "adherence" ? "%" : meta.metric === "caloric_intake" ? " kcal" : ""} ${dir} (limite: ${meta.threshold}${meta.metric === "adherence" ? "%" : meta.metric === "caloric_intake" ? " kcal" : ""}) · ${meta.period_days}d`;
   };
 
@@ -524,19 +577,50 @@ function PatientRiskModal({
 
         <ScrollArea className="flex-1 -mx-6 px-6">
           <div className="space-y-5 pb-4">
+            {/* Longitudinal Indicators */}
             <section>
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Indicadores Clínicos</h3>
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                <Brain className="w-3.5 h-3.5" /> Inteligência Longitudinal
+              </h3>
               <div className="grid grid-cols-2 gap-3">
-                <IndicatorCard label="Adesão 7d" value={patient.adherence_7d >= 0 ? `${patient.adherence_7d}%` : "—"} icon={BarChart3}
-                  status={patient.adherence_7d < 60 ? "danger" : patient.adherence_7d < 80 ? "warning" : "ok"} />
-                <IndicatorCard label="Último Peso" value={patient.last_weight ? `${patient.last_weight} kg` : "—"} icon={Scale} status="neutral" />
-                <IndicatorCard label="Meta Calórica" value={patient.calorie_target ? `${patient.calorie_target} kcal` : "—"} icon={Utensils} status="neutral" />
+                <IndicatorCard
+                  label="Tendência Peso"
+                  value={wt.label}
+                  icon={wt.icon}
+                  status={wt.color.includes("success") ? "ok" : wt.color.includes("destructive") ? "danger" : wt.color.includes("warning") ? "warning" : "neutral"}
+                  subtitle={patient.weight_velocity_kg_week ? `${patient.weight_velocity_kg_week > 0 ? "+" : ""}${patient.weight_velocity_kg_week.toFixed(2)} kg/sem` : undefined}
+                />
+                <IndicatorCard
+                  label="Momentum Adesão"
+                  value={mom.label}
+                  icon={HeartPulse}
+                  status={mom.color.includes("success") ? "ok" : mom.color.includes("destructive") ? "danger" : mom.color.includes("warning") ? "warning" : "neutral"}
+                  subtitle={`${patient.adherence_7d >= 0 ? patient.adherence_7d : 0}% atual · ${patient.adherence_score_prev_7d || 0}% anterior`}
+                />
+                <IndicatorCard
+                  label="Engajamento"
+                  value={`${patient.engagement_index}/100`}
+                  icon={Zap}
+                  status={eng.color.includes("success") ? "ok" : eng.color.includes("destructive") ? "danger" : eng.color.includes("warning") ? "warning" : "neutral"}
+                  subtitle={eng.label}
+                />
                 <IndicatorCard label="Último Acesso" value={
                   patient.last_seen
                     ? `${Math.floor((Date.now() - new Date(patient.last_seen).getTime()) / 86400000)}d atrás`
                     : "—"
                 } icon={Clock}
                   status={!patient.last_seen || (Date.now() - new Date(patient.last_seen).getTime()) > 5 * 86400000 ? "danger" : "ok"} />
+              </div>
+            </section>
+
+            <section>
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Indicadores Clássicos</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <IndicatorCard label="Adesão 7d" value={patient.adherence_7d >= 0 ? `${patient.adherence_7d}%` : "—"} icon={BarChart3}
+                  status={patient.adherence_7d < 60 ? "danger" : patient.adherence_7d < 80 ? "warning" : "ok"} />
+                <IndicatorCard label="Último Peso" value={patient.last_weight ? `${patient.last_weight} kg` : "—"} icon={Scale} status="neutral" />
+                <IndicatorCard label="Meta Calórica" value={patient.calorie_target ? `${patient.calorie_target} kcal` : "—"} icon={Utensils} status="neutral" />
+                <IndicatorCard label="Status Plano" value={patient.plan_status?.replace(/_/g, " ") || "—"} icon={FileText} status="neutral" />
               </div>
             </section>
 
@@ -610,8 +694,8 @@ function PatientRiskModal({
   );
 }
 
-function IndicatorCard({ label, value, icon: Icon, status }: {
-  label: string; value: string; icon: any; status: "ok" | "warning" | "danger" | "neutral";
+function IndicatorCard({ label, value, icon: Icon, status, subtitle }: {
+  label: string; value: string; icon: any; status: "ok" | "warning" | "danger" | "neutral"; subtitle?: string;
 }) {
   const colors = {
     ok: "text-success",
@@ -625,7 +709,8 @@ function IndicatorCard({ label, value, icon: Icon, status }: {
         <Icon className="w-3.5 h-3.5 text-muted-foreground" />
         <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{label}</span>
       </div>
-      <p className={`text-lg font-bold ${colors[status]}`}>{value}</p>
+      <p className={`text-sm font-bold ${colors[status]}`}>{value}</p>
+      {subtitle && <p className="text-[10px] text-muted-foreground mt-0.5">{subtitle}</p>}
     </div>
   );
 }

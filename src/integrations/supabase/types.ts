@@ -2166,42 +2166,57 @@ export type Database = {
       patient_clinical_snapshots: {
         Row: {
           active_alerts_count: number | null
+          adherence_momentum: string | null
           adherence_score: number | null
           calorie_avg: number | null
           clinical_risk_level: string | null
           created_at: string | null
+          engagement_index: number | null
+          engine_version: string | null
           id: string
           metadata: Json | null
           patient_id: string
           risk_score: number | null
           snapshot_date: string
           weight: number | null
+          weight_trend_status: string | null
+          weight_velocity: number | null
         }
         Insert: {
           active_alerts_count?: number | null
+          adherence_momentum?: string | null
           adherence_score?: number | null
           calorie_avg?: number | null
           clinical_risk_level?: string | null
           created_at?: string | null
+          engagement_index?: number | null
+          engine_version?: string | null
           id?: string
           metadata?: Json | null
           patient_id: string
           risk_score?: number | null
           snapshot_date?: string
           weight?: number | null
+          weight_trend_status?: string | null
+          weight_velocity?: number | null
         }
         Update: {
           active_alerts_count?: number | null
+          adherence_momentum?: string | null
           adherence_score?: number | null
           calorie_avg?: number | null
           clinical_risk_level?: string | null
           created_at?: string | null
+          engagement_index?: number | null
+          engine_version?: string | null
           id?: string
           metadata?: Json | null
           patient_id?: string
           risk_score?: number | null
           snapshot_date?: string
           weight?: number | null
+          weight_trend_status?: string | null
+          weight_velocity?: number | null
         }
         Relationships: []
       }
@@ -3541,10 +3556,15 @@ export type Database = {
       }
       profiles: {
         Row: {
+          adherence_momentum: string | null
+          adherence_score_7d: number | null
+          adherence_score_prev_7d: number | null
           avatar_url: string | null
           clinical_risk_level: string | null
           clinical_risk_score: number | null
           created_at: string
+          engagement_index: number | null
+          engagement_level: string | null
           full_name: string
           id: string
           phone: string | null
@@ -3552,12 +3572,19 @@ export type Database = {
           show_in_ranking: boolean
           updated_at: string
           user_id: string
+          weight_trend_status: string | null
+          weight_velocity_kg_week: number | null
         }
         Insert: {
+          adherence_momentum?: string | null
+          adherence_score_7d?: number | null
+          adherence_score_prev_7d?: number | null
           avatar_url?: string | null
           clinical_risk_level?: string | null
           clinical_risk_score?: number | null
           created_at?: string
+          engagement_index?: number | null
+          engagement_level?: string | null
           full_name?: string
           id?: string
           phone?: string | null
@@ -3565,12 +3592,19 @@ export type Database = {
           show_in_ranking?: boolean
           updated_at?: string
           user_id: string
+          weight_trend_status?: string | null
+          weight_velocity_kg_week?: number | null
         }
         Update: {
+          adherence_momentum?: string | null
+          adherence_score_7d?: number | null
+          adherence_score_prev_7d?: number | null
           avatar_url?: string | null
           clinical_risk_level?: string | null
           clinical_risk_score?: number | null
           created_at?: string
+          engagement_index?: number | null
+          engagement_level?: string | null
           full_name?: string
           id?: string
           phone?: string | null
@@ -3578,6 +3612,8 @@ export type Database = {
           show_in_ranking?: boolean
           updated_at?: string
           user_id?: string
+          weight_trend_status?: string | null
+          weight_velocity_kg_week?: number | null
         }
         Relationships: []
       }
