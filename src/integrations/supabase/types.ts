@@ -1124,6 +1124,91 @@ export type Database = {
         }
         Relationships: []
       }
+      clinical_audit_logs: {
+        Row: {
+          action_metadata: Json | null
+          action_type: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          organization_id: string | null
+          patient_id: string | null
+        }
+        Insert: {
+          action_metadata?: Json | null
+          action_type: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          organization_id?: string | null
+          patient_id?: string | null
+        }
+        Update: {
+          action_metadata?: Json | null
+          action_type?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          organization_id?: string | null
+          patient_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_audit_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clinical_methodologies: {
+        Row: {
+          alert_thresholds: Json | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          organization_id: string
+          protocol_rules: Json | null
+          scoring_weights: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          alert_thresholds?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          organization_id: string
+          protocol_rules?: Json | null
+          scoring_weights?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          alert_thresholds?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          organization_id?: string
+          protocol_rules?: Json | null
+          scoring_weights?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_methodologies_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clinical_rule_conditions: {
         Row: {
           created_at: string
@@ -2542,6 +2627,363 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      organization_brand_settings: {
+        Row: {
+          accent_color: string | null
+          app_name: string | null
+          created_at: string | null
+          custom_css: string | null
+          email_signature: string | null
+          font_family: string | null
+          id: string
+          login_background: string | null
+          logo_url: string | null
+          onboarding_copy: Json | null
+          organization_id: string
+          primary_color: string | null
+          secondary_color: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          accent_color?: string | null
+          app_name?: string | null
+          created_at?: string | null
+          custom_css?: string | null
+          email_signature?: string | null
+          font_family?: string | null
+          id?: string
+          login_background?: string | null
+          logo_url?: string | null
+          onboarding_copy?: Json | null
+          organization_id: string
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          accent_color?: string | null
+          app_name?: string | null
+          created_at?: string | null
+          custom_css?: string | null
+          email_signature?: string | null
+          font_family?: string | null
+          id?: string
+          login_background?: string | null
+          logo_url?: string | null
+          onboarding_copy?: Json | null
+          organization_id?: string
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_brand_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_engine_config: {
+        Row: {
+          abandonment_days: number | null
+          adherence_threshold: number | null
+          caloric_excess_threshold: number | null
+          cluster_rules: Json | null
+          created_at: string | null
+          id: string
+          organization_id: string
+          performance_weights: Json | null
+          stagnation_days: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          abandonment_days?: number | null
+          adherence_threshold?: number | null
+          caloric_excess_threshold?: number | null
+          cluster_rules?: Json | null
+          created_at?: string | null
+          id?: string
+          organization_id: string
+          performance_weights?: Json | null
+          stagnation_days?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          abandonment_days?: number | null
+          adherence_threshold?: number | null
+          caloric_excess_threshold?: number | null
+          cluster_rules?: Json | null
+          created_at?: string | null
+          id?: string
+          organization_id?: string
+          performance_weights?: Json | null
+          stagnation_days?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_engine_config_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_members: {
+        Row: {
+          created_at: string | null
+          id: string
+          invited_at: string | null
+          joined_at: string | null
+          organization_id: string
+          role: string
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          invited_at?: string | null
+          joined_at?: string | null
+          organization_id: string
+          role?: string
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          invited_at?: string | null
+          joined_at?: string | null
+          organization_id?: string
+          role?: string
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_metrics_cache: {
+        Row: {
+          active_patients: number | null
+          avg_adherence: number | null
+          avg_performance_score: number | null
+          avg_plan_efficacy: number | null
+          computed_at: string | null
+          dropout_rate: number | null
+          engine_version: string | null
+          id: string
+          new_patients_30d: number | null
+          organization_id: string
+          patients_at_risk_percent: number | null
+          portfolio_classification: string | null
+          retention_rate: number | null
+          top_protocol_name: string | null
+          total_patients: number | null
+          total_professionals: number | null
+        }
+        Insert: {
+          active_patients?: number | null
+          avg_adherence?: number | null
+          avg_performance_score?: number | null
+          avg_plan_efficacy?: number | null
+          computed_at?: string | null
+          dropout_rate?: number | null
+          engine_version?: string | null
+          id?: string
+          new_patients_30d?: number | null
+          organization_id: string
+          patients_at_risk_percent?: number | null
+          portfolio_classification?: string | null
+          retention_rate?: number | null
+          top_protocol_name?: string | null
+          total_patients?: number | null
+          total_professionals?: number | null
+        }
+        Update: {
+          active_patients?: number | null
+          avg_adherence?: number | null
+          avg_performance_score?: number | null
+          avg_plan_efficacy?: number | null
+          computed_at?: string | null
+          dropout_rate?: number | null
+          engine_version?: string | null
+          id?: string
+          new_patients_30d?: number | null
+          organization_id?: string
+          patients_at_risk_percent?: number | null
+          portfolio_classification?: string | null
+          retention_rate?: number | null
+          top_protocol_name?: string | null
+          total_patients?: number | null
+          total_professionals?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_metrics_cache_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_regional_settings: {
+        Row: {
+          created_at: string | null
+          currency: string | null
+          date_format: string | null
+          id: string
+          locale: string | null
+          measurement_system: string | null
+          nutritional_guidelines: string | null
+          organization_id: string
+          timezone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string | null
+          date_format?: string | null
+          id?: string
+          locale?: string | null
+          measurement_system?: string | null
+          nutritional_guidelines?: string | null
+          organization_id: string
+          timezone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string | null
+          date_format?: string | null
+          id?: string
+          locale?: string | null
+          measurement_system?: string | null
+          nutritional_guidelines?: string | null
+          organization_id?: string
+          timezone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_regional_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_subscriptions: {
+        Row: {
+          ai_features_enabled: boolean | null
+          billing_cycle: string | null
+          created_at: string | null
+          current_period_end: string | null
+          id: string
+          max_patients: number | null
+          max_professionals: number | null
+          organization_id: string
+          plan: string | null
+          status: string | null
+          stripe_subscription_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ai_features_enabled?: boolean | null
+          billing_cycle?: string | null
+          created_at?: string | null
+          current_period_end?: string | null
+          id?: string
+          max_patients?: number | null
+          max_professionals?: number | null
+          organization_id: string
+          plan?: string | null
+          status?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ai_features_enabled?: boolean | null
+          billing_cycle?: string | null
+          created_at?: string | null
+          current_period_end?: string | null
+          id?: string
+          max_patients?: number | null
+          max_professionals?: number | null
+          organization_id?: string
+          plan?: string | null
+          status?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_subscriptions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          brand_colors: Json | null
+          brand_name: string | null
+          country: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          logo_url: string | null
+          name: string
+          slug: string
+          subscription_plan: string | null
+          timezone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          brand_colors?: Json | null
+          brand_name?: string | null
+          country?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name: string
+          slug: string
+          subscription_plan?: string | null
+          timezone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          brand_colors?: Json | null
+          brand_name?: string | null
+          country?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name?: string
+          slug?: string
+          subscription_plan?: string | null
+          timezone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       patient_anamnesis: {
         Row: {
@@ -6789,11 +7231,20 @@ export type Database = {
       }
       get_user_email_by_id: { Args: { _user_id: string }; Returns: string }
       get_user_id_by_email: { Args: { _email: string }; Returns: string }
+      get_user_org_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_org_member: {
+        Args: { _org_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_org_owner: {
+        Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
       is_patient_enrolled_in_program: {
