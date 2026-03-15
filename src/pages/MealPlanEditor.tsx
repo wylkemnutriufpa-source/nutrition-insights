@@ -1362,6 +1362,35 @@ export default function MealPlanEditor() {
               </div>
             </div>
 
+            {/* Macro Balance Preview */}
+            {(form.protein_target || form.carbs_target || form.fat_target) && (
+              <MacroBalanceBar
+                protein={parseFloat(form.protein_target) || 0}
+                carbs={parseFloat(form.carbs_target) || 0}
+                fat={parseFloat(form.fat_target) || 0}
+                calories={parseInt(form.calories_target) || 0}
+              />
+            )}
+
+            {/* Smart Substitutions */}
+            {form.title.trim() && (
+              <FoodSubstitutions
+                currentFood={form.title}
+                onSelect={(food) => {
+                  setForm({
+                    ...form,
+                    title: food.name,
+                    description: food.portion,
+                    calories_target: food.calories.toString(),
+                    protein_target: food.protein.toString(),
+                    carbs_target: food.carbs.toString(),
+                    fat_target: food.fat.toString(),
+                  });
+                  toast.success(`Substituído por ${food.name}`);
+                }}
+              />
+            )}
+
             {/* Save & Import meal buttons */}
             <div className="flex gap-2">
               <Button
