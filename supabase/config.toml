@@ -97,6 +97,9 @@ verify_jwt = false
 [functions.compute-adaptive-safe-automation-engine]
 verify_jwt = false
 
+[functions.compute-global-adaptive-clinical-intelligence]
+verify_jwt = false
+
 # ═══════════════════════════════════════════
 
 [functions.generate-weekly-report]
