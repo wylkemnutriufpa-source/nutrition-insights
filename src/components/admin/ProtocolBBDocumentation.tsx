@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import {
   Lock, Shield, CheckCircle2, Edit3, Save, X,
   Sparkles, Target, ClipboardCheck, Zap, FileText,
-  Heart, AlertTriangle, Flame, Droplets, Moon, Apple, Dumbbell
+  Heart, AlertTriangle, Flame
 } from "lucide-react";
 
 interface ProtocolStep {

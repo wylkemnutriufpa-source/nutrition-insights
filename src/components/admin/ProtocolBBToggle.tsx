@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Sparkles, Shield, Clock, Users, Loader2, CheckCircle2, Flame, Target, Droplets } from "lucide-react";
+import { Sparkles, Shield, Loader2, CheckCircle2, Flame } from "lucide-react";
 
 interface BBSettings {
   is_enabled: boolean;
