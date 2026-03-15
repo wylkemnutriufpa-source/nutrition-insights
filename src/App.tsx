@@ -103,6 +103,7 @@ const FitnessAnamnesis = lazy(() => import("./pages/FitnessAnamnesis"));
 const ClinicalRiskDashboard = lazy(() => import("./pages/ClinicalRiskDashboard"));
 const AdminProtocolFitJourney = lazy(() => import("./pages/AdminProtocolFitJourney"));
 const AdminProtocolBiquiniBranco = lazy(() => import("./pages/AdminProtocolBiquiniBranco"));
+const AdminNutritionProtocols = lazy(() => import("./pages/AdminNutritionProtocols"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
