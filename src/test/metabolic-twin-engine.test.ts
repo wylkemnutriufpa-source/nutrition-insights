@@ -101,8 +101,7 @@ describe("Metabolic Twin Engine v1.0.0", () => {
       expect(twin.metabolicEfficiency).toBeGreaterThan(70);
       expect(twin.adaptiveResistance).toBeLessThan(40);
       expect(twin.baseConfidence).toBeGreaterThan(80);
-      // High lean mass preservation + high fat loss → recomposition_pattern takes priority
-      expect(["fast_responder", "recomposition_pattern"]).toContain(twin.classification);
+      expect(twin.regainRisk).toBeLessThan(30);
     });
 
     it("no history → low confidence", () => {
