@@ -91,6 +91,9 @@ verify_jwt = false
 [functions.compute-clinical-experiment-analysis]
 verify_jwt = false
 
+[functions.compute-therapeutic-orchestration-engine]
+verify_jwt = false
+
 # ═══════════════════════════════════════════
 
 [functions.generate-weekly-report]
