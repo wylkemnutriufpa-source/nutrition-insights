@@ -465,9 +465,9 @@ async function saveDailySnapshots(supabase: any, patientIds: string[]) {
 
     const ms = mealsByP[pid] || [];
     const mealsWithCal = ms.filter((m: any) => m.calories && m.calories > 0);
-    const uniqueDays = new Set(ms.map(() => today)); // simplified
-    const calorieAvg = mealsWithCal.length > 0
-      ? Math.round(mealsWithCal.reduce((s: number, m: any) => s + m.calories, 0) / Math.max(uniqueDays.size, 1))
+    const uniqueMealDays = new Set(mealsWithCal.map((m: any) => new Date(m.logged_at || m.created_at).toISOString().split("T")[0]));
+    const calorieAvg = mealsWithCal.length > 0 && uniqueMealDays.size > 0
+      ? Math.round(mealsWithCal.reduce((s: number, m: any) => s + m.calories, 0) / uniqueMealDays.size)
       : null;
 
     const score = scoreMap[pid] || 0;
