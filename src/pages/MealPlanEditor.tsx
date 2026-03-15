@@ -292,9 +292,15 @@ export default function MealPlanEditor() {
 
   const getMealTypeTotals = (mealType: MealType) => {
     const mealItems = items.filter((i) => i.meal_type === mealType);
+    const totalCal = mealItems.reduce((s, i) => s + (i.calories_target || 0), 0);
+    const totalProt = mealItems.reduce((s, i) => s + (Number(i.protein_target) || 0), 0);
+    const daysWithItems = new Set(mealItems.map(i => i.day_of_week)).size || 1;
     return {
-      calories: mealItems.reduce((s, i) => s + (i.calories_target || 0), 0),
-      protein: mealItems.reduce((s, i) => s + (Number(i.protein_target) || 0), 0),
+      calories: totalCal,
+      protein: totalProt,
+      avgCalories: Math.round(totalCal / daysWithItems),
+      avgProtein: totalProt / daysWithItems,
+      daysCount: daysWithItems,
     };
   };
 
@@ -872,7 +878,7 @@ export default function MealPlanEditor() {
                         <span className="font-display text-xs font-semibold">{meal.label}</span>
                       </div>
                       <div className="text-[10px] text-muted-foreground mt-1">
-                        {(() => { const t = getMealTypeTotals(meal.key); return `${t.calories} kcal • ${t.protein.toFixed(0)}g prot`; })()}
+                        {(() => { const t = getMealTypeTotals(meal.key); return `~${t.avgCalories} kcal/dia • ${t.avgProtein.toFixed(0)}g prot/dia`; })()}
                       </div>
                     </div>
 
