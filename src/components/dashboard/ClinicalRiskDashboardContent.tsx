@@ -69,9 +69,9 @@ const alertTypeIcons: Record<string, any> = {
 
 function getRiskSeverity(score: number): string {
   if (score >= 60) return "critical";
-  if (score >= 30) return "high";
-  if (score >= 10) return "medium";
-  return "low";
+  if (score >= 30) return "risk";
+  if (score >= 10) return "attention";
+  return "stable";
 }
 
 function getRowBg(score: number): string {
