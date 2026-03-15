@@ -61,6 +61,7 @@ const alertTypeIcons: Record<string, any> = {
   low_checkin_frequency: Utensils,
   possible_abandonment: UserX,
   metabolic_signal: Activity,
+  caloric_excess: Flame,
 };
 
 function getRiskSeverity(score: number): string {
