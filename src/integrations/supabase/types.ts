@@ -4318,6 +4318,60 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_metabolic_twin: {
+        Row: {
+          adaptive_resistance_score: number | null
+          created_at: string | null
+          fat_loss_response_index: number | null
+          id: string
+          lean_mass_preservation_index: number | null
+          metabolic_efficiency_score: number | null
+          metabolic_flexibility_index: number | null
+          model_confidence: number | null
+          model_inputs: Json | null
+          patient_id: string
+          predicted_plateau_weeks: number | null
+          regain_risk_score: number | null
+          response_classification: string | null
+          twin_model_version: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          adaptive_resistance_score?: number | null
+          created_at?: string | null
+          fat_loss_response_index?: number | null
+          id?: string
+          lean_mass_preservation_index?: number | null
+          metabolic_efficiency_score?: number | null
+          metabolic_flexibility_index?: number | null
+          model_confidence?: number | null
+          model_inputs?: Json | null
+          patient_id: string
+          predicted_plateau_weeks?: number | null
+          regain_risk_score?: number | null
+          response_classification?: string | null
+          twin_model_version?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          adaptive_resistance_score?: number | null
+          created_at?: string | null
+          fat_loss_response_index?: number | null
+          id?: string
+          lean_mass_preservation_index?: number | null
+          metabolic_efficiency_score?: number | null
+          metabolic_flexibility_index?: number | null
+          model_confidence?: number | null
+          model_inputs?: Json | null
+          patient_id?: string
+          predicted_plateau_weeks?: number | null
+          regain_risk_score?: number | null
+          response_classification?: string | null
+          twin_model_version?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       patient_missions: {
         Row: {
           completed_at: string | null
@@ -4568,6 +4622,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      patient_plateau_predictions: {
+        Row: {
+          actual_plateau_week: number | null
+          created_at: string | null
+          id: string
+          patient_id: string
+          predicted_plateau_intensity: string | null
+          predicted_plateau_start_week: number | null
+          prediction_confidence: number | null
+          prediction_model_version: string | null
+          preventive_recommendation: string | null
+          was_accurate: boolean | null
+        }
+        Insert: {
+          actual_plateau_week?: number | null
+          created_at?: string | null
+          id?: string
+          patient_id: string
+          predicted_plateau_intensity?: string | null
+          predicted_plateau_start_week?: number | null
+          prediction_confidence?: number | null
+          prediction_model_version?: string | null
+          preventive_recommendation?: string | null
+          was_accurate?: boolean | null
+        }
+        Update: {
+          actual_plateau_week?: number | null
+          created_at?: string | null
+          id?: string
+          patient_id?: string
+          predicted_plateau_intensity?: string | null
+          predicted_plateau_start_week?: number | null
+          prediction_confidence?: number | null
+          prediction_model_version?: string | null
+          preventive_recommendation?: string | null
+          was_accurate?: boolean | null
+        }
+        Relationships: []
       }
       patient_points: {
         Row: {
