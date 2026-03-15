@@ -67,6 +67,9 @@ verify_jwt = false
 [functions.compute-clinical-portfolio-orchestration]
 verify_jwt = false
 
+[functions.compute-human-performance-engine]
+verify_jwt = false
+
 # ═══════════════════════════════════════════
 
 [functions.generate-weekly-report]
