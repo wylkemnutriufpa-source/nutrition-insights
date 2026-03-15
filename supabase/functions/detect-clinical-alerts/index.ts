@@ -163,7 +163,7 @@ async function processBatch(supabase: any, patientIds: string[], relationships: 
         .select("patient_id, weight, assessment_date")
         .in("patient_id", patientIds)
         .order("assessment_date", { ascending: false })
-        .limit(500),
+        .limit(patientIds.length * 5),
       supabase
         .from("profiles")
         .select("user_id, full_name")
