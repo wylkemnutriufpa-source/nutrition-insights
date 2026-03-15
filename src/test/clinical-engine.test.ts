@@ -706,8 +706,8 @@ describe("Phase 3 — Adaptive Nutrition Decision Engine", () => {
       expect(classifyCaloricResponse(20, -0.1, 80)).toBe("resistente");
     });
 
-    it("classifies possivel_adaptacao_metabolica: excellent adherence + gaining", () => {
-      expect(classifyCaloricResponse(20, 0.1, 85)).toBe("possivel_adaptacao_metabolica");
+    it("classifies resistente when good adherence but no weight response", () => {
+      expect(classifyCaloricResponse(20, 0.1, 85)).toBe("resistente");
     });
   });
 
