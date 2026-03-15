@@ -145,6 +145,14 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
 
   async function handleApprove() {
     if (!pipeline || !user) return;
+
+    // Block approval if no real plan exists
+    const planId = pipeline.generated_plan_id || pipeline.generated_plan_data?.mealPlanId;
+    if (!planId) {
+      toast.error("Nenhum plano encontrado. Gere o plano primeiro antes de aprovar.");
+      return;
+    }
+
     setProcessing(true);
 
     // Update pipeline as approved
@@ -252,6 +260,49 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
     setRejectReason("");
     fetchPipeline();
     setProcessing(false);
+  }
+
+  async function handleGenerateNewPlan() {
+    if (!pipeline || !user) return;
+    setOpeningEditor(true);
+    try {
+      toast.info("Gerando plano completo com itens... Aguarde.");
+      const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
+        body: {
+          patientId: pipeline.patient_id,
+          nutritionistId: user.id,
+          weight: pipeline.weight,
+          height: pipeline.height,
+          mealCount: pipeline.meal_count,
+          cookingPreference: pipeline.cooking_preference,
+          isPipeline: true,
+        },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "Falha na geração");
+
+      const newPlanId = data.mealPlanId;
+      await supabase
+        .from("onboarding_pipelines" as any)
+        .update({
+          generated_plan_id: newPlanId,
+          generated_plan_data: data,
+          plan_generated: true,
+        } as any)
+        .eq("id", pipeline.id);
+
+      await supabase
+        .from("meal_plans")
+        .update({ plan_status: "under_professional_review" } as any)
+        .eq("id", newPlanId);
+
+      toast.success(`Plano gerado com ${data.items_count} itens! Revise e aprove.`);
+      navigate(`/meal-plans/${newPlanId}`);
+    } catch (err: any) {
+      toast.error("Erro ao gerar plano: " + (err.message || "Tente novamente"));
+    } finally {
+      setOpeningEditor(false);
+    }
   }
 
   async function ensurePlanReadyAndOpen(planId: string) {
@@ -389,7 +440,11 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
                 onClick={() => {
                   if (isClickable) {
                     const planId = pipeline.generated_plan_id || pipeline.generated_plan_data?.mealPlanId;
-                    if (planId) ensurePlanReadyAndOpen(planId);
+                    if (planId) {
+                      ensurePlanReadyAndOpen(planId);
+                    } else {
+                      handleGenerateNewPlan();
+                    }
                   }
                 }}
                 className={`text-center p-2.5 rounded-lg text-xs font-semibold border-2 transition-all duration-300 ${
@@ -518,65 +573,16 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
                   </Button>
                 );
               }
-              // Pipeline is pending_approval but has no plan yet — allow generating
-              if (pipeline.status === "pending_approval") {
-                return (
-                  <Button
-                    className="w-full gap-2 gradient-primary shadow-glow"
-                    disabled={openingEditor}
-                    onClick={async () => {
-                      if (!user) return;
-                      setOpeningEditor(true);
-                      try {
-                        toast.info("Gerando plano completo com itens... Aguarde.");
-                        const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
-                          body: {
-                            patientId: pipeline.patient_id,
-                            nutritionistId: user.id,
-                            weight: pipeline.weight,
-                            height: pipeline.height,
-                            mealCount: pipeline.meal_count,
-                            cookingPreference: pipeline.cooking_preference,
-                            isPipeline: true,
-                          },
-                        });
-                        if (error) throw error;
-                        if (!data?.success) throw new Error(data?.error || "Falha na geração");
-
-                        const newPlanId = data.mealPlanId;
-                        await supabase
-                          .from("onboarding_pipelines" as any)
-                          .update({
-                            generated_plan_id: newPlanId,
-                            generated_plan_data: data,
-                            plan_generated: true,
-                          } as any)
-                          .eq("id", pipeline.id);
-
-                        await supabase
-                          .from("meal_plans")
-                          .update({ plan_status: "under_professional_review" } as any)
-                          .eq("id", newPlanId);
-
-                        toast.success(`Plano gerado com ${data.items_count} itens! Revise e aprove.`);
-                        navigate(`/meal-plans/${newPlanId}`);
-                      } catch (err: any) {
-                        toast.error("Erro ao gerar plano: " + (err.message || "Tente novamente"));
-                      } finally {
-                        setOpeningEditor(false);
-                      }
-                    }}
-                  >
-                    {openingEditor ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                    {openingEditor ? "Gerando plano..." : "Gerar e Editar Plano"}
-                  </Button>
-                );
-              }
+              // No plan ID exists — allow generating regardless of status
               return (
-                <div className="w-full flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm">
-                  <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-                  <span>Nenhum plano detectado. O paciente precisa completar o onboarding primeiro.</span>
-                </div>
+                <Button
+                  className="w-full gap-2 gradient-primary shadow-glow"
+                  disabled={openingEditor}
+                  onClick={() => handleGenerateNewPlan()}
+                >
+                  {openingEditor ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  {openingEditor ? "Gerando plano..." : "Gerar e Editar Plano"}
+                </Button>
               );
             })()}
 
