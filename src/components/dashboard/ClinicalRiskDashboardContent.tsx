@@ -47,6 +47,11 @@ interface PatientRisk {
   stagnation_risk_level?: string;
   therapeutic_effectiveness?: string;
   adjustment_suggestions?: AdjustmentSuggestion[];
+  // Cluster indicators (Phase 4)
+  metabolic_cluster?: string;
+  metabolic_cluster_confidence?: string;
+  cluster_strategy?: any;
+  metabolic_feature_vector?: any;
 }
 
 interface AdjustmentSuggestion {
