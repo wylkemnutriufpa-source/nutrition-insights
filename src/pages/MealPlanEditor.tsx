@@ -298,7 +298,52 @@ export default function MealPlanEditor() {
     };
   };
 
-  // Quick-add: allows typing a food name and instantly adding it
+  // Drag-and-drop swap: swap all items between two cells
+  const handleSwapCells = async (
+    source: { day: number; mealType: MealType },
+    target: { day: number; mealType: MealType }
+  ) => {
+    if (source.day === target.day && source.mealType === target.mealType) return;
+    if (!id) return;
+    setSwapping(true);
+
+    const sourceItems = items.filter(i => i.day_of_week === source.day && i.meal_type === source.mealType);
+    const targetItems = items.filter(i => i.day_of_week === target.day && i.meal_type === target.mealType);
+
+    // Update source items → target position
+    const sourceUpdates = sourceItems.map(item =>
+      supabase.from("meal_plan_items").update({
+        day_of_week: target.day,
+        meal_type: target.mealType,
+      }).eq("id", item.id)
+    );
+
+    // Update target items → source position
+    const targetUpdates = targetItems.map(item =>
+      supabase.from("meal_plan_items").update({
+        day_of_week: source.day,
+        meal_type: source.mealType,
+      }).eq("id", item.id)
+    );
+
+    const results = await Promise.all([...sourceUpdates, ...targetUpdates]);
+    const hasError = results.some(r => r.error);
+
+    if (hasError) {
+      toast.error("Erro ao trocar refeições");
+    } else {
+      const srcLabel = `${MEAL_TYPES.find(m => m.key === source.mealType)?.label} (${DAYS[source.day]?.short})`;
+      const tgtLabel = `${MEAL_TYPES.find(m => m.key === target.mealType)?.label} (${DAYS[target.day]?.short})`;
+      toast.success(`Trocado: ${srcLabel} ↔ ${tgtLabel}`);
+      fetchData();
+    }
+
+    setSwapping(false);
+    setDragSource(null);
+    setDragOver(null);
+  };
+
+
   const handleQuickAdd = async (day: number, mealType: MealType) => {
     if (!id || !quickAddText.trim()) return;
     setQuickAdding(true);
