@@ -138,7 +138,7 @@ export default function PhysiologicalIntelligence() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Badge variant="outline" className="text-xs">PHYSIO_ENGINE v{ENGINE_VERSION || "1.0.0"}</Badge>
+            <Badge variant="outline" className="text-xs">PHYSIO_ENGINE v1.0.0</Badge>
             <Button size="sm" onClick={runEngine} variant="outline">
               <Activity className="h-4 w-4 mr-1" /> Processar
             </Button>
