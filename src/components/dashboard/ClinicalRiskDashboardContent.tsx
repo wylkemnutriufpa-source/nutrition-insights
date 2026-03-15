@@ -180,15 +180,16 @@ export default function ClinicalRiskDashboardContent() {
 
   const kpis = useMemo(() => {
     const critical = patients.filter(p => p.risk_score >= 60).length;
-    const alert = patients.filter(p => p.risk_score >= 30 && p.risk_score < 60).length;
-    const stable = patients.filter(p => p.risk_score < 30).length;
+    const risk = patients.filter(p => p.risk_score >= 30 && p.risk_score < 60).length;
+    const stable = patients.filter(p => p.risk_score < 10).length;
+    const attention = patients.filter(p => p.risk_score >= 10 && p.risk_score < 30).length;
     const withAdherence = patients.filter(p => p.adherence_7d >= 0);
     const avgAdherence = withAdherence.length > 0
       ? Math.round(withAdherence.reduce((s, p) => s + p.adherence_7d, 0) / withAdherence.length)
       : 0;
     const fiveDaysAgo = new Date(Date.now() - 5 * 86400000);
     const noLogin = patients.filter(p => !p.last_seen || new Date(p.last_seen) < fiveDaysAgo).length;
-    return { critical, alert, stable, avgAdherence, noLogin };
+    return { critical, risk, attention, stable, avgAdherence, noLogin };
   }, [patients]);
 
   const filtered = useMemo(() => {
