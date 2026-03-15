@@ -292,9 +292,15 @@ export default function MealPlanEditor() {
 
   const getMealTypeTotals = (mealType: MealType) => {
     const mealItems = items.filter((i) => i.meal_type === mealType);
+    const totalCal = mealItems.reduce((s, i) => s + (i.calories_target || 0), 0);
+    const totalProt = mealItems.reduce((s, i) => s + (Number(i.protein_target) || 0), 0);
+    const daysWithItems = new Set(mealItems.map(i => i.day_of_week)).size || 1;
     return {
-      calories: mealItems.reduce((s, i) => s + (i.calories_target || 0), 0),
-      protein: mealItems.reduce((s, i) => s + (Number(i.protein_target) || 0), 0),
+      calories: totalCal,
+      protein: totalProt,
+      avgCalories: Math.round(totalCal / daysWithItems),
+      avgProtein: totalProt / daysWithItems,
+      daysCount: daysWithItems,
     };
   };
 
