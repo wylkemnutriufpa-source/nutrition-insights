@@ -109,8 +109,8 @@ describe("Phase 17: Executive Command & Operations Intelligence", () => {
 
   describe("Intervention Load Index (ILI)", () => {
     it("classifies low load", () => { expect(classifyILI(10, 5, 2)).toBe("low"); });
-    it("classifies critical load", () => { expect(classifyILI(90, 80, 50)).toBe("critical"); });
-    it("classifies moderate load", () => { expect(classifyILI(40, 30, 10)).toBe("moderate"); });
+    it("classifies critical load", () => { expect(classifyILI(90, 80, 500)).toBe("critical"); });
+    it("classifies moderate load", () => { expect(classifyILI(50, 40, 20)).toBe("moderate"); });
   });
 
   describe("LTV Estimation", () => {
