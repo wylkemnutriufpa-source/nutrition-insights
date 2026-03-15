@@ -1739,6 +1739,7 @@ export type Database = {
           template_slug: string | null
           template_version: number | null
           therapeutic_effectiveness_status: string | null
+          therapeutic_efficacy_score: number | null
           title: string
           updated_at: string
         }
@@ -1759,6 +1760,7 @@ export type Database = {
           template_slug?: string | null
           template_version?: number | null
           therapeutic_effectiveness_status?: string | null
+          therapeutic_efficacy_score?: number | null
           title: string
           updated_at?: string
         }
@@ -1779,6 +1781,7 @@ export type Database = {
           template_slug?: string | null
           template_version?: number | null
           therapeutic_effectiveness_status?: string | null
+          therapeutic_efficacy_score?: number | null
           title?: string
           updated_at?: string
         }
@@ -1930,6 +1933,68 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      nutritional_intervention_suggestions: {
+        Row: {
+          applied_at: string | null
+          applied_by: string | null
+          caloric_adjustment_percent: number | null
+          clinical_reason: string
+          cluster_origin: string | null
+          created_at: string
+          efficacy_score: number | null
+          engine_version: string
+          id: string
+          intervention_type: string
+          metadata: Json | null
+          patient_id: string
+          plan_id: string | null
+          risk_at_moment: string | null
+          status: string
+        }
+        Insert: {
+          applied_at?: string | null
+          applied_by?: string | null
+          caloric_adjustment_percent?: number | null
+          clinical_reason: string
+          cluster_origin?: string | null
+          created_at?: string
+          efficacy_score?: number | null
+          engine_version?: string
+          id?: string
+          intervention_type: string
+          metadata?: Json | null
+          patient_id: string
+          plan_id?: string | null
+          risk_at_moment?: string | null
+          status?: string
+        }
+        Update: {
+          applied_at?: string | null
+          applied_by?: string | null
+          caloric_adjustment_percent?: number | null
+          clinical_reason?: string
+          cluster_origin?: string | null
+          created_at?: string
+          efficacy_score?: number | null
+          engine_version?: string
+          id?: string
+          intervention_type?: string
+          metadata?: Json | null
+          patient_id?: string
+          plan_id?: string | null
+          risk_at_moment?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nutritional_intervention_suggestions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       nutritionist_patients: {
         Row: {
