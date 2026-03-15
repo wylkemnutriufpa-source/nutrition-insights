@@ -275,6 +275,10 @@ export default function ClinicalRiskDashboardContent() {
           stagnation_risk_level: clinicalState?.stagnation_risk_level,
           therapeutic_effectiveness: plan?.therapeutic_effectiveness_status,
           adjustment_suggestions: suggestionsByPatient[pid] || [],
+          metabolic_cluster: clinicalState?.metabolic_cluster,
+          metabolic_cluster_confidence: clinicalState?.metabolic_cluster_confidence,
+          cluster_strategy: clinicalState?.cluster_strategy,
+          metabolic_feature_vector: clinicalState?.metabolic_feature_vector,
         };
       });
 
