@@ -397,7 +397,11 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
                 onClick={() => {
                   if (isClickable) {
                     const planId = pipeline.generated_plan_id || pipeline.generated_plan_data?.mealPlanId;
-                    if (planId) ensurePlanReadyAndOpen(planId);
+                    if (planId) {
+                      ensurePlanReadyAndOpen(planId);
+                    } else {
+                      handleGenerateNewPlan();
+                    }
                   }
                 }}
                 className={`text-center p-2.5 rounded-lg text-xs font-semibold border-2 transition-all duration-300 ${
