@@ -112,7 +112,7 @@ export default function ClinicalRiskDashboardContent() {
         supabase.from("checklist_tasks").select("patient_id, completed").in("patient_id", patientIds).gte("date", sevenDaysAgo.split("T")[0]),
         supabase.from("user_sessions").select("user_id, last_seen_at").in("user_id", patientIds),
         supabase.from("meal_plans").select("patient_id, plan_status, generation_metadata").in("patient_id", patientIds).eq("is_active", true).order("created_at", { ascending: false }),
-        supabase.from("physical_assessments").select("patient_id, weight, assessment_date").in("patient_id", patientIds).order("assessment_date", { ascending: false }).limit(200),
+        supabase.from("physical_assessments").select("patient_id, weight, assessment_date").in("patient_id", patientIds).order("assessment_date", { ascending: false }).limit(patientIds.length * 3),
       ]);
 
       const profileMap: Record<string, any> = {};
