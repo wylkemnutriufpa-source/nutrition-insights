@@ -82,6 +82,9 @@ verify_jwt = false
 [functions.compute-clinical-outcome-predictions]
 verify_jwt = false
 
+[functions.compute-clinical-simulation-engine]
+verify_jwt = false
+
 # ═══════════════════════════════════════════
 
 [functions.generate-weekly-report]
