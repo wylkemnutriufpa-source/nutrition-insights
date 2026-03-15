@@ -3795,6 +3795,42 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_body_projection_states: {
+        Row: {
+          created_at: string
+          engine_version: string | null
+          estimated_body_fat: number | null
+          estimated_lean_mass: number | null
+          id: string
+          patient_id: string
+          projection_confidence: number | null
+          projection_date: string
+          silhouette_classification: string | null
+        }
+        Insert: {
+          created_at?: string
+          engine_version?: string | null
+          estimated_body_fat?: number | null
+          estimated_lean_mass?: number | null
+          id?: string
+          patient_id: string
+          projection_confidence?: number | null
+          projection_date: string
+          silhouette_classification?: string | null
+        }
+        Update: {
+          created_at?: string
+          engine_version?: string | null
+          estimated_body_fat?: number | null
+          estimated_lean_mass?: number | null
+          id?: string
+          patient_id?: string
+          projection_confidence?: number | null
+          projection_date?: string
+          silhouette_classification?: string | null
+        }
+        Relationships: []
+      }
       patient_checkins: {
         Row: {
           created_at: string
@@ -5184,6 +5220,135 @@ export type Database = {
           is_read?: boolean
           tip?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      patient_weight_dynamics: {
+        Row: {
+          avg_weekly_weight_change: number | null
+          best_weekly_loss: number | null
+          computed_at: string | null
+          detected_plateaus: number | null
+          engine_version: string | null
+          first_measurement_date: string | null
+          historical_response_pattern: string | null
+          id: string
+          last_measurement_date: string | null
+          metabolic_response_classification: string | null
+          patient_id: string
+          total_data_points: number | null
+          total_weight_change: number | null
+          volatility_score: number | null
+          worst_weekly_gain: number | null
+        }
+        Insert: {
+          avg_weekly_weight_change?: number | null
+          best_weekly_loss?: number | null
+          computed_at?: string | null
+          detected_plateaus?: number | null
+          engine_version?: string | null
+          first_measurement_date?: string | null
+          historical_response_pattern?: string | null
+          id?: string
+          last_measurement_date?: string | null
+          metabolic_response_classification?: string | null
+          patient_id: string
+          total_data_points?: number | null
+          total_weight_change?: number | null
+          volatility_score?: number | null
+          worst_weekly_gain?: number | null
+        }
+        Update: {
+          avg_weekly_weight_change?: number | null
+          best_weekly_loss?: number | null
+          computed_at?: string | null
+          detected_plateaus?: number | null
+          engine_version?: string | null
+          first_measurement_date?: string | null
+          historical_response_pattern?: string | null
+          id?: string
+          last_measurement_date?: string | null
+          metabolic_response_classification?: string | null
+          patient_id?: string
+          total_data_points?: number | null
+          total_weight_change?: number | null
+          volatility_score?: number | null
+          worst_weekly_gain?: number | null
+        }
+        Relationships: []
+      }
+      patient_weight_history: {
+        Row: {
+          body_fat_percentage: number | null
+          created_at: string
+          id: string
+          measurement_date: string
+          measurement_source: string
+          notes: string | null
+          patient_id: string
+          waist_circumference: number | null
+          weight: number
+        }
+        Insert: {
+          body_fat_percentage?: number | null
+          created_at?: string
+          id?: string
+          measurement_date: string
+          measurement_source?: string
+          notes?: string | null
+          patient_id: string
+          waist_circumference?: number | null
+          weight: number
+        }
+        Update: {
+          body_fat_percentage?: number | null
+          created_at?: string
+          id?: string
+          measurement_date?: string
+          measurement_source?: string
+          notes?: string | null
+          patient_id?: string
+          waist_circumference?: number | null
+          weight?: number
+        }
+        Relationships: []
+      }
+      patient_weight_projection: {
+        Row: {
+          created_at: string
+          horizon_weeks: number | null
+          id: string
+          patient_id: string
+          projected_body_fat: number | null
+          projected_risk_level: string | null
+          projected_weight: number | null
+          projection_confidence: number | null
+          projection_date: string
+          projection_model_version: string | null
+        }
+        Insert: {
+          created_at?: string
+          horizon_weeks?: number | null
+          id?: string
+          patient_id: string
+          projected_body_fat?: number | null
+          projected_risk_level?: string | null
+          projected_weight?: number | null
+          projection_confidence?: number | null
+          projection_date: string
+          projection_model_version?: string | null
+        }
+        Update: {
+          created_at?: string
+          horizon_weeks?: number | null
+          id?: string
+          patient_id?: string
+          projected_body_fat?: number | null
+          projected_risk_level?: string | null
+          projected_weight?: number | null
+          projection_confidence?: number | null
+          projection_date?: string
+          projection_model_version?: string | null
         }
         Relationships: []
       }
