@@ -144,6 +144,9 @@ export default function MealPlanEditor() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerItem, setDrawerItem] = useState<MealPlanItem | null>(null);
 
+  // Fullscreen mode
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
   const fetchData = useCallback(async () => {
     if (!id || !user) return;
     setLoading(true);
