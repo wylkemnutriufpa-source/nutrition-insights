@@ -262,7 +262,7 @@ describe("Protocolo Biquíni Branco — Metadata Schema", () => {
     tdee_value: 2201,
     calorie_target: 1801,
     macro_strategy: "bb_high_protein_cut",
-    macros: { protein_g: 140, carbs_g: 150, fat_g: 50 },
+    macros: { protein_g: 140, carbs_g: 180, fat_g: 60 },
     template_selected: { id: "uuid-test", slug: "low_carb_1800", version: 3 },
     template_score: 82,
     phase_adjustments: {
