@@ -82,7 +82,7 @@ const riskColors: Record<string, string> = {
 };
 
 export default function WeightTrajectory() {
-  const { user, role } = useAuth();
+  const { user, isNutritionist } = useAuth();
   const [patients, setPatients] = useState<any[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<string>("");
   const [dynamics, setDynamics] = useState<WeightDynamics | null>(null);
@@ -93,8 +93,8 @@ export default function WeightTrajectory() {
   const [computing, setComputing] = useState(false);
 
   useEffect(() => {
-    if (role === "nutritionist" && user) loadPatients();
-  }, [user, role]);
+    if (isNutritionist && user) loadPatients();
+  }, [user, isNutritionist]);
 
   useEffect(() => {
     if (selectedPatient) loadPatientData(selectedPatient);
