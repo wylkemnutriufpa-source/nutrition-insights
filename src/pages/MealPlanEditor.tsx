@@ -15,7 +15,7 @@ import {
   Sun, Coffee, Apple, Sandwich, Moon, Cookie, Save, ChevronLeft, ChevronRight,
   Flame, Beef, Wheat, Droplets, Leaf, PencilLine, X, Check, Sparkles, Loader2,
   Bookmark, BookmarkCheck, FolderDown, FolderUp, BookOpen, CalendarDays, CalendarRange,
-  AlertTriangle, ArrowLeftRight, BarChart3, ArrowRightLeft
+  AlertTriangle, ArrowLeftRight, BarChart3, ArrowRightLeft, Maximize2, Minimize2
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import PlanScheduler from "@/components/plans/PlanScheduler";
@@ -143,6 +143,9 @@ export default function MealPlanEditor() {
   // Smart drawer panel state  
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerItem, setDrawerItem] = useState<MealPlanItem | null>(null);
+
+  // Fullscreen mode
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!id || !user) return;
@@ -677,16 +680,15 @@ export default function MealPlanEditor() {
     );
   }
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-4">
+  const fullscreenContent = (
+      <div className={isFullscreen ? "fixed inset-0 z-50 bg-background overflow-y-auto p-4 md:p-6" : "space-y-4"}>
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate("/meal-plans")}
+              onClick={() => isFullscreen ? setIsFullscreen(false) : navigate("/meal-plans")}
               className="shrink-0"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -697,6 +699,17 @@ export default function MealPlanEditor() {
                 Paciente: {patientName} • Início: {new Date(plan.start_date).toLocaleDateString("pt-BR")}
               </p>
             </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className="gap-1.5"
+            >
+              {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+              {isFullscreen ? "Minimizar" : "Tela Cheia"}
+            </Button>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <CalorieTemplates mealPlanId={plan.id} onApplied={fetchData} />
@@ -1281,6 +1294,11 @@ export default function MealPlanEditor() {
         {/* Plan Scheduler */}
         <PlanScheduler mealPlanId={plan.id} planTitle={plan.title} />
       </div>
+  );
+
+  return (
+    <>
+      {isFullscreen ? fullscreenContent : <DashboardLayout>{fullscreenContent}</DashboardLayout>}
 
       {/* Add/Edit Item Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -1715,6 +1733,6 @@ export default function MealPlanEditor() {
           )}
         </SheetContent>
       </Sheet>
-    </DashboardLayout>
+    </>
   );
 }
