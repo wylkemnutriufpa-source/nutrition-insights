@@ -282,7 +282,7 @@ describe("Semi-Autonomous Clinical Orchestration Engine v1.0.0", () => {
   // ── Overloaded Professional ──
   it("detects overloaded portfolio", () => {
     const patients = Array.from({ length: 20 }, () =>
-      computeTherapeuticPriority({ ...STABLE, clinical_risk_score: 70, dropout_risk_score: 65, cluster_type: "behavioral_struggler", performance_score: 35 })
+      computeTherapeuticPriority({ ...STABLE, clinical_risk_score: 80, dropout_risk_score: 75, cluster_type: "disengaging_patient", performance_score: 25, days_since_intervention: 12, physiological_stress: 60 })
     );
     const highPriority = patients.filter(p => p.classification === "alta_prioridade" || p.classification === "urgente");
     expect(highPriority.length).toBeGreaterThan(0);
