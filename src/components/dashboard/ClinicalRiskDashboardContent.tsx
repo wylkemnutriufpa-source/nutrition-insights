@@ -116,6 +116,28 @@ const engagementLabels: Record<string, { label: string; color: string }> = {
   drop_risk: { label: "Risco", color: "text-destructive" },
 };
 
+const caloricResponseLabels: Record<string, { label: string; status: "ok" | "warning" | "danger" | "neutral" }> = {
+  hiperresponsivo: { label: "Hiperresponsivo", status: "warning" },
+  responsivo: { label: "Responsivo", status: "ok" },
+  neutro: { label: "Neutro", status: "neutral" },
+  resistente: { label: "Resistente", status: "danger" },
+  possivel_adaptacao_metabolica: { label: "Adaptação Metab.", status: "danger" },
+};
+
+const stagnationLabels: Record<string, { label: string; status: "ok" | "warning" | "danger" | "neutral" }> = {
+  risco_baixo: { label: "Baixo", status: "ok" },
+  risco_moderado: { label: "Moderado", status: "warning" },
+  risco_alto: { label: "Alto", status: "danger" },
+};
+
+const effectivenessLabels: Record<string, { label: string; status: "ok" | "warning" | "danger" | "neutral" }> = {
+  protocolo_eficaz: { label: "Eficaz", status: "ok" },
+  eficacia_parcial: { label: "Parcial", status: "warning" },
+  baixa_eficacia: { label: "Baixa Eficácia", status: "danger" },
+  falha_terapeutica: { label: "Falha Terapêutica", status: "danger" },
+  pending_evaluation: { label: "Avaliando...", status: "neutral" },
+};
+
 function getRiskSeverity(score: number): string {
   if (score >= 60) return "critical";
   if (score >= 30) return "risk";
