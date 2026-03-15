@@ -61,7 +61,9 @@ verify_jwt = false
 [functions.compute-clinical-protocol-intelligence]
 verify_jwt = false
 
-# ═══════════════════════════════════════════
+[functions.compute-semi-autonomous-protocol-transitions]
+verify_jwt = false
+
 # RELATÓRIOS E PLANOS (Determinístico + AI opcional)
 # ═══════════════════════════════════════════
 
