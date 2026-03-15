@@ -198,7 +198,7 @@ export default function ClinicalRiskDashboardContent() {
         supabase.from("user_sessions").select("user_id, last_seen_at").in("user_id", patientIds),
         supabase.from("meal_plans").select("patient_id, plan_status, generation_metadata, therapeutic_effectiveness_status").in("patient_id", patientIds).eq("is_active", true).order("created_at", { ascending: false }),
         supabase.from("physical_assessments").select("patient_id, weight, assessment_date").in("patient_id", patientIds).order("assessment_date", { ascending: false }).limit(patientIds.length * 3),
-        (supabase as any).from("patient_clinical_state").select("patient_id, caloric_response_status, stagnation_risk_level").in("patient_id", patientIds),
+        (supabase as any).from("patient_clinical_state").select("patient_id, caloric_response_status, stagnation_risk_level, metabolic_cluster, metabolic_cluster_confidence, cluster_strategy, metabolic_feature_vector").in("patient_id", patientIds),
         (supabase as any).from("meal_plan_adjustment_suggestions").select("*").in("patient_id", patientIds).eq("status", "pending").order("created_at", { ascending: false }),
       ]);
 
