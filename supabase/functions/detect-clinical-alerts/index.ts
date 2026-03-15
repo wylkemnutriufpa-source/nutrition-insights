@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const ALERT_ENGINE_VERSION = "1.0.0";
+const ALERT_ENGINE_VERSION = "2.0.0";
+const BATCH_SIZE = 50;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -45,19 +46,28 @@ const ALERT_TYPES = {
     source: "engagement_engine",
     cooldown_days: 7,
   },
-  METABOLIC_SIGNAL: {
-    type: "metabolic_signal",
+  CALORIC_EXCESS: {
+    type: "caloric_excess",
     severity: "medium" as const,
-    title: "🟠 Sinal Metabólico",
+    title: "🟠 Excesso Calórico Persistente",
     source: "metabolic_engine",
     cooldown_days: 7,
   },
 } as const;
 
+const SCORE_MAP: Record<string, number> = {
+  critical: 40,
+  high: 25,
+  medium: 10,
+  low: 5,
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const startTime = Date.now();
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -66,6 +76,8 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const nutritionistId = body.nutritionist_id;
+
+    console.log(`[ALERT-ENGINE v${ALERT_ENGINE_VERSION}] Starting. Filter: ${nutritionistId || "all"}`);
 
     // 1. Get active relationships
     let npQuery = supabase
@@ -76,53 +88,65 @@ Deno.serve(async (req) => {
     const { data: relationships } = await npQuery;
 
     if (!relationships || relationships.length === 0) {
-      return new Response(
-        JSON.stringify({ alerts_created: 0, engine_version: ALERT_ENGINE_VERSION }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      console.log("[ALERT-ENGINE] No active relationships found");
+      return jsonResponse({ alerts_created: 0, patients_scanned: 0, engine_version: ALERT_ENGINE_VERSION, duration_ms: Date.now() - startTime });
     }
 
     const patientIds = [...new Set(relationships.map((r) => r.patient_id))];
-    const alertsCreated: any[] = [];
+    let totalAlerts = 0;
+    const batchResults: any[] = [];
 
-    // Process patients in batches of 20
-    for (let i = 0; i < patientIds.length; i += 20) {
-      const batch = patientIds.slice(i, i + 20);
+    // Process patients in batches
+    for (let i = 0; i < patientIds.length; i += BATCH_SIZE) {
+      const batch = patientIds.slice(i, i + BATCH_SIZE);
+      const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+      console.log(`[ALERT-ENGINE] Batch ${batchNum}: ${batch.length} patients`);
+
       const batchAlerts = await processBatch(supabase, batch, relationships);
-      alertsCreated.push(...batchAlerts);
+      totalAlerts += batchAlerts.length;
+      batchResults.push({ batch: batchNum, patients: batch.length, alerts: batchAlerts.length });
+
+      // Update risk scores for this batch
+      await updateRiskScores(supabase, batch);
+
+      // Save daily snapshots for this batch
+      await saveDailySnapshots(supabase, batch);
     }
 
-    return new Response(
-      JSON.stringify({
-        alerts_created: alertsCreated.length,
-        patients_scanned: patientIds.length,
-        engine_version: ALERT_ENGINE_VERSION,
-        details: alertsCreated,
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    const duration = Date.now() - startTime;
+    console.log(`[ALERT-ENGINE] Complete. ${totalAlerts} alerts, ${patientIds.length} patients, ${duration}ms`);
+
+    return jsonResponse({
+      alerts_created: totalAlerts,
+      patients_scanned: patientIds.length,
+      engine_version: ALERT_ENGINE_VERSION,
+      duration_ms: duration,
+      batches: batchResults,
+    });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("[ALERT-ENGINE] Fatal error:", error);
+    return new Response(JSON.stringify({ error: error.message, engine_version: ALERT_ENGINE_VERSION }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
 
-async function processBatch(
-  supabase: any,
-  patientIds: string[],
-  relationships: any[]
-) {
+function jsonResponse(data: any) {
+  return new Response(JSON.stringify(data), {
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+// ─── Batch Processing ───
+async function processBatch(supabase: any, patientIds: string[], relationships: any[]) {
   const alerts: any[] = [];
   const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000).toISOString();
   const threeDaysAgo = new Date(now.getTime() - 3 * 86400000).toISOString();
-  const twentyOneDaysAgo = new Date(now.getTime() - 21 * 86400000).toISOString();
-  const tenDaysAgo = new Date(now.getTime() - 10 * 86400000).toISOString();
 
-  // Batch fetch data for all patients
-  const [checklistRes, mealsRes, assessmentsRes, profilesRes, presenceRes, mealPlansRes] =
+  // Batch fetch all data in parallel
+  const [checklistRes, mealsRes, assessmentsRes, profilesRes, presenceRes, mealPlansRes, mealCompletionsRes] =
     await Promise.all([
       supabase
         .from("checklist_tasks")
@@ -139,10 +163,10 @@ async function processBatch(
         .select("patient_id, weight, assessment_date")
         .in("patient_id", patientIds)
         .order("assessment_date", { ascending: false })
-        .limit(200),
+        .limit(500),
       supabase
         .from("profiles")
-        .select("user_id, full_name, last_sign_in_at")
+        .select("user_id, full_name")
         .in("user_id", patientIds),
       supabase
         .from("user_sessions")
@@ -154,16 +178,20 @@ async function processBatch(
         .in("patient_id", patientIds)
         .eq("is_active", true)
         .eq("plan_status", "published_to_patient"),
+      supabase
+        .from("meal_item_completions")
+        .select("patient_id, adherence_status, completed, date")
+        .in("patient_id", patientIds)
+        .gte("date", sevenDaysAgo.split("T")[0]),
     ]);
 
-  // Index data by patient
   const checklistByPatient = groupBy(checklistRes.data || [], "patient_id");
   const mealsByPatient = groupBy(mealsRes.data || [], "user_id");
   const profileMap = indexBy(profilesRes.data || [], "user_id");
   const presenceMap = indexBy(presenceRes.data || [], "user_id");
   const mealPlanMap = indexBy(mealPlansRes.data || [], "patient_id");
+  const mealCompByPatient = groupBy(mealCompletionsRes.data || [], "patient_id");
 
-  // Group assessments (multiple per patient)
   const assessmentsByPatient: Record<string, any[]> = {};
   for (const a of assessmentsRes.data || []) {
     if (!assessmentsByPatient[a.patient_id]) assessmentsByPatient[a.patient_id] = [];
@@ -180,31 +208,44 @@ async function processBatch(
     const assessments = assessmentsByPatient[patientId] || [];
     const presence = presenceMap[patientId];
     const activePlan = mealPlanMap[patientId];
+    const mealComps = mealCompByPatient[patientId] || [];
 
-    // ─── SIGNAL 1: Low Adherence ───
-    if (checklist.length > 0) {
-      const total = checklist.length;
-      const completed = checklist.filter((t: any) => t.completed).length;
-      const adherence = Math.round((completed / total) * 100);
+    // ─── SIGNAL 1: Low Adherence (<60% in 7d) ───
+    // Use meal_item_completions for real adherence, fallback to checklist
+    let adherence = -1;
+    let adherenceTotal = 0;
+    let adherenceCompleted = 0;
 
-      if (adherence < 60) {
-        for (const nId of nutritionistIds) {
-          const created = await createAlertIfNew(
-            supabase, patientId, nId, ALERT_TYPES.LOW_ADHERENCE,
-            `${patientName}: adesão de ${adherence}% nos últimos 7 dias. Considere simplificar o protocolo ou entrar em contato.`,
-            {
-              adherence_percent: adherence,
-              tasks_total: total,
-              tasks_completed: completed,
-              period_days: 7,
-            }
-          );
-          if (created) alerts.push({ type: "low_adherence", patient_id: patientId, severity: "high" });
-        }
+    if (mealComps.length > 0) {
+      adherenceTotal = mealComps.length;
+      adherenceCompleted = mealComps.filter((m: any) => m.adherence_status === "followed" && m.completed).length;
+      adherence = Math.round((adherenceCompleted / adherenceTotal) * 100);
+    } else if (checklist.length > 0) {
+      adherenceTotal = checklist.length;
+      adherenceCompleted = checklist.filter((t: any) => t.completed).length;
+      adherence = Math.round((adherenceCompleted / adherenceTotal) * 100);
+    }
+
+    if (adherence >= 0 && adherence < 60) {
+      for (const nId of nutritionistIds) {
+        const created = await createAlertIfNew(
+          supabase, patientId, nId, ALERT_TYPES.LOW_ADHERENCE,
+          `${patientName}: adesão de ${adherence}% nos últimos 7 dias (${adherenceCompleted}/${adherenceTotal} itens). Considere simplificar o protocolo.`,
+          {
+            metric: "adherence",
+            period_days: 7,
+            measured_value: adherence,
+            threshold: 60,
+            direction: "below_expected",
+            tasks_total: adherenceTotal,
+            tasks_completed: adherenceCompleted,
+          }
+        );
+        if (created) alerts.push({ type: "low_adherence", patient_id: patientId, severity: "high" });
       }
     }
 
-    // ─── SIGNAL 2: Weight Stagnation ───
+    // ─── SIGNAL 2: Weight Stagnation (<0.3kg in 21d, goal = loss) ───
     if (assessments.length >= 2) {
       const latest = assessments[0];
       const oldest = assessments.find((a: any) => {
@@ -214,24 +255,27 @@ async function processBatch(
 
       if (oldest && latest.weight && oldest.weight) {
         const diff = Math.abs(latest.weight - oldest.weight);
+        const daysBetween = Math.round(
+          (new Date(latest.assessment_date).getTime() - new Date(oldest.assessment_date).getTime()) / 86400000
+        );
+
         if (diff < 0.3) {
-          // Check if patient's goal is weight loss
           const goalIsLoss = activePlan?.generation_metadata?.goal === "lose_weight" ||
             activePlan?.generation_metadata?.goal === "emagrecimento";
 
           if (goalIsLoss || !activePlan) {
             for (const nId of nutritionistIds) {
-              const days = Math.round(
-                (new Date(latest.assessment_date).getTime() - new Date(oldest.assessment_date).getTime()) / 86400000
-              );
               const created = await createAlertIfNew(
                 supabase, patientId, nId, ALERT_TYPES.WEIGHT_STAGNATION,
-                `${patientName}: peso estagnado (${latest.weight}kg) há ${days} dias. Variação de apenas ${diff.toFixed(1)}kg.`,
+                `${patientName}: peso estagnado (${latest.weight}kg) há ${daysBetween} dias. Variação de apenas ${diff.toFixed(1)}kg.`,
                 {
+                  metric: "weight_variation",
+                  period_days: daysBetween,
+                  measured_value: diff,
+                  threshold: 0.3,
+                  direction: "stagnant",
                   current_weight: latest.weight,
                   previous_weight: oldest.weight,
-                  weight_diff: diff,
-                  days_between: days,
                 }
               );
               if (created) alerts.push({ type: "weight_stagnation", patient_id: patientId, severity: "medium" });
@@ -241,7 +285,7 @@ async function processBatch(
       }
     }
 
-    // ─── SIGNAL 3: Unexpected Weight Gain ───
+    // ─── SIGNAL 3: Unexpected Weight Gain (>1.5kg in 10d) ───
     if (assessments.length >= 2) {
       const latest = assessments[0];
       const recent = assessments.find((a: any) => {
@@ -255,11 +299,15 @@ async function processBatch(
           for (const nId of nutritionistIds) {
             const created = await createAlertIfNew(
               supabase, patientId, nId, ALERT_TYPES.UNEXPECTED_WEIGHT_GAIN,
-              `${patientName}: ganho de ${gain.toFixed(1)}kg em período curto (${recent.weight}kg → ${latest.weight}kg). Investigar causas.`,
+              `${patientName}: ganho de ${gain.toFixed(1)}kg em período curto (${recent.weight}kg → ${latest.weight}kg).`,
               {
+                metric: "weight_gain",
+                period_days: 10,
+                measured_value: gain,
+                threshold: 1.5,
+                direction: "above_expected",
                 current_weight: latest.weight,
                 previous_weight: recent.weight,
-                weight_gain: gain,
               }
             );
             if (created) alerts.push({ type: "unexpected_weight_gain", patient_id: patientId, severity: "high" });
@@ -268,17 +316,23 @@ async function processBatch(
       }
     }
 
-    // ─── SIGNAL 4: Low Check-in Frequency ───
+    // ─── SIGNAL 4: Low Check-in Frequency (>3d without records) ───
     const recentMeals = meals.filter((m: any) => new Date(m.logged_at) >= new Date(threeDaysAgo));
     if (recentMeals.length === 0 && meals.length > 0) {
-      // Had meals before but none in last 3 days
+      const lastMealDate = meals[0]?.logged_at;
+      const daysSince = lastMealDate
+        ? Math.floor((now.getTime() - new Date(lastMealDate).getTime()) / 86400000)
+        : 3;
       for (const nId of nutritionistIds) {
-        const lastMealDate = meals[0]?.logged_at;
         const created = await createAlertIfNew(
           supabase, patientId, nId, ALERT_TYPES.LOW_CHECKIN_FREQUENCY,
-          `${patientName}: sem registro alimentar há mais de 3 dias. Último registro: ${lastMealDate ? new Date(lastMealDate).toLocaleDateString("pt-BR") : "desconhecido"}.`,
+          `${patientName}: sem registro alimentar há ${daysSince} dias.`,
           {
-            days_without_record: 3,
+            metric: "checkin_frequency",
+            period_days: daysSince,
+            measured_value: 0,
+            threshold: 3,
+            direction: "below_expected",
             last_meal_date: lastMealDate,
           }
         );
@@ -286,7 +340,7 @@ async function processBatch(
       }
     }
 
-    // ─── SIGNAL 5: Possible Abandonment ───
+    // ─── SIGNAL 5: Possible Abandonment (>7d without login) ───
     const lastSeen = presence?.last_seen_at;
     if (lastSeen) {
       const daysSinceLogin = (now.getTime() - new Date(lastSeen).getTime()) / 86400000;
@@ -296,7 +350,11 @@ async function processBatch(
             supabase, patientId, nId, ALERT_TYPES.POSSIBLE_ABANDONMENT,
             `${patientName}: sem acesso ao sistema há ${Math.floor(daysSinceLogin)} dias. Alto risco de abandono.`,
             {
-              days_since_login: Math.floor(daysSinceLogin),
+              metric: "login_recency",
+              period_days: Math.floor(daysSinceLogin),
+              measured_value: Math.floor(daysSinceLogin),
+              threshold: 7,
+              direction: "above_expected",
               last_seen: lastSeen,
             }
           );
@@ -305,31 +363,34 @@ async function processBatch(
       }
     }
 
-    // ─── SIGNAL 6: Metabolic Signal (calorie overshoot) ───
+    // ─── SIGNAL 6: Caloric Excess (avg > target +25%) ───
     if (meals.length >= 3 && activePlan?.generation_metadata) {
       const calorieTarget = activePlan.generation_metadata.calorie_target;
       if (calorieTarget && calorieTarget > 0) {
         const mealsWithCalories = meals.filter((m: any) => m.calories && m.calories > 0);
         if (mealsWithCalories.length >= 3) {
           const totalCalories = mealsWithCalories.reduce((sum: number, m: any) => sum + (m.calories || 0), 0);
-          // Get unique days
           const uniqueDays = new Set(mealsWithCalories.map((m: any) => new Date(m.logged_at).toISOString().split("T")[0]));
           const avgDailyCalories = totalCalories / uniqueDays.size;
           const threshold = calorieTarget * 1.25;
 
           if (avgDailyCalories > threshold) {
+            const overshootPct = Math.round(((avgDailyCalories - calorieTarget) / calorieTarget) * 100);
             for (const nId of nutritionistIds) {
               const created = await createAlertIfNew(
-                supabase, patientId, nId, ALERT_TYPES.METABOLIC_SIGNAL,
-                `${patientName}: ingestão média (${Math.round(avgDailyCalories)} kcal) excede meta (${calorieTarget} kcal) em +25%. Revisar plano.`,
+                supabase, patientId, nId, ALERT_TYPES.CALORIC_EXCESS,
+                `${patientName}: ingestão média (${Math.round(avgDailyCalories)} kcal) excede meta (${calorieTarget} kcal) em +${overshootPct}%.`,
                 {
-                  avg_daily_calories: Math.round(avgDailyCalories),
-                  calorie_target: calorieTarget,
-                  overshoot_percent: Math.round(((avgDailyCalories - calorieTarget) / calorieTarget) * 100),
+                  metric: "caloric_intake",
+                  period_days: 7,
+                  measured_value: Math.round(avgDailyCalories),
+                  threshold: calorieTarget,
+                  direction: "above_expected",
+                  overshoot_percent: overshootPct,
                   days_analyzed: uniqueDays.size,
                 }
               );
-              if (created) alerts.push({ type: "metabolic_signal", patient_id: patientId, severity: "medium" });
+              if (created) alerts.push({ type: "caloric_excess", patient_id: patientId, severity: "medium" });
             }
           }
         }
@@ -340,6 +401,98 @@ async function processBatch(
   return alerts;
 }
 
+// ─── Risk Score Update ───
+async function updateRiskScores(supabase: any, patientIds: string[]) {
+  // Get all active alerts for these patients
+  const { data: alerts } = await supabase
+    .from("clinical_alerts")
+    .select("patient_id, severity")
+    .in("patient_id", patientIds)
+    .eq("is_active", true);
+
+  // Calculate score per patient
+  const scoreMap: Record<string, number> = {};
+  for (const pid of patientIds) scoreMap[pid] = 0;
+
+  for (const alert of alerts || []) {
+    scoreMap[alert.patient_id] = (scoreMap[alert.patient_id] || 0) + (SCORE_MAP[alert.severity] || 0);
+  }
+
+  // Batch update profiles
+  for (const pid of patientIds) {
+    const score = scoreMap[pid] || 0;
+    const level = score >= 60 ? "critical" : score >= 30 ? "attention" : score >= 10 ? "risk" : "stable";
+
+    await supabase
+      .from("profiles")
+      .update({ clinical_risk_score: score, clinical_risk_level: level })
+      .eq("user_id", pid);
+  }
+}
+
+// ─── Daily Snapshot ───
+async function saveDailySnapshots(supabase: any, patientIds: string[]) {
+  const today = new Date().toISOString().split("T")[0];
+  const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+
+  // Fetch current data for snapshots
+  const [alertsRes, checklistRes, mealsRes, assessRes] = await Promise.all([
+    supabase.from("clinical_alerts").select("patient_id, severity").in("patient_id", patientIds).eq("is_active", true),
+    supabase.from("checklist_tasks").select("patient_id, completed").in("patient_id", patientIds).gte("date", sevenDaysAgo.split("T")[0]),
+    supabase.from("meals").select("user_id, calories").in("user_id", patientIds).gte("logged_at", sevenDaysAgo),
+    supabase.from("physical_assessments").select("patient_id, weight").in("patient_id", patientIds).order("assessment_date", { ascending: false }).limit(200),
+  ]);
+
+  const checklistByP = groupBy(checklistRes.data || [], "patient_id");
+  const mealsByP = groupBy(mealsRes.data || [], "user_id");
+  const weightMap: Record<string, number> = {};
+  for (const a of assessRes.data || []) {
+    if (!weightMap[a.patient_id] && a.weight) weightMap[a.patient_id] = a.weight;
+  }
+
+  const alertCountMap: Record<string, number> = {};
+  const scoreMap: Record<string, number> = {};
+  for (const a of alertsRes.data || []) {
+    alertCountMap[a.patient_id] = (alertCountMap[a.patient_id] || 0) + 1;
+    scoreMap[a.patient_id] = (scoreMap[a.patient_id] || 0) + (SCORE_MAP[a.severity] || 0);
+  }
+
+  const snapshots = patientIds.map((pid) => {
+    const cl = checklistByP[pid] || [];
+    const adherence = cl.length > 0
+      ? Math.round((cl.filter((t: any) => t.completed).length / cl.length) * 100)
+      : null;
+
+    const ms = mealsByP[pid] || [];
+    const mealsWithCal = ms.filter((m: any) => m.calories && m.calories > 0);
+    const uniqueDays = new Set(ms.map(() => today)); // simplified
+    const calorieAvg = mealsWithCal.length > 0
+      ? Math.round(mealsWithCal.reduce((s: number, m: any) => s + m.calories, 0) / Math.max(uniqueDays.size, 1))
+      : null;
+
+    const score = scoreMap[pid] || 0;
+
+    return {
+      patient_id: pid,
+      snapshot_date: today,
+      weight: weightMap[pid] || null,
+      adherence_score: adherence,
+      calorie_avg: calorieAvg,
+      risk_score: score,
+      active_alerts_count: alertCountMap[pid] || 0,
+      clinical_risk_level: score >= 60 ? "critical" : score >= 30 ? "attention" : score >= 10 ? "risk" : "stable",
+    };
+  });
+
+  // Upsert (idempotent)
+  const { error } = await supabase
+    .from("patient_clinical_snapshots")
+    .upsert(snapshots, { onConflict: "patient_id,snapshot_date" });
+
+  if (error) console.error("[ALERT-ENGINE] Snapshot upsert error:", error);
+}
+
+// ─── Alert Creation with Dedup ───
 async function createAlertIfNew(
   supabase: any,
   patientId: string,
@@ -348,10 +501,7 @@ async function createAlertIfNew(
   description: string,
   metadata: Record<string, any>
 ): Promise<boolean> {
-  // Check cooldown — don't duplicate if active alert exists within cooldown
-  const cooldownDate = new Date(
-    Date.now() - alertDef.cooldown_days * 86400000
-  ).toISOString();
+  const cooldownDate = new Date(Date.now() - alertDef.cooldown_days * 86400000).toISOString();
 
   const { count } = await supabase
     .from("clinical_alerts")
@@ -364,7 +514,6 @@ async function createAlertIfNew(
 
   if ((count || 0) > 0) return false;
 
-  // Create alert
   const { error: alertError } = await supabase.from("clinical_alerts").insert({
     patient_id: patientId,
     nutritionist_id: nutritionistId,
@@ -380,34 +529,34 @@ async function createAlertIfNew(
   });
 
   if (alertError) {
-    console.error("Alert insert error:", alertError);
+    console.error("[ALERT-ENGINE] Alert insert error:", alertError);
     return false;
   }
 
-  // Create notification
-  await supabase.from("notifications").insert({
-    user_id: nutritionistId,
-    title: alertDef.title,
-    message: description,
-    type: "clinical_alert",
-    action_url: `/patients/${patientId}`,
-    metadata: { alert_type: alertDef.type, severity: alertDef.severity, patient_id: patientId },
-  });
-
-  // Create timeline event
-  await supabase.from("patient_timeline").insert({
-    patient_id: patientId,
-    event_type: "clinical_alert",
-    title: alertDef.title,
-    description,
-    metadata: {
-      alert_type: alertDef.type,
-      severity: alertDef.severity,
-      trigger_source: alertDef.source,
-      engine_version: ALERT_ENGINE_VERSION,
-      ...metadata,
-    },
-  });
+  // Notification + Timeline in parallel
+  await Promise.all([
+    supabase.from("notifications").insert({
+      user_id: nutritionistId,
+      title: alertDef.title,
+      message: description,
+      type: "clinical_alert",
+      action_url: `/patients/${patientId}`,
+      metadata: { alert_type: alertDef.type, severity: alertDef.severity, patient_id: patientId },
+    }),
+    supabase.from("patient_timeline").insert({
+      patient_id: patientId,
+      event_type: "clinical_alert",
+      title: alertDef.title,
+      description,
+      metadata: {
+        alert_type: alertDef.type,
+        severity: alertDef.severity,
+        trigger_source: alertDef.source,
+        engine_version: ALERT_ENGINE_VERSION,
+        ...metadata,
+      },
+    }),
+  ]);
 
   return true;
 }
