@@ -270,6 +270,7 @@ const App = () => (
               <Route path="/human-performance" element={<NutritionistRoute><LP section="Performance Humana"><HumanPerformance /></LP></NutritionistRoute>} />
               <Route path="/population-intelligence" element={<NutritionistRoute><LP section="Inteligência Populacional"><PopulationIntelligence /></LP></NutritionistRoute>} />
               <Route path="/physiological-intelligence" element={<NutritionistRoute><LP section="Inteligência Fisiológica"><PhysiologicalIntelligence /></LP></NutritionistRoute>} />
+              <Route path="/clinical-predictions" element={<NutritionistRoute><LP section="Previsão Clínica"><ClinicalPredictions /></LP></NutritionistRoute>} />
               <Route path="/weekly-report" element={<NutritionistRoute><LP section="Relatórios"><WeeklyReport /></LP></NutritionistRoute>} />
               <Route path="/financial" element={<NutritionistRoute><LP section="Financeiro"><Financial /></LP></NutritionistRoute>} />
               <Route path="/global-tips" element={<ProtectedRoute><LP section="Dicas"><GlobalTips /></LP></ProtectedRoute>} />
