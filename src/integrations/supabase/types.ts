@@ -579,6 +579,66 @@ export type Database = {
           },
         ]
       }
+      behavioral_recovery_actions: {
+        Row: {
+          adherence_at_moment: number | null
+          applied_at: string | null
+          applied_by: string | null
+          clinical_reason: string
+          cluster_origin: string | null
+          created_at: string
+          days_inactive: number | null
+          dropout_risk_level: string
+          dropout_risk_score: number
+          engine_version: string
+          id: string
+          metadata: Json | null
+          patient_id: string
+          plan_efficacy_score: number | null
+          priority: number
+          status: string
+          suggested_strategy: string
+        }
+        Insert: {
+          adherence_at_moment?: number | null
+          applied_at?: string | null
+          applied_by?: string | null
+          clinical_reason: string
+          cluster_origin?: string | null
+          created_at?: string
+          days_inactive?: number | null
+          dropout_risk_level?: string
+          dropout_risk_score?: number
+          engine_version?: string
+          id?: string
+          metadata?: Json | null
+          patient_id: string
+          plan_efficacy_score?: number | null
+          priority?: number
+          status?: string
+          suggested_strategy: string
+        }
+        Update: {
+          adherence_at_moment?: number | null
+          applied_at?: string | null
+          applied_by?: string | null
+          clinical_reason?: string
+          cluster_origin?: string | null
+          created_at?: string
+          days_inactive?: number | null
+          dropout_risk_level?: string
+          dropout_risk_score?: number
+          engine_version?: string
+          id?: string
+          metadata?: Json | null
+          patient_id?: string
+          plan_efficacy_score?: number | null
+          priority?: number
+          status?: string
+          suggested_strategy?: string
+        }
+        Relationships: []
+      }
       body_analyses: {
         Row: {
           ai_analysis: Json | null
