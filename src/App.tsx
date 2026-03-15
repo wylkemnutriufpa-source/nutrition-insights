@@ -261,6 +261,7 @@ const App = () => (
               <Route path="/clinical-intelligence" element={<NutritionistRoute><LP section="Inteligência Clínica"><ClinicalIntelligence /></LP></NutritionistRoute>} />
               <Route path="/therapeutic-intelligence" element={<NutritionistRoute><LP section="Inteligência Terapêutica"><TherapeuticIntelligence /></LP></NutritionistRoute>} />
               <Route path="/protocol-transitions" element={<NutritionistRoute><LP section="Transições de Protocolo"><ProtocolTransitions /></LP></NutritionistRoute>} />
+              <Route path="/clinical-orchestration" element={<NutritionistRoute><LP section="Orquestração Clínica"><ClinicalOrchestration /></LP></NutritionistRoute>} />
               <Route path="/weekly-report" element={<NutritionistRoute><LP section="Relatórios"><WeeklyReport /></LP></NutritionistRoute>} />
               <Route path="/financial" element={<NutritionistRoute><LP section="Financeiro"><Financial /></LP></NutritionistRoute>} />
               <Route path="/global-tips" element={<ProtectedRoute><LP section="Dicas"><GlobalTips /></LP></ProtectedRoute>} />
