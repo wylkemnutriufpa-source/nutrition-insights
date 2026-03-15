@@ -106,6 +106,9 @@ verify_jwt = false
 [functions.compute-metabolic-twin-engine]
 verify_jwt = false
 
+[functions.compute-population-nutrition-intelligence]
+verify_jwt = false
+
 # ═══════════════════════════════════════════
 
 [functions.generate-weekly-report]
