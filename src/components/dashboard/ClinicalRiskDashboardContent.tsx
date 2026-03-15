@@ -554,6 +554,34 @@ function PatientRiskModal({
     }
   };
 
+  const handleApproveSuggestion = async (suggestionId: string) => {
+    try {
+      const { error } = await (supabase as any)
+        .from("meal_plan_adjustment_suggestions")
+        .update({ status: "approved", resolved_at: new Date().toISOString(), resolved_by: patient.patient_id })
+        .eq("id", suggestionId);
+      if (error) throw error;
+      toast.success("Sugestão aprovada");
+      queryClient.invalidateQueries({ queryKey: ["clinical-risk-dashboard"] });
+    } catch (err: any) {
+      toast.error("Erro: " + err.message);
+    }
+  };
+
+  const handleRejectSuggestion = async (suggestionId: string) => {
+    try {
+      const { error } = await (supabase as any)
+        .from("meal_plan_adjustment_suggestions")
+        .update({ status: "rejected", resolved_at: new Date().toISOString(), resolved_by: patient.patient_id })
+        .eq("id", suggestionId);
+      if (error) throw error;
+      toast.success("Sugestão rejeitada");
+      queryClient.invalidateQueries({ queryKey: ["clinical-risk-dashboard"] });
+    } catch (err: any) {
+      toast.error("Erro: " + err.message);
+    }
+  };
+
   const handleMarkContacted = async () => {
     setContacting(true);
     try {
