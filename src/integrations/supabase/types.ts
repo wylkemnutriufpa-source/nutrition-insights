@@ -3673,6 +3673,111 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_physiological_signals: {
+        Row: {
+          active_calories: number | null
+          body_temperature_delta: number | null
+          created_at: string | null
+          heart_rate_variability: number | null
+          id: string
+          patient_id: string
+          readiness_score: number | null
+          resting_heart_rate: number | null
+          signal_date: string
+          sleep_duration_minutes: number | null
+          sleep_quality_score: number | null
+          source_device: string | null
+          steps: number | null
+          stress_index: number | null
+          training_load_score: number | null
+        }
+        Insert: {
+          active_calories?: number | null
+          body_temperature_delta?: number | null
+          created_at?: string | null
+          heart_rate_variability?: number | null
+          id?: string
+          patient_id: string
+          readiness_score?: number | null
+          resting_heart_rate?: number | null
+          signal_date?: string
+          sleep_duration_minutes?: number | null
+          sleep_quality_score?: number | null
+          source_device?: string | null
+          steps?: number | null
+          stress_index?: number | null
+          training_load_score?: number | null
+        }
+        Update: {
+          active_calories?: number | null
+          body_temperature_delta?: number | null
+          created_at?: string | null
+          heart_rate_variability?: number | null
+          id?: string
+          patient_id?: string
+          readiness_score?: number | null
+          resting_heart_rate?: number | null
+          signal_date?: string
+          sleep_duration_minutes?: number | null
+          sleep_quality_score?: number | null
+          source_device?: string | null
+          steps?: number | null
+          stress_index?: number | null
+          training_load_score?: number | null
+        }
+        Relationships: []
+      }
+      patient_physiology_snapshots: {
+        Row: {
+          created_at: string | null
+          engine_version: string | null
+          has_physiological_data: boolean | null
+          hrv_trend: string | null
+          id: string
+          metadata: Json | null
+          patient_id: string
+          physiological_risk_level: string | null
+          psi: number | null
+          resting_hr_trend: string | null
+          rpi: number | null
+          sleep_trend: string | null
+          snapshot_date: string
+          training_load_balance: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          engine_version?: string | null
+          has_physiological_data?: boolean | null
+          hrv_trend?: string | null
+          id?: string
+          metadata?: Json | null
+          patient_id: string
+          physiological_risk_level?: string | null
+          psi?: number | null
+          resting_hr_trend?: string | null
+          rpi?: number | null
+          sleep_trend?: string | null
+          snapshot_date?: string
+          training_load_balance?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          engine_version?: string | null
+          has_physiological_data?: boolean | null
+          hrv_trend?: string | null
+          id?: string
+          metadata?: Json | null
+          patient_id?: string
+          physiological_risk_level?: string | null
+          psi?: number | null
+          resting_hr_trend?: string | null
+          rpi?: number | null
+          sleep_trend?: string | null
+          snapshot_date?: string
+          training_load_balance?: string | null
+        }
+        Relationships: []
+      }
       patient_plan_features: {
         Row: {
           created_at: string
@@ -6782,6 +6887,42 @@ export type Database = {
           last_seen_at?: string
           session_count?: number
           user_id?: string
+        }
+        Relationships: []
+      }
+      wearable_devices: {
+        Row: {
+          connected_at: string | null
+          created_at: string | null
+          device_identifier: string | null
+          device_type: string
+          id: string
+          last_sync_at: string | null
+          patient_id: string
+          provider: string | null
+          status: string | null
+        }
+        Insert: {
+          connected_at?: string | null
+          created_at?: string | null
+          device_identifier?: string | null
+          device_type?: string
+          id?: string
+          last_sync_at?: string | null
+          patient_id: string
+          provider?: string | null
+          status?: string | null
+        }
+        Update: {
+          connected_at?: string | null
+          created_at?: string | null
+          device_identifier?: string | null
+          device_type?: string
+          id?: string
+          last_sync_at?: string | null
+          patient_id?: string
+          provider?: string | null
+          status?: string | null
         }
         Relationships: []
       }
