@@ -3027,6 +3027,60 @@ export type Database = {
           },
         ]
       }
+      patient_human_performance_state: {
+        Row: {
+          consistency_score: number | null
+          engine_version: string | null
+          id: string
+          metabolic_score: number | null
+          metadata: Json | null
+          nutrition_score: number | null
+          overall_performance_score: number | null
+          patient_id: string
+          performance_level: string | null
+          performance_profile: string | null
+          recommended_focus: string | null
+          recovery_score: number | null
+          stress_load_score: number | null
+          training_score: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          consistency_score?: number | null
+          engine_version?: string | null
+          id?: string
+          metabolic_score?: number | null
+          metadata?: Json | null
+          nutrition_score?: number | null
+          overall_performance_score?: number | null
+          patient_id: string
+          performance_level?: string | null
+          performance_profile?: string | null
+          recommended_focus?: string | null
+          recovery_score?: number | null
+          stress_load_score?: number | null
+          training_score?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          consistency_score?: number | null
+          engine_version?: string | null
+          id?: string
+          metabolic_score?: number | null
+          metadata?: Json | null
+          nutrition_score?: number | null
+          overall_performance_score?: number | null
+          patient_id?: string
+          performance_level?: string | null
+          performance_profile?: string | null
+          recommended_focus?: string | null
+          recovery_score?: number | null
+          stress_load_score?: number | null
+          training_score?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       patient_journey_events: {
         Row: {
           created_at: string | null
@@ -3123,6 +3177,57 @@ export type Database = {
           target_value?: number
           title?: string
           xp_reward?: number | null
+        }
+        Relationships: []
+      }
+      patient_performance_snapshots: {
+        Row: {
+          consistency_score: number | null
+          created_at: string | null
+          engine_version: string | null
+          id: string
+          metabolic_score: number | null
+          nutrition_score: number | null
+          overall_performance_score: number | null
+          patient_id: string
+          performance_level: string | null
+          performance_profile: string | null
+          recovery_score: number | null
+          snapshot_date: string
+          stress_load_score: number | null
+          training_score: number | null
+        }
+        Insert: {
+          consistency_score?: number | null
+          created_at?: string | null
+          engine_version?: string | null
+          id?: string
+          metabolic_score?: number | null
+          nutrition_score?: number | null
+          overall_performance_score?: number | null
+          patient_id: string
+          performance_level?: string | null
+          performance_profile?: string | null
+          recovery_score?: number | null
+          snapshot_date?: string
+          stress_load_score?: number | null
+          training_score?: number | null
+        }
+        Update: {
+          consistency_score?: number | null
+          created_at?: string | null
+          engine_version?: string | null
+          id?: string
+          metabolic_score?: number | null
+          nutrition_score?: number | null
+          overall_performance_score?: number | null
+          patient_id?: string
+          performance_level?: string | null
+          performance_profile?: string | null
+          recovery_score?: number | null
+          snapshot_date?: string
+          stress_load_score?: number | null
+          training_score?: number | null
         }
         Relationships: []
       }
