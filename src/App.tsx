@@ -108,6 +108,7 @@ const TherapeuticIntelligence = lazy(() => import("./pages/TherapeuticIntelligen
 const ProtocolTransitions = lazy(() => import("./pages/ProtocolTransitions"));
 const ClinicalOrchestration = lazy(() => import("./pages/ClinicalOrchestration"));
 const HumanPerformance = lazy(() => import("./pages/HumanPerformance"));
+const PopulationIntelligence = lazy(() => import("./pages/PopulationIntelligence"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
