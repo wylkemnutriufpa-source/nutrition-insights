@@ -46,6 +46,9 @@ verify_jwt = false
 [functions.compute-longitudinal]
 verify_jwt = false
 
+[functions.compute-adaptive-nutrition]
+verify_jwt = false
+
 # ═══════════════════════════════════════════
 # RELATÓRIOS E PLANOS (Determinístico + AI opcional)
 # ═══════════════════════════════════════════

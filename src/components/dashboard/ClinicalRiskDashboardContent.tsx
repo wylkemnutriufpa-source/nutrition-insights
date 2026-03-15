@@ -42,6 +42,24 @@ interface PatientRisk {
   adherence_score_prev_7d?: number;
   engagement_index?: number;
   engagement_level?: string;
+  // Adaptive indicators
+  caloric_response_status?: string;
+  stagnation_risk_level?: string;
+  therapeutic_effectiveness?: string;
+  adjustment_suggestions?: AdjustmentSuggestion[];
+}
+
+interface AdjustmentSuggestion {
+  id: string;
+  suggestion_type: string;
+  status: string;
+  current_value?: number;
+  suggested_value?: number;
+  delta_percent?: number;
+  clinical_reason: string;
+  confidence: string;
+  metadata: any;
+  created_at: string;
 }
 
 interface ClinicalAlert {
@@ -98,6 +116,28 @@ const engagementLabels: Record<string, { label: string; color: string }> = {
   drop_risk: { label: "Risco", color: "text-destructive" },
 };
 
+const caloricResponseLabels: Record<string, { label: string; status: "ok" | "warning" | "danger" | "neutral" }> = {
+  hiperresponsivo: { label: "Hiperresponsivo", status: "warning" },
+  responsivo: { label: "Responsivo", status: "ok" },
+  neutro: { label: "Neutro", status: "neutral" },
+  resistente: { label: "Resistente", status: "danger" },
+  possivel_adaptacao_metabolica: { label: "Adaptação Metab.", status: "danger" },
+};
+
+const stagnationLabels: Record<string, { label: string; status: "ok" | "warning" | "danger" | "neutral" }> = {
+  risco_baixo: { label: "Baixo", status: "ok" },
+  risco_moderado: { label: "Moderado", status: "warning" },
+  risco_alto: { label: "Alto", status: "danger" },
+};
+
+const effectivenessLabels: Record<string, { label: string; status: "ok" | "warning" | "danger" | "neutral" }> = {
+  protocolo_eficaz: { label: "Eficaz", status: "ok" },
+  eficacia_parcial: { label: "Parcial", status: "warning" },
+  baixa_eficacia: { label: "Baixa Eficácia", status: "danger" },
+  falha_terapeutica: { label: "Falha Terapêutica", status: "danger" },
+  pending_evaluation: { label: "Avaliando...", status: "neutral" },
+};
+
 function getRiskSeverity(score: number): string {
   if (score >= 60) return "critical";
   if (score >= 30) return "risk";
@@ -137,13 +177,15 @@ export default function ClinicalRiskDashboardContent() {
 
       const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
 
-      const [alertsRes, profilesRes, checklistRes, sessionsRes, plansRes, assessRes] = await Promise.all([
+      const [alertsRes, profilesRes, checklistRes, sessionsRes, plansRes, assessRes, clinicalStateRes, suggestionsRes] = await Promise.all([
         supabase.from("clinical_alerts").select("*").eq("nutritionist_id", userId).eq("is_active", true).order("created_at", { ascending: false }),
         supabase.from("profiles").select("user_id, full_name, avatar_url, weight_trend_status, weight_velocity_kg_week, adherence_momentum, adherence_score_7d, adherence_score_prev_7d, engagement_index, engagement_level").in("user_id", patientIds),
         supabase.from("checklist_tasks").select("patient_id, completed").in("patient_id", patientIds).gte("date", sevenDaysAgo.split("T")[0]),
         supabase.from("user_sessions").select("user_id, last_seen_at").in("user_id", patientIds),
-        supabase.from("meal_plans").select("patient_id, plan_status, generation_metadata").in("patient_id", patientIds).eq("is_active", true).order("created_at", { ascending: false }),
+        supabase.from("meal_plans").select("patient_id, plan_status, generation_metadata, therapeutic_effectiveness_status").in("patient_id", patientIds).eq("is_active", true).order("created_at", { ascending: false }),
         supabase.from("physical_assessments").select("patient_id, weight, assessment_date").in("patient_id", patientIds).order("assessment_date", { ascending: false }).limit(patientIds.length * 3),
+        (supabase as any).from("patient_clinical_state").select("patient_id, caloric_response_status, stagnation_risk_level").in("patient_id", patientIds),
+        (supabase as any).from("meal_plan_adjustment_suggestions").select("*").in("patient_id", patientIds).eq("status", "pending").order("created_at", { ascending: false }),
       ]);
 
       const profileMap: Record<string, any> = {};
@@ -170,12 +212,22 @@ export default function ClinicalRiskDashboardContent() {
       const weightMap: Record<string, number> = {};
       (assessRes.data || []).forEach((a: any) => { if (!weightMap[a.patient_id] && a.weight) weightMap[a.patient_id] = a.weight; });
 
+      const clinicalStateMap: Record<string, any> = {};
+      (clinicalStateRes.data || []).forEach((s: any) => { clinicalStateMap[s.patient_id] = s; });
+
+      const suggestionsByPatient: Record<string, AdjustmentSuggestion[]> = {};
+      (suggestionsRes.data || []).forEach((s: any) => {
+        if (!suggestionsByPatient[s.patient_id]) suggestionsByPatient[s.patient_id] = [];
+        suggestionsByPatient[s.patient_id].push(s);
+      });
+
       const patients: PatientRisk[] = patientIds.map((pid: string) => {
         const profile = profileMap[pid];
         const alerts = alertsByPatient[pid] || [];
         const checklist = checklistByPatient[pid] || [];
         const session = sessionMap[pid];
         const plan = planMap[pid];
+        const clinicalState = clinicalStateMap[pid];
 
         const total = checklist.length;
         const completed = checklist.filter((t: any) => t.completed).length;
@@ -205,6 +257,10 @@ export default function ClinicalRiskDashboardContent() {
           adherence_score_prev_7d: profile?.adherence_score_prev_7d || 0,
           engagement_index: profile?.engagement_index || 0,
           engagement_level: profile?.engagement_level || "moderate",
+          caloric_response_status: clinicalState?.caloric_response_status,
+          stagnation_risk_level: clinicalState?.stagnation_risk_level,
+          therapeutic_effectiveness: plan?.therapeutic_effectiveness_status,
+          adjustment_suggestions: suggestionsByPatient[pid] || [],
         };
       });
 
@@ -498,6 +554,34 @@ function PatientRiskModal({
     }
   };
 
+  const handleApproveSuggestion = async (suggestionId: string) => {
+    try {
+      const { error } = await (supabase as any)
+        .from("meal_plan_adjustment_suggestions")
+        .update({ status: "approved", resolved_at: new Date().toISOString(), resolved_by: patient.patient_id })
+        .eq("id", suggestionId);
+      if (error) throw error;
+      toast.success("Sugestão aprovada");
+      queryClient.invalidateQueries({ queryKey: ["clinical-risk-dashboard"] });
+    } catch (err: any) {
+      toast.error("Erro: " + err.message);
+    }
+  };
+
+  const handleRejectSuggestion = async (suggestionId: string) => {
+    try {
+      const { error } = await (supabase as any)
+        .from("meal_plan_adjustment_suggestions")
+        .update({ status: "rejected", resolved_at: new Date().toISOString(), resolved_by: patient.patient_id })
+        .eq("id", suggestionId);
+      if (error) throw error;
+      toast.success("Sugestão rejeitada");
+      queryClient.invalidateQueries({ queryKey: ["clinical-risk-dashboard"] });
+    } catch (err: any) {
+      toast.error("Erro: " + err.message);
+    }
+  };
+
   const handleMarkContacted = async () => {
     setContacting(true);
     try {
@@ -612,6 +696,93 @@ function PatientRiskModal({
                   status={!patient.last_seen || (Date.now() - new Date(patient.last_seen).getTime()) > 5 * 86400000 ? "danger" : "ok"} />
               </div>
             </section>
+
+            {/* Adaptive Intelligence */}
+            {(patient.caloric_response_status || patient.stagnation_risk_level || (patient.adjustment_suggestions && patient.adjustment_suggestions.length > 0)) && (
+              <section>
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                  <Activity className="w-3.5 h-3.5" /> Motor Adaptativo
+                </h3>
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  {patient.caloric_response_status && (
+                    <IndicatorCard
+                      label="Resposta Calórica"
+                      value={caloricResponseLabels[patient.caloric_response_status]?.label || patient.caloric_response_status}
+                      icon={Flame}
+                      status={caloricResponseLabels[patient.caloric_response_status]?.status || "neutral"}
+                    />
+                  )}
+                  {patient.stagnation_risk_level && (
+                    <IndicatorCard
+                      label="Risco Estagnação"
+                      value={stagnationLabels[patient.stagnation_risk_level]?.label || patient.stagnation_risk_level}
+                      icon={AlertTriangle}
+                      status={stagnationLabels[patient.stagnation_risk_level]?.status || "neutral"}
+                    />
+                  )}
+                  {patient.therapeutic_effectiveness && (
+                    <IndicatorCard
+                      label="Eficácia do Plano"
+                      value={effectivenessLabels[patient.therapeutic_effectiveness]?.label || patient.therapeutic_effectiveness}
+                      icon={Shield}
+                      status={effectivenessLabels[patient.therapeutic_effectiveness]?.status || "neutral"}
+                    />
+                  )}
+                </div>
+
+                {patient.adjustment_suggestions && patient.adjustment_suggestions.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-[11px] font-semibold text-muted-foreground">Sugestões de Ajuste</p>
+                    {patient.adjustment_suggestions.map((sug) => (
+                      <div key={sug.id} className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+                        <div className="flex items-start gap-2">
+                          <TrendingUp className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Badge variant="outline" className="text-[10px]">
+                                {sug.suggestion_type === "caloric_adjustment" ? "Ajuste Calórico" : "Troca de Template"}
+                              </Badge>
+                              <Badge variant="outline" className="text-[10px]">
+                                Confiança: {sug.confidence === "high" ? "Alta" : sug.confidence === "medium" ? "Média" : "Baixa"}
+                              </Badge>
+                            </div>
+                            <p className="text-xs leading-relaxed">{sug.clinical_reason}</p>
+                            {sug.current_value && sug.suggested_value && (
+                              <p className="text-[10px] font-mono bg-muted/30 rounded px-1.5 py-0.5 inline-block mt-1">
+                                {sug.current_value} kcal → {sug.suggested_value} kcal ({sug.delta_percent! > 0 ? "+" : ""}{sug.delta_percent}%)
+                              </p>
+                            )}
+                            {sug.metadata && (
+                              <p className="text-[10px] text-muted-foreground mt-1">
+                                Resp. calórica: {sug.metadata.caloric_response} · Adesão 28d: {sug.metadata.adherence_28d}% · Plano: {sug.metadata.plan_active_days}d
+                              </p>
+                            )}
+                            <div className="flex gap-2 mt-2">
+                              <Button
+                                variant="default"
+                                size="sm"
+                                className="h-6 text-[10px] gap-1"
+                                onClick={(e) => { e.stopPropagation(); handleApproveSuggestion(sug.id); }}
+                              >
+                                <CheckCheck className="w-3 h-3" /> Aprovar
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 text-[10px] gap-1"
+                                onClick={(e) => { e.stopPropagation(); handleRejectSuggestion(sug.id); }}
+                              >
+                                <X className="w-3 h-3" /> Rejeitar
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
 
             <section>
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Indicadores Clássicos</h3>

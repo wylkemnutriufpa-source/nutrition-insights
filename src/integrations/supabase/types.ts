@@ -1617,6 +1617,60 @@ export type Database = {
           },
         ]
       }
+      meal_plan_adjustment_suggestions: {
+        Row: {
+          clinical_reason: string
+          confidence: string
+          created_at: string | null
+          current_value: number | null
+          delta_percent: number | null
+          engine_version: string | null
+          id: string
+          meal_plan_id: string | null
+          metadata: Json | null
+          patient_id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          suggested_value: number | null
+          suggestion_type: string
+        }
+        Insert: {
+          clinical_reason: string
+          confidence?: string
+          created_at?: string | null
+          current_value?: number | null
+          delta_percent?: number | null
+          engine_version?: string | null
+          id?: string
+          meal_plan_id?: string | null
+          metadata?: Json | null
+          patient_id: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          suggested_value?: number | null
+          suggestion_type: string
+        }
+        Update: {
+          clinical_reason?: string
+          confidence?: string
+          created_at?: string | null
+          current_value?: number | null
+          delta_percent?: number | null
+          engine_version?: string | null
+          id?: string
+          meal_plan_id?: string | null
+          metadata?: Json | null
+          patient_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          suggested_value?: number | null
+          suggestion_type?: string
+        }
+        Relationships: []
+      }
       meal_plan_items: {
         Row: {
           calories_target: number | null
@@ -1684,6 +1738,7 @@ export type Database = {
           template_id: string | null
           template_slug: string | null
           template_version: number | null
+          therapeutic_effectiveness_status: string | null
           title: string
           updated_at: string
         }
@@ -1703,6 +1758,7 @@ export type Database = {
           template_id?: string | null
           template_slug?: string | null
           template_version?: number | null
+          therapeutic_effectiveness_status?: string | null
           title: string
           updated_at?: string
         }
@@ -1722,6 +1778,7 @@ export type Database = {
           template_id?: string | null
           template_slug?: string | null
           template_version?: number | null
+          therapeutic_effectiveness_status?: string | null
           title?: string
           updated_at?: string
         }
@@ -2168,6 +2225,7 @@ export type Database = {
           active_alerts_count: number | null
           adherence_momentum: string | null
           adherence_score: number | null
+          caloric_response_status: string | null
           calorie_avg: number | null
           clinical_risk_level: string | null
           created_at: string | null
@@ -2178,6 +2236,8 @@ export type Database = {
           patient_id: string
           risk_score: number | null
           snapshot_date: string
+          stagnation_risk_level: string | null
+          therapeutic_effectiveness: string | null
           weight: number | null
           weight_trend_status: string | null
           weight_velocity: number | null
@@ -2186,6 +2246,7 @@ export type Database = {
           active_alerts_count?: number | null
           adherence_momentum?: string | null
           adherence_score?: number | null
+          caloric_response_status?: string | null
           calorie_avg?: number | null
           clinical_risk_level?: string | null
           created_at?: string | null
@@ -2196,6 +2257,8 @@ export type Database = {
           patient_id: string
           risk_score?: number | null
           snapshot_date?: string
+          stagnation_risk_level?: string | null
+          therapeutic_effectiveness?: string | null
           weight?: number | null
           weight_trend_status?: string | null
           weight_velocity?: number | null
@@ -2204,6 +2267,7 @@ export type Database = {
           active_alerts_count?: number | null
           adherence_momentum?: string | null
           adherence_score?: number | null
+          caloric_response_status?: string | null
           calorie_avg?: number | null
           clinical_risk_level?: string | null
           created_at?: string | null
@@ -2214,9 +2278,62 @@ export type Database = {
           patient_id?: string
           risk_score?: number | null
           snapshot_date?: string
+          stagnation_risk_level?: string | null
+          therapeutic_effectiveness?: string | null
           weight?: number | null
           weight_trend_status?: string | null
           weight_velocity?: number | null
+        }
+        Relationships: []
+      }
+      patient_clinical_state: {
+        Row: {
+          adherence_avg_28d: number | null
+          analysis_window_days: number | null
+          calculation_version: string | null
+          caloric_response_status: string
+          calorie_avg_real: number | null
+          calorie_target: number | null
+          data_points_used: number | null
+          engagement_avg_28d: number | null
+          id: string
+          patient_id: string
+          plan_active_days: number | null
+          stagnation_risk_level: string
+          updated_at: string | null
+          weight_velocity_pct: number | null
+        }
+        Insert: {
+          adherence_avg_28d?: number | null
+          analysis_window_days?: number | null
+          calculation_version?: string | null
+          caloric_response_status?: string
+          calorie_avg_real?: number | null
+          calorie_target?: number | null
+          data_points_used?: number | null
+          engagement_avg_28d?: number | null
+          id?: string
+          patient_id: string
+          plan_active_days?: number | null
+          stagnation_risk_level?: string
+          updated_at?: string | null
+          weight_velocity_pct?: number | null
+        }
+        Update: {
+          adherence_avg_28d?: number | null
+          analysis_window_days?: number | null
+          calculation_version?: string | null
+          caloric_response_status?: string
+          calorie_avg_real?: number | null
+          calorie_target?: number | null
+          data_points_used?: number | null
+          engagement_avg_28d?: number | null
+          id?: string
+          patient_id?: string
+          plan_active_days?: number | null
+          stagnation_risk_level?: string
+          updated_at?: string | null
+          weight_velocity_pct?: number | null
         }
         Relationships: []
       }
