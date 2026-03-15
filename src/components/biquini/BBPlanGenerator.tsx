@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, Sparkles, Zap, Target, TrendingDown, Shield, Heart } from "lucide-react";
-import PatientPickerDropdown from "@/components/common/PatientPickerDropdown";
 
 const PHASE_INFO = [
   { phase: 1, name: "Reset Metabólico", icon: Heart, color: "text-green-500", deficit: "0 kcal", description: "Adaptação sem déficit. Reeducação alimentar." },
