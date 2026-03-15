@@ -21,6 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import TherapeuticSuggestionsPanel from "./TherapeuticSuggestionsPanel";
 
 interface PatientRisk {
   patient_id: string;
@@ -346,6 +347,8 @@ export default function ClinicalRiskDashboardContent() {
           <KpiCard icon={Brain} label="Risco Metabólico" value={kpis.metabolicRisk} color="warning" />
         </div>
       )}
+
+      <TherapeuticSuggestionsPanel />
 
       <div className="flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
