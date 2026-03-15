@@ -107,6 +107,7 @@ const AdminNutritionProtocols = lazy(() => import("./pages/AdminNutritionProtoco
 const TherapeuticIntelligence = lazy(() => import("./pages/TherapeuticIntelligence"));
 const ProtocolTransitions = lazy(() => import("./pages/ProtocolTransitions"));
 const ClinicalOrchestration = lazy(() => import("./pages/ClinicalOrchestration"));
+const HumanPerformance = lazy(() => import("./pages/HumanPerformance"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
