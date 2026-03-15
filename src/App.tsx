@@ -115,6 +115,7 @@ const ClinicalPredictions = lazy(() => import("./pages/ClinicalPredictions"));
 const ClinicalSimulation = lazy(() => import("./pages/ClinicalSimulation"));
 const ClinicalLab = lazy(() => import("./pages/ClinicalLab"));
 const ClinicalAutomation = lazy(() => import("./pages/ClinicalAutomation"));
+const GlobalAdaptiveIntelligence = lazy(() => import("./pages/GlobalAdaptiveIntelligence"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
