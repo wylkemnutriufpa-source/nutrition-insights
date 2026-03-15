@@ -43,6 +43,9 @@ verify_jwt = false
 [functions.detect-clinical-alerts]
 verify_jwt = false
 
+[functions.compute-longitudinal]
+verify_jwt = false
+
 # ═══════════════════════════════════════════
 # RELATÓRIOS E PLANOS (Determinístico + AI opcional)
 # ═══════════════════════════════════════════
