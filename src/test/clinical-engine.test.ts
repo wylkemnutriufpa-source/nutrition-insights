@@ -1,7 +1,7 @@
 /**
- * Clinical Engine Validation — Phase 1 Hardening
- * Tests all 6 alert rules, score recalculation, snapshot idempotency,
- * cooldown dedup, and risk level consistency.
+ * Clinical Engine Validation — Phase 1 + Phase 2 (Longitudinal Intelligence)
+ * Tests all 6+1 alert rules, longitudinal indicators, score recalculation,
+ * snapshot idempotency, cooldown dedup, and risk level consistency.
  */
 import { describe, it, expect } from "vitest";
 
