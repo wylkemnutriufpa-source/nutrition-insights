@@ -1162,6 +1162,51 @@ export type Database = {
           },
         ]
       }
+      clinical_auto_adjustment_logs: {
+        Row: {
+          adjustment_parameters: Json | null
+          adjustment_type: string
+          approved_by_guardrail: boolean | null
+          automation_confidence: number | null
+          created_at: string | null
+          expected_clinical_effect: string | null
+          id: string
+          patient_id: string
+          reversal_reason: string | null
+          reversed_at: string | null
+          triggering_driver: string
+          was_reversed: boolean | null
+        }
+        Insert: {
+          adjustment_parameters?: Json | null
+          adjustment_type: string
+          approved_by_guardrail?: boolean | null
+          automation_confidence?: number | null
+          created_at?: string | null
+          expected_clinical_effect?: string | null
+          id?: string
+          patient_id: string
+          reversal_reason?: string | null
+          reversed_at?: string | null
+          triggering_driver: string
+          was_reversed?: boolean | null
+        }
+        Update: {
+          adjustment_parameters?: Json | null
+          adjustment_type?: string
+          approved_by_guardrail?: boolean | null
+          automation_confidence?: number | null
+          created_at?: string | null
+          expected_clinical_effect?: string | null
+          id?: string
+          patient_id?: string
+          reversal_reason?: string | null
+          reversed_at?: string | null
+          triggering_driver?: string
+          was_reversed?: boolean | null
+        }
+        Relationships: []
+      }
       clinical_experiment_assignments: {
         Row: {
           assigned_at: string
@@ -3618,6 +3663,60 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      patient_automation_state: {
+        Row: {
+          automation_enabled: boolean | null
+          automation_level: string | null
+          automation_zone: string
+          cluster_type: string | null
+          created_at: string | null
+          dropout_risk: number | null
+          engine_version: string | null
+          id: string
+          longitudinal_stability: number | null
+          patient_id: string
+          performance_level: number | null
+          physiological_stability: number | null
+          prediction_confidence: number | null
+          regression_risk: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          automation_enabled?: boolean | null
+          automation_level?: string | null
+          automation_zone?: string
+          cluster_type?: string | null
+          created_at?: string | null
+          dropout_risk?: number | null
+          engine_version?: string | null
+          id?: string
+          longitudinal_stability?: number | null
+          patient_id: string
+          performance_level?: number | null
+          physiological_stability?: number | null
+          prediction_confidence?: number | null
+          regression_risk?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          automation_enabled?: boolean | null
+          automation_level?: string | null
+          automation_zone?: string
+          cluster_type?: string | null
+          created_at?: string | null
+          dropout_risk?: number | null
+          engine_version?: string | null
+          id?: string
+          longitudinal_stability?: number | null
+          patient_id?: string
+          performance_level?: number | null
+          physiological_stability?: number | null
+          prediction_confidence?: number | null
+          regression_risk?: number | null
+          updated_at?: string | null
         }
         Relationships: []
       }

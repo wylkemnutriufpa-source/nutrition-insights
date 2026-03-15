@@ -114,6 +114,7 @@ const PhysiologicalIntelligence = lazy(() => import("./pages/PhysiologicalIntell
 const ClinicalPredictions = lazy(() => import("./pages/ClinicalPredictions"));
 const ClinicalSimulation = lazy(() => import("./pages/ClinicalSimulation"));
 const ClinicalLab = lazy(() => import("./pages/ClinicalLab"));
+const ClinicalAutomation = lazy(() => import("./pages/ClinicalAutomation"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -280,6 +281,7 @@ const App = () => (
               <Route path="/global-tips" element={<ProtectedRoute><LP section="Dicas"><GlobalTips /></LP></ProtectedRoute>} />
               <Route path="/professional-guide" element={<NutritionistRoute><LP section="Guia"><ProfessionalGuide /></LP></NutritionistRoute>} />
               <Route path="/automation" element={<NutritionistRoute><LP section="Automação"><AutomationCenter /></LP></NutritionistRoute>} />
+              <Route path="/clinical-automation" element={<NutritionistRoute><LP section="Automação Clínica"><ClinicalAutomation /></LP></NutritionistRoute>} />
               <Route path="/checkin-panel" element={<NutritionistRoute><LP section="Check-ins"><CheckinPanel /></LP></NutritionistRoute>} />
               <Route path="/clinical-risk" element={<NutritionistRoute><LP section="Risco Clínico"><ClinicalRiskDashboard /></LP></NutritionistRoute>} />
 
