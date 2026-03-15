@@ -229,8 +229,8 @@ export default function ClinicalRiskDashboardContent() {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           <KpiCard icon={Flame} label="Críticos" value={kpis.critical} color="destructive" />
-          <KpiCard icon={AlertTriangle} label="Em Alerta" value={kpis.alert} color="warning" />
-          <KpiCard icon={CheckCircle2} label="Estáveis" value={kpis.stable} color="success" />
+          <KpiCard icon={AlertTriangle} label="Em Risco" value={kpis.risk} color="warning" />
+          <KpiCard icon={Shield} label="Atenção" value={kpis.attention} color="primary" />
           <KpiCard icon={BarChart3} label="Adesão Média" value={`${kpis.avgAdherence}%`} color="primary" />
           <KpiCard icon={UserX} label="Sem Login > 5d" value={kpis.noLogin} color="muted" />
         </div>
