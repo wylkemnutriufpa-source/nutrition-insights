@@ -3359,6 +3359,50 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_population_benchmark: {
+        Row: {
+          benchmark_classification: string | null
+          cohort_id: string | null
+          engine_version: string | null
+          id: string
+          patient_id: string
+          relative_adherence: number | null
+          relative_performance_score: number | null
+          relative_weight_response: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          benchmark_classification?: string | null
+          cohort_id?: string | null
+          engine_version?: string | null
+          id?: string
+          patient_id: string
+          relative_adherence?: number | null
+          relative_performance_score?: number | null
+          relative_weight_response?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          benchmark_classification?: string | null
+          cohort_id?: string | null
+          engine_version?: string | null
+          id?: string
+          patient_id?: string
+          relative_adherence?: number | null
+          relative_performance_score?: number | null
+          relative_weight_response?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_population_benchmark_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: false
+            referencedRelation: "population_cohorts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_prestige: {
         Row: {
           assigned_at: string
@@ -4147,6 +4191,125 @@ export type Database = {
           total_xp?: number
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      population_clinical_insights: {
+        Row: {
+          created_at: string | null
+          engine_version: string | null
+          id: string
+          insight_description: string
+          insight_scope: string | null
+          insight_type: string
+          nutritionist_id: string
+          statistical_confidence: string | null
+          supporting_data: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          engine_version?: string | null
+          id?: string
+          insight_description: string
+          insight_scope?: string | null
+          insight_type: string
+          nutritionist_id: string
+          statistical_confidence?: string | null
+          supporting_data?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          engine_version?: string | null
+          id?: string
+          insight_description?: string
+          insight_scope?: string | null
+          insight_type?: string
+          nutritionist_id?: string
+          statistical_confidence?: string | null
+          supporting_data?: Json | null
+        }
+        Relationships: []
+      }
+      population_cohort_metrics: {
+        Row: {
+          avg_adherence: number | null
+          avg_performance_score: number | null
+          avg_response_velocity: number | null
+          avg_weight_loss_14d: number | null
+          avg_weight_loss_30d: number | null
+          cohort_id: string
+          dropout_rate: number | null
+          engine_version: string | null
+          id: string
+          metabolic_stability: number | null
+          stagnation_rate: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          avg_adherence?: number | null
+          avg_performance_score?: number | null
+          avg_response_velocity?: number | null
+          avg_weight_loss_14d?: number | null
+          avg_weight_loss_30d?: number | null
+          cohort_id: string
+          dropout_rate?: number | null
+          engine_version?: string | null
+          id?: string
+          metabolic_stability?: number | null
+          stagnation_rate?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          avg_adherence?: number | null
+          avg_performance_score?: number | null
+          avg_response_velocity?: number | null
+          avg_weight_loss_14d?: number | null
+          avg_weight_loss_30d?: number | null
+          cohort_id?: string
+          dropout_rate?: number | null
+          engine_version?: string | null
+          id?: string
+          metabolic_stability?: number | null
+          stagnation_rate?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "population_cohort_metrics_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: true
+            referencedRelation: "population_cohorts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      population_cohorts: {
+        Row: {
+          cohort_key: string
+          cohort_signature: Json
+          created_at: string | null
+          id: string
+          nutritionist_id: string
+          patients_count: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          cohort_key: string
+          cohort_signature?: Json
+          created_at?: string | null
+          id?: string
+          nutritionist_id: string
+          patients_count?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          cohort_key?: string
+          cohort_signature?: Json
+          created_at?: string | null
+          id?: string
+          nutritionist_id?: string
+          patients_count?: number | null
+          updated_at?: string | null
         }
         Relationships: []
       }
