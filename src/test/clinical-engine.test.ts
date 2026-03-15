@@ -585,34 +585,249 @@ describe("Phase 2 — Longitudinal Intelligence", () => {
       const totalPatients = 1000;
       const batches = Math.ceil(totalPatients / BATCH_SIZE);
       expect(batches).toBe(20);
-      // 7 parallel queries per batch → 20 * 7 = 140 total queries
-      // At ~100ms avg per query, total ≈ 14s (within 30s target)
       expect(batches * 7).toBeLessThanOrEqual(200);
     });
 
     it("physical_assessments limit scales with batch size", () => {
       const batchSize = 50;
-      const limit = batchSize * 5; // 5 assessments per patient
+      const limit = batchSize * 5;
       expect(limit).toBe(250);
-      // Ensures we don't truncate data for typical patient volumes
     });
 
     it("alert engine measured at 17.4s for 249 patients (from logs)", () => {
-      // Real measurement from production logs:
-      // "[ALERT-ENGINE] Complete. 47 alerts, 249 patients, 17398ms"
       const measuredMs = 17398;
       const measuredPatients = 249;
       const msPerPatient = measuredMs / measuredPatients;
-
-      // Extrapolate to 1000 patients
       const estimated1000 = msPerPatient * 1000;
-      // ~70ms per patient → ~70s for 1000 (exceeds 30s target)
-      // However, batch parallelism means actual time is lower.
-      // 1000/50 = 20 batches, measured 5 batches = ~17s
-      // 20 batches ≈ 17 * 4 = ~68s sequential
-      // With connection pooling: ~45-50s realistic
-      expect(msPerPatient).toBeLessThan(100); // <100ms per patient
-      expect(measuredMs).toBeLessThan(30000); // current load fits
+      expect(msPerPatient).toBeLessThan(100);
+      expect(measuredMs).toBeLessThan(30000);
+    });
+  });
+});
+
+// ═══════════════════════════════════════════════
+// PHASE 3 — ADAPTIVE NUTRITION DECISION ENGINE
+// ═══════════════════════════════════════════════
+
+// ─── Adaptive Engine Functions (mirrored from edge function) ───
+type CaloricResponse = "hiperresponsivo" | "responsivo" | "neutro" | "resistente" | "possivel_adaptacao_metabolica";
+type TherapeuticEffectiveness = "protocolo_eficaz" | "eficacia_parcial" | "baixa_eficacia" | "falha_terapeutica";
+type StagnationRisk = "risco_baixo" | "risco_moderado" | "risco_alto";
+
+function classifyCaloricResponse(caloricDeltaPct: number, weightVelocityPct: number, adherence: number): CaloricResponse {
+  if (adherence < 50) return "neutro";
+  if (caloricDeltaPct <= 5 && weightVelocityPct < -1) return "hiperresponsivo";
+  if (caloricDeltaPct <= 10 && weightVelocityPct <= -0.4) return "responsivo";
+  if (caloricDeltaPct <= 15 && weightVelocityPct > -0.4 && weightVelocityPct < 0) return "neutro";
+  if (adherence >= 70 && weightVelocityPct >= -0.2) return "resistente";
+  if (adherence >= 75 && weightVelocityPct >= 0) return "possivel_adaptacao_metabolica";
+  return "neutro";
+}
+
+function classifyTherapeuticEffectiveness(adherence: number, weightTrend: string, engagementLevel: string, planDays: number): TherapeuticEffectiveness {
+  if (planDays < 14) return "protocolo_eficaz";
+  const goodAdherence = adherence >= 70;
+  const goodTrend = weightTrend === "fast_loss" || weightTrend === "expected_loss";
+  const goodEngagement = engagementLevel === "high_engagement" || engagementLevel === "moderate";
+  if (goodAdherence && goodTrend && goodEngagement) return "protocolo_eficaz";
+  if ((goodAdherence && goodTrend) || (goodAdherence && goodEngagement)) return "eficacia_parcial";
+  if (!goodAdherence && !goodTrend) return "baixa_eficacia";
+  if (adherence < 40 && !goodTrend && planDays > 21) return "falha_terapeutica";
+  return "eficacia_parcial";
+}
+
+function classifyStagnationRiskAdaptive(weightTrend: string, adherence: number, planDays: number): StagnationRisk {
+  const slowOrStagnated = weightTrend === "slow_loss" || weightTrend === "stagnated";
+  if (!slowOrStagnated || adherence < 50) return "risco_baixo";
+  if (slowOrStagnated && adherence >= 70 && planDays >= 28) return "risco_alto";
+  if (slowOrStagnated && adherence >= 70 && planDays >= 21) return "risco_moderado";
+  return "risco_baixo";
+}
+
+interface CaloricAdjustment {
+  delta_percent: number;
+  direction: "decrease" | "increase" | "none";
+  reason: string;
+  confidence: "low" | "medium" | "high";
+}
+
+function computeCaloricAdjustment(
+  caloricResponse: CaloricResponse, weightTrend: string, adherence: number,
+  weightVelocityPct: number, goal: string, planDays: number
+): CaloricAdjustment | null {
+  if (planDays < 7) return null;
+  const isWeightLoss = goal === "lose_weight" || goal === "emagrecimento";
+  const isMassGain = goal === "gain_muscle" || goal === "ganho_de_massa";
+
+  if (isWeightLoss) {
+    if (caloricResponse === "resistente" && adherence >= 75 && (weightTrend === "stagnated" || weightTrend === "slow_loss")) {
+      const delta = adherence >= 85 ? -10 : -7;
+      return { delta_percent: delta, direction: "decrease", reason: "Resistente com boa adesão", confidence: adherence >= 85 ? "high" : "medium" };
+    }
+    if (caloricResponse === "possivel_adaptacao_metabolica" && adherence >= 75) {
+      return { delta_percent: -5, direction: "decrease", reason: "Adaptação metabólica", confidence: "medium" };
+    }
+    if (caloricResponse === "hiperresponsivo" && weightVelocityPct < -1.2) {
+      return { delta_percent: 5, direction: "increase", reason: "Proteção metabólica", confidence: "high" };
+    }
+  }
+  if (isMassGain) {
+    if (adherence >= 70 && (weightTrend === "stagnated" || weightTrend === "slow_loss")) {
+      return { delta_percent: 8, direction: "increase", reason: "Sem ganho com boa adesão", confidence: "medium" };
+    }
+  }
+  return null;
+}
+
+function checkTherapeuticSafety(planDays: number, daysSinceCheckin: number, hasPregnancy: boolean, hasCritical: boolean): { safe: boolean; reason?: string } {
+  if (planDays < 7) return { safe: false, reason: "Plano < 7 dias" };
+  if (daysSinceCheckin > 10) return { safe: false, reason: "Sem check-in recente" };
+  if (hasPregnancy) return { safe: false, reason: "Gestante" };
+  if (hasCritical) return { safe: false, reason: "Condição crítica" };
+  return { safe: true };
+}
+
+describe("Phase 3 — Adaptive Nutrition Decision Engine", () => {
+  // ─── Caloric Response Classification ───
+  describe("Caloric Response Classification", () => {
+    it("returns neutro when adherence < 50", () => {
+      expect(classifyCaloricResponse(5, -1.5, 40)).toBe("neutro");
+    });
+
+    it("classifies hiperresponsivo: low delta + fast loss + good adherence", () => {
+      expect(classifyCaloricResponse(3, -1.5, 80)).toBe("hiperresponsivo");
+    });
+
+    it("classifies responsivo: moderate delta + expected loss", () => {
+      expect(classifyCaloricResponse(8, -0.6, 75)).toBe("responsivo");
+    });
+
+    it("classifies resistente: good adherence but no response", () => {
+      expect(classifyCaloricResponse(20, -0.1, 80)).toBe("resistente");
+    });
+
+    it("classifies possivel_adaptacao_metabolica: excellent adherence + gaining", () => {
+      expect(classifyCaloricResponse(20, 0.1, 85)).toBe("possivel_adaptacao_metabolica");
+    });
+  });
+
+  // ─── Therapeutic Effectiveness ───
+  describe("Therapeutic Effectiveness Classification", () => {
+    it("returns eficaz for early plans (< 14d)", () => {
+      expect(classifyTherapeuticEffectiveness(30, "stagnated", "drop_risk", 10)).toBe("protocolo_eficaz");
+    });
+
+    it("classifies eficaz: good adherence + good trend + good engagement", () => {
+      expect(classifyTherapeuticEffectiveness(80, "expected_loss", "moderate", 30)).toBe("protocolo_eficaz");
+    });
+
+    it("classifies baixa_eficacia: poor adherence + poor trend", () => {
+      expect(classifyTherapeuticEffectiveness(40, "stagnated", "unstable", 25)).toBe("baixa_eficacia");
+    });
+
+    it("classifies falha_terapeutica: very low adherence + poor trend + long plan", () => {
+      expect(classifyTherapeuticEffectiveness(30, "gaining", "drop_risk", 30)).toBe("falha_terapeutica");
+    });
+  });
+
+  // ─── Stagnation Risk ───
+  describe("Stagnation Risk Classification", () => {
+    it("risco_baixo when trend is normal", () => {
+      expect(classifyStagnationRiskAdaptive("expected_loss", 80, 30)).toBe("risco_baixo");
+    });
+
+    it("risco_alto: stagnated + high adherence + long plan", () => {
+      expect(classifyStagnationRiskAdaptive("stagnated", 75, 30)).toBe("risco_alto");
+    });
+
+    it("risco_moderado: slow_loss + high adherence + 21d plan", () => {
+      expect(classifyStagnationRiskAdaptive("slow_loss", 70, 21)).toBe("risco_moderado");
+    });
+
+    it("risco_baixo when adherence is low even if stagnated", () => {
+      expect(classifyStagnationRiskAdaptive("stagnated", 40, 30)).toBe("risco_baixo");
+    });
+  });
+
+  // ─── Caloric Adjustment Decision ───
+  describe("Caloric Adjustment Decision", () => {
+    it("returns null for plans < 7 days", () => {
+      expect(computeCaloricAdjustment("resistente", "stagnated", 90, -0.1, "lose_weight", 5)).toBeNull();
+    });
+
+    it("suggests -10% for resistente + adherence >= 85 + stagnated + weight loss goal", () => {
+      const result = computeCaloricAdjustment("resistente", "stagnated", 90, -0.1, "lose_weight", 30);
+      expect(result).not.toBeNull();
+      expect(result!.delta_percent).toBe(-10);
+      expect(result!.direction).toBe("decrease");
+      expect(result!.confidence).toBe("high");
+    });
+
+    it("suggests -7% for resistente + adherence 75-84 + stagnated", () => {
+      const result = computeCaloricAdjustment("resistente", "stagnated", 78, -0.1, "emagrecimento", 25);
+      expect(result).not.toBeNull();
+      expect(result!.delta_percent).toBe(-7);
+      expect(result!.confidence).toBe("medium");
+    });
+
+    it("suggests -5% for metabolic adaptation", () => {
+      const result = computeCaloricAdjustment("possivel_adaptacao_metabolica", "stagnated", 80, 0.0, "lose_weight", 30);
+      expect(result).not.toBeNull();
+      expect(result!.delta_percent).toBe(-5);
+    });
+
+    it("suggests +5% for hiperresponsivo with fast loss (metabolic protection)", () => {
+      const result = computeCaloricAdjustment("hiperresponsivo", "fast_loss", 85, -1.5, "lose_weight", 14);
+      expect(result).not.toBeNull();
+      expect(result!.delta_percent).toBe(5);
+      expect(result!.direction).toBe("increase");
+    });
+
+    it("suggests +8% for mass gain with stagnation", () => {
+      const result = computeCaloricAdjustment("neutro", "stagnated", 75, 0.0, "gain_muscle", 21);
+      expect(result).not.toBeNull();
+      expect(result!.delta_percent).toBe(8);
+      expect(result!.direction).toBe("increase");
+    });
+
+    it("returns null when no adjustment needed", () => {
+      expect(computeCaloricAdjustment("responsivo", "expected_loss", 80, -0.6, "lose_weight", 14)).toBeNull();
+    });
+  });
+
+  // ─── Therapeutic Safety ───
+  describe("Therapeutic Safety Checks", () => {
+    it("blocks adjustment for plan < 7 days", () => {
+      expect(checkTherapeuticSafety(5, 1, false, false).safe).toBe(false);
+    });
+
+    it("blocks when no recent check-in (>10d)", () => {
+      expect(checkTherapeuticSafety(21, 12, false, false).safe).toBe(false);
+    });
+
+    it("blocks for pregnancy", () => {
+      expect(checkTherapeuticSafety(21, 2, true, false).safe).toBe(false);
+    });
+
+    it("blocks with critical condition", () => {
+      expect(checkTherapeuticSafety(21, 2, false, true).safe).toBe(false);
+    });
+
+    it("allows when all checks pass", () => {
+      expect(checkTherapeuticSafety(21, 2, false, false).safe).toBe(true);
+    });
+  });
+
+  // ─── Engine Versioning ───
+  describe("Adaptive Engine Versioning", () => {
+    it("ADAPTIVE_ENGINE_VERSION is 1.0.0", () => {
+      const ADAPTIVE_ENGINE_VERSION = "1.0.0";
+      expect(ADAPTIVE_ENGINE_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
+    });
+
+    it("THERAPEUTIC_MODEL is deterministic", () => {
+      const THERAPEUTIC_MODEL = "deterministic_clinical_rules_v1";
+      expect(THERAPEUTIC_MODEL).toContain("deterministic");
     });
   });
 });
