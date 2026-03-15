@@ -1994,6 +1994,60 @@ export type Database = {
         }
         Relationships: []
       }
+      nutrition_protocols: {
+        Row: {
+          behavioral_complexity_level: string
+          clinical_goal: string
+          contraindicated_conditions: string[] | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          metabolic_strategy_type: string
+          protocol_category: string
+          protocol_name: string
+          protocol_slug: string
+          recommended_clusters: string[] | null
+          scientific_rationale: string | null
+          updated_at: string | null
+          version: number | null
+        }
+        Insert: {
+          behavioral_complexity_level?: string
+          clinical_goal: string
+          contraindicated_conditions?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          metabolic_strategy_type?: string
+          protocol_category?: string
+          protocol_name: string
+          protocol_slug: string
+          recommended_clusters?: string[] | null
+          scientific_rationale?: string | null
+          updated_at?: string | null
+          version?: number | null
+        }
+        Update: {
+          behavioral_complexity_level?: string
+          clinical_goal?: string
+          contraindicated_conditions?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          metabolic_strategy_type?: string
+          protocol_category?: string
+          protocol_name?: string
+          protocol_slug?: string
+          recommended_clusters?: string[] | null
+          scientific_rationale?: string | null
+          updated_at?: string | null
+          version?: number | null
+        }
+        Relationships: []
+      }
       nutritional_intervention_suggestions: {
         Row: {
           applied_at: string | null
@@ -4279,6 +4333,97 @@ export type Database = {
           },
         ]
       }
+      protocol_caloric_ranges: {
+        Row: {
+          adaptation_cycle_days: number | null
+          created_at: string | null
+          deficit_strategy_type: string
+          diet_break_supported: boolean | null
+          id: string
+          kcal_max: number
+          kcal_min: number
+          protocol_id: string
+          refeed_supported: boolean | null
+        }
+        Insert: {
+          adaptation_cycle_days?: number | null
+          created_at?: string | null
+          deficit_strategy_type?: string
+          diet_break_supported?: boolean | null
+          id?: string
+          kcal_max?: number
+          kcal_min?: number
+          protocol_id: string
+          refeed_supported?: boolean | null
+        }
+        Update: {
+          adaptation_cycle_days?: number | null
+          created_at?: string | null
+          deficit_strategy_type?: string
+          diet_break_supported?: boolean | null
+          id?: string
+          kcal_max?: number
+          kcal_min?: number
+          protocol_id?: string
+          refeed_supported?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "protocol_caloric_ranges_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      protocol_clinical_performance: {
+        Row: {
+          avg_adherence: number | null
+          avg_weight_response: number | null
+          created_at: string | null
+          dropout_rate: number | null
+          id: string
+          last_updated: string | null
+          metabolic_success_score: number | null
+          protocol_id: string
+          stagnation_rate: number | null
+          total_applications: number | null
+        }
+        Insert: {
+          avg_adherence?: number | null
+          avg_weight_response?: number | null
+          created_at?: string | null
+          dropout_rate?: number | null
+          id?: string
+          last_updated?: string | null
+          metabolic_success_score?: number | null
+          protocol_id: string
+          stagnation_rate?: number | null
+          total_applications?: number | null
+        }
+        Update: {
+          avg_adherence?: number | null
+          avg_weight_response?: number | null
+          created_at?: string | null
+          dropout_rate?: number | null
+          id?: string
+          last_updated?: string | null
+          metabolic_success_score?: number | null
+          protocol_id?: string
+          stagnation_rate?: number | null
+          total_applications?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "protocol_clinical_performance_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: true
+            referencedRelation: "nutrition_protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       protocol_cycles: {
         Row: {
           approval_required: boolean | null
@@ -4335,6 +4480,38 @@ export type Database = {
           },
         ]
       }
+      protocol_food_substitution_groups: {
+        Row: {
+          created_at: string | null
+          id: string
+          objective: string | null
+          protocol_id: string
+          substitution_group: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          objective?: string | null
+          protocol_id: string
+          substitution_group: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          objective?: string | null
+          protocol_id?: string
+          substitution_group?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "protocol_food_substitution_groups_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       protocol_master_settings: {
         Row: {
           apply_to_existing_patients: boolean
@@ -4376,6 +4553,79 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      protocol_meal_structures: {
+        Row: {
+          created_at: string | null
+          glycemic_strategy: string | null
+          id: string
+          macro_distribution_pattern: string
+          meal_density_level: string | null
+          meals_per_day: number
+          preparation_complexity: string | null
+          protocol_id: string
+          satiety_strategy: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          glycemic_strategy?: string | null
+          id?: string
+          macro_distribution_pattern?: string
+          meal_density_level?: string | null
+          meals_per_day?: number
+          preparation_complexity?: string | null
+          protocol_id: string
+          satiety_strategy?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          glycemic_strategy?: string | null
+          id?: string
+          macro_distribution_pattern?: string
+          meal_density_level?: string | null
+          meals_per_day?: number
+          preparation_complexity?: string | null
+          protocol_id?: string
+          satiety_strategy?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "protocol_meal_structures_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      protocol_metabolic_tags: {
+        Row: {
+          created_at: string | null
+          id: string
+          protocol_id: string
+          tag: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          protocol_id: string
+          tag: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          protocol_id?: string
+          tag?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "protocol_metabolic_tags_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_protocols"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       protocol_tasks: {
         Row: {
