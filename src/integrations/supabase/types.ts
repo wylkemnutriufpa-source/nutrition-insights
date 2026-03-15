@@ -3161,6 +3161,189 @@ export type Database = {
           },
         ]
       }
+      organization_operational_alerts: {
+        Row: {
+          alert_type: string
+          description: string | null
+          detected_at: string | null
+          id: string
+          is_active: boolean | null
+          metadata: Json | null
+          organization_id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string | null
+          title: string
+        }
+        Insert: {
+          alert_type: string
+          description?: string | null
+          detected_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          organization_id: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          title: string
+        }
+        Update: {
+          alert_type?: string
+          description?: string | null
+          detected_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          organization_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_operational_alerts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_operational_snapshots: {
+        Row: {
+          active_patients: number | null
+          average_adherence: number | null
+          average_performance_score: number | null
+          avg_patient_ltv_estimate: number | null
+          avg_time_between_interventions: number | null
+          clinical_efficiency_index: number | null
+          clinical_intervention_rate: number | null
+          created_at: string | null
+          dropout_rate_30d: number | null
+          engine_version: string | null
+          high_risk_patients: number | null
+          id: string
+          intervention_load_level: string | null
+          organization_id: string
+          portfolio_stability_index: number | null
+          predicted_portfolio_contraction_rate: number | null
+          predicted_portfolio_growth_rate: number | null
+          protocol_adjustment_rate: number | null
+          snapshot_date: string
+          stagnation_rate_30d: number | null
+        }
+        Insert: {
+          active_patients?: number | null
+          average_adherence?: number | null
+          average_performance_score?: number | null
+          avg_patient_ltv_estimate?: number | null
+          avg_time_between_interventions?: number | null
+          clinical_efficiency_index?: number | null
+          clinical_intervention_rate?: number | null
+          created_at?: string | null
+          dropout_rate_30d?: number | null
+          engine_version?: string | null
+          high_risk_patients?: number | null
+          id?: string
+          intervention_load_level?: string | null
+          organization_id: string
+          portfolio_stability_index?: number | null
+          predicted_portfolio_contraction_rate?: number | null
+          predicted_portfolio_growth_rate?: number | null
+          protocol_adjustment_rate?: number | null
+          snapshot_date?: string
+          stagnation_rate_30d?: number | null
+        }
+        Update: {
+          active_patients?: number | null
+          average_adherence?: number | null
+          average_performance_score?: number | null
+          avg_patient_ltv_estimate?: number | null
+          avg_time_between_interventions?: number | null
+          clinical_efficiency_index?: number | null
+          clinical_intervention_rate?: number | null
+          created_at?: string | null
+          dropout_rate_30d?: number | null
+          engine_version?: string | null
+          high_risk_patients?: number | null
+          id?: string
+          intervention_load_level?: string | null
+          organization_id?: string
+          portfolio_stability_index?: number | null
+          predicted_portfolio_contraction_rate?: number | null
+          predicted_portfolio_growth_rate?: number | null
+          protocol_adjustment_rate?: number | null
+          snapshot_date?: string
+          stagnation_rate_30d?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_operational_snapshots_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_recommended_actions: {
+        Row: {
+          acted_at: string | null
+          acted_by: string | null
+          action_type: string
+          created_at: string | null
+          description: string | null
+          engine_version: string | null
+          expected_impact: string | null
+          id: string
+          organization_id: string
+          priority: number | null
+          rationale: string | null
+          status: string | null
+          title: string
+        }
+        Insert: {
+          acted_at?: string | null
+          acted_by?: string | null
+          action_type: string
+          created_at?: string | null
+          description?: string | null
+          engine_version?: string | null
+          expected_impact?: string | null
+          id?: string
+          organization_id: string
+          priority?: number | null
+          rationale?: string | null
+          status?: string | null
+          title: string
+        }
+        Update: {
+          acted_at?: string | null
+          acted_by?: string | null
+          action_type?: string
+          created_at?: string | null
+          description?: string | null
+          engine_version?: string | null
+          expected_impact?: string | null
+          id?: string
+          organization_id?: string
+          priority?: number | null
+          rationale?: string | null
+          status?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_recommended_actions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_regional_settings: {
         Row: {
           created_at: string | null
@@ -5390,6 +5573,68 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      professional_operational_metrics: {
+        Row: {
+          active_patients: number | null
+          adherence_mean: number | null
+          avg_patient_performance: number | null
+          avg_patient_risk: number | null
+          clinical_efficiency_score: number | null
+          computed_at: string | null
+          dropout_rate: number | null
+          engine_version: string | null
+          id: string
+          intervention_frequency: number | null
+          organization_id: string | null
+          patient_ltv_estimate: number | null
+          portfolio_stability_score: number | null
+          professional_id: string
+          rank_position: number | null
+        }
+        Insert: {
+          active_patients?: number | null
+          adherence_mean?: number | null
+          avg_patient_performance?: number | null
+          avg_patient_risk?: number | null
+          clinical_efficiency_score?: number | null
+          computed_at?: string | null
+          dropout_rate?: number | null
+          engine_version?: string | null
+          id?: string
+          intervention_frequency?: number | null
+          organization_id?: string | null
+          patient_ltv_estimate?: number | null
+          portfolio_stability_score?: number | null
+          professional_id: string
+          rank_position?: number | null
+        }
+        Update: {
+          active_patients?: number | null
+          adherence_mean?: number | null
+          avg_patient_performance?: number | null
+          avg_patient_risk?: number | null
+          clinical_efficiency_score?: number | null
+          computed_at?: string | null
+          dropout_rate?: number | null
+          engine_version?: string | null
+          id?: string
+          intervention_frequency?: number | null
+          organization_id?: string | null
+          patient_ltv_estimate?: number | null
+          portfolio_stability_score?: number | null
+          professional_id?: string
+          rank_position?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_operational_metrics_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       professional_profiles: {
         Row: {
