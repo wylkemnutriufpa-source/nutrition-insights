@@ -2949,6 +2949,48 @@ export type Database = {
           },
         ]
       }
+      organization_action_groups_snapshot: {
+        Row: {
+          avg_priority: number | null
+          avg_risk: number | null
+          created_at: string | null
+          engine_version: string | null
+          group_type: string
+          id: string
+          nutritionist_id: string
+          organization_id: string | null
+          patient_ids: Json | null
+          patients_count: number | null
+          snapshot_date: string | null
+        }
+        Insert: {
+          avg_priority?: number | null
+          avg_risk?: number | null
+          created_at?: string | null
+          engine_version?: string | null
+          group_type: string
+          id?: string
+          nutritionist_id: string
+          organization_id?: string | null
+          patient_ids?: Json | null
+          patients_count?: number | null
+          snapshot_date?: string | null
+        }
+        Update: {
+          avg_priority?: number | null
+          avg_risk?: number | null
+          created_at?: string | null
+          engine_version?: string | null
+          group_type?: string
+          id?: string
+          nutritionist_id?: string
+          organization_id?: string | null
+          patient_ids?: Json | null
+          patients_count?: number | null
+          snapshot_date?: string | null
+        }
+        Relationships: []
+      }
       organization_brand_settings: {
         Row: {
           accent_color: string | null
@@ -4833,6 +4875,78 @@ export type Database = {
           start_date?: string
           timing?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      patient_therapeutic_priority_state: {
+        Row: {
+          action_clinical_driver: string | null
+          action_expected_impact: string | null
+          action_group: string | null
+          action_urgency: string | null
+          clinical_risk_component: number | null
+          cluster_behavior_component: number | null
+          created_at: string | null
+          dropout_risk_component: number | null
+          engine_version: string | null
+          id: string
+          last_calculated_at: string | null
+          main_driver: string | null
+          nutritionist_id: string
+          patient_id: string
+          performance_component: number | null
+          physiological_component: number | null
+          priority_classification: string | null
+          recommended_clinical_action: string | null
+          regression_risk_component: number | null
+          therapeutic_priority_score: number | null
+          time_since_intervention_component: number | null
+        }
+        Insert: {
+          action_clinical_driver?: string | null
+          action_expected_impact?: string | null
+          action_group?: string | null
+          action_urgency?: string | null
+          clinical_risk_component?: number | null
+          cluster_behavior_component?: number | null
+          created_at?: string | null
+          dropout_risk_component?: number | null
+          engine_version?: string | null
+          id?: string
+          last_calculated_at?: string | null
+          main_driver?: string | null
+          nutritionist_id: string
+          patient_id: string
+          performance_component?: number | null
+          physiological_component?: number | null
+          priority_classification?: string | null
+          recommended_clinical_action?: string | null
+          regression_risk_component?: number | null
+          therapeutic_priority_score?: number | null
+          time_since_intervention_component?: number | null
+        }
+        Update: {
+          action_clinical_driver?: string | null
+          action_expected_impact?: string | null
+          action_group?: string | null
+          action_urgency?: string | null
+          clinical_risk_component?: number | null
+          cluster_behavior_component?: number | null
+          created_at?: string | null
+          dropout_risk_component?: number | null
+          engine_version?: string | null
+          id?: string
+          last_calculated_at?: string | null
+          main_driver?: string | null
+          nutritionist_id?: string
+          patient_id?: string
+          performance_component?: number | null
+          physiological_component?: number | null
+          priority_classification?: string | null
+          recommended_clinical_action?: string | null
+          regression_risk_component?: number | null
+          therapeutic_priority_score?: number | null
+          time_since_intervention_component?: number | null
         }
         Relationships: []
       }
