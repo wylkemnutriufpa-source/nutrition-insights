@@ -104,6 +104,7 @@ const ClinicalRiskDashboard = lazy(() => import("./pages/ClinicalRiskDashboard")
 const AdminProtocolFitJourney = lazy(() => import("./pages/AdminProtocolFitJourney"));
 const AdminProtocolBiquiniBranco = lazy(() => import("./pages/AdminProtocolBiquiniBranco"));
 const AdminNutritionProtocols = lazy(() => import("./pages/AdminNutritionProtocols"));
+const TherapeuticIntelligence = lazy(() => import("./pages/TherapeuticIntelligence"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
