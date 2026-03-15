@@ -15,13 +15,16 @@ import {
   Sun, Coffee, Apple, Sandwich, Moon, Cookie, Save, ChevronLeft, ChevronRight,
   Flame, Beef, Wheat, Droplets, Leaf, PencilLine, X, Check, Sparkles, Loader2,
   Bookmark, BookmarkCheck, FolderDown, FolderUp, BookOpen, CalendarDays, CalendarRange,
-  AlertTriangle, ArrowLeftRight
+  AlertTriangle, ArrowLeftRight, BarChart3, ArrowRightLeft
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import PlanScheduler from "@/components/plans/PlanScheduler";
 import DocumentUpload from "@/components/common/DocumentUpload";
 import FoodAutocomplete, { type FoodItem } from "@/components/meals/FoodAutocomplete";
 import CalorieTemplates from "@/components/meals/CalorieTemplates";
+import FoodSubstitutions, { getCategoryDot } from "@/components/meals/FoodSubstitutions";
+import MacroBalanceBar from "@/components/meals/MacroBalanceBar";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -131,6 +134,15 @@ export default function MealPlanEditor() {
   const [dragSource, setDragSource] = useState<{ day: number; mealType: MealType } | null>(null);
   const [dragOver, setDragOver] = useState<{ day: number; mealType: MealType } | null>(null);
   const [swapping, setSwapping] = useState(false);
+
+  // Inline editing state
+  const [inlineEditId, setInlineEditId] = useState<string | null>(null);
+  const [inlineEditValue, setInlineEditValue] = useState("");
+  const [inlineEditSaving, setInlineEditSaving] = useState(false);
+
+  // Smart drawer panel state  
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerItem, setDrawerItem] = useState<MealPlanItem | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!id || !user) return;
@@ -347,6 +359,53 @@ export default function MealPlanEditor() {
     setSwapping(false);
     setDragSource(null);
     setDragOver(null);
+  };
+
+  // Inline edit: save title directly
+  const handleInlineEdit = async (itemId: string, newTitle: string) => {
+    if (!newTitle.trim()) { setInlineEditId(null); return; }
+    setInlineEditSaving(true);
+    const match = findFoodMatch(newTitle.trim());
+    const updatePayload: any = { title: newTitle.trim() };
+    if (match) {
+      updatePayload.calories_target = match.calories;
+      updatePayload.protein_target = match.protein;
+      updatePayload.carbs_target = match.carbs;
+      updatePayload.fat_target = match.fat;
+      updatePayload.description = match.portion;
+    }
+    const { error } = await supabase.from("meal_plan_items").update(updatePayload).eq("id", itemId);
+    setInlineEditSaving(false);
+    setInlineEditId(null);
+    if (error) toast.error("Erro ao editar");
+    else {
+      toast.success(match ? "Atualizado com macros ✨" : "Atualizado!");
+      fetchData();
+    }
+  };
+
+  // Open drawer panel for detailed view
+  const openDrawerPanel = (item: MealPlanItem) => {
+    setDrawerItem(item);
+    setDrawerOpen(true);
+  };
+
+  // Handle substitution from drawer
+  const handleSubstitute = async (item: MealPlanItem, food: FoodItem) => {
+    const { error } = await supabase.from("meal_plan_items").update({
+      title: food.name,
+      description: food.portion,
+      calories_target: food.calories,
+      protein_target: food.protein,
+      carbs_target: food.carbs,
+      fat_target: food.fat,
+    }).eq("id", item.id);
+    if (error) toast.error("Erro ao substituir");
+    else {
+      toast.success(`Substituído por ${food.name} ✨`);
+      setDrawerOpen(false);
+      fetchData();
+    }
   };
 
 
@@ -930,26 +989,60 @@ export default function MealPlanEditor() {
                           )}
                           <div className="flex-1 space-y-1.5">
                             <AnimatePresence mode="popLayout">
-                              {cellItems.map((item) => (
+                              {cellItems.map((item) => {
+                                const catDot = getCategoryDot(item.title);
+                                const isInlineEditing = inlineEditId === item.id;
+                                return (
                                 <motion.div
                                   key={item.id}
                                   initial={{ opacity: 0, scale: 0.95 }}
                                   animate={{ opacity: 1, scale: 1 }}
                                   exit={{ opacity: 0, scale: 0.95 }}
-                                  className="bg-secondary/60 rounded-md px-2 py-1.5 cursor-pointer hover:bg-secondary transition-colors group/item"
-                                  onClick={() => openEditDialog(item)}
+                                  className="bg-secondary/60 rounded-md px-2 py-1.5 hover:bg-secondary transition-colors group/item relative"
                                 >
-                                  <p className="text-[11px] font-medium leading-tight truncate">{item.title}</p>
-                                  {item.description && <p className="text-[9px] text-muted-foreground leading-tight mt-0.5 line-clamp-2">{item.description}</p>}
-                                  <div className="flex items-center gap-1.5 mt-1 text-[9px] text-muted-foreground">
-                                    {item.calories_target && <span className="flex items-center gap-0.5"><Flame className="w-2.5 h-2.5 text-orange-400" />{item.calories_target}</span>}
-                                    {item.protein_target && <span className="flex items-center gap-0.5"><Beef className="w-2.5 h-2.5 text-red-400" />{Number(item.protein_target).toFixed(0)}g</span>}
-                                  </div>
-                                  <button onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }} className="absolute top-1 right-1 opacity-0 group-hover/item:opacity-100 transition-opacity p-0.5 rounded hover:bg-destructive/10">
-                                    <X className="w-3 h-3 text-destructive" />
-                                  </button>
+                                  {isInlineEditing ? (
+                                    <div className="flex gap-1">
+                                      <input
+                                        autoFocus
+                                        value={inlineEditValue}
+                                        onChange={(e) => setInlineEditValue(e.target.value)}
+                                        onKeyDown={(e) => {
+                                          if (e.key === "Enter") handleInlineEdit(item.id, inlineEditValue);
+                                          if (e.key === "Escape") setInlineEditId(null);
+                                        }}
+                                        onBlur={() => handleInlineEdit(item.id, inlineEditValue)}
+                                        className="w-full text-[11px] bg-transparent border-b border-primary outline-none"
+                                        disabled={inlineEditSaving}
+                                      />
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <div className="flex items-center gap-1 cursor-pointer" onClick={() => openEditDialog(item)}>
+                                        {catDot && <span className={`w-1.5 h-1.5 rounded-full ${catDot} shrink-0`} />}
+                                        <p className="text-[11px] font-medium leading-tight truncate flex-1">{item.title}</p>
+                                      </div>
+                                      {item.description && <p className="text-[9px] text-muted-foreground leading-tight mt-0.5 line-clamp-2">{item.description}</p>}
+                                      <div className="flex items-center gap-1.5 mt-1 text-[9px] text-muted-foreground">
+                                        {item.calories_target && <span className="flex items-center gap-0.5"><Flame className="w-2.5 h-2.5 text-orange-400" />{item.calories_target}</span>}
+                                        {item.protein_target && <span className="flex items-center gap-0.5"><Beef className="w-2.5 h-2.5 text-red-400" />{Number(item.protein_target).toFixed(0)}g</span>}
+                                      </div>
+                                      {/* Action buttons */}
+                                      <div className="absolute top-1 right-1 flex gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                        <button onClick={(e) => { e.stopPropagation(); setInlineEditId(item.id); setInlineEditValue(item.title); }} className="p-0.5 rounded hover:bg-accent/50" title="Editar inline">
+                                          <PencilLine className="w-2.5 h-2.5 text-muted-foreground" />
+                                        </button>
+                                        <button onClick={(e) => { e.stopPropagation(); openDrawerPanel(item); }} className="p-0.5 rounded hover:bg-accent/50" title="Painel detalhado">
+                                          <ArrowRightLeft className="w-2.5 h-2.5 text-muted-foreground" />
+                                        </button>
+                                        <button onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }} className="p-0.5 rounded hover:bg-destructive/10" title="Remover">
+                                          <X className="w-3 h-3 text-destructive" />
+                                        </button>
+                                      </div>
+                                    </>
+                                  )}
                                 </motion.div>
-                              ))}
+                              );
+                              })}
                             </AnimatePresence>
                           </div>
 
@@ -1012,6 +1105,9 @@ export default function MealPlanEditor() {
                           <div className="flex items-center gap-1"><Wheat className="w-3 h-3 text-amber-500" /><span className="font-semibold">{t.carbs.toFixed(0)}g</span><span className="text-muted-foreground">carb</span></div>
                           <div className="flex items-center gap-1"><Droplets className="w-3 h-3 text-blue-400" /><span className="font-semibold">{t.fat.toFixed(0)}g</span><span className="text-muted-foreground">gord</span></div>
                         </div>
+                        <div className="mt-1.5">
+                          <MacroBalanceBar protein={t.protein} carbs={t.carbs} fat={t.fat} calories={t.calories} compact />
+                        </div>
                         <div className="mt-1 flex justify-center">
                           <button
                             onClick={() => setCopySource(copySource?.day === day.key ? null : { day: day.key, mealType: "breakfast" })}
@@ -1058,11 +1154,17 @@ export default function MealPlanEditor() {
             {(() => {
               const t = getDayTotals(selectedDay);
               return (
-                <div className="grid grid-cols-4 gap-2">
-                  <div className="glass rounded-xl p-3 text-center"><Flame className="w-4 h-4 mx-auto text-orange-500 mb-1" /><p className="text-xs text-muted-foreground">Calorias</p><p className="font-display font-bold text-sm">{t.calories}</p></div>
-                  <div className="glass rounded-xl p-3 text-center"><Beef className="w-4 h-4 mx-auto text-red-500 mb-1" /><p className="text-xs text-muted-foreground">Proteína</p><p className="font-display font-bold text-sm">{t.protein.toFixed(0)}g</p></div>
-                  <div className="glass rounded-xl p-3 text-center"><Wheat className="w-4 h-4 mx-auto text-amber-500 mb-1" /><p className="text-xs text-muted-foreground">Carbs</p><p className="font-display font-bold text-sm">{t.carbs.toFixed(0)}g</p></div>
-                  <div className="glass rounded-xl p-3 text-center"><Droplets className="w-4 h-4 mx-auto text-blue-400 mb-1" /><p className="text-xs text-muted-foreground">Gordura</p><p className="font-display font-bold text-sm">{t.fat.toFixed(0)}g</p></div>
+                <div className="space-y-2">
+                  <div className="grid grid-cols-4 gap-2">
+                    <div className="glass rounded-xl p-3 text-center"><Flame className="w-4 h-4 mx-auto text-orange-500 mb-1" /><p className="text-xs text-muted-foreground">Calorias</p><p className="font-display font-bold text-sm">{t.calories}</p></div>
+                    <div className="glass rounded-xl p-3 text-center"><Beef className="w-4 h-4 mx-auto text-red-500 mb-1" /><p className="text-xs text-muted-foreground">Proteína</p><p className="font-display font-bold text-sm">{t.protein.toFixed(0)}g</p></div>
+                    <div className="glass rounded-xl p-3 text-center"><Wheat className="w-4 h-4 mx-auto text-amber-500 mb-1" /><p className="text-xs text-muted-foreground">Carbs</p><p className="font-display font-bold text-sm">{t.carbs.toFixed(0)}g</p></div>
+                    <div className="glass rounded-xl p-3 text-center"><Droplets className="w-4 h-4 mx-auto text-blue-400 mb-1" /><p className="text-xs text-muted-foreground">Gordura</p><p className="font-display font-bold text-sm">{t.fat.toFixed(0)}g</p></div>
+                  </div>
+                  <div className="glass rounded-xl p-3">
+                    <p className="text-[10px] font-semibold text-muted-foreground mb-1.5">Distribuição de Macros</p>
+                    <MacroBalanceBar protein={t.protein} carbs={t.carbs} fat={t.fat} calories={t.calories} />
+                  </div>
                 </div>
               );
             })()}
@@ -1080,12 +1182,15 @@ export default function MealPlanEditor() {
                       <span className="text-[10px] text-muted-foreground">{cellItems.length} itens</span>
                     </div>
                     <div className="p-3 space-y-2">
-                      {cellItems.map((item) => (
+                      {cellItems.map((item) => {
+                        const catDot = getCategoryDot(item.title);
+                        return (
                         <div
                           key={item.id}
                           className="flex items-center gap-3 p-2.5 rounded-lg bg-secondary/40 hover:bg-secondary/60 transition-colors cursor-pointer group/item relative"
                           onClick={() => openEditDialog(item)}
                         >
+                          {catDot && <span className={`w-2 h-2 rounded-full ${catDot} shrink-0`} />}
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">{item.title}</p>
                             {item.description && <p className="text-xs text-muted-foreground truncate">{item.description}</p>}
@@ -1096,11 +1201,17 @@ export default function MealPlanEditor() {
                               {item.fat_target && <span className="flex items-center gap-0.5"><Droplets className="w-3 h-3 text-blue-400" />{Number(item.fat_target).toFixed(0)}g</span>}
                             </div>
                           </div>
-                          <button onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }} className="opacity-0 group-hover/item:opacity-100 p-1 rounded hover:bg-destructive/10 transition-opacity">
-                            <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                          </button>
+                          <div className="flex gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                            <button onClick={(e) => { e.stopPropagation(); openDrawerPanel(item); }} className="p-1 rounded hover:bg-accent/50" title="Painel inteligente">
+                              <ArrowRightLeft className="w-3.5 h-3.5 text-muted-foreground" />
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }} className="p-1 rounded hover:bg-destructive/10">
+                              <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                            </button>
+                          </div>
                         </div>
-                      ))}
+                      );
+                      })}
 
                       {/* Quick-add inline for daily view */}
                       {quickAddKey === cellKey ? (
@@ -1265,6 +1376,35 @@ export default function MealPlanEditor() {
                 />
               </div>
             </div>
+
+            {/* Macro Balance Preview */}
+            {(form.protein_target || form.carbs_target || form.fat_target) && (
+              <MacroBalanceBar
+                protein={parseFloat(form.protein_target) || 0}
+                carbs={parseFloat(form.carbs_target) || 0}
+                fat={parseFloat(form.fat_target) || 0}
+                calories={parseInt(form.calories_target) || 0}
+              />
+            )}
+
+            {/* Smart Substitutions */}
+            {form.title.trim() && (
+              <FoodSubstitutions
+                currentFood={form.title}
+                onSelect={(food) => {
+                  setForm({
+                    ...form,
+                    title: food.name,
+                    description: food.portion,
+                    calories_target: food.calories.toString(),
+                    protein_target: food.protein.toString(),
+                    carbs_target: food.carbs.toString(),
+                    fat_target: food.fat.toString(),
+                  });
+                  toast.success(`Substituído por ${food.name}`);
+                }}
+              />
+            )}
 
             {/* Save & Import meal buttons */}
             <div className="flex gap-2">
@@ -1475,6 +1615,106 @@ export default function MealPlanEditor() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Smart Drawer Panel */}
+      <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
+        <SheetContent className="sm:max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="font-display flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-primary" /> Painel Inteligente
+            </SheetTitle>
+          </SheetHeader>
+          {drawerItem && (
+            <div className="space-y-4 mt-4">
+              {/* Current item info */}
+              <div className="glass rounded-xl p-4 space-y-2">
+                <h3 className="font-semibold text-sm">{drawerItem.title}</h3>
+                {drawerItem.description && (
+                  <p className="text-xs text-muted-foreground">{drawerItem.description}</p>
+                )}
+                <div className="grid grid-cols-4 gap-2 text-[10px]">
+                  <div className="text-center p-2 rounded-lg bg-secondary/40">
+                    <Flame className="w-3.5 h-3.5 mx-auto text-orange-400 mb-0.5" />
+                    <p className="font-semibold">{drawerItem.calories_target || 0}</p>
+                    <p className="text-muted-foreground">kcal</p>
+                  </div>
+                  <div className="text-center p-2 rounded-lg bg-secondary/40">
+                    <Beef className="w-3.5 h-3.5 mx-auto text-red-400 mb-0.5" />
+                    <p className="font-semibold">{Number(drawerItem.protein_target || 0).toFixed(0)}g</p>
+                    <p className="text-muted-foreground">prot</p>
+                  </div>
+                  <div className="text-center p-2 rounded-lg bg-secondary/40">
+                    <Wheat className="w-3.5 h-3.5 mx-auto text-amber-500 mb-0.5" />
+                    <p className="font-semibold">{Number(drawerItem.carbs_target || 0).toFixed(0)}g</p>
+                    <p className="text-muted-foreground">carb</p>
+                  </div>
+                  <div className="text-center p-2 rounded-lg bg-secondary/40">
+                    <Droplets className="w-3.5 h-3.5 mx-auto text-blue-400 mb-0.5" />
+                    <p className="font-semibold">{Number(drawerItem.fat_target || 0).toFixed(0)}g</p>
+                    <p className="text-muted-foreground">gord</p>
+                  </div>
+                </div>
+                <MacroBalanceBar
+                  protein={Number(drawerItem.protein_target) || 0}
+                  carbs={Number(drawerItem.carbs_target) || 0}
+                  fat={Number(drawerItem.fat_target) || 0}
+                  calories={drawerItem.calories_target || 0}
+                />
+              </div>
+
+              {/* Quick edit button */}
+              <Button
+                variant="outline"
+                className="w-full gap-2"
+                onClick={() => {
+                  setDrawerOpen(false);
+                  openEditDialog(drawerItem);
+                }}
+              >
+                <PencilLine className="w-4 h-4" /> Editar no Modal Detalhado
+              </Button>
+
+              {/* Substitution suggestions */}
+              <div>
+                <h4 className="text-xs font-semibold mb-2 flex items-center gap-1.5">
+                  <ArrowRightLeft className="w-3.5 h-3.5 text-primary" />
+                  Substituir por Equivalente
+                </h4>
+                <FoodSubstitutions
+                  currentFood={drawerItem.title}
+                  onSelect={(food) => handleSubstitute(drawerItem, food)}
+                />
+              </div>
+
+              {/* Search in database */}
+              <div>
+                <h4 className="text-xs font-semibold mb-2">Buscar na Base de Alimentos</h4>
+                <FoodAutocomplete
+                  value=""
+                  onChange={() => {}}
+                  onSelect={(food) => handleSubstitute(drawerItem, food)}
+                  placeholder="Buscar alimento..."
+                />
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex gap-2 pt-2 border-t border-border">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="flex-1 gap-1.5"
+                  onClick={async () => {
+                    await handleDeleteItem(drawerItem.id);
+                    setDrawerOpen(false);
+                  }}
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Remover
+                </Button>
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </DashboardLayout>
   );
 }
