@@ -230,8 +230,8 @@ describe("Physiological Engine - Fallback Without Wearable", () => {
     expect(calculateTLB([])).toBe("optimal");
   });
 
-  it("should classify low risk with neutral fallbacks", () => {
-    expect(classifyPhysioRisk(50, 30, "optimal")).toBe("low");
+  it("should classify moderate risk with neutral fallbacks (RPI=50 < 60 threshold)", () => {
+    expect(classifyPhysioRisk(50, 30, "optimal")).toBe("moderate");
   });
 });
 
