@@ -21,6 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import TherapeuticSuggestionsPanel from "./TherapeuticSuggestionsPanel";
 
 interface PatientRisk {
   patient_id: string;
