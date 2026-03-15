@@ -1105,6 +1105,9 @@ export default function MealPlanEditor() {
                           <div className="flex items-center gap-1"><Wheat className="w-3 h-3 text-amber-500" /><span className="font-semibold">{t.carbs.toFixed(0)}g</span><span className="text-muted-foreground">carb</span></div>
                           <div className="flex items-center gap-1"><Droplets className="w-3 h-3 text-blue-400" /><span className="font-semibold">{t.fat.toFixed(0)}g</span><span className="text-muted-foreground">gord</span></div>
                         </div>
+                        <div className="mt-1.5">
+                          <MacroBalanceBar protein={t.protein} carbs={t.carbs} fat={t.fat} calories={t.calories} compact />
+                        </div>
                         <div className="mt-1 flex justify-center">
                           <button
                             onClick={() => setCopySource(copySource?.day === day.key ? null : { day: day.key, mealType: "breakfast" })}
