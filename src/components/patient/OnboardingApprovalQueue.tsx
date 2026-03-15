@@ -98,6 +98,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
       .maybeSingle();
     if (data) {
       const p = data as any;
+      console.log("[OnboardingApproval] Pipeline loaded:", { id: p.id, status: p.status, plan_generated: p.plan_generated, plan_approved: p.plan_approved, generated_plan_id: p.generated_plan_id });
       setPipeline(p);
       setUseScheduling(p.use_scheduling_criteria || false);
       setCriteria(p.scheduling_criteria || DEFAULT_CRITERIA);
