@@ -50,8 +50,11 @@ interface ClinicalAlert {
 const severityConfig: Record<string, { bg: string; text: string; label: string; dot: string }> = {
   critical: { bg: "bg-destructive/10 border-destructive/30", text: "text-destructive", label: "Crítico", dot: "bg-destructive" },
   high: { bg: "bg-destructive/5 border-destructive/20", text: "text-destructive/80", label: "Alto", dot: "bg-destructive/70" },
+  risk: { bg: "bg-warning/5 border-warning/20", text: "text-warning", label: "Em Risco", dot: "bg-warning" },
+  attention: { bg: "bg-yellow-500/5 border-yellow-500/20", text: "text-yellow-600", label: "Atenção", dot: "bg-yellow-500" },
   medium: { bg: "bg-warning/5 border-warning/20", text: "text-warning", label: "Médio", dot: "bg-warning" },
   low: { bg: "bg-muted/50 border-border", text: "text-muted-foreground", label: "Baixo", dot: "bg-muted-foreground" },
+  stable: { bg: "bg-muted/30 border-border", text: "text-muted-foreground", label: "Estável", dot: "bg-success" },
 };
 
 const alertTypeIcons: Record<string, any> = {
@@ -66,9 +69,9 @@ const alertTypeIcons: Record<string, any> = {
 
 function getRiskSeverity(score: number): string {
   if (score >= 60) return "critical";
-  if (score >= 30) return "high";
-  if (score >= 10) return "medium";
-  return "low";
+  if (score >= 30) return "risk";
+  if (score >= 10) return "attention";
+  return "stable";
 }
 
 function getRowBg(score: number): string {
@@ -109,7 +112,7 @@ export default function ClinicalRiskDashboardContent() {
         supabase.from("checklist_tasks").select("patient_id, completed").in("patient_id", patientIds).gte("date", sevenDaysAgo.split("T")[0]),
         supabase.from("user_sessions").select("user_id, last_seen_at").in("user_id", patientIds),
         supabase.from("meal_plans").select("patient_id, plan_status, generation_metadata").in("patient_id", patientIds).eq("is_active", true).order("created_at", { ascending: false }),
-        supabase.from("physical_assessments").select("patient_id, weight, assessment_date").in("patient_id", patientIds).order("assessment_date", { ascending: false }).limit(200),
+        supabase.from("physical_assessments").select("patient_id, weight, assessment_date").in("patient_id", patientIds).order("assessment_date", { ascending: false }).limit(patientIds.length * 3),
       ]);
 
       const profileMap: Record<string, any> = {};
@@ -177,15 +180,16 @@ export default function ClinicalRiskDashboardContent() {
 
   const kpis = useMemo(() => {
     const critical = patients.filter(p => p.risk_score >= 60).length;
-    const alert = patients.filter(p => p.risk_score >= 30 && p.risk_score < 60).length;
-    const stable = patients.filter(p => p.risk_score < 30).length;
+    const risk = patients.filter(p => p.risk_score >= 30 && p.risk_score < 60).length;
+    const stable = patients.filter(p => p.risk_score < 10).length;
+    const attention = patients.filter(p => p.risk_score >= 10 && p.risk_score < 30).length;
     const withAdherence = patients.filter(p => p.adherence_7d >= 0);
     const avgAdherence = withAdherence.length > 0
       ? Math.round(withAdherence.reduce((s, p) => s + p.adherence_7d, 0) / withAdherence.length)
       : 0;
     const fiveDaysAgo = new Date(Date.now() - 5 * 86400000);
     const noLogin = patients.filter(p => !p.last_seen || new Date(p.last_seen) < fiveDaysAgo).length;
-    return { critical, alert, stable, avgAdherence, noLogin };
+    return { critical, risk, attention, stable, avgAdherence, noLogin };
   }, [patients]);
 
   const filtered = useMemo(() => {
@@ -225,8 +229,8 @@ export default function ClinicalRiskDashboardContent() {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           <KpiCard icon={Flame} label="Críticos" value={kpis.critical} color="destructive" />
-          <KpiCard icon={AlertTriangle} label="Em Alerta" value={kpis.alert} color="warning" />
-          <KpiCard icon={CheckCircle2} label="Estáveis" value={kpis.stable} color="success" />
+          <KpiCard icon={AlertTriangle} label="Em Risco" value={kpis.risk} color="warning" />
+          <KpiCard icon={Shield} label="Atenção" value={kpis.attention} color="primary" />
           <KpiCard icon={BarChart3} label="Adesão Média" value={`${kpis.avgAdherence}%`} color="primary" />
           <KpiCard icon={UserX} label="Sem Login > 5d" value={kpis.noLogin} color="muted" />
         </div>

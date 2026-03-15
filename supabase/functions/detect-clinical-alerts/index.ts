@@ -163,7 +163,7 @@ async function processBatch(supabase: any, patientIds: string[], relationships: 
         .select("patient_id, weight, assessment_date")
         .in("patient_id", patientIds)
         .order("assessment_date", { ascending: false })
-        .limit(500),
+        .limit(patientIds.length * 5),
       supabase
         .from("profiles")
         .select("user_id, full_name")
@@ -421,7 +421,7 @@ async function updateRiskScores(supabase: any, patientIds: string[]) {
   // Batch update profiles
   for (const pid of patientIds) {
     const score = scoreMap[pid] || 0;
-    const level = score >= 60 ? "critical" : score >= 30 ? "attention" : score >= 10 ? "risk" : "stable";
+    const level = score >= 60 ? "critical" : score >= 30 ? "risk" : score >= 10 ? "attention" : "stable";
 
     await supabase
       .from("profiles")
@@ -439,8 +439,8 @@ async function saveDailySnapshots(supabase: any, patientIds: string[]) {
   const [alertsRes, checklistRes, mealsRes, assessRes] = await Promise.all([
     supabase.from("clinical_alerts").select("patient_id, severity").in("patient_id", patientIds).eq("is_active", true),
     supabase.from("checklist_tasks").select("patient_id, completed").in("patient_id", patientIds).gte("date", sevenDaysAgo.split("T")[0]),
-    supabase.from("meals").select("user_id, calories").in("user_id", patientIds).gte("logged_at", sevenDaysAgo),
-    supabase.from("physical_assessments").select("patient_id, weight").in("patient_id", patientIds).order("assessment_date", { ascending: false }).limit(200),
+    supabase.from("meals").select("user_id, calories, logged_at").in("user_id", patientIds).gte("logged_at", sevenDaysAgo),
+    supabase.from("physical_assessments").select("patient_id, weight").in("patient_id", patientIds).order("assessment_date", { ascending: false }).limit(patientIds.length * 3),
   ]);
 
   const checklistByP = groupBy(checklistRes.data || [], "patient_id");
@@ -465,9 +465,9 @@ async function saveDailySnapshots(supabase: any, patientIds: string[]) {
 
     const ms = mealsByP[pid] || [];
     const mealsWithCal = ms.filter((m: any) => m.calories && m.calories > 0);
-    const uniqueDays = new Set(ms.map(() => today)); // simplified
-    const calorieAvg = mealsWithCal.length > 0
-      ? Math.round(mealsWithCal.reduce((s: number, m: any) => s + m.calories, 0) / Math.max(uniqueDays.size, 1))
+    const uniqueMealDays = new Set(mealsWithCal.map((m: any) => new Date(m.logged_at || m.created_at).toISOString().split("T")[0]));
+    const calorieAvg = mealsWithCal.length > 0 && uniqueMealDays.size > 0
+      ? Math.round(mealsWithCal.reduce((s: number, m: any) => s + m.calories, 0) / uniqueMealDays.size)
       : null;
 
     const score = scoreMap[pid] || 0;
@@ -480,7 +480,7 @@ async function saveDailySnapshots(supabase: any, patientIds: string[]) {
       calorie_avg: calorieAvg,
       risk_score: score,
       active_alerts_count: alertCountMap[pid] || 0,
-      clinical_risk_level: score >= 60 ? "critical" : score >= 30 ? "attention" : score >= 10 ? "risk" : "stable",
+      clinical_risk_level: score >= 60 ? "critical" : score >= 30 ? "risk" : score >= 10 ? "attention" : "stable",
     };
   });
 
