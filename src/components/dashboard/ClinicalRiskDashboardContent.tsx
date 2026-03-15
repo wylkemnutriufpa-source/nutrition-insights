@@ -1,14 +1,15 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import {
   AlertTriangle, Shield, Users, Activity, TrendingDown, Scale,
   UserX, Utensils, Clock, Flame, CheckCircle2, Eye, MessageSquare,
   CalendarDays, FileText, Filter, Search, X,
-  BarChart3
+  BarChart3, Phone, CheckCheck, RefreshCw
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -60,6 +61,7 @@ const alertTypeIcons: Record<string, any> = {
   low_checkin_frequency: Utensils,
   possible_abandonment: UserX,
   metabolic_signal: Activity,
+  caloric_excess: Flame,
 };
 
 function getRiskSeverity(score: number): string {
@@ -421,9 +423,80 @@ function PatientRiskModal({
   onClose: () => void;
   onNavigate: (path: string) => void;
 }) {
+  const queryClient = useQueryClient();
+  const [resolving, setResolving] = useState<string | null>(null);
+  const [contacting, setContacting] = useState(false);
+
   if (!patient) return null;
   const sev = getRiskSeverity(patient.risk_score);
   const config = severityConfig[sev];
+
+  const handleResolveAlert = async (alertId: string) => {
+    setResolving(alertId);
+    try {
+      const { data, error } = await supabase.rpc("resolve_alert", {
+        _alert_id: alertId,
+      });
+      if (error) throw error;
+      toast.success("Alerta resolvido com sucesso");
+      queryClient.invalidateQueries({ queryKey: ["clinical-risk-dashboard"] });
+      onClose();
+    } catch (err: any) {
+      toast.error("Erro ao resolver alerta: " + err.message);
+    } finally {
+      setResolving(null);
+    }
+  };
+
+  const handleMarkContacted = async () => {
+    setContacting(true);
+    try {
+      const { error } = await supabase.rpc("mark_patient_contacted", {
+        _patient_id: patient.patient_id,
+        _contact_method: "chat",
+      });
+      if (error) throw error;
+      toast.success("Contato registrado na timeline");
+    } catch (err: any) {
+      toast.error("Erro: " + err.message);
+    } finally {
+      setContacting(false);
+    }
+  };
+
+  const handleFlagReview = async () => {
+    try {
+      const { error } = await supabase.rpc("flag_plan_review_needed", {
+        _patient_id: patient.patient_id,
+        _reason: "Revisão solicitada via cockpit de risco clínico",
+      });
+      if (error) throw error;
+      toast.success("Plano marcado para revisão");
+      queryClient.invalidateQueries({ queryKey: ["clinical-risk-dashboard"] });
+    } catch (err: any) {
+      toast.error("Erro: " + err.message);
+    }
+  };
+
+  const formatMetricExplanation = (meta: any): string | null => {
+    if (!meta?.metric) return null;
+    const metricLabels: Record<string, string> = {
+      adherence: "Adesão alimentar",
+      weight_variation: "Variação de peso",
+      weight_gain: "Ganho de peso",
+      checkin_frequency: "Frequência de registros",
+      login_recency: "Último acesso",
+      caloric_intake: "Ingestão calórica",
+    };
+    const dirLabels: Record<string, string> = {
+      below_expected: "abaixo do esperado",
+      above_expected: "acima do esperado",
+      stagnant: "estagnado",
+    };
+    const label = metricLabels[meta.metric] || meta.metric;
+    const dir = dirLabels[meta.direction] || "";
+    return `${label}: ${meta.measured_value}${meta.metric === "adherence" ? "%" : meta.metric === "caloric_intake" ? " kcal" : ""} ${dir} (limite: ${meta.threshold}${meta.metric === "adherence" ? "%" : meta.metric === "caloric_intake" ? " kcal" : ""}) · ${meta.period_days}d`;
+  };
 
   return (
     <Dialog open={!!patient} onOpenChange={() => onClose()}>
@@ -472,6 +545,7 @@ function PatientRiskModal({
                   {patient.alerts.map((alert) => {
                     const ac = severityConfig[alert.severity] || severityConfig.medium;
                     const TypeIcon = alertTypeIcons[alert.alert_type] || Activity;
+                    const explanation = formatMetricExplanation(alert.metadata);
                     return (
                       <div key={alert.id} className={`rounded-lg border p-3 ${ac.bg}`}>
                         <div className="flex items-start gap-2">
@@ -484,6 +558,21 @@ function PatientRiskModal({
                               </span>
                             </div>
                             <p className="text-xs leading-relaxed">{alert.description}</p>
+                            {explanation && (
+                              <p className="text-[10px] text-muted-foreground mt-1 font-mono bg-muted/30 rounded px-1.5 py-0.5 inline-block">
+                                {explanation}
+                              </p>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="mt-1.5 h-6 text-[10px] gap-1 text-success hover:text-success"
+                              disabled={resolving === alert.id}
+                              onClick={(e) => { e.stopPropagation(); handleResolveAlert(alert.id); }}
+                            >
+                              <CheckCheck className="w-3 h-3" />
+                              {resolving === alert.id ? "Resolvendo..." : "Resolver Alerta"}
+                            </Button>
                           </div>
                         </div>
                       </div>
@@ -494,19 +583,19 @@ function PatientRiskModal({
             )}
 
             <section>
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Ações Rápidas</h3>
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Ações Clínicas</h3>
               <div className="grid grid-cols-2 gap-2">
                 <Button variant="outline" size="sm" className="gap-2 justify-start" onClick={() => { onClose(); onNavigate(`/patients/${patient.patient_id}`); }}>
                   <Eye className="w-4 h-4" /> Ver Paciente
                 </Button>
-                <Button variant="outline" size="sm" className="gap-2 justify-start" onClick={() => { onClose(); onNavigate(`/meal-plans`); }}>
-                  <FileText className="w-4 h-4" /> Revisar Plano
+                <Button variant="outline" size="sm" className="gap-2 justify-start" onClick={handleFlagReview}>
+                  <RefreshCw className="w-4 h-4" /> Revisar Plano
+                </Button>
+                <Button variant="outline" size="sm" className="gap-2 justify-start" disabled={contacting} onClick={handleMarkContacted}>
+                  <Phone className="w-4 h-4" /> {contacting ? "Registrando..." : "Registrar Contato"}
                 </Button>
                 <Button variant="outline" size="sm" className="gap-2 justify-start" onClick={() => { onClose(); onNavigate(`/chat`); }}>
                   <MessageSquare className="w-4 h-4" /> Enviar Mensagem
-                </Button>
-                <Button variant="outline" size="sm" className="gap-2 justify-start" onClick={() => { onClose(); onNavigate(`/appointments`); }}>
-                  <CalendarDays className="w-4 h-4" /> Marcar Retorno
                 </Button>
               </div>
             </section>
