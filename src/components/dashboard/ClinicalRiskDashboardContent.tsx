@@ -1,14 +1,15 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import {
   AlertTriangle, Shield, Users, Activity, TrendingDown, Scale,
   UserX, Utensils, Clock, Flame, CheckCircle2, Eye, MessageSquare,
   CalendarDays, FileText, Filter, Search, X,
-  BarChart3
+  BarChart3, Phone, CheckCheck, RefreshCw
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
