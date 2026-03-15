@@ -97,9 +97,20 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
       .eq("patient_id", patientId)
       .maybeSingle();
     if (data) {
-      setPipeline(data as any);
-      setUseScheduling((data as any).use_scheduling_criteria || false);
-      setCriteria((data as any).scheduling_criteria || DEFAULT_CRITERIA);
+      const p = data as any;
+      console.log("[OnboardingApproval] Pipeline loaded:", { id: p.id, status: p.status, plan_generated: p.plan_generated, plan_approved: p.plan_approved, generated_plan_id: p.generated_plan_id });
+      setPipeline(p);
+      setUseScheduling(p.use_scheduling_criteria || false);
+      setCriteria(p.scheduling_criteria || DEFAULT_CRITERIA);
+
+      // Auto-fix: if plan is generated but status isn't pending_approval, fix it
+      if (p.plan_generated && !p.plan_approved && p.status !== "pending_approval" && p.status !== "completed" && p.status !== "rejected") {
+        await supabase
+          .from("onboarding_pipelines" as any)
+          .update({ status: "pending_approval" } as any)
+          .eq("id", p.id);
+        setPipeline({ ...p, status: "pending_approval" });
+      }
     }
     setLoading(false);
   }
@@ -356,11 +367,11 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
         {/* Steps overview */}
         <div className="grid grid-cols-5 gap-2">
           {[
-            { label: "Anamnese", done: pipeline.anamnesis_completed, icon: "📋" },
-            { label: "Corpo", done: pipeline.body_data_completed, icon: "⚖️" },
-            { label: "Prefs", done: pipeline.preferences_completed, icon: "🍽️" },
-            { label: "Plano", done: pipeline.plan_generated, icon: "✨" },
-            { label: "Aprovado", done: pipeline.plan_approved, icon: "👍" },
+            { label: "Anamnese", done: pipeline.anamnesis_completed, icon: "📋", key: "anamnesis" },
+            { label: "Corpo", done: pipeline.body_data_completed, icon: "⚖️", key: "body" },
+            { label: "Prefs", done: pipeline.preferences_completed, icon: "🍽️", key: "prefs" },
+            { label: "Plano", done: pipeline.plan_generated, icon: "✨", key: "plan" },
+            { label: "Aprovado", done: pipeline.plan_approved, icon: "👍", key: "approved" },
           ].map((s, i) => {
             const isNext = !s.done && (i === 0 || [
               pipeline.anamnesis_completed,
@@ -369,18 +380,25 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
               pipeline.plan_generated,
               pipeline.plan_approved,
             ][i - 1]);
+            const isClickable = (s.key === "plan" || s.key === "approved") && pipeline.plan_generated && !pipeline.plan_approved;
             return (
               <motion.div
                 key={i}
                 initial={{ scale: 0.9 }}
                 animate={{ scale: s.done ? 1 : isNext ? 1.05 : 0.95 }}
+                onClick={() => {
+                  if (isClickable) {
+                    const planId = pipeline.generated_plan_id || pipeline.generated_plan_data?.mealPlanId;
+                    if (planId) ensurePlanReadyAndOpen(planId);
+                  }
+                }}
                 className={`text-center p-2.5 rounded-lg text-xs font-semibold border-2 transition-all duration-300 ${
                   s.done
                     ? "bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.3)]"
                     : isNext
                     ? "bg-amber-500/15 border-amber-500/60 text-amber-400 animate-pulse"
                     : "bg-muted/50 border-muted text-muted-foreground"
-                }`}
+                } ${isClickable ? "cursor-pointer hover:scale-105" : ""}`}
               >
                 <span className="text-base">{s.done ? "✅" : isNext ? "⏳" : s.icon}</span>
                 <div className="mt-1">{s.label}</div>
@@ -399,8 +417,8 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
           </div>
         )}
 
-        {/* Approval actions */}
-        {pipeline.status === "pending_approval" && (
+        {/* Approval actions — show when plan is generated but not yet approved */}
+        {pipeline.plan_generated && !pipeline.plan_approved && pipeline.status !== "completed" && (
           <div className="space-y-4 border-t pt-4">
             <p className="text-sm font-medium">Pré-plano gerado pelo Protocolo FitJourney. Revise e decida:</p>
 
