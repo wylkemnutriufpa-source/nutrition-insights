@@ -97,9 +97,19 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
       .eq("patient_id", patientId)
       .maybeSingle();
     if (data) {
-      setPipeline(data as any);
-      setUseScheduling((data as any).use_scheduling_criteria || false);
-      setCriteria((data as any).scheduling_criteria || DEFAULT_CRITERIA);
+      const p = data as any;
+      setPipeline(p);
+      setUseScheduling(p.use_scheduling_criteria || false);
+      setCriteria(p.scheduling_criteria || DEFAULT_CRITERIA);
+
+      // Auto-fix: if plan is generated but status isn't pending_approval, fix it
+      if (p.plan_generated && !p.plan_approved && p.status !== "pending_approval" && p.status !== "completed" && p.status !== "rejected") {
+        await supabase
+          .from("onboarding_pipelines" as any)
+          .update({ status: "pending_approval" } as any)
+          .eq("id", p.id);
+        setPipeline({ ...p, status: "pending_approval" });
+      }
     }
     setLoading(false);
   }
