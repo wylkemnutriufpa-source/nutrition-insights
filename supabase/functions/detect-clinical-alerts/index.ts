@@ -76,6 +76,18 @@ const LONGITUDINAL_SCORE: Record<string, Record<string, number>> = {
   weight_trend_status: { gaining: 15 },
 };
 
+// Cluster-based score modulation (Phase 4)
+const CLUSTER_SCORE_MODIFIERS: Record<string, Record<string, number>> = {
+  // resistant → tolerate more stagnation, less weight penalty
+  resistant_profile: { weight_trend_status_gaining: -5, engagement_level_drop_risk: 5 },
+  // disengaging → increase engagement/adherence weight
+  disengaging_patient: { engagement_level_drop_risk: 10, adherence_momentum_critical_drop: 10 },
+  // behavioral_struggler → focus on adherence signals
+  behavioral_struggler: { adherence_momentum_declining: 5, adherence_momentum_critical_drop: 10 },
+  // metabolic_adaptive → less penalty for slow_loss (expected)
+  metabolic_adaptive: { weight_trend_status_gaining: -5 },
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
