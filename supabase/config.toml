@@ -103,6 +103,9 @@ verify_jwt = false
 [functions.compute-weight-trajectory-engine]
 verify_jwt = false
 
+[functions.compute-metabolic-twin-engine]
+verify_jwt = false
+
 # ═══════════════════════════════════════════
 
 [functions.generate-weekly-report]
