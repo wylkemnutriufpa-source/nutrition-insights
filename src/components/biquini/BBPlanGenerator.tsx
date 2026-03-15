@@ -38,6 +38,22 @@ export default function BBPlanGenerator() {
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState<GenerationResult | null>(null);
 
+  const { data: patients } = useQuery({
+    queryKey: ["bb-patients", user?.id],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("nutritionist_patients")
+        .select("patient_id, profiles!nutritionist_patients_patient_id_fkey(full_name, user_id)")
+        .eq("nutritionist_id", user!.id)
+        .eq("status", "active");
+      return (data || []).map((r: any) => ({
+        id: r.patient_id,
+        name: r.profiles?.full_name || "Paciente",
+      }));
+    },
+    enabled: !!user,
+  });
+
   async function handleGenerate() {
     if (!user || !selectedPatient) {
       toast.error("Selecione um paciente");
