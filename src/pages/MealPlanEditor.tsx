@@ -15,7 +15,7 @@ import {
   Sun, Coffee, Apple, Sandwich, Moon, Cookie, Save, ChevronLeft, ChevronRight,
   Flame, Beef, Wheat, Droplets, Leaf, PencilLine, X, Check, Sparkles, Loader2,
   Bookmark, BookmarkCheck, FolderDown, FolderUp, BookOpen, CalendarDays, CalendarRange,
-  AlertTriangle
+  AlertTriangle, ArrowLeftRight
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import PlanScheduler from "@/components/plans/PlanScheduler";
