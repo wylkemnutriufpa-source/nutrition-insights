@@ -190,12 +190,22 @@ export default function ClinicalRiskDashboardContent() {
       const weightMap: Record<string, number> = {};
       (assessRes.data || []).forEach((a: any) => { if (!weightMap[a.patient_id] && a.weight) weightMap[a.patient_id] = a.weight; });
 
+      const clinicalStateMap: Record<string, any> = {};
+      (clinicalStateRes.data || []).forEach((s: any) => { clinicalStateMap[s.patient_id] = s; });
+
+      const suggestionsByPatient: Record<string, AdjustmentSuggestion[]> = {};
+      (suggestionsRes.data || []).forEach((s: any) => {
+        if (!suggestionsByPatient[s.patient_id]) suggestionsByPatient[s.patient_id] = [];
+        suggestionsByPatient[s.patient_id].push(s);
+      });
+
       const patients: PatientRisk[] = patientIds.map((pid: string) => {
         const profile = profileMap[pid];
         const alerts = alertsByPatient[pid] || [];
         const checklist = checklistByPatient[pid] || [];
         const session = sessionMap[pid];
         const plan = planMap[pid];
+        const clinicalState = clinicalStateMap[pid];
 
         const total = checklist.length;
         const completed = checklist.filter((t: any) => t.completed).length;
@@ -225,6 +235,10 @@ export default function ClinicalRiskDashboardContent() {
           adherence_score_prev_7d: profile?.adherence_score_prev_7d || 0,
           engagement_index: profile?.engagement_index || 0,
           engagement_level: profile?.engagement_level || "moderate",
+          caloric_response_status: clinicalState?.caloric_response_status,
+          stagnation_risk_level: clinicalState?.stagnation_risk_level,
+          therapeutic_effectiveness: plan?.therapeutic_effectiveness_status,
+          adjustment_suggestions: suggestionsByPatient[pid] || [],
         };
       });
 
