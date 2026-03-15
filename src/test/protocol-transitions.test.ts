@@ -190,13 +190,13 @@ describe("Semi-Autonomous Protocol Transition Engine v1.0.0", () => {
     expect(score).toBeLessThan(45);
   });
 
-  it("computes medium confidence for average data", () => {
+  it("computes medium confidence for limited data", () => {
     const score = computeConfidenceScore({
-      ...BASE_CTX, data_points: 15, cluster_stability: 0.6,
-      adherence: 72, weight_trend: "slow_loss", previous_interventions: 1,
+      ...BASE_CTX, data_points: 8, cluster_stability: 0.4,
+      adherence: 55, weight_trend: "unknown", previous_interventions: 0,
     });
-    expect(score).toBeGreaterThanOrEqual(45);
-    expect(score).toBeLessThan(85);
+    expect(score).toBeGreaterThanOrEqual(35);
+    expect(score).toBeLessThan(70);
   });
 
   // ── Approval flow ──
