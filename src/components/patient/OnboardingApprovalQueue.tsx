@@ -406,8 +406,8 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
           </div>
         )}
 
-        {/* Approval actions */}
-        {pipeline.status === "pending_approval" && (
+        {/* Approval actions — show when plan is generated but not yet approved */}
+        {pipeline.plan_generated && !pipeline.plan_approved && pipeline.status !== "completed" && (
           <div className="space-y-4 border-t pt-4">
             <p className="text-sm font-medium">Pré-plano gerado pelo Protocolo FitJourney. Revise e decida:</p>
 
