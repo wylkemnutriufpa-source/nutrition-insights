@@ -1910,6 +1910,7 @@ export type Database = {
           nutritionist_id: string
           patient_id: string
           plan_status: string
+          previous_plan_id: string | null
           start_date: string
           template_id: string | null
           template_slug: string | null
@@ -1917,6 +1918,7 @@ export type Database = {
           therapeutic_effectiveness_status: string | null
           therapeutic_efficacy_score: number | null
           title: string
+          transition_origin_id: string | null
           updated_at: string
         }
         Insert: {
@@ -1931,6 +1933,7 @@ export type Database = {
           nutritionist_id: string
           patient_id: string
           plan_status?: string
+          previous_plan_id?: string | null
           start_date: string
           template_id?: string | null
           template_slug?: string | null
@@ -1938,6 +1941,7 @@ export type Database = {
           therapeutic_effectiveness_status?: string | null
           therapeutic_efficacy_score?: number | null
           title: string
+          transition_origin_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -1952,6 +1956,7 @@ export type Database = {
           nutritionist_id?: string
           patient_id?: string
           plan_status?: string
+          previous_plan_id?: string | null
           start_date?: string
           template_id?: string | null
           template_slug?: string | null
@@ -1959,9 +1964,25 @@ export type Database = {
           therapeutic_effectiveness_status?: string | null
           therapeutic_efficacy_score?: number | null
           title?: string
+          transition_origin_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "meal_plans_previous_plan_id_fkey"
+            columns: ["previous_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_plans_transition_origin_id_fkey"
+            columns: ["transition_origin_id"]
+            isOneToOne: false
+            referencedRelation: "protocol_transition_suggestions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       meals: {
         Row: {
@@ -4509,6 +4530,33 @@ export type Database = {
           },
         ]
       }
+      protocol_autonomy_settings: {
+        Row: {
+          autonomy_mode: string | null
+          created_at: string | null
+          id: string
+          min_confidence_for_auto_draft: number | null
+          nutritionist_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          autonomy_mode?: string | null
+          created_at?: string | null
+          id?: string
+          min_confidence_for_auto_draft?: number | null
+          nutritionist_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          autonomy_mode?: string | null
+          created_at?: string | null
+          id?: string
+          min_confidence_for_auto_draft?: number | null
+          nutritionist_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       protocol_caloric_ranges: {
         Row: {
           adaptation_cycle_days: number | null
@@ -4861,6 +4909,101 @@ export type Database = {
             columns: ["protocol_id"]
             isOneToOne: false
             referencedRelation: "protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      protocol_transition_suggestions: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          calorie_adjustment_percent: number | null
+          clinical_reason: string
+          confidence_level: string | null
+          confidence_score: number | null
+          created_at: string | null
+          current_plan_id: string | null
+          current_protocol_id: string | null
+          engine_version: string | null
+          expected_strategy_outcome: string | null
+          id: string
+          nutritionist_id: string
+          patient_id: string
+          status: string | null
+          suggested_protocol_id: string | null
+          suggested_template_id: string | null
+          supporting_metrics: Json | null
+          transition_type: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          calorie_adjustment_percent?: number | null
+          clinical_reason: string
+          confidence_level?: string | null
+          confidence_score?: number | null
+          created_at?: string | null
+          current_plan_id?: string | null
+          current_protocol_id?: string | null
+          engine_version?: string | null
+          expected_strategy_outcome?: string | null
+          id?: string
+          nutritionist_id: string
+          patient_id: string
+          status?: string | null
+          suggested_protocol_id?: string | null
+          suggested_template_id?: string | null
+          supporting_metrics?: Json | null
+          transition_type?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          calorie_adjustment_percent?: number | null
+          clinical_reason?: string
+          confidence_level?: string | null
+          confidence_score?: number | null
+          created_at?: string | null
+          current_plan_id?: string | null
+          current_protocol_id?: string | null
+          engine_version?: string | null
+          expected_strategy_outcome?: string | null
+          id?: string
+          nutritionist_id?: string
+          patient_id?: string
+          status?: string | null
+          suggested_protocol_id?: string | null
+          suggested_template_id?: string | null
+          supporting_metrics?: Json | null
+          transition_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "protocol_transition_suggestions_current_plan_id_fkey"
+            columns: ["current_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "protocol_transition_suggestions_current_protocol_id_fkey"
+            columns: ["current_protocol_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_protocols"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "protocol_transition_suggestions_suggested_protocol_id_fkey"
+            columns: ["suggested_protocol_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_protocols"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "protocol_transition_suggestions_suggested_template_id_fkey"
+            columns: ["suggested_template_id"]
+            isOneToOne: false
+            referencedRelation: "diet_templates"
             referencedColumns: ["id"]
           },
         ]
