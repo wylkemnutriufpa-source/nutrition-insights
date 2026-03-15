@@ -15,7 +15,7 @@ import {
   Sun, Coffee, Apple, Sandwich, Moon, Cookie, Save, ChevronLeft, ChevronRight,
   Flame, Beef, Wheat, Droplets, Leaf, PencilLine, X, Check, Sparkles, Loader2,
   Bookmark, BookmarkCheck, FolderDown, FolderUp, BookOpen, CalendarDays, CalendarRange,
-  AlertTriangle
+  AlertTriangle, ArrowLeftRight
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import PlanScheduler from "@/components/plans/PlanScheduler";
@@ -126,6 +126,11 @@ export default function MealPlanEditor() {
 
   const [emptyPlanWarning, setEmptyPlanWarning] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+
+  // Drag-and-drop swap state
+  const [dragSource, setDragSource] = useState<{ day: number; mealType: MealType } | null>(null);
+  const [dragOver, setDragOver] = useState<{ day: number; mealType: MealType } | null>(null);
+  const [swapping, setSwapping] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!id || !user) return;
@@ -293,7 +298,52 @@ export default function MealPlanEditor() {
     };
   };
 
-  // Quick-add: allows typing a food name and instantly adding it
+  // Drag-and-drop swap: swap all items between two cells
+  const handleSwapCells = async (
+    source: { day: number; mealType: MealType },
+    target: { day: number; mealType: MealType }
+  ) => {
+    if (source.day === target.day && source.mealType === target.mealType) return;
+    if (!id) return;
+    setSwapping(true);
+
+    const sourceItems = items.filter(i => i.day_of_week === source.day && i.meal_type === source.mealType);
+    const targetItems = items.filter(i => i.day_of_week === target.day && i.meal_type === target.mealType);
+
+    // Update source items → target position
+    const sourceUpdates = sourceItems.map(item =>
+      supabase.from("meal_plan_items").update({
+        day_of_week: target.day,
+        meal_type: target.mealType,
+      }).eq("id", item.id)
+    );
+
+    // Update target items → source position
+    const targetUpdates = targetItems.map(item =>
+      supabase.from("meal_plan_items").update({
+        day_of_week: source.day,
+        meal_type: source.mealType,
+      }).eq("id", item.id)
+    );
+
+    const results = await Promise.all([...sourceUpdates, ...targetUpdates]);
+    const hasError = results.some(r => r.error);
+
+    if (hasError) {
+      toast.error("Erro ao trocar refeições");
+    } else {
+      const srcLabel = `${MEAL_TYPES.find(m => m.key === source.mealType)?.label} (${DAYS[source.day]?.short})`;
+      const tgtLabel = `${MEAL_TYPES.find(m => m.key === target.mealType)?.label} (${DAYS[target.day]?.short})`;
+      toast.success(`Trocado: ${srcLabel} ↔ ${tgtLabel}`);
+      fetchData();
+    }
+
+    setSwapping(false);
+    setDragSource(null);
+    setDragOver(null);
+  };
+
+
   const handleQuickAdd = async (day: number, mealType: MealType) => {
     if (!id || !quickAddText.trim()) return;
     setQuickAdding(true);
@@ -829,8 +879,49 @@ export default function MealPlanEditor() {
                     {DAYS.map((day) => {
                       const cellItems = getItems(day.key, meal.key);
                       const cellKey = `${day.key}-${meal.key}`;
+                      const isDragSource = dragSource?.day === day.key && dragSource?.mealType === meal.key;
+                      const isDragOver = dragOver?.day === day.key && dragOver?.mealType === meal.key;
                       return (
-                        <div key={day.key} className="glass rounded-lg p-2 min-h-[100px] flex flex-col group relative hover:border-primary/30 transition-colors">
+                        <div
+                          key={day.key}
+                          draggable={cellItems.length > 0 && !swapping}
+                          onDragStart={(e) => {
+                            setDragSource({ day: day.key, mealType: meal.key });
+                            e.dataTransfer.effectAllowed = "move";
+                            e.dataTransfer.setData("text/plain", cellKey);
+                          }}
+                          onDragEnd={() => { setDragSource(null); setDragOver(null); }}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            e.dataTransfer.dropEffect = "move";
+                            if (!isDragOver) setDragOver({ day: day.key, mealType: meal.key });
+                          }}
+                          onDragLeave={() => { if (isDragOver) setDragOver(null); }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            if (dragSource && !(dragSource.day === day.key && dragSource.mealType === meal.key)) {
+                              handleSwapCells(dragSource, { day: day.key, mealType: meal.key });
+                            }
+                            setDragOver(null);
+                          }}
+                          className={`glass rounded-lg p-2 min-h-[100px] flex flex-col group relative transition-all duration-200 ${
+                            isDragSource ? "opacity-50 scale-95 border-primary/50" : ""
+                          } ${isDragOver ? "ring-2 ring-primary/60 bg-primary/5 scale-[1.02]" : "hover:border-primary/30"
+                          } ${cellItems.length > 0 && !swapping ? "cursor-grab active:cursor-grabbing" : ""}`}
+                        >
+                          {/* Drag handle indicator */}
+                          {cellItems.length > 0 && (
+                            <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-60 transition-opacity">
+                              <ArrowLeftRight className="w-3 h-3 text-muted-foreground" />
+                            </div>
+                          )}
+                          {isDragOver && dragSource && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-primary/10 rounded-lg z-10 pointer-events-none">
+                              <span className="text-[10px] font-semibold text-primary flex items-center gap-1">
+                                <ArrowLeftRight className="w-3.5 h-3.5" /> Trocar
+                              </span>
+                            </div>
+                          )}
                           <div className="flex-1 space-y-1.5">
                             <AnimatePresence mode="popLayout">
                               {cellItems.map((item) => (
