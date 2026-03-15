@@ -16,12 +16,13 @@ function classifyCaloricResponseStatus(
   if (weightVelocity14d < -0.8 && adherence7d >= 60) return "resposta_rapida";
   if (weightVelocity14d <= -0.3 && weightVelocity14d >= -0.8 && adherence7d >= 60) return "resposta_adequada";
   if (weightVelocity14d > -0.3 && weightVelocity14d < -0.05 && adherence7d >= 60) return "resposta_lenta";
-  if (Math.abs(weightVelocity14d) <= 0.05 && adherence7d >= 50) return "estagnado";
-  if (weightVelocity14d > 0.1) return "resposta_negativa";
+  // Metabolic adaptation BEFORE estagnado (higher priority clinical signal)
   if (adherence7d >= 75 && (weightTrend === "stagnated" || weightTrend === "slow_loss") &&
     (cluster === "resistant_profile" || cluster === "metabolic_adaptive")) {
     return "risco_adaptacao_metabolica";
   }
+  if (Math.abs(weightVelocity14d) <= 0.05 && adherence7d >= 50) return "estagnado";
+  if (weightVelocity14d > 0.1) return "resposta_negativa";
   if (weightVelocity14d >= 0) return "resposta_negativa";
   return "resposta_lenta";
 }
