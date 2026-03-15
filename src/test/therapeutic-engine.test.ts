@@ -96,7 +96,8 @@ describe("Therapeutic Engine - Caloric Response Classification", () => {
   });
 
   it("should classify stagnation", () => {
-    expect(classifyCaloricResponseStatus(0.02, "resistant_profile", 80, 10, "stagnated")).toBe("estagnado");
+    // Use metabolic_responder cluster (not resistant/adaptive) to get pure stagnation
+    expect(classifyCaloricResponseStatus(0.02, "metabolic_responder", 80, 10, "stagnated")).toBe("estagnado");
   });
 
   it("should classify metabolic adaptation risk", () => {
