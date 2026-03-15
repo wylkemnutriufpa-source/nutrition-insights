@@ -715,7 +715,63 @@ function PatientRiskModal({
               </div>
             </section>
 
-            {/* Adaptive Intelligence */}
+            {/* Metabolic Cluster (Phase 4) */}
+            {patient.metabolic_cluster && patient.metabolic_cluster !== "unknown" && (
+              <section>
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                  <HeartPulse className="w-3.5 h-3.5" /> Cluster Metabólico
+                </h3>
+                <div className="rounded-lg border bg-card/50 p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">{clusterLabels[patient.metabolic_cluster]?.icon || "❓"}</span>
+                    <div>
+                      <p className={`text-sm font-bold ${clusterLabels[patient.metabolic_cluster]?.color || "text-foreground"}`}>
+                        {clusterLabels[patient.metabolic_cluster]?.label || patient.metabolic_cluster}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {clusterLabels[patient.metabolic_cluster]?.description}
+                        {patient.metabolic_cluster_confidence && (
+                          <> · Confiança: {patient.metabolic_cluster_confidence === "high" ? "Alta" : patient.metabolic_cluster_confidence === "medium" ? "Média" : "Baixa"}</>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  {patient.cluster_strategy && (
+                    <div className="space-y-2 border-t pt-2">
+                      <p className="text-[11px] font-semibold text-muted-foreground">Estratégia Recomendada</p>
+                      <div className="grid grid-cols-2 gap-2 text-[10px]">
+                        <div><span className="text-muted-foreground">Abordagem:</span> <span className="font-medium">{patient.cluster_strategy.nutrition_strategy}</span></div>
+                        <div><span className="text-muted-foreground">Complexidade:</span> <span className="font-medium capitalize">{patient.cluster_strategy.plan_complexity}</span></div>
+                        <div><span className="text-muted-foreground">Intervenção:</span> <span className="font-medium capitalize">{patient.cluster_strategy.intervention_frequency}</span></div>
+                        <div><span className="text-muted-foreground">Foco:</span> <span className="font-medium capitalize">{patient.cluster_strategy.focus_area}</span></div>
+                      </div>
+                      {patient.cluster_strategy.recommendations && (
+                        <ul className="space-y-0.5 mt-1">
+                          {patient.cluster_strategy.recommendations.map((rec: string, i: number) => (
+                            <li key={i} className="text-[10px] text-muted-foreground flex items-start gap-1">
+                              <span className="text-primary mt-0.5">•</span> {rec}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+
+                  {patient.metabolic_feature_vector && (
+                    <div className="border-t pt-2">
+                      <p className="text-[10px] text-muted-foreground font-mono">
+                        Vel. peso: {patient.metabolic_feature_vector.weight_velocity_avg} kg/sem ·
+                        Adesão 30d: {patient.metabolic_feature_vector.adherence_avg_30d}% ·
+                        Estabilidade: {patient.metabolic_feature_vector.adherence_stability}/100 ·
+                        Interação: {patient.metabolic_feature_vector.plan_interaction_rate}%
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+
             {(patient.caloric_response_status || patient.stagnation_risk_level || (patient.adjustment_suggestions && patient.adjustment_suggestions.length > 0)) && (
               <section>
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
