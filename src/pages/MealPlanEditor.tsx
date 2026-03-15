@@ -135,6 +135,15 @@ export default function MealPlanEditor() {
   const [dragOver, setDragOver] = useState<{ day: number; mealType: MealType } | null>(null);
   const [swapping, setSwapping] = useState(false);
 
+  // Inline editing state
+  const [inlineEditId, setInlineEditId] = useState<string | null>(null);
+  const [inlineEditValue, setInlineEditValue] = useState("");
+  const [inlineEditSaving, setInlineEditSaving] = useState(false);
+
+  // Smart drawer panel state  
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerItem, setDrawerItem] = useState<MealPlanItem | null>(null);
+
   const fetchData = useCallback(async () => {
     if (!id || !user) return;
     setLoading(true);
