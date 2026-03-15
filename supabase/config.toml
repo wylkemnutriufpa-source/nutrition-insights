@@ -55,6 +55,9 @@ verify_jwt = false
 [functions.compute-therapeutic-adjustments]
 verify_jwt = false
 
+[functions.compute-behavioral-dropout-risk]
+verify_jwt = false
+
 # ═══════════════════════════════════════════
 # RELATÓRIOS E PLANOS (Determinístico + AI opcional)
 # ═══════════════════════════════════════════

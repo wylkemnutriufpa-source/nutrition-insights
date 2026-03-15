@@ -349,6 +349,8 @@ export default function ClinicalRiskDashboardContent() {
         </div>
       )}
 
+      <BehavioralDropoutPanel />
+
       <TherapeuticSuggestionsPanel />
 
       <div className="flex flex-wrap gap-3 items-center">
