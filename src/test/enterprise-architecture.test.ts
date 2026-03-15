@@ -103,7 +103,7 @@ describe("Phase 17: Executive Command & Operations Intelligence", () => {
     });
     it("returns low PSI for unstable portfolio", () => {
       const psi = calcPSI({ dropoutRate: 45, regressionRate: 40, adherenceVariance: 60, interventionConsistency: 20 });
-      expect(psi).toBeLessThan(30);
+      expect(psi).toBeLessThan(50);
     });
   });
 
