@@ -439,8 +439,8 @@ async function saveDailySnapshots(supabase: any, patientIds: string[]) {
   const [alertsRes, checklistRes, mealsRes, assessRes] = await Promise.all([
     supabase.from("clinical_alerts").select("patient_id, severity").in("patient_id", patientIds).eq("is_active", true),
     supabase.from("checklist_tasks").select("patient_id, completed").in("patient_id", patientIds).gte("date", sevenDaysAgo.split("T")[0]),
-    supabase.from("meals").select("user_id, calories").in("user_id", patientIds).gte("logged_at", sevenDaysAgo),
-    supabase.from("physical_assessments").select("patient_id, weight").in("patient_id", patientIds).order("assessment_date", { ascending: false }).limit(200),
+    supabase.from("meals").select("user_id, calories, logged_at").in("user_id", patientIds).gte("logged_at", sevenDaysAgo),
+    supabase.from("physical_assessments").select("patient_id, weight").in("patient_id", patientIds).order("assessment_date", { ascending: false }).limit(patientIds.length * 3),
   ]);
 
   const checklistByP = groupBy(checklistRes.data || [], "patient_id");
