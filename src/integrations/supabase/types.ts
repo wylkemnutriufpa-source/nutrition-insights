@@ -911,6 +911,72 @@ export type Database = {
           },
         ]
       }
+      clinic_clinical_evolution_metrics: {
+        Row: {
+          avg_metabolic_stability: number | null
+          avg_protocol_efficacy: number | null
+          avg_transformation_velocity: number | null
+          base_at_risk_percent: number | null
+          computed_at: string | null
+          engine_version: string | null
+          id: string
+          nutritionist_id: string
+          top_protocol_id: string | null
+          top_protocol_name: string | null
+          total_patients_analyzed: number | null
+          total_protocols_analyzed: number | null
+          worst_protocol_id: string | null
+          worst_protocol_name: string | null
+        }
+        Insert: {
+          avg_metabolic_stability?: number | null
+          avg_protocol_efficacy?: number | null
+          avg_transformation_velocity?: number | null
+          base_at_risk_percent?: number | null
+          computed_at?: string | null
+          engine_version?: string | null
+          id?: string
+          nutritionist_id: string
+          top_protocol_id?: string | null
+          top_protocol_name?: string | null
+          total_patients_analyzed?: number | null
+          total_protocols_analyzed?: number | null
+          worst_protocol_id?: string | null
+          worst_protocol_name?: string | null
+        }
+        Update: {
+          avg_metabolic_stability?: number | null
+          avg_protocol_efficacy?: number | null
+          avg_transformation_velocity?: number | null
+          base_at_risk_percent?: number | null
+          computed_at?: string | null
+          engine_version?: string | null
+          id?: string
+          nutritionist_id?: string
+          top_protocol_id?: string | null
+          top_protocol_name?: string | null
+          total_patients_analyzed?: number | null
+          total_protocols_analyzed?: number | null
+          worst_protocol_id?: string | null
+          worst_protocol_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinic_clinical_evolution_metrics_top_protocol_id_fkey"
+            columns: ["top_protocol_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_protocols"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clinic_clinical_evolution_metrics_worst_protocol_id_fkey"
+            columns: ["worst_protocol_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clinical_alerts: {
         Row: {
           alert_type: string
@@ -1132,6 +1198,56 @@ export type Database = {
           signal_key?: string
         }
         Relationships: []
+      }
+      cluster_protocol_matrix: {
+        Row: {
+          avg_adherence: number | null
+          avg_weight_response: number | null
+          cluster_type: string
+          dropout_rate: number | null
+          effectiveness_tier: string | null
+          id: string
+          last_updated: string | null
+          protocol_id: string
+          sample_size: number | null
+          stagnation_rate: number | null
+          success_score: number | null
+        }
+        Insert: {
+          avg_adherence?: number | null
+          avg_weight_response?: number | null
+          cluster_type: string
+          dropout_rate?: number | null
+          effectiveness_tier?: string | null
+          id?: string
+          last_updated?: string | null
+          protocol_id: string
+          sample_size?: number | null
+          stagnation_rate?: number | null
+          success_score?: number | null
+        }
+        Update: {
+          avg_adherence?: number | null
+          avg_weight_response?: number | null
+          cluster_type?: string
+          dropout_rate?: number | null
+          effectiveness_tier?: string | null
+          id?: string
+          last_updated?: string | null
+          protocol_id?: string
+          sample_size?: number | null
+          stagnation_rate?: number | null
+          success_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cluster_protocol_matrix_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_protocols"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       diet_templates: {
         Row: {
@@ -1993,6 +2109,66 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      nutrition_protocol_changed: {
+        Row: {
+          adherence_at_change: number | null
+          behavioral_reason: string | null
+          change_reason: string | null
+          changed_by: string | null
+          cluster_at_change: string | null
+          created_at: string | null
+          expected_impact: string | null
+          id: string
+          metabolic_reason: string | null
+          new_protocol_id: string | null
+          patient_id: string
+          previous_protocol_id: string | null
+        }
+        Insert: {
+          adherence_at_change?: number | null
+          behavioral_reason?: string | null
+          change_reason?: string | null
+          changed_by?: string | null
+          cluster_at_change?: string | null
+          created_at?: string | null
+          expected_impact?: string | null
+          id?: string
+          metabolic_reason?: string | null
+          new_protocol_id?: string | null
+          patient_id: string
+          previous_protocol_id?: string | null
+        }
+        Update: {
+          adherence_at_change?: number | null
+          behavioral_reason?: string | null
+          change_reason?: string | null
+          changed_by?: string | null
+          cluster_at_change?: string | null
+          created_at?: string | null
+          expected_impact?: string | null
+          id?: string
+          metabolic_reason?: string | null
+          new_protocol_id?: string | null
+          patient_id?: string
+          previous_protocol_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nutrition_protocol_changed_new_protocol_id_fkey"
+            columns: ["new_protocol_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_protocols"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nutrition_protocol_changed_previous_protocol_id_fkey"
+            columns: ["previous_protocol_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_protocols"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       nutrition_protocols: {
         Row: {
@@ -4379,36 +4555,54 @@ export type Database = {
       }
       protocol_clinical_performance: {
         Row: {
+          alert_rate: number | null
           avg_adherence: number | null
           avg_weight_response: number | null
+          avg_weight_response_14d: number | null
+          avg_weight_response_30d: number | null
           created_at: string | null
           dropout_rate: number | null
+          effectiveness_tier: string | null
+          engine_version: string | null
           id: string
           last_updated: string | null
+          metabolic_stability: number | null
           metabolic_success_score: number | null
           protocol_id: string
           stagnation_rate: number | null
           total_applications: number | null
         }
         Insert: {
+          alert_rate?: number | null
           avg_adherence?: number | null
           avg_weight_response?: number | null
+          avg_weight_response_14d?: number | null
+          avg_weight_response_30d?: number | null
           created_at?: string | null
           dropout_rate?: number | null
+          effectiveness_tier?: string | null
+          engine_version?: string | null
           id?: string
           last_updated?: string | null
+          metabolic_stability?: number | null
           metabolic_success_score?: number | null
           protocol_id: string
           stagnation_rate?: number | null
           total_applications?: number | null
         }
         Update: {
+          alert_rate?: number | null
           avg_adherence?: number | null
           avg_weight_response?: number | null
+          avg_weight_response_14d?: number | null
+          avg_weight_response_30d?: number | null
           created_at?: string | null
           dropout_rate?: number | null
+          effectiveness_tier?: string | null
+          engine_version?: string | null
           id?: string
           last_updated?: string | null
+          metabolic_stability?: number | null
           metabolic_success_score?: number | null
           protocol_id?: string
           stagnation_rate?: number | null
