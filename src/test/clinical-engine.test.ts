@@ -91,11 +91,62 @@ function calculateCalorieAvg(
   );
 }
 
+// ─── Longitudinal Functions (Phase 2) ───
+function classifyWeightTrend(velocityPctPerWeek: number, absVariationKg: number): string {
+  if (absVariationKg < 0.2) return "stagnated";
+  if (velocityPctPerWeek < -1) return "fast_loss";
+  if (velocityPctPerWeek <= -0.4) return "expected_loss";
+  if (velocityPctPerWeek < 0) return "slow_loss";
+  return "gaining";
+}
+
+function classifyAdherenceMomentum(current7d: number, prev7d: number): string {
+  const diff = current7d - prev7d;
+  if (diff <= -20) return "critical_drop";
+  if (diff <= -5) return "declining";
+  if (diff >= 5) return "improving";
+  return "stable";
+}
+
+function classifyEngagement(index: number): string {
+  if (index >= 75) return "high_engagement";
+  if (index >= 50) return "moderate";
+  if (index >= 25) return "unstable";
+  return "drop_risk";
+}
+
+function checkMetabolicAdaptationRisk(
+  weightTrend: string,
+  adherenceScore7d: number,
+  planActiveDays: number
+): boolean {
+  return (
+    (weightTrend === "slow_loss" || weightTrend === "stagnated") &&
+    adherenceScore7d >= 75 &&
+    planActiveDays > 21
+  );
+}
+
+const LONGITUDINAL_SCORE: Record<string, Record<string, number>> = {
+  adherence_momentum: { declining: 10, critical_drop: 20 },
+  engagement_level: { unstable: 10, drop_risk: 25 },
+  weight_trend_status: { gaining: 15 },
+};
+
+function calculateLongitudinalScore(profile: Record<string, string>): number {
+  let score = 0;
+  for (const [field, values] of Object.entries(LONGITUDINAL_SCORE)) {
+    const val = profile[field];
+    if (val && values[val]) score += values[val];
+  }
+  return score;
+}
+
 // ═══════════════════════════════════════════════
 // TESTS
 // ═══════════════════════════════════════════════
 
-describe("Clinical Alert Engine — Phase 1 Validation", () => {
+describe("Clinical Alert Engine — Phase 1 + Phase 2 Validation", () => {
   // ─── 1. Low Adherence ───
   describe("Signal: Low Adherence", () => {
     it("triggers when adherence < 60%", () => {
