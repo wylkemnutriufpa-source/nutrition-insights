@@ -879,8 +879,49 @@ export default function MealPlanEditor() {
                     {DAYS.map((day) => {
                       const cellItems = getItems(day.key, meal.key);
                       const cellKey = `${day.key}-${meal.key}`;
+                      const isDragSource = dragSource?.day === day.key && dragSource?.mealType === meal.key;
+                      const isDragOver = dragOver?.day === day.key && dragOver?.mealType === meal.key;
                       return (
-                        <div key={day.key} className="glass rounded-lg p-2 min-h-[100px] flex flex-col group relative hover:border-primary/30 transition-colors">
+                        <div
+                          key={day.key}
+                          draggable={cellItems.length > 0 && !swapping}
+                          onDragStart={(e) => {
+                            setDragSource({ day: day.key, mealType: meal.key });
+                            e.dataTransfer.effectAllowed = "move";
+                            e.dataTransfer.setData("text/plain", cellKey);
+                          }}
+                          onDragEnd={() => { setDragSource(null); setDragOver(null); }}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            e.dataTransfer.dropEffect = "move";
+                            if (!isDragOver) setDragOver({ day: day.key, mealType: meal.key });
+                          }}
+                          onDragLeave={() => { if (isDragOver) setDragOver(null); }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            if (dragSource && !(dragSource.day === day.key && dragSource.mealType === meal.key)) {
+                              handleSwapCells(dragSource, { day: day.key, mealType: meal.key });
+                            }
+                            setDragOver(null);
+                          }}
+                          className={`glass rounded-lg p-2 min-h-[100px] flex flex-col group relative transition-all duration-200 ${
+                            isDragSource ? "opacity-50 scale-95 border-primary/50" : ""
+                          } ${isDragOver ? "ring-2 ring-primary/60 bg-primary/5 scale-[1.02]" : "hover:border-primary/30"
+                          } ${cellItems.length > 0 && !swapping ? "cursor-grab active:cursor-grabbing" : ""}`}
+                        >
+                          {/* Drag handle indicator */}
+                          {cellItems.length > 0 && (
+                            <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-60 transition-opacity">
+                              <ArrowLeftRight className="w-3 h-3 text-muted-foreground" />
+                            </div>
+                          )}
+                          {isDragOver && dragSource && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-primary/10 rounded-lg z-10 pointer-events-none">
+                              <span className="text-[10px] font-semibold text-primary flex items-center gap-1">
+                                <ArrowLeftRight className="w-3.5 h-3.5" /> Trocar
+                              </span>
+                            </div>
+                          )}
                           <div className="flex-1 space-y-1.5">
                             <AnimatePresence mode="popLayout">
                               {cellItems.map((item) => (
