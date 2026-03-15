@@ -127,6 +127,11 @@ export default function MealPlanEditor() {
   const [emptyPlanWarning, setEmptyPlanWarning] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
 
+  // Drag-and-drop swap state
+  const [dragSource, setDragSource] = useState<{ day: number; mealType: MealType } | null>(null);
+  const [dragOver, setDragOver] = useState<{ day: number; mealType: MealType } | null>(null);
+  const [swapping, setSwapping] = useState(false);
+
   const fetchData = useCallback(async () => {
     if (!id || !user) return;
     setLoading(true);
