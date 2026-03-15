@@ -76,6 +76,18 @@ const LONGITUDINAL_SCORE: Record<string, Record<string, number>> = {
   weight_trend_status: { gaining: 15 },
 };
 
+// Cluster-based score modulation (Phase 4)
+const CLUSTER_SCORE_MODIFIERS: Record<string, Record<string, number>> = {
+  // resistant → tolerate more stagnation, less weight penalty
+  resistant_profile: { weight_trend_status_gaining: -5, engagement_level_drop_risk: 5 },
+  // disengaging → increase engagement/adherence weight
+  disengaging_patient: { engagement_level_drop_risk: 10, adherence_momentum_critical_drop: 10 },
+  // behavioral_struggler → focus on adherence signals
+  behavioral_struggler: { adherence_momentum_declining: 5, adherence_momentum_critical_drop: 10 },
+  // metabolic_adaptive → less penalty for slow_loss (expected)
+  metabolic_adaptive: { weight_trend_status_gaining: -5 },
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -566,9 +578,9 @@ async function processBatch(
   return alerts;
 }
 
-// ─── Risk Score Update (BLOCO 3 - with longitudinal weights) ───
+// ─── Risk Score Update (BLOCO 3 - with longitudinal weights + cluster modulation) ───
 async function updateRiskScores(supabase: any, patientIds: string[]) {
-  const [alertsRes, profilesRes] = await Promise.all([
+  const [alertsRes, profilesRes, clusterRes] = await Promise.all([
     supabase
       .from("clinical_alerts")
       .select("patient_id, severity")
@@ -580,9 +592,14 @@ async function updateRiskScores(supabase: any, patientIds: string[]) {
         "user_id, adherence_momentum, engagement_level, weight_trend_status"
       )
       .in("user_id", patientIds),
+    supabase
+      .from("patient_clinical_state")
+      .select("patient_id, metabolic_cluster")
+      .in("patient_id", patientIds),
   ]);
 
   const profileMap = indexBy(profilesRes.data || [], "user_id");
+  const clusterMap = indexBy(clusterRes.data || [], "patient_id");
 
   const scoreMap: Record<string, number> = {};
   for (const pid of patientIds) scoreMap[pid] = 0;
@@ -601,6 +618,21 @@ async function updateRiskScores(supabase: any, patientIds: string[]) {
       const val = p[field as keyof typeof p] as string;
       if (val && values[val]) {
         scoreMap[pid] = (scoreMap[pid] || 0) + values[val];
+      }
+    }
+
+    // Apply cluster-based score modulation (Phase 4)
+    const cluster = clusterMap[pid]?.metabolic_cluster;
+    if (cluster && CLUSTER_SCORE_MODIFIERS[cluster]) {
+      const mods = CLUSTER_SCORE_MODIFIERS[cluster];
+      for (const [field, values] of Object.entries(LONGITUDINAL_SCORE)) {
+        const val = p[field as keyof typeof p] as string;
+        if (val) {
+          const modKey = `${field}_${val}`;
+          if (mods[modKey]) {
+            scoreMap[pid] = Math.max(0, (scoreMap[pid] || 0) + mods[modKey]);
+          }
+        }
       }
     }
   }

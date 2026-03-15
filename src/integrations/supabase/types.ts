@@ -2228,10 +2228,12 @@ export type Database = {
           caloric_response_status: string | null
           calorie_avg: number | null
           clinical_risk_level: string | null
+          cluster_confidence: string | null
           created_at: string | null
           engagement_index: number | null
           engine_version: string | null
           id: string
+          metabolic_cluster: string | null
           metadata: Json | null
           patient_id: string
           risk_score: number | null
@@ -2249,10 +2251,12 @@ export type Database = {
           caloric_response_status?: string | null
           calorie_avg?: number | null
           clinical_risk_level?: string | null
+          cluster_confidence?: string | null
           created_at?: string | null
           engagement_index?: number | null
           engine_version?: string | null
           id?: string
+          metabolic_cluster?: string | null
           metadata?: Json | null
           patient_id: string
           risk_score?: number | null
@@ -2270,10 +2274,12 @@ export type Database = {
           caloric_response_status?: string | null
           calorie_avg?: number | null
           clinical_risk_level?: string | null
+          cluster_confidence?: string | null
           created_at?: string | null
           engagement_index?: number | null
           engine_version?: string | null
           id?: string
+          metabolic_cluster?: string | null
           metadata?: Json | null
           patient_id?: string
           risk_score?: number | null
@@ -2294,9 +2300,17 @@ export type Database = {
           caloric_response_status: string
           calorie_avg_real: number | null
           calorie_target: number | null
+          cluster_changed_at: string | null
+          cluster_data_points: number | null
+          cluster_engine_version: string | null
+          cluster_min_days_met: boolean | null
+          cluster_strategy: Json | null
           data_points_used: number | null
           engagement_avg_28d: number | null
           id: string
+          metabolic_cluster: string | null
+          metabolic_cluster_confidence: string | null
+          metabolic_feature_vector: Json | null
           patient_id: string
           plan_active_days: number | null
           stagnation_risk_level: string
@@ -2310,9 +2324,17 @@ export type Database = {
           caloric_response_status?: string
           calorie_avg_real?: number | null
           calorie_target?: number | null
+          cluster_changed_at?: string | null
+          cluster_data_points?: number | null
+          cluster_engine_version?: string | null
+          cluster_min_days_met?: boolean | null
+          cluster_strategy?: Json | null
           data_points_used?: number | null
           engagement_avg_28d?: number | null
           id?: string
+          metabolic_cluster?: string | null
+          metabolic_cluster_confidence?: string | null
+          metabolic_feature_vector?: Json | null
           patient_id: string
           plan_active_days?: number | null
           stagnation_risk_level?: string
@@ -2326,9 +2348,17 @@ export type Database = {
           caloric_response_status?: string
           calorie_avg_real?: number | null
           calorie_target?: number | null
+          cluster_changed_at?: string | null
+          cluster_data_points?: number | null
+          cluster_engine_version?: string | null
+          cluster_min_days_met?: boolean | null
+          cluster_strategy?: Json | null
           data_points_used?: number | null
           engagement_avg_28d?: number | null
           id?: string
+          metabolic_cluster?: string | null
+          metabolic_cluster_confidence?: string | null
+          metabolic_feature_vector?: Json | null
           patient_id?: string
           plan_active_days?: number | null
           stagnation_risk_level?: string
