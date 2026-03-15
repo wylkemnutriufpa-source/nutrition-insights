@@ -1294,6 +1294,11 @@ export default function MealPlanEditor() {
         {/* Plan Scheduler */}
         <PlanScheduler mealPlanId={plan.id} planTitle={plan.title} />
       </div>
+  );
+
+  return (
+    <>
+      {isFullscreen ? fullscreenContent : <DashboardLayout>{fullscreenContent}</DashboardLayout>}
 
       {/* Add/Edit Item Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
