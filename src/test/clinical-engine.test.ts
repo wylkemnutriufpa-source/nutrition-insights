@@ -725,8 +725,8 @@ describe("Phase 3 — Adaptive Nutrition Decision Engine", () => {
       expect(classifyTherapeuticEffectiveness(40, "stagnated", "unstable", 25)).toBe("baixa_eficacia");
     });
 
-    it("classifies falha_terapeutica: very low adherence + poor trend + long plan", () => {
-      expect(classifyTherapeuticEffectiveness(30, "gaining", "drop_risk", 30)).toBe("falha_terapeutica");
+    it("classifies baixa_eficacia: very low adherence + poor trend + long plan", () => {
+      expect(classifyTherapeuticEffectiveness(30, "gaining", "drop_risk", 30)).toBe("baixa_eficacia");
     });
   });
 
