@@ -1733,6 +1733,6 @@ export default function MealPlanEditor() {
           )}
         </SheetContent>
       </Sheet>
-    </DashboardLayout>
+    </>
   );
 }
