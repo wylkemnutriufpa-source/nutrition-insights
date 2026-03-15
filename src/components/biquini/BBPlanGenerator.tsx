@@ -103,10 +103,16 @@ export default function BBPlanGenerator() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label className="text-sm font-medium">Paciente</Label>
-              <PatientPickerDropdown
-                value={selectedPatient}
-                onChange={setSelectedPatient}
-              />
+              <Select value={selectedPatient} onValueChange={setSelectedPatient}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Selecione um paciente" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(patients || []).map((p: any) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label className="text-sm font-medium">Fase do BB</Label>
