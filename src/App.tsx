@@ -102,6 +102,7 @@ const PersonalLanding = lazy(() => import("./pages/PersonalLanding"));
 const FitnessAnamnesis = lazy(() => import("./pages/FitnessAnamnesis"));
 const ClinicalRiskDashboard = lazy(() => import("./pages/ClinicalRiskDashboard"));
 const AdminProtocolFitJourney = lazy(() => import("./pages/AdminProtocolFitJourney"));
+const AdminProtocolBiquiniBranco = lazy(() => import("./pages/AdminProtocolBiquiniBranco"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -311,6 +312,7 @@ const App = () => (
               <Route path="/admin/landing-pages" element={<AdminRoute><LP section="Admin"><AdminLandingPages /></LP></AdminRoute>} />
               <Route path="/admin/menu-config" element={<AdminRoute><LP section="Admin"><AdminMenuConfig /></LP></AdminRoute>} />
               <Route path="/admin/protocol-fitjourney" element={<AdminRoute><LP section="Admin"><AdminProtocolFitJourney /></LP></AdminRoute>} />
+              <Route path="/admin/protocol-biquini-branco" element={<AdminRoute><LP section="Admin"><AdminProtocolBiquiniBranco /></LP></AdminRoute>} />
 
               {/* Public pricing */}
               <Route path="/pricing" element={<LP section="Pricing"><Pricing /></LP>} />
