@@ -106,6 +106,7 @@ const AdminProtocolBiquiniBranco = lazy(() => import("./pages/AdminProtocolBiqui
 const AdminNutritionProtocols = lazy(() => import("./pages/AdminNutritionProtocols"));
 const TherapeuticIntelligence = lazy(() => import("./pages/TherapeuticIntelligence"));
 const ProtocolTransitions = lazy(() => import("./pages/ProtocolTransitions"));
+const ClinicalOrchestration = lazy(() => import("./pages/ClinicalOrchestration"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
