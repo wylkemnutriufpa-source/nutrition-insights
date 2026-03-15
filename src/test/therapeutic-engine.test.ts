@@ -99,7 +99,8 @@ describe("Therapeutic Engine - Caloric Response Classification", () => {
   });
 
   it("should classify metabolic adaptation risk", () => {
-    expect(classifyCaloricResponseStatus(-0.06, "resistant_profile", 80, 10, "stagnated")).toBe("risco_adaptacao_metabolica");
+    // velocity is near zero (not matching resposta_lenta range), high adherence, resistant profile, stagnated trend
+    expect(classifyCaloricResponseStatus(0.01, "resistant_profile", 80, 10, "stagnated")).toBe("risco_adaptacao_metabolica");
   });
 
   it("should classify negative response", () => {
