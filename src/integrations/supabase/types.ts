@@ -1162,6 +1162,273 @@ export type Database = {
           },
         ]
       }
+      clinical_experiment_assignments: {
+        Row: {
+          assigned_at: string
+          baseline_snapshot: Json
+          experiment_id: string
+          group_id: string
+          id: string
+          patient_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          baseline_snapshot?: Json
+          experiment_id: string
+          group_id: string
+          id?: string
+          patient_id: string
+        }
+        Update: {
+          assigned_at?: string
+          baseline_snapshot?: Json
+          experiment_id?: string
+          group_id?: string
+          id?: string
+          patient_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_experiment_assignments_experiment_id_fkey"
+            columns: ["experiment_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_experiments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clinical_experiment_assignments_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_experiment_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clinical_experiment_groups: {
+        Row: {
+          created_at: string
+          expected_mechanism: string | null
+          experiment_id: string
+          group_name: string
+          id: string
+          intervention_definition: Json
+        }
+        Insert: {
+          created_at?: string
+          expected_mechanism?: string | null
+          experiment_id: string
+          group_name: string
+          id?: string
+          intervention_definition?: Json
+        }
+        Update: {
+          created_at?: string
+          expected_mechanism?: string | null
+          experiment_id?: string
+          group_name?: string
+          id?: string
+          intervention_definition?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_experiment_groups_experiment_id_fkey"
+            columns: ["experiment_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_experiments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clinical_experiment_insights: {
+        Row: {
+          confidence_level: string | null
+          created_at: string
+          experiment_id: string
+          id: string
+          insight_description: string
+        }
+        Insert: {
+          confidence_level?: string | null
+          created_at?: string
+          experiment_id: string
+          id?: string
+          insight_description: string
+        }
+        Update: {
+          confidence_level?: string | null
+          created_at?: string
+          experiment_id?: string
+          id?: string
+          insight_description?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_experiment_insights_experiment_id_fkey"
+            columns: ["experiment_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_experiments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clinical_experiment_outcomes: {
+        Row: {
+          adherence_delta: number | null
+          dropout_event: boolean | null
+          evaluation_window_days: number | null
+          experiment_id: string
+          id: string
+          patient_id: string
+          performance_delta: number | null
+          recorded_at: string
+          regression_event: boolean | null
+          risk_delta: number | null
+          stagnation_event: boolean | null
+          weight_delta: number | null
+        }
+        Insert: {
+          adherence_delta?: number | null
+          dropout_event?: boolean | null
+          evaluation_window_days?: number | null
+          experiment_id: string
+          id?: string
+          patient_id: string
+          performance_delta?: number | null
+          recorded_at?: string
+          regression_event?: boolean | null
+          risk_delta?: number | null
+          stagnation_event?: boolean | null
+          weight_delta?: number | null
+        }
+        Update: {
+          adherence_delta?: number | null
+          dropout_event?: boolean | null
+          evaluation_window_days?: number | null
+          experiment_id?: string
+          id?: string
+          patient_id?: string
+          performance_delta?: number | null
+          recorded_at?: string
+          regression_event?: boolean | null
+          risk_delta?: number | null
+          stagnation_event?: boolean | null
+          weight_delta?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_experiment_outcomes_experiment_id_fkey"
+            columns: ["experiment_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_experiments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clinical_experiment_results: {
+        Row: {
+          avg_adherence_change: number | null
+          avg_performance_change: number | null
+          avg_weight_change: number | null
+          created_at: string
+          dropout_rate: number | null
+          experiment_id: string
+          group_id: string
+          id: string
+          patients_count: number | null
+          regression_rate: number | null
+          result_interpretation: string | null
+          stagnation_rate: number | null
+          statistical_signal_strength: number | null
+        }
+        Insert: {
+          avg_adherence_change?: number | null
+          avg_performance_change?: number | null
+          avg_weight_change?: number | null
+          created_at?: string
+          dropout_rate?: number | null
+          experiment_id: string
+          group_id: string
+          id?: string
+          patients_count?: number | null
+          regression_rate?: number | null
+          result_interpretation?: string | null
+          stagnation_rate?: number | null
+          statistical_signal_strength?: number | null
+        }
+        Update: {
+          avg_adherence_change?: number | null
+          avg_performance_change?: number | null
+          avg_weight_change?: number | null
+          created_at?: string
+          dropout_rate?: number | null
+          experiment_id?: string
+          group_id?: string
+          id?: string
+          patients_count?: number | null
+          regression_rate?: number | null
+          result_interpretation?: string | null
+          stagnation_rate?: number | null
+          statistical_signal_strength?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_experiment_results_experiment_id_fkey"
+            columns: ["experiment_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_experiments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clinical_experiment_results_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_experiment_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clinical_experiments: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expected_duration_days: number
+          experiment_name: string
+          experiment_type: string
+          hypothesis_description: string
+          id: string
+          organization_id: string | null
+          start_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expected_duration_days?: number
+          experiment_name: string
+          experiment_type?: string
+          hypothesis_description?: string
+          id?: string
+          organization_id?: string | null
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expected_duration_days?: number
+          experiment_name?: string
+          experiment_type?: string
+          hypothesis_description?: string
+          id?: string
+          organization_id?: string | null
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       clinical_intervention_simulations: {
         Row: {
           baseline_state: Json
