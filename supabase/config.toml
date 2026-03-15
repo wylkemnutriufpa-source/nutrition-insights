@@ -79,6 +79,9 @@ verify_jwt = false
 [functions.compute-physiological-signal-engine]
 verify_jwt = false
 
+[functions.compute-clinical-outcome-predictions]
+verify_jwt = false
+
 # ═══════════════════════════════════════════
 
 [functions.generate-weekly-report]
