@@ -1154,11 +1154,17 @@ export default function MealPlanEditor() {
             {(() => {
               const t = getDayTotals(selectedDay);
               return (
-                <div className="grid grid-cols-4 gap-2">
-                  <div className="glass rounded-xl p-3 text-center"><Flame className="w-4 h-4 mx-auto text-orange-500 mb-1" /><p className="text-xs text-muted-foreground">Calorias</p><p className="font-display font-bold text-sm">{t.calories}</p></div>
-                  <div className="glass rounded-xl p-3 text-center"><Beef className="w-4 h-4 mx-auto text-red-500 mb-1" /><p className="text-xs text-muted-foreground">Proteína</p><p className="font-display font-bold text-sm">{t.protein.toFixed(0)}g</p></div>
-                  <div className="glass rounded-xl p-3 text-center"><Wheat className="w-4 h-4 mx-auto text-amber-500 mb-1" /><p className="text-xs text-muted-foreground">Carbs</p><p className="font-display font-bold text-sm">{t.carbs.toFixed(0)}g</p></div>
-                  <div className="glass rounded-xl p-3 text-center"><Droplets className="w-4 h-4 mx-auto text-blue-400 mb-1" /><p className="text-xs text-muted-foreground">Gordura</p><p className="font-display font-bold text-sm">{t.fat.toFixed(0)}g</p></div>
+                <div className="space-y-2">
+                  <div className="grid grid-cols-4 gap-2">
+                    <div className="glass rounded-xl p-3 text-center"><Flame className="w-4 h-4 mx-auto text-orange-500 mb-1" /><p className="text-xs text-muted-foreground">Calorias</p><p className="font-display font-bold text-sm">{t.calories}</p></div>
+                    <div className="glass rounded-xl p-3 text-center"><Beef className="w-4 h-4 mx-auto text-red-500 mb-1" /><p className="text-xs text-muted-foreground">Proteína</p><p className="font-display font-bold text-sm">{t.protein.toFixed(0)}g</p></div>
+                    <div className="glass rounded-xl p-3 text-center"><Wheat className="w-4 h-4 mx-auto text-amber-500 mb-1" /><p className="text-xs text-muted-foreground">Carbs</p><p className="font-display font-bold text-sm">{t.carbs.toFixed(0)}g</p></div>
+                    <div className="glass rounded-xl p-3 text-center"><Droplets className="w-4 h-4 mx-auto text-blue-400 mb-1" /><p className="text-xs text-muted-foreground">Gordura</p><p className="font-display font-bold text-sm">{t.fat.toFixed(0)}g</p></div>
+                  </div>
+                  <div className="glass rounded-xl p-3">
+                    <p className="text-[10px] font-semibold text-muted-foreground mb-1.5">Distribuição de Macros</p>
+                    <MacroBalanceBar protein={t.protein} carbs={t.carbs} fat={t.fat} calories={t.calories} />
+                  </div>
                 </div>
               );
             })()}
