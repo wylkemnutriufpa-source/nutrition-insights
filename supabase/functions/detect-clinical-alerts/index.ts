@@ -421,7 +421,7 @@ async function updateRiskScores(supabase: any, patientIds: string[]) {
   // Batch update profiles
   for (const pid of patientIds) {
     const score = scoreMap[pid] || 0;
-    const level = score >= 60 ? "critical" : score >= 30 ? "attention" : score >= 10 ? "risk" : "stable";
+    const level = score >= 60 ? "critical" : score >= 30 ? "risk" : score >= 10 ? "attention" : "stable";
 
     await supabase
       .from("profiles")
