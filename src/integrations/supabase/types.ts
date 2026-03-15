@@ -1162,6 +1162,60 @@ export type Database = {
           },
         ]
       }
+      clinical_intervention_simulations: {
+        Row: {
+          baseline_state: Json
+          confidence_classification: string
+          created_at: string
+          created_by: string | null
+          current_plan_id: string | null
+          current_protocol_id: string | null
+          engine_version: string
+          id: string
+          patient_id: string
+          projected_outcomes: Json
+          projected_risks: Json
+          recommended_decision: string
+          simulated_intervention: Json
+          simulation_confidence_score: number
+          simulation_type: string
+        }
+        Insert: {
+          baseline_state?: Json
+          confidence_classification?: string
+          created_at?: string
+          created_by?: string | null
+          current_plan_id?: string | null
+          current_protocol_id?: string | null
+          engine_version?: string
+          id?: string
+          patient_id: string
+          projected_outcomes?: Json
+          projected_risks?: Json
+          recommended_decision?: string
+          simulated_intervention?: Json
+          simulation_confidence_score?: number
+          simulation_type?: string
+        }
+        Update: {
+          baseline_state?: Json
+          confidence_classification?: string
+          created_at?: string
+          created_by?: string | null
+          current_plan_id?: string | null
+          current_protocol_id?: string | null
+          engine_version?: string
+          id?: string
+          patient_id?: string
+          projected_outcomes?: Json
+          projected_risks?: Json
+          recommended_decision?: string
+          simulated_intervention?: Json
+          simulation_confidence_score?: number
+          simulation_type?: string
+        }
+        Relationships: []
+      }
       clinical_methodologies: {
         Row: {
           alert_thresholds: Json | null
