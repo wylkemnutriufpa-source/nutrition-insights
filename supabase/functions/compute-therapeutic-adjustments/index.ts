@@ -38,13 +38,7 @@ function classifyCaloricResponseStatus(
   // Slow response
   if (weightVelocity14d > -0.3 && weightVelocity14d < -0.05 && adherence7d >= 60) return "resposta_lenta";
 
-  // Stagnated
-  if (Math.abs(weightVelocity14d) <= 0.05 && adherence7d >= 50) return "estagnado";
-
-  // Negative response (gaining weight)
-  if (weightVelocity14d > 0.1) return "resposta_negativa";
-
-  // Metabolic adaptation risk: high adherence + slow/stagnated + prolonged
+  // Metabolic adaptation risk (BEFORE estagnado — higher priority clinical signal)
   if (
     adherence7d >= 75 &&
     (weightTrend === "stagnated" || weightTrend === "slow_loss") &&
@@ -52,6 +46,12 @@ function classifyCaloricResponseStatus(
   ) {
     return "risco_adaptacao_metabolica";
   }
+
+  // Stagnated
+  if (Math.abs(weightVelocity14d) <= 0.05 && adherence7d >= 50) return "estagnado";
+
+  // Negative response (gaining weight)
+  if (weightVelocity14d > 0.1) return "resposta_negativa";
 
   // Default based on velocity
   if (weightVelocity14d >= 0) return "resposta_negativa";
