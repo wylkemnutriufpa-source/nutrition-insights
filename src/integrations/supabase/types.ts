@@ -4432,6 +4432,53 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_nutrition_benchmarks: {
+        Row: {
+          adherence_percentile: number | null
+          benchmark_classification: string
+          cohort_id: string | null
+          engine_version: string
+          id: string
+          patient_id: string
+          performance_percentile: number | null
+          risk_percentile: number | null
+          updated_at: string
+          weight_response_percentile: number | null
+        }
+        Insert: {
+          adherence_percentile?: number | null
+          benchmark_classification?: string
+          cohort_id?: string | null
+          engine_version?: string
+          id?: string
+          patient_id: string
+          performance_percentile?: number | null
+          risk_percentile?: number | null
+          updated_at?: string
+          weight_response_percentile?: number | null
+        }
+        Update: {
+          adherence_percentile?: number | null
+          benchmark_classification?: string
+          cohort_id?: string | null
+          engine_version?: string
+          id?: string
+          patient_id?: string
+          performance_percentile?: number | null
+          risk_percentile?: number | null
+          updated_at?: string
+          weight_response_percentile?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_nutrition_benchmarks_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: false
+            referencedRelation: "population_nutrition_cohorts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_performance_snapshots: {
         Row: {
           consistency_score: number | null
@@ -6021,6 +6068,149 @@ export type Database = {
         }
         Relationships: []
       }
+      population_nutrition_cohorts: {
+        Row: {
+          activity_level: string | null
+          adherence_band: string | null
+          age_band: string | null
+          bmi_band: string | null
+          caloric_band: string | null
+          cohort_signature: Json
+          cohort_slug: string
+          created_at: string
+          goal_category: string | null
+          id: string
+          metabolic_cluster: string | null
+          patients_count: number
+          sex: string | null
+          updated_at: string
+        }
+        Insert: {
+          activity_level?: string | null
+          adherence_band?: string | null
+          age_band?: string | null
+          bmi_band?: string | null
+          caloric_band?: string | null
+          cohort_signature?: Json
+          cohort_slug: string
+          created_at?: string
+          goal_category?: string | null
+          id?: string
+          metabolic_cluster?: string | null
+          patients_count?: number
+          sex?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activity_level?: string | null
+          adherence_band?: string | null
+          age_band?: string | null
+          bmi_band?: string | null
+          caloric_band?: string | null
+          cohort_signature?: Json
+          cohort_slug?: string
+          created_at?: string
+          goal_category?: string | null
+          id?: string
+          metabolic_cluster?: string | null
+          patients_count?: number
+          sex?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      population_nutrition_metrics: {
+        Row: {
+          avg_adherence: number | null
+          avg_body_fat_change: number | null
+          avg_dropout_rate: number | null
+          avg_performance_score: number | null
+          avg_protocol_success_score: number | null
+          avg_regression_rate: number | null
+          avg_stagnation_rate: number | null
+          avg_weight_change_14d: number | null
+          avg_weight_change_30d: number | null
+          cohort_id: string
+          engine_version: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avg_adherence?: number | null
+          avg_body_fat_change?: number | null
+          avg_dropout_rate?: number | null
+          avg_performance_score?: number | null
+          avg_protocol_success_score?: number | null
+          avg_regression_rate?: number | null
+          avg_stagnation_rate?: number | null
+          avg_weight_change_14d?: number | null
+          avg_weight_change_30d?: number | null
+          cohort_id: string
+          engine_version?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          avg_adherence?: number | null
+          avg_body_fat_change?: number | null
+          avg_dropout_rate?: number | null
+          avg_performance_score?: number | null
+          avg_protocol_success_score?: number | null
+          avg_regression_rate?: number | null
+          avg_stagnation_rate?: number | null
+          avg_weight_change_14d?: number | null
+          avg_weight_change_30d?: number | null
+          cohort_id?: string
+          engine_version?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "population_nutrition_metrics_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: true
+            referencedRelation: "population_nutrition_cohorts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      population_response_patterns: {
+        Row: {
+          affected_cohort: string | null
+          confidence_score: number | null
+          created_at: string
+          engine_version: string
+          id: string
+          nutritionist_id: string | null
+          pattern_description: string
+          pattern_type: string
+          supporting_metrics: Json
+        }
+        Insert: {
+          affected_cohort?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          engine_version?: string
+          id?: string
+          nutritionist_id?: string | null
+          pattern_description: string
+          pattern_type: string
+          supporting_metrics?: Json
+        }
+        Update: {
+          affected_cohort?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          engine_version?: string
+          id?: string
+          nutritionist_id?: string | null
+          pattern_description?: string
+          pattern_type?: string
+          supporting_metrics?: Json
+        }
+        Relationships: []
+      }
       prestige_plans: {
         Row: {
           ai_usage_multiplier: number
@@ -7053,6 +7243,66 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "protocol_metabolic_tags_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      protocol_population_success_matrix: {
+        Row: {
+          adherence_rate: number | null
+          cluster_type: string | null
+          cohort_id: string | null
+          dropout_rate: number | null
+          evidence_strength: string | null
+          id: string
+          metabolic_response_score: number | null
+          protocol_id: string | null
+          sample_size: number | null
+          stagnation_rate: number | null
+          success_rate: number | null
+          updated_at: string
+        }
+        Insert: {
+          adherence_rate?: number | null
+          cluster_type?: string | null
+          cohort_id?: string | null
+          dropout_rate?: number | null
+          evidence_strength?: string | null
+          id?: string
+          metabolic_response_score?: number | null
+          protocol_id?: string | null
+          sample_size?: number | null
+          stagnation_rate?: number | null
+          success_rate?: number | null
+          updated_at?: string
+        }
+        Update: {
+          adherence_rate?: number | null
+          cluster_type?: string | null
+          cohort_id?: string | null
+          dropout_rate?: number | null
+          evidence_strength?: string | null
+          id?: string
+          metabolic_response_score?: number | null
+          protocol_id?: string | null
+          sample_size?: number | null
+          stagnation_rate?: number | null
+          success_rate?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "protocol_population_success_matrix_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: false
+            referencedRelation: "population_nutrition_cohorts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "protocol_population_success_matrix_protocol_id_fkey"
             columns: ["protocol_id"]
             isOneToOne: false
             referencedRelation: "nutrition_protocols"
