@@ -143,6 +143,15 @@ const effectivenessLabels: Record<string, { label: string; status: "ok" | "warni
   pending_evaluation: { label: "Avaliando...", status: "neutral" },
 };
 
+const clusterLabels: Record<string, { label: string; icon: string; color: string; description: string }> = {
+  metabolic_responder: { label: "Respondedor", icon: "✅", color: "text-success", description: "Perda consistente com boa adesão" },
+  metabolic_adaptive: { label: "Adaptativo", icon: "🔄", color: "text-warning", description: "Desaceleração metabólica em andamento" },
+  behavioral_struggler: { label: "Lutador", icon: "💪", color: "text-warning", description: "Adesão instável, peso responsivo" },
+  resistant_profile: { label: "Resistente", icon: "🛡️", color: "text-destructive", description: "Boa adesão, baixa resposta" },
+  disengaging_patient: { label: "Desengajando", icon: "⚠️", color: "text-destructive", description: "Queda progressiva de engajamento" },
+  unknown: { label: "Avaliando", icon: "⏳", color: "text-muted-foreground", description: "Dados insuficientes" },
+};
+
 function getRiskSeverity(score: number): string {
   if (score >= 60) return "critical";
   if (score >= 30) return "risk";
