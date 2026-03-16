@@ -444,12 +444,13 @@ export default function MealPlanEditor() {
     if (source.day === target.day && source.mealType === target.mealType) return;
     if (!id) return;
     setSwapping(true);
+    showSyncSaving();
 
     const sourceItems = items.filter(i => i.day_of_week === source.day && i.meal_type === source.mealType);
     const targetItems = items.filter(i => i.day_of_week === target.day && i.meal_type === target.mealType);
 
     // OPTIMISTIC: update UI immediately
-    setItems(prev => prev.map(i => {
+    setItemsStable(prev => prev.map(i => {
       if (sourceItems.some(s => s.id === i.id)) return { ...i, day_of_week: target.day, meal_type: target.mealType };
       if (targetItems.some(t => t.id === i.id)) return { ...i, day_of_week: source.day, meal_type: source.mealType };
       return i;
@@ -480,7 +481,11 @@ export default function MealPlanEditor() {
     const hasError = results.some(r => r.error);
     if (hasError) {
       toast.error("Erro ao salvar troca — revertendo...");
-      refreshItems(); // rollback from server
+      showSyncDone(false);
+      refreshItems();
+    } else {
+      showSyncDone(true);
+    }
     }
   };
 
