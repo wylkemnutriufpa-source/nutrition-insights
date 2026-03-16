@@ -1238,7 +1238,7 @@ export default function MealPlanEditor() {
                             </div>
                           )}
                           <div className="flex-1 space-y-1.5">
-                            <AnimatePresence mode="popLayout">
+                            <AnimatePresence initial={false}>
                               {cellItems.map((item) => {
                                 const catDot = getCategoryDot(item.title);
                                 const isInlineEditing = inlineEditId === item.id;
