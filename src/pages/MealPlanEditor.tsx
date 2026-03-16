@@ -298,6 +298,25 @@ export default function MealPlanEditor() {
     }
   };
 
+  // Delete all items for a specific day
+  const handleDeleteDay = async (day: number) => {
+    const dayItems = items.filter(i => i.day_of_week === day);
+    if (dayItems.length === 0) {
+      toast.error("Dia já está vazio");
+      return;
+    }
+    // Optimistic
+    setItems(prev => prev.filter(i => i.day_of_week !== day));
+    const ids = dayItems.map(i => i.id);
+    const { error } = await supabase.from("meal_plan_items").delete().in("id", ids);
+    if (error) {
+      toast.error("Erro ao limpar dia: " + error.message);
+      refreshItems();
+    } else {
+      toast.success(`${DAYS[day].label} limpo! (${dayItems.length} itens removidos)`);
+    }
+  };
+
   const handleCopyDay = async (sourceDay: number, targetDay: number) => {
     if (!id) return;
     const sourceItems = items.filter((i) => i.day_of_week === sourceDay);
