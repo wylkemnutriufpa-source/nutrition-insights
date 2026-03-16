@@ -345,6 +345,11 @@ export default function MealPlanEditor() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  useEffect(() => {
+    if (!id || !plan) return;
+    writeMealPlanEditorCache(id, { plan, patientName, items });
+  }, [id, plan, patientName, items]);
+
   // Cleanup sync timer
   useEffect(() => {
     return () => { if (syncTimerRef.current) clearTimeout(syncTimerRef.current); };
