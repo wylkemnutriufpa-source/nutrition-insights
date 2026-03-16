@@ -197,6 +197,17 @@ export default function MealPlanEditor() {
     setLoading(false);
   }, [id, user]);
 
+  // Light refresh: only re-fetches items without loading spinner
+  const refreshItems = useCallback(async () => {
+    if (!id) return;
+    const { data } = await supabase
+      .from("meal_plan_items")
+      .select("*")
+      .eq("meal_plan_id", id)
+      .order("created_at");
+    if (data) setItems(data);
+  }, [id]);
+
   const fetchDocs = async () => {
     if (!id) return;
     const { data } = await supabase
@@ -258,24 +269,31 @@ export default function MealPlanEditor() {
         .update(payload)
         .eq("id", editingItem.id);
       if (error) toast.error("Erro ao atualizar: " + error.message);
-      else toast.success("Item atualizado!");
+      else {
+        toast.success("Item atualizado!");
+        setItems(prev => prev.map(i => i.id === editingItem.id ? { ...i, ...payload } as MealPlanItem : i));
+      }
     } else {
-      const { error } = await supabase.from("meal_plan_items").insert(payload);
+      const { data, error } = await supabase.from("meal_plan_items").insert(payload).select().single();
       if (error) toast.error("Erro ao adicionar: " + error.message);
-      else toast.success("Item adicionado!");
+      else {
+        toast.success("Item adicionado!");
+        setItems(prev => [...prev, data]);
+      }
     }
 
     setSaving(false);
     setDialogOpen(false);
-    fetchData();
   };
 
   const handleDeleteItem = async (itemId: string) => {
+    setItems(prev => prev.filter(i => i.id !== itemId));
     const { error } = await supabase.from("meal_plan_items").delete().eq("id", itemId);
-    if (error) toast.error("Erro ao remover: " + error.message);
-    else {
+    if (error) {
+      toast.error("Erro ao remover: " + error.message);
+      refreshItems(); // rollback
+    } else {
       toast.success("Removido!");
-      fetchData();
     }
   };
 
@@ -299,12 +317,12 @@ export default function MealPlanEditor() {
       fat_target: item.fat_target,
     }));
 
-    const { error } = await supabase.from("meal_plan_items").insert(inserts);
+    const { data, error } = await supabase.from("meal_plan_items").insert(inserts).select();
     if (error) toast.error("Erro ao copiar: " + error.message);
     else {
       toast.success(`Copiado para ${DAYS[targetDay].label}!`);
       setCopySource(null);
-      fetchData();
+      if (data) setItems(prev => [...prev, ...data]);
     }
   };
 
@@ -365,11 +383,17 @@ export default function MealPlanEditor() {
 
     if (hasError) {
       toast.error("Erro ao trocar refeições");
+      refreshItems();
     } else {
       const srcLabel = `${MEAL_TYPES.find(m => m.key === source.mealType)?.label} (${DAYS[source.day]?.short})`;
       const tgtLabel = `${MEAL_TYPES.find(m => m.key === target.mealType)?.label} (${DAYS[target.day]?.short})`;
       toast.success(`Trocado: ${srcLabel} ↔ ${tgtLabel}`);
-      fetchData();
+      // Optimistic: update items locally
+      setItems(prev => prev.map(i => {
+        if (sourceItems.some(s => s.id === i.id)) return { ...i, day_of_week: target.day, meal_type: target.mealType };
+        if (targetItems.some(t => t.id === i.id)) return { ...i, day_of_week: source.day, meal_type: source.mealType };
+        return i;
+      }));
     }
 
     setSwapping(false);
@@ -396,7 +420,7 @@ export default function MealPlanEditor() {
     if (error) toast.error("Erro ao editar");
     else {
       toast.success(match ? "Atualizado com macros ✨" : "Atualizado!");
-      fetchData();
+      setItems(prev => prev.map(i => i.id === itemId ? { ...i, ...updatePayload } as MealPlanItem : i));
     }
   };
 
@@ -463,7 +487,7 @@ export default function MealPlanEditor() {
       toast.success(`${macroLabels[bulkEditMacro]} ajustada (${modeLabels[bulkEditMode]}) em ${targetItems.length} itens de ${mealLabel} ✨`);
       setBulkEditOpen(false);
       setBulkEditValue("");
-      fetchData();
+      refreshItems();
     }
 
     setBulkEditSaving(false);
@@ -472,7 +496,7 @@ export default function MealPlanEditor() {
   // Duplicate a meal item (same day/meal_type)
   const handleDuplicateItem = async (item: MealPlanItem) => {
     if (!id) return;
-    const { error } = await supabase.from("meal_plan_items").insert({
+    const { data, error } = await supabase.from("meal_plan_items").insert({
       meal_plan_id: id,
       title: item.title,
       description: item.description,
@@ -482,11 +506,11 @@ export default function MealPlanEditor() {
       protein_target: item.protein_target,
       carbs_target: item.carbs_target,
       fat_target: item.fat_target,
-    });
+    }).select().single();
     if (error) toast.error("Erro ao duplicar: " + error.message);
     else {
       toast.success("Refeição duplicada! 📋");
-      fetchData();
+      if (data) setItems(prev => [...prev, data]);
     }
   };
 
@@ -499,7 +523,7 @@ export default function MealPlanEditor() {
   // Paste clipboard item into a specific cell
   const handlePasteItem = async (day: number, mealType: MealType) => {
     if (!id || !clipboardItem) return;
-    const { error } = await supabase.from("meal_plan_items").insert({
+    const { data, error } = await supabase.from("meal_plan_items").insert({
       meal_plan_id: id,
       title: clipboardItem.title,
       description: clipboardItem.description,
@@ -509,11 +533,11 @@ export default function MealPlanEditor() {
       protein_target: clipboardItem.protein_target,
       carbs_target: clipboardItem.carbs_target,
       fat_target: clipboardItem.fat_target,
-    });
+    }).select().single();
     if (error) toast.error("Erro ao colar: " + error.message);
     else {
       toast.success(`"${clipboardItem.title}" colado! ✅`);
-      fetchData();
+      if (data) setItems(prev => [...prev, data]);
     }
   };
 
@@ -537,7 +561,7 @@ export default function MealPlanEditor() {
     else {
       toast.success(`Substituído por ${food.name} ✨`);
       setDrawerOpen(false);
-      fetchData();
+      setItems(prev => prev.map(i => i.id === item.id ? { ...i, title: food.name, description: food.portion, calories_target: food.calories, protein_target: food.protein, carbs_target: food.carbs, fat_target: food.fat } as MealPlanItem : i));
     }
   };
 
@@ -549,7 +573,7 @@ export default function MealPlanEditor() {
     // Try to match food from database for auto macros
     const match = findFoodMatch(quickAddText.trim());
     
-    const { error } = await supabase.from("meal_plan_items").insert({
+    const { data, error } = await supabase.from("meal_plan_items").insert({
       meal_plan_id: id,
       title: quickAddText.trim(),
       description: match ? match.portion : null,
@@ -559,14 +583,14 @@ export default function MealPlanEditor() {
       protein_target: match ? match.protein : null,
       carbs_target: match ? match.carbs : null,
       fat_target: match ? match.fat : null,
-    });
+    }).select().single();
     setQuickAdding(false);
     if (error) toast.error("Erro ao adicionar: " + error.message);
     else {
       toast.success(match ? `${quickAddText.trim()} adicionado com macros! ✨` : "Item adicionado!");
       setQuickAddText("");
       setQuickAddKey(null);
-      fetchData();
+      if (data) setItems(prev => [...prev, data]);
     }
   };
 
@@ -591,7 +615,7 @@ export default function MealPlanEditor() {
       };
     });
 
-    const { error } = await supabase.from("meal_plan_items").insert(inserts);
+    const { data, error } = await supabase.from("meal_plan_items").insert(inserts).select();
     setBatchAdding(false);
     if (error) toast.error("Erro ao adicionar: " + error.message);
     else {
@@ -599,7 +623,7 @@ export default function MealPlanEditor() {
       toast.success(`${lines.length} itens adicionados! ${matched > 0 ? `(${matched} com macros automáticos ✨)` : ""}`);
       setBatchText("");
       setBatchTarget(null);
-      fetchData();
+      if (data) setItems(prev => [...prev, ...data]);
     }
   };
 
@@ -714,7 +738,7 @@ export default function MealPlanEditor() {
     else {
       toast.success(`Modelo aplicado com ${templateItems.length} itens! 🎉`);
       setSavedPlansDialogOpen(false);
-      fetchData();
+      refreshItems();
     }
   };
 
@@ -765,7 +789,7 @@ export default function MealPlanEditor() {
         if (!data?.success) throw new Error(data?.error || "Falha na geração");
         toast.success(`Plano regenerado com ${data.items_count} itens!`);
         setEmptyPlanWarning(false);
-        fetchData();
+        refreshItems();
       } catch (err: any) {
         toast.error("Erro ao regenerar: " + (err.message || "Tente novamente"));
       } finally {
@@ -851,7 +875,7 @@ export default function MealPlanEditor() {
             >
               <Wand2 className="w-4 h-4" /> Edição Inteligente
             </Button>
-            <CalorieTemplates mealPlanId={plan.id} onApplied={fetchData} />
+            <CalorieTemplates mealPlanId={plan.id} onApplied={refreshItems} />
             <Button
               variant="outline"
               size="sm"
@@ -889,7 +913,7 @@ export default function MealPlanEditor() {
                   if (error) throw error;
                   if (data?.error) throw new Error(data.error);
                   toast.success(`AI Plan gerou ${data.items_count} itens e ${data.tips_count} dicas! 🤖`);
-                  fetchData();
+                  refreshItems();
                 } catch (e: any) {
                   toast.error(e.message || "Erro ao gerar plano");
                 }
@@ -942,7 +966,7 @@ export default function MealPlanEditor() {
                       if (error) toast.error("Erro: " + error.message);
                       else {
                         toast.success("Plano aprovado! ✅");
-                        fetchData();
+                        refreshItems();
                       }
                       setApproving(false);
                     }}
@@ -1005,7 +1029,7 @@ export default function MealPlanEditor() {
                       });
 
                       toast.success("Plano publicado e paciente notificado! 🎉");
-                      fetchData();
+                      refreshItems();
                     } catch (err: any) {
                       toast.error("Erro: " + (err?.message || "Falha ao publicar"));
                     }
