@@ -397,6 +397,75 @@ export default function MealPlanEditor() {
     }
   };
 
+  // Bulk Smart Edit: adjust macros across multiple items at once
+  const handleBulkMacroEdit = async () => {
+    if (!id || !bulkEditValue.trim()) return;
+    setBulkEditSaving(true);
+
+    const val = parseFloat(bulkEditValue);
+    if (isNaN(val)) {
+      toast.error("Valor inválido");
+      setBulkEditSaving(false);
+      return;
+    }
+
+    // Filter items by meal type
+    const targetItems = bulkEditMealType === "all"
+      ? items
+      : items.filter(i => i.meal_type === bulkEditMealType);
+
+    if (targetItems.length === 0) {
+      toast.error("Nenhum item encontrado para esse tipo de refeição");
+      setBulkEditSaving(false);
+      return;
+    }
+
+    const updates = targetItems.map(item => {
+      const currentVal = Number(item[bulkEditMacro]) || 0;
+      let newVal: number;
+
+      switch (bulkEditMode) {
+        case "add": newVal = currentVal + val; break;
+        case "subtract": newVal = Math.max(0, currentVal - val); break;
+        case "set": newVal = val; break;
+        case "multiply": newVal = Math.round(currentVal * (val / 100) * 100) / 100; break;
+        default: newVal = currentVal;
+      }
+
+      // Recalculate calories if adjusting macros (not calories directly)
+      const payload: Record<string, number | null> = { [bulkEditMacro]: Math.round(newVal * 10) / 10 };
+
+      return supabase.from("meal_plan_items").update(payload).eq("id", item.id);
+    });
+
+    const results = await Promise.all(updates);
+    const errors = results.filter(r => r.error);
+
+    if (errors.length > 0) {
+      toast.error(`${errors.length} erros ao atualizar`);
+    } else {
+      const macroLabels: Record<string, string> = {
+        protein_target: "Proteína",
+        carbs_target: "Carboidratos",
+        fat_target: "Gordura",
+        calories_target: "Calorias",
+      };
+      const modeLabels: Record<string, string> = {
+        add: `+${val}`,
+        subtract: `-${val}`,
+        set: `= ${val}`,
+        multiply: `× ${val}%`,
+      };
+      const mealLabel = bulkEditMealType === "all" ? "todas as refeições" : MEAL_TYPES.find(m => m.key === bulkEditMealType)?.label;
+      toast.success(`${macroLabels[bulkEditMacro]} ajustada (${modeLabels[bulkEditMode]}) em ${targetItems.length} itens de ${mealLabel} ✨`);
+      setBulkEditOpen(false);
+      setBulkEditValue("");
+      fetchData();
+    }
+
+    setBulkEditSaving(false);
+  };
+
   // Open drawer panel for detailed view
   const openDrawerPanel = (item: MealPlanItem) => {
     setDrawerItem(item);
