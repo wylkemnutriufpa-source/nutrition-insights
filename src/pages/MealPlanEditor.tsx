@@ -1342,10 +1342,13 @@ export default function MealPlanEditor() {
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => { setBatchTarget({ day: day.key, mealType: meal.key }); setBatchText(""); }}
-                                  className="flex-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-primary"
+                                  onClick={() => {
+                                    setTemplatePanelTarget({ day: day.key, mealType: meal.key });
+                                    setTemplatePanelOpen(true);
+                                  }}
+                                  className="flex-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-amber-500 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-amber-500/50 hover:bg-amber-500/5"
                                 >
-                                  <Leaf className="w-3 h-3" /> Lote
+                                  <Zap className="w-3 h-3" /> Template
                                 </button>
                                 <button
                                   type="button"
@@ -1355,6 +1358,19 @@ export default function MealPlanEditor() {
                                   <PencilLine className="w-3 h-3" /> Detalhado
                                 </button>
                               </div>
+                              {cellItems.length > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSaveTemplateItems(cellItems);
+                                    setSaveTemplateMealType(meal.key);
+                                    setSaveTemplateOpen(true);
+                                  }}
+                                  className="w-full flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-primary"
+                                >
+                                  <Bookmark className="w-3 h-3" /> Salvar como Template
+                                </button>
+                              )}
                               {clipboardItem && (
                                 <button
                                   type="button"
