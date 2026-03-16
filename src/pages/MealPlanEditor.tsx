@@ -1213,6 +1213,14 @@ export default function MealPlanEditor() {
                           key={item.id}
                           className="flex items-center gap-3 p-2.5 rounded-lg bg-secondary/40 hover:bg-secondary/60 transition-colors cursor-pointer group/item relative"
                           onClick={() => openEditDialog(item)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              openEditDialog(item);
+                            }
+                          }}
                         >
                           {catDot && <span className={`w-2 h-2 rounded-full ${catDot} shrink-0`} />}
                           <div className="flex-1 min-w-0">
@@ -1226,10 +1234,28 @@ export default function MealPlanEditor() {
                             </div>
                           </div>
                           <div className="flex gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
-                            <button onClick={(e) => { e.stopPropagation(); openDrawerPanel(item); }} className="p-1 rounded hover:bg-accent/50" title="Painel inteligente">
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); openEditDialog(item); }}
+                              className="p-1 rounded hover:bg-accent/50"
+                              title="Editar refeição"
+                            >
+                              <PencilLine className="w-3.5 h-3.5 text-muted-foreground" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); openDrawerPanel(item); }}
+                              className="p-1 rounded hover:bg-accent/50"
+                              title="Painel inteligente"
+                            >
                               <ArrowRightLeft className="w-3.5 h-3.5 text-muted-foreground" />
                             </button>
-                            <button onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }} className="p-1 rounded hover:bg-destructive/10">
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }}
+                              className="p-1 rounded hover:bg-destructive/10"
+                              title="Remover refeição"
+                            >
                               <Trash2 className="w-3.5 h-3.5 text-destructive" />
                             </button>
                           </div>
