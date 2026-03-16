@@ -1313,19 +1313,18 @@ export default function MealPlanEditor() {
 
       {/* Add/Edit Item Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-display">
-              {editingItem ? "Editar Item" : "Adicionar Item"}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <DialogTitle className="font-display flex items-center gap-2">
               <span className={MEAL_TYPES.find((m) => m.key === dialogMealType)?.color}>
                 {MEAL_TYPES.find((m) => m.key === dialogMealType)?.icon}
               </span>
+              {editingItem ? "Editar Refeição" : "Adicionar Refeição"}
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground">
               {MEAL_TYPES.find((m) => m.key === dialogMealType)?.label} — {DAYS[dialogDay]?.label}
-            </div>
+            </p>
+          </DialogHeader>
 
             <div>
               <Label>Alimento / Preparação</Label>
