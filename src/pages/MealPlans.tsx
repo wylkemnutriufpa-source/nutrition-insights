@@ -99,14 +99,14 @@ export default function MealPlans() {
     if (!user || !form.patient_id) return;
     setSubmitting(true);
 
-    const { error } = await supabase.from("meal_plans").insert({
+    const { data: createdPlan, error } = await supabase.from("meal_plans").insert({
       nutritionist_id: user.id,
       patient_id: form.patient_id,
       title: form.title,
       description: form.description || null,
       start_date: form.start_date,
       is_active: true,
-    });
+    }).select("id").single();
 
     if (error) {
       toast.error("Erro: " + error.message);
@@ -116,8 +116,7 @@ export default function MealPlans() {
         .update({ is_active: false })
         .eq("nutritionist_id", user.id)
         .eq("patient_id", form.patient_id)
-        .neq("title", form.title)
-        .neq("start_date", form.start_date);
+        .neq("id", createdPlan.id);
 
       toast.success("Plano criado e definido como ativo!");
       setOpen(false);
