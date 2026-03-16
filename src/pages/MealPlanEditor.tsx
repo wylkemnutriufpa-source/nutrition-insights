@@ -160,8 +160,9 @@ export default function MealPlanEditor() {
   // Clipboard for individual item copy/paste
   const [clipboardItem, setClipboardItem] = useState<MealPlanItem | null>(null);
 
+  const userId = user?.id;
   const fetchData = useCallback(async () => {
-    if (!id || !user) return;
+    if (!id || !userId) return;
     setLoading(true);
 
     const [{ data: planData }, { data: itemsData }] = await Promise.all([
@@ -195,7 +196,7 @@ export default function MealPlanEditor() {
     setPlanDocs(docs || []);
 
     setLoading(false);
-  }, [id, user]);
+  }, [id, userId]);
 
   // Light refresh: only re-fetches items without loading spinner
   const refreshItems = useCallback(async () => {
