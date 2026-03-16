@@ -284,7 +284,7 @@ function SidebarContent({
           )}
           {isProRole && (
             <>
-              <PendingPlansWidget collapsed={collapsed} onLinkClick={onLinkClick} />
+              <PendingPlansWidget collapsed={collapsed} onLinkClick={onLinkClick} isAdmin={userRole === 'admin'} />
               <button
                 onClick={() => { onSosOpen?.(); onLinkClick?.(); }}
                 className="flex items-center gap-3 px-3 py-2 rounded-xl bg-destructive/10 text-destructive border border-destructive/20 mt-2 w-full hover:bg-destructive/20 transition-all"
