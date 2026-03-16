@@ -116,6 +116,17 @@ export const readActiveEditorRoute = (): PersistedEditorPlanoRouteState | null =
       return null;
     }
 
+    const normalizedRoute = parsed.route.replace(/\/legacy(?=\?|#|$)/, "");
+
+    if (normalizedRoute !== parsed.route) {
+      const normalizedPayload: PersistedEditorPlanoRouteState = {
+        ...parsed,
+        route: normalizedRoute,
+      };
+      sessionStorage.setItem(ACTIVE_EDITOR_ROUTE_STORAGE_KEY, JSON.stringify(normalizedPayload));
+      return normalizedPayload;
+    }
+
     return parsed;
   } catch {
     return null;

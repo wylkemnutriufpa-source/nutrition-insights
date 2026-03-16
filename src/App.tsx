@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { lazy, Suspense, useEffect } from "react";
 import { Helmet, HelmetProvider } from "react-helmet-async";
@@ -205,6 +205,17 @@ function RootRoute() {
   return <Suspense fallback={<PageLoader />}><Index /></Suspense>;
 }
 
+function LegacyMealPlanRedirect() {
+  const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+
+  if (!id) {
+    return <Navigate to="/meal-plans" replace />;
+  }
+
+  return <Navigate to={`/meal-plans/${id}${location.search}${location.hash}`} replace />;
+}
+
 function DarkModeInit() {
   useEffect(() => {
     const stored = localStorage.getItem("theme");
@@ -279,7 +290,7 @@ const App = () => (
               <Route path="/programs/:programId/biquini-branco" element={<NutritionistRoute><LP section="Projetos"><BiquiniBrancoDetail /></LP></NutritionistRoute>} />
               <Route path="/meal-plans" element={<NutritionistRoute><LP section="Planos"><MealPlans /></LP></NutritionistRoute>} />
               <Route path="/meal-plans/:id" element={<NutritionistRoute><LP section="Planos"><MealPlanEditorV2 /></LP></NutritionistRoute>} />
-              <Route path="/meal-plans/:id/legacy" element={<NutritionistRoute><LP section="Planos"><MealPlanEditor /></LP></NutritionistRoute>} />
+              <Route path="/meal-plans/:id/legacy" element={<NutritionistRoute><LegacyMealPlanRedirect /></NutritionistRoute>} />
               <Route path="/diet-templates" element={<NutritionistRoute><LP section="Templates"><DietTemplates /></LP></NutritionistRoute>} />
               <Route path="/physical-assessment" element={<NutritionistRoute><LP section="Avaliação"><PhysicalAssessment /></LP></NutritionistRoute>} />
               <Route path="/body-analysis" element={<NutritionistRoute><LP section="Análise Corporal"><BodyAnalysis /></LP></NutritionistRoute>} />
