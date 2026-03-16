@@ -162,6 +162,15 @@ export default function MealPlanEditor() {
   // Clipboard for individual item copy/paste
   const [clipboardItem, setClipboardItem] = useState<MealPlanItem | null>(null);
 
+  // Template Quick Insert Panel state
+  const [templatePanelOpen, setTemplatePanelOpen] = useState(false);
+  const [templatePanelTarget, setTemplatePanelTarget] = useState<{ day: number; mealType: MealType }>({ day: 1, mealType: "breakfast" });
+
+  // Save as template dialog state
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
+  const [saveTemplateItems, setSaveTemplateItems] = useState<MealPlanItem[]>([]);
+  const [saveTemplateMealType, setSaveTemplateMealType] = useState<string>("lunch");
+
   const userId = user?.id;
   const fetchData = useCallback(async () => {
     if (!id || !userId) return;
