@@ -311,6 +311,7 @@ export default function MealPlanEditor() {
   const handleSaveItem = async () => {
     if (!id || !form.title.trim()) return;
     setSaving(true);
+    showSyncSaving();
 
     const payload = {
       meal_plan_id: id,
@@ -329,17 +330,19 @@ export default function MealPlanEditor() {
         .from("meal_plan_items")
         .update(payload)
         .eq("id", editingItem.id);
-      if (error) toast.error("Erro ao atualizar: " + error.message);
+      if (error) { toast.error("Erro ao atualizar: " + error.message); showSyncDone(false); }
       else {
         toast.success("Item atualizado!");
-        setItems(prev => prev.map(i => i.id === editingItem.id ? { ...i, ...payload } as MealPlanItem : i));
+        setItemsStable(prev => prev.map(i => i.id === editingItem.id ? { ...i, ...payload } as MealPlanItem : i));
+        showSyncDone(true);
       }
     } else {
       const { data, error } = await supabase.from("meal_plan_items").insert(payload).select().single();
-      if (error) toast.error("Erro ao adicionar: " + error.message);
+      if (error) { toast.error("Erro ao adicionar: " + error.message); showSyncDone(false); }
       else {
         toast.success("Item adicionado!");
-        setItems(prev => [...prev, data]);
+        setItemsStable(prev => [...prev, data]);
+        showSyncDone(true);
       }
     }
 
