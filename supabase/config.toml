@@ -173,3 +173,16 @@ verify_jwt = false
 
 [functions.generate-recipe]
 verify_jwt = false
+
+# ═══════════════════════════════════════════
+# INTEGRAÇÕES EXTERNAS
+# ═══════════════════════════════════════════
+
+[functions.send-telegram]
+verify_jwt = false
+
+[functions.firecrawl-scrape]
+verify_jwt = false
+
+[functions.firecrawl-search]
+verify_jwt = false
