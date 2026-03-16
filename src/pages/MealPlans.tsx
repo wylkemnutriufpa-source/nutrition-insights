@@ -268,8 +268,7 @@ export default function MealPlans() {
               <motion.div
                 key={p.id}
                 whileHover={{ y: -2 }}
-                className={`glass rounded-xl p-5 shadow-card cursor-pointer ${isPending ? "ring-2 ring-amber-500/40" : ""}`}
-                onClick={() => navigate(`/meal-plans/${p.id}`)}
+                className={`glass rounded-xl p-5 shadow-card ${isPending ? "ring-2 ring-amber-500/40" : ""}`}
               >
                 <div className="flex items-start justify-between">
                   <div>
@@ -281,22 +280,22 @@ export default function MealPlans() {
                   </div>
                   <div className="flex items-center gap-2">
                     {isPending && (
-                      <Button
-                        size="sm"
+                      <EditorVersionPicker
+                        planId={p.id}
+                        label="Revisar"
+                        variant="default"
                         className="gradient-primary shadow-glow gap-1.5"
-                        onClick={(e) => { e.stopPropagation(); navigate(`/meal-plans/${p.id}`); }}
-                      >
-                        <FileText className="w-3.5 h-3.5" /> Revisar
-                      </Button>
+                        icon={<FileText className="w-3.5 h-3.5" />}
+                      />
                     )}
-                    <Button
+                    <EditorVersionPicker
+                      planId={p.id}
+                      label=""
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8"
-                      onClick={(e) => { e.stopPropagation(); navigate(`/meal-plans/${p.id}`); }}
-                    >
-                      <PencilLine className="w-4 h-4" />
-                    </Button>
+                      icon={<PencilLine className="w-4 h-4" />}
+                    />
                     {!isPending && (
                       <button onClick={(e) => { e.stopPropagation(); toggleActive(p.id, p.patient_id, p.is_active); }}>
                         {p.is_active ? (
