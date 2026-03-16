@@ -966,7 +966,7 @@ export default function MealPlanEditor() {
                       if (error) toast.error("Erro: " + error.message);
                       else {
                         toast.success("Plano aprovado! ✅");
-                        fetchData();
+                        refreshItems();
                       }
                       setApproving(false);
                     }}
