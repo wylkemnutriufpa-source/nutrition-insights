@@ -479,17 +479,22 @@ export default function MealPlanEditor() {
         default: newVal = currentVal;
       }
 
-      // Recalculate calories if adjusting macros (not calories directly)
-      const payload: Record<string, number | null> = { [bulkEditMacro]: Math.round(newVal * 10) / 10 };
+      const roundedValue = Math.round(newVal * 10) / 10;
+      const payload: Record<string, number | null> = { [bulkEditMacro]: roundedValue };
 
-      return supabase.from("meal_plan_items").update(payload).eq("id", item.id);
+      return {
+        id: item.id,
+        payload,
+        request: supabase.from("meal_plan_items").update(payload).eq("id", item.id),
+      };
     });
 
-    const results = await Promise.all(updates);
+    const results = await Promise.all(updates.map(({ request }) => request));
     const errors = results.filter(r => r.error);
 
     if (errors.length > 0) {
       toast.error(`${errors.length} erros ao atualizar`);
+      refreshItems();
     } else {
       const macroLabels: Record<string, string> = {
         protein_target: "Proteína",
@@ -504,10 +509,13 @@ export default function MealPlanEditor() {
         multiply: `× ${val}%`,
       };
       const mealLabel = bulkEditMealType === "all" ? "todas as refeições" : MEAL_TYPES.find(m => m.key === bulkEditMealType)?.label;
+      setItems(prev => prev.map(item => {
+        const update = updates.find(entry => entry.id === item.id);
+        return update ? { ...item, ...update.payload } as MealPlanItem : item;
+      }));
       toast.success(`${macroLabels[bulkEditMacro]} ajustada (${modeLabels[bulkEditMode]}) em ${targetItems.length} itens de ${mealLabel} ✨`);
       setBulkEditOpen(false);
       setBulkEditValue("");
-      refreshItems();
     }
 
     setBulkEditSaving(false);
