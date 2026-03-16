@@ -404,7 +404,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
         <main className="pt-14">
           <motion.div
-            key={location.pathname}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
