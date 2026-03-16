@@ -469,6 +469,54 @@ export default function MealPlanEditor() {
     setBulkEditSaving(false);
   };
 
+  // Duplicate a meal item (same day/meal_type)
+  const handleDuplicateItem = async (item: MealPlanItem) => {
+    if (!id) return;
+    const { error } = await supabase.from("meal_plan_items").insert({
+      meal_plan_id: id,
+      title: item.title,
+      description: item.description,
+      meal_type: item.meal_type,
+      day_of_week: item.day_of_week,
+      calories_target: item.calories_target,
+      protein_target: item.protein_target,
+      carbs_target: item.carbs_target,
+      fat_target: item.fat_target,
+    });
+    if (error) toast.error("Erro ao duplicar: " + error.message);
+    else {
+      toast.success("Refeição duplicada! 📋");
+      fetchData();
+    }
+  };
+
+  // Copy item to clipboard
+  const handleCopyItemToClipboard = (item: MealPlanItem) => {
+    setClipboardItem(item);
+    toast.success("Refeição copiada! Cole em qualquer célula 📋");
+  };
+
+  // Paste clipboard item into a specific cell
+  const handlePasteItem = async (day: number, mealType: MealType) => {
+    if (!id || !clipboardItem) return;
+    const { error } = await supabase.from("meal_plan_items").insert({
+      meal_plan_id: id,
+      title: clipboardItem.title,
+      description: clipboardItem.description,
+      meal_type: mealType,
+      day_of_week: day,
+      calories_target: clipboardItem.calories_target,
+      protein_target: clipboardItem.protein_target,
+      carbs_target: clipboardItem.carbs_target,
+      fat_target: clipboardItem.fat_target,
+    });
+    if (error) toast.error("Erro ao colar: " + error.message);
+    else {
+      toast.success(`"${clipboardItem.title}" colado! ✅`);
+      fetchData();
+    }
+  };
+
   // Open drawer panel for detailed view
   const openDrawerPanel = (item: MealPlanItem) => {
     setDrawerItem(item);
