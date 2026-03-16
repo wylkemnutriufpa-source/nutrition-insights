@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState as useStateReact } from "react";
 import OfflineSyncBanner from "@/components/common/OfflineSyncBanner";
 import SmartResumeModal from "@/components/common/SmartResumeModal";
 import { Link, useLocation } from "react-router-dom";
