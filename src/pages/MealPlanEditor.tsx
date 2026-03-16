@@ -269,10 +269,24 @@ export default function MealPlanEditor() {
   const hasFetchedRef = useRef<string | null>(null);
   const fetchData = useCallback(async () => {
     if (!id || !userId) return;
+
+    const cachedSnapshot = readMealPlanEditorCache(id);
+
+    // Hydrate instantly from cache to avoid page-level spinner/remount flash.
+    if (cachedSnapshot) {
+      setPlan((prev) => prev ?? cachedSnapshot.plan);
+      setPatientName((prev) => prev || cachedSnapshot.patientName);
+      setItems((prev) => (prev.length > 0 ? prev : cachedSnapshot.items));
+      setLoading(false);
+    }
+
     // Guard: don't re-fetch if already loaded for this plan
     if (hasFetchedRef.current === id) return;
     hasFetchedRef.current = id;
-    setLoading(true);
+
+    if (!cachedSnapshot && !plan) {
+      setLoading(true);
+    }
 
     const [{ data: planData }, { data: itemsData }] = await Promise.all([
       supabase.from("meal_plans").select("*").eq("id", id).maybeSingle(),
@@ -303,7 +317,7 @@ export default function MealPlanEditor() {
     setPlanDocs(docs || []);
 
     setLoading(false);
-  }, [id, userId]);
+  }, [id, userId, plan]);
 
   // Silent refresh: only re-fetches items without loading spinner or scroll reset
   const refreshItems = useCallback(async () => {
