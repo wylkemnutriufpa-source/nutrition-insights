@@ -2234,6 +2234,27 @@ export default function MealPlanEditor() {
           )}
         </SheetContent>
       </Sheet>
+      {/* Template Quick Insert Panel */}
+      <TemplateQuickInsertPanel
+        open={templatePanelOpen}
+        onOpenChange={setTemplatePanelOpen}
+        mealType={templatePanelTarget.mealType}
+        dayOfWeek={templatePanelTarget.day}
+        planId={plan?.id || ""}
+        patientTargetKcal={plan?.daily_calories_target || undefined}
+        onInserted={(newItems) => {
+          setItems(prev => [...prev, ...newItems]);
+        }}
+      />
+
+      {/* Save Meal as Template Dialog */}
+      <SaveMealTemplateDialog
+        open={saveTemplateOpen}
+        onOpenChange={setSaveTemplateOpen}
+        items={saveTemplateItems}
+        mealType={saveTemplateMealType}
+        defaultName=""
+      />
     </>
   );
 }
