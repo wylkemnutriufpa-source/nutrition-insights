@@ -29,6 +29,8 @@ import MacroBalanceBar from "@/components/meals/MacroBalanceBar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
+import TemplateQuickInsertPanel from "@/components/meals/TemplateQuickInsertPanel";
+import SaveMealTemplateDialog from "@/components/meals/SaveMealTemplateDialog";
 
 type MealPlan = Tables<"meal_plans">;
 type MealPlanItem = Tables<"meal_plan_items">;
