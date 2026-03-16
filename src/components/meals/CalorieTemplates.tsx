@@ -95,6 +95,19 @@ export default function CalorieTemplates({ mealPlanId, onApplied }: CalorieTempl
       })
     );
 
+    // Remove existing items for the affected days before inserting
+    const { error: deleteError } = await supabase
+      .from("meal_plan_items")
+      .delete()
+      .eq("meal_plan_id", mealPlanId)
+      .in("day_of_week", days);
+
+    if (deleteError) {
+      setApplying(false);
+      toast.error("Erro ao limpar itens existentes: " + deleteError.message);
+      return;
+    }
+
     const { error } = await supabase.from("meal_plan_items").insert(inserts);
     setApplying(false);
 
