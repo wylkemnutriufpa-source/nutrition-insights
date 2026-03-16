@@ -227,7 +227,20 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
       action_url: "/my-diet",
     });
 
+    // Clean up non-selected plan options
+    if (planOptions.length > 1) {
+      const otherPlanIds = planOptions
+        .filter((p: any) => p.mealPlanId !== planId)
+        .map((p: any) => p.mealPlanId);
+      for (const otherId of otherPlanIds) {
+        await supabase.from("meal_plans")
+          .update({ plan_status: "rejected", is_active: false } as any)
+          .eq("id", otherId);
+      }
+    }
+
     toast.success("Plano aprovado e publicado com sucesso!");
+    setPlanOptions([]);
     fetchPipeline();
     setProcessing(false);
   }
