@@ -1011,6 +1011,9 @@ export default function MealPlanEditor() {
                                   initial={{ opacity: 0, scale: 0.95 }}
                                   animate={{ opacity: 1, scale: 1 }}
                                   exit={{ opacity: 0, scale: 0.95 }}
+                                  draggable={false}
+                                  onDragStart={(e) => e.stopPropagation()}
+                                  onMouseDown={(e) => e.stopPropagation()}
                                   className="bg-secondary/60 rounded-md px-2 py-1.5 hover:bg-secondary transition-colors group/item relative"
                                 >
                                   {isInlineEditing ? (
@@ -1060,6 +1063,7 @@ export default function MealPlanEditor() {
                           </div>
 
                           {/* Quick-add inline */}
+                          <div draggable={false} onMouseDown={(e) => e.stopPropagation()} onDragStart={(e) => e.stopPropagation()}>
                           {quickAddKey === cellKey ? (
                             <div className="mt-1 flex gap-1">
                               <Input
@@ -1097,6 +1101,7 @@ export default function MealPlanEditor() {
                               </button>
                             </div>
                           )}
+                          </div>
                         </div>
                       );
                     })}
