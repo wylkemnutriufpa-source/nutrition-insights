@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Loader2, AlertTriangle, Zap } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -65,7 +65,12 @@ export default function MealPlanEditorV2() {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="font-display text-xl font-bold">{plan.title}</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="font-display text-xl font-bold">{plan.title}</h1>
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                  <Zap className="w-3 h-3" /> Premium V2
+                </span>
+              </div>
               <p className="text-sm text-muted-foreground">
                 Paciente: {store.patientName} • Início: {new Date(plan.start_date).toLocaleDateString("pt-BR")}
               </p>
@@ -85,4 +90,3 @@ export default function MealPlanEditorV2() {
     </DashboardLayout>
   );
 }
-
