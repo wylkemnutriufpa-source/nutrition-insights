@@ -1325,7 +1325,7 @@ export default function MealPlanEditor() {
               {MEAL_TYPES.find((m) => m.key === dialogMealType)?.label} — {DAYS[dialogDay]?.label}
             </p>
           </DialogHeader>
-
+          <div className="space-y-4">
             <div>
               <Label>Alimento / Preparação</Label>
               <FoodAutocomplete
