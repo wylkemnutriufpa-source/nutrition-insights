@@ -35,6 +35,7 @@ import {
   editorPlanoReducer,
   getEditorPlanoInitialState,
   persistEditorPlanoState,
+  type EditorPlanoSyncStatus,
   type MealPlan,
   type MealPlanItem,
 } from "@/lib/mealPlanEditorStore";
@@ -89,32 +90,45 @@ const findFoodMatch = (text: string): FoodItem | null => {
   }) || null;
 };
 
-
-// ─── Sync Status Types ───
-type SyncStatus = "idle" | "saving" | "saved" | "error";
-
 export default function MealPlanEditor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const userId = user?.id;
   const [editorState, dispatchEditor] = useReducer(editorPlanoReducer, id, getEditorPlanoInitialState);
-  const { plan, patientName, items, isHydratingPlano, syncingMap } = editorState;
+  const { plan, patientName, items, isHydratingPlano, syncingMap, statusSync } = editorState;
   const editorStateRef = useRef(editorState);
   const [planDocs, setPlanDocs] = useState<any[]>([]);
 
-  // ─── Sync status indicator ───
-  const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
-  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const syncBadgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isFlushingQueueRef = useRef(false);
+  const pendingPersistenceRef = useRef(
+    new Map<
+      string,
+      {
+        itemIds: string[];
+        persist: () => Promise<void>;
+        rollback?: () => void;
+        errorMessage?: string;
+      }
+    >()
+  );
+
+  const setEditorSyncStatus = useCallback((status: EditorPlanoSyncStatus) => {
+    dispatchEditor({ type: "set_status_sync", status });
+  }, []);
+
   const showSyncSaving = useCallback(() => {
-    setSyncStatus("saving");
-    if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
-  }, []);
+    setEditorSyncStatus("saving");
+    if (syncBadgeTimerRef.current) clearTimeout(syncBadgeTimerRef.current);
+  }, [setEditorSyncStatus]);
+
   const showSyncDone = useCallback((success: boolean = true) => {
-    setSyncStatus(success ? "saved" : "error");
-    if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
-    syncTimerRef.current = setTimeout(() => setSyncStatus("idle"), 2500);
-  }, []);
+    setEditorSyncStatus(success ? "saved" : "error");
+    if (syncBadgeTimerRef.current) clearTimeout(syncBadgeTimerRef.current);
+    syncBadgeTimerRef.current = setTimeout(() => setEditorSyncStatus("idle"), 2500);
+  }, [setEditorSyncStatus]);
 
   // ─── Scroll preservation ───
   const editorContainerRef = useRef<HTMLDivElement>(null);
@@ -149,6 +163,153 @@ export default function MealPlanEditor() {
   const mergePlanLocal = useCallback((payload: Partial<MealPlan>) => {
     dispatchEditor({ type: "merge_plan", payload });
   }, []);
+
+  const flushQueuedMutations = useCallback(async () => {
+    if (isFlushingQueueRef.current) return;
+
+    const queueSnapshot = Array.from(pendingPersistenceRef.current.entries());
+    if (queueSnapshot.length === 0) {
+      if (editorStateRef.current.statusSync === "saving") showSyncDone(true);
+      return;
+    }
+
+    isFlushingQueueRef.current = true;
+
+    try {
+      const results = await Promise.all(
+        queueSnapshot.map(async ([key, mutation]) => {
+          try {
+            await mutation.persist();
+            return { key, success: true, itemIds: mutation.itemIds, errorMessage: mutation.errorMessage };
+          } catch (error) {
+            mutation.rollback?.();
+            return { key, success: false, itemIds: mutation.itemIds, errorMessage: mutation.errorMessage, error };
+          }
+        })
+      );
+
+      const processedKeys = results.map((result) => result.key);
+      processedKeys.forEach((key) => pendingPersistenceRef.current.delete(key));
+      dispatchEditor({ type: "dequeue_mutations", keys: processedKeys });
+
+      const processedItemIds = [...new Set(results.flatMap((result) => result.itemIds))];
+      const stillPendingIds = new Set(
+        Array.from(pendingPersistenceRef.current.values()).flatMap((mutation) => mutation.itemIds)
+      );
+      const idsToUnlock = processedItemIds.filter((itemId) => !stillPendingIds.has(itemId));
+      if (idsToUnlock.length > 0) {
+        setSyncingItems(idsToUnlock, false);
+      }
+
+      const failedResults = results.filter((result) => !result.success);
+      if (failedResults.length > 0) {
+        toast.error(failedResults[0].errorMessage || "Erro ao sincronizar alterações");
+        showSyncDone(false);
+      } else {
+        showSyncDone(true);
+      }
+    } finally {
+      isFlushingQueueRef.current = false;
+      if (pendingPersistenceRef.current.size > 0) {
+        if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = setTimeout(() => {
+          void flushQueuedMutations();
+        }, 1200);
+      }
+    }
+  }, [setSyncingItems, showSyncDone]);
+
+  const scheduleAutoSave = useCallback(() => {
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    autoSaveTimerRef.current = setTimeout(() => {
+      void flushQueuedMutations();
+    }, 1200);
+  }, [flushQueuedMutations]);
+
+  const enqueuePersistencia = useCallback((
+    key: string,
+    itemIds: string[],
+    persist: () => Promise<void>,
+    options?: { rollback?: () => void; errorMessage?: string }
+  ) => {
+    pendingPersistenceRef.current.set(key, {
+      itemIds,
+      persist,
+      rollback: options?.rollback,
+      errorMessage: options?.errorMessage,
+    });
+
+    dispatchEditor({
+      type: "enqueue_mutation",
+      mutation: { key, itemIds, queuedAt: Date.now() },
+    });
+
+    if (itemIds.length > 0) {
+      setSyncingItems(itemIds, true);
+    }
+
+    showSyncSaving();
+    scheduleAutoSave();
+  }, [scheduleAutoSave, setSyncingItems, showSyncSaving]);
+
+  const buildOptimisticItems = useCallback((inserts: TablesInsert<"meal_plan_items">[]) => {
+    const baseTimestamp = Date.now();
+    return inserts.map((insert, index) => ({
+      id: `temp-${baseTimestamp}-${index}`,
+      meal_plan_id: insert.meal_plan_id,
+      title: insert.title,
+      description: insert.description ?? null,
+      meal_type: insert.meal_type,
+      day_of_week: insert.day_of_week ?? 1,
+      calories_target: insert.calories_target ?? null,
+      protein_target: insert.protein_target ?? null,
+      carbs_target: insert.carbs_target ?? null,
+      fat_target: insert.fat_target ?? null,
+      created_at: new Date(baseTimestamp + index).toISOString(),
+    } as MealPlanItem));
+  }, []);
+
+  const queueInsertMealItems = useCallback((
+    inserts: TablesInsert<"meal_plan_items">[],
+    options?: { successMessage?: string; errorMessage?: string; afterSuccess?: (rows: MealPlanItem[]) => void; afterRollback?: () => void }
+  ) => {
+    if (inserts.length === 0) return;
+
+    const optimisticItems = buildOptimisticItems(inserts);
+    const tempIds = optimisticItems.map((item) => item.id);
+    setItemsStable((prev) => [...prev, ...optimisticItems]);
+
+    if (options?.successMessage) {
+      toast.success(options.successMessage);
+    }
+
+    enqueuePersistencia(
+      `insert:${tempIds.join(",")}:${Date.now()}`,
+      tempIds,
+      async () => {
+        const { data, error } = await supabase.from("meal_plan_items").insert(inserts).select();
+        if (error) throw error;
+
+        const rows = ((data || []) as MealPlanItem[]);
+        const replacementMap = new Map(tempIds.map((tempId, index) => [tempId, rows[index] ?? null]));
+
+        setItemsStable((prev) => prev.flatMap((item) => {
+          if (!replacementMap.has(item.id)) return [item];
+          const replacement = replacementMap.get(item.id);
+          return replacement ? [replacement] : [];
+        }));
+
+        options?.afterSuccess?.(rows);
+      },
+      {
+        rollback: () => {
+          setItemsStable((prev) => prev.filter((item) => !tempIds.includes(item.id)));
+          options?.afterRollback?.();
+        },
+        errorMessage: options?.errorMessage || "Erro ao salvar refeição",
+      }
+    );
+  }, [buildOptimisticItems, enqueuePersistencia, setItemsStable]);
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -313,9 +474,11 @@ export default function MealPlanEditor() {
     persistEditorPlanoState(id, editorState);
   }, [editorState, id, plan]);
 
-  // Cleanup sync timer
   useEffect(() => {
-    return () => { if (syncTimerRef.current) clearTimeout(syncTimerRef.current); };
+    return () => {
+      if (syncBadgeTimerRef.current) clearTimeout(syncBadgeTimerRef.current);
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    };
   }, []);
 
   const getItems = (day: number, mealType: MealType) =>
