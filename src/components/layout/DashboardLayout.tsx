@@ -280,6 +280,25 @@ function SidebarContent({
           )}
           {isProRole && (
             <>
+              {(["admin", "nutritionist"].includes(userRole)) && (
+                <Link
+                  to="/editor-v2"
+                  onClick={onLinkClick}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl mt-3 w-full border transition-all ${
+                    location.pathname === "/editor-v2" || /^\/meal-plans\/[^/]+$/.test(location.pathname)
+                      ? "bg-primary/10 text-primary border-primary/20 shadow-sm"
+                      : "bg-card/60 text-muted-foreground border-border/50 hover:bg-muted/50 hover:text-foreground"
+                  }`}
+                >
+                  <Zap className="w-4 h-4 flex-shrink-0" />
+                  {!collapsed && (
+                    <div className="flex-1 min-w-0">
+                      <span className="text-xs font-semibold">Editor Premium V2</span>
+                      <p className="text-[10px] text-muted-foreground">Abrir editor novo</p>
+                    </div>
+                  )}
+                </Link>
+              )}
               <PendingPlansWidget collapsed={collapsed} onLinkClick={onLinkClick} />
               <button
                 onClick={() => { onSosOpen?.(); onLinkClick?.(); }}
