@@ -486,7 +486,6 @@ export default function MealPlanEditor() {
     } else {
       showSyncDone(true);
     }
-    }
   };
 
   // Inline edit: save title directly
