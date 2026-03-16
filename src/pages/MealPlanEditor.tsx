@@ -16,7 +16,7 @@ import {
   Flame, Beef, Wheat, Droplets, Leaf, PencilLine, X, Check, Sparkles, Loader2,
   Bookmark, BookmarkCheck, FolderDown, FolderUp, BookOpen, CalendarDays, CalendarRange,
   AlertTriangle, ArrowLeftRight, BarChart3, ArrowRightLeft, Maximize2, Minimize2,
-  Wand2, TrendingUp, TrendingDown, Equal
+  Wand2, TrendingUp, TrendingDown, Equal, Clipboard, ClipboardPaste, CopyPlus
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
