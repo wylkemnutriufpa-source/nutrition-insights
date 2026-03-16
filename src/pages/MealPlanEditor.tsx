@@ -220,6 +220,9 @@ export default function MealPlanEditor() {
   const hasFetchedRef = useRef<string | null>(null);
   const fetchData = useCallback(async () => {
     if (!id || !userId) return;
+    // Guard: don't re-fetch if already loaded for this plan
+    if (hasFetchedRef.current === id) return;
+    hasFetchedRef.current = id;
     setLoading(true);
 
     const [{ data: planData }, { data: itemsData }] = await Promise.all([
@@ -236,14 +239,12 @@ export default function MealPlanEditor() {
         .maybeSingle();
       setPatientName(profile?.full_name || "Paciente");
 
-      // Detect empty pipeline plan
       if ((!itemsData || itemsData.length === 0) && planData.generation_source === "protocol_fitjourney") {
         setEmptyPlanWarning(true);
       }
     }
     setItems(itemsData || []);
 
-    // Fetch documents
     const { data: docs } = await supabase
       .from("patient_documents" as any)
       .select("*")
@@ -255,16 +256,18 @@ export default function MealPlanEditor() {
     setLoading(false);
   }, [id, userId]);
 
-  // Light refresh: only re-fetches items without loading spinner
+  // Silent refresh: only re-fetches items without loading spinner or scroll reset
   const refreshItems = useCallback(async () => {
     if (!id) return;
+    preserveScroll();
     const { data } = await supabase
       .from("meal_plan_items")
       .select("*")
       .eq("meal_plan_id", id)
       .order("created_at");
     if (data) setItems(data);
-  }, [id]);
+    restoreScroll();
+  }, [id, preserveScroll, restoreScroll]);
 
   const fetchDocs = async () => {
     if (!id) return;
