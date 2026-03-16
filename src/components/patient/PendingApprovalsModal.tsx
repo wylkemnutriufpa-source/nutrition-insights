@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import {
   AlertTriangle, CheckCircle2, XCircle, Loader2, User,
   Target, Sparkles, ChevronRight, Scale,
-  FileText
+  FileText, Zap
 } from "lucide-react";
 
 interface PendingPipeline {
@@ -23,6 +23,7 @@ interface PendingPipeline {
   status: string;
   generated_plan_id: string | null;
   generated_plan_data: any;
+  plan_generated?: boolean;
   weight: number | null;
   height: number | null;
   meal_count: number;
@@ -47,6 +48,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
   const [processing, setProcessing] = useState(false);
   const [rejectMode, setRejectMode] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [batchGenerating, setBatchGenerating] = useState(false);
 
   useEffect(() => {
     if (open && user) fetchPending();
@@ -77,7 +79,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
       .from("onboarding_pipelines" as any)
       .select("*")
       .eq("nutritionist_id", user.id)
-      .eq("status", "pending_approval");
+      .in("status", ["pending_approval", "pending_plan_generation"]);
 
     const items = (data || []) as any[];
     if (items.length > 0) {
@@ -112,18 +114,20 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
     return ex.selected_template || null;
   }
 
-  async function generateOrRegeneratePlan(targetPlanId?: string) {
-    if (!selectedPipeline || !user) throw new Error("Pipeline inválido");
+  async function generateOrRegeneratePlan(targetPlanId?: string, pipelineOverride?: PendingPipeline) {
+    const pip = pipelineOverride || selectedPipeline;
+    if (!pip || !user) throw new Error("Pipeline inválido");
 
     const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
       body: {
-        patientId: selectedPipeline.patient_id,
+        patientId: pip.patient_id,
         nutritionistId: user.id,
-        weight: selectedPipeline.weight,
-        height: selectedPipeline.height,
-        mealCount: selectedPipeline.meal_count,
-        cookingPreference: selectedPipeline.cooking_preference,
+        weight: pip.weight,
+        height: pip.height,
+        mealCount: pip.meal_count,
+        cookingPreference: pip.cooking_preference,
         isPipeline: true,
+        planCount: 3,
         ...(targetPlanId ? { meal_plan_id: targetPlanId } : {}),
       },
     });
@@ -140,10 +144,37 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
         generated_plan_id: planId,
         generated_plan_data: data,
         plan_generated: true,
+        status: "pending_approval",
       } as any)
-      .eq("id", selectedPipeline.id);
+      .eq("id", pip.id);
 
     return { planId, data };
+  }
+
+
+
+  async function handleBatchGenerate() {
+    if (!user) return;
+    const pendingGen = pipelines.filter(p => p.status === "pending_plan_generation" || (!p.generated_plan_id && !p.plan_generated));
+    if (pendingGen.length === 0) {
+      toast.info("Todos os pipelines já possuem planos gerados.");
+      return;
+    }
+    setBatchGenerating(true);
+    let success = 0;
+    let failed = 0;
+    for (const pip of pendingGen) {
+      try {
+        await generateOrRegeneratePlan(undefined, pip);
+        success++;
+      } catch (err: any) {
+        console.error(`Erro ao gerar plano para ${pip.patient_name}:`, err);
+        failed++;
+      }
+    }
+    setBatchGenerating(false);
+    toast.success(`${success} planos gerados com 3 opções cada!${failed > 0 ? ` ${failed} falharam.` : ""}`);
+    fetchPending();
   }
 
   async function handleCreateAndEdit() {
@@ -252,12 +283,27 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-amber-500" />
-            Planos Pendentes de Aprovação
+            Planos Pendentes
             {pendingCount > 0 && (
               <Badge variant="destructive" className="ml-2">{pendingCount}</Badge>
             )}
           </DialogTitle>
         </DialogHeader>
+
+        {/* Batch generate button - outside scroll area */}
+        {!selectedPipeline && !loading && pipelines.some(p => p.status === "pending_plan_generation" || (!p.generated_plan_id && !p.plan_generated)) && (
+          <div className="px-1 pb-2">
+            <Button 
+              className="w-full" 
+              variant="default"
+              disabled={batchGenerating}
+              onClick={handleBatchGenerate}
+            >
+              {batchGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Zap className="w-4 h-4 mr-2" />}
+              {batchGenerating ? "Gerando planos..." : `Gerar 3 Opções para Todos (${pipelines.filter(p => p.status === "pending_plan_generation" || (!p.generated_plan_id && !p.plan_generated)).length} pendentes)`}
+            </Button>
+          </div>
+        )}
 
         <ScrollArea type="always" className="flex-1 min-h-0 -mx-6 px-6">
           {loading ? (
@@ -292,9 +338,17 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold truncate">{p.patient_name}</p>
                           <div className="flex flex-wrap gap-2 mt-1">
-                            {template && (
+                            {p.status === "pending_plan_generation" ? (
+                              <Badge variant="outline" className="text-xs border-amber-500 text-amber-600">
+                                ⏳ Aguardando geração
+                              </Badge>
+                            ) : template ? (
                               <Badge variant="secondary" className="text-xs">
                                 {template.name} • {template.base_calories}kcal
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-xs border-amber-500 text-amber-600">
+                                ⏳ Sem plano
                               </Badge>
                             )}
                             {altCount > 0 && (
@@ -436,7 +490,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
                   </Button>
                 );
               }
-              if (selectedPipeline.generated_plan_data || selectedPipeline.status === 'pending_approval') {
+              if (selectedPipeline.generated_plan_data || selectedPipeline.status === 'pending_approval' || selectedPipeline.status === 'pending_plan_generation') {
                 return (
                   <Button
                     className="flex-1 gradient-primary shadow-glow"
@@ -477,7 +531,7 @@ export function usePendingApprovals() {
         .from("onboarding_pipelines" as any)
         .select("id", { count: "exact", head: true })
         .eq("nutritionist_id", user.id)
-        .eq("status", "pending_approval");
+        .in("status", ["pending_approval", "pending_plan_generation"]);
       setCount(c || 0);
     };
     check();
