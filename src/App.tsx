@@ -8,6 +8,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import PageLoader from "@/components/common/PageLoader";
+import { readActiveEditorRoute } from "@/lib/mealPlanEditorStore";
 
 // ── Eager-loaded (critical path) ────────────────────────────
 import GatewayPage from "./pages/GatewayPage";

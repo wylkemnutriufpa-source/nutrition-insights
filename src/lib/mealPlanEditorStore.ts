@@ -25,6 +25,13 @@ type PersistedEditorPlanoState = Pick<EditorPlanoState, "plan" | "patientName" |
   savedAt: number;
 };
 
+type PersistedEditorPlanoRouteState = {
+  planId: string;
+  route: string;
+  shouldRestore: boolean;
+  savedAt: number;
+};
+
 export type EditorPlanoAction =
   | { type: "reset"; state: EditorPlanoState }
   | { type: "hydrate"; plan: MealPlan | null; patientName: string; items: MealPlanItem[] }
@@ -38,6 +45,8 @@ export type EditorPlanoAction =
   | { type: "dequeue_mutations"; keys: string[] };
 
 const CACHE_TTL_MS = 1000 * 60 * 15;
+const ROUTE_RESTORE_TTL_MS = 1000 * 45;
+const ACTIVE_EDITOR_ROUTE_STORAGE_KEY = "meal-plan-editor:active-route";
 const runtimeEditorStateCache = new Map<string, EditorPlanoState>();
 
 const getEditorPlanoStorageKey = (planId?: string) =>
