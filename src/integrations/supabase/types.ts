@@ -2683,6 +2683,47 @@ export type Database = {
           },
         ]
       }
+      meal_template_performance: {
+        Row: {
+          avg_adherence: number | null
+          avg_weight_response: number | null
+          id: string
+          last_used: string | null
+          success_rate: number | null
+          template_id: string
+          updated_at: string | null
+          usage_count: number | null
+        }
+        Insert: {
+          avg_adherence?: number | null
+          avg_weight_response?: number | null
+          id?: string
+          last_used?: string | null
+          success_rate?: number | null
+          template_id: string
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Update: {
+          avg_adherence?: number | null
+          avg_weight_response?: number | null
+          id?: string
+          last_used?: string | null
+          success_rate?: number | null
+          template_id?: string
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_template_performance_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "nutritionist_meal_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meals: {
         Row: {
           ai_analyzed: boolean
@@ -3005,6 +3046,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      nutritionist_meal_templates: {
+        Row: {
+          carbs_base: number | null
+          complexity_level: string | null
+          created_at: string | null
+          fat_base: number | null
+          foods_structure: Json | null
+          goal_tags: Json | null
+          id: string
+          is_global: boolean | null
+          kcal_base: number | null
+          meal_type: string
+          name: string
+          nutritionist_id: string
+          protein_base: number | null
+          satiety_score: number | null
+          updated_at: string | null
+          usage_count: number | null
+        }
+        Insert: {
+          carbs_base?: number | null
+          complexity_level?: string | null
+          created_at?: string | null
+          fat_base?: number | null
+          foods_structure?: Json | null
+          goal_tags?: Json | null
+          id?: string
+          is_global?: boolean | null
+          kcal_base?: number | null
+          meal_type?: string
+          name: string
+          nutritionist_id: string
+          protein_base?: number | null
+          satiety_score?: number | null
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Update: {
+          carbs_base?: number | null
+          complexity_level?: string | null
+          created_at?: string | null
+          fat_base?: number | null
+          foods_structure?: Json | null
+          goal_tags?: Json | null
+          id?: string
+          is_global?: boolean | null
+          kcal_base?: number | null
+          meal_type?: string
+          name?: string
+          nutritionist_id?: string
+          protein_base?: number | null
+          satiety_score?: number | null
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Relationships: []
       }
       nutritionist_patients: {
         Row: {

@@ -16,7 +16,7 @@ import {
   Flame, Beef, Wheat, Droplets, Leaf, PencilLine, X, Check, Sparkles, Loader2,
   Bookmark, BookmarkCheck, FolderDown, FolderUp, BookOpen, CalendarDays, CalendarRange,
   AlertTriangle, ArrowLeftRight, BarChart3, ArrowRightLeft, Maximize2, Minimize2,
-  Wand2, TrendingUp, TrendingDown, Equal, Clipboard, ClipboardPaste, CopyPlus
+  Wand2, TrendingUp, TrendingDown, Equal, Clipboard, ClipboardPaste, CopyPlus, Zap
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -29,6 +29,8 @@ import MacroBalanceBar from "@/components/meals/MacroBalanceBar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
+import TemplateQuickInsertPanel from "@/components/meals/TemplateQuickInsertPanel";
+import SaveMealTemplateDialog from "@/components/meals/SaveMealTemplateDialog";
 
 type MealPlan = Tables<"meal_plans">;
 type MealPlanItem = Tables<"meal_plan_items">;
@@ -159,6 +161,15 @@ export default function MealPlanEditor() {
 
   // Clipboard for individual item copy/paste
   const [clipboardItem, setClipboardItem] = useState<MealPlanItem | null>(null);
+
+  // Template Quick Insert Panel state
+  const [templatePanelOpen, setTemplatePanelOpen] = useState(false);
+  const [templatePanelTarget, setTemplatePanelTarget] = useState<{ day: number; mealType: MealType }>({ day: 1, mealType: "breakfast" });
+
+  // Save as template dialog state
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
+  const [saveTemplateItems, setSaveTemplateItems] = useState<MealPlanItem[]>([]);
+  const [saveTemplateMealType, setSaveTemplateMealType] = useState<string>("lunch");
 
   const userId = user?.id;
   const fetchData = useCallback(async () => {
@@ -1331,10 +1342,13 @@ export default function MealPlanEditor() {
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => { setBatchTarget({ day: day.key, mealType: meal.key }); setBatchText(""); }}
-                                  className="flex-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-primary"
+                                  onClick={() => {
+                                    setTemplatePanelTarget({ day: day.key, mealType: meal.key });
+                                    setTemplatePanelOpen(true);
+                                  }}
+                                  className="flex-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-amber-500 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-amber-500/50 hover:bg-amber-500/5"
                                 >
-                                  <Leaf className="w-3 h-3" /> Lote
+                                  <Zap className="w-3 h-3" /> Template
                                 </button>
                                 <button
                                   type="button"
@@ -1344,6 +1358,19 @@ export default function MealPlanEditor() {
                                   <PencilLine className="w-3 h-3" /> Detalhado
                                 </button>
                               </div>
+                              {cellItems.length > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSaveTemplateItems(cellItems);
+                                    setSaveTemplateMealType(meal.key);
+                                    setSaveTemplateOpen(true);
+                                  }}
+                                  className="w-full flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-primary"
+                                >
+                                  <Bookmark className="w-3 h-3" /> Salvar como Template
+                                </button>
+                              )}
                               {clipboardItem && (
                                 <button
                                   type="button"
@@ -2207,6 +2234,27 @@ export default function MealPlanEditor() {
           )}
         </SheetContent>
       </Sheet>
+      {/* Template Quick Insert Panel */}
+      <TemplateQuickInsertPanel
+        open={templatePanelOpen}
+        onOpenChange={setTemplatePanelOpen}
+        mealType={templatePanelTarget.mealType}
+        dayOfWeek={templatePanelTarget.day}
+        planId={plan?.id || ""}
+        patientTargetKcal={(() => { try { const m = plan?.generation_metadata as any; return m?.target_kcal || m?.caloric_target || undefined; } catch { return undefined; } })()}
+        onInserted={(newItems) => {
+          setItems(prev => [...prev, ...newItems]);
+        }}
+      />
+
+      {/* Save Meal as Template Dialog */}
+      <SaveMealTemplateDialog
+        open={saveTemplateOpen}
+        onOpenChange={setSaveTemplateOpen}
+        items={saveTemplateItems}
+        mealType={saveTemplateMealType}
+        defaultName=""
+      />
     </>
   );
 }
