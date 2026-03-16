@@ -510,7 +510,6 @@ export default function MealPlanEditor() {
   const handleSaveItem = async () => {
     if (!id || !form.title.trim()) return;
     setSaving(true);
-    showSyncSaving();
 
     const payload = {
       meal_plan_id: id,
@@ -525,24 +524,31 @@ export default function MealPlanEditor() {
     };
 
     if (editingItem) {
-      const { error } = await supabase
-        .from("meal_plan_items")
-        .update(payload)
-        .eq("id", editingItem.id);
-      if (error) { toast.error("Erro ao atualizar: " + error.message); showSyncDone(false); }
-      else {
-        toast.success("Item atualizado!");
-        setItemsStable(prev => prev.map(i => i.id === editingItem.id ? { ...i, ...payload } as MealPlanItem : i));
-        showSyncDone(true);
-      }
+      const previousItems = items;
+      setItemsStable(prev => prev.map(i => i.id === editingItem.id ? { ...i, ...payload } as MealPlanItem : i));
+      enqueuePersistencia(
+        `update:${editingItem.id}:save-item`,
+        [editingItem.id],
+        async () => {
+          const { error } = await supabase
+            .from("meal_plan_items")
+            .update(payload)
+            .eq("id", editingItem.id);
+          if (error) throw error;
+          toast.success("Item atualizado!");
+        },
+        {
+          rollback: () => setItemsStable(previousItems),
+          errorMessage: "Erro ao atualizar item",
+        }
+      );
     } else {
-      const { data, error } = await supabase.from("meal_plan_items").insert(payload).select().single();
-      if (error) { toast.error("Erro ao adicionar: " + error.message); showSyncDone(false); }
-      else {
-        toast.success("Item adicionado!");
-        setItemsStable(prev => [...prev, data]);
-        showSyncDone(true);
-      }
+      queueInsertMealItems([
+        payload,
+      ], {
+        successMessage: "Item adicionado!",
+        errorMessage: "Erro ao adicionar item",
+      });
     }
 
     setSaving(false);
@@ -551,19 +557,20 @@ export default function MealPlanEditor() {
 
   const handleDeleteItem = async (itemId: string) => {
     const previousItems = items;
-    showSyncSaving();
-    setSyncingItems([itemId], true);
     setItemsStable(prev => prev.filter(i => i.id !== itemId));
-    const { error } = await supabase.from("meal_plan_items").delete().eq("id", itemId);
-    if (error) {
-      toast.error("Erro ao remover: " + error.message);
-      setItemsStable(previousItems);
-      showSyncDone(false);
-    } else {
-      toast.success("Removido!");
-      showSyncDone(true);
-    }
-    setSyncingItems([itemId], false);
+    enqueuePersistencia(
+      `delete:${itemId}`,
+      [itemId],
+      async () => {
+        const { error } = await supabase.from("meal_plan_items").delete().eq("id", itemId);
+        if (error) throw error;
+        toast.success("Removido!");
+      },
+      {
+        rollback: () => setItemsStable(previousItems),
+        errorMessage: "Erro ao remover refeição",
+      }
+    );
   };
 
   const handleDeleteDay = async (day: number) => {
@@ -571,19 +578,20 @@ export default function MealPlanEditor() {
     if (dayItems.length === 0) { toast.error("Dia já está vazio"); return; }
     const previousItems = items;
     const ids = dayItems.map(i => i.id);
-    showSyncSaving();
-    setSyncingItems(ids, true);
     setItemsStable(prev => prev.filter(i => i.day_of_week !== day));
-    const { error } = await supabase.from("meal_plan_items").delete().in("id", ids);
-    if (error) {
-      toast.error("Erro ao limpar dia: " + error.message);
-      setItemsStable(previousItems);
-      showSyncDone(false);
-    } else {
-      toast.success(`${DAYS[day].label} limpo! (${dayItems.length} itens removidos)`);
-      showSyncDone(true);
-    }
-    setSyncingItems(ids, false);
+    enqueuePersistencia(
+      `delete-day:${day}:${ids.join(",")}`,
+      ids,
+      async () => {
+        const { error } = await supabase.from("meal_plan_items").delete().in("id", ids);
+        if (error) throw error;
+        toast.success(`${DAYS[day].label} limpo! (${dayItems.length} itens removidos)`);
+      },
+      {
+        rollback: () => setItemsStable(previousItems),
+        errorMessage: "Erro ao limpar dia",
+      }
+    );
   };
 
   const handleCopyDay = async (sourceDay: number, targetDay: number) => {
@@ -606,15 +614,11 @@ export default function MealPlanEditor() {
       fat_target: item.fat_target,
     }));
 
-    showSyncSaving();
-    const { data, error } = await supabase.from("meal_plan_items").insert(inserts).select();
-    if (error) { toast.error("Erro ao copiar: " + error.message); showSyncDone(false); }
-    else {
-      toast.success(`Copiado para ${DAYS[targetDay].label}!`);
-      setCopySource(null);
-      if (data) setItemsStable(prev => [...prev, ...data]);
-      showSyncDone(true);
-    }
+    setCopySource(null);
+    queueInsertMealItems(inserts, {
+      successMessage: `Copiado para ${DAYS[targetDay].label}!`,
+      errorMessage: "Erro ao copiar dia",
+    });
   };
 
   const getDayTotals = (day: number) => {
@@ -649,13 +653,11 @@ export default function MealPlanEditor() {
     if (source.day === target.day && source.mealType === target.mealType) return;
     if (!id) return;
     setSwapping(true);
-    showSyncSaving();
 
     const previousItems = items;
     const sourceItems = items.filter(i => i.day_of_week === source.day && i.meal_type === source.mealType);
     const targetItems = items.filter(i => i.day_of_week === target.day && i.meal_type === target.mealType);
     const syncingIds = [...sourceItems, ...targetItems].map(item => item.id);
-    setSyncingItems(syncingIds, true);
 
     setItemsStable(prev => prev.map(i => {
       if (sourceItems.some(s => s.id === i.id)) return { ...i, day_of_week: target.day, meal_type: target.mealType };
@@ -670,30 +672,36 @@ export default function MealPlanEditor() {
     const tgtLabel = `${MEAL_TYPES.find(m => m.key === target.mealType)?.label} (${DAYS[target.day]?.short})`;
     toast.success(`Trocado: ${srcLabel} ↔ ${tgtLabel}`);
 
-    const sourceUpdates = sourceItems.map(item =>
-      supabase.from("meal_plan_items").update({ day_of_week: target.day, meal_type: target.mealType }).eq("id", item.id)
+    enqueuePersistencia(
+      `swap:${source.day}:${source.mealType}:${target.day}:${target.mealType}`,
+      syncingIds,
+      async () => {
+        const sourceUpdates = sourceItems.map(item =>
+          supabase.from("meal_plan_items").update({ day_of_week: target.day, meal_type: target.mealType }).eq("id", item.id)
+        );
+        const targetUpdates = targetItems.map(item =>
+          supabase.from("meal_plan_items").update({ day_of_week: source.day, meal_type: source.mealType }).eq("id", item.id)
+        );
+        const results = await Promise.all([...sourceUpdates, ...targetUpdates]);
+        const failed = results.find((result) => result.error);
+        if (failed?.error) throw failed.error;
+      },
+      {
+        rollback: () => {
+          setItemsStable(previousItems);
+          setSwapping(false);
+          setDragSource(null);
+          setDragOver(null);
+        },
+        errorMessage: "Erro ao salvar troca",
+      }
     );
-    const targetUpdates = targetItems.map(item =>
-      supabase.from("meal_plan_items").update({ day_of_week: source.day, meal_type: source.mealType }).eq("id", item.id)
-    );
-
-    const results = await Promise.all([...sourceUpdates, ...targetUpdates]);
-    const hasError = results.some(r => r.error);
-    if (hasError) {
-      toast.error("Erro ao salvar troca — revertendo...");
-      setItemsStable(previousItems);
-      showSyncDone(false);
-    } else {
-      showSyncDone(true);
-    }
-    setSyncingItems(syncingIds, false);
   };
 
   // Inline edit: save title directly
   const handleInlineEdit = async (itemId: string, newTitle: string) => {
     if (!newTitle.trim()) { setInlineEditId(null); return; }
     setInlineEditSaving(true);
-    showSyncSaving();
     const match = findFoodMatch(newTitle.trim());
     const updatePayload: any = { title: newTitle.trim() };
     if (match) {
@@ -703,28 +711,34 @@ export default function MealPlanEditor() {
       updatePayload.fat_target = match.fat;
       updatePayload.description = match.portion;
     }
-    const { error } = await supabase.from("meal_plan_items").update(updatePayload).eq("id", itemId);
+    const previousItems = items;
+    setItemsStable(prev => prev.map(i => i.id === itemId ? { ...i, ...updatePayload } as MealPlanItem : i));
     setInlineEditSaving(false);
     setInlineEditId(null);
-    if (error) { toast.error("Erro ao editar"); showSyncDone(false); }
-    else {
-      toast.success(match ? "Atualizado com macros ✨" : "Atualizado!");
-      setItemsStable(prev => prev.map(i => i.id === itemId ? { ...i, ...updatePayload } as MealPlanItem : i));
-      showSyncDone(true);
-    }
+    enqueuePersistencia(
+      `inline:${itemId}`,
+      [itemId],
+      async () => {
+        const { error } = await supabase.from("meal_plan_items").update(updatePayload).eq("id", itemId);
+        if (error) throw error;
+        toast.success(match ? "Atualizado com macros ✨" : "Atualizado!");
+      },
+      {
+        rollback: () => setItemsStable(previousItems),
+        errorMessage: "Erro ao editar refeição",
+      }
+    );
   };
 
   // Bulk Smart Edit: adjust macros across multiple items at once
   const handleBulkMacroEdit = async () => {
     if (!id || !bulkEditValue.trim()) return;
     setBulkEditSaving(true);
-    showSyncSaving();
 
     const val = parseFloat(bulkEditValue);
     if (isNaN(val)) {
       toast.error("Valor inválido");
       setBulkEditSaving(false);
-      showSyncDone(false);
       return;
     }
 
@@ -735,14 +749,10 @@ export default function MealPlanEditor() {
     if (targetItems.length === 0) {
       toast.error("Nenhum item encontrado para esse tipo de refeição");
       setBulkEditSaving(false);
-      showSyncDone(false);
       return;
     }
 
     const previousItems = items;
-    const syncingIds = targetItems.map(item => item.id);
-    setSyncingItems(syncingIds, true);
-
     const updates = targetItems.map(item => {
       const currentVal = Number(item[bulkEditMacro]) || 0;
       let newVal: number;
@@ -756,12 +766,9 @@ export default function MealPlanEditor() {
       }
 
       const roundedValue = Math.round(newVal * 10) / 10;
-      const payload: Record<string, number | null> = { [bulkEditMacro]: roundedValue };
-
       return {
         id: item.id,
-        payload,
-        request: supabase.from("meal_plan_items").update(payload).eq("id", item.id),
+        payload: { [bulkEditMacro]: roundedValue } as Record<string, number | null>,
       };
     });
 
@@ -770,65 +777,63 @@ export default function MealPlanEditor() {
       return update ? { ...item, ...update.payload } as MealPlanItem : item;
     }));
 
-    const results = await Promise.all(updates.map(({ request }) => request));
-    const errors = results.filter(r => r.error);
+    enqueuePersistencia(
+      `bulk:${bulkEditMealType}:${bulkEditMacro}:${bulkEditMode}:${val}`,
+      updates.map((entry) => entry.id),
+      async () => {
+        const results = await Promise.all(
+          updates.map(({ id: itemId, payload }) =>
+            supabase.from("meal_plan_items").update(payload).eq("id", itemId)
+          )
+        );
+        const failed = results.find((result) => result.error);
+        if (failed?.error) throw failed.error;
 
-    if (errors.length > 0) {
-      toast.error(`${errors.length} erros ao atualizar`);
-      setItemsStable(previousItems);
-      showSyncDone(false);
-    } else {
-      const macroLabels: Record<string, string> = {
-        protein_target: "Proteína",
-        carbs_target: "Carboidratos",
-        fat_target: "Gordura",
-        calories_target: "Calorias",
-      };
-      const modeLabels: Record<string, string> = {
-        add: `+${val}`,
-        subtract: `-${val}`,
-        set: `= ${val}`,
-        multiply: `× ${val}%`,
-      };
-      const mealLabel = bulkEditMealType === "all" ? "todas as refeições" : MEAL_TYPES.find(m => m.key === bulkEditMealType)?.label;
-      toast.success(`${macroLabels[bulkEditMacro]} ajustada (${modeLabels[bulkEditMode]}) em ${targetItems.length} itens de ${mealLabel} ✨`);
-      setBulkEditOpen(false);
-      setBulkEditValue("");
-      showSyncDone(true);
-    }
+        const macroLabels: Record<string, string> = {
+          protein_target: "Proteína",
+          carbs_target: "Carboidratos",
+          fat_target: "Gordura",
+          calories_target: "Calorias",
+        };
+        const modeLabels: Record<string, string> = {
+          add: `+${val}`,
+          subtract: `-${val}`,
+          set: `= ${val}`,
+          multiply: `× ${val}%`,
+        };
+        const mealLabel = bulkEditMealType === "all" ? "todas as refeições" : MEAL_TYPES.find(m => m.key === bulkEditMealType)?.label;
+        toast.success(`${macroLabels[bulkEditMacro]} ajustada (${modeLabels[bulkEditMode]}) em ${targetItems.length} itens de ${mealLabel} ✨`);
+        setBulkEditOpen(false);
+        setBulkEditValue("");
+      },
+      {
+        rollback: () => setItemsStable(previousItems),
+        errorMessage: "Erro ao aplicar edição em lote",
+      }
+    );
 
-    setSyncingItems(syncingIds, false);
     setBulkEditSaving(false);
   };
 
   // Duplicate a meal item (same day/meal_type)
   const handleDuplicateItem = async (item: MealPlanItem) => {
     if (!id) return;
-    showSyncSaving();
-    const tempId = `temp-${Date.now()}`;
-    const tempItem = { ...item, id: tempId, created_at: new Date().toISOString() };
-    setItemsStable(prev => [...prev, tempItem]);
-    toast.success("Refeição duplicada! 📋");
-
-    const { data, error } = await supabase.from("meal_plan_items").insert({
-      meal_plan_id: id,
-      title: item.title,
-      description: item.description,
-      meal_type: item.meal_type,
-      day_of_week: item.day_of_week,
-      calories_target: item.calories_target,
-      protein_target: item.protein_target,
-      carbs_target: item.carbs_target,
-      fat_target: item.fat_target,
-    }).select().single();
-    if (error) {
-      toast.error("Erro ao duplicar: " + error.message);
-      setItemsStable(prev => prev.filter(i => i.id !== tempId));
-      showSyncDone(false);
-    } else if (data) {
-      setItemsStable(prev => prev.map(i => i.id === tempId ? data : i));
-      showSyncDone(true);
-    }
+    queueInsertMealItems([
+      {
+        meal_plan_id: id,
+        title: item.title,
+        description: item.description,
+        meal_type: item.meal_type,
+        day_of_week: item.day_of_week,
+        calories_target: item.calories_target,
+        protein_target: item.protein_target,
+        carbs_target: item.carbs_target,
+        fat_target: item.fat_target,
+      },
+    ], {
+      successMessage: "Refeição duplicada! 📋",
+      errorMessage: "Erro ao duplicar refeição",
+    });
   };
 
   // Copy item to clipboard
@@ -840,31 +845,22 @@ export default function MealPlanEditor() {
   // Paste clipboard item into a specific cell
   const handlePasteItem = async (day: number, mealType: MealType) => {
     if (!id || !clipboardItem) return;
-    showSyncSaving();
-    const tempId = `temp-${Date.now()}`;
-    const tempItem = { ...clipboardItem, id: tempId, meal_type: mealType, day_of_week: day, meal_plan_id: id, created_at: new Date().toISOString() };
-    setItemsStable(prev => [...prev, tempItem]);
-    toast.success(`"${clipboardItem.title}" colado! ✅`);
-
-    const { data, error } = await supabase.from("meal_plan_items").insert({
-      meal_plan_id: id,
-      title: clipboardItem.title,
-      description: clipboardItem.description,
-      meal_type: mealType,
-      day_of_week: day,
-      calories_target: clipboardItem.calories_target,
-      protein_target: clipboardItem.protein_target,
-      carbs_target: clipboardItem.carbs_target,
-      fat_target: clipboardItem.fat_target,
-    }).select().single();
-    if (error) {
-      toast.error("Erro ao colar: " + error.message);
-      setItemsStable(prev => prev.filter(i => i.id !== tempId));
-      showSyncDone(false);
-    } else if (data) {
-      setItemsStable(prev => prev.map(i => i.id === tempId ? data : i));
-      showSyncDone(true);
-    }
+    queueInsertMealItems([
+      {
+        meal_plan_id: id,
+        title: clipboardItem.title,
+        description: clipboardItem.description,
+        meal_type: mealType,
+        day_of_week: day,
+        calories_target: clipboardItem.calories_target,
+        protein_target: clipboardItem.protein_target,
+        carbs_target: clipboardItem.carbs_target,
+        fat_target: clipboardItem.fat_target,
+      },
+    ], {
+      successMessage: `"${clipboardItem.title}" colado! ✅`,
+      errorMessage: "Erro ao colar refeição",
+    });
   };
 
   // Open drawer panel for detailed view
@@ -875,80 +871,70 @@ export default function MealPlanEditor() {
 
   // Handle substitution from drawer
   const handleSubstitute = async (item: MealPlanItem, food: FoodItem) => {
-    showSyncSaving();
-    const { error } = await supabase.from("meal_plan_items").update({
+    const previousItems = items;
+    const payload = {
       title: food.name,
       description: food.portion,
       calories_target: food.calories,
       protein_target: food.protein,
       carbs_target: food.carbs,
       fat_target: food.fat,
-    }).eq("id", item.id);
-    if (error) { toast.error("Erro ao substituir"); showSyncDone(false); }
-    else {
-      toast.success(`Substituído por ${food.name} ✨`);
-      setDrawerOpen(false);
-      setItemsStable(prev => prev.map(i => i.id === item.id ? { ...i, title: food.name, description: food.portion, calories_target: food.calories, protein_target: food.protein, carbs_target: food.carbs, fat_target: food.fat } as MealPlanItem : i));
-      showSyncDone(true);
-    }
+    };
+
+    setDrawerOpen(false);
+    setItemsStable(prev => prev.map(i => i.id === item.id ? { ...i, ...payload } as MealPlanItem : i));
+
+    enqueuePersistencia(
+      `substitute:${item.id}`,
+      [item.id],
+      async () => {
+        const { error } = await supabase.from("meal_plan_items").update(payload).eq("id", item.id);
+        if (error) throw error;
+        toast.success(`Substituído por ${food.name} ✨`);
+      },
+      {
+        rollback: () => {
+          setItemsStable(previousItems);
+          setDrawerOpen(true);
+        },
+        errorMessage: "Erro ao substituir refeição",
+      }
+    );
   };
 
 
   const handleQuickAdd = async (day: number, mealType: MealType) => {
     if (!id || !quickAddText.trim()) return;
     setQuickAdding(true);
-    showSyncSaving();
     
     const match = findFoodMatch(quickAddText.trim());
-    const tempId = `temp-${Date.now()}`;
-    const tempItem = {
-      id: tempId,
-      meal_plan_id: id,
-      title: quickAddText.trim(),
-      description: match ? match.portion : null,
-      meal_type: mealType,
-      day_of_week: day,
-      calories_target: match ? match.calories : null,
-      protein_target: match ? match.protein : null,
-      carbs_target: match ? match.carbs : null,
-      fat_target: match ? match.fat : null,
-      created_at: new Date().toISOString(),
-    } as MealPlanItem;
-
-    // Optimistic: add immediately
-    setItemsStable(prev => [...prev, tempItem]);
-    toast.success(match ? `${quickAddText.trim()} adicionado com macros! ✨` : "Item adicionado!");
     const addedText = quickAddText.trim();
     setQuickAddText("");
     setQuickAddKey(null);
     setQuickAdding(false);
 
-    const { data, error } = await supabase.from("meal_plan_items").insert({
-      meal_plan_id: id,
-      title: addedText,
-      description: match ? match.portion : null,
-      meal_type: mealType,
-      day_of_week: day,
-      calories_target: match ? match.calories : null,
-      protein_target: match ? match.protein : null,
-      carbs_target: match ? match.carbs : null,
-      fat_target: match ? match.fat : null,
-    }).select().single();
-    if (error) {
-      toast.error("Erro ao salvar: " + error.message);
-      setItemsStable(prev => prev.filter(i => i.id !== tempId));
-      showSyncDone(false);
-    } else if (data) {
-      setItemsStable(prev => prev.map(i => i.id === tempId ? data : i));
-      showSyncDone(true);
-    }
+    queueInsertMealItems([
+      {
+        meal_plan_id: id,
+        title: addedText,
+        description: match ? match.portion : null,
+        meal_type: mealType,
+        day_of_week: day,
+        calories_target: match ? match.calories : null,
+        protein_target: match ? match.protein : null,
+        carbs_target: match ? match.carbs : null,
+        fat_target: match ? match.fat : null,
+      },
+    ], {
+      successMessage: match ? `${addedText} adicionado com macros! ✨` : "Item adicionado!",
+      errorMessage: "Erro ao salvar refeição",
+    });
   };
 
   // Batch add: multiple foods at once (one per line)
   const handleBatchAdd = async (day: number, mealType: MealType) => {
     if (!id || !batchText.trim()) return;
     setBatchAdding(true);
-    showSyncSaving();
     
     const lines = batchText.split("\n").map(l => l.trim()).filter(Boolean);
     const inserts = lines.map(line => {
@@ -966,17 +952,14 @@ export default function MealPlanEditor() {
       };
     });
 
-    const { data, error } = await supabase.from("meal_plan_items").insert(inserts).select();
     setBatchAdding(false);
-    if (error) { toast.error("Erro ao adicionar: " + error.message); showSyncDone(false); }
-    else {
-      const matched = inserts.filter(i => i.calories_target !== null).length;
-      toast.success(`${lines.length} itens adicionados! ${matched > 0 ? `(${matched} com macros automáticos ✨)` : ""}`);
-      setBatchText("");
-      setBatchTarget(null);
-      if (data) setItemsStable(prev => [...prev, ...data]);
-      showSyncDone(true);
-    }
+    setBatchText("");
+    setBatchTarget(null);
+
+    queueInsertMealItems(inserts, {
+      successMessage: `${lines.length} itens adicionados! ${inserts.filter(i => i.calories_target !== null).length > 0 ? `(${inserts.filter(i => i.calories_target !== null).length} com macros automáticos ✨)` : ""}`,
+      errorMessage: "Erro ao adicionar itens em lote",
+    });
   };
 
   // Save current meal item as reusable
