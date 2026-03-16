@@ -282,12 +282,27 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-amber-500" />
-            Planos Pendentes de Aprovação
+            Planos Pendentes
             {pendingCount > 0 && (
               <Badge variant="destructive" className="ml-2">{pendingCount}</Badge>
             )}
           </DialogTitle>
         </DialogHeader>
+
+        {/* Batch generate button - outside scroll area */}
+        {!selectedPipeline && !loading && pipelines.some(p => p.status === "pending_plan_generation" || (!p.generated_plan_id && !p.plan_generated)) && (
+          <div className="px-1 pb-2">
+            <Button 
+              className="w-full" 
+              variant="default"
+              disabled={batchGenerating}
+              onClick={handleBatchGenerate}
+            >
+              {batchGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Zap className="w-4 h-4 mr-2" />}
+              {batchGenerating ? "Gerando planos..." : `Gerar 3 Opções para Todos (${pipelines.filter(p => p.status === "pending_plan_generation" || (!p.generated_plan_id && !p.plan_generated)).length} pendentes)`}
+            </Button>
+          </div>
+        )}
 
         <ScrollArea type="always" className="flex-1 min-h-0 -mx-6 px-6">
           {loading ? (
