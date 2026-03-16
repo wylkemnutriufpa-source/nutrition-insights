@@ -36,6 +36,54 @@ type MealPlan = Tables<"meal_plans">;
 type MealPlanItem = Tables<"meal_plan_items">;
 type MealType = Database["public"]["Enums"]["meal_type"];
 
+type MealPlanEditorCache = {
+  plan: MealPlan | null;
+  patientName: string;
+  items: MealPlanItem[];
+  savedAt: number;
+};
+
+const MEAL_PLAN_EDITOR_CACHE_TTL_MS = 1000 * 60 * 15;
+
+const getMealPlanEditorCacheKey = (planId?: string) =>
+  planId ? `meal-plan-editor:${planId}` : null;
+
+const readMealPlanEditorCache = (planId?: string): MealPlanEditorCache | null => {
+  const cacheKey = getMealPlanEditorCacheKey(planId);
+  if (!cacheKey || typeof window === "undefined") return null;
+
+  try {
+    const raw = sessionStorage.getItem(cacheKey);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as MealPlanEditorCache;
+    if (!parsed?.savedAt || Date.now() - parsed.savedAt > MEAL_PLAN_EDITOR_CACHE_TTL_MS) {
+      sessionStorage.removeItem(cacheKey);
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const writeMealPlanEditorCache = (
+  planId: string,
+  snapshot: Omit<MealPlanEditorCache, "savedAt">
+) => {
+  if (typeof window === "undefined") return;
+
+  try {
+    sessionStorage.setItem(
+      getMealPlanEditorCacheKey(planId)!,
+      JSON.stringify({ ...snapshot, savedAt: Date.now() })
+    );
+  } catch {
+    // Ignore storage quota/cache errors — editor must never block UI.
+  }
+};
+
 const MEAL_TYPES: { key: MealType; label: string; icon: React.ReactNode; color: string }[] = [
   { key: "breakfast", label: "Café da Manhã", icon: <Coffee className="w-4 h-4" />, color: "text-amber-500" },
   { key: "morning_snack", label: "Lanche da Manhã", icon: <Apple className="w-4 h-4" />, color: "text-green-500" },
