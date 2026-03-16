@@ -789,7 +789,7 @@ export default function MealPlanEditor() {
         if (!data?.success) throw new Error(data?.error || "Falha na geração");
         toast.success(`Plano regenerado com ${data.items_count} itens!`);
         setEmptyPlanWarning(false);
-        fetchData();
+        refreshItems();
       } catch (err: any) {
         toast.error("Erro ao regenerar: " + (err.message || "Tente novamente"));
       } finally {
