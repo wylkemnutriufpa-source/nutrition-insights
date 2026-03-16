@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { ClipboardList, Plus, Calendar, ToggleLeft, ToggleRight, PencilLine, Clock, CheckCircle2, FileText } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
+import { EditorVersionPicker } from "@/components/common/EditorVersionPicker";
 
 type MealPlan = Tables<"meal_plans">;
 
