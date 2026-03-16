@@ -1126,9 +1126,32 @@ export default function MealPlanEditor() {
                             {totals.protein.toFixed(0)}g
                           </span>
                         </div>
-                        {copySource && (
-                          <Button size="sm" variant="outline" className="mt-1 h-6 text-[10px] px-2" onClick={() => handleCopyDay(copySource.day, day.key)}>
-                            Colar aqui
+                        <div className="flex items-center justify-center gap-1 mt-1.5">
+                          <Button
+                            size="sm"
+                            variant={copySource?.day === day.key ? "default" : "outline"}
+                            className="h-6 text-[10px] px-1.5 gap-0.5"
+                            onClick={() => setCopySource(copySource?.day === day.key ? null : { day: day.key, mealType: "breakfast" })}
+                            title="Copiar este dia"
+                          >
+                            <Copy className="w-3 h-3" />
+                            {copySource?.day === day.key ? "Copiando..." : "Copiar"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-6 text-[10px] px-1.5 gap-0.5 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
+                            onClick={() => handleDeleteDay(day.key)}
+                            disabled={getItems(day.key, "breakfast").length === 0 && getItems(day.key, "lunch").length === 0 && getItems(day.key, "dinner").length === 0 && items.filter(i => i.day_of_week === day.key).length === 0}
+                            title="Limpar todos os itens deste dia"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            Limpar
+                          </Button>
+                        </div>
+                        {copySource && copySource.day !== day.key && (
+                          <Button size="sm" variant="outline" className="mt-1 h-6 text-[10px] px-2 border-primary/50 text-primary" onClick={() => handleCopyDay(copySource.day, day.key)}>
+                            <ClipboardPaste className="w-3 h-3 mr-0.5" /> Colar aqui
                           </Button>
                         )}
                       </div>
