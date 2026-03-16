@@ -489,7 +489,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
                   </Button>
                 );
               }
-              if (selectedPipeline.generated_plan_data || selectedPipeline.status === 'pending_approval') {
+              if (selectedPipeline.generated_plan_data || selectedPipeline.status === 'pending_approval' || selectedPipeline.status === 'pending_plan_generation') {
                 return (
                   <Button
                     className="flex-1 gradient-primary shadow-glow"
