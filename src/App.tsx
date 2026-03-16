@@ -91,6 +91,7 @@ const OnboardingPipeline = lazy(() => import("./pages/OnboardingPipeline"));
 const AmbassadorDashboard = lazy(() => import("./pages/AmbassadorDashboard"));
 const AdminAffiliates = lazy(() => import("./pages/AdminAffiliates"));
 const PatientLanding = lazy(() => import("./pages/PatientLanding"));
+const PatientRegister = lazy(() => import("./pages/PatientRegister"));
 const AffiliateLanding = lazy(() => import("./pages/AffiliateLanding"));
 const AdminLandingPages = lazy(() => import("./pages/AdminLandingPages"));
 const AdminMenuConfig = lazy(() => import("./pages/AdminMenuConfig"));
@@ -243,6 +244,7 @@ const App = () => (
               <Route path="/landing-personal" element={<LP section="Landing"><PersonalLanding /></LP>} />
               <Route path="/landing-afiliado" element={<LP section="Landing"><AffiliateLanding /></LP>} />
               <Route path="/biquini-branco" element={<LP section="Landing"><BiquiniBrancoLanding /></LP>} />
+              <Route path="/cadastro" element={<LP section="Cadastro"><PatientRegister /></LP>} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<LP section="Auth"><ResetPassword /></LP>} />
               <Route path="/" element={<RootRoute />} />
