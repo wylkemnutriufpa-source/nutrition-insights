@@ -1063,6 +1063,7 @@ export default function MealPlanEditor() {
                           </div>
 
                           {/* Quick-add inline */}
+                          <div draggable={false} onMouseDown={(e) => e.stopPropagation()} onDragStart={(e) => e.stopPropagation()}>
                           {quickAddKey === cellKey ? (
                             <div className="mt-1 flex gap-1">
                               <Input
@@ -1100,6 +1101,7 @@ export default function MealPlanEditor() {
                               </button>
                             </div>
                           )}
+                          </div>
                         </div>
                       );
                     })}
