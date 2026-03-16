@@ -522,7 +522,7 @@ export function usePendingApprovals() {
         .from("onboarding_pipelines" as any)
         .select("id", { count: "exact", head: true })
         .eq("nutritionist_id", user.id)
-        .eq("status", "pending_approval");
+        .in("status", ["pending_approval", "pending_plan_generation"]);
       setCount(c || 0);
     };
     check();
