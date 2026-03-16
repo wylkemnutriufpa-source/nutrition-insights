@@ -268,7 +268,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
     if (!pipeline || !user) return;
     setOpeningEditor(true);
     try {
-      toast.info("Gerando plano completo com itens... Aguarde.");
+      toast.info("Gerando opções de plano... Aguarde.");
       const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
         body: {
           patientId: pipeline.patient_id,
@@ -278,28 +278,49 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
           mealCount: pipeline.meal_count,
           cookingPreference: pipeline.cooking_preference,
           isPipeline: true,
+          planCount: 3,
         },
       });
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || "Falha na geração");
 
-      const newPlanId = data.mealPlanId;
-      await supabase
-        .from("onboarding_pipelines" as any)
-        .update({
-          generated_plan_id: newPlanId,
-          generated_plan_data: data,
-          plan_generated: true,
-        } as any)
-        .eq("id", pipeline.id);
+      if (data.multiPlan && data.plans?.length > 0) {
+        // Multi-plan: show options for selection
+        setPlanOptions(data.plans);
+        setSelectedPlanId(data.plans[0].mealPlanId);
 
-      await supabase
-        .from("meal_plans")
-        .update({ plan_status: "under_professional_review" } as any)
-        .eq("id", newPlanId);
+        // Save first plan as default in pipeline
+        await supabase
+          .from("onboarding_pipelines" as any)
+          .update({
+            generated_plan_id: data.plans[0].mealPlanId,
+            generated_plan_data: { ...data, selectedIndex: 0 },
+            plan_generated: true,
+          } as any)
+          .eq("id", pipeline.id);
 
-      toast.success(`Plano gerado com ${data.items_count} itens! Revise e aprove.`);
-      navigate(`/meal-plans/${newPlanId}`);
+        toast.success(`${data.plans.length} opções de plano geradas! Escolha a melhor opção.`);
+        fetchPipeline();
+      } else {
+        // Single plan fallback
+        const newPlanId = data.mealPlanId;
+        await supabase
+          .from("onboarding_pipelines" as any)
+          .update({
+            generated_plan_id: newPlanId,
+            generated_plan_data: data,
+            plan_generated: true,
+          } as any)
+          .eq("id", pipeline.id);
+
+        await supabase
+          .from("meal_plans")
+          .update({ plan_status: "under_professional_review" } as any)
+          .eq("id", newPlanId);
+
+        toast.success(`Plano gerado com ${data.items_count} itens! Revise e aprove.`);
+        navigate(`/meal-plans/${newPlanId}`);
+      }
     } catch (err: any) {
       toast.error("Erro ao gerar plano: " + (err.message || "Tente novamente"));
     } finally {
