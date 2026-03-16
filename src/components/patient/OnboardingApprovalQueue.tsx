@@ -589,9 +589,70 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
               );
             })()}
 
+            {/* Plan Options Selection */}
+            {planOptions.length > 1 && (
+              <div className="space-y-3 border-t pt-3">
+                <p className="text-sm font-medium flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  Escolha a melhor opção de plano:
+                </p>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {planOptions.map((opt: any, i: number) => {
+                    const isSelected = selectedPlanId === opt.mealPlanId;
+                    return (
+                      <motion.button
+                        key={opt.mealPlanId}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={async () => {
+                          setSelectedPlanId(opt.mealPlanId);
+                          if (pipeline) {
+                            await supabase
+                              .from("onboarding_pipelines" as any)
+                              .update({
+                                generated_plan_id: opt.mealPlanId,
+                                generated_plan_data: {
+                                  ...pipeline.generated_plan_data,
+                                  selectedIndex: i,
+                                  mealPlanId: opt.mealPlanId,
+                                },
+                              } as any)
+                              .eq("id", pipeline.id);
+                            setPipeline({ ...pipeline, generated_plan_id: opt.mealPlanId });
+                          }
+                        }}
+                        className={`relative text-left p-4 rounded-xl border-2 transition-all ${
+                          isSelected
+                            ? "border-primary bg-primary/5 shadow-[0_0_12px_rgba(var(--primary),0.15)]"
+                            : "border-border hover:border-primary/40 bg-card"
+                        }`}
+                      >
+                        {isSelected && (
+                          <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                            <CheckCircle2 className="w-4 h-4 text-primary-foreground" />
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge variant={i === 0 ? "default" : "outline"} className="text-[10px]">
+                            {i === 0 ? "⭐ Recomendado" : `Opção ${i + 1}`}
+                          </Badge>
+                          <span className="text-[10px] text-muted-foreground">{opt.score}pts</span>
+                        </div>
+                        <p className="font-semibold text-sm text-foreground truncate">{opt.templateName}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{opt.baseCalories} kcal base • {opt.itemsCount} itens</p>
+                        {opt.reasons?.slice(0, 2).map((r: string, j: number) => (
+                          <span key={j} className="text-[10px] text-muted-foreground block mt-0.5">✓ {r}</span>
+                        ))}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Link to edit */}
             {(() => {
-              const planId = pipeline.generated_plan_id || pipeline.generated_plan_data?.mealPlanId;
+              const planId = selectedPlanId || pipeline.generated_plan_id || pipeline.generated_plan_data?.mealPlanId;
               if (planId) {
                 return (
                   <Button
@@ -600,11 +661,10 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
                     onClick={() => ensurePlanReadyAndOpen(planId)}
                   >
                     {openingEditor ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
-                    {openingEditor ? "Abrindo plano..." : "Analisar e Editar o Plano"}
+                    {openingEditor ? "Abrindo plano..." : "Analisar e Editar o Plano Selecionado"}
                   </Button>
                 );
               }
-              // No plan ID exists — allow generating regardless of status
               return (
                 <Button
                   className="w-full gap-2 gradient-primary shadow-glow"
@@ -612,7 +672,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
                   onClick={() => handleGenerateNewPlan()}
                 >
                   {openingEditor ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                  {openingEditor ? "Gerando plano..." : "Gerar e Editar Plano"}
+                  {openingEditor ? "Gerando planos..." : "Gerar Opções de Plano"}
                 </Button>
               );
             })()}
