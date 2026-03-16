@@ -456,6 +456,7 @@ serve(async (req) => {
     const bestTemplate = scoredTemplates[0];
 
     // ── 7. Multi-plan support: generate N plans from top N templates ──
+    const startDate = new Date().toISOString().split("T")[0];
     if (isPipeline && planCount > 1 && !meal_plan_id) {
       const topTemplates = scoredTemplates.slice(0, planCount);
       const generatedPlans: any[] = [];
