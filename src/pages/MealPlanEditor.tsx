@@ -1033,7 +1033,13 @@ export default function MealPlanEditor() {
                                     </div>
                                   ) : (
                                     <>
-                                      <div className="flex items-center gap-1 cursor-pointer" onClick={() => openEditDialog(item)}>
+                                      <div 
+                                        className="flex items-center gap-1 cursor-pointer" 
+                                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); openEditDialog(item); }}
+                                        role="button"
+                                        tabIndex={0}
+                                        onKeyDown={(e) => { if (e.key === 'Enter') openEditDialog(item); }}
+                                      >
                                         {catDot && <span className={`w-1.5 h-1.5 rounded-full ${catDot} shrink-0`} />}
                                         <p className="text-[11px] font-medium leading-tight truncate flex-1">{item.title}</p>
                                       </div>
@@ -1307,20 +1313,19 @@ export default function MealPlanEditor() {
 
       {/* Add/Edit Item Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-display">
-              {editingItem ? "Editar Item" : "Adicionar Item"}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <DialogTitle className="font-display flex items-center gap-2">
               <span className={MEAL_TYPES.find((m) => m.key === dialogMealType)?.color}>
                 {MEAL_TYPES.find((m) => m.key === dialogMealType)?.icon}
               </span>
+              {editingItem ? "Editar Refeição" : "Adicionar Refeição"}
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground">
               {MEAL_TYPES.find((m) => m.key === dialogMealType)?.label} — {DAYS[dialogDay]?.label}
-            </div>
-
+            </p>
+          </DialogHeader>
+          <div className="space-y-4">
             <div>
               <Label>Alimento / Preparação</Label>
               <FoodAutocomplete
