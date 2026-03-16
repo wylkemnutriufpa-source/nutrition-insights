@@ -738,7 +738,7 @@ export default function MealPlanEditor() {
     else {
       toast.success(`Modelo aplicado com ${templateItems.length} itens! 🎉`);
       setSavedPlansDialogOpen(false);
-      fetchData();
+      refreshItems();
     }
   };
 
