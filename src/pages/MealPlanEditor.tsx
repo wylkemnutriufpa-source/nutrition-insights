@@ -496,7 +496,7 @@ export default function MealPlanEditor() {
   // Duplicate a meal item (same day/meal_type)
   const handleDuplicateItem = async (item: MealPlanItem) => {
     if (!id) return;
-    const { error } = await supabase.from("meal_plan_items").insert({
+    const { data, error } = await supabase.from("meal_plan_items").insert({
       meal_plan_id: id,
       title: item.title,
       description: item.description,
@@ -506,11 +506,11 @@ export default function MealPlanEditor() {
       protein_target: item.protein_target,
       carbs_target: item.carbs_target,
       fat_target: item.fat_target,
-    });
+    }).select().single();
     if (error) toast.error("Erro ao duplicar: " + error.message);
     else {
       toast.success("Refeição duplicada! 📋");
-      fetchData();
+      if (data) setItems(prev => [...prev, data]);
     }
   };
 
