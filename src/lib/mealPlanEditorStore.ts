@@ -2,6 +2,13 @@ import type { Tables } from "@/integrations/supabase/types";
 
 export type MealPlan = Tables<"meal_plans">;
 export type MealPlanItem = Tables<"meal_plan_items">;
+export type EditorPlanoSyncStatus = "idle" | "saving" | "saved" | "error";
+
+export interface PendingEditorPlanoMutation {
+  key: string;
+  itemIds: string[];
+  queuedAt: number;
+}
 
 export interface EditorPlanoState {
   plan: MealPlan | null;
@@ -9,6 +16,9 @@ export interface EditorPlanoState {
   items: MealPlanItem[];
   isHydratingPlano: boolean;
   syncingMap: Record<string, boolean>;
+  statusSync: EditorPlanoSyncStatus;
+  pendingMutationsQueue: PendingEditorPlanoMutation[];
+  hasHydratedOnce: boolean;
 }
 
 type PersistedEditorPlanoState = Pick<EditorPlanoState, "plan" | "patientName" | "items"> & {
@@ -22,7 +32,10 @@ export type EditorPlanoAction =
   | { type: "replace_items"; items: MealPlanItem[] }
   | { type: "merge_plan"; payload: Partial<MealPlan> }
   | { type: "set_patient_name"; patientName: string }
-  | { type: "set_syncing"; itemIds: string[]; value: boolean };
+  | { type: "set_syncing"; itemIds: string[]; value: boolean }
+  | { type: "set_status_sync"; status: EditorPlanoSyncStatus }
+  | { type: "enqueue_mutation"; mutation: PendingEditorPlanoMutation }
+  | { type: "dequeue_mutations"; keys: string[] };
 
 const CACHE_TTL_MS = 1000 * 60 * 15;
 const runtimeEditorStateCache = new Map<string, EditorPlanoState>();
@@ -36,6 +49,9 @@ const defaultEditorPlanoState: EditorPlanoState = {
   items: [],
   isHydratingPlano: true,
   syncingMap: {},
+  statusSync: "idle",
+  pendingMutationsQueue: [],
+  hasHydratedOnce: false,
 };
 
 export const buildSyncingMap = (
@@ -78,6 +94,9 @@ export const readEditorPlanoSnapshot = (planId?: string): EditorPlanoState | nul
       items: parsed.items,
       isHydratingPlano: false,
       syncingMap: {},
+      statusSync: "idle",
+      pendingMutationsQueue: [],
+      hasHydratedOnce: true,
     };
   } catch {
     return null;
@@ -118,14 +137,19 @@ export const editorPlanoReducer = (
       return action.state;
     case "hydrate":
       return {
+        ...state,
         plan: action.plan,
         patientName: action.patientName,
         items: action.items,
         isHydratingPlano: false,
         syncingMap: {},
+        hasHydratedOnce: true,
       };
     case "set_hydrating":
-      return { ...state, isHydratingPlano: action.value };
+      return {
+        ...state,
+        isHydratingPlano: state.hasHydratedOnce ? false : action.value,
+      };
     case "replace_items":
       return { ...state, items: action.items };
     case "merge_plan":
@@ -139,6 +163,26 @@ export const editorPlanoReducer = (
       return {
         ...state,
         syncingMap: buildSyncingMap(action.itemIds, action.value, state.syncingMap),
+      };
+    case "set_status_sync":
+      return {
+        ...state,
+        statusSync: action.status,
+      };
+    case "enqueue_mutation":
+      return {
+        ...state,
+        pendingMutationsQueue: [
+          ...state.pendingMutationsQueue.filter((entry) => entry.key !== action.mutation.key),
+          action.mutation,
+        ],
+      };
+    case "dequeue_mutations":
+      return {
+        ...state,
+        pendingMutationsQueue: state.pendingMutationsQueue.filter(
+          (entry) => !action.keys.includes(entry.key)
+        ),
       };
     default:
       return state;
