@@ -36,6 +36,54 @@ type MealPlan = Tables<"meal_plans">;
 type MealPlanItem = Tables<"meal_plan_items">;
 type MealType = Database["public"]["Enums"]["meal_type"];
 
+type MealPlanEditorCache = {
+  plan: MealPlan | null;
+  patientName: string;
+  items: MealPlanItem[];
+  savedAt: number;
+};
+
+const MEAL_PLAN_EDITOR_CACHE_TTL_MS = 1000 * 60 * 15;
+
+const getMealPlanEditorCacheKey = (planId?: string) =>
+  planId ? `meal-plan-editor:${planId}` : null;
+
+const readMealPlanEditorCache = (planId?: string): MealPlanEditorCache | null => {
+  const cacheKey = getMealPlanEditorCacheKey(planId);
+  if (!cacheKey || typeof window === "undefined") return null;
+
+  try {
+    const raw = sessionStorage.getItem(cacheKey);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as MealPlanEditorCache;
+    if (!parsed?.savedAt || Date.now() - parsed.savedAt > MEAL_PLAN_EDITOR_CACHE_TTL_MS) {
+      sessionStorage.removeItem(cacheKey);
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const writeMealPlanEditorCache = (
+  planId: string,
+  snapshot: Omit<MealPlanEditorCache, "savedAt">
+) => {
+  if (typeof window === "undefined") return;
+
+  try {
+    sessionStorage.setItem(
+      getMealPlanEditorCacheKey(planId)!,
+      JSON.stringify({ ...snapshot, savedAt: Date.now() })
+    );
+  } catch {
+    // Ignore storage quota/cache errors — editor must never block UI.
+  }
+};
+
 const MEAL_TYPES: { key: MealType; label: string; icon: React.ReactNode; color: string }[] = [
   { key: "breakfast", label: "Café da Manhã", icon: <Coffee className="w-4 h-4" />, color: "text-amber-500" },
   { key: "morning_snack", label: "Lanche da Manhã", icon: <Apple className="w-4 h-4" />, color: "text-green-500" },
@@ -94,11 +142,12 @@ export default function MealPlanEditor() {
   const { user } = useAuth();
   // Stable userId primitive — never causes re-render from auth token refresh
   const userId = user?.id;
+  const cachedEditorState = readMealPlanEditorCache(id);
 
-  const [plan, setPlan] = useState<MealPlan | null>(null);
-  const [patientName, setPatientName] = useState("");
-  const [items, setItems] = useState<MealPlanItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [plan, setPlan] = useState<MealPlan | null>(cachedEditorState?.plan ?? null);
+  const [patientName, setPatientName] = useState(cachedEditorState?.patientName ?? "");
+  const [items, setItems] = useState<MealPlanItem[]>(cachedEditorState?.items ?? []);
+  const [loading, setLoading] = useState(!cachedEditorState);
   const [planDocs, setPlanDocs] = useState<any[]>([]);
 
   // ─── Sync status indicator ───
@@ -220,10 +269,24 @@ export default function MealPlanEditor() {
   const hasFetchedRef = useRef<string | null>(null);
   const fetchData = useCallback(async () => {
     if (!id || !userId) return;
+
+    const cachedSnapshot = readMealPlanEditorCache(id);
+
+    // Hydrate instantly from cache to avoid page-level spinner/remount flash.
+    if (cachedSnapshot) {
+      setPlan((prev) => prev ?? cachedSnapshot.plan);
+      setPatientName((prev) => prev || cachedSnapshot.patientName);
+      setItems((prev) => (prev.length > 0 ? prev : cachedSnapshot.items));
+      setLoading(false);
+    }
+
     // Guard: don't re-fetch if already loaded for this plan
     if (hasFetchedRef.current === id) return;
     hasFetchedRef.current = id;
-    setLoading(true);
+
+    if (!cachedSnapshot && !plan) {
+      setLoading(true);
+    }
 
     const [{ data: planData }, { data: itemsData }] = await Promise.all([
       supabase.from("meal_plans").select("*").eq("id", id).maybeSingle(),
@@ -254,7 +317,7 @@ export default function MealPlanEditor() {
     setPlanDocs(docs || []);
 
     setLoading(false);
-  }, [id, userId]);
+  }, [id, userId, plan]);
 
   // Silent refresh: only re-fetches items without loading spinner or scroll reset
   const refreshItems = useCallback(async () => {
@@ -281,6 +344,11 @@ export default function MealPlanEditor() {
   };
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  useEffect(() => {
+    if (!id || !plan) return;
+    writeMealPlanEditorCache(id, { plan, patientName, items });
+  }, [id, plan, patientName, items]);
 
   // Cleanup sync timer
   useEffect(() => {
@@ -913,7 +981,7 @@ export default function MealPlanEditor() {
     toast.success("Modelo removido");
   };
 
-  if (loading) {
+  if (loading && !plan) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
