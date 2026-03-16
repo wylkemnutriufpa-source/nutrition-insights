@@ -573,7 +573,7 @@ export default function MealPlanEditor() {
     // Try to match food from database for auto macros
     const match = findFoodMatch(quickAddText.trim());
     
-    const { error } = await supabase.from("meal_plan_items").insert({
+    const { data, error } = await supabase.from("meal_plan_items").insert({
       meal_plan_id: id,
       title: quickAddText.trim(),
       description: match ? match.portion : null,
@@ -583,14 +583,14 @@ export default function MealPlanEditor() {
       protein_target: match ? match.protein : null,
       carbs_target: match ? match.carbs : null,
       fat_target: match ? match.fat : null,
-    });
+    }).select().single();
     setQuickAdding(false);
     if (error) toast.error("Erro ao adicionar: " + error.message);
     else {
       toast.success(match ? `${quickAddText.trim()} adicionado com macros! ✨` : "Item adicionado!");
       setQuickAddText("");
       setQuickAddKey(null);
-      fetchData();
+      if (data) setItems(prev => [...prev, data]);
     }
   };
 
