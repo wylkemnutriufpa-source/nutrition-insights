@@ -112,18 +112,20 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
     return ex.selected_template || null;
   }
 
-  async function generateOrRegeneratePlan(targetPlanId?: string) {
-    if (!selectedPipeline || !user) throw new Error("Pipeline inválido");
+  async function generateOrRegeneratePlan(targetPlanId?: string, pipelineOverride?: PendingPipeline) {
+    const pip = pipelineOverride || selectedPipeline;
+    if (!pip || !user) throw new Error("Pipeline inválido");
 
     const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
       body: {
-        patientId: selectedPipeline.patient_id,
+        patientId: pip.patient_id,
         nutritionistId: user.id,
-        weight: selectedPipeline.weight,
-        height: selectedPipeline.height,
-        mealCount: selectedPipeline.meal_count,
-        cookingPreference: selectedPipeline.cooking_preference,
+        weight: pip.weight,
+        height: pip.height,
+        mealCount: pip.meal_count,
+        cookingPreference: pip.cooking_preference,
         isPipeline: true,
+        planCount: 3,
         ...(targetPlanId ? { meal_plan_id: targetPlanId } : {}),
       },
     });
@@ -140,10 +142,37 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
         generated_plan_id: planId,
         generated_plan_data: data,
         plan_generated: true,
+        status: "pending_approval",
       } as any)
-      .eq("id", selectedPipeline.id);
+      .eq("id", pip.id);
 
     return { planId, data };
+  }
+
+  const [batchGenerating, setBatchGenerating] = useState(false);
+
+  async function handleBatchGenerate() {
+    if (!user) return;
+    const pendingGen = pipelines.filter(p => p.status === "pending_plan_generation" || (!p.generated_plan_id && !p.plan_generated));
+    if (pendingGen.length === 0) {
+      toast.info("Todos os pipelines já possuem planos gerados.");
+      return;
+    }
+    setBatchGenerating(true);
+    let success = 0;
+    let failed = 0;
+    for (const pip of pendingGen) {
+      try {
+        await generateOrRegeneratePlan(undefined, pip);
+        success++;
+      } catch (err: any) {
+        console.error(`Erro ao gerar plano para ${pip.patient_name}:`, err);
+        failed++;
+      }
+    }
+    setBatchGenerating(false);
+    toast.success(`${success} planos gerados com 3 opções cada!${failed > 0 ? ` ${failed} falharam.` : ""}`);
+    fetchPending();
   }
 
   async function handleCreateAndEdit() {
