@@ -487,7 +487,7 @@ export default function MealPlanEditor() {
       toast.success(`${macroLabels[bulkEditMacro]} ajustada (${modeLabels[bulkEditMode]}) em ${targetItems.length} itens de ${mealLabel} ✨`);
       setBulkEditOpen(false);
       setBulkEditValue("");
-      fetchData();
+      refreshItems();
     }
 
     setBulkEditSaving(false);
