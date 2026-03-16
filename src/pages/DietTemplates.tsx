@@ -335,7 +335,7 @@ export default function DietTemplates() {
             meal_plan_id: targetPlanId,
             title: meal.title,
             description: desc,
-            meal_type: meal.meal_type,
+            meal_type: meal.meal_type || (meal as any).type,
             day_of_week: day,
             calories_target: totalCals,
             protein_target: totalProtein,
