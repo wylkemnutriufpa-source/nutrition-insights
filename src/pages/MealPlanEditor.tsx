@@ -561,7 +561,7 @@ export default function MealPlanEditor() {
     else {
       toast.success(`Substituído por ${food.name} ✨`);
       setDrawerOpen(false);
-      fetchData();
+      setItems(prev => prev.map(i => i.id === item.id ? { ...i, title: food.name, description: food.portion, calories_target: food.calories, protein_target: food.protein, carbs_target: food.carbs, fat_target: food.fat } as MealPlanItem : i));
     }
   };
 
