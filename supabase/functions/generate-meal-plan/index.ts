@@ -596,7 +596,6 @@ serve(async (req) => {
 
     // ── 9. Create or update meal plan ──
     let finalMealPlanId = meal_plan_id;
-    const startDate = new Date().toISOString().split("T")[0];
 
     if (isPipeline && !meal_plan_id) {
       const nutritionistId = body.nutritionistId;
