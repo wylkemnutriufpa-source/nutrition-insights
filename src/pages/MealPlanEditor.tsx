@@ -138,6 +138,7 @@ export default function MealPlanEditor() {
   const [dragSource, setDragSource] = useState<{ day: number; mealType: MealType } | null>(null);
   const [dragOver, setDragOver] = useState<{ day: number; mealType: MealType } | null>(null);
   const [swapping, setSwapping] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Inline editing state
   const [inlineEditId, setInlineEditId] = useState<string | null>(null);
