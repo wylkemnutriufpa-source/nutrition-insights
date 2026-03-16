@@ -348,6 +348,7 @@ serve(async (req) => {
     const patient_id = body.patient_id || body.patientId;
     const meal_plan_id = body.meal_plan_id;
     const isPipeline = body.isPipeline || false;
+    const planCount = Math.min(Math.max(body.planCount || 1, 1), 3);
 
     const serviceClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -454,7 +455,136 @@ serve(async (req) => {
 
     const bestTemplate = scoredTemplates[0];
 
-    // ── 7. Generate plan items deterministically ──
+    // ── 7. Multi-plan support: generate N plans from top N templates ──
+    const startDate = new Date().toISOString().split("T")[0];
+    if (isPipeline && planCount > 1 && !meal_plan_id) {
+      const topTemplates = scoredTemplates.slice(0, planCount);
+      const generatedPlans: any[] = [];
+      const nutritionistId = body.nutritionistId;
+
+      for (const template of topTemplates) {
+        const planItems = generatePlanFromTemplate(template, finalKcal, finalMacros, restrictions, disliked);
+        const genMeta = buildGenerationMetadata(
+          tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
+          age, sex, activityLevel, dataSource, template, scoredTemplates,
+          restrictions, medicalConditions, cookingPref, disliked
+        );
+
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + 30);
+
+        const { data: newPlan, error: planErr } = await serviceClient
+          .from("meal_plans")
+          .insert({
+            title: `Opção — ${template.name}`,
+            description: `Gerado pelo Protocolo FitJourney v${ENGINE_VERSION}. Template: ${template.name}. Meta: ${finalKcal}kcal/dia. Score: ${template._score}pts.`,
+            patient_id,
+            nutritionist_id: nutritionistId,
+            start_date: startDate,
+            end_date: endDate.toISOString().split("T")[0],
+            is_active: false,
+            plan_status: "draft_auto_generated",
+            template_id: template.id,
+            template_slug: template.slug,
+            template_version: 1,
+            generation_source: "protocol_fitjourney",
+            generated_by: userId,
+            generation_metadata: genMeta,
+          })
+          .select("id")
+          .single();
+
+        if (planErr || !newPlan) {
+          console.error("Failed to create plan option:", planErr);
+          continue;
+        }
+
+        const itemsToInsert = planItems.map((item: any) => ({ ...item, meal_plan_id: newPlan.id }));
+        await serviceClient.from("meal_plan_items").insert(itemsToInsert);
+
+        generatedPlans.push({
+          mealPlanId: newPlan.id,
+          templateName: template.name,
+          templateSlug: template.slug,
+          templateId: template.id,
+          score: template._score,
+          scoreBreakdown: template._breakdown,
+          reasons: template._reasons,
+          baseCalories: template.base_calories,
+          itemsCount: planItems.length,
+        });
+      }
+
+      // Save tips (once)
+      const tips = generateTips(mergedAnswers);
+      await serviceClient.from("patient_tips").delete().eq("user_id", patient_id);
+      if (tips.length > 0) {
+        await serviceClient.from("patient_tips").insert(tips.map((t) => ({ user_id: patient_id, ...t })));
+      }
+
+      // Save computed values
+      await serviceClient.from("patient_anamnesis").update({
+        computed_tmb: tmb,
+        computed_kcal_target: finalKcal,
+        computed_protein: finalMacros.protein,
+        computed_carbs: finalMacros.carbs,
+        computed_fat: finalMacros.fat,
+      }).eq("id", anamnesis.id);
+
+      // Timeline
+      await serviceClient.from("patient_timeline").insert({
+        patient_id,
+        event_type: "meal_plan",
+        title: "Opções de Plano Alimentar Geradas",
+        description: `${generatedPlans.length} opções geradas pelo Protocolo FitJourney v${ENGINE_VERSION}. Meta: ${finalKcal}kcal/dia.`,
+        metadata: {
+          type: "multi_plan_generated",
+          protocol: PROTOCOL_VERSION,
+          engine_version: ENGINE_VERSION,
+          plan_count: generatedPlans.length,
+          plans: generatedPlans.map(p => ({ id: p.mealPlanId, template: p.templateName, score: p.score })),
+        },
+        created_by: userId,
+      });
+
+      const explainability = {
+        engine_version: ENGINE_VERSION,
+        protocol_version: PROTOCOL_VERSION,
+        calculation: {
+          bmr_formula: "mifflin_st_jeor",
+          tmb, tdee_factor: tdeeFactor, tdee,
+          goal_adjustment: GOAL_KCAL_ADJUSTMENT[goal] || 0,
+          final_kcal: finalKcal, data_source: dataSource,
+        },
+        patient_profile: {
+          weight, height, age, sex,
+          activity_level: activityLevel, goal,
+          goal_strategy: (GOAL_STRATEGY[goal] || {}).calorie,
+          macro_strategy: (GOAL_STRATEGY[goal] || {}).macro,
+          restrictions: restrictions.length > 0 ? restrictions : ["nenhuma"],
+          medical_conditions: medicalConditions.length > 0 ? medicalConditions : ["nenhuma"],
+          disliked_foods: disliked.length > 0 ? disliked : ["nenhum"],
+          cooking_preference: cookingPref || "sem preferência",
+        },
+        macros: { protein: finalMacros.protein, carbs: finalMacros.carbs, fat: finalMacros.fat },
+      };
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          multiPlan: true,
+          plans: generatedPlans,
+          mealPlanId: generatedPlans[0]?.mealPlanId,
+          plan_status: "draft_auto_generated",
+          items_count: generatedPlans.reduce((s: number, p: any) => s + p.itemsCount, 0),
+          tips_count: tips.length,
+          explainability,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ── Single plan flow (original) ──
     const planItems = generatePlanFromTemplate(bestTemplate, finalKcal, finalMacros, restrictions, disliked);
 
     // ── 8. Build standardized generation_metadata ──
@@ -466,7 +596,6 @@ serve(async (req) => {
 
     // ── 9. Create or update meal plan ──
     let finalMealPlanId = meal_plan_id;
-    const startDate = new Date().toISOString().split("T")[0];
 
     if (isPipeline && !meal_plan_id) {
       const nutritionistId = body.nutritionistId;
@@ -497,15 +626,12 @@ serve(async (req) => {
       if (planErr || !newPlan) throw new Error("Falha ao criar plano alimentar: " + planErr?.message);
       finalMealPlanId = newPlan.id;
     } else if (finalMealPlanId) {
-      // ── SAFE REGENERATION: Archive previous version before overwriting ──
-      // Get existing plan data
       const { data: existingPlan } = await serviceClient
         .from("meal_plans")
         .select("plan_status, template_id, generation_metadata")
         .eq("id", finalMealPlanId)
         .single();
 
-      // Block regeneration of already approved/published plans
       if (existingPlan?.plan_status === "published_to_patient" || existingPlan?.plan_status === "approved") {
         return new Response(JSON.stringify({
           error: "Não é possível regenerar plano já aprovado/publicado. Crie um novo plano.",
@@ -515,7 +641,6 @@ serve(async (req) => {
         });
       }
 
-      // Update existing plan with new metadata
       await serviceClient.from("meal_plans").update({
         plan_status: "draft_auto_generated",
         template_id: bestTemplate.id,
@@ -533,15 +658,12 @@ serve(async (req) => {
       });
     }
 
-    // ── 10. SAFE item replacement: delete then insert in sequence ──
-    // If delete succeeds but insert fails, we still have the metadata to regenerate
     const { error: deleteErr } = await serviceClient.from("meal_plan_items").delete().eq("meal_plan_id", finalMealPlanId);
     if (deleteErr) throw new Error("Falha ao limpar itens anteriores: " + deleteErr.message);
 
     const itemsToInsert = planItems.map((item: any) => ({ ...item, meal_plan_id: finalMealPlanId }));
     const { error: insertErr } = await serviceClient.from("meal_plan_items").insert(itemsToInsert);
     if (insertErr) {
-      // Rollback: mark plan as needing regeneration
       await serviceClient.from("meal_plans").update({
         plan_status: "draft",
         description: "ERRO: Itens falharam ao inserir. Regenere o plano.",
@@ -549,7 +671,6 @@ serve(async (req) => {
       throw new Error("Falha ao inserir itens (plano marcado para regeneração): " + insertErr.message);
     }
 
-    // ── 11. Save computed values to anamnesis ──
     await serviceClient.from("patient_anamnesis").update({
       computed_tmb: tmb,
       computed_kcal_target: finalKcal,
@@ -558,14 +679,12 @@ serve(async (req) => {
       computed_fat: finalMacros.fat,
     }).eq("id", anamnesis.id);
 
-    // ── 12. Deterministic tips ──
     const tips = generateTips(mergedAnswers);
     await serviceClient.from("patient_tips").delete().eq("user_id", patient_id);
     if (tips.length > 0) {
       await serviceClient.from("patient_tips").insert(tips.map((t) => ({ user_id: patient_id, ...t })));
     }
 
-    // ── 13. Timeline event with FULL audit metadata ──
     await serviceClient.from("patient_timeline").insert({
       patient_id,
       event_type: "meal_plan",
@@ -584,9 +703,7 @@ serve(async (req) => {
         items_count: planItems.length,
         data_source: dataSource,
         bmr_formula: "mifflin_st_jeor",
-        tmb,
-        tdee,
-        tdee_factor: tdeeFactor,
+        tmb, tdee, tdee_factor: tdeeFactor,
         kcal_target: finalKcal,
         macros: finalMacros,
         goal,
@@ -597,23 +714,18 @@ serve(async (req) => {
       created_by: userId,
     });
 
-    // ── 14. Explainability response ──
     const explainability = {
       engine_version: ENGINE_VERSION,
       protocol_version: PROTOCOL_VERSION,
       calculation: {
         bmr_formula: "mifflin_st_jeor",
-        tmb,
-        tdee_factor: tdeeFactor,
-        tdee,
+        tmb, tdee_factor: tdeeFactor, tdee,
         goal_adjustment: GOAL_KCAL_ADJUSTMENT[goal] || 0,
-        final_kcal: finalKcal,
-        data_source: dataSource,
+        final_kcal: finalKcal, data_source: dataSource,
       },
       patient_profile: {
         weight, height, age, sex,
-        activity_level: activityLevel,
-        goal,
+        activity_level: activityLevel, goal,
         goal_strategy: (GOAL_STRATEGY[goal] || {}).calorie,
         macro_strategy: (GOAL_STRATEGY[goal] || {}).macro,
         restrictions: restrictions.length > 0 ? restrictions : ["nenhuma"],
@@ -623,13 +735,9 @@ serve(async (req) => {
       },
       macros: { protein: finalMacros.protein, carbs: finalMacros.carbs, fat: finalMacros.fat },
       selected_template: {
-        id: bestTemplate.id,
-        slug: bestTemplate.slug,
-        name: bestTemplate.name,
-        category: bestTemplate.category,
-        base_calories: bestTemplate.base_calories,
-        score: bestTemplate._score,
-        score_breakdown: bestTemplate._breakdown,
+        id: bestTemplate.id, slug: bestTemplate.slug, name: bestTemplate.name,
+        category: bestTemplate.category, base_calories: bestTemplate.base_calories,
+        score: bestTemplate._score, score_breakdown: bestTemplate._breakdown,
         reasons: bestTemplate._reasons,
       },
       alternative_templates: scoredTemplates.slice(1, 4).map((t: any) => ({

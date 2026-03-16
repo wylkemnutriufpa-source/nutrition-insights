@@ -76,6 +76,8 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
   const [criteria, setCriteria] = useState(DEFAULT_CRITERIA);
   const [creating, setCreating] = useState(false);
   const [openingEditor, setOpeningEditor] = useState(false);
+  const [planOptions, setPlanOptions] = useState<any[]>([]);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPipeline();
@@ -102,6 +104,14 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
       setPipeline(p);
       setUseScheduling(p.use_scheduling_criteria || false);
       setCriteria(p.scheduling_criteria || DEFAULT_CRITERIA);
+
+      // Restore plan options from saved data
+      if (p.generated_plan_data?.multiPlan && p.generated_plan_data?.plans?.length > 0) {
+        setPlanOptions(p.generated_plan_data.plans);
+        setSelectedPlanId(p.generated_plan_id || p.generated_plan_data.plans[0].mealPlanId);
+      } else {
+        setPlanOptions([]);
+      }
 
       // Auto-fix: if plan is generated but status isn't pending_approval, fix it
       if (p.plan_generated && !p.plan_approved && p.status !== "pending_approval" && p.status !== "completed" && p.status !== "rejected") {
@@ -146,8 +156,8 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
   async function handleApprove() {
     if (!pipeline || !user) return;
 
-    // Block approval if no real plan exists
-    const planId = pipeline.generated_plan_id || pipeline.generated_plan_data?.mealPlanId;
+    // Use selected plan or fallback
+    const planId = selectedPlanId || pipeline.generated_plan_id || pipeline.generated_plan_data?.mealPlanId;
     if (!planId) {
       toast.error("Nenhum plano encontrado. Gere o plano primeiro antes de aprovar.");
       return;
@@ -217,7 +227,20 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
       action_url: "/my-diet",
     });
 
+    // Clean up non-selected plan options
+    if (planOptions.length > 1) {
+      const otherPlanIds = planOptions
+        .filter((p: any) => p.mealPlanId !== planId)
+        .map((p: any) => p.mealPlanId);
+      for (const otherId of otherPlanIds) {
+        await supabase.from("meal_plans")
+          .update({ plan_status: "rejected", is_active: false } as any)
+          .eq("id", otherId);
+      }
+    }
+
     toast.success("Plano aprovado e publicado com sucesso!");
+    setPlanOptions([]);
     fetchPipeline();
     setProcessing(false);
   }
@@ -266,7 +289,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
     if (!pipeline || !user) return;
     setOpeningEditor(true);
     try {
-      toast.info("Gerando plano completo com itens... Aguarde.");
+      toast.info("Gerando opções de plano... Aguarde.");
       const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
         body: {
           patientId: pipeline.patient_id,
@@ -276,28 +299,49 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
           mealCount: pipeline.meal_count,
           cookingPreference: pipeline.cooking_preference,
           isPipeline: true,
+          planCount: 3,
         },
       });
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || "Falha na geração");
 
-      const newPlanId = data.mealPlanId;
-      await supabase
-        .from("onboarding_pipelines" as any)
-        .update({
-          generated_plan_id: newPlanId,
-          generated_plan_data: data,
-          plan_generated: true,
-        } as any)
-        .eq("id", pipeline.id);
+      if (data.multiPlan && data.plans?.length > 0) {
+        // Multi-plan: show options for selection
+        setPlanOptions(data.plans);
+        setSelectedPlanId(data.plans[0].mealPlanId);
 
-      await supabase
-        .from("meal_plans")
-        .update({ plan_status: "under_professional_review" } as any)
-        .eq("id", newPlanId);
+        // Save first plan as default in pipeline
+        await supabase
+          .from("onboarding_pipelines" as any)
+          .update({
+            generated_plan_id: data.plans[0].mealPlanId,
+            generated_plan_data: { ...data, selectedIndex: 0 },
+            plan_generated: true,
+          } as any)
+          .eq("id", pipeline.id);
 
-      toast.success(`Plano gerado com ${data.items_count} itens! Revise e aprove.`);
-      navigate(`/meal-plans/${newPlanId}`);
+        toast.success(`${data.plans.length} opções de plano geradas! Escolha a melhor opção.`);
+        fetchPipeline();
+      } else {
+        // Single plan fallback
+        const newPlanId = data.mealPlanId;
+        await supabase
+          .from("onboarding_pipelines" as any)
+          .update({
+            generated_plan_id: newPlanId,
+            generated_plan_data: data,
+            plan_generated: true,
+          } as any)
+          .eq("id", pipeline.id);
+
+        await supabase
+          .from("meal_plans")
+          .update({ plan_status: "under_professional_review" } as any)
+          .eq("id", newPlanId);
+
+        toast.success(`Plano gerado com ${data.items_count} itens! Revise e aprove.`);
+        navigate(`/meal-plans/${newPlanId}`);
+      }
     } catch (err: any) {
       toast.error("Erro ao gerar plano: " + (err.message || "Tente novamente"));
     } finally {
@@ -558,9 +602,70 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
               );
             })()}
 
+            {/* Plan Options Selection */}
+            {planOptions.length > 1 && (
+              <div className="space-y-3 border-t pt-3">
+                <p className="text-sm font-medium flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  Escolha a melhor opção de plano:
+                </p>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {planOptions.map((opt: any, i: number) => {
+                    const isSelected = selectedPlanId === opt.mealPlanId;
+                    return (
+                      <motion.button
+                        key={opt.mealPlanId}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={async () => {
+                          setSelectedPlanId(opt.mealPlanId);
+                          if (pipeline) {
+                            await supabase
+                              .from("onboarding_pipelines" as any)
+                              .update({
+                                generated_plan_id: opt.mealPlanId,
+                                generated_plan_data: {
+                                  ...pipeline.generated_plan_data,
+                                  selectedIndex: i,
+                                  mealPlanId: opt.mealPlanId,
+                                },
+                              } as any)
+                              .eq("id", pipeline.id);
+                            setPipeline({ ...pipeline, generated_plan_id: opt.mealPlanId });
+                          }
+                        }}
+                        className={`relative text-left p-4 rounded-xl border-2 transition-all ${
+                          isSelected
+                            ? "border-primary bg-primary/5 shadow-[0_0_12px_rgba(var(--primary),0.15)]"
+                            : "border-border hover:border-primary/40 bg-card"
+                        }`}
+                      >
+                        {isSelected && (
+                          <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                            <CheckCircle2 className="w-4 h-4 text-primary-foreground" />
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge variant={i === 0 ? "default" : "outline"} className="text-[10px]">
+                            {i === 0 ? "⭐ Recomendado" : `Opção ${i + 1}`}
+                          </Badge>
+                          <span className="text-[10px] text-muted-foreground">{opt.score}pts</span>
+                        </div>
+                        <p className="font-semibold text-sm text-foreground truncate">{opt.templateName}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{opt.baseCalories} kcal base • {opt.itemsCount} itens</p>
+                        {opt.reasons?.slice(0, 2).map((r: string, j: number) => (
+                          <span key={j} className="text-[10px] text-muted-foreground block mt-0.5">✓ {r}</span>
+                        ))}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Link to edit */}
             {(() => {
-              const planId = pipeline.generated_plan_id || pipeline.generated_plan_data?.mealPlanId;
+              const planId = selectedPlanId || pipeline.generated_plan_id || pipeline.generated_plan_data?.mealPlanId;
               if (planId) {
                 return (
                   <Button
@@ -569,11 +674,10 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
                     onClick={() => ensurePlanReadyAndOpen(planId)}
                   >
                     {openingEditor ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
-                    {openingEditor ? "Abrindo plano..." : "Analisar e Editar o Plano"}
+                    {openingEditor ? "Abrindo plano..." : "Analisar e Editar o Plano Selecionado"}
                   </Button>
                 );
               }
-              // No plan ID exists — allow generating regardless of status
               return (
                 <Button
                   className="w-full gap-2 gradient-primary shadow-glow"
@@ -581,7 +685,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
                   onClick={() => handleGenerateNewPlan()}
                 >
                   {openingEditor ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                  {openingEditor ? "Gerando plano..." : "Gerar e Editar Plano"}
+                  {openingEditor ? "Gerando planos..." : "Gerar Opções de Plano"}
                 </Button>
               );
             })()}
