@@ -348,6 +348,7 @@ serve(async (req) => {
     const patient_id = body.patient_id || body.patientId;
     const meal_plan_id = body.meal_plan_id;
     const isPipeline = body.isPipeline || false;
+    const planCount = Math.min(Math.max(body.planCount || 1, 1), 3);
 
     const serviceClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
