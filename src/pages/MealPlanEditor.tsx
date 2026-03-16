@@ -998,14 +998,15 @@ export default function MealPlanEditor() {
                     disabled={approving || items.length === 0}
                     onClick={async () => {
                       setApproving(true);
+                      const nextStatus = "approved" as const;
                       const { error } = await supabase
                         .from("meal_plans")
-                        .update({ plan_status: "approved" } as any)
+                        .update({ plan_status: nextStatus } as any)
                         .eq("id", plan.id);
                       if (error) toast.error("Erro: " + error.message);
                       else {
                         toast.success("Plano aprovado! ✅");
-                        refreshItems();
+                        setPlan(prev => prev ? { ...prev, plan_status: nextStatus } : prev);
                       }
                       setApproving(false);
                     }}
