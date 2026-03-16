@@ -309,10 +309,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   // Track presence for all logged-in users
   usePresenceTracker();
 
-  // Scroll to top on route change
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [location.pathname]);
+  // Preserve native scroll position to avoid interrupting long editing flows.
 
   // Close mobile sidebar on route change
   useEffect(() => {
@@ -407,7 +404,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
         <main className="pt-14">
           <motion.div
-            key={location.pathname}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
@@ -470,7 +466,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
         <OfflineSyncBanner />
         <motion.div
-          key={location.pathname}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}

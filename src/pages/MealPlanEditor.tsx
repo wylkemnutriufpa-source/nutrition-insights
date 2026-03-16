@@ -479,17 +479,22 @@ export default function MealPlanEditor() {
         default: newVal = currentVal;
       }
 
-      // Recalculate calories if adjusting macros (not calories directly)
-      const payload: Record<string, number | null> = { [bulkEditMacro]: Math.round(newVal * 10) / 10 };
+      const roundedValue = Math.round(newVal * 10) / 10;
+      const payload: Record<string, number | null> = { [bulkEditMacro]: roundedValue };
 
-      return supabase.from("meal_plan_items").update(payload).eq("id", item.id);
+      return {
+        id: item.id,
+        payload,
+        request: supabase.from("meal_plan_items").update(payload).eq("id", item.id),
+      };
     });
 
-    const results = await Promise.all(updates);
+    const results = await Promise.all(updates.map(({ request }) => request));
     const errors = results.filter(r => r.error);
 
     if (errors.length > 0) {
       toast.error(`${errors.length} erros ao atualizar`);
+      refreshItems();
     } else {
       const macroLabels: Record<string, string> = {
         protein_target: "Proteína",
@@ -504,10 +509,13 @@ export default function MealPlanEditor() {
         multiply: `× ${val}%`,
       };
       const mealLabel = bulkEditMealType === "all" ? "todas as refeições" : MEAL_TYPES.find(m => m.key === bulkEditMealType)?.label;
+      setItems(prev => prev.map(item => {
+        const update = updates.find(entry => entry.id === item.id);
+        return update ? { ...item, ...update.payload } as MealPlanItem : item;
+      }));
       toast.success(`${macroLabels[bulkEditMacro]} ajustada (${modeLabels[bulkEditMode]}) em ${targetItems.length} itens de ${mealLabel} ✨`);
       setBulkEditOpen(false);
       setBulkEditValue("");
-      refreshItems();
     }
 
     setBulkEditSaving(false);
@@ -990,14 +998,15 @@ export default function MealPlanEditor() {
                     disabled={approving || items.length === 0}
                     onClick={async () => {
                       setApproving(true);
+                      const nextStatus = "approved" as const;
                       const { error } = await supabase
                         .from("meal_plans")
-                        .update({ plan_status: "approved" } as any)
+                        .update({ plan_status: nextStatus } as any)
                         .eq("id", plan.id);
                       if (error) toast.error("Erro: " + error.message);
                       else {
                         toast.success("Plano aprovado! ✅");
-                        refreshItems();
+                        setPlan(prev => prev ? { ...prev, plan_status: nextStatus } : prev);
                       }
                       setApproving(false);
                     }}
@@ -1007,67 +1016,70 @@ export default function MealPlanEditor() {
                     Aprovar
                   </Button>
                 )}
-                <Button
-                  size="sm"
-                  disabled={approving || items.length === 0}
-                  onClick={async () => {
-                    setApproving(true);
-                    try {
-                      // Step 1: approve first if not yet approved (trigger requires approved -> published)
-                      if (plan.plan_status !== "approved") {
-                        const { error: approveErr } = await supabase
-                          .from("meal_plans")
-                          .update({ plan_status: "approved" } as any)
-                          .eq("id", plan.id);
-                        if (approveErr) throw approveErr;
-                      }
-                      // Step 2: publish
-                      const startDate = new Date();
-                      const endDate = new Date(startDate);
-                      endDate.setDate(endDate.getDate() + 30);
-                      const { error } = await supabase
-                        .from("meal_plans")
-                        .update({
+                  <Button
+                    size="sm"
+                    disabled={approving || items.length === 0}
+                    onClick={async () => {
+                      setApproving(true);
+                      try {
+                        const startDate = new Date();
+                        const endDate = new Date(startDate);
+                        endDate.setDate(endDate.getDate() + 30);
+
+                        // Step 1: approve first if not yet approved (trigger requires approved -> published)
+                        if (plan.plan_status !== "approved") {
+                          const { error: approveErr } = await supabase
+                            .from("meal_plans")
+                            .update({ plan_status: "approved" } as any)
+                            .eq("id", plan.id);
+                          if (approveErr) throw approveErr;
+                        }
+
+                        // Step 2: publish
+                        const publishedPayload = {
                           plan_status: "published_to_patient",
                           is_active: true,
                           start_date: startDate.toISOString().split("T")[0],
                           end_date: endDate.toISOString().split("T")[0],
-                        } as any)
-                        .eq("id", plan.id);
-                      if (error) throw error;
+                        } as any;
+                        const { error } = await supabase
+                          .from("meal_plans")
+                          .update(publishedPayload)
+                          .eq("id", plan.id);
+                        if (error) throw error;
 
-                      // Step 3: update onboarding pipeline if linked
-                      if (user) {
-                        await supabase
-                          .from("onboarding_pipelines" as any)
-                          .update({
-                            plan_approved: true,
-                            approved_by: user.id,
-                            approved_at: new Date().toISOString(),
-                            status: "completed",
-                          } as any)
-                          .eq("generated_plan_id", plan.id)
-                          .eq("status", "pending_approval");
+                        // Step 3: update onboarding pipeline if linked
+                        if (user) {
+                          await supabase
+                            .from("onboarding_pipelines" as any)
+                            .update({
+                              plan_approved: true,
+                              approved_by: user.id,
+                              approved_at: new Date().toISOString(),
+                              status: "completed",
+                            } as any)
+                            .eq("generated_plan_id", plan.id)
+                            .eq("status", "pending_approval");
+                        }
+
+                        // Step 4: notify patient
+                        await supabase.from("notifications").insert({
+                          user_id: plan.patient_id,
+                          title: "Novo plano alimentar ativado! 🎉",
+                          message: `Seu plano "${plan.title}" foi aprovado e está ativo por 30 dias. Confira agora!`,
+                          type: "meal_plan",
+                          action_url: "/my-diet",
+                        });
+
+                        setPlan(prev => prev ? { ...prev, ...publishedPayload } : prev);
+                        toast.success("Plano publicado e paciente notificado! 🎉");
+                      } catch (err: any) {
+                        toast.error("Erro: " + (err?.message || "Falha ao publicar"));
                       }
-
-                      // Step 4: notify patient
-                      await supabase.from("notifications").insert({
-                        user_id: plan.patient_id,
-                        title: "Novo plano alimentar ativado! 🎉",
-                        message: `Seu plano "${plan.title}" foi aprovado e está ativo por 30 dias. Confira agora!`,
-                        type: "meal_plan",
-                        action_url: "/my-diet",
-                      });
-
-                      toast.success("Plano publicado e paciente notificado! 🎉");
-                      refreshItems();
-                    } catch (err: any) {
-                      toast.error("Erro: " + (err?.message || "Falha ao publicar"));
-                    }
-                    setApproving(false);
-                  }}
-                  className="gradient-primary gap-1.5 shadow-glow"
-                >
+                      setApproving(false);
+                    }}
+                    className="gradient-primary gap-1.5 shadow-glow"
+                  >
                   {approving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                   Aprovar e Publicar
                 </Button>
