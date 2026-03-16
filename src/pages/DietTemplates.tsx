@@ -211,13 +211,22 @@ export default function DietTemplates() {
   };
 
   const filtered = useMemo(() => {
-    let result = templates.map(t => ({
-      ...t,
-      meals: Array.isArray(t.meals) ? t.meals : [],
-      tags: Array.isArray(t.tags) ? t.tags : [],
-      conditions: Array.isArray(t.conditions) ? t.conditions : [],
-      macro_ratio: t.macro_ratio && typeof t.macro_ratio === 'object' ? t.macro_ratio : { protein: 30, carbs: 45, fat: 25 },
-    }));
+    let result = templates.map(t => {
+      const raw = t.macro_ratio && typeof t.macro_ratio === 'object' ? t.macro_ratio : { protein: 30, carbs: 45, fat: 25 };
+      // Normalize: if values are decimals (< 1), convert to percentage
+      const macro_ratio = {
+        protein: raw.protein <= 1 ? Math.round(raw.protein * 100) : raw.protein,
+        carbs: raw.carbs <= 1 ? Math.round(raw.carbs * 100) : raw.carbs,
+        fat: raw.fat <= 1 ? Math.round(raw.fat * 100) : raw.fat,
+      };
+      return {
+        ...t,
+        meals: Array.isArray(t.meals) ? t.meals : [],
+        tags: Array.isArray(t.tags) ? t.tags : [],
+        conditions: Array.isArray(t.conditions) ? t.conditions : [],
+        macro_ratio,
+      };
+    });
     if (categoryFilter) result = result.filter((t) => (t.goal_category || t.category) === categoryFilter);
     if (search.trim()) {
       const q = search.toLowerCase();
