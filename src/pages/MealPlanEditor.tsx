@@ -492,6 +492,7 @@ export default function MealPlanEditor() {
   const handleInlineEdit = async (itemId: string, newTitle: string) => {
     if (!newTitle.trim()) { setInlineEditId(null); return; }
     setInlineEditSaving(true);
+    showSyncSaving();
     const match = findFoodMatch(newTitle.trim());
     const updatePayload: any = { title: newTitle.trim() };
     if (match) {
@@ -504,10 +505,11 @@ export default function MealPlanEditor() {
     const { error } = await supabase.from("meal_plan_items").update(updatePayload).eq("id", itemId);
     setInlineEditSaving(false);
     setInlineEditId(null);
-    if (error) toast.error("Erro ao editar");
+    if (error) { toast.error("Erro ao editar"); showSyncDone(false); }
     else {
       toast.success(match ? "Atualizado com macros ✨" : "Atualizado!");
-      setItems(prev => prev.map(i => i.id === itemId ? { ...i, ...updatePayload } as MealPlanItem : i));
+      setItemsStable(prev => prev.map(i => i.id === itemId ? { ...i, ...updatePayload } as MealPlanItem : i));
+      showSyncDone(true);
     }
   };
 
@@ -515,15 +517,16 @@ export default function MealPlanEditor() {
   const handleBulkMacroEdit = async () => {
     if (!id || !bulkEditValue.trim()) return;
     setBulkEditSaving(true);
+    showSyncSaving();
 
     const val = parseFloat(bulkEditValue);
     if (isNaN(val)) {
       toast.error("Valor inválido");
       setBulkEditSaving(false);
+      showSyncDone(false);
       return;
     }
 
-    // Filter items by meal type
     const targetItems = bulkEditMealType === "all"
       ? items
       : items.filter(i => i.meal_type === bulkEditMealType);
@@ -531,6 +534,7 @@ export default function MealPlanEditor() {
     if (targetItems.length === 0) {
       toast.error("Nenhum item encontrado para esse tipo de refeição");
       setBulkEditSaving(false);
+      showSyncDone(false);
       return;
     }
 
@@ -556,11 +560,18 @@ export default function MealPlanEditor() {
       };
     });
 
+    // Optimistic: update UI immediately
+    setItemsStable(prev => prev.map(item => {
+      const update = updates.find(entry => entry.id === item.id);
+      return update ? { ...item, ...update.payload } as MealPlanItem : item;
+    }));
+
     const results = await Promise.all(updates.map(({ request }) => request));
     const errors = results.filter(r => r.error);
 
     if (errors.length > 0) {
       toast.error(`${errors.length} erros ao atualizar`);
+      showSyncDone(false);
       refreshItems();
     } else {
       const macroLabels: Record<string, string> = {
@@ -576,13 +587,10 @@ export default function MealPlanEditor() {
         multiply: `× ${val}%`,
       };
       const mealLabel = bulkEditMealType === "all" ? "todas as refeições" : MEAL_TYPES.find(m => m.key === bulkEditMealType)?.label;
-      setItems(prev => prev.map(item => {
-        const update = updates.find(entry => entry.id === item.id);
-        return update ? { ...item, ...update.payload } as MealPlanItem : item;
-      }));
       toast.success(`${macroLabels[bulkEditMacro]} ajustada (${modeLabels[bulkEditMode]}) em ${targetItems.length} itens de ${mealLabel} ✨`);
       setBulkEditOpen(false);
       setBulkEditValue("");
+      showSyncDone(true);
     }
 
     setBulkEditSaving(false);
@@ -591,10 +599,10 @@ export default function MealPlanEditor() {
   // Duplicate a meal item (same day/meal_type)
   const handleDuplicateItem = async (item: MealPlanItem) => {
     if (!id) return;
-    // Optimistic: add temp item immediately
+    showSyncSaving();
     const tempId = `temp-${Date.now()}`;
     const tempItem = { ...item, id: tempId, created_at: new Date().toISOString() };
-    setItems(prev => [...prev, tempItem]);
+    setItemsStable(prev => [...prev, tempItem]);
     toast.success("Refeição duplicada! 📋");
 
     const { data, error } = await supabase.from("meal_plan_items").insert({
@@ -610,9 +618,11 @@ export default function MealPlanEditor() {
     }).select().single();
     if (error) {
       toast.error("Erro ao duplicar: " + error.message);
-      setItems(prev => prev.filter(i => i.id !== tempId)); // rollback
+      setItemsStable(prev => prev.filter(i => i.id !== tempId));
+      showSyncDone(false);
     } else if (data) {
-      setItems(prev => prev.map(i => i.id === tempId ? data : i)); // replace temp with real
+      setItemsStable(prev => prev.map(i => i.id === tempId ? data : i));
+      showSyncDone(true);
     }
   };
 
@@ -625,10 +635,10 @@ export default function MealPlanEditor() {
   // Paste clipboard item into a specific cell
   const handlePasteItem = async (day: number, mealType: MealType) => {
     if (!id || !clipboardItem) return;
-    // Optimistic: add temp item immediately
+    showSyncSaving();
     const tempId = `temp-${Date.now()}`;
     const tempItem = { ...clipboardItem, id: tempId, meal_type: mealType, day_of_week: day, meal_plan_id: id, created_at: new Date().toISOString() };
-    setItems(prev => [...prev, tempItem]);
+    setItemsStable(prev => [...prev, tempItem]);
     toast.success(`"${clipboardItem.title}" colado! ✅`);
 
     const { data, error } = await supabase.from("meal_plan_items").insert({
@@ -644,9 +654,11 @@ export default function MealPlanEditor() {
     }).select().single();
     if (error) {
       toast.error("Erro ao colar: " + error.message);
-      setItems(prev => prev.filter(i => i.id !== tempId));
+      setItemsStable(prev => prev.filter(i => i.id !== tempId));
+      showSyncDone(false);
     } else if (data) {
-      setItems(prev => prev.map(i => i.id === tempId ? data : i));
+      setItemsStable(prev => prev.map(i => i.id === tempId ? data : i));
+      showSyncDone(true);
     }
   };
 
@@ -658,6 +670,7 @@ export default function MealPlanEditor() {
 
   // Handle substitution from drawer
   const handleSubstitute = async (item: MealPlanItem, food: FoodItem) => {
+    showSyncSaving();
     const { error } = await supabase.from("meal_plan_items").update({
       title: food.name,
       description: food.portion,
@@ -666,11 +679,12 @@ export default function MealPlanEditor() {
       carbs_target: food.carbs,
       fat_target: food.fat,
     }).eq("id", item.id);
-    if (error) toast.error("Erro ao substituir");
+    if (error) { toast.error("Erro ao substituir"); showSyncDone(false); }
     else {
       toast.success(`Substituído por ${food.name} ✨`);
       setDrawerOpen(false);
-      setItems(prev => prev.map(i => i.id === item.id ? { ...i, title: food.name, description: food.portion, calories_target: food.calories, protein_target: food.protein, carbs_target: food.carbs, fat_target: food.fat } as MealPlanItem : i));
+      setItemsStable(prev => prev.map(i => i.id === item.id ? { ...i, title: food.name, description: food.portion, calories_target: food.calories, protein_target: food.protein, carbs_target: food.carbs, fat_target: food.fat } as MealPlanItem : i));
+      showSyncDone(true);
     }
   };
 
@@ -678,6 +692,7 @@ export default function MealPlanEditor() {
   const handleQuickAdd = async (day: number, mealType: MealType) => {
     if (!id || !quickAddText.trim()) return;
     setQuickAdding(true);
+    showSyncSaving();
     
     const match = findFoodMatch(quickAddText.trim());
     const tempId = `temp-${Date.now()}`;
@@ -696,7 +711,7 @@ export default function MealPlanEditor() {
     } as MealPlanItem;
 
     // Optimistic: add immediately
-    setItems(prev => [...prev, tempItem]);
+    setItemsStable(prev => [...prev, tempItem]);
     toast.success(match ? `${quickAddText.trim()} adicionado com macros! ✨` : "Item adicionado!");
     const addedText = quickAddText.trim();
     setQuickAddText("");
@@ -716,9 +731,11 @@ export default function MealPlanEditor() {
     }).select().single();
     if (error) {
       toast.error("Erro ao salvar: " + error.message);
-      setItems(prev => prev.filter(i => i.id !== tempId));
+      setItemsStable(prev => prev.filter(i => i.id !== tempId));
+      showSyncDone(false);
     } else if (data) {
-      setItems(prev => prev.map(i => i.id === tempId ? data : i));
+      setItemsStable(prev => prev.map(i => i.id === tempId ? data : i));
+      showSyncDone(true);
     }
   };
 
@@ -726,6 +743,7 @@ export default function MealPlanEditor() {
   const handleBatchAdd = async (day: number, mealType: MealType) => {
     if (!id || !batchText.trim()) return;
     setBatchAdding(true);
+    showSyncSaving();
     
     const lines = batchText.split("\n").map(l => l.trim()).filter(Boolean);
     const inserts = lines.map(line => {
@@ -745,13 +763,14 @@ export default function MealPlanEditor() {
 
     const { data, error } = await supabase.from("meal_plan_items").insert(inserts).select();
     setBatchAdding(false);
-    if (error) toast.error("Erro ao adicionar: " + error.message);
+    if (error) { toast.error("Erro ao adicionar: " + error.message); showSyncDone(false); }
     else {
       const matched = inserts.filter(i => i.calories_target !== null).length;
       toast.success(`${lines.length} itens adicionados! ${matched > 0 ? `(${matched} com macros automáticos ✨)` : ""}`);
       setBatchText("");
       setBatchTarget(null);
-      if (data) setItems(prev => [...prev, ...data]);
+      if (data) setItemsStable(prev => [...prev, ...data]);
+      showSyncDone(true);
     }
   };
 
