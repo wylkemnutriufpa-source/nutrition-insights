@@ -298,7 +298,7 @@ export default function MealPlans() {
                       <PencilLine className="w-4 h-4" />
                     </Button>
                     {!isPending && (
-                      <button onClick={(e) => { e.stopPropagation(); toggleActive(p.id, p.is_active); }}>
+                      <button onClick={(e) => { e.stopPropagation(); toggleActive(p.id, p.patient_id, p.is_active); }}>
                         {p.is_active ? (
                           <ToggleRight className="w-6 h-6 text-success" />
                         ) : (
