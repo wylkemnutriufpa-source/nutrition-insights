@@ -1253,6 +1253,15 @@ export default function MealPlanEditor() {
                                 <PencilLine className="w-3 h-3" /> Detalhado
                               </button>
                             </div>
+                            {clipboardItem && (
+                              <button
+                                type="button"
+                                onClick={() => handlePasteItem(day.key, meal.key)}
+                                className="w-full flex items-center justify-center gap-1 text-[10px] text-primary hover:text-primary/80 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-primary/40 hover:border-primary bg-primary/5 mt-0.5"
+                              >
+                                <ClipboardPaste className="w-3 h-3" /> Colar "{clipboardItem.title}"
+                              </button>
+                            )}
                           )}
                           </div>
                         </div>
