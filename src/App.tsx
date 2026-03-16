@@ -205,6 +205,17 @@ function RootRoute() {
   return <Suspense fallback={<PageLoader />}><Index /></Suspense>;
 }
 
+function LegacyMealPlanRedirect() {
+  const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+
+  if (!id) {
+    return <Navigate to="/meal-plans" replace />;
+  }
+
+  return <Navigate to={`/meal-plans/${id}${location.search}${location.hash}`} replace />;
+}
+
 function DarkModeInit() {
   useEffect(() => {
     const stored = localStorage.getItem("theme");
