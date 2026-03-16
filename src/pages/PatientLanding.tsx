@@ -131,7 +131,7 @@ export default function PatientLanding() {
         <div className="max-w-2xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold mb-4"><span className="text-emerald-400">{ctaTitle}</span></h2>
           <p className="text-white/40 mb-8">{ctaSubtitle}</p>
-          <Link to="/auth">
+          <Link to="/cadastro">
             <Button size="lg" className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-10 text-lg">
               Criar Minha Conta <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
