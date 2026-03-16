@@ -105,6 +105,14 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
       setUseScheduling(p.use_scheduling_criteria || false);
       setCriteria(p.scheduling_criteria || DEFAULT_CRITERIA);
 
+      // Restore plan options from saved data
+      if (p.generated_plan_data?.multiPlan && p.generated_plan_data?.plans?.length > 0) {
+        setPlanOptions(p.generated_plan_data.plans);
+        setSelectedPlanId(p.generated_plan_id || p.generated_plan_data.plans[0].mealPlanId);
+      } else {
+        setPlanOptions([]);
+      }
+
       // Auto-fix: if plan is generated but status isn't pending_approval, fix it
       if (p.plan_generated && !p.plan_approved && p.status !== "pending_approval" && p.status !== "completed" && p.status !== "rejected") {
         await supabase
