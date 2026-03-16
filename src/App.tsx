@@ -91,6 +91,7 @@ const OnboardingPipeline = lazy(() => import("./pages/OnboardingPipeline"));
 const AmbassadorDashboard = lazy(() => import("./pages/AmbassadorDashboard"));
 const AdminAffiliates = lazy(() => import("./pages/AdminAffiliates"));
 const PatientLanding = lazy(() => import("./pages/PatientLanding"));
+const PatientRegister = lazy(() => import("./pages/PatientRegister"));
 const AffiliateLanding = lazy(() => import("./pages/AffiliateLanding"));
 const AdminLandingPages = lazy(() => import("./pages/AdminLandingPages"));
 const AdminMenuConfig = lazy(() => import("./pages/AdminMenuConfig"));
