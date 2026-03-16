@@ -994,7 +994,30 @@ export default function MealPlanEditor() {
   }
 
   const fullscreenContent = (
-      <div className={isFullscreen ? "fixed inset-0 z-50 bg-background overflow-y-auto p-4 md:p-6" : "space-y-4"}>
+      <div ref={editorContainerRef} className={isFullscreen ? "fixed inset-0 z-50 bg-background overflow-y-auto p-4 md:p-6" : "space-y-4"}>
+        {/* Sync Status Badge */}
+        {syncStatus !== "idle" && (
+          <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border border-border shadow-lg text-xs font-medium animate-in fade-in slide-in-from-bottom-2 duration-200">
+            {syncStatus === "saving" && (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                <span className="text-muted-foreground">Salvando alterações…</span>
+              </>
+            )}
+            {syncStatus === "saved" && (
+              <>
+                <Check className="w-3.5 h-3.5 text-primary" />
+                <span className="text-muted-foreground">Salvo ✓</span>
+              </>
+            )}
+            {syncStatus === "error" && (
+              <>
+                <AlertTriangle className="w-3.5 h-3.5 text-destructive" />
+                <span className="text-destructive">Erro ao salvar</span>
+              </>
+            )}
+          </div>
+        )}
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
