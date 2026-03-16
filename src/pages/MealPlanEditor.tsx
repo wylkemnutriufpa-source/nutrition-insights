@@ -913,7 +913,7 @@ export default function MealPlanEditor() {
                   if (error) throw error;
                   if (data?.error) throw new Error(data.error);
                   toast.success(`AI Plan gerou ${data.items_count} itens e ${data.tips_count} dicas! 🤖`);
-                  fetchData();
+                  refreshItems();
                 } catch (e: any) {
                   toast.error(e.message || "Erro ao gerar plano");
                 }
