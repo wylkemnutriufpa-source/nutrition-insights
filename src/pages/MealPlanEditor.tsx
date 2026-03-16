@@ -1191,6 +1191,12 @@ export default function MealPlanEditor() {
                                         <button type="button" onClick={(e) => { e.stopPropagation(); setInlineEditId(item.id); setInlineEditValue(item.title); }} className="p-0.5 rounded hover:bg-accent/50" title="Editar inline">
                                           <PencilLine className="w-2.5 h-2.5 text-muted-foreground" />
                                         </button>
+                                        <button type="button" onClick={(e) => { e.stopPropagation(); handleDuplicateItem(item); }} className="p-0.5 rounded hover:bg-accent/50" title="Duplicar">
+                                          <CopyPlus className="w-2.5 h-2.5 text-muted-foreground" />
+                                        </button>
+                                        <button type="button" onClick={(e) => { e.stopPropagation(); handleCopyItemToClipboard(item); }} className="p-0.5 rounded hover:bg-accent/50" title="Copiar">
+                                          <Clipboard className="w-2.5 h-2.5 text-muted-foreground" />
+                                        </button>
                                         <button type="button" onClick={(e) => { e.stopPropagation(); openDrawerPanel(item); }} className="p-0.5 rounded hover:bg-accent/50" title="Painel detalhado">
                                           <ArrowRightLeft className="w-2.5 h-2.5 text-muted-foreground" />
                                         </button>
