@@ -85,16 +85,60 @@ const findFoodMatch = (text: string): FoodItem | null => {
 };
 
 
+// ─── Sync Status Types ───
+type SyncStatus = "idle" | "saving" | "saved" | "error";
+
 export default function MealPlanEditor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  // Stable userId primitive — never causes re-render from auth token refresh
+  const userId = user?.id;
 
   const [plan, setPlan] = useState<MealPlan | null>(null);
   const [patientName, setPatientName] = useState("");
   const [items, setItems] = useState<MealPlanItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [planDocs, setPlanDocs] = useState<any[]>([]);
+
+  // ─── Sync status indicator ───
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
+  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showSyncSaving = useCallback(() => {
+    setSyncStatus("saving");
+    if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+  }, []);
+  const showSyncDone = useCallback((success: boolean = true) => {
+    setSyncStatus(success ? "saved" : "error");
+    if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+    syncTimerRef.current = setTimeout(() => setSyncStatus("idle"), 2500);
+  }, []);
+
+  // ─── Scroll preservation ───
+  const editorContainerRef = useRef<HTMLDivElement>(null);
+  const savedScrollRef = useRef<number>(0);
+  const preserveScroll = useCallback(() => {
+    if (editorContainerRef.current) {
+      savedScrollRef.current = editorContainerRef.current.scrollTop;
+    } else {
+      savedScrollRef.current = window.scrollY;
+    }
+  }, []);
+  const restoreScroll = useCallback(() => {
+    requestAnimationFrame(() => {
+      if (editorContainerRef.current) {
+        editorContainerRef.current.scrollTop = savedScrollRef.current;
+      } else {
+        window.scrollTo(0, savedScrollRef.current);
+      }
+    });
+  }, []);
+  // Wrapper: preserve scroll around any setItems call
+  const setItemsStable = useCallback((updater: React.SetStateAction<MealPlanItem[]>) => {
+    preserveScroll();
+    setItems(updater);
+    restoreScroll();
+  }, [preserveScroll, restoreScroll]);
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -109,7 +153,7 @@ export default function MealPlanEditor() {
   const [generating, setGenerating] = useState(false);
 
   // Quick-add state
-  const [quickAddKey, setQuickAddKey] = useState<string | null>(null); // "day-mealType"
+  const [quickAddKey, setQuickAddKey] = useState<string | null>(null);
   const [quickAddText, setQuickAddText] = useState("");
   const [quickAdding, setQuickAdding] = useState(false);
   const [batchMode, setBatchMode] = useState(false);
@@ -165,16 +209,20 @@ export default function MealPlanEditor() {
 
   // Template Quick Insert Panel state
   const [templatePanelOpen, setTemplatePanelOpen] = useState(false);
-  const [templatePanelTarget, setTemplatePanelTarget] = useState<{ day: number; mealType: MealType }>({ day: 1, mealType: "breakfast" });
+  const [templatePanelTarget, setTemplatePanelTarget] = useState<{ day: number; mealType: MealType }>({ day: 1, mealType: "breakfast" })
 
   // Save as template dialog state
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
   const [saveTemplateItems, setSaveTemplateItems] = useState<MealPlanItem[]>([]);
   const [saveTemplateMealType, setSaveTemplateMealType] = useState<string>("lunch");
 
-  const userId = user?.id;
+  // Guard: only fetch once per plan ID
+  const hasFetchedRef = useRef<string | null>(null);
   const fetchData = useCallback(async () => {
     if (!id || !userId) return;
+    // Guard: don't re-fetch if already loaded for this plan
+    if (hasFetchedRef.current === id) return;
+    hasFetchedRef.current = id;
     setLoading(true);
 
     const [{ data: planData }, { data: itemsData }] = await Promise.all([
@@ -191,14 +239,12 @@ export default function MealPlanEditor() {
         .maybeSingle();
       setPatientName(profile?.full_name || "Paciente");
 
-      // Detect empty pipeline plan
       if ((!itemsData || itemsData.length === 0) && planData.generation_source === "protocol_fitjourney") {
         setEmptyPlanWarning(true);
       }
     }
     setItems(itemsData || []);
 
-    // Fetch documents
     const { data: docs } = await supabase
       .from("patient_documents" as any)
       .select("*")
@@ -210,16 +256,18 @@ export default function MealPlanEditor() {
     setLoading(false);
   }, [id, userId]);
 
-  // Light refresh: only re-fetches items without loading spinner
+  // Silent refresh: only re-fetches items without loading spinner or scroll reset
   const refreshItems = useCallback(async () => {
     if (!id) return;
+    preserveScroll();
     const { data } = await supabase
       .from("meal_plan_items")
       .select("*")
       .eq("meal_plan_id", id)
       .order("created_at");
     if (data) setItems(data);
-  }, [id]);
+    restoreScroll();
+  }, [id, preserveScroll, restoreScroll]);
 
   const fetchDocs = async () => {
     if (!id) return;
@@ -233,6 +281,11 @@ export default function MealPlanEditor() {
   };
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // Cleanup sync timer
+  useEffect(() => {
+    return () => { if (syncTimerRef.current) clearTimeout(syncTimerRef.current); };
+  }, []);
 
   const getItems = (day: number, mealType: MealType) =>
     items.filter((i) => i.day_of_week === day && i.meal_type === mealType);
@@ -263,6 +316,7 @@ export default function MealPlanEditor() {
   const handleSaveItem = async () => {
     if (!id || !form.title.trim()) return;
     setSaving(true);
+    showSyncSaving();
 
     const payload = {
       meal_plan_id: id,
@@ -281,17 +335,19 @@ export default function MealPlanEditor() {
         .from("meal_plan_items")
         .update(payload)
         .eq("id", editingItem.id);
-      if (error) toast.error("Erro ao atualizar: " + error.message);
+      if (error) { toast.error("Erro ao atualizar: " + error.message); showSyncDone(false); }
       else {
         toast.success("Item atualizado!");
-        setItems(prev => prev.map(i => i.id === editingItem.id ? { ...i, ...payload } as MealPlanItem : i));
+        setItemsStable(prev => prev.map(i => i.id === editingItem.id ? { ...i, ...payload } as MealPlanItem : i));
+        showSyncDone(true);
       }
     } else {
       const { data, error } = await supabase.from("meal_plan_items").insert(payload).select().single();
-      if (error) toast.error("Erro ao adicionar: " + error.message);
+      if (error) { toast.error("Erro ao adicionar: " + error.message); showSyncDone(false); }
       else {
         toast.success("Item adicionado!");
-        setItems(prev => [...prev, data]);
+        setItemsStable(prev => [...prev, data]);
+        showSyncDone(true);
       }
     }
 
@@ -300,32 +356,33 @@ export default function MealPlanEditor() {
   };
 
   const handleDeleteItem = async (itemId: string) => {
-    setItems(prev => prev.filter(i => i.id !== itemId));
+    showSyncSaving();
+    setItemsStable(prev => prev.filter(i => i.id !== itemId));
     const { error } = await supabase.from("meal_plan_items").delete().eq("id", itemId);
     if (error) {
       toast.error("Erro ao remover: " + error.message);
-      refreshItems(); // rollback
+      showSyncDone(false);
+      refreshItems();
     } else {
       toast.success("Removido!");
+      showSyncDone(true);
     }
   };
 
-  // Delete all items for a specific day
   const handleDeleteDay = async (day: number) => {
     const dayItems = items.filter(i => i.day_of_week === day);
-    if (dayItems.length === 0) {
-      toast.error("Dia já está vazio");
-      return;
-    }
-    // Optimistic
-    setItems(prev => prev.filter(i => i.day_of_week !== day));
+    if (dayItems.length === 0) { toast.error("Dia já está vazio"); return; }
+    showSyncSaving();
+    setItemsStable(prev => prev.filter(i => i.day_of_week !== day));
     const ids = dayItems.map(i => i.id);
     const { error } = await supabase.from("meal_plan_items").delete().in("id", ids);
     if (error) {
       toast.error("Erro ao limpar dia: " + error.message);
+      showSyncDone(false);
       refreshItems();
     } else {
       toast.success(`${DAYS[day].label} limpo! (${dayItems.length} itens removidos)`);
+      showSyncDone(true);
     }
   };
 
@@ -349,12 +406,14 @@ export default function MealPlanEditor() {
       fat_target: item.fat_target,
     }));
 
+    showSyncSaving();
     const { data, error } = await supabase.from("meal_plan_items").insert(inserts).select();
-    if (error) toast.error("Erro ao copiar: " + error.message);
+    if (error) { toast.error("Erro ao copiar: " + error.message); showSyncDone(false); }
     else {
       toast.success(`Copiado para ${DAYS[targetDay].label}!`);
       setCopySource(null);
-      if (data) setItems(prev => [...prev, ...data]);
+      if (data) setItemsStable(prev => [...prev, ...data]);
+      showSyncDone(true);
     }
   };
 
@@ -390,12 +449,13 @@ export default function MealPlanEditor() {
     if (source.day === target.day && source.mealType === target.mealType) return;
     if (!id) return;
     setSwapping(true);
+    showSyncSaving();
 
     const sourceItems = items.filter(i => i.day_of_week === source.day && i.meal_type === source.mealType);
     const targetItems = items.filter(i => i.day_of_week === target.day && i.meal_type === target.mealType);
 
     // OPTIMISTIC: update UI immediately
-    setItems(prev => prev.map(i => {
+    setItemsStable(prev => prev.map(i => {
       if (sourceItems.some(s => s.id === i.id)) return { ...i, day_of_week: target.day, meal_type: target.mealType };
       if (targetItems.some(t => t.id === i.id)) return { ...i, day_of_week: source.day, meal_type: source.mealType };
       return i;
@@ -426,7 +486,10 @@ export default function MealPlanEditor() {
     const hasError = results.some(r => r.error);
     if (hasError) {
       toast.error("Erro ao salvar troca — revertendo...");
-      refreshItems(); // rollback from server
+      showSyncDone(false);
+      refreshItems();
+    } else {
+      showSyncDone(true);
     }
   };
 
@@ -434,6 +497,7 @@ export default function MealPlanEditor() {
   const handleInlineEdit = async (itemId: string, newTitle: string) => {
     if (!newTitle.trim()) { setInlineEditId(null); return; }
     setInlineEditSaving(true);
+    showSyncSaving();
     const match = findFoodMatch(newTitle.trim());
     const updatePayload: any = { title: newTitle.trim() };
     if (match) {
@@ -446,10 +510,11 @@ export default function MealPlanEditor() {
     const { error } = await supabase.from("meal_plan_items").update(updatePayload).eq("id", itemId);
     setInlineEditSaving(false);
     setInlineEditId(null);
-    if (error) toast.error("Erro ao editar");
+    if (error) { toast.error("Erro ao editar"); showSyncDone(false); }
     else {
       toast.success(match ? "Atualizado com macros ✨" : "Atualizado!");
-      setItems(prev => prev.map(i => i.id === itemId ? { ...i, ...updatePayload } as MealPlanItem : i));
+      setItemsStable(prev => prev.map(i => i.id === itemId ? { ...i, ...updatePayload } as MealPlanItem : i));
+      showSyncDone(true);
     }
   };
 
@@ -457,15 +522,16 @@ export default function MealPlanEditor() {
   const handleBulkMacroEdit = async () => {
     if (!id || !bulkEditValue.trim()) return;
     setBulkEditSaving(true);
+    showSyncSaving();
 
     const val = parseFloat(bulkEditValue);
     if (isNaN(val)) {
       toast.error("Valor inválido");
       setBulkEditSaving(false);
+      showSyncDone(false);
       return;
     }
 
-    // Filter items by meal type
     const targetItems = bulkEditMealType === "all"
       ? items
       : items.filter(i => i.meal_type === bulkEditMealType);
@@ -473,6 +539,7 @@ export default function MealPlanEditor() {
     if (targetItems.length === 0) {
       toast.error("Nenhum item encontrado para esse tipo de refeição");
       setBulkEditSaving(false);
+      showSyncDone(false);
       return;
     }
 
@@ -498,11 +565,18 @@ export default function MealPlanEditor() {
       };
     });
 
+    // Optimistic: update UI immediately
+    setItemsStable(prev => prev.map(item => {
+      const update = updates.find(entry => entry.id === item.id);
+      return update ? { ...item, ...update.payload } as MealPlanItem : item;
+    }));
+
     const results = await Promise.all(updates.map(({ request }) => request));
     const errors = results.filter(r => r.error);
 
     if (errors.length > 0) {
       toast.error(`${errors.length} erros ao atualizar`);
+      showSyncDone(false);
       refreshItems();
     } else {
       const macroLabels: Record<string, string> = {
@@ -518,13 +592,10 @@ export default function MealPlanEditor() {
         multiply: `× ${val}%`,
       };
       const mealLabel = bulkEditMealType === "all" ? "todas as refeições" : MEAL_TYPES.find(m => m.key === bulkEditMealType)?.label;
-      setItems(prev => prev.map(item => {
-        const update = updates.find(entry => entry.id === item.id);
-        return update ? { ...item, ...update.payload } as MealPlanItem : item;
-      }));
       toast.success(`${macroLabels[bulkEditMacro]} ajustada (${modeLabels[bulkEditMode]}) em ${targetItems.length} itens de ${mealLabel} ✨`);
       setBulkEditOpen(false);
       setBulkEditValue("");
+      showSyncDone(true);
     }
 
     setBulkEditSaving(false);
@@ -533,10 +604,10 @@ export default function MealPlanEditor() {
   // Duplicate a meal item (same day/meal_type)
   const handleDuplicateItem = async (item: MealPlanItem) => {
     if (!id) return;
-    // Optimistic: add temp item immediately
+    showSyncSaving();
     const tempId = `temp-${Date.now()}`;
     const tempItem = { ...item, id: tempId, created_at: new Date().toISOString() };
-    setItems(prev => [...prev, tempItem]);
+    setItemsStable(prev => [...prev, tempItem]);
     toast.success("Refeição duplicada! 📋");
 
     const { data, error } = await supabase.from("meal_plan_items").insert({
@@ -552,9 +623,11 @@ export default function MealPlanEditor() {
     }).select().single();
     if (error) {
       toast.error("Erro ao duplicar: " + error.message);
-      setItems(prev => prev.filter(i => i.id !== tempId)); // rollback
+      setItemsStable(prev => prev.filter(i => i.id !== tempId));
+      showSyncDone(false);
     } else if (data) {
-      setItems(prev => prev.map(i => i.id === tempId ? data : i)); // replace temp with real
+      setItemsStable(prev => prev.map(i => i.id === tempId ? data : i));
+      showSyncDone(true);
     }
   };
 
@@ -567,10 +640,10 @@ export default function MealPlanEditor() {
   // Paste clipboard item into a specific cell
   const handlePasteItem = async (day: number, mealType: MealType) => {
     if (!id || !clipboardItem) return;
-    // Optimistic: add temp item immediately
+    showSyncSaving();
     const tempId = `temp-${Date.now()}`;
     const tempItem = { ...clipboardItem, id: tempId, meal_type: mealType, day_of_week: day, meal_plan_id: id, created_at: new Date().toISOString() };
-    setItems(prev => [...prev, tempItem]);
+    setItemsStable(prev => [...prev, tempItem]);
     toast.success(`"${clipboardItem.title}" colado! ✅`);
 
     const { data, error } = await supabase.from("meal_plan_items").insert({
@@ -586,9 +659,11 @@ export default function MealPlanEditor() {
     }).select().single();
     if (error) {
       toast.error("Erro ao colar: " + error.message);
-      setItems(prev => prev.filter(i => i.id !== tempId));
+      setItemsStable(prev => prev.filter(i => i.id !== tempId));
+      showSyncDone(false);
     } else if (data) {
-      setItems(prev => prev.map(i => i.id === tempId ? data : i));
+      setItemsStable(prev => prev.map(i => i.id === tempId ? data : i));
+      showSyncDone(true);
     }
   };
 
@@ -600,6 +675,7 @@ export default function MealPlanEditor() {
 
   // Handle substitution from drawer
   const handleSubstitute = async (item: MealPlanItem, food: FoodItem) => {
+    showSyncSaving();
     const { error } = await supabase.from("meal_plan_items").update({
       title: food.name,
       description: food.portion,
@@ -608,11 +684,12 @@ export default function MealPlanEditor() {
       carbs_target: food.carbs,
       fat_target: food.fat,
     }).eq("id", item.id);
-    if (error) toast.error("Erro ao substituir");
+    if (error) { toast.error("Erro ao substituir"); showSyncDone(false); }
     else {
       toast.success(`Substituído por ${food.name} ✨`);
       setDrawerOpen(false);
-      setItems(prev => prev.map(i => i.id === item.id ? { ...i, title: food.name, description: food.portion, calories_target: food.calories, protein_target: food.protein, carbs_target: food.carbs, fat_target: food.fat } as MealPlanItem : i));
+      setItemsStable(prev => prev.map(i => i.id === item.id ? { ...i, title: food.name, description: food.portion, calories_target: food.calories, protein_target: food.protein, carbs_target: food.carbs, fat_target: food.fat } as MealPlanItem : i));
+      showSyncDone(true);
     }
   };
 
@@ -620,6 +697,7 @@ export default function MealPlanEditor() {
   const handleQuickAdd = async (day: number, mealType: MealType) => {
     if (!id || !quickAddText.trim()) return;
     setQuickAdding(true);
+    showSyncSaving();
     
     const match = findFoodMatch(quickAddText.trim());
     const tempId = `temp-${Date.now()}`;
@@ -638,7 +716,7 @@ export default function MealPlanEditor() {
     } as MealPlanItem;
 
     // Optimistic: add immediately
-    setItems(prev => [...prev, tempItem]);
+    setItemsStable(prev => [...prev, tempItem]);
     toast.success(match ? `${quickAddText.trim()} adicionado com macros! ✨` : "Item adicionado!");
     const addedText = quickAddText.trim();
     setQuickAddText("");
@@ -658,9 +736,11 @@ export default function MealPlanEditor() {
     }).select().single();
     if (error) {
       toast.error("Erro ao salvar: " + error.message);
-      setItems(prev => prev.filter(i => i.id !== tempId));
+      setItemsStable(prev => prev.filter(i => i.id !== tempId));
+      showSyncDone(false);
     } else if (data) {
-      setItems(prev => prev.map(i => i.id === tempId ? data : i));
+      setItemsStable(prev => prev.map(i => i.id === tempId ? data : i));
+      showSyncDone(true);
     }
   };
 
@@ -668,6 +748,7 @@ export default function MealPlanEditor() {
   const handleBatchAdd = async (day: number, mealType: MealType) => {
     if (!id || !batchText.trim()) return;
     setBatchAdding(true);
+    showSyncSaving();
     
     const lines = batchText.split("\n").map(l => l.trim()).filter(Boolean);
     const inserts = lines.map(line => {
@@ -687,13 +768,14 @@ export default function MealPlanEditor() {
 
     const { data, error } = await supabase.from("meal_plan_items").insert(inserts).select();
     setBatchAdding(false);
-    if (error) toast.error("Erro ao adicionar: " + error.message);
+    if (error) { toast.error("Erro ao adicionar: " + error.message); showSyncDone(false); }
     else {
       const matched = inserts.filter(i => i.calories_target !== null).length;
       toast.success(`${lines.length} itens adicionados! ${matched > 0 ? `(${matched} com macros automáticos ✨)` : ""}`);
       setBatchText("");
       setBatchTarget(null);
-      if (data) setItems(prev => [...prev, ...data]);
+      if (data) setItemsStable(prev => [...prev, ...data]);
+      showSyncDone(true);
     }
   };
 
@@ -917,7 +999,30 @@ export default function MealPlanEditor() {
   }
 
   const fullscreenContent = (
-      <div className={isFullscreen ? "fixed inset-0 z-50 bg-background overflow-y-auto p-4 md:p-6" : "space-y-4"}>
+      <div ref={editorContainerRef} className={isFullscreen ? "fixed inset-0 z-50 bg-background overflow-y-auto p-4 md:p-6" : "space-y-4"}>
+        {/* Sync Status Badge */}
+        {syncStatus !== "idle" && (
+          <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border border-border shadow-lg text-xs font-medium animate-in fade-in slide-in-from-bottom-2 duration-200">
+            {syncStatus === "saving" && (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                <span className="text-muted-foreground">Salvando alterações…</span>
+              </>
+            )}
+            {syncStatus === "saved" && (
+              <>
+                <Check className="w-3.5 h-3.5 text-primary" />
+                <span className="text-muted-foreground">Salvo ✓</span>
+              </>
+            )}
+            {syncStatus === "error" && (
+              <>
+                <AlertTriangle className="w-3.5 h-3.5 text-destructive" />
+                <span className="text-destructive">Erro ao salvar</span>
+              </>
+            )}
+          </div>
+        )}
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
@@ -957,13 +1062,14 @@ export default function MealPlanEditor() {
               <Wand2 className="w-4 h-4" /> Edição Inteligente (Macros em Lote)
             </Button>
             <CalorieTemplates mealPlanId={plan.id} onApplied={async () => {
-              // Fetch updated items without loading spinner
+              showSyncSaving();
               const { data } = await supabase
                 .from("meal_plan_items")
                 .select("*")
                 .eq("meal_plan_id", plan.id)
                 .order("created_at");
-              if (data) setItems(data);
+              if (data) setItemsStable(data);
+              showSyncDone(true);
             }} />
             <Button
               variant="outline"
@@ -2281,8 +2387,9 @@ export default function MealPlanEditor() {
         dayOfWeek={templatePanelTarget.day}
         planId={plan?.id || ""}
         patientTargetKcal={(() => { try { const m = plan?.generation_metadata as any; return m?.target_kcal || m?.caloric_target || undefined; } catch { return undefined; } })()}
-        onInserted={(newItems) => {
-          setItems(prev => [...prev, ...newItems]);
+        onInserted={(newItems: MealPlanItem[]) => {
+          setItemsStable((prev: MealPlanItem[]) => [...prev, ...newItems]);
+          showSyncDone(true);
         }}
       />
 
