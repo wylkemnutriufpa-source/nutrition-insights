@@ -151,7 +151,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
     return { planId, data };
   }
 
-  const [batchGenerating, setBatchGenerating] = useState(false);
+
 
   async function handleBatchGenerate() {
     if (!user) return;
