@@ -383,11 +383,17 @@ export default function MealPlanEditor() {
 
     if (hasError) {
       toast.error("Erro ao trocar refeições");
+      refreshItems();
     } else {
       const srcLabel = `${MEAL_TYPES.find(m => m.key === source.mealType)?.label} (${DAYS[source.day]?.short})`;
       const tgtLabel = `${MEAL_TYPES.find(m => m.key === target.mealType)?.label} (${DAYS[target.day]?.short})`;
       toast.success(`Trocado: ${srcLabel} ↔ ${tgtLabel}`);
-      fetchData();
+      // Optimistic: update items locally
+      setItems(prev => prev.map(i => {
+        if (sourceItems.some(s => s.id === i.id)) return { ...i, day_of_week: target.day, meal_type: target.mealType };
+        if (targetItems.some(t => t.id === i.id)) return { ...i, day_of_week: source.day, meal_type: source.mealType };
+        return i;
+      }));
     }
 
     setSwapping(false);
