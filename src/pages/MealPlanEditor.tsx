@@ -401,12 +401,14 @@ export default function MealPlanEditor() {
       fat_target: item.fat_target,
     }));
 
+    showSyncSaving();
     const { data, error } = await supabase.from("meal_plan_items").insert(inserts).select();
-    if (error) toast.error("Erro ao copiar: " + error.message);
+    if (error) { toast.error("Erro ao copiar: " + error.message); showSyncDone(false); }
     else {
       toast.success(`Copiado para ${DAYS[targetDay].label}!`);
       setCopySource(null);
-      if (data) setItems(prev => [...prev, ...data]);
+      if (data) setItemsStable(prev => [...prev, ...data]);
+      showSyncDone(true);
     }
   };
 
