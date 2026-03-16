@@ -62,7 +62,7 @@ export default function PatientLanding() {
             <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">{heroTitle}</span>
           </h1>
           <p className="text-white/50 text-lg md:text-xl max-w-2xl mx-auto mb-10">{heroSubtitle}</p>
-          <Link to="/auth">
+          <Link to="/cadastro">
             <Button size="lg" className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 text-lg hover:opacity-90 shadow-lg shadow-emerald-500/20">
               Começar Agora <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
