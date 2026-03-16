@@ -34,6 +34,7 @@ import SaveMealTemplateDialog from "@/components/meals/SaveMealTemplateDialog";
 import {
   editorPlanoReducer,
   getEditorPlanoInitialState,
+  persistActiveEditorRoute,
   persistEditorPlanoState,
   type EditorPlanoSyncStatus,
   type MealPlan,
