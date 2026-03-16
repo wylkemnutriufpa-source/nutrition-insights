@@ -393,15 +393,27 @@ export default function MealPlanEditor() {
     const sourceItems = items.filter(i => i.day_of_week === source.day && i.meal_type === source.mealType);
     const targetItems = items.filter(i => i.day_of_week === target.day && i.meal_type === target.mealType);
 
-    // Update source items → target position
+    // OPTIMISTIC: update UI immediately
+    setItems(prev => prev.map(i => {
+      if (sourceItems.some(s => s.id === i.id)) return { ...i, day_of_week: target.day, meal_type: target.mealType };
+      if (targetItems.some(t => t.id === i.id)) return { ...i, day_of_week: source.day, meal_type: source.mealType };
+      return i;
+    }));
+    setSwapping(false);
+    setDragSource(null);
+    setDragOver(null);
+
+    const srcLabel = `${MEAL_TYPES.find(m => m.key === source.mealType)?.label} (${DAYS[source.day]?.short})`;
+    const tgtLabel = `${MEAL_TYPES.find(m => m.key === target.mealType)?.label} (${DAYS[target.day]?.short})`;
+    toast.success(`Trocado: ${srcLabel} ↔ ${tgtLabel}`);
+
+    // Persist in background
     const sourceUpdates = sourceItems.map(item =>
       supabase.from("meal_plan_items").update({
         day_of_week: target.day,
         meal_type: target.mealType,
       }).eq("id", item.id)
     );
-
-    // Update target items → source position
     const targetUpdates = targetItems.map(item =>
       supabase.from("meal_plan_items").update({
         day_of_week: source.day,
@@ -411,25 +423,10 @@ export default function MealPlanEditor() {
 
     const results = await Promise.all([...sourceUpdates, ...targetUpdates]);
     const hasError = results.some(r => r.error);
-
     if (hasError) {
-      toast.error("Erro ao trocar refeições");
-      refreshItems();
-    } else {
-      const srcLabel = `${MEAL_TYPES.find(m => m.key === source.mealType)?.label} (${DAYS[source.day]?.short})`;
-      const tgtLabel = `${MEAL_TYPES.find(m => m.key === target.mealType)?.label} (${DAYS[target.day]?.short})`;
-      toast.success(`Trocado: ${srcLabel} ↔ ${tgtLabel}`);
-      // Optimistic: update items locally
-      setItems(prev => prev.map(i => {
-        if (sourceItems.some(s => s.id === i.id)) return { ...i, day_of_week: target.day, meal_type: target.mealType };
-        if (targetItems.some(t => t.id === i.id)) return { ...i, day_of_week: source.day, meal_type: source.mealType };
-        return i;
-      }));
+      toast.error("Erro ao salvar troca — revertendo...");
+      refreshItems(); // rollback from server
     }
-
-    setSwapping(false);
-    setDragSource(null);
-    setDragOver(null);
   };
 
   // Inline edit: save title directly
