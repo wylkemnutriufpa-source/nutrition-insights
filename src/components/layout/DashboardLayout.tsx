@@ -309,10 +309,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   // Track presence for all logged-in users
   usePresenceTracker();
 
-  // Scroll to top on route change
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [location.pathname]);
+  // Preserve native scroll position to avoid interrupting long editing flows.
 
   // Close mobile sidebar on route change
   useEffect(() => {
