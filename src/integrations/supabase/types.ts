@@ -9164,6 +9164,10 @@ export type Database = {
         Args: { _alert_id: string; _resolution_note?: string }
         Returns: Json
       }
+      self_register_patient: {
+        Args: { _referral_code?: string; _user_id: string }
+        Returns: Json
+      }
       sync_protocol_checklist: {
         Args: { _date?: string; _patient_protocol_id: string }
         Returns: number
