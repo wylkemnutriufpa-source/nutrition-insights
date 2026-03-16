@@ -1207,6 +1207,80 @@ export type Database = {
         }
         Relationships: []
       }
+      clinical_daily_snapshots: {
+        Row: {
+          active_alerts_count: number | null
+          adherence_score: number | null
+          checklist_completion_rate: number | null
+          clinical_risk_score: number | null
+          created_at: string
+          current_weight: number | null
+          days_since_last_checkin: number | null
+          days_since_last_meal: number | null
+          dropout_risk_score: number | null
+          id: string
+          metabolic_cluster: string | null
+          momentum_direction: string | null
+          patient_id: string
+          pipeline_run_id: string | null
+          risk_level: string | null
+          snapshot_data: Json | null
+          snapshot_date: string
+          weight_change_7d: number | null
+          weight_trend: string | null
+        }
+        Insert: {
+          active_alerts_count?: number | null
+          adherence_score?: number | null
+          checklist_completion_rate?: number | null
+          clinical_risk_score?: number | null
+          created_at?: string
+          current_weight?: number | null
+          days_since_last_checkin?: number | null
+          days_since_last_meal?: number | null
+          dropout_risk_score?: number | null
+          id?: string
+          metabolic_cluster?: string | null
+          momentum_direction?: string | null
+          patient_id: string
+          pipeline_run_id?: string | null
+          risk_level?: string | null
+          snapshot_data?: Json | null
+          snapshot_date?: string
+          weight_change_7d?: number | null
+          weight_trend?: string | null
+        }
+        Update: {
+          active_alerts_count?: number | null
+          adherence_score?: number | null
+          checklist_completion_rate?: number | null
+          clinical_risk_score?: number | null
+          created_at?: string
+          current_weight?: number | null
+          days_since_last_checkin?: number | null
+          days_since_last_meal?: number | null
+          dropout_risk_score?: number | null
+          id?: string
+          metabolic_cluster?: string | null
+          momentum_direction?: string | null
+          patient_id?: string
+          pipeline_run_id?: string | null
+          risk_level?: string | null
+          snapshot_data?: Json | null
+          snapshot_date?: string
+          weight_change_7d?: number | null
+          weight_trend?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_daily_snapshots_pipeline_run_id_fkey"
+            columns: ["pipeline_run_id"]
+            isOneToOne: false
+            referencedRelation: "pipeline_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clinical_experiment_assignments: {
         Row: {
           assigned_at: string
@@ -5721,6 +5795,113 @@ export type Database = {
           weight?: number | null
         }
         Relationships: []
+      }
+      pipeline_runs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          duration_ms: number | null
+          engine_versions: Json | null
+          error_summary: string | null
+          execution_log: Json | null
+          id: string
+          run_type: string
+          started_at: string
+          status: string
+          steps_completed: Json | null
+          steps_failed: Json | null
+          total_patients_processed: number | null
+          triggered_by: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          engine_versions?: Json | null
+          error_summary?: string | null
+          execution_log?: Json | null
+          id?: string
+          run_type?: string
+          started_at?: string
+          status?: string
+          steps_completed?: Json | null
+          steps_failed?: Json | null
+          total_patients_processed?: number | null
+          triggered_by?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          engine_versions?: Json | null
+          error_summary?: string | null
+          execution_log?: Json | null
+          id?: string
+          run_type?: string
+          started_at?: string
+          status?: string
+          steps_completed?: Json | null
+          steps_failed?: Json | null
+          total_patients_processed?: number | null
+          triggered_by?: string | null
+        }
+        Relationships: []
+      }
+      pipeline_step_results: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          duration_ms: number | null
+          error_message: string | null
+          function_name: string
+          id: string
+          output_summary: Json | null
+          patients_processed: number | null
+          run_id: string
+          started_at: string | null
+          status: string
+          step_name: string
+          step_order: number
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          function_name: string
+          id?: string
+          output_summary?: Json | null
+          patients_processed?: number | null
+          run_id: string
+          started_at?: string | null
+          status?: string
+          step_name: string
+          step_order: number
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          function_name?: string
+          id?: string
+          output_summary?: Json | null
+          patients_processed?: number | null
+          run_id?: string
+          started_at?: string | null
+          status?: string
+          step_name?: string
+          step_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pipeline_step_results_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "pipeline_runs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       plan_requests: {
         Row: {
