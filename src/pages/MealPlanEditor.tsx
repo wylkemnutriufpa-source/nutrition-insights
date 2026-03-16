@@ -351,32 +351,33 @@ export default function MealPlanEditor() {
   };
 
   const handleDeleteItem = async (itemId: string) => {
-    setItems(prev => prev.filter(i => i.id !== itemId));
+    showSyncSaving();
+    setItemsStable(prev => prev.filter(i => i.id !== itemId));
     const { error } = await supabase.from("meal_plan_items").delete().eq("id", itemId);
     if (error) {
       toast.error("Erro ao remover: " + error.message);
-      refreshItems(); // rollback
+      showSyncDone(false);
+      refreshItems();
     } else {
       toast.success("Removido!");
+      showSyncDone(true);
     }
   };
 
-  // Delete all items for a specific day
   const handleDeleteDay = async (day: number) => {
     const dayItems = items.filter(i => i.day_of_week === day);
-    if (dayItems.length === 0) {
-      toast.error("Dia já está vazio");
-      return;
-    }
-    // Optimistic
-    setItems(prev => prev.filter(i => i.day_of_week !== day));
+    if (dayItems.length === 0) { toast.error("Dia já está vazio"); return; }
+    showSyncSaving();
+    setItemsStable(prev => prev.filter(i => i.day_of_week !== day));
     const ids = dayItems.map(i => i.id);
     const { error } = await supabase.from("meal_plan_items").delete().in("id", ids);
     if (error) {
       toast.error("Erro ao limpar dia: " + error.message);
+      showSyncDone(false);
       refreshItems();
     } else {
       toast.success(`${DAYS[day].label} limpo! (${dayItems.length} itens removidos)`);
+      showSyncDone(true);
     }
   };
 
