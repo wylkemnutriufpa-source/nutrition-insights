@@ -981,7 +981,7 @@ export default function MealPlanEditor() {
     toast.success("Modelo removido");
   };
 
-  if (loading) {
+  if (loading && !plan) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
