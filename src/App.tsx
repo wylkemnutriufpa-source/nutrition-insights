@@ -121,6 +121,7 @@ const MetabolicTwin = lazy(() => import("./pages/MetabolicTwin"));
 const PopulationNutritionIntelligence = lazy(() => import("./pages/PopulationNutritionIntelligence"));
 const PlatformGovernance = lazy(() => import("./pages/PlatformGovernance"));
 const ClinicalPipeline = lazy(() => import("./pages/ClinicalPipeline"));
+const Integrations = lazy(() => import("./pages/Integrations"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
