@@ -25,6 +25,7 @@ const Patients = lazy(() => import("./pages/Patients"));
 const PatientDetail = lazy(() => import("./pages/PatientDetail"));
 const MealPlans = lazy(() => import("./pages/MealPlans"));
 const MealPlanEditor = lazy(() => import("./pages/MealPlanEditor"));
+const MealPlanEditorV2 = lazy(() => import("./pages/MealPlanEditorV2"));
 const Anamnesis = lazy(() => import("./pages/Anamnesis"));
 const AnalyzeMeal = lazy(() => import("./pages/AnalyzeMeal"));
 const Settings = lazy(() => import("./pages/Settings"));
@@ -278,6 +279,7 @@ const App = () => (
               <Route path="/programs/:programId/biquini-branco" element={<NutritionistRoute><LP section="Projetos"><BiquiniBrancoDetail /></LP></NutritionistRoute>} />
               <Route path="/meal-plans" element={<NutritionistRoute><LP section="Planos"><MealPlans /></LP></NutritionistRoute>} />
               <Route path="/meal-plans/:id" element={<NutritionistRoute><LP section="Planos"><MealPlanEditor /></LP></NutritionistRoute>} />
+              <Route path="/meal-plans/:id/v2" element={<NutritionistRoute><LP section="Planos"><MealPlanEditorV2 /></LP></NutritionistRoute>} />
               <Route path="/diet-templates" element={<NutritionistRoute><LP section="Templates"><DietTemplates /></LP></NutritionistRoute>} />
               <Route path="/physical-assessment" element={<NutritionistRoute><LP section="Avaliação"><PhysicalAssessment /></LP></NutritionistRoute>} />
               <Route path="/body-analysis" element={<NutritionistRoute><LP section="Análise Corporal"><BodyAnalysis /></LP></NutritionistRoute>} />
