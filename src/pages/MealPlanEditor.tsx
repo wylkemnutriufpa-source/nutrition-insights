@@ -472,9 +472,17 @@ export default function MealPlanEditor() {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   useEffect(() => {
-    if (!id || !plan) return;
+    if (!id) return;
+
+    persistActiveEditorRoute({
+      planId: id,
+      route: `${location.pathname}${location.search}${location.hash}`,
+      shouldRestore: statusSync === "saving" || pendingMutationsQueue.length > 0,
+    });
+
+    if (!plan) return;
     persistEditorPlanoState(id, editorState);
-  }, [editorState, id, plan]);
+  }, [editorState, id, location.hash, location.pathname, location.search, pendingMutationsQueue.length, plan, statusSync]);
 
   useEffect(() => {
     return () => {

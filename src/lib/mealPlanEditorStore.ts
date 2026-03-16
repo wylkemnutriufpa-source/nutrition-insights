@@ -78,6 +78,50 @@ export const buildSyncingMap = (
   return next;
 };
 
+export const persistActiveEditorRoute = ({
+  planId,
+  route,
+  shouldRestore,
+}: Pick<PersistedEditorPlanoRouteState, "planId" | "route" | "shouldRestore">) => {
+  if (typeof window === "undefined" || !planId || !route) return;
+
+  try {
+    const payload: PersistedEditorPlanoRouteState = {
+      planId,
+      route,
+      shouldRestore,
+      savedAt: Date.now(),
+    };
+
+    sessionStorage.setItem(ACTIVE_EDITOR_ROUTE_STORAGE_KEY, JSON.stringify(payload));
+  } catch {
+    // Ignore storage failures — route restore is best-effort only.
+  }
+};
+
+export const readActiveEditorRoute = (): PersistedEditorPlanoRouteState | null => {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const raw = sessionStorage.getItem(ACTIVE_EDITOR_ROUTE_STORAGE_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as PersistedEditorPlanoRouteState;
+    if (
+      !parsed?.savedAt ||
+      !parsed?.route?.startsWith("/meal-plans/") ||
+      Date.now() - parsed.savedAt > ROUTE_RESTORE_TTL_MS
+    ) {
+      sessionStorage.removeItem(ACTIVE_EDITOR_ROUTE_STORAGE_KEY);
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
 export const readEditorPlanoSnapshot = (planId?: string): EditorPlanoState | null => {
   const cacheKey = getEditorPlanoStorageKey(planId);
   if (!cacheKey) return null;

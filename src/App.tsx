@@ -137,15 +137,14 @@ const queryClient = new QueryClient({
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  if (loading && !user) return <PageLoader />;
+  if (loading) return user ? <>{children}</> : <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
   return <>{children}</>;
 }
 
 function NutritionistRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isNutritionist, isAdmin } = useAuth();
-  if (loading && !user) return <PageLoader />;
-  if (loading && user && (isNutritionist || isAdmin)) return <>{children}</>;
+  if (loading) return user ? <>{children}</> : <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
   if (!isNutritionist && !isAdmin) return <Navigate to="/" replace />;
   return <>{children}</>;
@@ -153,8 +152,7 @@ function NutritionistRoute({ children }: { children: React.ReactNode }) {
 
 function PersonalRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isPersonal, isAdmin } = useAuth();
-  if (loading && !user) return <PageLoader />;
-  if (loading && user && (isPersonal || isAdmin)) return <>{children}</>;
+  if (loading) return user ? <>{children}</> : <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
   if (!isPersonal && !isAdmin) return <Navigate to="/" replace />;
   return <>{children}</>;
@@ -162,8 +160,7 @@ function PersonalRoute({ children }: { children: React.ReactNode }) {
 
 function ProfessionalRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isNutritionist, isPersonal, isAdmin } = useAuth();
-  if (loading && !user) return <PageLoader />;
-  if (loading && user && (isNutritionist || isPersonal || isAdmin)) return <>{children}</>;
+  if (loading) return user ? <>{children}</> : <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
   if (!isNutritionist && !isPersonal && !isAdmin) return <Navigate to="/" replace />;
   return <>{children}</>;
@@ -171,8 +168,7 @@ function ProfessionalRoute({ children }: { children: React.ReactNode }) {
 
 function PatientRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isPatient } = useAuth();
-  if (loading && !user) return <PageLoader />;
-  if (loading && user && isPatient) return <>{children}</>;
+  if (loading) return user ? <>{children}</> : <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
   if (!isPatient) return <Navigate to="/" replace />;
   return <>{children}</>;
@@ -180,8 +176,7 @@ function PatientRoute({ children }: { children: React.ReactNode }) {
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isAdmin } = useAuth();
-  if (loading && !user) return <PageLoader />;
-  if (loading && user && isAdmin) return <>{children}</>;
+  if (loading) return user ? <>{children}</> : <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
   if (!isAdmin) return <Navigate to="/" replace />;
   return <>{children}</>;
@@ -195,9 +190,16 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 }
 
 function RootRoute() {
-  const { user, loading, isPersonal } = useAuth();
+  const { user, loading, isPersonal, isNutritionist, isAdmin } = useAuth();
+  const activeEditorRoute = !loading && user && (isNutritionist || isAdmin)
+    ? readActiveEditorRoute()
+    : null;
+
   if (loading) return <PageLoader />;
   if (!user) return <GatewayPage />;
+  if (activeEditorRoute?.shouldRestore) {
+    return <Navigate to={activeEditorRoute.route} replace />;
+  }
   if (isPersonal) return <Suspense fallback={<PageLoader />}><PersonalDashboard /></Suspense>;
   return <Suspense fallback={<PageLoader />}><Index /></Suspense>;
 }
