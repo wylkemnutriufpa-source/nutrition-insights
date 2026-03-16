@@ -157,6 +157,9 @@ export default function MealPlanEditor() {
   const [bulkEditValue, setBulkEditValue] = useState("");
   const [bulkEditSaving, setBulkEditSaving] = useState(false);
 
+  // Clipboard for individual item copy/paste
+  const [clipboardItem, setClipboardItem] = useState<MealPlanItem | null>(null);
+
   const fetchData = useCallback(async () => {
     if (!id || !user) return;
     setLoading(true);
