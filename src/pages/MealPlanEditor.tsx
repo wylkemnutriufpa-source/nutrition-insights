@@ -149,6 +149,14 @@ export default function MealPlanEditor() {
   // Fullscreen mode
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // Bulk Smart Edit state
+  const [bulkEditOpen, setBulkEditOpen] = useState(false);
+  const [bulkEditMealType, setBulkEditMealType] = useState<MealType | "all">("all");
+  const [bulkEditMacro, setBulkEditMacro] = useState<"protein_target" | "carbs_target" | "fat_target" | "calories_target">("protein_target");
+  const [bulkEditMode, setBulkEditMode] = useState<"add" | "subtract" | "set" | "multiply">("add");
+  const [bulkEditValue, setBulkEditValue] = useState("");
+  const [bulkEditSaving, setBulkEditSaving] = useState(false);
+
   const fetchData = useCallback(async () => {
     if (!id || !user) return;
     setLoading(true);
