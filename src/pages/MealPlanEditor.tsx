@@ -1400,6 +1400,22 @@ export default function MealPlanEditor() {
                             </button>
                             <button
                               type="button"
+                              onClick={(e) => { e.stopPropagation(); handleDuplicateItem(item); }}
+                              className="p-1 rounded hover:bg-accent/50"
+                              title="Duplicar refeição"
+                            >
+                              <CopyPlus className="w-3.5 h-3.5 text-muted-foreground" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); handleCopyItemToClipboard(item); }}
+                              className="p-1 rounded hover:bg-accent/50"
+                              title="Copiar refeição"
+                            >
+                              <Clipboard className="w-3.5 h-3.5 text-muted-foreground" />
+                            </button>
+                            <button
+                              type="button"
                               onClick={(e) => { e.stopPropagation(); openDrawerPanel(item); }}
                               className="p-1 rounded hover:bg-accent/50"
                               title="Painel inteligente"
