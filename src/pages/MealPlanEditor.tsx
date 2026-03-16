@@ -142,11 +142,12 @@ export default function MealPlanEditor() {
   const { user } = useAuth();
   // Stable userId primitive — never causes re-render from auth token refresh
   const userId = user?.id;
+  const cachedEditorState = readMealPlanEditorCache(id);
 
-  const [plan, setPlan] = useState<MealPlan | null>(null);
-  const [patientName, setPatientName] = useState("");
-  const [items, setItems] = useState<MealPlanItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [plan, setPlan] = useState<MealPlan | null>(cachedEditorState?.plan ?? null);
+  const [patientName, setPatientName] = useState(cachedEditorState?.patientName ?? "");
+  const [items, setItems] = useState<MealPlanItem[]>(cachedEditorState?.items ?? []);
+  const [loading, setLoading] = useState(!cachedEditorState);
   const [planDocs, setPlanDocs] = useState<any[]>([]);
 
   // ─── Sync status indicator ───
