@@ -1029,7 +1029,7 @@ export default function MealPlanEditor() {
                       });
 
                       toast.success("Plano publicado e paciente notificado! 🎉");
-                      fetchData();
+                      refreshItems();
                     } catch (err: any) {
                       toast.error("Erro: " + (err?.message || "Falha ao publicar"));
                     }
