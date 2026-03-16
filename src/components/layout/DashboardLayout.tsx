@@ -119,28 +119,24 @@ function RenderSmartLink({ item, active, collapsed, isProRole, onLinkClick, trac
 }
 
 // Pending plans sidebar widget for nutritionists
-function PendingPlansWidget({ collapsed, onLinkClick, isAdmin }: { collapsed: boolean; onLinkClick?: () => void; isAdmin?: boolean }) {
+function PendingPlansWidget({ collapsed, onLinkClick }: { collapsed: boolean; onLinkClick?: () => void }) {
   const [count, setCount] = useStateReact(0);
   const { user } = useAuth();
 
   useEffect(() => {
     if (!user?.id) return;
     const fetchCount = async () => {
-      let query = supabase
+      const { count: c } = await supabase
         .from("onboarding_pipelines" as any)
         .select("id", { count: "exact", head: true })
+        .eq("nutritionist_id", user.id)
         .in("status", ["pending_approval", "pending_plan_generation"]);
-      // Admins see all pending plans; nutritionists see only their own
-      if (!isAdmin) {
-        query = query.eq("nutritionist_id", user.id);
-      }
-      const { count: c } = await query;
       setCount(c || 0);
     };
     fetchCount();
     const interval = setInterval(fetchCount, 30000);
     return () => clearInterval(interval);
-  }, [user?.id, isAdmin]);
+  }, [user?.id]);
 
   if (count === 0) return null;
 
@@ -284,7 +280,7 @@ function SidebarContent({
           )}
           {isProRole && (
             <>
-              <PendingPlansWidget collapsed={collapsed} onLinkClick={onLinkClick} isAdmin={userRole === 'admin'} />
+              <PendingPlansWidget collapsed={collapsed} onLinkClick={onLinkClick} />
               <button
                 onClick={() => { onSosOpen?.(); onLinkClick?.(); }}
                 className="flex items-center gap-3 px-3 py-2 rounded-xl bg-destructive/10 text-destructive border border-destructive/20 mt-2 w-full hover:bg-destructive/20 transition-all"
