@@ -615,7 +615,7 @@ export default function MealPlanEditor() {
       };
     });
 
-    const { error } = await supabase.from("meal_plan_items").insert(inserts);
+    const { data, error } = await supabase.from("meal_plan_items").insert(inserts).select();
     setBatchAdding(false);
     if (error) toast.error("Erro ao adicionar: " + error.message);
     else {
@@ -623,7 +623,7 @@ export default function MealPlanEditor() {
       toast.success(`${lines.length} itens adicionados! ${matched > 0 ? `(${matched} com macros automáticos ✨)` : ""}`);
       setBatchText("");
       setBatchTarget(null);
-      fetchData();
+      if (data) setItems(prev => [...prev, ...data]);
     }
   };
 
