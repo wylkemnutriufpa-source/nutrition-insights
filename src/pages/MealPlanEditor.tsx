@@ -1454,31 +1454,43 @@ export default function MealPlanEditor() {
                           </Button>
                         </div>
                       ) : (
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="flex-1 h-9 gap-1.5 border border-dashed border-border hover:border-primary text-muted-foreground hover:text-primary"
-                            onClick={() => { setQuickAddKey(cellKey); setQuickAddText(""); }}
-                          >
-                            <Plus className="w-3.5 h-3.5" /> Rápido
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-9 gap-1.5 border border-dashed border-border hover:border-primary text-muted-foreground hover:text-primary"
-                            onClick={() => { setBatchTarget({ day: selectedDay, mealType: meal.key }); setBatchText(""); }}
-                          >
-                            <Leaf className="w-3.5 h-3.5" /> Lote
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-9 gap-1.5 border border-dashed border-border hover:border-primary text-muted-foreground hover:text-primary"
-                            onClick={() => openAddDialog(selectedDay, meal.key)}
-                          >
-                            <PencilLine className="w-3.5 h-3.5" /> Detalhado
-                          </Button>
+                        <div className="space-y-1.5">
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="flex-1 h-9 gap-1.5 border border-dashed border-border hover:border-primary text-muted-foreground hover:text-primary"
+                              onClick={() => { setQuickAddKey(cellKey); setQuickAddText(""); }}
+                            >
+                              <Plus className="w-3.5 h-3.5" /> Rápido
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-9 gap-1.5 border border-dashed border-border hover:border-primary text-muted-foreground hover:text-primary"
+                              onClick={() => { setBatchTarget({ day: selectedDay, mealType: meal.key }); setBatchText(""); }}
+                            >
+                              <Leaf className="w-3.5 h-3.5" /> Lote
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-9 gap-1.5 border border-dashed border-border hover:border-primary text-muted-foreground hover:text-primary"
+                              onClick={() => openAddDialog(selectedDay, meal.key)}
+                            >
+                              <PencilLine className="w-3.5 h-3.5" /> Detalhado
+                            </Button>
+                          </div>
+                          {clipboardItem && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="w-full h-9 gap-1.5 border border-dashed border-primary/40 hover:border-primary text-primary hover:text-primary/80 bg-primary/5"
+                              onClick={() => handlePasteItem(selectedDay, meal.key)}
+                            >
+                              <ClipboardPaste className="w-3.5 h-3.5" /> Colar {clipboardItem.title}
+                            </Button>
+                          )}
                         </div>
                       )}
                     </div>
