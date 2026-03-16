@@ -282,6 +282,11 @@ export default function MealPlanEditor() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  // Cleanup sync timer
+  useEffect(() => {
+    return () => { if (syncTimerRef.current) clearTimeout(syncTimerRef.current); };
+  }, []);
+
   const getItems = (day: number, mealType: MealType) =>
     items.filter((i) => i.day_of_week === day && i.meal_type === mealType);
 
