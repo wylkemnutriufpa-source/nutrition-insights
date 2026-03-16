@@ -722,6 +722,7 @@ export default function MealPlanEditor() {
   // Apply a saved plan template to current plan
   const applySavedPlan = async (template: any) => {
     if (!id) return;
+
     const templateItems = (template.items as any[]).map((item: any) => ({
       meal_plan_id: id,
       title: item.title,
@@ -733,6 +734,17 @@ export default function MealPlanEditor() {
       carbs_target: item.carbs_target ? Number(item.carbs_target) : null,
       fat_target: item.fat_target ? Number(item.fat_target) : null,
     }));
+
+    const { error: deleteError } = await supabase
+      .from("meal_plan_items")
+      .delete()
+      .eq("meal_plan_id", id);
+
+    if (deleteError) {
+      toast.error("Erro ao limpar plano atual: " + deleteError.message);
+      return;
+    }
+
     const { error } = await supabase.from("meal_plan_items").insert(templateItems);
     if (error) toast.error("Erro ao aplicar modelo: " + error.message);
     else {

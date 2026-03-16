@@ -344,6 +344,12 @@ export default function DietTemplates() {
         }
       }
 
+      const { error: deleteError } = await supabase
+        .from("meal_plan_items")
+        .delete()
+        .eq("meal_plan_id", targetPlanId);
+      if (deleteError) throw deleteError;
+
       const { error: itemsError } = await supabase.from("meal_plan_items").insert(items);
       if (itemsError) throw itemsError;
 
