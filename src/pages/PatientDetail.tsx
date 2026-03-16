@@ -945,13 +945,22 @@ export default function PatientDetail() {
                                 </div>
                                 <div className="flex items-center gap-2">
                                   {isPending && (
-                                    <Button size="sm" className="gradient-primary shadow-glow gap-1.5" onClick={() => { setOpenSection(null); navigate(`/meal-plans/${plan.id}`); }}>
-                                      <Pencil className="w-3.5 h-3.5" /> Revisar e Aprovar
-                                    </Button>
+                                    <EditorVersionPicker
+                                      planId={plan.id}
+                                      onBeforeNavigate={() => setOpenSection(null)}
+                                      label="Revisar e Aprovar"
+                                      variant="default"
+                                      className="gradient-primary shadow-glow gap-1.5"
+                                      icon={<Pencil className="w-3.5 h-3.5" />}
+                                    />
                                   )}
-                                  <Button size="sm" variant="outline" onClick={() => { setOpenSection(null); navigate(`/meal-plans/${plan.id}`); }}>
-                                    <FileText className="w-3.5 h-3.5 mr-1" /> {isPending ? "Ver" : "Ver Plano"}
-                                  </Button>
+                                  <EditorVersionPicker
+                                    planId={plan.id}
+                                    onBeforeNavigate={() => setOpenSection(null)}
+                                    label={isPending ? "Ver" : "Ver Plano"}
+                                    variant="outline"
+                                    icon={<FileText className="w-3.5 h-3.5" />}
+                                  />
                                 </div>
                               </div>
                               {plan.description && <p className="text-sm text-muted-foreground mt-2">{plan.description}</p>}
