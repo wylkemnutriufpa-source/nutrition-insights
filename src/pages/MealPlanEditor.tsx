@@ -1011,10 +1011,16 @@ export default function MealPlanEditor() {
                                   initial={{ opacity: 0, scale: 0.95 }}
                                   animate={{ opacity: 1, scale: 1 }}
                                   exit={{ opacity: 0, scale: 0.95 }}
-                                  draggable={false}
-                                  onDragStart={(e) => e.stopPropagation()}
-                                  onMouseDown={(e) => e.stopPropagation()}
-                                  className="bg-secondary/60 rounded-md px-2 py-1.5 hover:bg-secondary transition-colors group/item relative"
+                                  onClick={isInlineEditing ? undefined : () => openEditDialog(item)}
+                                  role={isInlineEditing ? undefined : "button"}
+                                  tabIndex={isInlineEditing ? -1 : 0}
+                                  onKeyDown={(e) => {
+                                    if (!isInlineEditing && (e.key === "Enter" || e.key === " ")) {
+                                      e.preventDefault();
+                                      openEditDialog(item);
+                                    }
+                                  }}
+                                  className="bg-secondary/60 rounded-md px-2 py-1.5 hover:bg-secondary transition-colors group/item relative cursor-pointer"
                                 >
                                   {isInlineEditing ? (
                                     <div className="flex gap-1">
@@ -1033,13 +1039,7 @@ export default function MealPlanEditor() {
                                     </div>
                                   ) : (
                                     <>
-                                      <div 
-                                        className="flex items-center gap-1 cursor-pointer" 
-                                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); openEditDialog(item); }}
-                                        role="button"
-                                        tabIndex={0}
-                                        onKeyDown={(e) => { if (e.key === 'Enter') openEditDialog(item); }}
-                                      >
+                                      <div className="flex items-center gap-1">
                                         {catDot && <span className={`w-1.5 h-1.5 rounded-full ${catDot} shrink-0`} />}
                                         <p className="text-[11px] font-medium leading-tight truncate flex-1">{item.title}</p>
                                       </div>
@@ -1048,15 +1048,14 @@ export default function MealPlanEditor() {
                                         {item.calories_target && <span className="flex items-center gap-0.5"><Flame className="w-2.5 h-2.5 text-orange-400" />{item.calories_target}</span>}
                                         {item.protein_target && <span className="flex items-center gap-0.5"><Beef className="w-2.5 h-2.5 text-red-400" />{Number(item.protein_target).toFixed(0)}g</span>}
                                       </div>
-                                      {/* Action buttons */}
-                                      <div className="absolute top-1 right-1 flex gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
-                                        <button onClick={(e) => { e.stopPropagation(); setInlineEditId(item.id); setInlineEditValue(item.title); }} className="p-0.5 rounded hover:bg-accent/50" title="Editar inline">
+                                      <div className="absolute top-1 right-1 z-10 flex gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                        <button type="button" onClick={(e) => { e.stopPropagation(); setInlineEditId(item.id); setInlineEditValue(item.title); }} className="p-0.5 rounded hover:bg-accent/50" title="Editar inline">
                                           <PencilLine className="w-2.5 h-2.5 text-muted-foreground" />
                                         </button>
-                                        <button onClick={(e) => { e.stopPropagation(); openDrawerPanel(item); }} className="p-0.5 rounded hover:bg-accent/50" title="Painel detalhado">
+                                        <button type="button" onClick={(e) => { e.stopPropagation(); openDrawerPanel(item); }} className="p-0.5 rounded hover:bg-accent/50" title="Painel detalhado">
                                           <ArrowRightLeft className="w-2.5 h-2.5 text-muted-foreground" />
                                         </button>
-                                        <button onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }} className="p-0.5 rounded hover:bg-destructive/10" title="Remover">
+                                        <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }} className="p-0.5 rounded hover:bg-destructive/10" title="Remover">
                                           <X className="w-3 h-3 text-destructive" />
                                         </button>
                                       </div>
@@ -1069,7 +1068,7 @@ export default function MealPlanEditor() {
                           </div>
 
                           {/* Quick-add inline */}
-                          <div draggable={false} onMouseDown={(e) => e.stopPropagation()} onDragStart={(e) => e.stopPropagation()}>
+                          <div onClick={(e) => e.stopPropagation()}>
                           {quickAddKey === cellKey ? (
                             <div className="mt-1 flex gap-1">
                               <Input
@@ -1088,18 +1087,21 @@ export default function MealPlanEditor() {
                           ) : (
                             <div className="mt-1 flex gap-0.5">
                               <button
+                                type="button"
                                 onClick={() => { setQuickAddKey(cellKey); setQuickAddText(""); }}
                                 className="flex-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-primary"
                               >
                                 <Plus className="w-3 h-3" /> Rápido
                               </button>
                               <button
+                                type="button"
                                 onClick={() => { setBatchTarget({ day: day.key, mealType: meal.key }); setBatchText(""); }}
                                 className="flex-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-primary"
                               >
                                 <Leaf className="w-3 h-3" /> Lote
                               </button>
                               <button
+                                type="button"
                                 onClick={() => openAddDialog(day.key, meal.key)}
                                 className="flex-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-primary"
                               >
@@ -1213,6 +1215,14 @@ export default function MealPlanEditor() {
                           key={item.id}
                           className="flex items-center gap-3 p-2.5 rounded-lg bg-secondary/40 hover:bg-secondary/60 transition-colors cursor-pointer group/item relative"
                           onClick={() => openEditDialog(item)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              openEditDialog(item);
+                            }
+                          }}
                         >
                           {catDot && <span className={`w-2 h-2 rounded-full ${catDot} shrink-0`} />}
                           <div className="flex-1 min-w-0">
@@ -1226,10 +1236,28 @@ export default function MealPlanEditor() {
                             </div>
                           </div>
                           <div className="flex gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
-                            <button onClick={(e) => { e.stopPropagation(); openDrawerPanel(item); }} className="p-1 rounded hover:bg-accent/50" title="Painel inteligente">
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); openEditDialog(item); }}
+                              className="p-1 rounded hover:bg-accent/50"
+                              title="Editar refeição"
+                            >
+                              <PencilLine className="w-3.5 h-3.5 text-muted-foreground" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); openDrawerPanel(item); }}
+                              className="p-1 rounded hover:bg-accent/50"
+                              title="Painel inteligente"
+                            >
                               <ArrowRightLeft className="w-3.5 h-3.5 text-muted-foreground" />
                             </button>
-                            <button onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }} className="p-1 rounded hover:bg-destructive/10">
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }}
+                              className="p-1 rounded hover:bg-destructive/10"
+                              title="Remover refeição"
+                            >
                               <Trash2 className="w-3.5 h-3.5 text-destructive" />
                             </button>
                           </div>
