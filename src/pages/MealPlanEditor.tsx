@@ -922,7 +922,15 @@ export default function MealPlanEditor() {
             >
               <Wand2 className="w-4 h-4" /> Edição Inteligente (Macros em Lote)
             </Button>
-            <CalorieTemplates mealPlanId={plan.id} onApplied={refreshItems} />
+            <CalorieTemplates mealPlanId={plan.id} onApplied={async () => {
+              // Fetch updated items without loading spinner
+              const { data } = await supabase
+                .from("meal_plan_items")
+                .select("*")
+                .eq("meal_plan_id", plan.id)
+                .order("created_at");
+              if (data) setItems(data);
+            }} />
             <Button
               variant="outline"
               size="sm"
