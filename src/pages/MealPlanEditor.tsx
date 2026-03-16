@@ -15,8 +15,10 @@ import {
   Sun, Coffee, Apple, Sandwich, Moon, Cookie, Save, ChevronLeft, ChevronRight,
   Flame, Beef, Wheat, Droplets, Leaf, PencilLine, X, Check, Sparkles, Loader2,
   Bookmark, BookmarkCheck, FolderDown, FolderUp, BookOpen, CalendarDays, CalendarRange,
-  AlertTriangle, ArrowLeftRight, BarChart3, ArrowRightLeft, Maximize2, Minimize2
+  AlertTriangle, ArrowLeftRight, BarChart3, ArrowRightLeft, Maximize2, Minimize2,
+  Wand2, TrendingUp, TrendingDown, Equal
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import PlanScheduler from "@/components/plans/PlanScheduler";
 import DocumentUpload from "@/components/common/DocumentUpload";
@@ -146,6 +148,14 @@ export default function MealPlanEditor() {
 
   // Fullscreen mode
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Bulk Smart Edit state
+  const [bulkEditOpen, setBulkEditOpen] = useState(false);
+  const [bulkEditMealType, setBulkEditMealType] = useState<MealType | "all">("all");
+  const [bulkEditMacro, setBulkEditMacro] = useState<"protein_target" | "carbs_target" | "fat_target" | "calories_target">("protein_target");
+  const [bulkEditMode, setBulkEditMode] = useState<"add" | "subtract" | "set" | "multiply">("add");
+  const [bulkEditValue, setBulkEditValue] = useState("");
+  const [bulkEditSaving, setBulkEditSaving] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!id || !user) return;
@@ -385,6 +395,75 @@ export default function MealPlanEditor() {
       toast.success(match ? "Atualizado com macros ✨" : "Atualizado!");
       fetchData();
     }
+  };
+
+  // Bulk Smart Edit: adjust macros across multiple items at once
+  const handleBulkMacroEdit = async () => {
+    if (!id || !bulkEditValue.trim()) return;
+    setBulkEditSaving(true);
+
+    const val = parseFloat(bulkEditValue);
+    if (isNaN(val)) {
+      toast.error("Valor inválido");
+      setBulkEditSaving(false);
+      return;
+    }
+
+    // Filter items by meal type
+    const targetItems = bulkEditMealType === "all"
+      ? items
+      : items.filter(i => i.meal_type === bulkEditMealType);
+
+    if (targetItems.length === 0) {
+      toast.error("Nenhum item encontrado para esse tipo de refeição");
+      setBulkEditSaving(false);
+      return;
+    }
+
+    const updates = targetItems.map(item => {
+      const currentVal = Number(item[bulkEditMacro]) || 0;
+      let newVal: number;
+
+      switch (bulkEditMode) {
+        case "add": newVal = currentVal + val; break;
+        case "subtract": newVal = Math.max(0, currentVal - val); break;
+        case "set": newVal = val; break;
+        case "multiply": newVal = Math.round(currentVal * (val / 100) * 100) / 100; break;
+        default: newVal = currentVal;
+      }
+
+      // Recalculate calories if adjusting macros (not calories directly)
+      const payload: Record<string, number | null> = { [bulkEditMacro]: Math.round(newVal * 10) / 10 };
+
+      return supabase.from("meal_plan_items").update(payload).eq("id", item.id);
+    });
+
+    const results = await Promise.all(updates);
+    const errors = results.filter(r => r.error);
+
+    if (errors.length > 0) {
+      toast.error(`${errors.length} erros ao atualizar`);
+    } else {
+      const macroLabels: Record<string, string> = {
+        protein_target: "Proteína",
+        carbs_target: "Carboidratos",
+        fat_target: "Gordura",
+        calories_target: "Calorias",
+      };
+      const modeLabels: Record<string, string> = {
+        add: `+${val}`,
+        subtract: `-${val}`,
+        set: `= ${val}`,
+        multiply: `× ${val}%`,
+      };
+      const mealLabel = bulkEditMealType === "all" ? "todas as refeições" : MEAL_TYPES.find(m => m.key === bulkEditMealType)?.label;
+      toast.success(`${macroLabels[bulkEditMacro]} ajustada (${modeLabels[bulkEditMode]}) em ${targetItems.length} itens de ${mealLabel} ✨`);
+      setBulkEditOpen(false);
+      setBulkEditValue("");
+      fetchData();
+    }
+
+    setBulkEditSaving(false);
   };
 
   // Open drawer panel for detailed view
@@ -712,6 +791,15 @@ export default function MealPlanEditor() {
             </Button>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setBulkEditOpen(true)}
+              disabled={items.length === 0}
+              className="gap-1.5 border-primary/40 text-primary hover:bg-primary/10"
+            >
+              <Wand2 className="w-4 h-4" /> Edição Inteligente
+            </Button>
             <CalorieTemplates mealPlanId={plan.id} onApplied={fetchData} />
             <Button
               variant="outline"
@@ -1667,6 +1755,168 @@ export default function MealPlanEditor() {
             >
               {batchAdding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
               Adicionar {batchText.split("\n").filter(l => l.trim()).length} itens
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Smart Edit Dialog */}
+      <Dialog open={bulkEditOpen} onOpenChange={setBulkEditOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              <Wand2 className="w-5 h-5 text-primary" /> Edição Inteligente em Lote
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              Ajuste macros de múltiplas refeições de uma só vez em todos os dias.
+            </p>
+          </DialogHeader>
+          <div className="space-y-4">
+            {/* Meal type filter */}
+            <div>
+              <Label className="text-xs font-semibold">Tipo de Refeição</Label>
+              <Select value={bulkEditMealType} onValueChange={(v) => setBulkEditMealType(v as MealType | "all")}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    <span className="flex items-center gap-2"><Utensils className="w-3.5 h-3.5" /> Todas as refeições</span>
+                  </SelectItem>
+                  {MEAL_TYPES.map(m => (
+                    <SelectItem key={m.key} value={m.key}>
+                      <span className="flex items-center gap-2">
+                        <span className={m.color}>{m.icon}</span> {m.label}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                {bulkEditMealType === "all"
+                  ? `${items.length} itens serão afetados`
+                  : `${items.filter(i => i.meal_type === bulkEditMealType).length} itens serão afetados`}
+              </p>
+            </div>
+
+            {/* Macro to adjust */}
+            <div>
+              <Label className="text-xs font-semibold">Macro a Ajustar</Label>
+              <div className="grid grid-cols-2 gap-2 mt-1">
+                {([
+                  { key: "protein_target" as const, label: "Proteína (g)", icon: <Beef className="w-3.5 h-3.5" />, color: "text-red-400" },
+                  { key: "carbs_target" as const, label: "Carboidratos (g)", icon: <Wheat className="w-3.5 h-3.5" />, color: "text-amber-500" },
+                  { key: "fat_target" as const, label: "Gordura (g)", icon: <Droplets className="w-3.5 h-3.5" />, color: "text-blue-400" },
+                  { key: "calories_target" as const, label: "Calorias (kcal)", icon: <Flame className="w-3.5 h-3.5" />, color: "text-orange-400" },
+                ]).map(m => (
+                  <button
+                    key={m.key}
+                    type="button"
+                    onClick={() => setBulkEditMacro(m.key)}
+                    className={`flex items-center gap-2 p-2.5 rounded-lg border text-xs font-medium transition-all ${
+                      bulkEditMacro === m.key
+                        ? "border-primary bg-primary/10 text-foreground"
+                        : "border-border bg-secondary/30 text-muted-foreground hover:border-primary/40"
+                    }`}
+                  >
+                    <span className={m.color}>{m.icon}</span>
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Operation mode */}
+            <div>
+              <Label className="text-xs font-semibold">Operação</Label>
+              <div className="grid grid-cols-4 gap-1.5 mt-1">
+                {([
+                  { key: "add" as const, label: "Adicionar", icon: <TrendingUp className="w-3.5 h-3.5" />, desc: "+valor" },
+                  { key: "subtract" as const, label: "Reduzir", icon: <TrendingDown className="w-3.5 h-3.5" />, desc: "-valor" },
+                  { key: "set" as const, label: "Definir", icon: <Equal className="w-3.5 h-3.5" />, desc: "=valor" },
+                  { key: "multiply" as const, label: "Escalar %", icon: <span className="text-xs font-bold">×</span>, desc: "×%" },
+                ]).map(op => (
+                  <button
+                    key={op.key}
+                    type="button"
+                    onClick={() => setBulkEditMode(op.key)}
+                    className={`flex flex-col items-center gap-0.5 p-2 rounded-lg border text-[10px] transition-all ${
+                      bulkEditMode === op.key
+                        ? "border-primary bg-primary/10 text-foreground"
+                        : "border-border bg-secondary/30 text-muted-foreground hover:border-primary/40"
+                    }`}
+                  >
+                    {op.icon}
+                    <span className="font-medium">{op.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Value input */}
+            <div>
+              <Label className="text-xs font-semibold">
+                {bulkEditMode === "add" ? "Quantidade a adicionar" :
+                 bulkEditMode === "subtract" ? "Quantidade a reduzir" :
+                 bulkEditMode === "set" ? "Novo valor fixo" :
+                 "Porcentagem (ex: 120 = +20%)"}
+              </Label>
+              <Input
+                type="number"
+                step="0.1"
+                min="0"
+                value={bulkEditValue}
+                onChange={(e) => setBulkEditValue(e.target.value)}
+                placeholder={bulkEditMode === "multiply" ? "Ex: 120 (= 120% do atual)" : "Ex: 5"}
+                className="mt-1"
+              />
+            </div>
+
+            {/* Preview */}
+            {bulkEditValue && !isNaN(parseFloat(bulkEditValue)) && (() => {
+              const targetItems = bulkEditMealType === "all" ? items : items.filter(i => i.meal_type === bulkEditMealType);
+              const val = parseFloat(bulkEditValue);
+              const sample = targetItems.slice(0, 3);
+              const macroLabel = { protein_target: "prot", carbs_target: "carb", fat_target: "gord", calories_target: "kcal" }[bulkEditMacro];
+              return (
+                <div className="bg-secondary/40 rounded-lg p-3 space-y-1.5">
+                  <p className="text-[10px] font-semibold text-muted-foreground">Pré-visualização ({targetItems.length} itens):</p>
+                  {sample.map(item => {
+                    const current = Number(item[bulkEditMacro]) || 0;
+                    let newVal: number;
+                    switch (bulkEditMode) {
+                      case "add": newVal = current + val; break;
+                      case "subtract": newVal = Math.max(0, current - val); break;
+                      case "set": newVal = val; break;
+                      case "multiply": newVal = Math.round(current * (val / 100) * 100) / 100; break;
+                      default: newVal = current;
+                    }
+                    return (
+                      <div key={item.id} className="flex items-center justify-between text-xs">
+                        <span className="truncate flex-1">{item.title}</span>
+                        <span className="ml-2 shrink-0">
+                          <span className="text-muted-foreground">{current.toFixed(0)}</span>
+                          <span className="mx-1 text-primary">→</span>
+                          <span className="font-semibold text-foreground">{Math.round(newVal * 10) / 10}</span>
+                          <span className="text-muted-foreground ml-0.5">{macroLabel}</span>
+                        </span>
+                      </div>
+                    );
+                  })}
+                  {targetItems.length > 3 && (
+                    <p className="text-[10px] text-muted-foreground">...e mais {targetItems.length - 3} itens</p>
+                  )}
+                </div>
+              );
+            })()}
+
+            <Button
+              className="w-full gradient-primary gap-2"
+              onClick={handleBulkMacroEdit}
+              disabled={bulkEditSaving || !bulkEditValue.trim()}
+            >
+              {bulkEditSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+              Aplicar em {bulkEditMealType === "all" ? items.length : items.filter(i => i.meal_type === bulkEditMealType).length} itens
             </Button>
           </div>
         </DialogContent>
