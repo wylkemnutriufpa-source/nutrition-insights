@@ -156,8 +156,8 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
   async function handleApprove() {
     if (!pipeline || !user) return;
 
-    // Block approval if no real plan exists
-    const planId = pipeline.generated_plan_id || pipeline.generated_plan_data?.mealPlanId;
+    // Use selected plan or fallback
+    const planId = selectedPlanId || pipeline.generated_plan_id || pipeline.generated_plan_data?.mealPlanId;
     if (!planId) {
       toast.error("Nenhum plano encontrado. Gere o plano primeiro antes de aprovar.");
       return;
