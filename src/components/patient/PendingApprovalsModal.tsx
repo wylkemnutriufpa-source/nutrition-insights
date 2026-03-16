@@ -77,7 +77,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
       .from("onboarding_pipelines" as any)
       .select("*")
       .eq("nutritionist_id", user.id)
-      .eq("status", "pending_approval");
+      .in("status", ["pending_approval", "pending_plan_generation"]);
 
     const items = (data || []) as any[];
     if (items.length > 0) {
