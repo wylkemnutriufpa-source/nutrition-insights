@@ -592,7 +592,7 @@ export default function DietTemplates() {
                         </div>
 
                         <div className="space-y-2">
-                          {meal.foods.map((food, fi) => {
+                          {(meal.foods && meal.foods.length > 0) ? meal.foods.map((food, fi) => {
                             const key = `${mi}-${fi}`;
                             const subIdx = activeSubstitutions[key] ?? -1;
                             const adjusted = adjustFood(food, multiplier);
@@ -612,7 +612,7 @@ export default function DietTemplates() {
                                     )}
                                   </div>
                                   <p className="text-xs text-muted-foreground">{food.portion}</p>
-                                  {food.substitutions.length > 0 && (
+                                  {food.substitutions?.length > 0 && (
                                     <button
                                       onClick={() => toggleSubstitution(key, food.substitutions.length)}
                                       className="text-[10px] text-primary hover:underline flex items-center gap-1 mt-0.5"
@@ -628,7 +628,11 @@ export default function DietTemplates() {
                                 </div>
                               </div>
                             );
-                          })}
+                          }) : (
+                            <p className="text-xs text-muted-foreground italic">
+                              {(meal as any).pct ? `${Math.round(((meal as any).pct || 0) * 100)}% das calorias diárias (~${Math.round(getAdjustedCalories(previewTemplate) * ((meal as any).pct || 0))} kcal)` : "Sem alimentos detalhados"}
+                            </p>
+                          )}
                         </div>
                       </div>
                     );
