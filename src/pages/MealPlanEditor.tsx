@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useReducer } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -27,62 +27,19 @@ import CalorieTemplates from "@/components/meals/CalorieTemplates";
 import FoodSubstitutions, { getCategoryDot } from "@/components/meals/FoodSubstitutions";
 import MacroBalanceBar from "@/components/meals/MacroBalanceBar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import type { Tables, TablesInsert } from "@/integrations/supabase/types";
+import type { TablesInsert } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
 import TemplateQuickInsertPanel from "@/components/meals/TemplateQuickInsertPanel";
 import SaveMealTemplateDialog from "@/components/meals/SaveMealTemplateDialog";
+import {
+  editorPlanoReducer,
+  getEditorPlanoInitialState,
+  persistEditorPlanoState,
+  type MealPlan,
+  type MealPlanItem,
+} from "@/lib/mealPlanEditorStore";
 
-type MealPlan = Tables<"meal_plans">;
-type MealPlanItem = Tables<"meal_plan_items">;
 type MealType = Database["public"]["Enums"]["meal_type"];
-
-type MealPlanEditorCache = {
-  plan: MealPlan | null;
-  patientName: string;
-  items: MealPlanItem[];
-  savedAt: number;
-};
-
-const MEAL_PLAN_EDITOR_CACHE_TTL_MS = 1000 * 60 * 15;
-
-const getMealPlanEditorCacheKey = (planId?: string) =>
-  planId ? `meal-plan-editor:${planId}` : null;
-
-const readMealPlanEditorCache = (planId?: string): MealPlanEditorCache | null => {
-  const cacheKey = getMealPlanEditorCacheKey(planId);
-  if (!cacheKey || typeof window === "undefined") return null;
-
-  try {
-    const raw = sessionStorage.getItem(cacheKey);
-    if (!raw) return null;
-
-    const parsed = JSON.parse(raw) as MealPlanEditorCache;
-    if (!parsed?.savedAt || Date.now() - parsed.savedAt > MEAL_PLAN_EDITOR_CACHE_TTL_MS) {
-      sessionStorage.removeItem(cacheKey);
-      return null;
-    }
-
-    return parsed;
-  } catch {
-    return null;
-  }
-};
-
-const writeMealPlanEditorCache = (
-  planId: string,
-  snapshot: Omit<MealPlanEditorCache, "savedAt">
-) => {
-  if (typeof window === "undefined") return;
-
-  try {
-    sessionStorage.setItem(
-      getMealPlanEditorCacheKey(planId)!,
-      JSON.stringify({ ...snapshot, savedAt: Date.now() })
-    );
-  } catch {
-    // Ignore storage quota/cache errors — editor must never block UI.
-  }
-};
 
 const MEAL_TYPES: { key: MealType; label: string; icon: React.ReactNode; color: string }[] = [
   { key: "breakfast", label: "Café da Manhã", icon: <Coffee className="w-4 h-4" />, color: "text-amber-500" },
@@ -140,14 +97,10 @@ export default function MealPlanEditor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  // Stable userId primitive — never causes re-render from auth token refresh
   const userId = user?.id;
-  const cachedEditorState = readMealPlanEditorCache(id);
-
-  const [plan, setPlan] = useState<MealPlan | null>(cachedEditorState?.plan ?? null);
-  const [patientName, setPatientName] = useState(cachedEditorState?.patientName ?? "");
-  const [items, setItems] = useState<MealPlanItem[]>(cachedEditorState?.items ?? []);
-  const [loading, setLoading] = useState(!cachedEditorState);
+  const [editorState, dispatchEditor] = useReducer(editorPlanoReducer, id, getEditorPlanoInitialState);
+  const { plan, patientName, items, isHydratingPlano, syncingMap } = editorState;
+  const editorStateRef = useRef(editorState);
   const [planDocs, setPlanDocs] = useState<any[]>([]);
 
   // ─── Sync status indicator ───
@@ -182,12 +135,20 @@ export default function MealPlanEditor() {
       }
     });
   }, []);
-  // Wrapper: preserve scroll around any setItems call
   const setItemsStable = useCallback((updater: React.SetStateAction<MealPlanItem[]>) => {
     preserveScroll();
-    setItems(updater);
+    const nextItems = typeof updater === "function"
+      ? updater(editorStateRef.current.items)
+      : updater;
+    dispatchEditor({ type: "replace_items", items: nextItems });
     restoreScroll();
   }, [preserveScroll, restoreScroll]);
+  const setSyncingItems = useCallback((itemIds: string[], value: boolean) => {
+    dispatchEditor({ type: "set_syncing", itemIds, value });
+  }, []);
+  const mergePlanLocal = useCallback((payload: Partial<MealPlan>) => {
+    dispatchEditor({ type: "merge_plan", payload });
+  }, []);
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -270,22 +231,11 @@ export default function MealPlanEditor() {
   const fetchData = useCallback(async () => {
     if (!id || !userId) return;
 
-    const cachedSnapshot = readMealPlanEditorCache(id);
-
-    // Hydrate instantly from cache to avoid page-level spinner/remount flash.
-    if (cachedSnapshot) {
-      setPlan((prev) => prev ?? cachedSnapshot.plan);
-      setPatientName((prev) => prev || cachedSnapshot.patientName);
-      setItems((prev) => (prev.length > 0 ? prev : cachedSnapshot.items));
-      setLoading(false);
-    }
-
-    // Guard: don't re-fetch if already loaded for this plan
-    if (hasFetchedRef.current === id) return;
+    if (hasFetchedRef.current === id && editorStateRef.current.plan) return;
     hasFetchedRef.current = id;
 
-    if (!cachedSnapshot && !plan) {
-      setLoading(true);
+    if (!editorStateRef.current.plan) {
+      dispatchEditor({ type: "set_hydrating", value: true });
     }
 
     const [{ data: planData }, { data: itemsData }] = await Promise.all([
@@ -293,20 +243,29 @@ export default function MealPlanEditor() {
       supabase.from("meal_plan_items").select("*").eq("meal_plan_id", id).order("created_at"),
     ]);
 
+    let nextPatientName = editorStateRef.current.patientName;
+
     if (planData) {
-      setPlan(planData);
       const { data: profile } = await supabase
         .from("profiles")
         .select("full_name")
         .eq("user_id", planData.patient_id)
         .maybeSingle();
-      setPatientName(profile?.full_name || "Paciente");
+
+      nextPatientName = profile?.full_name || "Paciente";
+      dispatchEditor({
+        type: "hydrate",
+        plan: planData,
+        patientName: nextPatientName,
+        items: itemsData || [],
+      });
 
       if ((!itemsData || itemsData.length === 0) && planData.generation_source === "protocol_fitjourney") {
         setEmptyPlanWarning(true);
       }
+    } else {
+      dispatchEditor({ type: "set_hydrating", value: false });
     }
-    setItems(itemsData || []);
 
     const { data: docs } = await supabase
       .from("patient_documents" as any)
@@ -315,11 +274,9 @@ export default function MealPlanEditor() {
       .eq("document_type", "meal_plan")
       .order("created_at", { ascending: false });
     setPlanDocs(docs || []);
+  }, [id, userId]);
 
-    setLoading(false);
-  }, [id, userId, plan]);
-
-  // Silent refresh: only re-fetches items without loading spinner or scroll reset
+  // Silent refresh: only updates the local snapshot without page-level loading
   const refreshItems = useCallback(async () => {
     if (!id) return;
     preserveScroll();
@@ -328,7 +285,9 @@ export default function MealPlanEditor() {
       .select("*")
       .eq("meal_plan_id", id)
       .order("created_at");
-    if (data) setItems(data);
+    if (data) {
+      dispatchEditor({ type: "replace_items", items: data });
+    }
     restoreScroll();
   }, [id, preserveScroll, restoreScroll]);
 
@@ -343,12 +302,16 @@ export default function MealPlanEditor() {
     setPlanDocs(data || []);
   };
 
+  useEffect(() => {
+    editorStateRef.current = editorState;
+  }, [editorState]);
+
   useEffect(() => { fetchData(); }, [fetchData]);
 
   useEffect(() => {
     if (!id || !plan) return;
-    writeMealPlanEditorCache(id, { plan, patientName, items });
-  }, [id, plan, patientName, items]);
+    persistEditorPlanoState(id, editorState);
+  }, [editorState, id, plan]);
 
   // Cleanup sync timer
   useEffect(() => {
@@ -424,34 +387,40 @@ export default function MealPlanEditor() {
   };
 
   const handleDeleteItem = async (itemId: string) => {
+    const previousItems = items;
     showSyncSaving();
+    setSyncingItems([itemId], true);
     setItemsStable(prev => prev.filter(i => i.id !== itemId));
     const { error } = await supabase.from("meal_plan_items").delete().eq("id", itemId);
     if (error) {
       toast.error("Erro ao remover: " + error.message);
+      setItemsStable(previousItems);
       showSyncDone(false);
-      refreshItems();
     } else {
       toast.success("Removido!");
       showSyncDone(true);
     }
+    setSyncingItems([itemId], false);
   };
 
   const handleDeleteDay = async (day: number) => {
     const dayItems = items.filter(i => i.day_of_week === day);
     if (dayItems.length === 0) { toast.error("Dia já está vazio"); return; }
-    showSyncSaving();
-    setItemsStable(prev => prev.filter(i => i.day_of_week !== day));
+    const previousItems = items;
     const ids = dayItems.map(i => i.id);
+    showSyncSaving();
+    setSyncingItems(ids, true);
+    setItemsStable(prev => prev.filter(i => i.day_of_week !== day));
     const { error } = await supabase.from("meal_plan_items").delete().in("id", ids);
     if (error) {
       toast.error("Erro ao limpar dia: " + error.message);
+      setItemsStable(previousItems);
       showSyncDone(false);
-      refreshItems();
     } else {
       toast.success(`${DAYS[day].label} limpo! (${dayItems.length} itens removidos)`);
       showSyncDone(true);
     }
+    setSyncingItems(ids, false);
   };
 
   const handleCopyDay = async (sourceDay: number, targetDay: number) => {
@@ -519,10 +488,12 @@ export default function MealPlanEditor() {
     setSwapping(true);
     showSyncSaving();
 
+    const previousItems = items;
     const sourceItems = items.filter(i => i.day_of_week === source.day && i.meal_type === source.mealType);
     const targetItems = items.filter(i => i.day_of_week === target.day && i.meal_type === target.mealType);
+    const syncingIds = [...sourceItems, ...targetItems].map(item => item.id);
+    setSyncingItems(syncingIds, true);
 
-    // OPTIMISTIC: update UI immediately
     setItemsStable(prev => prev.map(i => {
       if (sourceItems.some(s => s.id === i.id)) return { ...i, day_of_week: target.day, meal_type: target.mealType };
       if (targetItems.some(t => t.id === i.id)) return { ...i, day_of_week: source.day, meal_type: source.mealType };
@@ -536,29 +507,23 @@ export default function MealPlanEditor() {
     const tgtLabel = `${MEAL_TYPES.find(m => m.key === target.mealType)?.label} (${DAYS[target.day]?.short})`;
     toast.success(`Trocado: ${srcLabel} ↔ ${tgtLabel}`);
 
-    // Persist in background
     const sourceUpdates = sourceItems.map(item =>
-      supabase.from("meal_plan_items").update({
-        day_of_week: target.day,
-        meal_type: target.mealType,
-      }).eq("id", item.id)
+      supabase.from("meal_plan_items").update({ day_of_week: target.day, meal_type: target.mealType }).eq("id", item.id)
     );
     const targetUpdates = targetItems.map(item =>
-      supabase.from("meal_plan_items").update({
-        day_of_week: source.day,
-        meal_type: source.mealType,
-      }).eq("id", item.id)
+      supabase.from("meal_plan_items").update({ day_of_week: source.day, meal_type: source.mealType }).eq("id", item.id)
     );
 
     const results = await Promise.all([...sourceUpdates, ...targetUpdates]);
     const hasError = results.some(r => r.error);
     if (hasError) {
       toast.error("Erro ao salvar troca — revertendo...");
+      setItemsStable(previousItems);
       showSyncDone(false);
-      refreshItems();
     } else {
       showSyncDone(true);
     }
+    setSyncingItems(syncingIds, false);
   };
 
   // Inline edit: save title directly
@@ -611,6 +576,10 @@ export default function MealPlanEditor() {
       return;
     }
 
+    const previousItems = items;
+    const syncingIds = targetItems.map(item => item.id);
+    setSyncingItems(syncingIds, true);
+
     const updates = targetItems.map(item => {
       const currentVal = Number(item[bulkEditMacro]) || 0;
       let newVal: number;
@@ -633,7 +602,6 @@ export default function MealPlanEditor() {
       };
     });
 
-    // Optimistic: update UI immediately
     setItemsStable(prev => prev.map(item => {
       const update = updates.find(entry => entry.id === item.id);
       return update ? { ...item, ...update.payload } as MealPlanItem : item;
@@ -644,8 +612,8 @@ export default function MealPlanEditor() {
 
     if (errors.length > 0) {
       toast.error(`${errors.length} erros ao atualizar`);
+      setItemsStable(previousItems);
       showSyncDone(false);
-      refreshItems();
     } else {
       const macroLabels: Record<string, string> = {
         protein_target: "Proteína",
@@ -666,6 +634,7 @@ export default function MealPlanEditor() {
       showSyncDone(true);
     }
 
+    setSyncingItems(syncingIds, false);
     setBulkEditSaving(false);
   };
 
@@ -981,7 +950,7 @@ export default function MealPlanEditor() {
     toast.success("Modelo removido");
   };
 
-  if (loading && !plan) {
+  if (isHydratingPlano && !plan) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
@@ -1230,7 +1199,7 @@ export default function MealPlanEditor() {
                       if (error) toast.error("Erro: " + error.message);
                       else {
                         toast.success("Plano aprovado! ✅");
-                        setPlan(prev => prev ? { ...prev, plan_status: nextStatus } : prev);
+                        mergePlanLocal({ plan_status: nextStatus });
                       }
                       setApproving(false);
                     }}
@@ -1295,7 +1264,7 @@ export default function MealPlanEditor() {
                           action_url: "/my-diet",
                         });
 
-                        setPlan(prev => prev ? { ...prev, ...publishedPayload } : prev);
+                        mergePlanLocal(publishedPayload);
                         toast.success("Plano publicado e paciente notificado! 🎉");
                       } catch (err: any) {
                         toast.error("Erro: " + (err?.message || "Falha ao publicar"));
@@ -1500,6 +1469,14 @@ export default function MealPlanEditor() {
                                       <div className="flex items-center gap-1.5 mt-1 text-[9px] text-muted-foreground">
                                         {item.calories_target && <span className="flex items-center gap-0.5"><Flame className="w-2.5 h-2.5 text-orange-400" />{item.calories_target}</span>}
                                         {item.protein_target && <span className="flex items-center gap-0.5"><Beef className="w-2.5 h-2.5 text-red-400" />{Number(item.protein_target).toFixed(0)}g</span>}
+                                      </div>
+                                      <div className="flex items-center gap-1 mt-1 text-[9px] text-muted-foreground">
+                                        {syncingMap[item.id] && (
+                                          <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-1.5 py-0.5 text-[8px] font-medium text-muted-foreground">
+                                            <Loader2 className="w-2.5 h-2.5 animate-spin text-primary" />
+                                            sincronizando...
+                                          </span>
+                                        )}
                                       </div>
                                       <div className="absolute top-1 right-1 z-10 flex gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
                                         <button type="button" onClick={(e) => { e.stopPropagation(); setInlineEditId(item.id); setInlineEditValue(item.title); }} className="p-0.5 rounded hover:bg-accent/50" title="Editar inline">
@@ -1720,6 +1697,12 @@ export default function MealPlanEditor() {
                               {item.carbs_target && <span className="flex items-center gap-0.5"><Wheat className="w-3 h-3 text-amber-500" />{Number(item.carbs_target).toFixed(0)}g</span>}
                               {item.fat_target && <span className="flex items-center gap-0.5"><Droplets className="w-3 h-3 text-blue-400" />{Number(item.fat_target).toFixed(0)}g</span>}
                             </div>
+                            {syncingMap[item.id] && (
+                              <div className="mt-1 inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 text-[9px] font-medium text-muted-foreground">
+                                <Loader2 className="w-3 h-3 animate-spin text-primary" />
+                                sincronizando...
+                              </div>
+                            )}
                           </div>
                           <div className="flex gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
                             <button
