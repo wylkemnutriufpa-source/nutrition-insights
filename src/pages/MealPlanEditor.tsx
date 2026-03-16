@@ -269,24 +269,31 @@ export default function MealPlanEditor() {
         .update(payload)
         .eq("id", editingItem.id);
       if (error) toast.error("Erro ao atualizar: " + error.message);
-      else toast.success("Item atualizado!");
+      else {
+        toast.success("Item atualizado!");
+        setItems(prev => prev.map(i => i.id === editingItem.id ? { ...i, ...payload } as MealPlanItem : i));
+      }
     } else {
-      const { error } = await supabase.from("meal_plan_items").insert(payload);
+      const { data, error } = await supabase.from("meal_plan_items").insert(payload).select().single();
       if (error) toast.error("Erro ao adicionar: " + error.message);
-      else toast.success("Item adicionado!");
+      else {
+        toast.success("Item adicionado!");
+        setItems(prev => [...prev, data]);
+      }
     }
 
     setSaving(false);
     setDialogOpen(false);
-    fetchData();
   };
 
   const handleDeleteItem = async (itemId: string) => {
+    setItems(prev => prev.filter(i => i.id !== itemId));
     const { error } = await supabase.from("meal_plan_items").delete().eq("id", itemId);
-    if (error) toast.error("Erro ao remover: " + error.message);
-    else {
+    if (error) {
+      toast.error("Erro ao remover: " + error.message);
+      refreshItems(); // rollback
+    } else {
       toast.success("Removido!");
-      fetchData();
     }
   };
 
