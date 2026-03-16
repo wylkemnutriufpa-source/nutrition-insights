@@ -2241,7 +2241,7 @@ export default function MealPlanEditor() {
         mealType={templatePanelTarget.mealType}
         dayOfWeek={templatePanelTarget.day}
         planId={plan?.id || ""}
-        patientTargetKcal={plan?.target_calories || undefined}
+        patientTargetKcal={(() => { try { const m = plan?.generation_metadata as any; return m?.target_kcal || m?.caloric_target || undefined; } catch { return undefined; } })()}
         onInserted={(newItems) => {
           setItems(prev => [...prev, ...newItems]);
         }}
