@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef, useReducer } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +34,7 @@ import SaveMealTemplateDialog from "@/components/meals/SaveMealTemplateDialog";
 import {
   editorPlanoReducer,
   getEditorPlanoInitialState,
+  persistActiveEditorRoute,
   persistEditorPlanoState,
   type EditorPlanoSyncStatus,
   type MealPlan,
@@ -93,10 +94,11 @@ const findFoodMatch = (text: string): FoodItem | null => {
 export default function MealPlanEditor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const userId = user?.id;
   const [editorState, dispatchEditor] = useReducer(editorPlanoReducer, id, getEditorPlanoInitialState);
-  const { plan, patientName, items, isHydratingPlano, syncingMap, statusSync } = editorState;
+  const { plan, patientName, items, isHydratingPlano, syncingMap, statusSync, pendingMutationsQueue } = editorState;
   const editorStateRef = useRef(editorState);
   const [planDocs, setPlanDocs] = useState<any[]>([]);
 
@@ -470,9 +472,17 @@ export default function MealPlanEditor() {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   useEffect(() => {
-    if (!id || !plan) return;
+    if (!id) return;
+
+    persistActiveEditorRoute({
+      planId: id,
+      route: `${location.pathname}${location.search}${location.hash}`,
+      shouldRestore: statusSync === "saving" || pendingMutationsQueue.length > 0,
+    });
+
+    if (!plan) return;
     persistEditorPlanoState(id, editorState);
-  }, [editorState, id, plan]);
+  }, [editorState, id, location.hash, location.pathname, location.search, pendingMutationsQueue.length, plan, statusSync]);
 
   useEffect(() => {
     return () => {
