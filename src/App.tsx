@@ -121,6 +121,7 @@ const MetabolicTwin = lazy(() => import("./pages/MetabolicTwin"));
 const PopulationNutritionIntelligence = lazy(() => import("./pages/PopulationNutritionIntelligence"));
 const PlatformGovernance = lazy(() => import("./pages/PlatformGovernance"));
 const ClinicalPipeline = lazy(() => import("./pages/ClinicalPipeline"));
+const Integrations = lazy(() => import("./pages/Integrations"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -295,6 +296,7 @@ const App = () => (
               <Route path="/population-nutrition" element={<NutritionistRoute><LP section="Nutrição Populacional"><PopulationNutritionIntelligence /></LP></NutritionistRoute>} />
               <Route path="/platform-governance" element={<AdminRoute><LP section="Governança"><PlatformGovernance /></LP></AdminRoute>} />
               <Route path="/clinical-pipeline" element={<AdminRoute><LP section="Pipeline Clínico"><ClinicalPipeline /></LP></AdminRoute>} />
+              <Route path="/integrations" element={<ProfessionalRoute><LP section="Integrações"><Integrations /></LP></ProfessionalRoute>} />
 
               {/* Personal Trainer routes */}
               <Route path="/personal/dashboard" element={<PersonalRoute><LP section="Personal"><PersonalDashboard /></LP></PersonalRoute>} />
