@@ -25,6 +25,7 @@ const Patients = lazy(() => import("./pages/Patients"));
 const PatientDetail = lazy(() => import("./pages/PatientDetail"));
 const MealPlans = lazy(() => import("./pages/MealPlans"));
 const MealPlanEditor = lazy(() => import("./pages/MealPlanEditor"));
+const MealPlanEditorV2 = lazy(() => import("./pages/MealPlanEditorV2"));
 const Anamnesis = lazy(() => import("./pages/Anamnesis"));
 const AnalyzeMeal = lazy(() => import("./pages/AnalyzeMeal"));
 const Settings = lazy(() => import("./pages/Settings"));
