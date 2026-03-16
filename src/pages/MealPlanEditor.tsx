@@ -197,6 +197,17 @@ export default function MealPlanEditor() {
     setLoading(false);
   }, [id, user]);
 
+  // Light refresh: only re-fetches items without loading spinner
+  const refreshItems = useCallback(async () => {
+    if (!id) return;
+    const { data } = await supabase
+      .from("meal_plan_items")
+      .select("*")
+      .eq("meal_plan_id", id)
+      .order("created_at");
+    if (data) setItems(data);
+  }, [id]);
+
   const fetchDocs = async () => {
     if (!id) return;
     const { data } = await supabase
