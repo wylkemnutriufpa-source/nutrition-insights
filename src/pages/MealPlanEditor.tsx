@@ -875,7 +875,7 @@ export default function MealPlanEditor() {
             >
               <Wand2 className="w-4 h-4" /> Edição Inteligente
             </Button>
-            <CalorieTemplates mealPlanId={plan.id} onApplied={fetchData} />
+            <CalorieTemplates mealPlanId={plan.id} onApplied={refreshItems} />
             <Button
               variant="outline"
               size="sm"
