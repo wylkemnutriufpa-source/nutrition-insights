@@ -1230,38 +1230,40 @@ export default function MealPlanEditor() {
                               </Button>
                             </div>
                           ) : (
-                            <div className="mt-1 flex gap-0.5">
-                              <button
-                                type="button"
-                                onClick={() => { setQuickAddKey(cellKey); setQuickAddText(""); }}
-                                className="flex-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-primary"
-                              >
-                                <Plus className="w-3 h-3" /> Rápido
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => { setBatchTarget({ day: day.key, mealType: meal.key }); setBatchText(""); }}
-                                className="flex-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-primary"
-                              >
-                                <Leaf className="w-3 h-3" /> Lote
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => openAddDialog(day.key, meal.key)}
-                                className="flex-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-primary"
-                              >
-                                <PencilLine className="w-3 h-3" /> Detalhado
-                              </button>
+                            <div className="mt-1 space-y-0.5">
+                              <div className="flex gap-0.5">
+                                <button
+                                  type="button"
+                                  onClick={() => { setQuickAddKey(cellKey); setQuickAddText(""); }}
+                                  className="flex-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-primary"
+                                >
+                                  <Plus className="w-3 h-3" /> Rápido
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => { setBatchTarget({ day: day.key, mealType: meal.key }); setBatchText(""); }}
+                                  className="flex-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-primary"
+                                >
+                                  <Leaf className="w-3 h-3" /> Lote
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => openAddDialog(day.key, meal.key)}
+                                  className="flex-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-primary"
+                                >
+                                  <PencilLine className="w-3 h-3" /> Detalhado
+                                </button>
+                              </div>
+                              {clipboardItem && (
+                                <button
+                                  type="button"
+                                  onClick={() => handlePasteItem(day.key, meal.key)}
+                                  className="w-full flex items-center justify-center gap-1 text-[10px] text-primary hover:text-primary/80 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-primary/40 hover:border-primary bg-primary/5"
+                                >
+                                  <ClipboardPaste className="w-3 h-3" /> Colar {clipboardItem.title}
+                                </button>
+                              )}
                             </div>
-                            {clipboardItem && (
-                              <button
-                                type="button"
-                                onClick={() => handlePasteItem(day.key, meal.key)}
-                                className="w-full flex items-center justify-center gap-1 text-[10px] text-primary hover:text-primary/80 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-primary/40 hover:border-primary bg-primary/5 mt-0.5"
-                              >
-                                <ClipboardPaste className="w-3 h-3" /> Colar &quot;{clipboardItem.title}&quot;
-                              </button>
-                            )}
                           )}
                           </div>
                         </div>
