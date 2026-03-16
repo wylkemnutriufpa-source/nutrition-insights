@@ -420,7 +420,7 @@ export default function MealPlanEditor() {
     if (error) toast.error("Erro ao editar");
     else {
       toast.success(match ? "Atualizado com macros ✨" : "Atualizado!");
-      fetchData();
+      setItems(prev => prev.map(i => i.id === itemId ? { ...i, ...updatePayload } as MealPlanItem : i));
     }
   };
 
