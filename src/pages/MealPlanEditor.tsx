@@ -1201,21 +1201,21 @@ export default function MealPlanEditor() {
   const fullscreenContent = (
       <div ref={editorContainerRef} className={isFullscreen ? "fixed inset-0 z-50 bg-background overflow-y-auto p-4 md:p-6" : "space-y-4"}>
         {/* Sync Status Badge */}
-        {syncStatus !== "idle" && (
+        {statusSync !== "idle" && (
           <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border border-border shadow-lg text-xs font-medium animate-in fade-in slide-in-from-bottom-2 duration-200">
-            {syncStatus === "saving" && (
+            {statusSync === "saving" && (
               <>
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
                 <span className="text-muted-foreground">Salvando alterações…</span>
               </>
             )}
-            {syncStatus === "saved" && (
+            {statusSync === "saved" && (
               <>
                 <Check className="w-3.5 h-3.5 text-primary" />
-                <span className="text-muted-foreground">Salvo ✓</span>
+                <span className="text-muted-foreground">Sincronizado</span>
               </>
             )}
-            {syncStatus === "error" && (
+            {statusSync === "error" && (
               <>
                 <AlertTriangle className="w-3.5 h-3.5 text-destructive" />
                 <span className="text-destructive">Erro ao salvar</span>

@@ -136,14 +136,15 @@ const queryClient = new QueryClient({
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  if (loading) return <PageLoader />;
+  if (loading && !user) return <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
   return <>{children}</>;
 }
 
 function NutritionistRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isNutritionist, isAdmin } = useAuth();
-  if (loading) return <PageLoader />;
+  if (loading && !user) return <PageLoader />;
+  if (loading && user && (isNutritionist || isAdmin)) return <>{children}</>;
   if (!user) return <Navigate to="/auth" replace />;
   if (!isNutritionist && !isAdmin) return <Navigate to="/" replace />;
   return <>{children}</>;
@@ -151,7 +152,8 @@ function NutritionistRoute({ children }: { children: React.ReactNode }) {
 
 function PersonalRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isPersonal, isAdmin } = useAuth();
-  if (loading) return <PageLoader />;
+  if (loading && !user) return <PageLoader />;
+  if (loading && user && (isPersonal || isAdmin)) return <>{children}</>;
   if (!user) return <Navigate to="/auth" replace />;
   if (!isPersonal && !isAdmin) return <Navigate to="/" replace />;
   return <>{children}</>;
@@ -159,7 +161,8 @@ function PersonalRoute({ children }: { children: React.ReactNode }) {
 
 function ProfessionalRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isNutritionist, isPersonal, isAdmin } = useAuth();
-  if (loading) return <PageLoader />;
+  if (loading && !user) return <PageLoader />;
+  if (loading && user && (isNutritionist || isPersonal || isAdmin)) return <>{children}</>;
   if (!user) return <Navigate to="/auth" replace />;
   if (!isNutritionist && !isPersonal && !isAdmin) return <Navigate to="/" replace />;
   return <>{children}</>;
@@ -167,7 +170,8 @@ function ProfessionalRoute({ children }: { children: React.ReactNode }) {
 
 function PatientRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isPatient } = useAuth();
-  if (loading) return <PageLoader />;
+  if (loading && !user) return <PageLoader />;
+  if (loading && user && isPatient) return <>{children}</>;
   if (!user) return <Navigate to="/auth" replace />;
   if (!isPatient) return <Navigate to="/" replace />;
   return <>{children}</>;
@@ -175,7 +179,8 @@ function PatientRoute({ children }: { children: React.ReactNode }) {
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isAdmin } = useAuth();
-  if (loading) return <PageLoader />;
+  if (loading && !user) return <PageLoader />;
+  if (loading && user && isAdmin) return <>{children}</>;
   if (!user) return <Navigate to="/auth" replace />;
   if (!isAdmin) return <Navigate to="/" replace />;
   return <>{children}</>;
