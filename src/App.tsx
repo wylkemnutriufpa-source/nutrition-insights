@@ -291,6 +291,7 @@ const App = () => (
               <Route path="/weight-trajectory" element={<NutritionistRoute><LP section="Trajetória de Peso"><WeightTrajectory /></LP></NutritionistRoute>} />
               <Route path="/metabolic-twin" element={<NutritionistRoute><LP section="Digital Twin"><MetabolicTwin /></LP></NutritionistRoute>} />
               <Route path="/population-nutrition" element={<NutritionistRoute><LP section="Nutrição Populacional"><PopulationNutritionIntelligence /></LP></NutritionistRoute>} />
+              <Route path="/platform-governance" element={<AdminRoute><LP section="Governança"><PlatformGovernance /></LP></AdminRoute>} />
 
               {/* Personal Trainer routes */}
               <Route path="/personal/dashboard" element={<PersonalRoute><LP section="Personal"><PersonalDashboard /></LP></PersonalRoute>} />
