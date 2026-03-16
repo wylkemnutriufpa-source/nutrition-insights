@@ -791,6 +791,15 @@ export default function MealPlanEditor() {
             </Button>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setBulkEditOpen(true)}
+              disabled={items.length === 0}
+              className="gap-1.5 border-primary/40 text-primary hover:bg-primary/10"
+            >
+              <Wand2 className="w-4 h-4" /> Edição Inteligente
+            </Button>
             <CalorieTemplates mealPlanId={plan.id} onApplied={fetchData} />
             <Button
               variant="outline"
