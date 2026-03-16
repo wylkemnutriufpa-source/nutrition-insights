@@ -583,7 +583,7 @@ export default function DietTemplates() {
                       <div key={mi} className="glass rounded-lg p-4">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
-                            {MEAL_ICONS[meal.meal_type]}
+                            {MEAL_ICONS[meal.meal_type || (meal as any).type]}
                             <h4 className="font-display font-semibold text-sm">{meal.title}</h4>
                           </div>
                           <span className="text-xs text-muted-foreground flex items-center gap-1">
