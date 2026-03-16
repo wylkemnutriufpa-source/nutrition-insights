@@ -302,6 +302,7 @@ export default function DietTemplates() {
             title: template.name + (patientName ? ` - ${patientName}` : ""),
             description: `Baseado no modelo "${template.name}". ${anamnesis ? "Ajustado conforme anamnese do paciente." : ""}`,
             start_date: new Date().toISOString().split("T")[0],
+            is_active: true,
           })
           .select("id")
           .single();
@@ -343,6 +344,18 @@ export default function DietTemplates() {
           });
         }
       }
+
+      await supabase
+        .from("meal_plans")
+        .update({ is_active: false })
+        .eq("nutritionist_id", user.id)
+        .eq("patient_id", patientId)
+        .neq("id", targetPlanId);
+
+      await supabase
+        .from("meal_plans")
+        .update({ is_active: true })
+        .eq("id", targetPlanId);
 
       const { error: deleteError } = await supabase
         .from("meal_plan_items")

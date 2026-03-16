@@ -98,17 +98,27 @@ export default function MealPlans() {
     e.preventDefault();
     if (!user || !form.patient_id) return;
     setSubmitting(true);
-    const { error } = await supabase.from("meal_plans").insert({
+
+    const { data: createdPlan, error } = await supabase.from("meal_plans").insert({
       nutritionist_id: user.id,
       patient_id: form.patient_id,
       title: form.title,
       description: form.description || null,
       start_date: form.start_date,
-    });
+      is_active: true,
+    }).select("id").single();
+
     if (error) {
       toast.error("Erro: " + error.message);
     } else {
-      toast.success("Plano criado!");
+      await supabase
+        .from("meal_plans")
+        .update({ is_active: false })
+        .eq("nutritionist_id", user.id)
+        .eq("patient_id", form.patient_id)
+        .neq("id", createdPlan.id);
+
+      toast.success("Plano criado e definido como ativo!");
       setOpen(false);
       setForm({ title: "", description: "", patient_id: "", start_date: new Date().toISOString().split("T")[0] });
       fetchPlans();
@@ -116,8 +126,13 @@ export default function MealPlans() {
     setSubmitting(false);
   };
 
-  const toggleActive = async (id: string, current: boolean) => {
-    await supabase.from("meal_plans").update({ is_active: !current }).eq("id", id);
+  const toggleActive = async (id: string, patientId: string, current: boolean) => {
+    if (current) {
+      await supabase.from("meal_plans").update({ is_active: false }).eq("id", id);
+    } else {
+      await supabase.from("meal_plans").update({ is_active: false }).eq("nutritionist_id", user?.id).eq("patient_id", patientId);
+      await supabase.from("meal_plans").update({ is_active: true }).eq("id", id);
+    }
     fetchPlans();
   };
 
@@ -282,7 +297,7 @@ export default function MealPlans() {
                       <PencilLine className="w-4 h-4" />
                     </Button>
                     {!isPending && (
-                      <button onClick={(e) => { e.stopPropagation(); toggleActive(p.id, p.is_active); }}>
+                      <button onClick={(e) => { e.stopPropagation(); toggleActive(p.id, p.patient_id, p.is_active); }}>
                         {p.is_active ? (
                           <ToggleRight className="w-6 h-6 text-success" />
                         ) : (
