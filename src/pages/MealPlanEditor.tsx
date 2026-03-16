@@ -94,10 +94,11 @@ const findFoodMatch = (text: string): FoodItem | null => {
 export default function MealPlanEditor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const userId = user?.id;
   const [editorState, dispatchEditor] = useReducer(editorPlanoReducer, id, getEditorPlanoInitialState);
-  const { plan, patientName, items, isHydratingPlano, syncingMap, statusSync } = editorState;
+  const { plan, patientName, items, isHydratingPlano, syncingMap, statusSync, pendingMutationsQueue } = editorState;
   const editorStateRef = useRef(editorState);
   const [planDocs, setPlanDocs] = useState<any[]>([]);
 
