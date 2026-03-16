@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -138,6 +138,7 @@ export default function MealPlanEditor() {
   const [dragSource, setDragSource] = useState<{ day: number; mealType: MealType } | null>(null);
   const [dragOver, setDragOver] = useState<{ day: number; mealType: MealType } | null>(null);
   const [swapping, setSwapping] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Inline editing state
   const [inlineEditId, setInlineEditId] = useState<string | null>(null);
@@ -393,15 +394,27 @@ export default function MealPlanEditor() {
     const sourceItems = items.filter(i => i.day_of_week === source.day && i.meal_type === source.mealType);
     const targetItems = items.filter(i => i.day_of_week === target.day && i.meal_type === target.mealType);
 
-    // Update source items → target position
+    // OPTIMISTIC: update UI immediately
+    setItems(prev => prev.map(i => {
+      if (sourceItems.some(s => s.id === i.id)) return { ...i, day_of_week: target.day, meal_type: target.mealType };
+      if (targetItems.some(t => t.id === i.id)) return { ...i, day_of_week: source.day, meal_type: source.mealType };
+      return i;
+    }));
+    setSwapping(false);
+    setDragSource(null);
+    setDragOver(null);
+
+    const srcLabel = `${MEAL_TYPES.find(m => m.key === source.mealType)?.label} (${DAYS[source.day]?.short})`;
+    const tgtLabel = `${MEAL_TYPES.find(m => m.key === target.mealType)?.label} (${DAYS[target.day]?.short})`;
+    toast.success(`Trocado: ${srcLabel} ↔ ${tgtLabel}`);
+
+    // Persist in background
     const sourceUpdates = sourceItems.map(item =>
       supabase.from("meal_plan_items").update({
         day_of_week: target.day,
         meal_type: target.mealType,
       }).eq("id", item.id)
     );
-
-    // Update target items → source position
     const targetUpdates = targetItems.map(item =>
       supabase.from("meal_plan_items").update({
         day_of_week: source.day,
@@ -411,25 +424,10 @@ export default function MealPlanEditor() {
 
     const results = await Promise.all([...sourceUpdates, ...targetUpdates]);
     const hasError = results.some(r => r.error);
-
     if (hasError) {
-      toast.error("Erro ao trocar refeições");
-      refreshItems();
-    } else {
-      const srcLabel = `${MEAL_TYPES.find(m => m.key === source.mealType)?.label} (${DAYS[source.day]?.short})`;
-      const tgtLabel = `${MEAL_TYPES.find(m => m.key === target.mealType)?.label} (${DAYS[target.day]?.short})`;
-      toast.success(`Trocado: ${srcLabel} ↔ ${tgtLabel}`);
-      // Optimistic: update items locally
-      setItems(prev => prev.map(i => {
-        if (sourceItems.some(s => s.id === i.id)) return { ...i, day_of_week: target.day, meal_type: target.mealType };
-        if (targetItems.some(t => t.id === i.id)) return { ...i, day_of_week: source.day, meal_type: source.mealType };
-        return i;
-      }));
+      toast.error("Erro ao salvar troca — revertendo...");
+      refreshItems(); // rollback from server
     }
-
-    setSwapping(false);
-    setDragSource(null);
-    setDragOver(null);
   };
 
   // Inline edit: save title directly
@@ -535,6 +533,12 @@ export default function MealPlanEditor() {
   // Duplicate a meal item (same day/meal_type)
   const handleDuplicateItem = async (item: MealPlanItem) => {
     if (!id) return;
+    // Optimistic: add temp item immediately
+    const tempId = `temp-${Date.now()}`;
+    const tempItem = { ...item, id: tempId, created_at: new Date().toISOString() };
+    setItems(prev => [...prev, tempItem]);
+    toast.success("Refeição duplicada! 📋");
+
     const { data, error } = await supabase.from("meal_plan_items").insert({
       meal_plan_id: id,
       title: item.title,
@@ -546,10 +550,11 @@ export default function MealPlanEditor() {
       carbs_target: item.carbs_target,
       fat_target: item.fat_target,
     }).select().single();
-    if (error) toast.error("Erro ao duplicar: " + error.message);
-    else {
-      toast.success("Refeição duplicada! 📋");
-      if (data) setItems(prev => [...prev, data]);
+    if (error) {
+      toast.error("Erro ao duplicar: " + error.message);
+      setItems(prev => prev.filter(i => i.id !== tempId)); // rollback
+    } else if (data) {
+      setItems(prev => prev.map(i => i.id === tempId ? data : i)); // replace temp with real
     }
   };
 
@@ -562,6 +567,12 @@ export default function MealPlanEditor() {
   // Paste clipboard item into a specific cell
   const handlePasteItem = async (day: number, mealType: MealType) => {
     if (!id || !clipboardItem) return;
+    // Optimistic: add temp item immediately
+    const tempId = `temp-${Date.now()}`;
+    const tempItem = { ...clipboardItem, id: tempId, meal_type: mealType, day_of_week: day, meal_plan_id: id, created_at: new Date().toISOString() };
+    setItems(prev => [...prev, tempItem]);
+    toast.success(`"${clipboardItem.title}" colado! ✅`);
+
     const { data, error } = await supabase.from("meal_plan_items").insert({
       meal_plan_id: id,
       title: clipboardItem.title,
@@ -573,10 +584,11 @@ export default function MealPlanEditor() {
       carbs_target: clipboardItem.carbs_target,
       fat_target: clipboardItem.fat_target,
     }).select().single();
-    if (error) toast.error("Erro ao colar: " + error.message);
-    else {
-      toast.success(`"${clipboardItem.title}" colado! ✅`);
-      if (data) setItems(prev => [...prev, data]);
+    if (error) {
+      toast.error("Erro ao colar: " + error.message);
+      setItems(prev => prev.filter(i => i.id !== tempId));
+    } else if (data) {
+      setItems(prev => prev.map(i => i.id === tempId ? data : i));
     }
   };
 
@@ -609,10 +621,10 @@ export default function MealPlanEditor() {
     if (!id || !quickAddText.trim()) return;
     setQuickAdding(true);
     
-    // Try to match food from database for auto macros
     const match = findFoodMatch(quickAddText.trim());
-    
-    const { data, error } = await supabase.from("meal_plan_items").insert({
+    const tempId = `temp-${Date.now()}`;
+    const tempItem = {
+      id: tempId,
       meal_plan_id: id,
       title: quickAddText.trim(),
       description: match ? match.portion : null,
@@ -622,14 +634,33 @@ export default function MealPlanEditor() {
       protein_target: match ? match.protein : null,
       carbs_target: match ? match.carbs : null,
       fat_target: match ? match.fat : null,
-    }).select().single();
+      created_at: new Date().toISOString(),
+    } as MealPlanItem;
+
+    // Optimistic: add immediately
+    setItems(prev => [...prev, tempItem]);
+    toast.success(match ? `${quickAddText.trim()} adicionado com macros! ✨` : "Item adicionado!");
+    const addedText = quickAddText.trim();
+    setQuickAddText("");
+    setQuickAddKey(null);
     setQuickAdding(false);
-    if (error) toast.error("Erro ao adicionar: " + error.message);
-    else {
-      toast.success(match ? `${quickAddText.trim()} adicionado com macros! ✨` : "Item adicionado!");
-      setQuickAddText("");
-      setQuickAddKey(null);
-      if (data) setItems(prev => [...prev, data]);
+
+    const { data, error } = await supabase.from("meal_plan_items").insert({
+      meal_plan_id: id,
+      title: addedText,
+      description: match ? match.portion : null,
+      meal_type: mealType,
+      day_of_week: day,
+      calories_target: match ? match.calories : null,
+      protein_target: match ? match.protein : null,
+      carbs_target: match ? match.carbs : null,
+      fat_target: match ? match.fat : null,
+    }).select().single();
+    if (error) {
+      toast.error("Erro ao salvar: " + error.message);
+      setItems(prev => prev.filter(i => i.id !== tempId));
+    } else if (data) {
+      setItems(prev => prev.map(i => i.id === tempId ? data : i));
     }
   };
 
@@ -925,7 +956,15 @@ export default function MealPlanEditor() {
             >
               <Wand2 className="w-4 h-4" /> Edição Inteligente (Macros em Lote)
             </Button>
-            <CalorieTemplates mealPlanId={plan.id} onApplied={refreshItems} />
+            <CalorieTemplates mealPlanId={plan.id} onApplied={async () => {
+              // Fetch updated items without loading spinner
+              const { data } = await supabase
+                .from("meal_plan_items")
+                .select("*")
+                .eq("meal_plan_id", plan.id)
+                .order("created_at");
+              if (data) setItems(data);
+            }} />
             <Button
               variant="outline"
               size="sm"
@@ -1241,7 +1280,7 @@ export default function MealPlanEditor() {
                             </div>
                           )}
                           <div className="flex-1 space-y-1.5">
-                            <AnimatePresence mode="popLayout">
+                            <AnimatePresence initial={false}>
                               {cellItems.map((item) => {
                                 const catDot = getCategoryDot(item.title);
                                 const isInlineEditing = inlineEditId === item.id;
