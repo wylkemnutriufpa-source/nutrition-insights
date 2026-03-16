@@ -523,7 +523,7 @@ export default function MealPlanEditor() {
   // Paste clipboard item into a specific cell
   const handlePasteItem = async (day: number, mealType: MealType) => {
     if (!id || !clipboardItem) return;
-    const { error } = await supabase.from("meal_plan_items").insert({
+    const { data, error } = await supabase.from("meal_plan_items").insert({
       meal_plan_id: id,
       title: clipboardItem.title,
       description: clipboardItem.description,
@@ -533,11 +533,11 @@ export default function MealPlanEditor() {
       protein_target: clipboardItem.protein_target,
       carbs_target: clipboardItem.carbs_target,
       fat_target: clipboardItem.fat_target,
-    });
+    }).select().single();
     if (error) toast.error("Erro ao colar: " + error.message);
     else {
       toast.success(`"${clipboardItem.title}" colado! ✅`);
-      fetchData();
+      if (data) setItems(prev => [...prev, data]);
     }
   };
 
