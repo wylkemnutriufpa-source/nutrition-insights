@@ -1068,7 +1068,7 @@ export default function MealPlanEditor() {
                           </div>
 
                           {/* Quick-add inline */}
-                          <div draggable={false} onMouseDown={(e) => e.stopPropagation()} onDragStart={(e) => e.stopPropagation()}>
+                          <div onClick={(e) => e.stopPropagation()}>
                           {quickAddKey === cellKey ? (
                             <div className="mt-1 flex gap-1">
                               <Input
@@ -1087,18 +1087,21 @@ export default function MealPlanEditor() {
                           ) : (
                             <div className="mt-1 flex gap-0.5">
                               <button
+                                type="button"
                                 onClick={() => { setQuickAddKey(cellKey); setQuickAddText(""); }}
                                 className="flex-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-primary"
                               >
                                 <Plus className="w-3 h-3" /> Rápido
                               </button>
                               <button
+                                type="button"
                                 onClick={() => { setBatchTarget({ day: day.key, mealType: meal.key }); setBatchText(""); }}
                                 className="flex-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-primary"
                               >
                                 <Leaf className="w-3 h-3" /> Lote
                               </button>
                               <button
+                                type="button"
                                 onClick={() => openAddDialog(day.key, meal.key)}
                                 className="flex-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-primary"
                               >
