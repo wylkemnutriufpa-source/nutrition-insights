@@ -85,16 +85,60 @@ const findFoodMatch = (text: string): FoodItem | null => {
 };
 
 
+// ─── Sync Status Types ───
+type SyncStatus = "idle" | "saving" | "saved" | "error";
+
 export default function MealPlanEditor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  // Stable userId primitive — never causes re-render from auth token refresh
+  const userId = user?.id;
 
   const [plan, setPlan] = useState<MealPlan | null>(null);
   const [patientName, setPatientName] = useState("");
   const [items, setItems] = useState<MealPlanItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [planDocs, setPlanDocs] = useState<any[]>([]);
+
+  // ─── Sync status indicator ───
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
+  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showSyncSaving = useCallback(() => {
+    setSyncStatus("saving");
+    if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+  }, []);
+  const showSyncDone = useCallback((success: boolean = true) => {
+    setSyncStatus(success ? "saved" : "error");
+    if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+    syncTimerRef.current = setTimeout(() => setSyncStatus("idle"), 2500);
+  }, []);
+
+  // ─── Scroll preservation ───
+  const editorContainerRef = useRef<HTMLDivElement>(null);
+  const savedScrollRef = useRef<number>(0);
+  const preserveScroll = useCallback(() => {
+    if (editorContainerRef.current) {
+      savedScrollRef.current = editorContainerRef.current.scrollTop;
+    } else {
+      savedScrollRef.current = window.scrollY;
+    }
+  }, []);
+  const restoreScroll = useCallback(() => {
+    requestAnimationFrame(() => {
+      if (editorContainerRef.current) {
+        editorContainerRef.current.scrollTop = savedScrollRef.current;
+      } else {
+        window.scrollTo(0, savedScrollRef.current);
+      }
+    });
+  }, []);
+  // Wrapper: preserve scroll around any setItems call
+  const setItemsStable = useCallback((updater: React.SetStateAction<MealPlanItem[]>) => {
+    preserveScroll();
+    setItems(updater);
+    restoreScroll();
+  }, [preserveScroll, restoreScroll]);
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -109,7 +153,7 @@ export default function MealPlanEditor() {
   const [generating, setGenerating] = useState(false);
 
   // Quick-add state
-  const [quickAddKey, setQuickAddKey] = useState<string | null>(null); // "day-mealType"
+  const [quickAddKey, setQuickAddKey] = useState<string | null>(null);
   const [quickAddText, setQuickAddText] = useState("");
   const [quickAdding, setQuickAdding] = useState(false);
   const [batchMode, setBatchMode] = useState(false);
@@ -165,14 +209,15 @@ export default function MealPlanEditor() {
 
   // Template Quick Insert Panel state
   const [templatePanelOpen, setTemplatePanelOpen] = useState(false);
-  const [templatePanelTarget, setTemplatePanelTarget] = useState<{ day: number; mealType: MealType }>({ day: 1, mealType: "breakfast" });
+  const [templatePanelTarget, setTemplatePanelTarget] = useState<{ day: number; mealType: MealType }>({ day: 1, mealType: "breakfast" })
 
   // Save as template dialog state
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
   const [saveTemplateItems, setSaveTemplateItems] = useState<MealPlanItem[]>([]);
   const [saveTemplateMealType, setSaveTemplateMealType] = useState<string>("lunch");
 
-  const userId = user?.id;
+  // Guard: only fetch once per plan ID
+  const hasFetchedRef = useRef<string | null>(null);
   const fetchData = useCallback(async () => {
     if (!id || !userId) return;
     setLoading(true);
