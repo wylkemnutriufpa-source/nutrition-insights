@@ -337,9 +337,17 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold truncate">{p.patient_name}</p>
                           <div className="flex flex-wrap gap-2 mt-1">
-                            {template && (
+                            {p.status === "pending_plan_generation" ? (
+                              <Badge variant="outline" className="text-xs border-amber-500 text-amber-600">
+                                ⏳ Aguardando geração
+                              </Badge>
+                            ) : template ? (
                               <Badge variant="secondary" className="text-xs">
                                 {template.name} • {template.base_calories}kcal
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-xs border-amber-500 text-amber-600">
+                                ⏳ Sem plano
                               </Badge>
                             )}
                             {altCount > 0 && (
