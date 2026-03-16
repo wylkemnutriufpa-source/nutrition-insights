@@ -1033,7 +1033,13 @@ export default function MealPlanEditor() {
                                     </div>
                                   ) : (
                                     <>
-                                      <div className="flex items-center gap-1 cursor-pointer" onClick={() => openEditDialog(item)}>
+                                      <div 
+                                        className="flex items-center gap-1 cursor-pointer" 
+                                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); openEditDialog(item); }}
+                                        role="button"
+                                        tabIndex={0}
+                                        onKeyDown={(e) => { if (e.key === 'Enter') openEditDialog(item); }}
+                                      >
                                         {catDot && <span className={`w-1.5 h-1.5 rounded-full ${catDot} shrink-0`} />}
                                         <p className="text-[11px] font-medium leading-tight truncate flex-1">{item.title}</p>
                                       </div>
