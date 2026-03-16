@@ -621,10 +621,10 @@ export default function MealPlanEditor() {
     if (!id || !quickAddText.trim()) return;
     setQuickAdding(true);
     
-    // Try to match food from database for auto macros
     const match = findFoodMatch(quickAddText.trim());
-    
-    const { data, error } = await supabase.from("meal_plan_items").insert({
+    const tempId = `temp-${Date.now()}`;
+    const tempItem = {
+      id: tempId,
       meal_plan_id: id,
       title: quickAddText.trim(),
       description: match ? match.portion : null,
@@ -634,14 +634,33 @@ export default function MealPlanEditor() {
       protein_target: match ? match.protein : null,
       carbs_target: match ? match.carbs : null,
       fat_target: match ? match.fat : null,
-    }).select().single();
+      created_at: new Date().toISOString(),
+    } as MealPlanItem;
+
+    // Optimistic: add immediately
+    setItems(prev => [...prev, tempItem]);
+    toast.success(match ? `${quickAddText.trim()} adicionado com macros! ✨` : "Item adicionado!");
+    const addedText = quickAddText.trim();
+    setQuickAddText("");
+    setQuickAddKey(null);
     setQuickAdding(false);
-    if (error) toast.error("Erro ao adicionar: " + error.message);
-    else {
-      toast.success(match ? `${quickAddText.trim()} adicionado com macros! ✨` : "Item adicionado!");
-      setQuickAddText("");
-      setQuickAddKey(null);
-      if (data) setItems(prev => [...prev, data]);
+
+    const { data, error } = await supabase.from("meal_plan_items").insert({
+      meal_plan_id: id,
+      title: addedText,
+      description: match ? match.portion : null,
+      meal_type: mealType,
+      day_of_week: day,
+      calories_target: match ? match.calories : null,
+      protein_target: match ? match.protein : null,
+      carbs_target: match ? match.carbs : null,
+      fat_target: match ? match.fat : null,
+    }).select().single();
+    if (error) {
+      toast.error("Erro ao salvar: " + error.message);
+      setItems(prev => prev.filter(i => i.id !== tempId));
+    } else if (data) {
+      setItems(prev => prev.map(i => i.id === tempId ? data : i));
     }
   };
 
