@@ -12,6 +12,7 @@ import {
   AlertTriangle, ArrowRight, Sparkles, Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePatientPlanStatus } from "@/hooks/usePatientPlanStatus";
 
 interface PipelineStep {
   key: string;
@@ -27,12 +28,17 @@ const DISMISSED_KEY = "fitjourney_onboarding_modal_dismissed";
 export default function OnboardingProgressModal() {
   const { user, isPatient } = useAuth();
   const navigate = useNavigate();
+  const planStatus = usePatientPlanStatus();
   const [open, setOpen] = useState(false);
   const [steps, setSteps] = useState<PipelineStep[]>([]);
   const [pipelineId, setPipelineId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user || !isPatient) return;
+
+    // ── SOVEREIGN RULE: If plan is delivered, NEVER show onboarding modal ──
+    if (planStatus.isLoading) return;
+    if (!planStatus.showOnboarding) return;
 
     // Don't show if dismissed today
     const dismissedRaw = localStorage.getItem(`${DISMISSED_KEY}_${user.id}`);
@@ -46,12 +52,12 @@ export default function OnboardingProgressModal() {
         .from("onboarding_pipelines")
         .select("*")
         .eq("patient_id", user.id)
-        .neq("status", "completed")
+        .not("status", "in", '("completed","superseded_by_published_plan")')
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
 
-      if (!pipeline) return; // No active pipeline or already completed
+      if (!pipeline) return;
 
       setPipelineId(pipeline.id);
 
@@ -90,18 +96,17 @@ export default function OnboardingProgressModal() {
             : "Após completar as etapas, seu profissional revisará e aprovará seu plano.",
           icon: CheckCircle2,
           completed: !!pipeline.plan_approved,
-          route: "/dashboard", // stays on dashboard, patient can't do anything here
+          route: "/dashboard",
         },
       ];
 
-      // If all patient steps are done but plan not approved, still show modal with waiting state
       const incomplete = detectedSteps.filter((s) => !s.completed);
-      if (incomplete.length === 0) return; // Everything done including approval
+      if (incomplete.length === 0) return;
 
       setSteps(detectedSteps);
       setOpen(true);
     })();
-  }, [user, isPatient]);
+  }, [user, isPatient, planStatus.isLoading, planStatus.showOnboarding]);
 
   const completedCount = steps.filter((s) => s.completed).length;
   const totalCount = steps.length;
@@ -122,7 +127,6 @@ export default function OnboardingProgressModal() {
     navigate(route);
   };
 
-  // Find first incomplete step
   const firstIncomplete = steps.find((s) => !s.completed);
 
   return (
@@ -139,7 +143,6 @@ export default function OnboardingProgressModal() {
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Progress bar */}
           <div className="space-y-1">
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>{completedCount} de {totalCount} concluídas</span>
@@ -148,13 +151,12 @@ export default function OnboardingProgressModal() {
             <Progress value={percent} className="h-2" />
           </div>
 
-          {/* Step list */}
           <div className="space-y-2">
             {steps.map((step) => {
               const Icon = step.icon;
               const isNext = !step.completed && step.key === firstIncomplete?.key;
               return (
-              <button
+                <button
                   key={step.key}
                   onClick={() => {
                     if (!step.completed && step.key !== "approval") handleGoToStep(step.route);
@@ -194,7 +196,6 @@ export default function OnboardingProgressModal() {
             })}
           </div>
 
-          {/* Actions */}
           <div className="flex gap-2 pt-2">
             <Button variant="outline" onClick={handleDismiss} className="flex-1">
               Lembrar depois
