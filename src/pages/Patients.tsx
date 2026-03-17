@@ -654,25 +654,11 @@ export default function Patients() {
   const onlineFilterFn = (p: PatientInfo) =>
     !onlineFilter || onlineSet.has(p.patient_id);
 
-  const activePatientsList = useMemo(() =>
-    patients.filter(p => p.status === "active" && searchFilter(p) && scoreFilter(p) && prestigeFilterFn(p) && onlineFilterFn(p)),
-    [patients, search, filter, prestigeFilter, onlineFilter, onlineSet]
+  // Client-side filters applied on current page of server-paginated results
+  const filteredPatients = useMemo(() =>
+    patients.filter(p => scoreFilter(p) && prestigeFilterFn(p) && onlineFilterFn(p)),
+    [patients, filter, prestigeFilter, onlineFilter, onlineSet]
   );
-
-  const inactivePatientsList = useMemo(() =>
-    patients.filter(p => p.status !== "active" && searchFilter(p) && prestigeFilterFn(p)),
-    [patients, search, prestigeFilter]
-  );
-
-  const programPatientLists = useMemo(() => {
-    const map = new Map<string, PatientInfo[]>();
-    programs.forEach(prog => {
-      map.set(prog.id, patients.filter(p =>
-        p.programs?.some(pp => pp.id === prog.id) && searchFilter(p)
-      ));
-    });
-    return map;
-  }, [patients, programs, search]);
 
   // Client-side score filter counts (on current page only)
   const scoreCounts = {
