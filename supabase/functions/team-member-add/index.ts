@@ -36,7 +36,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Verify caller is nutritionist/personal/admin
+    // Rate limiting: max 10 team-member-add requests per 15 min per user
+    const rl = await checkRateLimit("team-member-add", user.id, 10, 15);
+    if (!rl.allowed) return rateLimitResponse();
+
     const { data: callerRoles } = await supabaseAdmin
       .from("user_roles")
       .select("role")
