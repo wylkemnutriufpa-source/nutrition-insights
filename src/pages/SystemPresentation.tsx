@@ -7,14 +7,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
 import { PROFESSIONAL_SLIDES, PATIENT_SLIDES } from "@/lib/presentationSlides";
-import { GraduationCap, Stethoscope, User, Play, CheckCircle2, RotateCcw } from "lucide-react";
+import { GraduationCap, Stethoscope, User, Play, CheckCircle2, RotateCcw, Clapperboard } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const STORAGE_KEY_PRO = "fj_presentation_pro_done";
 const STORAGE_KEY_PAT = "fj_presentation_pat_done";
 
 export default function SystemPresentation() {
   const { isNutritionist, isAdmin, isPatient } = useAuth();
+  const navigate = useNavigate();
   const [activePresentation, setActivePresentation] = useState<"professional" | "patient" | null>(null);
   const [proDone, setProDone] = useState(() => localStorage.getItem(STORAGE_KEY_PRO) === "true");
   const [patDone, setPatDone] = useState(() => localStorage.getItem(STORAGE_KEY_PAT) === "true");
@@ -77,6 +79,25 @@ export default function SystemPresentation() {
     },
   ];
 
+  const cinematicCards = [
+    ...(isPro
+      ? [
+          {
+            title: "Onboarding Profissional Cinemático",
+            description: "Experiência imersiva premium com 10 slides — cockpit clínico, IA, automação e crescimento.",
+            route: "/onboarding-profissional",
+            gradient: "from-emerald-600 to-emerald-900",
+          },
+        ]
+      : []),
+    {
+      title: "Onboarding do Paciente Cinemático",
+      description: "Jornada guiada imersiva com 10 slides — plano alimentar, gamificação, evolução e suporte.",
+      route: "/onboarding-paciente",
+      gradient: "from-emerald-500 to-teal-700",
+    },
+  ];
+
   return (
     <DashboardLayout>
       <div className="max-w-3xl mx-auto space-y-8">
@@ -97,7 +118,7 @@ export default function SystemPresentation() {
           </p>
         </motion.div>
 
-        {/* Cards */}
+        {/* Standard presentation cards */}
         <div className="grid gap-4">
           {cards.map((c, i) => {
             const Icon = c.icon;
@@ -147,6 +168,44 @@ export default function SystemPresentation() {
               </motion.div>
             );
           })}
+        </div>
+
+        {/* Cinematic onboarding cards */}
+        <div>
+          <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <Clapperboard className="w-5 h-5 text-emerald-400" />
+            Experiências Cinemáticas
+          </h2>
+          <div className="grid gap-4">
+            {cinematicCards.map((c, i) => (
+              <motion.div
+                key={c.route}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 + i * 0.1 }}
+              >
+                <Card className="group hover:shadow-md transition-shadow border-emerald-500/20">
+                  <CardContent className="p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${c.gradient} flex items-center justify-center flex-shrink-0 shadow-md`}>
+                      <Clapperboard className="w-7 h-7 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-lg">{c.title}</h3>
+                      <p className="text-sm text-muted-foreground">{c.description}</p>
+                      <span className="text-xs text-muted-foreground mt-1 block">10 slides imersivos</span>
+                    </div>
+                    <Button
+                      onClick={() => navigate(c.route)}
+                      variant="outline"
+                      className="flex-shrink-0 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
+                    >
+                      <Play className="w-4 h-4 mr-1" /> Assistir
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
     </DashboardLayout>
