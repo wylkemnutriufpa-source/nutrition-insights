@@ -47,7 +47,7 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
     const handler = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight" || e.key === " ") go(idx + 1);
       else if (e.key === "ArrowLeft") go(idx - 1);
-      else if (e.key === "Escape") onSkip?.() || onFinish();
+      else if (e.key === "Escape") { if (onSkip) onSkip(); else onFinish(); }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
