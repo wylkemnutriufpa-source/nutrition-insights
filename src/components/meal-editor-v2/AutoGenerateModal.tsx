@@ -1,0 +1,358 @@
+import { useState, useCallback } from "react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Loader2, Wand2, AlertTriangle, CheckCircle2, Flame, Beef, Wheat, Droplets, Info,
+} from "lucide-react";
+import { toast } from "sonner";
+import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
+import {
+  generateMealPlanFromLibrary,
+  loadPatientProfile,
+  slotsToInserts,
+  type PatientProfile,
+  type AutoGenerationResult,
+  type MealDistribution,
+} from "@/lib/mealPlanAutoGenerator";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Props {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+const GOAL_LABELS: Record<string, string> = {
+  weight_loss: "Emagrecimento",
+  hypertrophy: "Hipertrofia",
+  low_carb: "Low Carb",
+  metabolic: "Metabólico",
+  functional: "Funcional",
+  maintenance: "Manutenção",
+};
+
+const DEFAULT_DIST: MealDistribution = {
+  breakfast: 0.20,
+  morning_snack: 0.10,
+  lunch: 0.30,
+  afternoon_snack: 0.10,
+  dinner: 0.22,
+  evening_snack: 0.08,
+};
+
+export function AutoGenerateModal({ open, onOpenChange }: Props) {
+  const { plan, planId, addItems, items: currentItems } = useMealPlanEditorV2Store();
+  const [step, setStep] = useState<"config" | "generating" | "preview">("config");
+  const [profile, setProfile] = useState<PatientProfile | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
+  const [result, setResult] = useState<AutoGenerationResult | null>(null);
+
+  // Overridable fields
+  const [goal, setGoal] = useState("weight_loss");
+  const [targetKcal, setTargetKcal] = useState(2000);
+  const [targetProtein, setTargetProtein] = useState(120);
+  const [targetCarbs, setTargetCarbs] = useState(250);
+  const [targetFat, setTargetFat] = useState(60);
+  const [rejectedFoods, setRejectedFoods] = useState("");
+
+  // Load patient profile when modal opens
+  const handleLoadProfile = useCallback(async () => {
+    if (!plan?.patient_id) return;
+    setLoadingProfile(true);
+    const p = await loadPatientProfile(plan.patient_id);
+    if (p) {
+      setProfile(p);
+      setGoal(p.goal);
+      setTargetKcal(p.targetCalories);
+      setTargetProtein(p.targetProtein);
+      setTargetCarbs(p.targetCarbs);
+      setTargetFat(p.targetFat);
+      setRejectedFoods(p.rejectedFoods.join(", "));
+    } else {
+      toast.info("Anamnese não encontrada. Configure manualmente.");
+    }
+    setLoadingProfile(false);
+  }, [plan?.patient_id]);
+
+  const handleGenerate = useCallback(async () => {
+    if (!planId) return;
+    setStep("generating");
+
+    const profileInput: PatientProfile = {
+      patientId: plan?.patient_id || "",
+      goal,
+      targetCalories: targetKcal,
+      targetProtein,
+      targetCarbs,
+      targetFat,
+      restrictions: [],
+      rejectedFoods: rejectedFoods.split(",").map((s) => s.trim()).filter(Boolean),
+      clinicalTags: profile?.clinicalTags || [],
+      weight: profile?.weight,
+    };
+
+    const res = await generateMealPlanFromLibrary(profileInput, DEFAULT_DIST);
+    setResult(res);
+    setStep("preview");
+
+    if (res.warnings.length > 0) {
+      toast.warning(`${res.warnings.length} aviso(s) durante geração`);
+    }
+  }, [planId, plan?.patient_id, goal, targetKcal, targetProtein, targetCarbs, targetFat, rejectedFoods, profile]);
+
+  const handleApply = useCallback(async () => {
+    if (!result || !planId) return;
+
+    // Delete existing items first (substitution logic)
+    const existingIds = currentItems.filter((i) => !i.id.startsWith("temp-")).map((i) => i.id);
+    if (existingIds.length > 0) {
+      await supabase.from("meal_plan_items").delete().in("id", existingIds);
+    }
+
+    // Generate inserts
+    const inserts = slotsToInserts(result.slots, planId);
+    
+    // Reset items in store and add new ones
+    useMealPlanEditorV2Store.setState({ items: [] });
+    addItems(inserts);
+
+    // Update plan status + metadata
+    await supabase
+      .from("meal_plans")
+      .update({
+        plan_status: "draft_auto_generated",
+        generation_source: "meal_library_engine",
+        generation_metadata: result.metadata as any,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", planId);
+
+    useMealPlanEditorV2Store.getState().updatePlan({
+      plan_status: "draft_auto_generated",
+      generation_source: "meal_library_engine",
+      generation_metadata: result.metadata as any,
+      updated_at: new Date().toISOString(),
+    } as any);
+
+    toast.success("Plano gerado automaticamente! Revise e salve.");
+    onOpenChange(false);
+    setStep("config");
+    setResult(null);
+  }, [result, planId, currentItems, addItems, onOpenChange]);
+
+  const handleClose = () => {
+    onOpenChange(false);
+    setStep("config");
+    setResult(null);
+  };
+
+  // Daily summary from result
+  const daySummary = result?.slots.reduce((acc, s) => {
+    if (!acc[s.day]) acc[s.day] = { kcal: 0, p: 0, c: 0, f: 0, count: 0 };
+    acc[s.day].kcal += s.targetKcal;
+    acc[s.day].p += Math.round(s.libraryItem.protein * s.scaleFactor);
+    acc[s.day].c += Math.round(s.libraryItem.carbs * s.scaleFactor);
+    acc[s.day].f += Math.round(s.libraryItem.fat * s.scaleFactor);
+    acc[s.day].count += 1;
+    return acc;
+  }, {} as Record<number, { kcal: number; p: number; c: number; f: number; count: number }>);
+
+  const dayLabels = ["", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-lg max-h-[85vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="px-5 pt-5 pb-3 border-b border-border">
+          <DialogTitle className="flex items-center gap-2 text-base">
+            <Wand2 className="w-4 h-4 text-primary" />
+            Gerar Plano Automático
+          </DialogTitle>
+          <DialogDescription className="text-xs">
+            Motor determinístico v1.0 — monta 7 dias a partir da biblioteca clínica
+          </DialogDescription>
+        </DialogHeader>
+
+        <ScrollArea className="flex-1 px-5 py-4">
+          {step === "config" && (
+            <div className="space-y-4">
+              {/* Load from anamnesis */}
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border">
+                <div className="text-xs">
+                  <p className="font-medium">Carregar dados da anamnese</p>
+                  <p className="text-muted-foreground">Preenche objetivo, macros e restrições</p>
+                </div>
+                <Button size="sm" variant="outline" onClick={handleLoadProfile} disabled={loadingProfile}>
+                  {loadingProfile ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Carregar"}
+                </Button>
+              </div>
+
+              {profile && (
+                <div className="flex items-center gap-1.5 text-[10px] text-green-600">
+                  <CheckCircle2 className="w-3 h-3" /> Dados carregados da anamnese
+                </div>
+              )}
+
+              {/* Goal */}
+              <div className="space-y-1.5">
+                <Label className="text-xs">Objetivo</Label>
+                <Select value={goal} onValueChange={setGoal}>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(GOAL_LABELS).map(([k, v]) => (
+                      <SelectItem key={k} value={k}>{v}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Macros */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs flex items-center gap-1">
+                    <Flame className="w-3 h-3 text-orange-400" /> Calorias/dia
+                  </Label>
+                  <Input type="number" value={targetKcal} onChange={(e) => setTargetKcal(Number(e.target.value))} className="h-8 text-sm" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs flex items-center gap-1">
+                    <Beef className="w-3 h-3 text-red-400" /> Proteína (g)
+                  </Label>
+                  <Input type="number" value={targetProtein} onChange={(e) => setTargetProtein(Number(e.target.value))} className="h-8 text-sm" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs flex items-center gap-1">
+                    <Wheat className="w-3 h-3 text-amber-500" /> Carboidratos (g)
+                  </Label>
+                  <Input type="number" value={targetCarbs} onChange={(e) => setTargetCarbs(Number(e.target.value))} className="h-8 text-sm" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs flex items-center gap-1">
+                    <Droplets className="w-3 h-3 text-blue-400" /> Gordura (g)
+                  </Label>
+                  <Input type="number" value={targetFat} onChange={(e) => setTargetFat(Number(e.target.value))} className="h-8 text-sm" />
+                </div>
+              </div>
+
+              {/* Rejected foods */}
+              <div className="space-y-1">
+                <Label className="text-xs">Alimentos rejeitados (separar por vírgula)</Label>
+                <Input
+                  value={rejectedFoods}
+                  onChange={(e) => setRejectedFoods(e.target.value)}
+                  placeholder="Ex: fígado, beterraba, chuchu"
+                  className="h-8 text-sm"
+                />
+              </div>
+
+              {/* Distribution info */}
+              <div className="p-3 rounded-lg bg-muted/30 border border-border text-[10px] space-y-1">
+                <p className="font-medium flex items-center gap-1">
+                  <Info className="w-3 h-3" /> Distribuição calórica padrão
+                </p>
+                <div className="grid grid-cols-3 gap-1 text-muted-foreground">
+                  <span>Café: 20%</span>
+                  <span>Lanche M: 10%</span>
+                  <span>Almoço: 30%</span>
+                  <span>Lanche T: 10%</span>
+                  <span>Jantar: 22%</span>
+                  <span>Ceia: 8%</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {step === "generating" && (
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <p className="text-sm font-medium">Gerando plano semanal…</p>
+              <p className="text-xs text-muted-foreground">Selecionando refeições • Aplicando escala • Validando diversidade</p>
+            </div>
+          )}
+
+          {step === "preview" && result && (
+            <div className="space-y-4">
+              {/* Summary */}
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-green-500" />
+                <span className="text-sm font-medium">
+                  {result.slots.length} refeições geradas para 7 dias
+                </span>
+              </div>
+
+              {/* Warnings */}
+              {result.warnings.length > 0 && (
+                <div className="p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20 space-y-1">
+                  {result.warnings.map((w, i) => (
+                    <p key={i} className="text-[10px] text-yellow-700 flex items-start gap-1">
+                      <AlertTriangle className="w-3 h-3 shrink-0 mt-0.5" /> {w}
+                    </p>
+                  ))}
+                </div>
+              )}
+
+              {/* Daily breakdown */}
+              <div className="space-y-2">
+                <p className="text-xs font-semibold">Resumo por dia</p>
+                {daySummary && Object.entries(daySummary).map(([day, d]) => (
+                  <div key={day} className="flex items-center justify-between text-[11px] p-2 rounded bg-muted/40 border border-border">
+                    <span className="font-medium w-10">{dayLabels[Number(day)]}</span>
+                    <span className="flex items-center gap-1">
+                      <Flame className="w-3 h-3 text-orange-400" /> {d.kcal}
+                    </span>
+                    <span className="flex items-center gap-1 text-muted-foreground">
+                      <Beef className="w-2.5 h-2.5 text-red-400" /> {d.p}g
+                    </span>
+                    <span className="flex items-center gap-1 text-muted-foreground">
+                      <Wheat className="w-2.5 h-2.5 text-amber-500" /> {d.c}g
+                    </span>
+                    <span className="flex items-center gap-1 text-muted-foreground">
+                      <Droplets className="w-2.5 h-2.5 text-blue-400" /> {d.f}g
+                    </span>
+                    <Badge variant="outline" className="text-[8px] h-4">{d.count} ref</Badge>
+                  </div>
+                ))}
+              </div>
+
+              {/* Metadata */}
+              <div className="p-2 rounded-lg bg-muted/20 border border-border text-[9px] text-muted-foreground space-y-0.5">
+                <p>Engine: v{result.metadata.engine_version} • {result.metadata.algorithm}</p>
+                <p>Biblioteca: {result.metadata.total_library_items} itens → {result.metadata.items_after_filter} filtrados</p>
+                <p>Diversidade: {result.metadata.diversity_enforced ? "✓ aplicada" : "⚠ relaxada"}</p>
+              </div>
+            </div>
+          )}
+        </ScrollArea>
+
+        <DialogFooter className="px-5 py-3 border-t border-border gap-2">
+          {step === "config" && (
+            <>
+              <Button variant="ghost" size="sm" onClick={handleClose}>Cancelar</Button>
+              <Button size="sm" onClick={handleGenerate} className="gap-1.5">
+                <Wand2 className="w-3.5 h-3.5" /> Gerar Plano
+              </Button>
+            </>
+          )}
+          {step === "preview" && result?.success && (
+            <>
+              <Button variant="ghost" size="sm" onClick={() => setStep("config")}>Voltar</Button>
+              <Button size="sm" onClick={handleApply} className="gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5" /> Aplicar ao Plano
+              </Button>
+            </>
+          )}
+          {step === "preview" && !result?.success && (
+            <Button variant="ghost" size="sm" onClick={() => setStep("config")}>Voltar</Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
