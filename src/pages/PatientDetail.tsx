@@ -553,6 +553,7 @@ export default function PatientDetail() {
             { key: "radar", label: "Radar Metabólico", icon: TrendingUp, color: "from-destructive/20 to-destructive/5", iconColor: "text-destructive" },
             { key: "recipes", label: "Receitas", icon: ChefHat, color: "from-primary/20 to-accent/5", iconColor: "text-primary" },
             { key: "clinical-decision", label: "Decisão Clínica", icon: Stethoscope, color: "from-destructive/20 to-primary/5", iconColor: "text-destructive" },
+            { key: "body-projection", label: "Projeção Corporal", icon: Sparkles, color: "from-purple-500/20 to-violet-500/5", iconColor: "text-purple-500" },
             { key: "onboarding", label: "Onboarding", icon: Zap, color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
             { key: "edit-profile", label: "Editar Cadastro", icon: Pencil, color: "from-info/20 to-info/5", iconColor: "text-info" },
           ];
