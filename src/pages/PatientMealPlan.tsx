@@ -16,6 +16,7 @@ import {
   BarChart3, TrendingUp, CalendarDays, CalendarRange, Star
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import { MealDetailModal, type MealDetailData } from "@/components/patient/MealDetailModal";
 
 type MealType = Database["public"]["Enums"]["meal_type"];
 type AdherenceStatus = "followed" | "partial" | "not_followed";
