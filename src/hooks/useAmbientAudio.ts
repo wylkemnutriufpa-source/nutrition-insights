@@ -5,35 +5,38 @@ interface UseAmbientAudioOptions {
   initialVolume?: number;
   fadeInDuration?: number;
   loop?: boolean;
-  autoplay?: boolean;
 }
+
+const MUTE_KEY = "fj_audio_muted";
 
 export function useAmbientAudio({
   src,
-  initialVolume = 0.2,
-  fadeInDuration = 1500,
+  initialVolume = 0.18,
+  fadeInDuration = 1200,
   loop = true,
-  autoplay = true,
 }: UseAmbientAudioOptions) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const fadeIntervalRef = useRef<number | null>(null);
-  const [isMuted, setIsMuted] = useState(false);
+  const fadeRef = useRef<number | null>(null);
+  const unlockedRef = useRef(false);
+  const [isMuted, setIsMuted] = useState(() => localStorage.getItem(MUTE_KEY) === "1");
   const [volume, setVolume] = useState(initialVolume);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [needsInteraction, setNeedsInteraction] = useState(false);
+  const [needsInteraction, setNeedsInteraction] = useState(true);
 
-  // Initialize audio element
+  // Create audio element once (lazy)
   useEffect(() => {
-    const audio = new Audio(src);
+    const audio = new Audio();
+    audio.preload = "auto";
     audio.loop = loop;
     audio.volume = 0;
-    audio.preload = "auto";
+    audio.src = src;
     audioRef.current = audio;
 
     return () => {
-      if (fadeIntervalRef.current) clearInterval(fadeIntervalRef.current);
+      if (fadeRef.current) cancelAnimationFrame(fadeRef.current);
       audio.pause();
-      audio.src = "";
+      audio.removeAttribute("src");
+      audio.load();
       audioRef.current = null;
     };
   }, [src, loop]);
@@ -42,72 +45,75 @@ export function useAmbientAudio({
   const fadeIn = useCallback((targetVolume: number) => {
     const audio = audioRef.current;
     if (!audio) return;
+    if (fadeRef.current) cancelAnimationFrame(fadeRef.current);
 
-    if (fadeIntervalRef.current) clearInterval(fadeIntervalRef.current);
+    const start = performance.now();
+    const from = audio.volume;
 
-    const steps = 50;
-    const stepTime = fadeInDuration / steps;
-    const volumeStep = targetVolume / steps;
-    let currentStep = 0;
-
-    fadeIntervalRef.current = window.setInterval(() => {
-      currentStep++;
-      const newVol = Math.min(volumeStep * currentStep, targetVolume);
-      audio.volume = newVol;
-      if (currentStep >= steps) {
-        if (fadeIntervalRef.current) clearInterval(fadeIntervalRef.current);
-        fadeIntervalRef.current = null;
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      const t = Math.min(elapsed / fadeInDuration, 1);
+      // ease-out quad
+      const eased = t * (2 - t);
+      audio.volume = from + (targetVolume - from) * eased;
+      if (t < 1) {
+        fadeRef.current = requestAnimationFrame(tick);
+      } else {
+        fadeRef.current = null;
       }
-    }, stepTime);
+    };
+    fadeRef.current = requestAnimationFrame(tick);
   }, [fadeInDuration]);
 
-  // Attempt autoplay
-  useEffect(() => {
-    if (!autoplay || !audioRef.current) return;
-
+  // Unlock and play — called on first user gesture
+  const startPlayback = useCallback(async () => {
+    if (unlockedRef.current) return;
     const audio = audioRef.current;
-    const tryPlay = async () => {
-      try {
-        await audio.play();
-        setIsPlaying(true);
+    if (!audio) return;
+
+    try {
+      audio.volume = 0;
+      await audio.play();
+      unlockedRef.current = true;
+      setIsPlaying(true);
+      setNeedsInteraction(false);
+
+      if (!isMuted) {
         fadeIn(volume);
-      } catch {
-        // Autoplay blocked — need user interaction
-        setNeedsInteraction(true);
+      }
+    } catch {
+      // Still blocked — keep waiting
+    }
+  }, [fadeIn, volume, isMuted]);
+
+  // Global listener: unlock on ANY user gesture
+  useEffect(() => {
+    const handler = () => {
+      if (!unlockedRef.current) {
+        startPlayback();
       }
     };
 
-    // Small delay to let component mount
-    const t = setTimeout(tryPlay, 300);
-    return () => clearTimeout(t);
-  }, [autoplay, fadeIn, volume]);
-
-  // Handle user-triggered play (for mobile / autoplay-blocked)
-  const startPlayback = useCallback(async () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    try {
-      await audio.play();
-      setIsPlaying(true);
-      setNeedsInteraction(false);
-      fadeIn(volume);
-    } catch {
-      // still blocked
-    }
-  }, [fadeIn, volume]);
+    const events = ["click", "touchstart", "keydown", "pointerdown"] as const;
+    events.forEach(e => window.addEventListener(e, handler, { once: false, passive: true }));
+    return () => {
+      events.forEach(e => window.removeEventListener(e, handler));
+    };
+  }, [startPlayback]);
 
   // Toggle mute
   const toggleMute = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    if (isMuted) {
-      audio.volume = volume;
-      setIsMuted(false);
-    } else {
+    const next = !isMuted;
+    setIsMuted(next);
+    localStorage.setItem(MUTE_KEY, next ? "1" : "0");
+    if (next) {
       audio.volume = 0;
-      setIsMuted(true);
+    } else {
+      fadeIn(volume);
     }
-  }, [isMuted, volume]);
+  }, [isMuted, volume, fadeIn]);
 
   // Update volume
   const changeVolume = useCallback((v: number) => {
@@ -122,26 +128,25 @@ export function useAmbientAudio({
   const stop = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
+    if (fadeRef.current) cancelAnimationFrame(fadeRef.current);
 
-    if (fadeIntervalRef.current) clearInterval(fadeIntervalRef.current);
+    const start = performance.now();
+    const from = audio.volume;
+    const duration = 500;
 
-    const steps = 15;
-    const stepTime = 500 / steps;
-    const currentVol = audio.volume;
-    const volumeStep = currentVol / steps;
-    let currentStep = 0;
-
-    fadeIntervalRef.current = window.setInterval(() => {
-      currentStep++;
-      const newVol = Math.max(currentVol - volumeStep * currentStep, 0);
-      audio.volume = newVol;
-      if (currentStep >= steps) {
-        if (fadeIntervalRef.current) clearInterval(fadeIntervalRef.current);
-        fadeIntervalRef.current = null;
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      const t = Math.min(elapsed / duration, 1);
+      audio.volume = from * (1 - t);
+      if (t < 1) {
+        fadeRef.current = requestAnimationFrame(tick);
+      } else {
+        fadeRef.current = null;
         audio.pause();
         setIsPlaying(false);
       }
-    }, stepTime);
+    };
+    fadeRef.current = requestAnimationFrame(tick);
   }, []);
 
   return {
