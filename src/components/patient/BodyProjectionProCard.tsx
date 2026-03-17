@@ -91,7 +91,7 @@ export default function BodyProjectionProCard({ patientId, isAdmin }: Props) {
         .limit(30),
     ]);
 
-    setSnapshots((snapRes.data || []) as Snapshot[]);
+    setSnapshots((snapRes.data || []) as unknown as Snapshot[]);
 
     // Build weight timeline
     const history: { date: string; weight: number }[] = [];
