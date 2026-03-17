@@ -146,13 +146,15 @@ export default function SystemPresentation() {
       key: "professional" as const,
       title: "Apresentação do Profissional",
       description: "Conheça o cockpit clínico, editor de planos, dashboard de resultados e o Motor FitJourney™.",
-      icon: Stethoscope, gradient: "from-primary to-accent", done: proDone, slides: PROFESSIONAL_SLIDES.length,
+      icon: Stethoscope, gradient: "from-primary to-accent", done: proDone, slides: proSlides.length,
+      newCount: proNew.length,
     }] : []),
     {
       key: "patient" as const,
       title: "Apresentação do Paciente",
       description: "Aprenda a seguir o plano alimentar, registrar progresso e interpretar seus resultados.",
-      icon: User, gradient: "from-success to-info", done: patDone, slides: PATIENT_SLIDES.length,
+      icon: User, gradient: "from-success to-info", done: patDone, slides: patSlides.length,
+      newCount: patNew.length,
     },
   ];
 
