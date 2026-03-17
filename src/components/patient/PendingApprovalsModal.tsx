@@ -16,6 +16,7 @@ import {
   Target, Sparkles, ChevronRight, Scale,
   FileText, Zap
 } from "lucide-react";
+import { EditorVersionPicker } from "@/components/common/EditorVersionPicker";
 
 interface PendingPipeline {
   id: string;
