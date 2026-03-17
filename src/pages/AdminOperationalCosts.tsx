@@ -427,7 +427,24 @@ export default function AdminOperationalCosts() {
             <p className="text-xs text-muted-foreground text-center">
               Última atualização: {new Date(data.computed_at).toLocaleString("pt-BR")} · Cache de 10 minutos · Cálculos 100% determinísticos
             </p>
-          </>
+            </TabsContent>
+
+            <TabsContent value="b2b">
+              <B2BProjectionSection
+                config={{
+                  cost_per_ai_call_usd: configForm.cost_per_ai_call_usd,
+                  cost_per_100mb_storage_usd: configForm.cost_per_100mb_storage_usd,
+                  infrastructure_base_cost_usd: configForm.infrastructure_base_cost_usd,
+                  cost_base_per_professional: configForm.cost_base_per_professional,
+                  monthly_price_per_professional: configForm.monthly_price_per_professional,
+                  avg_stripe_fee_percent: configForm.avg_stripe_fee_percent,
+                }}
+                onConfigChange={(c) => setConfigForm({ ...configForm, ...c })}
+                onSave={saveConfig}
+                saving={saving}
+              />
+            </TabsContent>
+          </Tabs>
         ) : null}
       </div>
     </DashboardLayout>
