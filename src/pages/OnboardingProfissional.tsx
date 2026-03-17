@@ -9,6 +9,11 @@ import slide2 from "@/assets/onboarding/slide-2.png";
 import slide3 from "@/assets/onboarding/slide-3.png";
 import slide4 from "@/assets/onboarding/slide-4.png";
 import slide5 from "@/assets/onboarding/slide-5.png";
+import slide6 from "@/assets/onboarding/slide-6.png";
+import slide7 from "@/assets/onboarding/slide-7.png";
+import slide8 from "@/assets/onboarding/slide-8.png";
+import slide9 from "@/assets/onboarding/slide-9.png";
+import slide10 from "@/assets/onboarding/slide-10.png";
 
 interface SlideData {
   image: string;
@@ -46,6 +51,36 @@ const SLIDES: SlideData[] = [
     caption: "Automação, Gamificação & Crescimento",
     detail:
       "Automações inteligentes, sistema de pontos, ranking global, protocolos especiais e ferramentas de crescimento para escalar seu consultório.",
+  },
+  {
+    image: slide6,
+    caption: "Protocolos Clínicos Estruturados",
+    detail:
+      "Crie e gerencie protocolos nutricionais completos com fases, tarefas diárias e transições automáticas baseadas na evolução do paciente.",
+  },
+  {
+    image: slide7,
+    caption: "Relatórios & Analytics Avançados",
+    detail:
+      "Relatórios automáticos semanais e mensais com gráficos de evolução, comparativos entre consultas e exportação em PDF profissional.",
+  },
+  {
+    image: slide8,
+    caption: "Engajamento Inteligente do Paciente",
+    detail:
+      "Comunicação ativa e personalizada, check-ins automáticos, acompanhamento contínuo e motivação baseada em dados reais de adesão.",
+  },
+  {
+    image: slide9,
+    caption: "Inteligência Artificial Clínica",
+    detail:
+      "IA opcional integrada para análise de refeições, geração de receitas, insights de anamnese e suporte à decisão clínica — sempre sob sua supervisão.",
+  },
+  {
+    image: slide10,
+    caption: "Escale Seu Consultório com Tecnologia",
+    detail:
+      "Landing pages, sistema de afiliados, agendamento online, pagamentos via Stripe e ferramentas de crescimento para transformar seu consultório.",
   },
 ];
 
