@@ -931,6 +931,7 @@ export default function AdminDashboard() {
             <Button variant="outline" size="sm" onClick={() => window.open("/landing", "_blank")} className="gap-1.5">
               <Eye className="w-4 h-4" /> Landing Page
             </Button>
+            <MagicSlideButton className="h-9 text-sm" />
           </div>
         </div>
 
