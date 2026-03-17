@@ -731,36 +731,71 @@ export type Database = {
       }
       body_projection_snapshots: {
         Row: {
+          assessment_id: string | null
           confidence_score: number | null
           created_at: string
+          created_by: string | null
           current_body_json: Json
+          current_metrics_json: Json | null
+          current_visual_url: string | null
+          generation_source: string
           id: string
+          locked_until: string | null
           narrative: string | null
           patient_id: string
           projected_body_json: Json
+          projected_metrics_json: Json | null
+          projected_visual_url: string | null
           timeframe: string
+          valid_until: string | null
         }
         Insert: {
+          assessment_id?: string | null
           confidence_score?: number | null
           created_at?: string
+          created_by?: string | null
           current_body_json?: Json
+          current_metrics_json?: Json | null
+          current_visual_url?: string | null
+          generation_source?: string
           id?: string
+          locked_until?: string | null
           narrative?: string | null
           patient_id: string
           projected_body_json?: Json
+          projected_metrics_json?: Json | null
+          projected_visual_url?: string | null
           timeframe: string
+          valid_until?: string | null
         }
         Update: {
+          assessment_id?: string | null
           confidence_score?: number | null
           created_at?: string
+          created_by?: string | null
           current_body_json?: Json
+          current_metrics_json?: Json | null
+          current_visual_url?: string | null
+          generation_source?: string
           id?: string
+          locked_until?: string | null
           narrative?: string | null
           patient_id?: string
           projected_body_json?: Json
+          projected_metrics_json?: Json | null
+          projected_visual_url?: string | null
           timeframe?: string
+          valid_until?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "body_projection_snapshots_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "body_assessment_photos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       booking_payments: {
         Row: {
