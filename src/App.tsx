@@ -108,6 +108,7 @@ const ClinicalRiskDashboard = lazy(() => import("./pages/ClinicalRiskDashboard")
 const AdminProtocolFitJourney = lazy(() => import("./pages/AdminProtocolFitJourney"));
 const AdminProtocolBiquiniBranco = lazy(() => import("./pages/AdminProtocolBiquiniBranco"));
 const AdminNutritionProtocols = lazy(() => import("./pages/AdminNutritionProtocols"));
+const AdminGuideEngine = lazy(() => import("./pages/AdminGuideEngine"));
 const TherapeuticIntelligence = lazy(() => import("./pages/TherapeuticIntelligence"));
 const ProtocolTransitions = lazy(() => import("./pages/ProtocolTransitions"));
 const ClinicalOrchestration = lazy(() => import("./pages/ClinicalOrchestration"));
@@ -381,6 +382,7 @@ const App = () => (
               <Route path="/admin/protocol-biquini-branco" element={<AdminRoute><LP section="Admin"><AdminProtocolBiquiniBranco /></LP></AdminRoute>} />
               <Route path="/admin/nutrition-protocols" element={<AdminRoute><LP section="Admin"><AdminNutritionProtocols /></LP></AdminRoute>} />
               <Route path="/admin/enterprise" element={<AdminRoute><LP section="Admin"><ClinicalEnterprise /></LP></AdminRoute>} />
+              <Route path="/admin/guide-engine" element={<AdminRoute><LP section="Admin"><AdminGuideEngine /></LP></AdminRoute>} />
               <Route path="/admin/adaptive-intelligence" element={<AdminRoute><LP section="Admin"><GlobalAdaptiveIntelligence /></LP></AdminRoute>} />
 
               {/* Public pricing */}
