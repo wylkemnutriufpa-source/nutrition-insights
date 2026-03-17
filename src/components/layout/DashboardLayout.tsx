@@ -439,7 +439,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   <Menu className="w-5 h-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="p-0 w-72 flex flex-col bg-card/95 backdrop-blur-xl">
+              <SheetContent side="left" className="p-0 w-72 flex flex-col bg-card/95 backdrop-blur-xl h-full max-h-screen overflow-hidden">
                 <SidebarContent {...sidebarProps} collapsed={false} onLinkClick={() => setMobileOpen(false)} />
               </SheetContent>
             </Sheet>
