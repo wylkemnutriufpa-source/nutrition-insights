@@ -15,7 +15,6 @@ const STORAGE_KEY_PAT = "fj_presentation_pat_done";
 
 export default function SystemPresentation() {
   const { isNutritionist, isAdmin, isPatient } = useAuth();
-  const navigate = useNavigate();
   const [activePresentation, setActivePresentation] = useState<"professional" | "patient" | null>(null);
   const [proDone, setProDone] = useState(() => localStorage.getItem(STORAGE_KEY_PRO) === "true");
   const [patDone, setPatDone] = useState(() => localStorage.getItem(STORAGE_KEY_PAT) === "true");
