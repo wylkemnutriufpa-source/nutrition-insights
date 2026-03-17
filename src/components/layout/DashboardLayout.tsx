@@ -295,6 +295,7 @@ function SidebarContent({
               {(["admin", "nutritionist", "personal"].includes(userRole)) && (
                 <Link
                   to="/editor-v2"
+                  data-tour="meal-editor"
                   onClick={onLinkClick}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-xl mt-3 w-full border transition-all ${
                     location.pathname === "/editor-v2" || /^\/meal-plans\/[^/]+$/.test(location.pathname)
