@@ -280,11 +280,29 @@ function scoreMeal(
   return score;
 }
 
-// ── Deterministic pick (pseudo-random based on day + meal) ──
+// ── Deterministic pick with patient-specific seed for differentiation ──
+let _generationSeed = 0;
+
+/**
+ * Set a seed before generating to ensure different patients get different plans.
+ * Uses patient ID hash + timestamp to create uniqueness.
+ */
+export function setGenerationSeed(patientId: string, optionIndex: number = 0) {
+  let hash = 0;
+  const seedStr = patientId + optionIndex.toString();
+  for (let i = 0; i < seedStr.length; i++) {
+    const char = seedStr.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  _generationSeed = Math.abs(hash);
+}
+
 function deterministicPick(day: number, mealType: string, max: number): number {
-  // Simple hash to distribute selections
-  const hash = (day * 7 + mealType.length * 13) % max;
-  return hash;
+  // Patient-seeded hash for unique plan per patient + option
+  const mealHash = mealType.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  const hash = (_generationSeed + day * 17 + mealHash * 31 + day * mealHash) % max;
+  return Math.abs(hash) % max;
 }
 
 // ── Scale factor calculation ─────────────────────────────────
