@@ -133,6 +133,7 @@ const OnboardingProfissional = lazy(() => import("./pages/OnboardingProfissional
 const OnboardingPaciente = lazy(() => import("./pages/OnboardingPaciente"));
 const MagicJourneyStory = lazy(() => import("./pages/MagicJourneyStory"));
 const BodyProjectionExperience = lazy(() => import("./pages/BodyProjectionExperience"));
+const AdminOperationalCosts = lazy(() => import("./pages/AdminOperationalCosts"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
