@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import GuidedTour, { PROFESSIONAL_TOUR_STEPS, PATIENT_TOUR_STEPS } from "@/components/common/GuidedTour";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -1287,6 +1288,22 @@ function generateLocalInsights(patients: any[]) {
 
 export default function Index() {
   const { isNutritionist, loading } = useAuth();
+  const [showTour, setShowTour] = useState(false);
+
+  const tourKey = isNutritionist ? "tour_professional_completed" : "tour_patient_completed";
+  const onboardingKey = isNutritionist ? "fitjourney_professional_onboarding_completed" : "patient_onboarding_completed";
+
+  // Auto-trigger tour after onboarding is done but tour isn't
+  useEffect(() => {
+    if (loading) return;
+    const onboardingDone = localStorage.getItem(onboardingKey) === "true";
+    const tourDone = localStorage.getItem(tourKey) === "true";
+    if (onboardingDone && !tourDone) {
+      // Small delay to let the dashboard render first
+      const timer = setTimeout(() => setShowTour(true), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, onboardingKey, tourKey]);
 
   if (loading) {
     return (
@@ -1301,6 +1318,13 @@ export default function Index() {
   return (
     <DashboardLayout>
       {isNutritionist ? <NutritionistDashboardContent /> : <PatientDashboardContent />}
+      {showTour && (
+        <GuidedTour
+          steps={isNutritionist ? PROFESSIONAL_TOUR_STEPS : PATIENT_TOUR_STEPS}
+          storageKey={tourKey}
+          onComplete={() => setShowTour(false)}
+        />
+      )}
     </DashboardLayout>
   );
 }

@@ -58,6 +58,16 @@ function RenderSmartLink({ item, active, collapsed, isProRole, onLinkClick, trac
   const hasColor = item.color && !isProRole;
   const isPremium = item.premium_only;
 
+  // Map routes to tour data attributes
+  const TOUR_MAP: Record<string, string> = {
+    "/": "dashboard", "/patients": "patients", "/editor-v2": "meal-editor",
+    "/automacoes": "automation", "/financeiro": "financial",
+    "/checklist": "checklist", "/plano-alimentar": "meal-plan",
+    "/checkin": "checkin", "/chat": "chat", "/jornada": "gamification",
+    "/alertas-clinicos": "alerts",
+  };
+  const tourId = TOUR_MAP[item.route];
+
   const handleClick = () => {
     trackClick(item.id);
     onLinkClick?.();
@@ -68,6 +78,7 @@ function RenderSmartLink({ item, active, collapsed, isProRole, onLinkClick, trac
       <Link
         to={item.route}
         onClick={handleClick}
+        {...(tourId ? { "data-tour": tourId } : {})}
         className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all group border
           hover:translate-x-1 hover:scale-[1.02] active:scale-[0.98]
           ${active
@@ -93,6 +104,7 @@ function RenderSmartLink({ item, active, collapsed, isProRole, onLinkClick, trac
     <Link
       to={item.route}
       onClick={handleClick}
+      {...(tourId ? { "data-tour": tourId } : {})}
       className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all group
         hover:translate-x-1 hover:scale-[1.02] active:scale-[0.98]
         ${isPremium && !active
@@ -283,6 +295,7 @@ function SidebarContent({
               {(["admin", "nutritionist", "personal"].includes(userRole)) && (
                 <Link
                   to="/editor-v2"
+                  data-tour="meal-editor"
                   onClick={onLinkClick}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-xl mt-3 w-full border transition-all ${
                     location.pathname === "/editor-v2" || /^\/meal-plans\/[^/]+$/.test(location.pathname)
