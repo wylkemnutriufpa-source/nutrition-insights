@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { MealDetailProvider } from "@/components/patient/MealDetailContext";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Loader2, AlertTriangle, Zap, Save, Send, CheckCircle2,
@@ -270,15 +271,19 @@ export default function MealPlanEditorV2() {
   // Fullscreen mode renders outside DashboardLayout
   if (isFullscreen) {
     return (
-      <div className="fixed inset-0 z-50 bg-background overflow-auto p-4">
-        {editorContent}
-      </div>
+      <MealDetailProvider>
+        <div className="fixed inset-0 z-50 bg-background overflow-auto p-4">
+          {editorContent}
+        </div>
+      </MealDetailProvider>
     );
   }
 
   return (
-    <DashboardLayout>
-      {editorContent}
-    </DashboardLayout>
+    <MealDetailProvider>
+      <DashboardLayout>
+        {editorContent}
+      </DashboardLayout>
+    </MealDetailProvider>
   );
 }
