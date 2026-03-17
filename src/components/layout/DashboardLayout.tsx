@@ -216,7 +216,7 @@ function SidebarContent({
       </div>
 
       {/* Nav links */}
-      <div className="flex-1 overflow-y-auto overscroll-contain px-3 mt-4 -webkit-overflow-scrolling-touch">
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 mt-4" style={{ WebkitOverflowScrolling: 'touch' }}>
         <nav className="space-y-1 pb-4">
           {!useFlat ? categories.map((cat, idx) => (
             <div key={cat.category} className={idx > 0 ? "mt-4" : ""}>
