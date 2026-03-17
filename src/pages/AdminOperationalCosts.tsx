@@ -126,6 +126,9 @@ export default function AdminOperationalCosts() {
           cost_per_1000_notifications_usd: configForm.cost_per_1000_notifications_usd,
           infrastructure_base_cost_usd: configForm.infrastructure_base_cost_usd,
           stripe_fee_percent: configForm.stripe_fee_percent,
+          monthly_price_per_professional: configForm.monthly_price_per_professional,
+          avg_stripe_fee_percent: configForm.avg_stripe_fee_percent,
+          cost_base_per_professional: configForm.cost_base_per_professional,
           updated_at: new Date().toISOString(),
           updated_by: user?.id,
         } as any)
@@ -133,7 +136,6 @@ export default function AdminOperationalCosts() {
 
       if (error) throw error;
 
-      // Log audit
       await supabase.rpc("log_audit", {
         _action: "update_cost_config",
         _resource_type: "operational_cost_configuration",
