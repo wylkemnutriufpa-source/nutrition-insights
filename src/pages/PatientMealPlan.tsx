@@ -555,6 +555,8 @@ export default function PatientMealPlan() {
                         {mealItems.map((mealItem) => {
                           const status = getItemStatus(mealItem.id);
                           const completedAt = getCompletionTime(mealItem.id);
+                          const isJustDone = justCompleted === mealItem.id;
+                          const impacts = getImpactTags(mealItem);
                           const statusColor = status === "followed" ? "border-emerald-500/30 bg-emerald-500/5"
                             : status === "partial" ? "border-amber-500/30 bg-amber-500/5"
                             : status === "not_followed" ? "border-red-500/30 bg-red-500/5"
@@ -565,9 +567,40 @@ export default function PatientMealPlan() {
                               key={mealItem.id}
                               layout
                               initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
+                              animate={{
+                                opacity: 1,
+                                x: 0,
+                                boxShadow: isJustDone
+                                  ? "0 0 20px rgba(16,185,129,0.3), 0 0 40px rgba(16,185,129,0.1)"
+                                  : "none",
+                              }}
+                              transition={isJustDone ? { duration: 0.5 } : undefined}
                               className={`glass rounded-xl p-4 transition-all ${statusColor}`}
                             >
+                              {/* Celebration particles */}
+                              {isJustDone && (
+                                <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
+                                  {[...Array(6)].map((_, i) => (
+                                    <motion.div
+                                      key={i}
+                                      className="absolute w-1.5 h-1.5 rounded-full bg-emerald-400"
+                                      initial={{
+                                        x: "50%",
+                                        y: "50%",
+                                        opacity: 1,
+                                      }}
+                                      animate={{
+                                        x: `${20 + Math.random() * 60}%`,
+                                        y: `${Math.random() * 100}%`,
+                                        opacity: 0,
+                                        scale: 0,
+                                      }}
+                                      transition={{ duration: 0.8, delay: i * 0.05 }}
+                                    />
+                                  ))}
+                                </div>
+                              )}
+
                               <div
                                 className="flex items-start gap-3 cursor-pointer"
                                 onClick={() => setSelectedMeal({ ...mealItem, metadata: (mealItem as any).metadata })}
@@ -585,6 +618,21 @@ export default function PatientMealPlan() {
                                   {mealItem.description && (
                                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{mealItem.description}</p>
                                   )}
+
+                                  {/* Impact Tags */}
+                                  {impacts.length > 0 && !focusMode && (
+                                    <div className="flex flex-wrap gap-1 mt-1.5">
+                                      {impacts.map(tag => {
+                                        const t = IMPACT_TAGS[tag];
+                                        return (
+                                          <span key={tag} className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-medium border ${t.color}`}>
+                                            {t.icon} {t.label}
+                                          </span>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+
                                   {(mealItem.calories_target || mealItem.protein_target) && (
                                     <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
                                       {mealItem.calories_target && <span className="flex items-center gap-1"><Flame className="w-3 h-3 text-orange-400" /> {mealItem.calories_target} kcal</span>}
@@ -598,7 +646,7 @@ export default function PatientMealPlan() {
                                     {ADHERENCE_OPTIONS.map(opt => (
                                       <button
                                         key={opt.status}
-                                        onClick={() => setAdherence(mealItem, opt.status)}
+                                        onClick={(e) => { e.stopPropagation(); setAdherence(mealItem, opt.status); }}
                                         className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[11px] font-medium transition-all ${
                                           status === opt.status
                                             ? `${opt.bgColor} ${opt.color} ring-1 ring-current`
