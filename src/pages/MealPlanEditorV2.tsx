@@ -207,6 +207,10 @@ export default function MealPlanEditorV2() {
         targetDay={1}
         targetMealType="breakfast"
       />
+      <AutoGenerateModal
+        open={autoGenOpen}
+        onOpenChange={setAutoGenOpen}
+      />
     </DashboardLayout>
   );
 }
