@@ -274,7 +274,23 @@ export default function PatientMealPlan() {
     }
 
     if (status === "followed") {
-      toast.success("✅ Refeição seguida! Ótimo trabalho!");
+      // Show XP popup
+      if (xpTimerRef.current) clearTimeout(xpTimerRef.current);
+      setJustCompleted(item.id);
+      setXpPopup({ show: true, points: 10 });
+      xpTimerRef.current = window.setTimeout(() => {
+        setXpPopup({ show: false, points: 0 });
+        setJustCompleted(null);
+      }, 2000);
+
+      // Check if all meals are now completed
+      const newFollowedCount = followedCount + 1;
+      if (newFollowedCount >= items.length) {
+        confetti();
+        toast.success("🏆 Dia perfeito! Todas as refeições seguidas!");
+      } else {
+        toast.success("✅ Refeição seguida! +10 XP");
+      }
     } else if (status === "partial") {
       toast("⚠️ Parcialmente seguida", { description: "Tente seguir 100% na próxima!" });
     }
