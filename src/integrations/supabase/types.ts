@@ -7077,18 +7077,24 @@ export type Database = {
           adherence_score_7d: number | null
           adherence_score_prev_7d: number | null
           avatar_url: string | null
+          behavioral_consistency_score: number | null
           clinical_risk_level: string | null
           clinical_risk_score: number | null
           created_at: string
           engagement_index: number | null
           engagement_level: string | null
           full_name: string
+          historical_loss_rate: number | null
           id: string
+          metabolic_response_type: string | null
           phone: string | null
+          plateau_probability: number | null
           ranking_nickname: string | null
+          regain_probability: number | null
           show_in_ranking: boolean
           updated_at: string
           user_id: string
+          weight_history_analyzed_at: string | null
           weight_trend_status: string | null
           weight_velocity_kg_week: number | null
         }
@@ -7097,18 +7103,24 @@ export type Database = {
           adherence_score_7d?: number | null
           adherence_score_prev_7d?: number | null
           avatar_url?: string | null
+          behavioral_consistency_score?: number | null
           clinical_risk_level?: string | null
           clinical_risk_score?: number | null
           created_at?: string
           engagement_index?: number | null
           engagement_level?: string | null
           full_name?: string
+          historical_loss_rate?: number | null
           id?: string
+          metabolic_response_type?: string | null
           phone?: string | null
+          plateau_probability?: number | null
           ranking_nickname?: string | null
+          regain_probability?: number | null
           show_in_ranking?: boolean
           updated_at?: string
           user_id: string
+          weight_history_analyzed_at?: string | null
           weight_trend_status?: string | null
           weight_velocity_kg_week?: number | null
         }
@@ -7117,18 +7129,24 @@ export type Database = {
           adherence_score_7d?: number | null
           adherence_score_prev_7d?: number | null
           avatar_url?: string | null
+          behavioral_consistency_score?: number | null
           clinical_risk_level?: string | null
           clinical_risk_score?: number | null
           created_at?: string
           engagement_index?: number | null
           engagement_level?: string | null
           full_name?: string
+          historical_loss_rate?: number | null
           id?: string
+          metabolic_response_type?: string | null
           phone?: string | null
+          plateau_probability?: number | null
           ranking_nickname?: string | null
+          regain_probability?: number | null
           show_in_ranking?: boolean
           updated_at?: string
           user_id?: string
+          weight_history_analyzed_at?: string | null
           weight_trend_status?: string | null
           weight_velocity_kg_week?: number | null
         }
