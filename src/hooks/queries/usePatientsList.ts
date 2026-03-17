@@ -140,15 +140,23 @@ export function usePatientsList(params: PatientsListParams = {}) {
       if (statusFilter === "active") query = query.eq("status", "active");
       else if (statusFilter === "inactive") query = query.neq("status", "active");
 
-      // Server-side search: we filter by patient_id after getting profiles
-      // For now, if search is provided, we fetch all matching and paginate in-memory
-      // This is a tradeoff: true server-side search would require a DB function
+      // Server-side search: fetch matching profiles, then filter links
       let allData: any[] = [];
       let totalCount = 0;
 
-      if (search.trim()) {
-        // When searching: fetch all links, then filter by profile name
-        const { data: allLinks } = await query;
+      if (search.trim() && search.trim().length >= 2) {
+        // When searching with 2+ chars: find matching patient IDs first via profiles
+        const searchLower = search.toLowerCase().trim();
+        
+        // Fetch ALL links for this nutritionist (with status filter)
+        let allLinksQuery = supabase
+          .from("nutritionist_patients")
+          .select("*")
+          .eq("nutritionist_id", userId);
+        if (statusFilter === "active") allLinksQuery = allLinksQuery.eq("status", "active");
+        else if (statusFilter === "inactive") allLinksQuery = allLinksQuery.neq("status", "active");
+        
+        const { data: allLinks } = await allLinksQuery;
         if (!allLinks || allLinks.length === 0) {
           const { data: progs } = await supabase.from("programs")
             .select("id, title").eq("created_by", userId).eq("is_active", true);
@@ -163,27 +171,37 @@ export function usePatientsList(params: PatientsListParams = {}) {
         }
 
         const allPatientIds = allLinks.map((p: any) => p.patient_id);
-        const { data: searchProfiles } = await supabase.from("profiles")
-          .select("user_id, full_name").in("user_id", allPatientIds);
         
-        const searchLower = search.toLowerCase();
+        // Batch search in profiles using ilike for better partial matching
+        const { data: searchProfiles } = await supabase.from("profiles")
+          .select("user_id, full_name")
+          .in("user_id", allPatientIds)
+          .ilike("full_name", `%${searchLower}%`);
+        
         const matchingUserIds = new Set(
-          (searchProfiles || [])
-            .filter((p: any) => p.full_name?.toLowerCase().includes(searchLower))
-            .map((p: any) => p.user_id)
+          (searchProfiles || []).map((p: any) => p.user_id)
         );
 
-        // Also check emails
-        const { data: emailResults } = await supabase.rpc("get_patient_emails", { _patient_ids: allPatientIds });
-        (emailResults || []).forEach((e: any) => {
-          if (e.email?.toLowerCase().includes(searchLower)) matchingUserIds.add(e.user_id);
-        });
+        // Also check emails for search
+        if (matchingUserIds.size < 10) {
+          const { data: emailResults } = await supabase.rpc("get_patient_emails", { _patient_ids: allPatientIds });
+          (emailResults || []).forEach((e: any) => {
+            if (e.email?.toLowerCase().includes(searchLower)) matchingUserIds.add(e.user_id);
+          });
+        }
 
         const filteredLinks = allLinks.filter((l: any) => matchingUserIds.has(l.patient_id));
         totalCount = filteredLinks.length;
 
         const start = (page - 1) * pageSize;
         allData = filteredLinks.slice(start, start + pageSize);
+      } else if (search.trim() && search.trim().length < 2) {
+        // Less than 2 chars: skip search, return normal paginated results
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize - 1;
+        const { data, count } = await query.range(from, to);
+        allData = data || [];
+        totalCount = count || 0;
       } else {
         // No search: use proper server-side pagination with range
         const from = (page - 1) * pageSize;
