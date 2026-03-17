@@ -46,6 +46,7 @@ import type { PatientSignals } from "@/components/dashboard/SmartRecommendations
 import { MomentumIndicator } from "@/components/gamification/MomentumIndicator";
 import { JourneyTimelineFeed } from "@/components/gamification/JourneyTimelineFeed";
 import { EditorVersionPicker } from "@/components/common/EditorVersionPicker";
+import MealAdherenceWidget from "@/components/patient/MealAdherenceWidget";
 
 export default function PatientDetail() {
   const { patientId } = useParams<{ patientId: string }>();
@@ -628,6 +629,10 @@ export default function PatientDetail() {
                         <p className="text-sm text-muted-foreground">Anamnese não preenchida.</p>
                       )}
                     </div>
+                    {/* Meal Adherence Widget */}
+                    <div className="md:col-span-3">
+                      <MealAdherenceWidget patientId={patientId!} />
+                    </div>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -1036,11 +1041,11 @@ export default function PatientDetail() {
                   <ClinicalDecisionSupport patientId={patientId!} nutritionistId={user!.id} />
                   <div className="border-t border-border pt-6 space-y-4">
                     <SmartRecommendationsPanel signals={{
-                      adherenceScore: 0,
+                      adherenceScore: data?.adherence7d ?? 0,
                       adherenceTrend: 0,
                       streakDays: 0,
                       mealsPerDay: 0,
-                      checklistPct: 0,
+                      checklistPct: checklistStats.total > 0 ? Math.round((checklistStats.completed / checklistStats.total) * 100) : 0,
                     } as PatientSignals} />
                   </div>
                 </DialogContent>

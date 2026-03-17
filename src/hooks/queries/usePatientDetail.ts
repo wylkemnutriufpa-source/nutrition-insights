@@ -13,7 +13,7 @@ export function usePatientDetail(patientId: string | undefined) {
     enabled: !!patientId && !!user,
     staleTime: 60 * 1000,
     queryFn: async () => {
-      const [profileRes, timelineRes, anamnesisRes, ppRes, protocolsRes, checkRes, subRes, plansRes, mealPlansRes, recipesRes, npRes] = await Promise.all([
+      const [profileRes, timelineRes, anamnesisRes, ppRes, protocolsRes, checkRes, subRes, plansRes, mealPlansRes, recipesRes, npRes, adherenceRes] = await Promise.all([
         supabase.from("profiles").select("full_name, avatar_url, phone").eq("user_id", patientId!).maybeSingle(),
         supabase.from("patient_timeline").select("*").eq("patient_id", patientId!).order("created_at", { ascending: false }).limit(50),
         supabase.from("patient_anamnesis").select("*").eq("user_id", patientId!).order("created_at", { ascending: false }).limit(1),
@@ -25,6 +25,7 @@ export function usePatientDetail(patientId: string | undefined) {
         supabase.from("meal_plans").select("*").eq("patient_id", patientId!).order("created_at", { ascending: false }),
         supabase.from("recipes").select("*").eq("nutritionist_id", user!.id).eq("is_shared", true).order("created_at", { ascending: false }),
         supabase.from("nutritionist_patients").select("id, status").eq("patient_id", patientId!).eq("nutritionist_id", user!.id).limit(1).maybeSingle(),
+        supabase.from("meal_item_completions").select("adherence_status, date").eq("patient_id", patientId!).gte("date", new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0]).lte("date", new Date().toISOString().split("T")[0]),
       ]);
 
       // Enrich protocols with title
@@ -90,6 +91,14 @@ export function usePatientDetail(patientId: string | undefined) {
         currentPrestigePlan,
         currentPrestigePlanId: patientPrestigeRes.data?.prestige_plans?.id || "",
         patientEmail,
+        adherence7d: (() => {
+          const comps = adherenceRes.data || [];
+          const followed = comps.filter((c: any) => c.adherence_status === "followed").length;
+          const partial = comps.filter((c: any) => c.adherence_status === "partial").length;
+          const total = comps.length;
+          if (total === 0) return 0;
+          return Math.round(((followed * 100 + partial * 50) / (total * 100)) * 100);
+        })(),
       };
     },
   });
