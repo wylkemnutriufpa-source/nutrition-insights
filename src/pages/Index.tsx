@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import GuidedTour, { PROFESSIONAL_TOUR_STEPS, PATIENT_TOUR_STEPS } from "@/components/common/GuidedTour";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import PatientGridDashboard from "@/components/dashboard/PatientGridDashboard";
 import ProStrategicDashboard from "@/components/dashboard/ProStrategicDashboard";
 import { useLayoutPreference } from "@/hooks/useLayoutPreference";
