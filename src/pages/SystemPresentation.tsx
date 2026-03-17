@@ -106,10 +106,10 @@ export default function SystemPresentation() {
 
   // Active standard presentation overlay
   if (activePresentation === "professional") {
-    return <GuidedPresentation slides={PROFESSIONAL_SLIDES} title="Guia do Profissional" onComplete={() => handleComplete("professional")} onSkip={() => setActivePresentation(null)} />;
+    return <GuidedPresentation slides={proSlides} title="Guia do Profissional" onComplete={() => handleComplete("professional")} onSkip={() => setActivePresentation(null)} />;
   }
   if (activePresentation === "patient") {
-    return <GuidedPresentation slides={PATIENT_SLIDES} title="Guia do Paciente" onComplete={() => handleComplete("patient")} onSkip={() => setActivePresentation(null)} />;
+    return <GuidedPresentation slides={patSlides} title="Guia do Paciente" onComplete={() => handleComplete("patient")} onSkip={() => setActivePresentation(null)} />;
   }
 
   // Cinematic fullscreen presentation
