@@ -2,6 +2,10 @@ import { useEffect, useState, useCallback } from "react";
 import GuidedTour, { PROFESSIONAL_TOUR_STEPS, PATIENT_TOUR_STEPS } from "@/components/common/GuidedTour";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
+import PatientGridDashboard from "@/components/dashboard/PatientGridDashboard";
+import ProStrategicDashboard from "@/components/dashboard/ProStrategicDashboard";
+import { useLayoutPreference } from "@/hooks/useLayoutPreference";
+import { LayoutGrid, List as ListIcon } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { usePatientDashboard } from "@/hooks/queries";
@@ -1299,11 +1303,15 @@ function generateLocalInsights(patients: any[]) {
 }
 
 export default function Index() {
-  const { isNutritionist, loading } = useAuth();
+  const { isNutritionist, isPersonal, isAdmin, loading } = useAuth();
   const [showTour, setShowTour] = useState(false);
+  const { proView, setProView } = useLayoutPreference();
 
-  const tourKey = isNutritionist ? "tour_professional_completed" : "tour_patient_completed";
-  const onboardingKey = isNutritionist ? "fitjourney_professional_onboarding_completed" : "patient_onboarding_completed";
+  const isProRole = isNutritionist || isPersonal || isAdmin;
+  const isPatient = !isProRole;
+
+  const tourKey = isProRole ? "tour_professional_completed" : "tour_patient_completed";
+  const onboardingKey = isProRole ? "fitjourney_professional_onboarding_completed" : "patient_onboarding_completed";
 
   // Auto-trigger tour after onboarding — with 30min cooldown
   useEffect(() => {
@@ -1315,7 +1323,7 @@ export default function Index() {
     const dismissedAt = localStorage.getItem(`${tourKey}_dismissed_at`);
     if (dismissedAt) {
       const elapsed = Date.now() - Number(dismissedAt);
-      if (elapsed < 30 * 60 * 1000) return; // 30 min cooldown
+      if (elapsed < 30 * 60 * 1000) return;
     }
 
     const timer = setTimeout(() => setShowTour(true), 1500);
@@ -1332,12 +1340,58 @@ export default function Index() {
     );
   }
 
+  const renderContent = () => {
+    if (isPatient) {
+      return (
+        <div className="space-y-6">
+          <PatientGridDashboard />
+          <PatientDashboardContent />
+        </div>
+      );
+    }
+
+    // Professional / Admin view with toggle
+    return (
+      <div className="space-y-6">
+        {/* View mode toggle */}
+        <div className="flex items-center justify-end">
+          <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
+            <Button
+              variant={proView === "clinical-list" ? "default" : "ghost"}
+              size="sm"
+              className="h-7 px-3 gap-1.5 text-xs"
+              onClick={() => setProView("clinical-list")}
+            >
+              <ListIcon className="w-3.5 h-3.5" />
+              Lista Clínica
+            </Button>
+            <Button
+              variant={proView === "strategic-dashboard" ? "default" : "ghost"}
+              size="sm"
+              className="h-7 px-3 gap-1.5 text-xs"
+              onClick={() => setProView("strategic-dashboard")}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              Dashboard
+            </Button>
+          </div>
+        </div>
+
+        {proView === "strategic-dashboard" ? (
+          <ProStrategicDashboard />
+        ) : (
+          <NutritionistDashboardContent />
+        )}
+      </div>
+    );
+  };
+
   return (
     <DashboardLayout>
-      {isNutritionist ? <NutritionistDashboardContent /> : <PatientDashboardContent />}
+      {renderContent()}
       {showTour && (
         <GuidedTour
-          steps={isNutritionist ? PROFESSIONAL_TOUR_STEPS : PATIENT_TOUR_STEPS}
+          steps={isProRole ? PROFESSIONAL_TOUR_STEPS : PATIENT_TOUR_STEPS}
           storageKey={tourKey}
           onComplete={() => {
             setShowTour(false);
