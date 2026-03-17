@@ -25,8 +25,8 @@ export default function MealPlanEditorV2() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user?.id]);
 
-  // ── Loading gate (only initial hydration) ─────────────────
-  if (!store.hydrated && store.hydrating) {
+  // ── Loading gate (initial state or hydrating) ─────────────────
+  if (!store.hydrated || (!store.plan && store.hydrating)) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
