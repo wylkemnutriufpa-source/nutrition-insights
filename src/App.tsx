@@ -295,7 +295,7 @@ const App = () => (
               <Route path="/meal-plans" element={<ProfessionalRoute><LP section="Planos"><MealPlans /></LP></ProfessionalRoute>} />
               <Route path="/editor-v2" element={<ProfessionalRoute><LP section="Editor Premium V2"><MealPlanEditorV2Entry /></LP></ProfessionalRoute>} />
               <Route path="/meal-plans/:id" element={<ProfessionalRoute><LP section="Planos"><MealPlanEditorV2 /></LP></ProfessionalRoute>} />
-              <Route path="/meal-plans/:id/legacy" element={<ProfessionalRoute><LP section="Planos"><MealPlanEditor /></LP></ProfessionalRoute>} />
+              <Route path="/meal-plans/:id/legacy" element={<LegacyMealPlanRedirect />} />
               <Route path="/diet-templates" element={<NutritionistRoute><LP section="Templates"><DietTemplates /></LP></NutritionistRoute>} />
               <Route path="/physical-assessment" element={<NutritionistRoute><LP section="Avaliação"><PhysicalAssessment /></LP></NutritionistRoute>} />
               <Route path="/body-analysis" element={<NutritionistRoute><LP section="Análise Corporal"><BodyAnalysis /></LP></NutritionistRoute>} />
