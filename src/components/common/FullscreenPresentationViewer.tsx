@@ -43,7 +43,7 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
   const particleCount = isMobile ? 8 : 20;
 
   const audio = useAmbientAudio({
-    src: "/audio/ambient-tech.mp3",
+    src: "/audio/ambient-cinema.mp3",
     initialVolume: 0.18,
     fadeInDuration: 1200,
     loop: true,
