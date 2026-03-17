@@ -1,10 +1,11 @@
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
-  Flame, Beef, PencilLine, CopyPlus, X, Loader2, Check,
+  Flame, Beef, PencilLine, CopyPlus, X, Loader2, Check, Eye,
 } from "lucide-react";
 import { useMealPlanEditorV2Store, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
 import { getCategoryDot } from "@/components/meals/FoodSubstitutions";
+import { useMealDetail } from "@/components/patient/MealDetailContext";
 
 interface MealItemCardProps {
   item: MealPlanItem;
