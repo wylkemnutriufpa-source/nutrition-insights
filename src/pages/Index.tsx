@@ -610,7 +610,7 @@ function NutritionistDashboardContent() {
   return (
     <div className="space-y-6">
       {/* Pending Approvals Modal */}
-      <PendingApprovalsModal open={approvalsModalOpen} onOpenChange={setApprovalsModalOpen} />
+      <PendingApprovalsModal open={approvalsModalOpen} onOpenChange={handleApprovalsModalChange} />
 
       {/* Pending approvals banner */}
       {pendingApprovalsCount > 0 && (
