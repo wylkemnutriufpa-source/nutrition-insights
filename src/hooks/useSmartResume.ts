@@ -233,12 +233,13 @@ export function useSmartResume() {
       } catch (e) {
         console.error("Error fetching smart resume:", e);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchResumeData();
-  }, [user, dismissed]);
+    return () => { cancelled = true; };
+  }, [userId, dismissed]);
 
   const dismiss = useCallback(() => {
     setDismissed(true);

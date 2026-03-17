@@ -376,12 +376,15 @@ function NutritionistDashboardContent() {
 
   // Auto-open modal once per session — persists dismissal via sessionStorage
   const APPROVALS_DISMISSED_KEY = "fj_approvals_dismissed";
+  const approvalsCheckedRef = useCallback(() => {}, []);
   useEffect(() => {
     const dismissed = sessionStorage.getItem(APPROVALS_DISMISSED_KEY) === "true";
-    if (pendingApprovalsCount > 0 && !dismissed) {
+    if (pendingApprovalsCount > 0 && !dismissed && !approvalsModalOpen) {
       setApprovalsModalOpen(true);
     }
-  }, [pendingApprovalsCount]);
+    // Only run once on mount + when count first becomes > 0
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingApprovalsCount > 0]);
 
   const handleApprovalsModalChange = (open: boolean) => {
     setApprovalsModalOpen(open);
