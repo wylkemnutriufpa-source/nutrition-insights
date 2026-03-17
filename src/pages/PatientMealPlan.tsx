@@ -837,6 +837,7 @@ export default function PatientMealPlan() {
           onOpenChange={(open) => { if (!open) setSelectedMeal(null); }}
           meal={selectedMeal}
         />
+        </div>{/* close relative z-20 wrapper */}
       </div>
     </DashboardLayout>
   );
