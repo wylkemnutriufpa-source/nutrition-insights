@@ -354,6 +354,14 @@ export function WeeklyGrid() {
         items={saveTemplateItems}
         mealType={saveTemplateMealType}
       />
+
+      {/* Meal Library Modal (banco de refeições) */}
+      <MealLibraryModal
+        open={mlModalOpen}
+        onOpenChange={setMlModalOpen}
+        targetDay={mlModalTarget.day}
+        targetMealType={mlModalTarget.mealType}
+      />
     </>
   );
 }
