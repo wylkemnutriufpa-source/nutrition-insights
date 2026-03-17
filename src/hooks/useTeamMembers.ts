@@ -319,7 +319,7 @@ export function useMyTeamPermissions() {
       if (!user) return null;
       const { data, error } = await supabase.rpc("get_team_permissions", { _user_id: user.id });
       if (error) throw error;
-      return data as TeamPermissions | null;
+      return data as unknown as TeamPermissions | null;
     },
     enabled: !!user,
   });
