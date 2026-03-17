@@ -132,6 +132,7 @@ const SystemPresentation = lazy(() => import("./pages/SystemPresentation"));
 const OnboardingProfissional = lazy(() => import("./pages/OnboardingProfissional"));
 const OnboardingPaciente = lazy(() => import("./pages/OnboardingPaciente"));
 const MagicJourneyStory = lazy(() => import("./pages/MagicJourneyStory"));
+const BodyProjectionExperience = lazy(() => import("./pages/BodyProjectionExperience"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -362,6 +363,7 @@ const App = () => (
               <Route path="/onboarding-profissional" element={<ProtectedRoute><LP section="Onboarding"><OnboardingProfissional /></LP></ProtectedRoute>} />
               <Route path="/onboarding-paciente" element={<ProtectedRoute><LP section="Onboarding Paciente"><OnboardingPaciente /></LP></ProtectedRoute>} />
               <Route path="/my-story" element={<ProtectedRoute><LP section="Minha História"><MagicJourneyStory /></LP></ProtectedRoute>} />
+              <Route path="/body-projection" element={<ProtectedRoute><LP section="Projeção Corporal"><BodyProjectionExperience /></LP></ProtectedRoute>} />
 
               {/* Admin routes */}
               <Route path="/admin" element={<AdminRoute><LP section="Admin"><AdminDashboard /></LP></AdminRoute>} />

@@ -693,6 +693,75 @@ export type Database = {
         }
         Relationships: []
       }
+      body_assessment_photos: {
+        Row: {
+          assessment_date: string
+          back_image_url: string | null
+          created_at: string
+          front_image_url: string | null
+          id: string
+          notes: string | null
+          patient_id: string
+          side_image_url: string | null
+          source: string
+        }
+        Insert: {
+          assessment_date?: string
+          back_image_url?: string | null
+          created_at?: string
+          front_image_url?: string | null
+          id?: string
+          notes?: string | null
+          patient_id: string
+          side_image_url?: string | null
+          source?: string
+        }
+        Update: {
+          assessment_date?: string
+          back_image_url?: string | null
+          created_at?: string
+          front_image_url?: string | null
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          side_image_url?: string | null
+          source?: string
+        }
+        Relationships: []
+      }
+      body_projection_snapshots: {
+        Row: {
+          confidence_score: number | null
+          created_at: string
+          current_body_json: Json
+          id: string
+          narrative: string | null
+          patient_id: string
+          projected_body_json: Json
+          timeframe: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string
+          current_body_json?: Json
+          id?: string
+          narrative?: string | null
+          patient_id: string
+          projected_body_json?: Json
+          timeframe: string
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string
+          current_body_json?: Json
+          id?: string
+          narrative?: string | null
+          patient_id?: string
+          projected_body_json?: Json
+          timeframe?: string
+        }
+        Relationships: []
+      }
       booking_payments: {
         Row: {
           amount: number
