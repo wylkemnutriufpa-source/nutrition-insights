@@ -35,6 +35,7 @@ import BrainIntelligence from "@/components/common/BrainIntelligence";
 import { AlertTriangle } from "lucide-react";
 import ProtocolBlockedModal from "@/components/biquini/ProtocolBlockedModal";
 import { useSmartMenu, SmartMenuItem, MenuCategory, CATEGORY_COLORS } from "@/hooks/useSmartMenu";
+import { useTeamPermissionsFilter } from "@/hooks/useTeamPermissionsFilter";
 
 // Icon registry - maps string names to Lucide components
 const ICON_MAP: Record<string, any> = {
