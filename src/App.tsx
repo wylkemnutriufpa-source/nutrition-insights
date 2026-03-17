@@ -126,6 +126,7 @@ const WeightTrajectory = lazy(() => import("./pages/WeightTrajectory"));
 const MetabolicTwin = lazy(() => import("./pages/MetabolicTwin"));
 const PopulationNutritionIntelligence = lazy(() => import("./pages/PopulationNutritionIntelligence"));
 const PlatformGovernance = lazy(() => import("./pages/PlatformGovernance"));
+const SecurityDashboard = lazy(() => import("./pages/SecurityDashboard"));
 const ClinicalPipeline = lazy(() => import("./pages/ClinicalPipeline"));
 const Integrations = lazy(() => import("./pages/Integrations"));
 const SystemPresentation = lazy(() => import("./pages/SystemPresentation"));
