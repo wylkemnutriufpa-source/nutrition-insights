@@ -148,6 +148,7 @@ export const FEATURE_REGISTRY: FeatureDefinition[] = [
 
   // Prestige & Gamificação Avançada
   { name: "prestige_plans", label: "Planos Prestige", description: "Sistema de planos de prestígio com badges, crowns e identidade visual no ranking", icon: Crown, category: "IA & Automação", defaultTier: "premium", addedVersion: "4.0" },
+  { name: "prestige_management", label: "Gestão de Prestígio", description: "Atribuição manual e automática de prestígio por paciente e por programa com sincronização em lote", icon: Crown, category: "Gestão de Pacientes", defaultTier: "premium", addedVersion: "5.0" },
   { name: "missions_challenges", label: "Missões e Desafios", description: "Sistema de missões e desafios com XP, conquistas e objetivos personalizados", icon: Target, category: "IA & Automação", defaultTier: "premium", addedVersion: "4.0" },
 
   // Paciente App
