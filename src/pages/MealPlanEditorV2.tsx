@@ -1,17 +1,23 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, AlertTriangle, Zap, Save, Send, CheckCircle2, Library, Utensils, Wand2 } from "lucide-react";
+import {
+  ArrowLeft, Loader2, AlertTriangle, Zap, Save, Send, CheckCircle2,
+  Library, Utensils, Wand2, LayoutGrid, List, Maximize2, Minimize2,
+} from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { WeeklyGrid } from "@/components/meal-editor-v2/WeeklyGrid";
+import { ListView } from "@/components/meal-editor-v2/ListView";
 import { EditorSyncBadge } from "@/components/meal-editor-v2/EditorSyncBadge";
 import { MealLibrarySidebar } from "@/components/meal-editor-v2/MealLibrarySidebar";
 import { MealLibraryModal } from "@/components/meal-editor-v2/MealLibraryModal";
 import { AutoGenerateModal } from "@/components/meal-editor-v2/AutoGenerateModal";
 import { toast } from "sonner";
+
+type ViewMode = "grid" | "list";
 
 export default function MealPlanEditorV2() {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +29,8 @@ export default function MealPlanEditorV2() {
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [mealLibModalOpen, setMealLibModalOpen] = useState(false);
   const [autoGenOpen, setAutoGenOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Hydrate on mount / planId change
   useEffect(() => {
@@ -102,15 +110,20 @@ export default function MealPlanEditorV2() {
     }
   };
 
-  return (
-    <DashboardLayout>
+  const editorContent = (
+    <>
       <EditorSyncBadge status={store.syncStatus} />
 
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/meal-plans")} className="shrink-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => isFullscreen ? setIsFullscreen(false) : navigate("/meal-plans")}
+              className="shrink-0"
+            >
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
@@ -136,13 +149,53 @@ export default function MealPlanEditorV2() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {store.hydrating && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 Atualizando…
               </div>
             )}
+
+            {/* View Mode Toggle */}
+            <div className="flex items-center rounded-lg border border-border bg-muted/50 p-0.5">
+              <button
+                type="button"
+                onClick={() => setViewMode("grid")}
+                className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium transition-colors ${
+                  viewMode === "grid"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <LayoutGrid className="w-3.5 h-3.5" /> Grade
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("list")}
+                className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium transition-colors ${
+                  viewMode === "list"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <List className="w-3.5 h-3.5" /> Lista
+              </button>
+            </div>
+
+            {/* Fullscreen Toggle */}
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              title={isFullscreen ? "Minimizar" : "Expandir editor"}
+            >
+              {isFullscreen
+                ? <Minimize2 className="w-4 h-4" />
+                : <Maximize2 className="w-4 h-4" />}
+            </Button>
+
             <Button
               variant="outline"
               size="sm"
@@ -150,7 +203,7 @@ export default function MealPlanEditorV2() {
               className="gap-1.5"
             >
               <Wand2 className="w-4 h-4" />
-              Gerar Automático
+              <span className="hidden sm:inline">Gerar Automático</span>
             </Button>
             <Button
               variant="outline"
@@ -159,7 +212,7 @@ export default function MealPlanEditorV2() {
               className="gap-1.5"
             >
               <Utensils className="w-4 h-4" />
-              Banco de Refeições
+              <span className="hidden sm:inline">Banco de Refeições</span>
             </Button>
             <Button
               variant="outline"
@@ -168,7 +221,7 @@ export default function MealPlanEditorV2() {
               className="gap-1.5"
             >
               <Library className="w-4 h-4" />
-              Meus Modelos
+              <span className="hidden sm:inline">Meus Modelos</span>
             </Button>
             <Button
               variant="outline"
@@ -190,11 +243,11 @@ export default function MealPlanEditorV2() {
           </div>
         </div>
 
-        {/* Weekly grid — always mounted, never unmounted */}
-        <WeeklyGrid />
+        {/* Editor Content */}
+        {viewMode === "grid" ? <WeeklyGrid /> : <ListView />}
       </div>
 
-      {/* Header-level library sidebar (defaults to breakfast / day 1) */}
+      {/* Modals & Sidebars */}
       <MealLibrarySidebar
         open={libraryOpen}
         onOpenChange={setLibraryOpen}
@@ -211,6 +264,21 @@ export default function MealPlanEditorV2() {
         open={autoGenOpen}
         onOpenChange={setAutoGenOpen}
       />
+    </>
+  );
+
+  // Fullscreen mode renders outside DashboardLayout
+  if (isFullscreen) {
+    return (
+      <div className="fixed inset-0 z-50 bg-background overflow-auto p-4">
+        {editorContent}
+      </div>
+    );
+  }
+
+  return (
+    <DashboardLayout>
+      {editorContent}
     </DashboardLayout>
   );
 }
