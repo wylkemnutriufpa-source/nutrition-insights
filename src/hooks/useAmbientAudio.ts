@@ -45,7 +45,7 @@ export function useAmbientAudio({
 
     if (fadeIntervalRef.current) clearInterval(fadeIntervalRef.current);
 
-    const steps = 30;
+    const steps = 50;
     const stepTime = fadeInDuration / steps;
     const volumeStep = targetVolume / steps;
     let currentStep = 0;
