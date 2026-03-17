@@ -230,6 +230,9 @@ function computeAdjustedProjection(
   if (analysis.metabolic_response_type === "weight_cycler") confidence -= 0.1;
   if (analysis.metabolic_response_type === "plateau_prone") confidence -= 0.05;
   if (analysis.metabolic_response_type === "rapid_responder") confidence += 0.05;
+  if (analysis.metabolic_response_type === "behavioral_inconsistent") confidence -= 0.1;
+  if (analysis.metabolic_response_type === "resistant_metabolism") confidence -= 0.08;
+  if (analysis.metabolic_response_type === "stable_transformer") confidence += 0.08;
   confidence = Math.round(Math.min(0.92, Math.max(0.15, confidence)) * 100) / 100;
 
   // Phase determination
