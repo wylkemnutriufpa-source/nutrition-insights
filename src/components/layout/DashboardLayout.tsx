@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useState as useStateReact } from "react";
 import OfflineSyncBanner from "@/components/common/OfflineSyncBanner";
 import SmartResumeModal from "@/components/common/SmartResumeModal";
+import AccordionSidebar from "@/components/layout/AccordionSidebar";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
