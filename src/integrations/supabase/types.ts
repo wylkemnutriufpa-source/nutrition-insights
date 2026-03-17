@@ -2058,63 +2058,81 @@ export type Database = {
       feature_registry: {
         Row: {
           bullets: Json
+          category: string
           clinical_impact: string | null
           created_at: string
           cta_text: string | null
           display_order: number | null
           emoji: string
+          emotional_impact: string
           experience_type: string
           feature_key: string
           gradient: string
           icon_name: string
           id: string
           is_highlight: boolean
+          is_premium: boolean
+          journey_phase: string
           journey_priority: number
           name: string
           short_description: string
           status: string
           target_audience: string
           updated_at: string
+          version: number
+          version_history: Json
         }
         Insert: {
           bullets?: Json
+          category?: string
           clinical_impact?: string | null
           created_at?: string
           cta_text?: string | null
           display_order?: number | null
           emoji?: string
+          emotional_impact?: string
           experience_type?: string
           feature_key: string
           gradient?: string
           icon_name?: string
           id?: string
           is_highlight?: boolean
+          is_premium?: boolean
+          journey_phase?: string
           journey_priority?: number
           name: string
           short_description: string
           status?: string
           target_audience?: string
           updated_at?: string
+          version?: number
+          version_history?: Json
         }
         Update: {
           bullets?: Json
+          category?: string
           clinical_impact?: string | null
           created_at?: string
           cta_text?: string | null
           display_order?: number | null
           emoji?: string
+          emotional_impact?: string
           experience_type?: string
           feature_key?: string
           gradient?: string
           icon_name?: string
           id?: string
           is_highlight?: boolean
+          is_premium?: boolean
+          journey_phase?: string
           journey_priority?: number
           name?: string
           short_description?: string
           status?: string
           target_audience?: string
           updated_at?: string
+          version?: number
+          version_history?: Json
         }
         Relationships: []
       }
