@@ -114,17 +114,21 @@ function analyzeWeightHistory(records: WeightRecord[]): HistoricalAnalysis {
   const hasSufficient = totalWeeks >= 4 && sorted.length >= 4;
 
   if (hasSufficient) {
-    if (yoyoCycles >= 3 || regainEvents >= 2) {
+    if (consistencyScore < 0.35 && stdDev > 1.0) {
+      responseType = "behavioral_inconsistent";
+    } else if (yoyoCycles >= 3 || regainEvents >= 2) {
       responseType = "weight_cycler";
     } else if (longestPlateauWeeks >= 4 || (longestPlateau / Math.max(1, sorted.length)) > 0.4) {
       responseType = "plateau_prone";
     } else if (avgWeeklyRate < -0.7) {
       responseType = "rapid_responder";
-    } else if (avgWeeklyRate < -0.15) {
-      responseType = netChange > -2 ? "slow_responder" : "stable_maintainer";
+    } else if (avgWeeklyRate <= -0.15 && avgWeeklyRate >= -0.7 && consistencyScore >= 0.6 && yoyoCycles <= 1) {
+      responseType = "stable_transformer";
+    } else if (avgWeeklyRate < -0.05 && avgWeeklyRate >= -0.15) {
+      responseType = "slow_responder";
     } else if (Math.abs(avgWeeklyRate) <= 0.15 && consistencyScore > 0.7) {
-      responseType = "stable_maintainer";
-    } else if (avgWeeklyRate > -0.15 && avgWeeklyRate < 0) {
+      responseType = "stable_transformer";
+    } else if (avgWeeklyRate < 0) {
       responseType = "slow_responder";
     } else {
       responseType = "slow_responder";
