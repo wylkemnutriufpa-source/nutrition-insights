@@ -42,7 +42,7 @@ export default function MagicJourneyStory() {
   const [loading, setLoading] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [selectedProjection, setSelectedProjection] = useState(0);
-  const { isMuted, toggleMute } = useAmbientAudio("/audio/ambient-floating.mp3");
+  const { isMuted, toggleMute } = useAmbientAudio({ src: "/audio/ambient-floating.mp3" });
 
   const generateStory = useCallback(async () => {
     if (!user) return;
