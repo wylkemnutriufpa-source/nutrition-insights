@@ -522,16 +522,14 @@ export default function Patients() {
   const { onlineUsers } = useOnlinePatients();
   const onlineSet = useMemo(() => new Set(onlineUsers.map(u => u.user_id)), [onlineUsers]);
 
-  // Debounced search: when search changes, reset page and debounce
-  const handleSearchChange = useCallback((value: string) => {
-    setSearch(value);
-    // Debounce server-side search
+  // Debounced search: proper cleanup with useEffect
+  useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(value);
-      setPage(1); // Reset to page 1 on search
-    }, 400);
+      setDebouncedSearch(search);
+      if (search !== debouncedSearch) setPage(1);
+    }, 300);
     return () => clearTimeout(timer);
-  }, []);
+  }, [search]);
 
   // Page change handler
   const handlePageChange = useCallback((newPage: number) => {
