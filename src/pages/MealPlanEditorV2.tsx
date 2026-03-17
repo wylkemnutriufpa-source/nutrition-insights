@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, AlertTriangle, Zap, Save, Send, CheckCircle2, Library } from "lucide-react";
+import { ArrowLeft, Loader2, AlertTriangle, Zap, Save, Send, CheckCircle2, Library, Utensils } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { WeeklyGrid } from "@/components/meal-editor-v2/WeeklyGrid";
 import { EditorSyncBadge } from "@/components/meal-editor-v2/EditorSyncBadge";
 import { MealLibrarySidebar } from "@/components/meal-editor-v2/MealLibrarySidebar";
+import { MealLibraryModal } from "@/components/meal-editor-v2/MealLibraryModal";
 import { toast } from "sonner";
 
 export default function MealPlanEditorV2() {
@@ -19,6 +20,7 @@ export default function MealPlanEditorV2() {
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
+  const [mealLibModalOpen, setMealLibModalOpen] = useState(false);
 
   // Hydrate on mount / planId change
   useEffect(() => {
@@ -142,11 +144,20 @@ export default function MealPlanEditorV2() {
             <Button
               variant="outline"
               size="sm"
+              onClick={() => setMealLibModalOpen(true)}
+              className="gap-1.5"
+            >
+              <Utensils className="w-4 h-4" />
+              Banco de Refeições
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setLibraryOpen(true)}
               className="gap-1.5"
             >
               <Library className="w-4 h-4" />
-              Biblioteca
+              Meus Modelos
             </Button>
             <Button
               variant="outline"
@@ -176,6 +187,12 @@ export default function MealPlanEditorV2() {
       <MealLibrarySidebar
         open={libraryOpen}
         onOpenChange={setLibraryOpen}
+        targetDay={1}
+        targetMealType="breakfast"
+      />
+      <MealLibraryModal
+        open={mealLibModalOpen}
+        onOpenChange={setMealLibModalOpen}
         targetDay={1}
         targetMealType="breakfast"
       />

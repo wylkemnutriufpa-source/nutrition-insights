@@ -11,6 +11,7 @@ import { useMealPlanEditorV2Store, type MealType, type MealPlanItem } from "@/st
 import { MealItemCard } from "./MealItemCard";
 import { DayBlockActions } from "./DayBlockActions";
 import { MealLibrarySidebar } from "./MealLibrarySidebar";
+import { MealLibraryModal } from "./MealLibraryModal";
 import { SaveTemplateDialog } from "./SaveTemplateDialog";
 import MacroBalanceBar from "@/components/meals/MacroBalanceBar";
 import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
@@ -62,6 +63,15 @@ export function WeeklyGrid() {
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
   const [saveTemplateItems, setSaveTemplateItems] = useState<MealPlanItem[]>([]);
   const [saveTemplateMealType, setSaveTemplateMealType] = useState<MealType>("breakfast");
+
+  // Meal Library Modal (banco de refeições)
+  const [mlModalOpen, setMlModalOpen] = useState(false);
+  const [mlModalTarget, setMlModalTarget] = useState<{ day: number; mealType: MealType }>({ day: 1, mealType: "breakfast" });
+
+  const openMealLibraryModal = (day: number, mealType: MealType) => {
+    setMlModalTarget({ day, mealType });
+    setMlModalOpen(true);
+  };
 
   const getItems = useCallback(
     (day: number, mealType: MealType) =>
@@ -266,9 +276,17 @@ export function WeeklyGrid() {
                         </button>
                         <button
                           type="button"
+                          onClick={() => openMealLibraryModal(day.key, meal.key)}
+                          className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 px-2 rounded border border-dashed border-border hover:border-primary"
+                          title="Banco de Refeições"
+                        >
+                          <Utensils className="w-3 h-3" />
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => openLibrary(day.key, meal.key)}
                           className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 px-2 rounded border border-dashed border-border hover:border-primary"
-                          title="Biblioteca de modelos"
+                          title="Meus Modelos"
                         >
                           <Zap className="w-3 h-3" />
                         </button>
@@ -335,6 +353,14 @@ export function WeeklyGrid() {
         onOpenChange={setSaveTemplateOpen}
         items={saveTemplateItems}
         mealType={saveTemplateMealType}
+      />
+
+      {/* Meal Library Modal (banco de refeições) */}
+      <MealLibraryModal
+        open={mlModalOpen}
+        onOpenChange={setMlModalOpen}
+        targetDay={mlModalTarget.day}
+        targetMealType={mlModalTarget.mealType}
       />
     </>
   );

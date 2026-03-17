@@ -2492,6 +2492,54 @@ export type Database = {
           },
         ]
       }
+      meal_library: {
+        Row: {
+          base_calories: number
+          carbs: number
+          clinical_tags: string[] | null
+          created_at: string
+          fat: number
+          foods: Json
+          goal_tag: string
+          id: string
+          is_active: boolean
+          meal_type: string
+          protein: number
+          substitutions: Json | null
+          title: string
+        }
+        Insert: {
+          base_calories?: number
+          carbs?: number
+          clinical_tags?: string[] | null
+          created_at?: string
+          fat?: number
+          foods?: Json
+          goal_tag: string
+          id?: string
+          is_active?: boolean
+          meal_type: string
+          protein?: number
+          substitutions?: Json | null
+          title: string
+        }
+        Update: {
+          base_calories?: number
+          carbs?: number
+          clinical_tags?: string[] | null
+          created_at?: string
+          fat?: number
+          foods?: Json
+          goal_tag?: string
+          id?: string
+          is_active?: boolean
+          meal_type?: string
+          protein?: number
+          substitutions?: Json | null
+          title?: string
+        }
+        Relationships: []
+      }
       meal_plan_adjustment_suggestions: {
         Row: {
           clinical_reason: string
@@ -9294,6 +9342,13 @@ export type Database = {
         | "reversed"
         | "cancelled"
       commission_type: "first_payment" | "recurring"
+      meal_goal_tag:
+        | "weight_loss"
+        | "hypertrophy"
+        | "metabolic"
+        | "low_carb"
+        | "functional"
+        | "maintenance"
       meal_plan_status:
         | "draft"
         | "draft_auto_generated"
@@ -9482,6 +9537,14 @@ export const Constants = {
         "cancelled",
       ],
       commission_type: ["first_payment", "recurring"],
+      meal_goal_tag: [
+        "weight_loss",
+        "hypertrophy",
+        "metabolic",
+        "low_carb",
+        "functional",
+        "maintenance",
+      ],
       meal_plan_status: [
         "draft",
         "draft_auto_generated",
