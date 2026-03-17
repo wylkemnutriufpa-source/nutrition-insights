@@ -500,26 +500,64 @@ Regras:
       }
     }
 
-    // === PERSIST SNAPSHOT ===
+    // === PERSIST SNAPSHOTS (one per timeframe) ===
     const now = new Date();
     const validUntil = new Date(now.getTime() + COOLDOWN_DAYS * 24 * 60 * 60 * 1000);
     const lockedUntil = new Date(now.getTime() + COOLDOWN_DAYS * 24 * 60 * 60 * 1000);
 
-    const { data: savedSnapshot } = await supabase.from("body_projection_snapshots").insert({
-      patient_id: targetPatient,
-      timeframe,
-      current_body_json: currentMetrics,
-      projected_body_json: projectedMetrics,
-      current_metrics_json: currentMetrics,
-      projected_metrics_json: projectedMetrics,
-      narrative,
-      confidence_score: projection.adjustedConfidence,
-      assessment_id: assessment_id || null,
-      generation_source,
-      valid_until: validUntil.toISOString(),
-      locked_until: lockedUntil.toISOString(),
-      created_by: user.id,
-    }).select("id, created_at").single();
+    const allResults: any[] = [];
+
+    for (const tf of timeframes) {
+      const tfDays = parseInt(tf) || 90;
+      const tfProjection = currentWeight
+        ? computeAdjustedProjection(currentWeight, tfDays, checkinWeeklyRate, historicalAnalysis, avgAdherence)
+        : projection;
+
+      const tfProjectedBmi = tfProjection.projectedWeight ? tfProjection.projectedWeight / ((height / 100) ** 2) : bmi;
+      const tfProjectedAdiposity = tfProjectedBmi > 35 ? "very_high" : tfProjectedBmi > 30 ? "high" : tfProjectedBmi > 25 ? "moderate" : tfProjectedBmi > 22 ? "low" : "very_low";
+
+      const tfProjectedMetrics = {
+        ...projectedMetrics,
+        projected_weight: tfProjection.projectedWeight,
+        projected_bmi: Math.round(tfProjectedBmi * 10) / 10,
+        weight_delta: tfProjection.projectedWeight && currentWeight ? Math.round((tfProjection.projectedWeight - currentWeight) * 10) / 10 : 0,
+        confidence_score: tfProjection.adjustedConfidence,
+        projected_phase: tfProjection.projectedPhase,
+        recommended_strategy: tfProjection.strategy,
+        curve_type: tfProjection.curveType,
+        adiposity_level: tfProjectedAdiposity,
+        historical_analysis: projectedMetrics.historical_analysis,
+      };
+
+      // Only generate narrative for 90d (primary)
+      const tfNarrative = tf === "90d" ? narrative : null;
+
+      const { data: savedSnapshot } = await supabase.from("body_projection_snapshots").insert({
+        patient_id: targetPatient,
+        timeframe: tf,
+        current_body_json: currentMetrics,
+        projected_body_json: tfProjectedMetrics,
+        current_metrics_json: currentMetrics,
+        projected_metrics_json: tfProjectedMetrics,
+        narrative: tfNarrative,
+        confidence_score: tfProjection.adjustedConfidence,
+        assessment_id: assessment_id || null,
+        generation_source,
+        valid_until: validUntil.toISOString(),
+        locked_until: lockedUntil.toISOString(),
+        created_by: user.id,
+      }).select("id, created_at, timeframe").single();
+
+      allResults.push({
+        snapshot_id: savedSnapshot?.id,
+        timeframe: tf,
+        projected_weight: tfProjection.projectedWeight,
+        projected_phase: tfProjection.projectedPhase,
+        confidence_score: tfProjection.adjustedConfidence,
+        strategy: tfProjection.strategy,
+        weight_delta: tfProjectedMetrics.weight_delta,
+      });
+    }
 
     // === UPDATE PROFILE with metabolic classification ===
     if (historicalAnalysis.has_sufficient_history) {
@@ -534,14 +572,16 @@ Regras:
     }
 
     return new Response(JSON.stringify({
-      snapshot_id: savedSnapshot?.id,
-      generated_at: savedSnapshot?.created_at || now.toISOString(),
+      success: true,
+      snapshots: allResults,
+      primary_snapshot_id: allResults.find(r => r.timeframe === "90d")?.snapshot_id || allResults[0]?.snapshot_id,
+      generated_at: now.toISOString(),
       valid_until: validUntil.toISOString(),
       locked_until: lockedUntil.toISOString(),
       current_body: currentMetrics,
       projected_body: projectedMetrics,
       narrative,
-      timeframe,
+      timeframes: timeframes,
       generation_source,
       photos_count: photos.length,
       data_points: checkins.length,
