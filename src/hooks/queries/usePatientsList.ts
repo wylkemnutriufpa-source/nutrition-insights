@@ -145,19 +145,16 @@ export function usePatientsList(params: PatientsListParams = {}) {
       let totalCount = 0;
 
       if (search.trim() && search.trim().length >= 2) {
-        // When searching with 2+ chars: find matching patient IDs first via profiles
-        const searchLower = search.toLowerCase().trim();
+        // Use server-side Full-Text Search via RPC for optimal performance
+        const searchTerm = search.trim();
         
-        // Fetch ALL links for this nutritionist (with status filter)
-        let allLinksQuery = supabase
-          .from("nutritionist_patients")
-          .select("*")
-          .eq("nutritionist_id", userId);
-        if (statusFilter === "active") allLinksQuery = allLinksQuery.eq("status", "active");
-        else if (statusFilter === "inactive") allLinksQuery = allLinksQuery.neq("status", "active");
-        
-        const { data: allLinks } = await allLinksQuery;
-        if (!allLinks || allLinks.length === 0) {
+        const { data: searchResults } = await supabase.rpc("search_patients", {
+          _nutritionist_id: userId,
+          _query: searchTerm,
+          _limit: 100,
+        });
+
+        if (!searchResults || searchResults.length === 0) {
           const { data: progs } = await supabase.from("programs")
             .select("id, title").eq("created_by", userId).eq("is_active", true);
           const { data: pPlans } = await supabase.from("prestige_plans").select("*").eq("is_active", true).order("display_order");
@@ -170,31 +167,22 @@ export function usePatientsList(params: PatientsListParams = {}) {
           };
         }
 
-        const allPatientIds = allLinks.map((p: any) => p.patient_id);
-        
-        // Batch search in profiles using ilike for better partial matching
-        const { data: searchProfiles } = await supabase.from("profiles")
-          .select("user_id, full_name")
-          .in("user_id", allPatientIds)
-          .ilike("full_name", `%${searchLower}%`);
-        
-        const matchingUserIds = new Set(
-          (searchProfiles || []).map((p: any) => p.user_id)
-        );
+        const matchingIds = new Set((searchResults as any[]).map((r: any) => r.user_id));
 
-        // Also check emails for search
-        if (matchingUserIds.size < 10) {
-          const { data: emailResults } = await supabase.rpc("get_patient_emails", { _patient_ids: allPatientIds });
-          (emailResults || []).forEach((e: any) => {
-            if (e.email?.toLowerCase().includes(searchLower)) matchingUserIds.add(e.user_id);
-          });
-        }
+        // Fetch links for matched patients
+        let linksQuery = supabase
+          .from("nutritionist_patients")
+          .select("*")
+          .eq("nutritionist_id", userId)
+          .in("patient_id", Array.from(matchingIds));
+        if (statusFilter === "active") linksQuery = linksQuery.eq("status", "active");
+        else if (statusFilter === "inactive") linksQuery = linksQuery.neq("status", "active");
 
-        const filteredLinks = allLinks.filter((l: any) => matchingUserIds.has(l.patient_id));
-        totalCount = filteredLinks.length;
+        const { data: filteredLinks } = await linksQuery;
+        totalCount = (filteredLinks || []).length;
 
         const start = (page - 1) * pageSize;
-        allData = filteredLinks.slice(start, start + pageSize);
+        allData = (filteredLinks || []).slice(start, start + pageSize);
       } else if (search.trim() && search.trim().length < 2) {
         // Less than 2 chars: skip search, return normal paginated results
         const from = (page - 1) * pageSize;
