@@ -10001,6 +10001,39 @@ export type Database = {
         }
         Relationships: []
       }
+      testimonials_public: {
+        Row: {
+          avatar_url: string | null
+          content: string | null
+          created_at: string | null
+          display_name: string | null
+          id: string | null
+          is_anonymous: boolean | null
+          nutritionist_id: string | null
+          rating: number | null
+        }
+        Insert: {
+          avatar_url?: never
+          content?: string | null
+          created_at?: string | null
+          display_name?: never
+          id?: string | null
+          is_anonymous?: boolean | null
+          nutritionist_id?: string | null
+          rating?: number | null
+        }
+        Update: {
+          avatar_url?: never
+          content?: string | null
+          created_at?: string | null
+          display_name?: never
+          id?: string | null
+          is_anonymous?: boolean | null
+          nutritionist_id?: string | null
+          rating?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       award_points:

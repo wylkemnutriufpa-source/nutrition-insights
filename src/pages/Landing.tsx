@@ -149,7 +149,7 @@ export default function Landing() {
   const [topRanking, setTopRanking] = useState<any[]>([]);
 
   useEffect(() => {
-    supabase.from("testimonials").select("*").eq("status", "approved").order("created_at", { ascending: false }).limit(6)
+    supabase.from("testimonials_public").select("*").order("created_at", { ascending: false }).limit(6)
       .then(({ data }) => { if (data?.length) setDbTestimonials(data); });
     // Fetch top 5 from ranking cache for the landing page
     supabase.from("patient_ranking_cache").select("display_name, total_points, avatar_url, plan_slug, plan_color, badge_icon, crown_enabled, rank_position")
