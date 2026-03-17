@@ -58,6 +58,16 @@ function RenderSmartLink({ item, active, collapsed, isProRole, onLinkClick, trac
   const hasColor = item.color && !isProRole;
   const isPremium = item.premium_only;
 
+  // Map routes to tour data attributes
+  const TOUR_MAP: Record<string, string> = {
+    "/": "dashboard", "/patients": "patients", "/editor-v2": "meal-editor",
+    "/automacoes": "automation", "/financeiro": "financial",
+    "/checklist": "checklist", "/plano-alimentar": "meal-plan",
+    "/checkin": "checkin", "/chat": "chat", "/jornada": "gamification",
+    "/alertas-clinicos": "alerts",
+  };
+  const tourId = TOUR_MAP[item.route];
+
   const handleClick = () => {
     trackClick(item.id);
     onLinkClick?.();
