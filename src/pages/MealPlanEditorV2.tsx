@@ -144,11 +144,20 @@ export default function MealPlanEditorV2() {
             <Button
               variant="outline"
               size="sm"
+              onClick={() => setMealLibModalOpen(true)}
+              className="gap-1.5"
+            >
+              <Utensils className="w-4 h-4" />
+              Banco de Refeições
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setLibraryOpen(true)}
               className="gap-1.5"
             >
               <Library className="w-4 h-4" />
-              Biblioteca
+              Meus Modelos
             </Button>
             <Button
               variant="outline"
