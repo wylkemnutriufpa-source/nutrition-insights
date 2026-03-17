@@ -481,7 +481,7 @@ serve(async (req) => {
         const { data: newPlan, error: planErr } = await serviceClient
           .from("meal_plans")
           .insert({
-            title: `Opção — ${template.name}`,
+            title: `Opção ${tplIdx + 1} — ${template.name}`,
             description: `Gerado pelo Protocolo FitJourney v${ENGINE_VERSION}. Template: ${template.name}. Meta: ${finalKcal}kcal/dia. Score: ${template._score}pts.`,
             patient_id,
             nutritionist_id: nutritionistId,
