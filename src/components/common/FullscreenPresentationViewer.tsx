@@ -44,7 +44,7 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
 
   const audio = useAmbientAudio({
     src: "/audio/ambient-cinema.mp3",
-    initialVolume: 0.18,
+    initialVolume: 0.45,
     fadeInDuration: 1200,
     loop: true,
   });
