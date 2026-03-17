@@ -310,7 +310,7 @@ function SidebarContent({
             </>
           )}
         </nav>
-      </ScrollArea>
+      </div>
 
       {/* Bottom */}
       <div className="p-3 border-t border-border/50 space-y-2">
