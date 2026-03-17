@@ -243,9 +243,10 @@ export default function SystemPresentation() {
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-semibold text-lg">{c.title}</h3>
                           {c.done && <Badge variant="secondary" className="text-xs gap-1"><CheckCircle2 className="w-3 h-3" /> Concluído</Badge>}
+                          {c.newCount > 0 && <Badge className="text-xs gap-1 bg-accent text-accent-foreground"><Sparkles className="w-3 h-3" /> {c.newCount} novo{c.newCount > 1 ? "s" : ""}</Badge>}
                         </div>
                         <p className="text-sm text-muted-foreground">{c.description}</p>
-                        <span className="text-xs text-muted-foreground mt-1 block">{c.slides} slides interativos</span>
+                        <span className="text-xs text-muted-foreground mt-1 block">{c.slides} slides interativos • Guia Vivo auto-atualizado</span>
                       </div>
                       <Button onClick={() => setActivePresentation(c.key)} variant={c.done ? "outline" : "default"} className="flex-shrink-0">
                         {c.done ? <><RotateCcw className="w-4 h-4 mr-1" /> Rever</> : <><Play className="w-4 h-4 mr-1" /> Iniciar</>}
