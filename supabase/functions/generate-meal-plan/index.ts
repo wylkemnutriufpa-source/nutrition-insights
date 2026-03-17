@@ -466,8 +466,9 @@ serve(async (req) => {
       const generatedPlans: any[] = [];
       const nutritionistId = body.nutritionistId;
 
-      for (const template of topTemplates) {
-        const planItems = generatePlanFromTemplate(template, finalKcal, finalMacros, restrictions, disliked);
+      for (let tplIdx = 0; tplIdx < topTemplates.length; tplIdx++) {
+        const template = topTemplates[tplIdx];
+        const planItems = generatePlanFromTemplate(template, finalKcal, finalMacros, restrictions, disliked, tplIdx);
         const genMeta = buildGenerationMetadata(
           tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
           age, sex, activityLevel, dataSource, template, scoredTemplates,
