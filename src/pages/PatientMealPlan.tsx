@@ -97,6 +97,7 @@ export default function PatientMealPlan() {
   const [loading, setLoading] = useState(true);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [viewMode, setViewMode] = useState<"daily" | "weekly">("daily");
+  const [selectedMeal, setSelectedMeal] = useState<MealDetailData | null>(null);
 
   const dayOfWeek = new Date(date + "T12:00:00").getDay();
   const isToday = date === new Date().toISOString().split("T")[0];
