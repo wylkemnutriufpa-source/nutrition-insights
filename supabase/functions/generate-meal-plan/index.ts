@@ -163,7 +163,7 @@ function isDisliked(name: string, desc: string, disliked: string[]): boolean {
 // ──── Generate plan items from template ────
 function generatePlanFromTemplate(
   template: any, kcalTarget: number, macros: { protein: number; carbs: number; fat: number },
-  restrictions: string[], disliked: string[]
+  restrictions: string[], disliked: string[], planOptionIndex: number = 0
 ): any[] {
   const meals = (template.meals || []) as any[];
   const items: any[] = [];
