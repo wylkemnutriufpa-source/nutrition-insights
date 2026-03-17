@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import {
   LayoutDashboard, Users, UtensilsCrossed, Trophy, Target, FileBarChart,
   Leaf, LogOut, Moon, Sun, ChevronRight, Sparkles, Settings,
