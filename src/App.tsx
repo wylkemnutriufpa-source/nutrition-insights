@@ -127,6 +127,7 @@ const PlatformGovernance = lazy(() => import("./pages/PlatformGovernance"));
 const ClinicalPipeline = lazy(() => import("./pages/ClinicalPipeline"));
 const Integrations = lazy(() => import("./pages/Integrations"));
 const SystemPresentation = lazy(() => import("./pages/SystemPresentation"));
+const OnboardingProfissional = lazy(() => import("./pages/OnboardingProfissional"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -354,6 +355,7 @@ const App = () => (
               <Route path="/user-guide" element={<ProtectedRoute><LP section="Guia"><UserGuide /></LP></ProtectedRoute>} />
               <Route path="/curiosidades" element={<ProtectedRoute><LP section="Curiosidades"><Curiosidades /></LP></ProtectedRoute>} />
               <Route path="/apresentacao" element={<ProtectedRoute><LP section="Apresentação"><SystemPresentation /></LP></ProtectedRoute>} />
+              <Route path="/onboarding-profissional" element={<ProtectedRoute><LP section="Onboarding"><OnboardingProfissional /></LP></ProtectedRoute>} />
 
               {/* Admin routes */}
               <Route path="/admin" element={<AdminRoute><LP section="Admin"><AdminDashboard /></LP></AdminRoute>} />
