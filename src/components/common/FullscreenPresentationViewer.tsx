@@ -44,10 +44,9 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
 
   const audio = useAmbientAudio({
     src: "/audio/ambient-tech.mp3",
-    initialVolume: 0.2,
-    fadeInDuration: 2500,
+    initialVolume: 0.18,
+    fadeInDuration: 1200,
     loop: true,
-    autoplay: true,
   });
 
   // Block body scroll
