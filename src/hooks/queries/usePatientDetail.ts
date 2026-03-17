@@ -91,6 +91,14 @@ export function usePatientDetail(patientId: string | undefined) {
         currentPrestigePlan,
         currentPrestigePlanId: patientPrestigeRes.data?.prestige_plans?.id || "",
         patientEmail,
+        adherence7d: (() => {
+          const comps = adherenceRes.data || [];
+          const followed = comps.filter((c: any) => c.adherence_status === "followed").length;
+          const partial = comps.filter((c: any) => c.adherence_status === "partial").length;
+          const total = comps.length;
+          if (total === 0) return 0;
+          return Math.round(((followed * 100 + partial * 50) / (total * 100)) * 100);
+        })(),
       };
     },
   });
