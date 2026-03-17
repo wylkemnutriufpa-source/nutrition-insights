@@ -689,6 +689,13 @@ export default function PatientMealPlan() {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Meal Detail Modal */}
+        <MealDetailModal
+          open={!!selectedMeal}
+          onOpenChange={(open) => { if (!open) setSelectedMeal(null); }}
+          meal={selectedMeal}
+        />
       </div>
     </DashboardLayout>
   );
