@@ -280,7 +280,7 @@ function SidebarContent({
           )}
           {isProRole && (
             <>
-              {(["admin", "nutritionist"].includes(userRole)) && (
+              {(["admin", "nutritionist", "personal"].includes(userRole)) && (
                 <Link
                   to="/editor-v2"
                   onClick={onLinkClick}
