@@ -208,6 +208,64 @@ export default function SystemPresentation() {
             ))}
           </div>
         </div>
+
+        {/* Tour Guiado section */}
+        <div>
+          <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <Map className="w-5 h-5 text-primary" />
+            Tour Guiado Interativo
+          </h2>
+          <div className="grid gap-4">
+            {isPro && (
+              <Card className="group hover:shadow-md transition-shadow">
+                <CardContent className="p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0 shadow-md">
+                    <Stethoscope className="w-7 h-7 text-primary-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-lg">Tour do Profissional</h3>
+                    <p className="text-sm text-muted-foreground">Tour contextual pelo dashboard com spotlight e tooltips — aprenda usando.</p>
+                    <span className="text-xs text-muted-foreground mt-1 block">{PROFESSIONAL_TOUR_STEPS.length} passos interativos</span>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      localStorage.removeItem("tour_professional_completed");
+                      navigate("/");
+                      toast.info("Tour será iniciado no dashboard!");
+                    }}
+                    variant="outline"
+                    className="flex-shrink-0"
+                  >
+                    <Play className="w-4 h-4 mr-1" /> Iniciar Tour
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+            <Card className="group hover:shadow-md transition-shadow">
+              <CardContent className="p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-success to-info flex items-center justify-center flex-shrink-0 shadow-md">
+                  <User className="w-7 h-7 text-primary-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-lg">Tour do Paciente</h3>
+                  <p className="text-sm text-muted-foreground">Tour contextual pelo app do paciente — checklist, plano, gamificação e chat.</p>
+                  <span className="text-xs text-muted-foreground mt-1 block">{PATIENT_TOUR_STEPS.length} passos interativos</span>
+                </div>
+                <Button
+                  onClick={() => {
+                    localStorage.removeItem("tour_patient_completed");
+                    navigate("/");
+                    toast.info("Tour será iniciado no dashboard!");
+                  }}
+                  variant="outline"
+                  className="flex-shrink-0"
+                >
+                  <Play className="w-4 h-4 mr-1" /> Iniciar Tour
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </DashboardLayout>
   );
