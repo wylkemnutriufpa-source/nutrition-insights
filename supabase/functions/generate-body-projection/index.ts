@@ -258,8 +258,14 @@ function computeAdjustedProjection(
     case "slow_responder":
       strategy = "Manter consistência a longo prazo. Ajustes calóricos pequenos e frequentes. Paciência é o principal aliado.";
       break;
-    case "stable_maintainer":
-      strategy = "Manter protocolo atual. O metabolismo está respondendo de forma equilibrada. Priorizar qualidade nutricional.";
+    case "stable_transformer":
+      strategy = "Manter protocolo atual. Metabolismo respondendo de forma equilibrada. Priorizar qualidade nutricional e progressão.";
+      break;
+    case "behavioral_inconsistent":
+      strategy = "Foco em estabilização de hábitos diários antes de ajustes calóricos. Simplificar plano e aumentar check-ins.";
+      break;
+    case "resistant_metabolism":
+      strategy = "Considerar intervenções mais intensivas, ciclos calóricos ou investigação metabólica complementar. Avaliar sono e estresse.";
       break;
     default:
       strategy = "Continuar acompanhamento para acumular dados suficientes para personalização avançada do protocolo.";

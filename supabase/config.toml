@@ -158,6 +158,9 @@ verify_jwt = false
 [functions.reset-patient-passwords]
 verify_jwt = false
 
+[functions.classify-metabolic-profile]
+verify_jwt = false
+
 # ═══════════════════════════════════════════
 # PREMIUM AI (Camada opcional de inteligência)
 # ═══════════════════════════════════════════
