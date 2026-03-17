@@ -198,27 +198,27 @@ export default function PatientMealPlan() {
     setItems((allItemsData || []).filter(i => i.day_of_week === dayOfWeek));
 
     // Fetch daily completions
-    const { data: completionsData } = await (supabase
-      .from("meal_item_completions" as any) as any)
+    const { data: completionsData } = await supabase
+      .from("meal_item_completions")
       .select("*")
       .eq("patient_id", user.id)
       .eq("meal_plan_id", planData.id)
       .eq("date", date);
 
-    setCompletions(completionsData || []);
+    setCompletions((completionsData || []) as unknown as MealCompletion[]);
 
     // Fetch week completions
     const weekStart = weekDates[0];
     const weekEnd = weekDates[6];
-    const { data: weekData } = await (supabase
-      .from("meal_item_completions" as any) as any)
+    const { data: weekData } = await supabase
+      .from("meal_item_completions")
       .select("*")
       .eq("patient_id", user.id)
       .eq("meal_plan_id", planData.id)
       .gte("date", weekStart)
       .lte("date", weekEnd);
 
-    setWeekCompletions(weekData || []);
+    setWeekCompletions((weekData || []) as unknown as MealCompletion[]);
     setLoading(false);
   }, [user, date, dayOfWeek]);
 
@@ -244,7 +244,8 @@ export default function PatientMealPlan() {
     const existing = relevantCompletions.find(c => c.meal_plan_item_id === item.id);
 
     if (existing && existing.adherence_status === status) {
-      await (supabase.from("meal_item_completions" as any) as any)
+      await supabase
+        .from("meal_item_completions")
         .delete()
         .eq("id", existing.id);
       if (!forDate) setCompletions(completions.filter(c => c.id !== existing.id));
@@ -253,7 +254,8 @@ export default function PatientMealPlan() {
     }
 
     if (existing) {
-      await (supabase.from("meal_item_completions" as any) as any)
+      await supabase
+        .from("meal_item_completions")
         .update({
           adherence_status: status,
           completed: status === "followed",
@@ -261,7 +263,8 @@ export default function PatientMealPlan() {
         })
         .eq("id", existing.id);
     } else {
-      await (supabase.from("meal_item_completions" as any) as any)
+      await supabase
+        .from("meal_item_completions")
         .insert({
           patient_id: user.id,
           meal_plan_item_id: item.id,
