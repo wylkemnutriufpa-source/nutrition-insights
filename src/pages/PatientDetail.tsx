@@ -1061,6 +1061,14 @@ export default function PatientDetail() {
                 </DialogContent>
               </Dialog>
 
+              {/* Body Projection Modal */}
+              <Dialog open={openSection === "body-projection"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display">Projeção Corporal</DialogTitle></DialogHeader>
+                  <BodyProjectionProCard patientId={patientId!} isAdmin={isAdmin} />
+                </DialogContent>
+              </Dialog>
+
               {/* Onboarding Pipeline Modal */}
               <Dialog open={openSection === "onboarding"} onOpenChange={(v) => !v && setOpenSection(null)}>
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
