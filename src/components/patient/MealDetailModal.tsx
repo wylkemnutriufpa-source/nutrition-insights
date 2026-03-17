@@ -1,12 +1,11 @@
 import React from "react";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import {
   Flame, Beef, Wheat, Droplets, Clock, ChefHat, Target,
-  Shuffle, Leaf, UtensilsCrossed, ScrollText,
+  Shuffle, Leaf, UtensilsCrossed, ScrollText, X,
 } from "lucide-react";
 
 interface FoodItem {
@@ -40,6 +39,15 @@ interface MealDetailModalProps {
   meal: MealDetailData | null;
 }
 
+const MEAL_TYPE_LABELS: Record<string, { label: string; emoji: string }> = {
+  breakfast: { label: "Café da Manhã", emoji: "☕" },
+  morning_snack: { label: "Lanche da Manhã", emoji: "🍌" },
+  lunch: { label: "Almoço", emoji: "🍽️" },
+  afternoon_snack: { label: "Lanche da Tarde", emoji: "🍎" },
+  dinner: { label: "Jantar", emoji: "🌙" },
+  evening_snack: { label: "Ceia", emoji: "🫖" },
+};
+
 const GOAL_LABELS: Record<string, { label: string; color: string }> = {
   weight_loss: { label: "Emagrecimento", color: "bg-orange-500/15 text-orange-600 border-orange-500/30" },
   hypertrophy: { label: "Hipertrofia", color: "bg-blue-500/15 text-blue-600 border-blue-500/30" },
@@ -54,6 +62,7 @@ const CLINICAL_LABELS: Record<string, string> = {
   intestinal: "Saúde Intestinal",
   hormonal: "Equilíbrio Hormonal",
   anti_inflammatory: "Anti-inflamatório",
+  anti_inflamatorio: "Anti-inflamatório",
   cardiovascular: "Cardiovascular",
   detox: "Detox",
   saciedade: "Alta Saciedade",
@@ -80,87 +89,109 @@ export function MealDetailModal({ open, onOpenChange, meal }: MealDetailModalPro
   const goalTag: string | undefined = meta.goal_tag;
   const clinicalTags: string[] = parseJsonField<string>(meta.clinical_tags || meta.clinical_tag);
   const source: string | undefined = meta.source;
+  const mealTypeInfo = MEAL_TYPE_LABELS[meal.meal_type || ""] || null;
 
   const hasMacros = meal.calories_target || meal.protein_target || meal.carbs_target || meal.fat_target;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md mx-auto max-h-[90vh] overflow-y-auto p-0 gap-0 rounded-2xl">
-        {/* Header */}
-        <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-5 pb-4">
-          <DialogHeader className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
-                <UtensilsCrossed className="w-5 h-5 text-primary" />
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent className="max-h-[95vh] flex flex-col">
+        {/* Sticky Header */}
+        <div className="sticky top-0 z-10 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-b border-border">
+          <DrawerHeader className="pb-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+                  <UtensilsCrossed className="w-6 h-6 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <DrawerTitle className="text-lg font-bold leading-tight">{meal.title}</DrawerTitle>
+                  {mealTypeInfo && (
+                    <DrawerDescription className="text-xs mt-0.5">
+                      {mealTypeInfo.emoji} {mealTypeInfo.label}
+                    </DrawerDescription>
+                  )}
+                  {!mealTypeInfo && meal.description && (
+                    <DrawerDescription className="text-xs mt-0.5 line-clamp-1">{meal.description}</DrawerDescription>
+                  )}
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <DialogTitle className="text-base font-bold leading-tight">{meal.title}</DialogTitle>
-                {meal.description && (
-                  <DialogDescription className="text-xs mt-0.5 line-clamp-2">{meal.description}</DialogDescription>
-                )}
-              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onOpenChange(false)}
+                className="shrink-0 -mt-1 -mr-2"
+              >
+                <X className="w-5 h-5" />
+              </Button>
             </div>
-          </DialogHeader>
 
-          {/* Tags */}
-          <div className="flex flex-wrap gap-1.5 mt-3">
-            {goalTag && GOAL_LABELS[goalTag] && (
-              <Badge variant="outline" className={`text-[10px] ${GOAL_LABELS[goalTag].color}`}>
-                <Target className="w-2.5 h-2.5 mr-1" />
-                {GOAL_LABELS[goalTag].label}
-              </Badge>
-            )}
-            {clinicalTags.map(tag => (
-              <Badge key={tag} variant="outline" className="text-[10px] bg-accent/50 border-accent">
-                <Leaf className="w-2.5 h-2.5 mr-1" />
-                {CLINICAL_LABELS[tag] || tag}
-              </Badge>
-            ))}
-            {prepTime && (
-              <Badge variant="outline" className="text-[10px]">
-                <Clock className="w-2.5 h-2.5 mr-1" /> {prepTime} min
-              </Badge>
-            )}
-            {source === "library" && (
-              <Badge variant="outline" className="text-[10px] bg-primary/10 border-primary/30 text-primary">
-                Banco FitJourney
-              </Badge>
-            )}
-          </div>
+            {/* Tags */}
+            <div className="flex flex-wrap gap-1.5 mt-3">
+              {goalTag && GOAL_LABELS[goalTag] && (
+                <Badge variant="outline" className={`text-[10px] ${GOAL_LABELS[goalTag].color}`}>
+                  <Target className="w-2.5 h-2.5 mr-1" />
+                  {GOAL_LABELS[goalTag].label}
+                </Badge>
+              )}
+              {clinicalTags.map(tag => (
+                <Badge key={tag} variant="outline" className="text-[10px] bg-accent/50 border-accent">
+                  <Leaf className="w-2.5 h-2.5 mr-1" />
+                  {CLINICAL_LABELS[tag] || tag.replace(/_/g, " ")}
+                </Badge>
+              ))}
+              {prepTime && (
+                <Badge variant="outline" className="text-[10px]">
+                  <Clock className="w-2.5 h-2.5 mr-1" /> {prepTime} min
+                </Badge>
+              )}
+              {source === "library" && (
+                <Badge variant="outline" className="text-[10px] bg-primary/10 border-primary/30 text-primary">
+                  Banco FitJourney
+                </Badge>
+              )}
+            </div>
+          </DrawerHeader>
         </div>
 
-        <div className="p-5 space-y-5">
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-8 space-y-6">
           {/* Macros */}
           {hasMacros && (
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-2 pt-4">
               {[
-                { label: "Calorias", value: meal.calories_target, unit: "", icon: <Flame className="w-4 h-4 text-orange-500" /> },
-                { label: "Proteína", value: meal.protein_target, unit: "g", icon: <Beef className="w-4 h-4 text-red-500" /> },
-                { label: "Carbs", value: meal.carbs_target, unit: "g", icon: <Wheat className="w-4 h-4 text-amber-500" /> },
-                { label: "Gordura", value: meal.fat_target, unit: "g", icon: <Droplets className="w-4 h-4 text-yellow-500" /> },
+                { label: "Calorias", value: meal.calories_target, unit: "", icon: <Flame className="w-5 h-5 text-orange-500" /> },
+                { label: "Proteína", value: meal.protein_target, unit: "g", icon: <Beef className="w-5 h-5 text-red-500" /> },
+                { label: "Carbs", value: meal.carbs_target, unit: "g", icon: <Wheat className="w-5 h-5 text-amber-500" /> },
+                { label: "Gordura", value: meal.fat_target, unit: "g", icon: <Droplets className="w-5 h-5 text-yellow-500" /> },
               ].map(m => (
-                <div key={m.label} className="rounded-xl bg-secondary/60 p-2.5 text-center">
-                  <div className="flex justify-center mb-1">{m.icon}</div>
+                <div key={m.label} className="rounded-xl bg-secondary/60 p-3 text-center">
+                  <div className="flex justify-center mb-1.5">{m.icon}</div>
                   <p className="text-[10px] text-muted-foreground">{m.label}</p>
-                  <p className="font-bold text-sm">{m.value != null ? `${Number(m.value).toFixed(0)}${m.unit}` : "—"}</p>
+                  <p className="font-bold text-base">{m.value != null ? `${Number(m.value).toFixed(0)}${m.unit}` : "—"}</p>
                 </div>
               ))}
             </div>
           )}
 
+          {/* Description (if not shown in header) */}
+          {meal.description && mealTypeInfo && (
+            <p className="text-sm text-muted-foreground">{meal.description}</p>
+          )}
+
           {/* Ingredients */}
           {foods.length > 0 && (
             <section>
-              <div className="flex items-center gap-2 mb-2.5">
-                <ChefHat className="w-4 h-4 text-primary" />
-                <h4 className="font-semibold text-sm">Ingredientes</h4>
+              <div className="flex items-center gap-2 mb-3">
+                <ChefHat className="w-5 h-5 text-primary" />
+                <h4 className="font-semibold text-base">Ingredientes</h4>
               </div>
-              <ul className="space-y-1.5">
+              <ul className="space-y-2.5">
                 {foods.map((food, idx) => (
-                  <li key={idx} className="flex items-center gap-2 text-sm">
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary/60 shrink-0" />
-                    <span className="flex-1">{food.name}</span>
-                    <span className="text-xs text-muted-foreground font-medium">{food.portion}</span>
+                  <li key={idx} className="flex items-center gap-3 text-sm bg-secondary/30 rounded-lg px-3 py-2.5">
+                    <span className="w-2 h-2 rounded-full bg-primary/60 shrink-0" />
+                    <span className="flex-1 font-medium">{food.name}</span>
+                    <span className="text-xs text-muted-foreground font-semibold bg-secondary rounded px-2 py-0.5">{food.portion}</span>
                   </li>
                 ))}
               </ul>
@@ -172,11 +203,13 @@ export function MealDetailModal({ open, onOpenChange, meal }: MealDetailModalPro
             <>
               <Separator />
               <section>
-                <div className="flex items-center gap-2 mb-2">
-                  <ScrollText className="w-4 h-4 text-primary" />
-                  <h4 className="font-semibold text-sm">Modo de Preparo</h4>
+                <div className="flex items-center gap-2 mb-3">
+                  <ScrollText className="w-5 h-5 text-primary" />
+                  <h4 className="font-semibold text-base">Modo de Preparo</h4>
                 </div>
-                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{instructions}</p>
+                <div className="rounded-lg bg-secondary/30 p-4">
+                  <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{instructions}</p>
+                </div>
               </section>
             </>
           )}
@@ -186,19 +219,19 @@ export function MealDetailModal({ open, onOpenChange, meal }: MealDetailModalPro
             <>
               <Separator />
               <section>
-                <div className="flex items-center gap-2 mb-2.5">
-                  <Shuffle className="w-4 h-4 text-primary" />
-                  <h4 className="font-semibold text-sm">Substituições</h4>
+                <div className="flex items-center gap-2 mb-3">
+                  <Shuffle className="w-5 h-5 text-primary" />
+                  <h4 className="font-semibold text-base">Substituições</h4>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   {substitutions.map((sub, idx) => (
-                    <div key={idx} className="rounded-lg bg-secondary/40 p-2.5">
-                      <p className="text-xs font-medium text-muted-foreground mb-1">
+                    <div key={idx} className="rounded-lg bg-secondary/40 p-3">
+                      <p className="text-xs font-medium text-muted-foreground mb-1.5">
                         Trocar <span className="text-foreground font-semibold">{sub.replace}</span> por:
                       </p>
-                      <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-wrap gap-1.5">
                         {sub.options.map((opt, oi) => (
-                          <Badge key={oi} variant="secondary" className="text-[10px]">{opt}</Badge>
+                          <Badge key={oi} variant="secondary" className="text-xs">{opt}</Badge>
                         ))}
                       </div>
                     </div>
@@ -208,15 +241,16 @@ export function MealDetailModal({ open, onOpenChange, meal }: MealDetailModalPro
             </>
           )}
 
-          {/* Empty state when no extra info */}
+          {/* Empty state */}
           {foods.length === 0 && !instructions && substitutions.length === 0 && !hasMacros && (
-            <div className="text-center py-6 text-muted-foreground">
-              <UtensilsCrossed className="w-8 h-8 mx-auto mb-2 opacity-40" />
-              <p className="text-sm">Detalhes serão adicionados pelo seu nutricionista.</p>
+            <div className="text-center py-10 text-muted-foreground">
+              <UtensilsCrossed className="w-10 h-10 mx-auto mb-3 opacity-40" />
+              <p className="text-sm font-medium">Detalhes serão adicionados pelo seu nutricionista.</p>
+              <p className="text-xs mt-1">Macros, ingredientes e instruções aparecerão aqui.</p>
             </div>
           )}
         </div>
-      </DialogContent>
-    </Dialog>
+      </DrawerContent>
+    </Drawer>
   );
 }

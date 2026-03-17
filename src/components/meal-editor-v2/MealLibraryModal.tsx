@@ -118,51 +118,48 @@ export function MealLibraryModal({
     // Calculate scale factor if patient has a target
     let scaleFactor = 1;
     if (patientTargetKcal && meal.base_calories > 0) {
-      // Distribution: estimate meal share based on type
       const mealShare: Record<string, number> = {
         breakfast: 0.25, morning_snack: 0.10, lunch: 0.30,
         afternoon_snack: 0.10, dinner: 0.20, evening_snack: 0.05,
       };
       const targetMealKcal = patientTargetKcal * (mealShare[meal.meal_type] || 0.2);
       scaleFactor = targetMealKcal / meal.base_calories;
-      // Clamp scale to reasonable range
       scaleFactor = Math.max(0.5, Math.min(2.0, scaleFactor));
     }
 
     const foods = Array.isArray(meal.foods) ? meal.foods : [];
 
-    if (foods.length > 0) {
-      const inserts = foods.map((food) => ({
-        meal_plan_id: planId,
-        title: food.name,
-        description: scaleFactor !== 1
-          ? `${food.portion} (×${scaleFactor.toFixed(1)})`
-          : food.portion || null,
-        meal_type: targetMealType,
-        day_of_week: targetDay,
-        calories_target: Math.round((meal.base_calories / foods.length) * scaleFactor),
-        protein_target: Math.round((meal.protein / foods.length) * scaleFactor),
-        carbs_target: Math.round((meal.carbs / foods.length) * scaleFactor),
-        fat_target: Math.round((meal.fat / foods.length) * scaleFactor),
-      }));
-      addItems(inserts);
-    } else {
-      addItem({
-        meal_plan_id: planId,
-        title: meal.title,
-        description: null,
-        meal_type: targetMealType,
-        day_of_week: targetDay,
-        calories_target: Math.round(meal.base_calories * scaleFactor),
-        protein_target: Math.round(meal.protein * scaleFactor),
-        carbs_target: Math.round(meal.carbs * scaleFactor),
-        fat_target: Math.round(meal.fat * scaleFactor),
-      });
-    }
+    // Build metadata for clinical traceability
+    const mealMeta = {
+      source: "library",
+      library_meal_id: meal.id,
+      goal_tag: meal.goal_tag,
+      clinical_tags: meal.clinical_tags,
+      foods: meal.foods,
+      substitutions: meal.substitutions,
+    };
+
+    // Always insert a header item with the meal title first
+    const headerItem = {
+      meal_plan_id: planId,
+      title: meal.title,
+      description: foods.length > 0
+        ? foods.map((f) => `• ${f.name} — ${f.portion}`).join("\n")
+        : null,
+      meal_type: targetMealType,
+      day_of_week: targetDay,
+      calories_target: Math.round(meal.base_calories * scaleFactor),
+      protein_target: Math.round(meal.protein * scaleFactor),
+      carbs_target: Math.round(meal.carbs * scaleFactor),
+      fat_target: Math.round(meal.fat * scaleFactor),
+      metadata: mealMeta,
+    };
+
+    addItem(headerItem as any);
 
     toast.success(`"${meal.title}" adicionado ao plano`);
     onOpenChange(false);
-  }, [planId, targetDay, targetMealType, patientTargetKcal, addItems, addItem, onOpenChange]);
+  }, [planId, targetDay, targetMealType, patientTargetKcal, addItem, onOpenChange]);
 
   const dayLabel = targetDay === 0 ? "Domingo" : ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"][targetDay - 1];
   const mealLabel = MEAL_TABS.find((t) => t.key === targetMealType)?.label || targetMealType;
