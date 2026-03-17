@@ -146,6 +146,15 @@ export default function MealPlanEditorV2() {
             <Button
               variant="outline"
               size="sm"
+              onClick={() => setAutoGenOpen(true)}
+              className="gap-1.5"
+            >
+              <Wand2 className="w-4 h-4" />
+              Gerar Automático
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setMealLibModalOpen(true)}
               className="gap-1.5"
             >
