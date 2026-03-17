@@ -475,8 +475,22 @@ export default function Patients() {
     nav(`/patients/${patientId}`);
   }, [nav]);
 
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [statusTab, setStatusTab] = useState<"active" | "inactive" | "all">("active");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Build params for server-side query
+  const queryParams: PatientsListParams = {
+    page,
+    pageSize,
+    statusFilter: statusTab,
+    search: debouncedSearch,
+  };
+
   // React Query hooks
-  const { data, isLoading, isError } = usePatientsList();
+  const { data, isLoading, isError, isFetching } = usePatientsList(queryParams);
   const toggleStatusMutation = useTogglePatientStatus();
   const addPatientMutation = useAddPatient();
   const removeFromProgramMutation = useRemoveFromProgram();
@@ -486,6 +500,8 @@ export default function Patients() {
   const patients = data?.patients ?? [];
   const programs = data?.programs ?? [];
   const prestigePlansList = data?.prestigePlans ?? [];
+  const pagination = data?.pagination ?? { page: 1, pageSize, totalCount: 0, hasNextPage: false, hasPreviousPage: false, totalPages: 0 };
+  const counts = data?.counts ?? { active: 0, inactive: 0 };
 
   // Local UI state
   const [open, setOpen] = useState(false);
@@ -494,7 +510,6 @@ export default function Patients() {
   const [patientPassword, setPatientPassword] = useState("");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "critical" | "medium" | "good">("all");
-  const [activeTab, setActiveTab] = useState("ativos");
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [assignTarget, setAssignTarget] = useState<PatientInfo | null>(null);
   const [layout, setLayout] = useState<"grid" | "list">("grid");
@@ -506,6 +521,37 @@ export default function Patients() {
   const [bulkMode, setBulkMode] = useState<"deactivate" | "activate">("deactivate");
   const { onlineUsers } = useOnlinePatients();
   const onlineSet = useMemo(() => new Set(onlineUsers.map(u => u.user_id)), [onlineUsers]);
+
+  // Debounced search: when search changes, reset page and debounce
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+    // Debounce server-side search
+    const timer = setTimeout(() => {
+      setDebouncedSearch(value);
+      setPage(1); // Reset to page 1 on search
+    }, 400);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Page change handler
+  const handlePageChange = useCallback((newPage: number) => {
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
+  // Page size change handler
+  const handlePageSizeChange = useCallback((newSize: number) => {
+    setPageSize(newSize);
+    setPage(1); // Reset to page 1
+  }, []);
+
+  // Tab change handler (server-side status filter)
+  const handleTabChange = useCallback((tab: string) => {
+    if (tab === "ativos") setStatusTab("active");
+    else if (tab === "inativos") setStatusTab("inactive");
+    else setStatusTab("all");
+    setPage(1); // Reset page on tab change
+  }, []);
 
   const addPatient = async (e: React.FormEvent) => {
     e.preventDefault();
