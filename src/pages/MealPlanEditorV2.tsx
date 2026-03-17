@@ -14,6 +14,8 @@ export default function MealPlanEditorV2() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const store = useMealPlanEditorV2Store();
+  const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
 
   // Hydrate on mount / planId change
   useEffect(() => {
@@ -55,9 +57,6 @@ export default function MealPlanEditorV2() {
 
   const plan = store.plan;
   if (!plan) return null;
-
-  const [saving, setSaving] = useState(false);
-  const [publishing, setPublishing] = useState(false);
 
   const isPublished = plan.plan_status === "published_to_patient";
   const isApproved = plan.plan_status === "approved";
