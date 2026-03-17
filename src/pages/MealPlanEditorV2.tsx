@@ -119,7 +119,17 @@ export default function MealPlanEditorV2() {
   const handlePublish = async () => {
     setPublishing(true);
     try {
+      // Flush any real pending ops, but clear stale temp-id ops first
+      const pendingOps = useMealPlanEditorV2Store.getState().pendingOps;
+      const hasStaleOps = pendingOps.some(op => op.itemIds.some(id => id.startsWith("temp-")));
+      if (hasStaleOps) {
+        // Clear stale ops that reference temp IDs no longer valid
+        useMealPlanEditorV2Store.setState(s => ({
+          pendingOps: s.pendingOps.filter(op => !op.itemIds.some(id => id.startsWith("temp-"))),
+        }));
+      }
       await store._flushQueue();
+
       const { error } = await supabase
         .from("meal_plans")
         .update({ plan_status: "published_to_patient", is_active: true, updated_at: new Date().toISOString() })
@@ -127,8 +137,9 @@ export default function MealPlanEditorV2() {
       if (error) throw error;
       store.updatePlan({ plan_status: "published_to_patient", is_active: true, updated_at: new Date().toISOString() } as any);
       toast.success("Plano publicado para o paciente!");
-    } catch (err) {
-      toast.error("Erro ao publicar o plano.");
+    } catch (err: any) {
+      console.error("[Publish] Error:", err);
+      toast.error("Erro ao publicar: " + (err?.message || "Tente novamente"));
     } finally {
       setPublishing(false);
     }
