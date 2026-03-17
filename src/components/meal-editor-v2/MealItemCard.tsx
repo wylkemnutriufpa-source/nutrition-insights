@@ -14,6 +14,7 @@ interface MealItemCardProps {
 
 export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
   const { updateItem, deleteItem, duplicateItem } = useMealPlanEditorV2Store();
+  const { openMealDetail } = useMealDetail();
   const [inlineEdit, setInlineEdit] = useState(false);
   const [editValue, setEditValue] = useState(item.title);
 
