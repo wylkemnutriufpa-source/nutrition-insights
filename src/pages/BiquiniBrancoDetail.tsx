@@ -105,9 +105,15 @@ export default function BiquiniBrancoDetail() {
     if (!programId || !user) return;
     setLoading(true);
 
-    const { data: prog } = await supabase.from("programs").select("*").eq("id", programId).maybeSingle();
+    const [progRes, prestigeRes] = await Promise.all([
+      supabase.from("programs").select("*").eq("id", programId).maybeSingle(),
+      supabase.from("prestige_plans").select("*").eq("is_active", true).order("display_order"),
+    ]);
+    const prog = progRes.data;
     if (!prog) { setLoading(false); return; }
     setProgram(prog);
+    setPrestigePlans(prestigeRes.data || []);
+    setSelectedPrestigePlanId((prog as any).prestige_plan_id || "");
 
     // Fetch phases
     const { data: ph } = await (supabase as any).from("program_phases").select("*").eq("program_id", programId).order("phase_number");
