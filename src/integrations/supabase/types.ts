@@ -8451,6 +8451,75 @@ export type Database = {
         }
         Relationships: []
       }
+      smart_generated_slides: {
+        Row: {
+          animation_suggestion: string | null
+          bullets: Json
+          created_at: string
+          created_by: string | null
+          cta_text: string | null
+          emoji: string | null
+          gradient: string | null
+          icon_suggestion: string | null
+          id: string
+          slide_type: string
+          soundtrack_suggestion: string | null
+          source_data: Json | null
+          status: string
+          subtitle: string | null
+          target_audience: string
+          theme: string
+          title: string
+          tone: string
+          updated_at: string
+          visual_style: Json
+        }
+        Insert: {
+          animation_suggestion?: string | null
+          bullets?: Json
+          created_at?: string
+          created_by?: string | null
+          cta_text?: string | null
+          emoji?: string | null
+          gradient?: string | null
+          icon_suggestion?: string | null
+          id?: string
+          slide_type?: string
+          soundtrack_suggestion?: string | null
+          source_data?: Json | null
+          status?: string
+          subtitle?: string | null
+          target_audience?: string
+          theme?: string
+          title: string
+          tone?: string
+          updated_at?: string
+          visual_style?: Json
+        }
+        Update: {
+          animation_suggestion?: string | null
+          bullets?: Json
+          created_at?: string
+          created_by?: string | null
+          cta_text?: string | null
+          emoji?: string | null
+          gradient?: string | null
+          icon_suggestion?: string | null
+          id?: string
+          slide_type?: string
+          soundtrack_suggestion?: string | null
+          source_data?: Json | null
+          status?: string
+          subtitle?: string | null
+          target_audience?: string
+          theme?: string
+          title?: string
+          tone?: string
+          updated_at?: string
+          visual_style?: Json
+        }
+        Relationships: []
+      }
       sos_tickets: {
         Row: {
           category: string

@@ -16,7 +16,7 @@ import {
   Shield, Users, UserCheck, Zap, Star, UserPlus, Settings, Globe,
   Eye, BarChart3, DollarSign, CreditCard, Crown, Loader2,
   Search, ToggleLeft, Trash2, Ban, CheckCircle2, Plus, FileText, Download, Sparkles,
-  Palette, LayoutGrid, GraduationCap
+  Palette, LayoutGrid, GraduationCap, Wand2
 } from "lucide-react";
 import { toast } from "sonner";
 import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
@@ -30,6 +30,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Clock, User, Activity, LogIn, LogOut, RefreshCw, Trash2 as Trash2Icon, UserPlus as UserPlusIcon } from "lucide-react";
 import { ProfessionalsDrillDown, PatientsDrillDown, SubscriptionsDrillDown, RevenueDrillDown } from "@/components/admin/AdminDrillDownDialogs";
+import { MagicSlideButton } from "@/components/common/MagicSlideGenerator";
 
 // ─── Types ───
 interface PlatformMetrics {
@@ -930,6 +931,7 @@ export default function AdminDashboard() {
             <Button variant="outline" size="sm" onClick={() => window.open("/landing", "_blank")} className="gap-1.5">
               <Eye className="w-4 h-4" /> Landing Page
             </Button>
+            <MagicSlideButton className="h-9 text-sm" />
           </div>
         </div>
 

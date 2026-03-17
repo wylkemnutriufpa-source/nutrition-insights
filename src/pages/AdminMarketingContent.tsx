@@ -10,6 +10,7 @@ import {
   Sparkles, Instagram, Copy, Download, RefreshCw, Eye,
   Wand2, CheckCircle, Clock, FileText,
 } from "lucide-react";
+import { MagicSlideButton } from "@/components/common/MagicSlideGenerator";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -123,10 +124,13 @@ export default function AdminMarketingContent() {
             Geração automática de conteúdo de marketing a partir dos recursos do sistema
           </p>
         </div>
-        <Badge variant="outline" className="gap-1">
-          <FileText className="w-3 h-3" />
-          {assets.length} posts gerados
-        </Badge>
+        <div className="flex items-center gap-2">
+          <MagicSlideButton />
+          <Badge variant="outline" className="gap-1">
+            <FileText className="w-3 h-3" />
+            {assets.length} posts gerados
+          </Badge>
+        </div>
       </div>
 
       {/* Generate for features without assets */}

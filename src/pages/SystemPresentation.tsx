@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/auth";
 import { PROFESSIONAL_SLIDES, PATIENT_SLIDES } from "@/lib/presentationSlides";
 import { useFeatureGuide } from "@/hooks/useFeatureGuide";
 import { GraduationCap, Stethoscope, User, Play, CheckCircle2, RotateCcw, Clapperboard, Map, Rocket, Users, LayoutDashboard, Sparkles } from "lucide-react";
+import { MagicSlideButton } from "@/components/common/MagicSlideGenerator";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
@@ -185,6 +186,9 @@ export default function SystemPresentation() {
           </div>
           <h1 className="text-2xl md:text-3xl font-display font-bold">Aprender a Usar o FitJourney</h1>
           <p className="text-muted-foreground mt-2 text-sm md:text-base">Apresentações interativas e demos cinemáticas para dominar todas as funcionalidades</p>
+          <div className="mt-4">
+            <MagicSlideButton />
+          </div>
         </motion.div>
 
         {/* Cinematic demos — primary section */}
