@@ -1,3 +1,28 @@
+/**
+ * ═══════════════════════════════════════════════════════════
+ * FITJOURNEY BODY PROJECTION — Edge Function v2.1.0
+ * ═══════════════════════════════════════════════════════════
+ * 
+ * ARQUITETURA HÍBRIDA:
+ * 
+ *   CAMADA 1 — Motor Determinístico (inline, idêntico ao client)
+ *     → Calcula projeções de peso, gordura, platô, confiança
+ *     → 100% matemático, zero IA
+ * 
+ *   CAMADA 2 — IA Generativa (Lovable AI Gateway)
+ *     → Recebe dados JÁ CALCULADOS pelo motor
+ *     → Gera narrativa motivacional para paciente
+ *     → Gera resumo técnico para profissional
+ *     → NÃO calcula, NÃO decide, NÃO projeta
+ * 
+ *   CAMADA 3 — Persistência Evolutiva
+ *     → Salva snapshots versionados
+ *     → Cooldown de 30 dias
+ *     → Timeline comparativa
+ * 
+ * ═══════════════════════════════════════════════════════════
+ */
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -7,9 +32,12 @@ const corsHeaders = {
 };
 
 const COOLDOWN_DAYS = 30;
-const ENGINE_VERSION = "2.0.0";
+const ENGINE_VERSION = "2.1.0";
 
-// ========== TYPES ==========
+// ╔═══════════════════════════════════════════════════════════╗
+// ║  CAMADA 1 — MOTOR DETERMINÍSTICO CLÍNICO                 ║
+// ║  Cálculo puro. Zero IA. Espelhado de bodyProjectionEngine ║
+// ╚═══════════════════════════════════════════════════════════╝
 
 interface WeightRecord {
   weight: number;
@@ -30,8 +58,48 @@ interface HistoricalAnalysis {
   has_sufficient_history: boolean;
 }
 
-// ========== HISTORICAL ANALYSIS ENGINE ==========
+interface DeterministicProjection {
+  projected_weight: number;
+  projected_body_fat: number | null;
+  projected_bmi: number;
+  weight_delta: number;
+  metabolic_adaptation_index: number;
+  adherence_prediction_score: number;
+  plateau_risk: number;
+  confidence_score: number;
+  projected_phase: string;
+  recommended_strategy: string;
+  curve_type: string;
+  adiposity_level: string;
+  visual_state_seed: Record<string, unknown>;
+}
 
+const METABOLIC_ADAPTATION_RATES: Record<string, number> = {
+  rapid_responder: 0.03,
+  stable_transformer: 0.02,
+  slow_responder: 0.015,
+  plateau_prone: 0.04,
+  weight_cycler: 0.035,
+  behavioral_inconsistent: 0.02,
+  resistant_metabolism: 0.05,
+  unknown: 0.025,
+};
+
+const STRATEGIES: Record<string, string> = {
+  weight_cycler: "Priorizar consolidação longa para quebrar o ciclo de recuperação. Déficit moderado com transições graduais.",
+  plateau_prone: "Variações calóricas periódicas (refeed) para evitar estagnação. Monitorar marcadores metabólicos.",
+  rapid_responder: "Aproveitar resposta inicial, planejar transição precoce para manutenção. Evitar déficit prolongado.",
+  slow_responder: "Consistência a longo prazo. Ajustes calóricos pequenos e frequentes. Paciência é aliada.",
+  stable_transformer: "Manter protocolo atual. Metabolismo equilibrado. Priorizar qualidade nutricional e progressão.",
+  behavioral_inconsistent: "Estabilizar hábitos antes de ajustes calóricos. Simplificar plano e aumentar check-ins.",
+  resistant_metabolism: "Ciclos calóricos ou investigação metabólica complementar. Avaliar sono e estresse.",
+  unknown: "Continuar acompanhamento para personalização avançada do protocolo.",
+};
+
+/**
+ * Analisa histórico de peso e classifica perfil metabólico.
+ * 100% determinístico.
+ */
 function analyzeWeightHistory(records: WeightRecord[]): HistoricalAnalysis {
   const empty: HistoricalAnalysis = {
     metabolic_response_type: "unknown",
@@ -121,19 +189,10 @@ function analyzeWeightHistory(records: WeightRecord[]): HistoricalAnalysis {
   };
 }
 
-// ========== PROJECTION ENGINE (DETERMINISTIC CORE) ==========
-
-const METABOLIC_ADAPTATION_RATES: Record<string, number> = {
-  rapid_responder: 0.03,
-  stable_transformer: 0.02,
-  slow_responder: 0.015,
-  plateau_prone: 0.04,
-  weight_cycler: 0.035,
-  behavioral_inconsistent: 0.02,
-  resistant_metabolism: 0.05,
-  unknown: 0.025,
-};
-
+/**
+ * Computa projeção para um horizonte temporal específico.
+ * 100% determinístico. A IA NÃO toca nesta função.
+ */
 function computeProjection(
   currentWeight: number,
   days: number,
@@ -144,7 +203,7 @@ function computeProjection(
   height: number,
   sex: string,
   age: number | null,
-) {
+): DeterministicProjection {
   const weeks = days / 7;
   let effectiveRate = weeklyRate;
   if (analysis.has_sufficient_history) {
@@ -181,10 +240,9 @@ function computeProjection(
   if (effectiveRate < 0) rawProjection += plateauPenalty + regainPenalty;
   else rawProjection -= plateauPenalty + regainPenalty;
 
-  const maxLoss = 1.0 * weeks; // max 1kg/week
+  const maxLoss = 1.0 * weeks;
   const projectedWeight = Math.round(Math.max(rawProjection, currentWeight - maxLoss, currentWeight * 0.7) * 10) / 10;
 
-  // Body fat projection
   const fatEstimate = currentBodyFat || (sex === "female" || sex === "feminino"
     ? (age ? Math.round((1.20 * (currentWeight / ((height / 100) ** 2)) + 0.23 * age - 5.4) * 10) / 10 : null)
     : (age ? Math.round((1.20 * (currentWeight / ((height / 100) ** 2)) + 0.23 * age - 16.2) * 10) / 10 : null));
@@ -197,7 +255,6 @@ function computeProjection(
   const projectedBmi = projectedWeight / ((height / 100) ** 2);
   const adiposity = projectedBmi > 35 ? "very_high" : projectedBmi > 30 ? "high" : projectedBmi > 25 ? "moderate" : projectedBmi > 22 ? "low" : "very_low";
 
-  // Plateau risk
   const plateauRisk = Math.min(1, Math.round((
     analysis.plateau_probability * 0.4 +
     (days > 90 ? 0.15 : 0) +
@@ -205,10 +262,8 @@ function computeProjection(
     (metabolicAdaptation < 0.85 ? 0.15 : 0)
   ) * 100) / 100);
 
-  // Adherence prediction
   const adherencePrediction = Math.round(Math.max(20, avgAdherence * (1 - days / 1000)) * 10) / 10;
 
-  // Confidence
   let confidence = 0.4;
   if (analysis.has_sufficient_history) confidence += 0.15;
   confidence += analysis.behavioral_consistency_score * 0.2;
@@ -219,56 +274,189 @@ function computeProjection(
   confidence -= days / 2000;
   confidence = Math.round(Math.min(0.92, Math.max(0.15, confidence)) * 100) / 100;
 
-  // Phase
   const phase = weightDelta < -3 ? "perda_ativa"
     : weightDelta < -1 ? "reducao_gradual"
     : weightDelta > 1 ? "recomposicao"
     : "consolidacao_metabolica";
 
-  // Strategy
-  const strategies: Record<string, string> = {
-    weight_cycler: "Priorizar consolidação longa para quebrar o ciclo de recuperação. Déficit moderado com transições graduais.",
-    plateau_prone: "Variações calóricas periódicas (refeed) para evitar estagnação. Monitorar marcadores metabólicos.",
-    rapid_responder: "Aproveitar resposta inicial, planejar transição precoce para manutenção. Evitar déficit prolongado.",
-    slow_responder: "Consistência a longo prazo. Ajustes calóricos pequenos e frequentes. Paciência é aliada.",
-    stable_transformer: "Manter protocolo atual. Metabolismo equilibrado. Priorizar qualidade nutricional e progressão.",
-    behavioral_inconsistent: "Estabilizar hábitos antes de ajustes calóricos. Simplificar plano e aumentar check-ins.",
-    resistant_metabolism: "Ciclos calóricos ou investigação metabólica complementar. Avaliar sono e estresse.",
-    unknown: "Continuar acompanhamento para personalização avançada do protocolo.",
-  };
-
   const muscLevel = avgAdherence > 80 ? "moderate_to_high" : avgAdherence > 60 ? "moderate" : "low";
   const renderingProfile = sex === "feminino" || sex === "female" || sex === "F" ? "female"
     : sex === "masculino" || sex === "male" || sex === "M" ? "male" : "neutral";
 
-  const visualStateSeed = {
-    rendering_profile: renderingProfile,
-    adiposity_level: adiposity,
-    muscularity_level: muscLevel,
-    body_frame_type: "medium",
-    silhouette_class: `${adiposity}_${muscLevel}`,
-    glow_intensity: confidence,
-    transformation_magnitude: Math.min(1, Math.abs(weightDelta) / 15),
-  };
-
   return {
-    projectedWeight,
-    projectedBodyFat,
-    projectedBmi: Math.round(projectedBmi * 10) / 10,
-    weightDelta: Math.round(weightDelta * 10) / 10,
-    metabolicAdaptation: Math.round(metabolicAdaptation * 1000) / 1000,
-    adherencePrediction,
-    plateauRisk,
-    confidence,
-    phase,
-    strategy: strategies[analysis.metabolic_response_type] || strategies.unknown,
-    curveType,
-    adiposity,
-    visualStateSeed,
+    projected_weight: projectedWeight,
+    projected_body_fat: projectedBodyFat,
+    projected_bmi: Math.round(projectedBmi * 10) / 10,
+    weight_delta: Math.round(weightDelta * 10) / 10,
+    metabolic_adaptation_index: Math.round(metabolicAdaptation * 1000) / 1000,
+    adherence_prediction_score: adherencePrediction,
+    plateau_risk: plateauRisk,
+    confidence_score: confidence,
+    projected_phase: phase,
+    recommended_strategy: STRATEGIES[analysis.metabolic_response_type] || STRATEGIES.unknown,
+    curve_type: curveType,
+    adiposity_level: adiposity,
+    visual_state_seed: {
+      rendering_profile: renderingProfile,
+      adiposity_level: adiposity,
+      muscularity_level: muscLevel,
+      body_frame_type: "medium",
+      silhouette_class: `${adiposity}_${muscLevel}`,
+      glow_intensity: confidence,
+      transformation_magnitude: Math.min(1, Math.abs(weightDelta) / 15),
+    },
   };
 }
 
-// ========== MAIN HANDLER ==========
+// ╔═══════════════════════════════════════════════════════════╗
+// ║  CAMADA 2 — IA GENERATIVA (NARRATIVA + VISUAL)            ║
+// ║  Recebe dados JÁ CALCULADOS. NÃO calcula. NÃO decide.    ║
+// ╚═══════════════════════════════════════════════════════════╝
+
+interface NarrativeInput {
+  currentWeight: number;
+  projection: DeterministicProjection;
+  avgAdherence: number;
+  historicalAnalysis: HistoricalAnalysis;
+  patientName?: string;
+}
+
+/**
+ * Gera narrativa motivacional para o PACIENTE via IA.
+ * Linguagem acolhedora, motivacional, sem termos técnicos.
+ */
+async function generatePatientNarrative(input: NarrativeInput, apiKey: string): Promise<string> {
+  const { currentWeight, projection: p, avgAdherence, historicalAnalysis: h } = input;
+
+  const histContext = h.has_sufficient_history
+    ? `Perfil metabólico: ${h.metabolic_response_type}. Taxa histórica: ${h.historical_loss_rate}kg/sem. Ciclos sanfona: ${h.yoyo_cycles}. Prob. platô: ${Math.round(h.plateau_probability * 100)}%.`
+    : "Histórico insuficiente para classificação metabólica avançada.";
+
+  const prompt = `Você é um consultor de nutrição clínica do FitJourney. Gere uma narrativa motivacional em português brasileiro (4-5 frases) para o PACIENTE sobre sua projeção corporal.
+
+IMPORTANTE: Você NÃO calculou esses dados. Eles foram gerados pelo motor clínico proprietário FitJourney Intelligence Engine v${ENGINE_VERSION}.
+Sua função é APENAS interpretar, explicar e motivar.
+
+Dados do motor determinístico:
+- Peso atual: ${currentWeight}kg → Projetado: ${p.projected_weight}kg em 90 dias
+- IMC projetado: ${p.projected_bmi}
+- % Gordura projetada: ${p.projected_body_fat || "N/A"}%
+- Adesão atual: ${Math.round(avgAdherence)}%
+- Risco de platô: ${Math.round(p.plateau_risk * 100)}%
+- Adaptação metabólica: ${Math.round(p.metabolic_adaptation_index * 100)}%
+- Fase projetada: ${p.projected_phase}
+- Estratégia recomendada: ${p.recommended_strategy}
+- Confiança: ${Math.round(p.confidence_score * 100)}%
+- ${histContext}
+
+Regras para narrativa do PACIENTE:
+- NUNCA prometa resultados exatos
+- Use "tendência" e "estimativa", nunca "previsão" ou "certeza"
+- Se houver padrão metabólico, mencione de forma educativa e esperançosa
+- Linguagem motivacional, empática e acolhedora
+- Evite termos técnicos complexos
+- Seja breve e impactante (4-5 frases)`;
+
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+
+  if (!res.ok) {
+    if (res.status === 429 || res.status === 402) throw new Error(`ai_${res.status}`);
+    throw new Error(`AI error: ${res.status}`);
+  }
+
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || "";
+}
+
+/**
+ * Gera resumo técnico para o PROFISSIONAL via IA.
+ * Linguagem clínica, concisa, baseada em evidências.
+ */
+async function generateProfessionalSummary(input: NarrativeInput, apiKey: string): Promise<string> {
+  const { currentWeight, projection: p, avgAdherence, historicalAnalysis: h } = input;
+
+  const prompt = `Você é um assistente clínico do FitJourney. Gere um RESUMO TÉCNICO em português brasileiro (3-4 frases) para o NUTRICIONISTA sobre a projeção deste paciente.
+
+IMPORTANTE: Os dados foram calculados pelo motor determinístico FitJourney v${ENGINE_VERSION}. Você interpreta, não calcula.
+
+Dados do motor:
+- Peso: ${currentWeight}kg → ${p.projected_weight}kg (Δ${p.weight_delta}kg em 90d)
+- IMC projetado: ${p.projected_bmi} | % Gordura: ${p.projected_body_fat || "N/A"}%
+- Perfil metabólico: ${h.metabolic_response_type} (${h.has_sufficient_history ? "classificado" : "insuficiente"})
+- Taxa histórica: ${h.historical_loss_rate}kg/sem | Ciclos yo-yo: ${h.yoyo_cycles}
+- Adesão: ${Math.round(avgAdherence)}% | Pred. adesão: ${p.adherence_prediction_score}%
+- Risco platô: ${Math.round(p.plateau_risk * 100)}% | Adapt. metab.: ${Math.round(p.metabolic_adaptation_index * 100)}%
+- Confiança: ${Math.round(p.confidence_score * 100)}% | Curva: ${p.curve_type}
+- Fase: ${p.projected_phase} | Estratégia: ${p.recommended_strategy}
+
+Regras para resumo PROFISSIONAL:
+- Linguagem clínica e objetiva
+- Destaque riscos e oportunidades de intervenção
+- Sugira ajustes de protocolo quando aplicável
+- Referencie o perfil metabólico e a adaptação
+- 3-4 frases concisas`;
+
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+
+  if (!res.ok) throw new Error(`AI error: ${res.status}`);
+
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || "";
+}
+
+/**
+ * Narrativa fallback determinística (sem IA).
+ */
+function generateFallbackNarrative(
+  projection: DeterministicProjection,
+  avgAdherence: number,
+  analysis: HistoricalAnalysis,
+): { patient: string; professional: string } {
+  const d = projection.weight_delta;
+  const typeLabels: Record<string, string> = {
+    rapid_responder: "resposta rápida inicial",
+    slow_responder: "resposta gradual e progressiva",
+    plateau_prone: "tendência a períodos de estagnação",
+    weight_cycler: "padrão de oscilação",
+    stable_transformer: "transformação estável e consistente",
+    behavioral_inconsistent: "padrão comportamental variável",
+    resistant_metabolism: "metabolismo resistente a mudanças",
+    unknown: "padrão ainda em análise",
+  };
+
+  const histNote = analysis.has_sufficient_history
+    ? ` Seu perfil metabólico indica ${typeLabels[analysis.metabolic_response_type] || typeLabels.unknown}.`
+    : "";
+
+  const patient = d < -3
+    ? `Mantendo sua consistência atual de ${Math.round(avgAdherence)}% de adesão, a tendência é de redução progressiva.${histNote} ${projection.recommended_strategy}`
+    : d < 0
+    ? `A projeção indica uma redução gradual e saudável.${histNote} Com adesão de ${Math.round(avgAdherence)}%, o progresso é sustentável. ${projection.recommended_strategy}`
+    : `Sua trajetória sugere uma fase de estabilização metabólica.${histNote} ${projection.recommended_strategy}`;
+
+  const professional = `Projeção ${projection.projected_phase} (Δ${d}kg/90d). Perfil: ${analysis.metabolic_response_type}. Confiança: ${Math.round(projection.confidence_score * 100)}%. Risco platô: ${Math.round(projection.plateau_risk * 100)}%. Estratégia: ${projection.recommended_strategy}`;
+
+  return { patient, professional };
+}
+
+// ╔═══════════════════════════════════════════════════════════╗
+// ║  CAMADA 3 — ORQUESTRAÇÃO + PERSISTÊNCIA EVOLUTIVA         ║
+// ║  Coleta dados → Motor calcula → IA narra → DB persiste    ║
+// ╚═══════════════════════════════════════════════════════════╝
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -279,6 +467,7 @@ serve(async (req) => {
     const lovableKey = Deno.env.get("LOVABLE_API_KEY");
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // ── AUTH ──
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header");
 
@@ -290,12 +479,12 @@ serve(async (req) => {
     const targetPatient = patient_id || user.id;
     const timeframes = generate_all_timeframes ? ["30d", "90d", "180d", "365d"] : [timeframe];
 
-    // Check roles
+    // ── ROLE CHECK ──
     const { data: userRoles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
     const roles = (userRoles || []).map((r: any) => r.role);
     const isProfessional = roles.includes("nutritionist") || roles.includes("admin");
 
-    // === COOLDOWN CHECK ===
+    // ── COOLDOWN CHECK ──
     const { data: lastProjection } = await supabase
       .from("body_projection_snapshots")
       .select("id, created_at, locked_until")
@@ -306,8 +495,7 @@ serve(async (req) => {
 
     if (lastProjection) {
       const lockedUntil = lastProjection.locked_until ? new Date(lastProjection.locked_until) : null;
-      const now = new Date();
-      if (lockedUntil && now < lockedUntil && (!force_override || !isProfessional)) {
+      if (lockedUntil && new Date() < lockedUntil && (!force_override || !isProfessional)) {
         return new Response(JSON.stringify({
           error: "cooldown_active",
           message: "Projeção em período de espera",
@@ -317,7 +505,10 @@ serve(async (req) => {
       }
     }
 
-    // === GATHER DATA ===
+    // ═══════════════════════════════════════════════════════
+    // FASE 1: COLETA DE DADOS (banco de dados)
+    // ═══════════════════════════════════════════════════════
+
     const [profileRes, checkinsRes, snapshotsRes, weightHistoryRes] = await Promise.all([
       supabase.from("profiles").select("*").eq("user_id", targetPatient).maybeSingle(),
       supabase.from("patient_checkins").select("*").eq("patient_id", targetPatient).order("created_at", { ascending: false }).limit(60),
@@ -330,7 +521,7 @@ serve(async (req) => {
     const snapshots = snapshotsRes.data || [];
     const weightHistory = weightHistoryRes.data || [];
 
-    // Merge weight records
+    // Merge & deduplicate weight records
     const allRecords: WeightRecord[] = [
       ...weightHistory.map((w: any) => ({ weight: w.weight, date: w.measurement_date, body_fat_percentage: w.body_fat_percentage })),
       ...checkins.filter((c: any) => c.weight).map((c: any) => ({ weight: c.weight, date: c.created_at, body_fat_percentage: null })),
@@ -343,9 +534,6 @@ serve(async (req) => {
       return true;
     }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-    const historicalAnalysis = analyzeWeightHistory(dedupedRecords);
-
-    // Current metrics
     const weights = checkins.filter((c: any) => c.weight).map((c: any) => ({ weight: c.weight, date: c.created_at }));
     const currentWeight = weights[0]?.weight || profile?.weight || null;
     const startWeight = weights.length > 1 ? weights[weights.length - 1].weight : currentWeight;
@@ -353,10 +541,9 @@ serve(async (req) => {
     const avgAdherence = snapshots.length > 0
       ? snapshots.reduce((sum: number, s: any) => sum + (s.adherence_score || 0), 0) / snapshots.length
       : 50;
-
     const weeklyRate = weights.length > 1
       ? weightChange / Math.max(1, weights.length / 7)
-      : historicalAnalysis.historical_loss_rate || -0.3;
+      : -0.3;
 
     const sex = profile?.sex || profile?.gender || "neutral";
     const height = profile?.height || 170;
@@ -368,7 +555,6 @@ serve(async (req) => {
     const adiposity = bmi > 35 ? "very_high" : bmi > 30 ? "high" : bmi > 25 ? "moderate" : bmi > 22 ? "low" : "very_low";
     const renderingProfile = sex === "feminino" || sex === "female" || sex === "F" ? "female"
       : sex === "masculino" || sex === "male" || sex === "M" ? "male" : "neutral";
-
     const clinicalPhase = weeklyRate < -0.5 ? "perda_ativa"
       : weeklyRate < -0.1 ? "reducao_gradual"
       : weeklyRate < 0.1 ? "estabilizacao"
@@ -383,110 +569,87 @@ serve(async (req) => {
       bmi: Math.round(bmi * 10) / 10,
       body_fat: currentBodyFat,
       clinical_phase: clinicalPhase,
-      metabolic_response_type: historicalAnalysis.metabolic_response_type,
+      metabolic_response_type: "unknown", // will be updated below
     };
 
-    // === GENERATE AI NARRATIVE (Camada 2: only for 90d) ===
-    let narrative = "";
-    if (lovableKey && currentWeight) {
-      try {
-        const primaryProj = computeProjection(currentWeight, 90, weeklyRate, historicalAnalysis, avgAdherence, currentBodyFat, height, sex, age);
+    // ═══════════════════════════════════════════════════════
+    // FASE 2: MOTOR DETERMINÍSTICO CALCULA (zero IA)
+    // ═══════════════════════════════════════════════════════
 
-        const histContext = historicalAnalysis.has_sufficient_history
-          ? `\nPerfil metabólico: ${historicalAnalysis.metabolic_response_type}
-Taxa histórica: ${historicalAnalysis.historical_loss_rate}kg/sem
-Ciclos sanfona: ${historicalAnalysis.yoyo_cycles}
-Prob. platô: ${Math.round(historicalAnalysis.plateau_probability * 100)}%
-Prob. recuperação: ${Math.round(historicalAnalysis.regain_probability * 100)}%
-Consistência: ${Math.round(historicalAnalysis.behavioral_consistency_score * 100)}%`
-          : "\nHistórico insuficiente para classificação metabólica avançada.";
+    const historicalAnalysis = analyzeWeightHistory(dedupedRecords);
+    currentMetrics.metabolic_response_type = historicalAnalysis.metabolic_response_type;
 
-        const prompt = `Você é um consultor de nutrição clínica do FitJourney. Gere uma narrativa motivacional em português brasileiro (4-5 frases) sobre a projeção corporal.
-
-IMPORTANTE: Você NÃO calculou esses dados. Eles foram gerados pelo motor clínico proprietário FitJourney Intelligence Engine.
-
-Dados do motor:
-- Peso atual: ${currentWeight}kg → Projetado: ${primaryProj.projectedWeight}kg em 90 dias
-- IMC: ${currentMetrics.bmi} → ${primaryProj.projectedBmi}
-- % Gordura projetada: ${primaryProj.projectedBodyFat || "N/A"}%
-- Adesão: ${Math.round(avgAdherence)}%
-- Risco de platô: ${Math.round(primaryProj.plateauRisk * 100)}%
-- Adaptação metabólica: ${Math.round(primaryProj.metabolicAdaptation * 100)}%
-${histContext}
-
-Regras:
-- NUNCA prometa resultados exatos
-- Use "tendência" e "estimativa", nunca "previsão" ou "certeza"
-- Se houver padrão metabólico, mencione de forma educativa
-- Inclua a estratégia recomendada
-- Linguagem motivacional e empática
-- Seja breve e impactante`;
-
-        const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${lovableKey}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
-            messages: [{ role: "user", content: prompt }],
-          }),
-        });
-
-        if (aiRes.ok) {
-          const aiData = await aiRes.json();
-          narrative = aiData.choices?.[0]?.message?.content || "";
-        }
-      } catch (e) {
-        console.error("AI narrative error:", e);
+    // Compute projections for all requested timeframes
+    const projections: Record<string, DeterministicProjection> = {};
+    for (const tf of timeframes) {
+      const tfDays = parseInt(tf) || 90;
+      if (currentWeight) {
+        projections[tf] = computeProjection(currentWeight, tfDays, weeklyRate, historicalAnalysis, avgAdherence, currentBodyFat, height, sex, age);
       }
     }
 
-    // Fallback narrative
-    if (!narrative && currentWeight) {
-      const p = computeProjection(currentWeight, 90, weeklyRate, historicalAnalysis, avgAdherence, currentBodyFat, height, sex, age);
-      const d = p.weightDelta;
-      const typeLabel: Record<string, string> = {
-        rapid_responder: "resposta rápida inicial",
-        slow_responder: "resposta gradual e progressiva",
-        plateau_prone: "tendência a períodos de estagnação",
-        weight_cycler: "padrão de oscilação",
-        stable_transformer: "transformação estável e consistente",
+    // ═══════════════════════════════════════════════════════
+    // FASE 3: IA GENERATIVA NARRA (recebe dados prontos)
+    // ═══════════════════════════════════════════════════════
+
+    let patientNarrative = "";
+    let professionalNarrative = "";
+
+    const primaryProjection = projections["90d"] || Object.values(projections)[0];
+
+    if (primaryProjection && currentWeight) {
+      const narrativeInput: NarrativeInput = {
+        currentWeight,
+        projection: primaryProjection,
+        avgAdherence,
+        historicalAnalysis,
+        patientName: profile?.full_name,
       };
-      const note = historicalAnalysis.has_sufficient_history
-        ? ` Seu perfil indica ${typeLabel[historicalAnalysis.metabolic_response_type] || "padrão em análise"}.`
-        : "";
-      narrative = d < -3
-        ? `Mantendo ${Math.round(avgAdherence)}% de adesão, a tendência é de redução progressiva.${note} ${p.strategy}`
-        : d < 0
-        ? `Projeção indica redução gradual e saudável.${note} Progresso sustentável. ${p.strategy}`
-        : `Trajetória sugere estabilização metabólica.${note} ${p.strategy}`;
+
+      if (lovableKey) {
+        // Generate both narratives in parallel
+        const [patientResult, professionalResult] = await Promise.allSettled([
+          generatePatientNarrative(narrativeInput, lovableKey),
+          isProfessional ? generateProfessionalSummary(narrativeInput, lovableKey) : Promise.resolve(""),
+        ]);
+
+        patientNarrative = patientResult.status === "fulfilled" ? patientResult.value : "";
+        professionalNarrative = professionalResult.status === "fulfilled" ? professionalResult.value : "";
+      }
+
+      // Fallback if AI failed
+      if (!patientNarrative || !professionalNarrative) {
+        const fallback = generateFallbackNarrative(primaryProjection, avgAdherence, historicalAnalysis);
+        if (!patientNarrative) patientNarrative = fallback.patient;
+        if (!professionalNarrative) professionalNarrative = fallback.professional;
+      }
     }
 
-    // === PERSIST SNAPSHOTS ===
+    // ═══════════════════════════════════════════════════════
+    // FASE 4: PERSISTÊNCIA EVOLUTIVA (snapshots imutáveis)
+    // ═══════════════════════════════════════════════════════
+
     const now = new Date();
     const validUntil = new Date(now.getTime() + COOLDOWN_DAYS * 24 * 60 * 60 * 1000);
     const lockedUntil = new Date(now.getTime() + COOLDOWN_DAYS * 24 * 60 * 60 * 1000);
     const allResults: any[] = [];
 
     for (const tf of timeframes) {
-      const tfDays = parseInt(tf) || 90;
-      const proj = currentWeight
-        ? computeProjection(currentWeight, tfDays, weeklyRate, historicalAnalysis, avgAdherence, currentBodyFat, height, sex, age)
-        : null;
-
+      const proj = projections[tf];
       if (!proj) continue;
 
       const projectedMetrics = {
         rendering_profile: renderingProfile,
-        adiposity_level: proj.adiposity,
-        muscularity_level: proj.visualStateSeed.muscularity_level,
-        projected_weight: proj.projectedWeight,
-        projected_bmi: proj.projectedBmi,
-        projected_body_fat: proj.projectedBodyFat,
-        weight_delta: proj.weightDelta,
-        confidence_score: proj.confidence,
-        projected_phase: proj.phase,
-        recommended_strategy: proj.strategy,
-        curve_type: proj.curveType,
+        adiposity_level: proj.adiposity_level,
+        muscularity_level: (proj.visual_state_seed as any).muscularity_level,
+        projected_weight: proj.projected_weight,
+        projected_bmi: proj.projected_bmi,
+        projected_body_fat: proj.projected_body_fat,
+        weight_delta: proj.weight_delta,
+        confidence_score: proj.confidence_score,
+        projected_phase: proj.projected_phase,
+        recommended_strategy: proj.recommended_strategy,
+        curve_type: proj.curve_type,
         historical_analysis: {
           metabolic_response_type: historicalAnalysis.metabolic_response_type,
           historical_loss_rate: historicalAnalysis.historical_loss_rate,
@@ -506,13 +669,13 @@ Regras:
         projected_body_json: projectedMetrics,
         current_metrics_json: currentMetrics,
         projected_metrics_json: projectedMetrics,
-        narrative: tf === "90d" ? narrative : null,
-        confidence_score: proj.confidence,
-        projected_body_fat: proj.projectedBodyFat,
-        metabolic_adaptation_index: proj.metabolicAdaptation,
-        adherence_prediction_score: proj.adherencePrediction,
-        plateau_risk: proj.plateauRisk,
-        visual_state_seed: proj.visualStateSeed,
+        narrative: tf === "90d" ? patientNarrative : null,
+        confidence_score: proj.confidence_score,
+        projected_body_fat: proj.projected_body_fat,
+        metabolic_adaptation_index: proj.metabolic_adaptation_index,
+        adherence_prediction_score: proj.adherence_prediction_score,
+        plateau_risk: proj.plateau_risk,
+        visual_state_seed: proj.visual_state_seed,
         engine_version: ENGINE_VERSION,
         assessment_id: assessment_id || null,
         generation_source,
@@ -524,15 +687,7 @@ Regras:
       allResults.push({
         snapshot_id: saved?.id,
         timeframe: tf,
-        projected_weight: proj.projectedWeight,
-        projected_body_fat: proj.projectedBodyFat,
-        projected_phase: proj.phase,
-        confidence_score: proj.confidence,
-        plateau_risk: proj.plateauRisk,
-        metabolic_adaptation: proj.metabolicAdaptation,
-        strategy: proj.strategy,
-        weight_delta: proj.weightDelta,
-        visual_state_seed: proj.visualStateSeed,
+        ...proj,
       });
     }
 
@@ -548,17 +703,31 @@ Regras:
       }).eq("user_id", targetPatient);
     }
 
+    // ═══════════════════════════════════════════════════════
+    // RESPOSTA FINAL
+    // ═══════════════════════════════════════════════════════
+
     return new Response(JSON.stringify({
       success: true,
       engine_version: ENGINE_VERSION,
       architecture: "hybrid_deterministic_ai",
+      layers: {
+        deterministic: "Motor clínico v" + ENGINE_VERSION + " — cálculos de projeção, confiança, risco",
+        generative: lovableKey ? "Lovable AI Gateway — narrativa e interpretação" : "Fallback determinístico",
+        persistence: "Snapshots imutáveis com cooldown de " + COOLDOWN_DAYS + " dias",
+      },
       snapshots: allResults,
       primary_snapshot_id: allResults.find(r => r.timeframe === "90d")?.snapshot_id || allResults[0]?.snapshot_id,
       generated_at: now.toISOString(),
       valid_until: validUntil.toISOString(),
       locked_until: lockedUntil.toISOString(),
       current_body: currentMetrics,
-      narrative,
+      narratives: {
+        patient: patientNarrative,
+        professional: professionalNarrative,
+      },
+      // Legacy field for backward compatibility
+      narrative: patientNarrative,
       timeframes,
       generation_source,
       weight_history_records: dedupedRecords.length,
@@ -567,8 +736,11 @@ Regras:
 
   } catch (error: any) {
     console.error("Body projection error:", error);
+    const status = error.message?.includes("ai_429") ? 429
+      : error.message?.includes("ai_402") ? 402
+      : 500;
     return new Response(JSON.stringify({ error: error.message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
