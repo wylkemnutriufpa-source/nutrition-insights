@@ -276,9 +276,17 @@ export function WeeklyGrid() {
                         </button>
                         <button
                           type="button"
+                          onClick={() => openMealLibraryModal(day.key, meal.key)}
+                          className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 px-2 rounded border border-dashed border-border hover:border-primary"
+                          title="Banco de Refeições"
+                        >
+                          <Utensils className="w-3 h-3" />
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => openLibrary(day.key, meal.key)}
                           className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 px-2 rounded border border-dashed border-border hover:border-primary"
-                          title="Biblioteca de modelos"
+                          title="Meus Modelos"
                         >
                           <Zap className="w-3 h-3" />
                         </button>
