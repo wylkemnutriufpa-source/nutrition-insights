@@ -126,6 +126,7 @@ const WeightTrajectory = lazy(() => import("./pages/WeightTrajectory"));
 const MetabolicTwin = lazy(() => import("./pages/MetabolicTwin"));
 const PopulationNutritionIntelligence = lazy(() => import("./pages/PopulationNutritionIntelligence"));
 const PlatformGovernance = lazy(() => import("./pages/PlatformGovernance"));
+const SecurityDashboard = lazy(() => import("./pages/SecurityDashboard"));
 const ClinicalPipeline = lazy(() => import("./pages/ClinicalPipeline"));
 const Integrations = lazy(() => import("./pages/Integrations"));
 const SystemPresentation = lazy(() => import("./pages/SystemPresentation"));
@@ -329,6 +330,7 @@ const App = () => (
               <Route path="/metabolic-twin" element={<NutritionistRoute><LP section="Digital Twin"><MetabolicTwin /></LP></NutritionistRoute>} />
               <Route path="/population-nutrition" element={<NutritionistRoute><LP section="Nutrição Populacional"><PopulationNutritionIntelligence /></LP></NutritionistRoute>} />
               <Route path="/platform-governance" element={<AdminRoute><LP section="Governança"><PlatformGovernance /></LP></AdminRoute>} />
+              <Route path="/security-dashboard" element={<AdminRoute><LP section="Segurança"><SecurityDashboard /></LP></AdminRoute>} />
               <Route path="/clinical-pipeline" element={<AdminRoute><LP section="Pipeline Clínico"><ClinicalPipeline /></LP></AdminRoute>} />
               <Route path="/integrations" element={<ProfessionalRoute><LP section="Integrações"><Integrations /></LP></ProfessionalRoute>} />
               <Route path="/team" element={<ProfessionalRoute><LP section="Equipe Clínica"><TeamManagement /></LP></ProfessionalRoute>} />

@@ -10242,6 +10242,7 @@ export type Database = {
         Args: { _alert_id: string; _resolution_note?: string }
         Returns: Json
       }
+      run_security_audit: { Args: never; Returns: Json }
       search_patients: {
         Args: { _limit?: number; _nutritionist_id: string; _query: string }
         Returns: {
