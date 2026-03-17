@@ -432,9 +432,10 @@ export default function PatientMealPlan() {
                               animate={{ opacity: 1, x: 0 }}
                               className={`glass rounded-xl p-4 transition-all ${statusColor}`}
                             >
-                              <div className="flex items-start gap-3">
-                                <div className="mt-0.5">
-                                  {status === "followed" ? <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                              <div
+                                className="flex items-start gap-3 cursor-pointer"
+                                onClick={() => setSelectedMeal({ ...mealItem, metadata: (mealItem as any).metadata })}
+                              >
                                     : status === "partial" ? <MinusCircle className="w-5 h-5 text-amber-500" />
                                     : status === "not_followed" ? <AlertCircle className="w-5 h-5 text-red-500" />
                                     : <Circle className="w-5 h-5 text-muted-foreground" />}
