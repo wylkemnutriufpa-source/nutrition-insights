@@ -7,8 +7,9 @@ const corsHeaders = {
 };
 
 const COOLDOWN_DAYS = 30;
+const ENGINE_VERSION = "2.0.0";
 
-// ========== HISTORICAL ANALYSIS ENGINE ==========
+// ========== TYPES ==========
 
 interface WeightRecord {
   weight: number;
@@ -18,16 +19,18 @@ interface WeightRecord {
 
 interface HistoricalAnalysis {
   metabolic_response_type: string;
-  historical_loss_rate: number; // kg/week average
-  regain_probability: number;  // 0-1
-  plateau_probability: number; // 0-1
-  behavioral_consistency_score: number; // 0-1
+  historical_loss_rate: number;
+  regain_probability: number;
+  plateau_probability: number;
+  behavioral_consistency_score: number;
   yoyo_cycles: number;
   longest_plateau_weeks: number;
   total_history_weeks: number;
   net_change_kg: number;
   has_sufficient_history: boolean;
 }
+
+// ========== HISTORICAL ANALYSIS ENGINE ==========
 
 function analyzeWeightHistory(records: WeightRecord[]): HistoricalAnalysis {
   const empty: HistoricalAnalysis = {
@@ -45,46 +48,32 @@ function analyzeWeightHistory(records: WeightRecord[]): HistoricalAnalysis {
 
   if (records.length < 3) return empty;
 
-  // Sort by date ascending
   const sorted = [...records].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
   const firstDate = new Date(sorted[0].date);
   const lastDate = new Date(sorted[sorted.length - 1].date);
   const totalWeeks = Math.max(1, (lastDate.getTime() - firstDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
   const netChange = sorted[sorted.length - 1].weight - sorted[0].weight;
   const avgWeeklyRate = netChange / totalWeeks;
 
-  // Detect direction changes (yoyo cycles)
-  let yoyoCycles = 0;
-  let direction = 0; // -1 losing, +1 gaining, 0 stable
+  let yoyoCycles = 0, direction = 0;
   for (let i = 1; i < sorted.length; i++) {
     const diff = sorted[i].weight - sorted[i - 1].weight;
     const newDir = diff < -0.3 ? -1 : diff > 0.3 ? 1 : 0;
-    if (newDir !== 0 && direction !== 0 && newDir !== direction) {
-      yoyoCycles++;
-    }
+    if (newDir !== 0 && direction !== 0 && newDir !== direction) yoyoCycles++;
     if (newDir !== 0) direction = newDir;
   }
 
-  // Detect plateau periods (weight change < 0.3kg over consecutive records)
-  let longestPlateau = 0;
-  let currentPlateau = 0;
+  let longestPlateau = 0, currentPlateau = 0;
   for (let i = 1; i < sorted.length; i++) {
-    if (Math.abs(sorted[i].weight - sorted[i - 1].weight) < 0.3) {
+    if (Math.abs(sorted[i].weight - sorted[i - 1].weight) < 0.5) {
       currentPlateau++;
       longestPlateau = Math.max(longestPlateau, currentPlateau);
-    } else {
-      currentPlateau = 0;
-    }
+    } else currentPlateau = 0;
   }
-  // Approximate plateau weeks based on record spacing
-  const avgRecordSpacingWeeks = totalWeeks / Math.max(1, sorted.length - 1);
-  const longestPlateauWeeks = Math.round(longestPlateau * avgRecordSpacingWeeks);
+  const avgSpacing = totalWeeks / Math.max(1, sorted.length - 1);
+  const longestPlateauWeeks = Math.round(longestPlateau * avgSpacing);
 
-  // Detect regain episodes: losing >2kg then regaining >50% of it
-  let regainEvents = 0;
-  let minAfterLoss = sorted[0].weight;
-  let peakLoss = 0;
+  let regainEvents = 0, minAfterLoss = sorted[0].weight, peakLoss = 0;
   for (let i = 1; i < sorted.length; i++) {
     if (sorted[i].weight < minAfterLoss) {
       peakLoss = sorted[0].weight - sorted[i].weight;
@@ -96,53 +85,33 @@ function analyzeWeightHistory(records: WeightRecord[]): HistoricalAnalysis {
     }
   }
 
-  // Consistency: measure variance of weekly changes
   const weeklyChanges: number[] = [];
   for (let i = 1; i < sorted.length; i++) {
-    const weeksBetween = (new Date(sorted[i].date).getTime() - new Date(sorted[i - 1].date).getTime()) / (7 * 24 * 60 * 60 * 1000);
-    if (weeksBetween > 0) {
-      weeklyChanges.push((sorted[i].weight - sorted[i - 1].weight) / weeksBetween);
-    }
+    const w = (new Date(sorted[i].date).getTime() - new Date(sorted[i - 1].date).getTime()) / (7 * 24 * 60 * 60 * 1000);
+    if (w > 0) weeklyChanges.push((sorted[i].weight - sorted[i - 1].weight) / w);
   }
-  const meanChange = weeklyChanges.reduce((a, b) => a + b, 0) / Math.max(1, weeklyChanges.length);
-  const variance = weeklyChanges.reduce((sum, v) => sum + (v - meanChange) ** 2, 0) / Math.max(1, weeklyChanges.length);
-  const stdDev = Math.sqrt(variance);
-  const consistencyScore = Math.max(0, Math.min(1, 1 - stdDev / 2));
+  const mean = weeklyChanges.reduce((a, b) => a + b, 0) / Math.max(1, weeklyChanges.length);
+  const variance = weeklyChanges.reduce((s, v) => s + (v - mean) ** 2, 0) / Math.max(1, weeklyChanges.length);
+  const consistencyScore = Math.max(0, Math.min(1, 1 - Math.sqrt(variance) / 2));
 
-  // Classify metabolic response type
-  let responseType = "unknown";
   const hasSufficient = totalWeeks >= 4 && sorted.length >= 4;
-
+  let responseType = "unknown";
   if (hasSufficient) {
-    if (consistencyScore < 0.35 && stdDev > 1.0) {
-      responseType = "behavioral_inconsistent";
-    } else if (yoyoCycles >= 3 || regainEvents >= 2) {
-      responseType = "weight_cycler";
-    } else if (longestPlateauWeeks >= 4 || (longestPlateau / Math.max(1, sorted.length)) > 0.4) {
-      responseType = "plateau_prone";
-    } else if (avgWeeklyRate < -0.7) {
-      responseType = "rapid_responder";
-    } else if (avgWeeklyRate <= -0.15 && avgWeeklyRate >= -0.7 && consistencyScore >= 0.6 && yoyoCycles <= 1) {
-      responseType = "stable_transformer";
-    } else if (avgWeeklyRate < -0.05 && avgWeeklyRate >= -0.15) {
-      responseType = "slow_responder";
-    } else if (Math.abs(avgWeeklyRate) <= 0.15 && consistencyScore > 0.7) {
-      responseType = "stable_transformer";
-    } else if (avgWeeklyRate < 0) {
-      responseType = "slow_responder";
-    } else {
-      responseType = "slow_responder";
-    }
+    if (consistencyScore < 0.35 && Math.sqrt(variance) > 1.0) responseType = "behavioral_inconsistent";
+    else if (yoyoCycles >= 3 || regainEvents >= 2) responseType = "weight_cycler";
+    else if (longestPlateauWeeks >= 3 || (longestPlateau / Math.max(1, sorted.length)) > 0.4) responseType = "plateau_prone";
+    else if (avgWeeklyRate < -0.7) responseType = "rapid_responder";
+    else if (avgWeeklyRate <= -0.15 && consistencyScore >= 0.6 && yoyoCycles <= 1) responseType = "stable_transformer";
+    else if (avgWeeklyRate < -0.05) responseType = "slow_responder";
+    else if (Math.abs(avgWeeklyRate) <= 0.15 && consistencyScore > 0.7) responseType = "stable_transformer";
+    else responseType = "slow_responder";
   }
-
-  const regainProb = Math.min(1, 0.1 + regainEvents * 0.25 + yoyoCycles * 0.1);
-  const plateauProb = Math.min(1, 0.1 + (longestPlateauWeeks / Math.max(1, totalWeeks)) * 0.8 + (responseType === "plateau_prone" ? 0.2 : 0));
 
   return {
     metabolic_response_type: responseType,
     historical_loss_rate: Math.round(avgWeeklyRate * 1000) / 1000,
-    regain_probability: Math.round(regainProb * 100) / 100,
-    plateau_probability: Math.round(plateauProb * 100) / 100,
+    regain_probability: Math.min(1, Math.round((0.1 + regainEvents * 0.25 + yoyoCycles * 0.1) * 100) / 100),
+    plateau_probability: Math.min(1, Math.round((0.1 + (longestPlateauWeeks / Math.max(1, totalWeeks)) * 0.8 + (responseType === "plateau_prone" ? 0.2 : 0)) * 100) / 100),
     behavioral_consistency_score: Math.round(consistencyScore * 100) / 100,
     yoyo_cycles: yoyoCycles,
     longest_plateau_weeks: longestPlateauWeeks,
@@ -152,126 +121,151 @@ function analyzeWeightHistory(records: WeightRecord[]): HistoricalAnalysis {
   };
 }
 
-// ========== ADJUSTED PROJECTION ENGINE ==========
+// ========== PROJECTION ENGINE (DETERMINISTIC CORE) ==========
 
-function computeAdjustedProjection(
+const METABOLIC_ADAPTATION_RATES: Record<string, number> = {
+  rapid_responder: 0.03,
+  stable_transformer: 0.02,
+  slow_responder: 0.015,
+  plateau_prone: 0.04,
+  weight_cycler: 0.035,
+  behavioral_inconsistent: 0.02,
+  resistant_metabolism: 0.05,
+  unknown: 0.025,
+};
+
+function computeProjection(
   currentWeight: number,
-  timeframeDays: number,
-  checkinWeeklyRate: number,
+  days: number,
+  weeklyRate: number,
   analysis: HistoricalAnalysis,
-  avgAdherence: number
-): { projectedWeight: number; adjustedConfidence: number; projectedPhase: string; strategy: string; curveType: string } {
-  
-  // Blend checkin rate with historical rate (historical has more weight when sufficient)
-  let effectiveRate = checkinWeeklyRate;
+  avgAdherence: number,
+  currentBodyFat: number | null,
+  height: number,
+  sex: string,
+  age: number | null,
+) {
+  const weeks = days / 7;
+  let effectiveRate = weeklyRate;
   if (analysis.has_sufficient_history) {
-    effectiveRate = checkinWeeklyRate * 0.4 + analysis.historical_loss_rate * 0.6;
+    effectiveRate = weeklyRate * 0.4 + analysis.historical_loss_rate * 0.6;
   }
 
-  const weeks = timeframeDays / 7;
-  let baseProjection = currentWeight + effectiveRate * weeks;
+  const adherenceFactor = Math.max(0.3, avgAdherence / 100);
+  const adaptRate = METABOLIC_ADAPTATION_RATES[analysis.metabolic_response_type] || 0.025;
+  const metabolicAdaptation = Math.max(0.6, 1 - adaptRate * (days / 30));
 
-  // Apply metabolic-type adjustments
-  let plateauPenalty = 0;
-  let regainPenalty = 0;
-  let curveType = "linear";
+  let rawProjection = currentWeight + (effectiveRate * weeks * adherenceFactor * metabolicAdaptation);
 
+  let plateauPenalty = 0, regainPenalty = 0, curveType = "linear";
   switch (analysis.metabolic_response_type) {
     case "weight_cycler":
       regainPenalty = Math.abs(effectiveRate * weeks) * 0.4 * analysis.regain_probability;
-      curveType = "oscillating";
-      break;
+      curveType = "oscillating"; break;
     case "plateau_prone":
       plateauPenalty = Math.abs(effectiveRate * weeks) * 0.3 * analysis.plateau_probability;
-      curveType = "stepped";
-      break;
+      curveType = "stepped"; break;
     case "rapid_responder":
-      if (weeks > 12) {
-        plateauPenalty = Math.abs(effectiveRate * (weeks - 12)) * 0.2;
-      }
-      curveType = "decelerating";
-      break;
-    case "slow_responder":
-      curveType = "gradual";
-      break;
-    case "stable_transformer":
-      curveType = "progressive";
-      break;
+      if (weeks > 12) plateauPenalty = Math.abs(effectiveRate * (weeks - 12)) * 0.2;
+      curveType = "decelerating"; break;
+    case "slow_responder": curveType = "gradual"; break;
+    case "stable_transformer": curveType = "progressive"; break;
     case "behavioral_inconsistent":
-      // High variance: reduce projected change significantly
       regainPenalty = Math.abs(effectiveRate * weeks) * 0.35;
-      curveType = "erratic";
-      break;
+      curveType = "erratic"; break;
     case "resistant_metabolism":
-      // Slow everything down
       plateauPenalty = Math.abs(effectiveRate * weeks) * 0.4;
-      curveType = "flat";
-      break;
-    default:
-      curveType = "linear";
+      curveType = "flat"; break;
   }
 
-  // Apply penalties (penalties always push toward less change)
-  if (effectiveRate < 0) {
-    // Losing weight: penalties reduce the loss
-    baseProjection += plateauPenalty + regainPenalty;
-  } else {
-    // Gaining weight: penalties reduce the gain (less relevant)
-    baseProjection -= plateauPenalty + regainPenalty;
-  }
+  if (effectiveRate < 0) rawProjection += plateauPenalty + regainPenalty;
+  else rawProjection -= plateauPenalty + regainPenalty;
 
-  const projectedWeight = Math.round(Math.max(baseProjection, currentWeight * 0.7) * 10) / 10;
+  const maxLoss = 1.0 * weeks; // max 1kg/week
+  const projectedWeight = Math.round(Math.max(rawProjection, currentWeight - maxLoss, currentWeight * 0.7) * 10) / 10;
 
-  // Adjusted confidence
+  // Body fat projection
+  const fatEstimate = currentBodyFat || (sex === "female" || sex === "feminino"
+    ? (age ? Math.round((1.20 * (currentWeight / ((height / 100) ** 2)) + 0.23 * age - 5.4) * 10) / 10 : null)
+    : (age ? Math.round((1.20 * (currentWeight / ((height / 100) ** 2)) + 0.23 * age - 16.2) * 10) / 10 : null));
+
+  const weightDelta = projectedWeight - currentWeight;
+  const projectedBodyFat = fatEstimate !== null
+    ? Math.round(Math.max(5, fatEstimate + (weightDelta * (weightDelta < 0 ? 0.75 : 0.4) / currentWeight * 100)) * 10) / 10
+    : null;
+
+  const projectedBmi = projectedWeight / ((height / 100) ** 2);
+  const adiposity = projectedBmi > 35 ? "very_high" : projectedBmi > 30 ? "high" : projectedBmi > 25 ? "moderate" : projectedBmi > 22 ? "low" : "very_low";
+
+  // Plateau risk
+  const plateauRisk = Math.min(1, Math.round((
+    analysis.plateau_probability * 0.4 +
+    (days > 90 ? 0.15 : 0) +
+    (analysis.metabolic_response_type === "plateau_prone" ? 0.25 : 0) +
+    (metabolicAdaptation < 0.85 ? 0.15 : 0)
+  ) * 100) / 100);
+
+  // Adherence prediction
+  const adherencePrediction = Math.round(Math.max(20, avgAdherence * (1 - days / 1000)) * 10) / 10;
+
+  // Confidence
   let confidence = 0.4;
   if (analysis.has_sufficient_history) confidence += 0.15;
   confidence += analysis.behavioral_consistency_score * 0.2;
   confidence += Math.min(0.15, avgAdherence / 500);
-  if (analysis.metabolic_response_type === "weight_cycler") confidence -= 0.1;
-  if (analysis.metabolic_response_type === "plateau_prone") confidence -= 0.05;
-  if (analysis.metabolic_response_type === "rapid_responder") confidence += 0.05;
-  if (analysis.metabolic_response_type === "behavioral_inconsistent") confidence -= 0.1;
-  if (analysis.metabolic_response_type === "resistant_metabolism") confidence -= 0.08;
   if (analysis.metabolic_response_type === "stable_transformer") confidence += 0.08;
+  if (analysis.metabolic_response_type === "weight_cycler") confidence -= 0.1;
+  if (analysis.metabolic_response_type === "behavioral_inconsistent") confidence -= 0.1;
+  confidence -= days / 2000;
   confidence = Math.round(Math.min(0.92, Math.max(0.15, confidence)) * 100) / 100;
 
-  // Phase determination
-  const delta = projectedWeight - currentWeight;
-  let projectedPhase = "estabilizacao";
-  if (delta < -3) projectedPhase = "perda_ativa";
-  else if (delta < -1) projectedPhase = "reducao_gradual";
-  else if (delta > 1) projectedPhase = "recomposicao";
-  else projectedPhase = "consolidacao_metabolica";
+  // Phase
+  const phase = weightDelta < -3 ? "perda_ativa"
+    : weightDelta < -1 ? "reducao_gradual"
+    : weightDelta > 1 ? "recomposicao"
+    : "consolidacao_metabolica";
 
   // Strategy
-  let strategy = "";
-  switch (analysis.metabolic_response_type) {
-    case "weight_cycler":
-      strategy = "Priorizar fase de consolidação longa para quebrar o ciclo de recuperação. Déficit calórico moderado com transições graduais.";
-      break;
-    case "plateau_prone":
-      strategy = "Implementar variações calóricas periódicas (refeed) para evitar estagnação. Monitorar marcadores metabólicos com frequência.";
-      break;
-    case "rapid_responder":
-      strategy = "Aproveitar a resposta inicial, mas planejar transição precoce para manutenção. Evitar déficit prolongado.";
-      break;
-    case "slow_responder":
-      strategy = "Manter consistência a longo prazo. Ajustes calóricos pequenos e frequentes. Paciência é o principal aliado.";
-      break;
-    case "stable_transformer":
-      strategy = "Manter protocolo atual. Metabolismo respondendo de forma equilibrada. Priorizar qualidade nutricional e progressão.";
-      break;
-    case "behavioral_inconsistent":
-      strategy = "Foco em estabilização de hábitos diários antes de ajustes calóricos. Simplificar plano e aumentar check-ins.";
-      break;
-    case "resistant_metabolism":
-      strategy = "Considerar intervenções mais intensivas, ciclos calóricos ou investigação metabólica complementar. Avaliar sono e estresse.";
-      break;
-    default:
-      strategy = "Continuar acompanhamento para acumular dados suficientes para personalização avançada do protocolo.";
-  }
+  const strategies: Record<string, string> = {
+    weight_cycler: "Priorizar consolidação longa para quebrar o ciclo de recuperação. Déficit moderado com transições graduais.",
+    plateau_prone: "Variações calóricas periódicas (refeed) para evitar estagnação. Monitorar marcadores metabólicos.",
+    rapid_responder: "Aproveitar resposta inicial, planejar transição precoce para manutenção. Evitar déficit prolongado.",
+    slow_responder: "Consistência a longo prazo. Ajustes calóricos pequenos e frequentes. Paciência é aliada.",
+    stable_transformer: "Manter protocolo atual. Metabolismo equilibrado. Priorizar qualidade nutricional e progressão.",
+    behavioral_inconsistent: "Estabilizar hábitos antes de ajustes calóricos. Simplificar plano e aumentar check-ins.",
+    resistant_metabolism: "Ciclos calóricos ou investigação metabólica complementar. Avaliar sono e estresse.",
+    unknown: "Continuar acompanhamento para personalização avançada do protocolo.",
+  };
 
-  return { projectedWeight, adjustedConfidence: confidence, projectedPhase, strategy, curveType };
+  const muscLevel = avgAdherence > 80 ? "moderate_to_high" : avgAdherence > 60 ? "moderate" : "low";
+  const renderingProfile = sex === "feminino" || sex === "female" || sex === "F" ? "female"
+    : sex === "masculino" || sex === "male" || sex === "M" ? "male" : "neutral";
+
+  const visualStateSeed = {
+    rendering_profile: renderingProfile,
+    adiposity_level: adiposity,
+    muscularity_level: muscLevel,
+    body_frame_type: "medium",
+    silhouette_class: `${adiposity}_${muscLevel}`,
+    glow_intensity: confidence,
+    transformation_magnitude: Math.min(1, Math.abs(weightDelta) / 15),
+  };
+
+  return {
+    projectedWeight,
+    projectedBodyFat,
+    projectedBmi: Math.round(projectedBmi * 10) / 10,
+    weightDelta: Math.round(weightDelta * 10) / 10,
+    metabolicAdaptation: Math.round(metabolicAdaptation * 1000) / 1000,
+    adherencePrediction,
+    plateauRisk,
+    confidence,
+    phase,
+    strategy: strategies[analysis.metabolic_response_type] || strategies.unknown,
+    curveType,
+    adiposity,
+    visualStateSeed,
+  };
 }
 
 // ========== MAIN HANDLER ==========
@@ -323,40 +317,35 @@ serve(async (req) => {
       }
     }
 
-    // === GATHER DATA (including weight history) ===
-    const [profileRes, checkinsRes, snapshotsRes, photosRes, weightHistoryRes] = await Promise.all([
+    // === GATHER DATA ===
+    const [profileRes, checkinsRes, snapshotsRes, weightHistoryRes] = await Promise.all([
       supabase.from("profiles").select("*").eq("user_id", targetPatient).maybeSingle(),
       supabase.from("patient_checkins").select("*").eq("patient_id", targetPatient).order("created_at", { ascending: false }).limit(60),
-      supabase.from("clinical_daily_snapshots").select("*").eq("patient_id", targetPatient).order("snapshot_date", { ascending: false }).limit(30),
-      supabase.from("body_assessment_photos").select("*").eq("patient_id", targetPatient).order("assessment_date", { ascending: false }).limit(5),
+      supabase.from("clinical_daily_snapshots").select("adherence_score").eq("patient_id", targetPatient).order("snapshot_date", { ascending: false }).limit(30),
       supabase.from("patient_weight_history").select("*").eq("patient_id", targetPatient).order("measurement_date", { ascending: true }).limit(200),
     ]);
 
     const profile = profileRes.data;
     const checkins = checkinsRes.data || [];
     const snapshots = snapshotsRes.data || [];
-    const photos = photosRes.data || [];
     const weightHistory = weightHistoryRes.data || [];
 
-    // === HISTORICAL ANALYSIS ===
-    // Combine weight history + checkins into unified timeline
-    const allWeightRecords: WeightRecord[] = [
+    // Merge weight records
+    const allRecords: WeightRecord[] = [
       ...weightHistory.map((w: any) => ({ weight: w.weight, date: w.measurement_date, body_fat_percentage: w.body_fat_percentage })),
       ...checkins.filter((c: any) => c.weight).map((c: any) => ({ weight: c.weight, date: c.created_at, body_fat_percentage: null })),
     ];
-
-    // Deduplicate by date (keep first per date)
     const seen = new Set<string>();
-    const dedupedRecords = allWeightRecords.filter(r => {
-      const dateKey = r.date.substring(0, 10);
-      if (seen.has(dateKey)) return false;
-      seen.add(dateKey);
+    const dedupedRecords = allRecords.filter(r => {
+      const key = r.date.substring(0, 10);
+      if (seen.has(key)) return false;
+      seen.add(key);
       return true;
     }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     const historicalAnalysis = analyzeWeightHistory(dedupedRecords);
 
-    // === DETERMINISTIC ENGINE ===
+    // Current metrics
     const weights = checkins.filter((c: any) => c.weight).map((c: any) => ({ weight: c.weight, date: c.created_at }));
     const currentWeight = weights[0]?.weight || profile?.weight || null;
     const startWeight = weights.length > 1 ? weights[weights.length - 1].weight : currentWeight;
@@ -365,100 +354,73 @@ serve(async (req) => {
       ? snapshots.reduce((sum: number, s: any) => sum + (s.adherence_score || 0), 0) / snapshots.length
       : 50;
 
-    const timeframeDays = parseInt(timeframe) || 90;
-    const checkinWeeklyRate = weights.length > 1
+    const weeklyRate = weights.length > 1
       ? weightChange / Math.max(1, weights.length / 7)
-      : -0.3;
-
-    // Use adjusted projection with historical data
-    const projection = currentWeight
-      ? computeAdjustedProjection(currentWeight, timeframeDays, checkinWeeklyRate, historicalAnalysis, avgAdherence)
-      : { projectedWeight: null, adjustedConfidence: 0.3, projectedPhase: "unknown", strategy: "", curveType: "linear" };
+      : historicalAnalysis.historical_loss_rate || -0.3;
 
     const sex = profile?.sex || profile?.gender || "neutral";
-    const renderingProfile = sex === "feminino" || sex === "female" || sex === "F" ? "female"
-      : sex === "masculino" || sex === "male" || sex === "M" ? "male"
-      : "neutral";
-
     const height = profile?.height || 170;
+    const age = profile?.age || profile?.birth_date
+      ? (profile.age || Math.floor((Date.now() - new Date(profile.birth_date).getTime()) / (365.25 * 24 * 60 * 60 * 1000)))
+      : null;
+    const currentBodyFat = profile?.body_fat_percentage || null;
     const bmi = currentWeight ? currentWeight / ((height / 100) ** 2) : 25;
-    const adiposityLevel = bmi > 35 ? "very_high" : bmi > 30 ? "high" : bmi > 25 ? "moderate" : bmi > 22 ? "low" : "very_low";
-    const projectedBmi = projection.projectedWeight ? projection.projectedWeight / ((height / 100) ** 2) : bmi;
-    const projectedAdiposity = projectedBmi > 35 ? "very_high" : projectedBmi > 30 ? "high" : projectedBmi > 25 ? "moderate" : projectedBmi > 22 ? "low" : "very_low";
+    const adiposity = bmi > 35 ? "very_high" : bmi > 30 ? "high" : bmi > 25 ? "moderate" : bmi > 22 ? "low" : "very_low";
+    const renderingProfile = sex === "feminino" || sex === "female" || sex === "F" ? "female"
+      : sex === "masculino" || sex === "male" || sex === "M" ? "male" : "neutral";
 
-    const clinicalPhase = checkinWeeklyRate < -0.5 ? "perda_ativa"
-      : checkinWeeklyRate < -0.1 ? "reducao_gradual"
-      : checkinWeeklyRate < 0.1 ? "estabilizacao"
+    const clinicalPhase = weeklyRate < -0.5 ? "perda_ativa"
+      : weeklyRate < -0.1 ? "reducao_gradual"
+      : weeklyRate < 0.1 ? "estabilizacao"
       : "recomposicao";
 
     const currentMetrics = {
       rendering_profile: renderingProfile,
       body_frame_type: "medium",
-      adiposity_level: adiposityLevel,
+      adiposity_level: adiposity,
       muscularity_level: avgAdherence > 70 ? "moderate" : "low",
       weight: currentWeight,
       bmi: Math.round(bmi * 10) / 10,
-      confidence_score: projection.adjustedConfidence,
+      body_fat: currentBodyFat,
       clinical_phase: clinicalPhase,
       metabolic_response_type: historicalAnalysis.metabolic_response_type,
     };
 
-    const projectedMetrics = {
-      rendering_profile: renderingProfile,
-      adiposity_level: projectedAdiposity,
-      muscularity_level: avgAdherence > 60 ? "moderate_to_high" : "moderate",
-      projected_weight: projection.projectedWeight,
-      projected_bmi: Math.round(projectedBmi * 10) / 10,
-      weight_delta: projection.projectedWeight && currentWeight ? Math.round((projection.projectedWeight - currentWeight) * 10) / 10 : 0,
-      confidence_score: projection.adjustedConfidence,
-      projected_phase: projection.projectedPhase,
-      recommended_strategy: projection.strategy,
-      curve_type: projection.curveType,
-      // Historical context
-      historical_analysis: {
-        metabolic_response_type: historicalAnalysis.metabolic_response_type,
-        historical_loss_rate: historicalAnalysis.historical_loss_rate,
-        regain_probability: historicalAnalysis.regain_probability,
-        plateau_probability: historicalAnalysis.plateau_probability,
-        behavioral_consistency_score: historicalAnalysis.behavioral_consistency_score,
-        yoyo_cycles: historicalAnalysis.yoyo_cycles,
-        longest_plateau_weeks: historicalAnalysis.longest_plateau_weeks,
-        total_history_weeks: historicalAnalysis.total_history_weeks,
-        has_sufficient_history: historicalAnalysis.has_sufficient_history,
-      },
-    };
-
-    // === AI NARRATIVE (considers historical patterns) ===
+    // === GENERATE AI NARRATIVE (Camada 2: only for 90d) ===
     let narrative = "";
-    if (lovableKey) {
+    if (lovableKey && currentWeight) {
       try {
+        const primaryProj = computeProjection(currentWeight, 90, weeklyRate, historicalAnalysis, avgAdherence, currentBodyFat, height, sex, age);
+
         const histContext = historicalAnalysis.has_sufficient_history
           ? `\nPerfil metabólico: ${historicalAnalysis.metabolic_response_type}
 Taxa histórica: ${historicalAnalysis.historical_loss_rate}kg/sem
 Ciclos sanfona: ${historicalAnalysis.yoyo_cycles}
 Prob. platô: ${Math.round(historicalAnalysis.plateau_probability * 100)}%
 Prob. recuperação: ${Math.round(historicalAnalysis.regain_probability * 100)}%
-Consistência: ${Math.round(historicalAnalysis.behavioral_consistency_score * 100)}%
-Histórico total: ${historicalAnalysis.total_history_weeks} semanas`
+Consistência: ${Math.round(historicalAnalysis.behavioral_consistency_score * 100)}%`
           : "\nHistórico insuficiente para classificação metabólica avançada.";
 
-        const prompt = `Você é um consultor de nutrição clínica. Gere uma narrativa motivacional em português brasileiro (4-5 frases) sobre a projeção corporal, considerando o histórico do paciente.
+        const prompt = `Você é um consultor de nutrição clínica do FitJourney. Gere uma narrativa motivacional em português brasileiro (4-5 frases) sobre a projeção corporal.
 
-Dados atuais:
-- Peso atual: ${currentWeight}kg → Projetado: ${projection.projectedWeight}kg em ${timeframeDays} dias
-- IMC: ${currentMetrics.bmi} → ${projectedMetrics.projected_bmi}
+IMPORTANTE: Você NÃO calculou esses dados. Eles foram gerados pelo motor clínico proprietário FitJourney Intelligence Engine.
+
+Dados do motor:
+- Peso atual: ${currentWeight}kg → Projetado: ${primaryProj.projectedWeight}kg em 90 dias
+- IMC: ${currentMetrics.bmi} → ${primaryProj.projectedBmi}
+- % Gordura projetada: ${primaryProj.projectedBodyFat || "N/A"}%
 - Adesão: ${Math.round(avgAdherence)}%
-- Fase clínica atual: ${clinicalPhase}
-- Fase projetada: ${projection.projectedPhase}
+- Risco de platô: ${Math.round(primaryProj.plateauRisk * 100)}%
+- Adaptação metabólica: ${Math.round(primaryProj.metabolicAdaptation * 100)}%
 ${histContext}
 
 Regras:
-- Não prometa resultados exatos
-- DEVE mencionar o padrão metabólico se disponível (ex: "seu histórico mostra tendência a platôs")
-- Linguagem motivacional e educativa
-- Inclua recomendação estratégica baseada no perfil metabólico
-- Seja breve e impactante
-- Se houver risco de recuperação, mencione de forma positiva a estratégia de prevenção`;
+- NUNCA prometa resultados exatos
+- Use "tendência" e "estimativa", nunca "previsão" ou "certeza"
+- Se houver padrão metabólico, mencione de forma educativa
+- Inclua a estratégia recomendada
+- Linguagem motivacional e empática
+- Seja breve e impactante`;
 
         const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
@@ -478,69 +440,80 @@ Regras:
       }
     }
 
-    if (!narrative) {
-      const delta = projectedMetrics.weight_delta;
+    // Fallback narrative
+    if (!narrative && currentWeight) {
+      const p = computeProjection(currentWeight, 90, weeklyRate, historicalAnalysis, avgAdherence, currentBodyFat, height, sex, age);
+      const d = p.weightDelta;
       const typeLabel: Record<string, string> = {
         rapid_responder: "resposta rápida inicial",
         slow_responder: "resposta gradual e progressiva",
         plateau_prone: "tendência a períodos de estagnação",
-        weight_cycler: "padrão de oscilação (efeito sanfona)",
-        stable_maintainer: "estabilidade metabólica consistente",
+        weight_cycler: "padrão de oscilação",
+        stable_transformer: "transformação estável e consistente",
       };
-      const histNote = historicalAnalysis.has_sufficient_history
-        ? ` Seu histórico mostra ${typeLabel[historicalAnalysis.metabolic_response_type] || "padrão ainda em análise"}.`
+      const note = historicalAnalysis.has_sufficient_history
+        ? ` Seu perfil indica ${typeLabel[historicalAnalysis.metabolic_response_type] || "padrão em análise"}.`
         : "";
-
-      if (delta < -3) {
-        narrative = `Mantendo sua consistência atual de ${Math.round(avgAdherence)}% de adesão, a tendência é de redução progressiva nos próximos ${timeframeDays} dias.${histNote} ${projection.strategy}`;
-      } else if (delta < 0) {
-        narrative = `A projeção indica uma redução gradual e saudável.${histNote} Com adesão de ${Math.round(avgAdherence)}%, o progresso é sustentável. ${projection.strategy}`;
-      } else {
-        narrative = `Sua trajetória sugere uma fase de estabilização metabólica.${histNote} ${projection.strategy}`;
-      }
+      narrative = d < -3
+        ? `Mantendo ${Math.round(avgAdherence)}% de adesão, a tendência é de redução progressiva.${note} ${p.strategy}`
+        : d < 0
+        ? `Projeção indica redução gradual e saudável.${note} Progresso sustentável. ${p.strategy}`
+        : `Trajetória sugere estabilização metabólica.${note} ${p.strategy}`;
     }
 
-    // === PERSIST SNAPSHOTS (one per timeframe) ===
+    // === PERSIST SNAPSHOTS ===
     const now = new Date();
     const validUntil = new Date(now.getTime() + COOLDOWN_DAYS * 24 * 60 * 60 * 1000);
     const lockedUntil = new Date(now.getTime() + COOLDOWN_DAYS * 24 * 60 * 60 * 1000);
-
     const allResults: any[] = [];
 
     for (const tf of timeframes) {
       const tfDays = parseInt(tf) || 90;
-      const tfProjection = currentWeight
-        ? computeAdjustedProjection(currentWeight, tfDays, checkinWeeklyRate, historicalAnalysis, avgAdherence)
-        : projection;
+      const proj = currentWeight
+        ? computeProjection(currentWeight, tfDays, weeklyRate, historicalAnalysis, avgAdherence, currentBodyFat, height, sex, age)
+        : null;
 
-      const tfProjectedBmi = tfProjection.projectedWeight ? tfProjection.projectedWeight / ((height / 100) ** 2) : bmi;
-      const tfProjectedAdiposity = tfProjectedBmi > 35 ? "very_high" : tfProjectedBmi > 30 ? "high" : tfProjectedBmi > 25 ? "moderate" : tfProjectedBmi > 22 ? "low" : "very_low";
+      if (!proj) continue;
 
-      const tfProjectedMetrics = {
-        ...projectedMetrics,
-        projected_weight: tfProjection.projectedWeight,
-        projected_bmi: Math.round(tfProjectedBmi * 10) / 10,
-        weight_delta: tfProjection.projectedWeight && currentWeight ? Math.round((tfProjection.projectedWeight - currentWeight) * 10) / 10 : 0,
-        confidence_score: tfProjection.adjustedConfidence,
-        projected_phase: tfProjection.projectedPhase,
-        recommended_strategy: tfProjection.strategy,
-        curve_type: tfProjection.curveType,
-        adiposity_level: tfProjectedAdiposity,
-        historical_analysis: projectedMetrics.historical_analysis,
+      const projectedMetrics = {
+        rendering_profile: renderingProfile,
+        adiposity_level: proj.adiposity,
+        muscularity_level: proj.visualStateSeed.muscularity_level,
+        projected_weight: proj.projectedWeight,
+        projected_bmi: proj.projectedBmi,
+        projected_body_fat: proj.projectedBodyFat,
+        weight_delta: proj.weightDelta,
+        confidence_score: proj.confidence,
+        projected_phase: proj.phase,
+        recommended_strategy: proj.strategy,
+        curve_type: proj.curveType,
+        historical_analysis: {
+          metabolic_response_type: historicalAnalysis.metabolic_response_type,
+          historical_loss_rate: historicalAnalysis.historical_loss_rate,
+          regain_probability: historicalAnalysis.regain_probability,
+          plateau_probability: historicalAnalysis.plateau_probability,
+          behavioral_consistency_score: historicalAnalysis.behavioral_consistency_score,
+          yoyo_cycles: historicalAnalysis.yoyo_cycles,
+          longest_plateau_weeks: historicalAnalysis.longest_plateau_weeks,
+          has_sufficient_history: historicalAnalysis.has_sufficient_history,
+        },
       };
 
-      // Only generate narrative for 90d (primary)
-      const tfNarrative = tf === "90d" ? narrative : null;
-
-      const { data: savedSnapshot } = await supabase.from("body_projection_snapshots").insert({
+      const { data: saved } = await supabase.from("body_projection_snapshots").insert({
         patient_id: targetPatient,
         timeframe: tf,
         current_body_json: currentMetrics,
-        projected_body_json: tfProjectedMetrics,
+        projected_body_json: projectedMetrics,
         current_metrics_json: currentMetrics,
-        projected_metrics_json: tfProjectedMetrics,
-        narrative: tfNarrative,
-        confidence_score: tfProjection.adjustedConfidence,
+        projected_metrics_json: projectedMetrics,
+        narrative: tf === "90d" ? narrative : null,
+        confidence_score: proj.confidence,
+        projected_body_fat: proj.projectedBodyFat,
+        metabolic_adaptation_index: proj.metabolicAdaptation,
+        adherence_prediction_score: proj.adherencePrediction,
+        plateau_risk: proj.plateauRisk,
+        visual_state_seed: proj.visualStateSeed,
+        engine_version: ENGINE_VERSION,
         assessment_id: assessment_id || null,
         generation_source,
         valid_until: validUntil.toISOString(),
@@ -549,17 +522,21 @@ Regras:
       }).select("id, created_at, timeframe").single();
 
       allResults.push({
-        snapshot_id: savedSnapshot?.id,
+        snapshot_id: saved?.id,
         timeframe: tf,
-        projected_weight: tfProjection.projectedWeight,
-        projected_phase: tfProjection.projectedPhase,
-        confidence_score: tfProjection.adjustedConfidence,
-        strategy: tfProjection.strategy,
-        weight_delta: tfProjectedMetrics.weight_delta,
+        projected_weight: proj.projectedWeight,
+        projected_body_fat: proj.projectedBodyFat,
+        projected_phase: proj.phase,
+        confidence_score: proj.confidence,
+        plateau_risk: proj.plateauRisk,
+        metabolic_adaptation: proj.metabolicAdaptation,
+        strategy: proj.strategy,
+        weight_delta: proj.weightDelta,
+        visual_state_seed: proj.visualStateSeed,
       });
     }
 
-    // === UPDATE PROFILE with metabolic classification ===
+    // Update profile with metabolic classification
     if (historicalAnalysis.has_sufficient_history) {
       await supabase.from("profiles").update({
         metabolic_response_type: historicalAnalysis.metabolic_response_type,
@@ -573,18 +550,17 @@ Regras:
 
     return new Response(JSON.stringify({
       success: true,
+      engine_version: ENGINE_VERSION,
+      architecture: "hybrid_deterministic_ai",
       snapshots: allResults,
       primary_snapshot_id: allResults.find(r => r.timeframe === "90d")?.snapshot_id || allResults[0]?.snapshot_id,
       generated_at: now.toISOString(),
       valid_until: validUntil.toISOString(),
       locked_until: lockedUntil.toISOString(),
       current_body: currentMetrics,
-      projected_body: projectedMetrics,
       narrative,
-      timeframes: timeframes,
+      timeframes,
       generation_source,
-      photos_count: photos.length,
-      data_points: checkins.length,
       weight_history_records: dedupedRecords.length,
       historical_analysis: historicalAnalysis,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
