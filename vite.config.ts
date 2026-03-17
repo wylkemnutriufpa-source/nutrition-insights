@@ -20,7 +20,8 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "pwa-192x192.png", "pwa-512x512.png"],
       workbox: {
-        navigateFallbackDenylist: [/^\/~oauth/],
+        navigateFallback: "/index.html",
+        navigateFallbackDenylist: [/^\/~oauth/, /^\/api/],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         // Import push notification handler into the generated SW
