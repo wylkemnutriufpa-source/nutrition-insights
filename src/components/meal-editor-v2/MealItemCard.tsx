@@ -35,7 +35,21 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.15 }}
-      className="bg-secondary/60 rounded-md px-2 py-1.5 hover:bg-secondary transition-colors group/item relative"
+      className="bg-secondary/60 rounded-md px-2 py-1.5 hover:bg-secondary transition-colors group/item relative cursor-pointer"
+      onClick={() => {
+        if (!inlineEdit) {
+          openMealDetail({
+            title: item.title,
+            description: item.description,
+            meal_type: item.meal_type,
+            calories_target: item.calories_target,
+            protein_target: item.protein_target,
+            carbs_target: item.carbs_target,
+            fat_target: item.fat_target,
+            metadata: (item as any).metadata,
+          });
+        }
+      }}
     >
       {inlineEdit ? (
         <div className="flex gap-1">
