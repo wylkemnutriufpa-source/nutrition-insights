@@ -218,7 +218,7 @@ export default function PatientMealPlan() {
       .gte("date", weekStart)
       .lte("date", weekEnd);
 
-    setWeekCompletions(weekData || []);
+    setWeekCompletions((weekData || []) as unknown as MealCompletion[]);
     setLoading(false);
   }, [user, date, dayOfWeek]);
 
