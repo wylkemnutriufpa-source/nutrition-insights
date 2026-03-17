@@ -77,6 +77,14 @@ export default function SystemPresentation() {
   const [cinematicProDone, setCinematicProDone] = useState(() => localStorage.getItem(CINEMATIC_PRO_KEY) === "true");
   const [cinematicPatDone, setCinematicPatDone] = useState(() => localStorage.getItem(CINEMATIC_PAT_KEY) === "true");
 
+  // 🧠 Guide Engine — dynamic slides from feature_registry
+  const { slides: proLiveSlides, newFeatures: proNew } = useFeatureGuide("professional");
+  const { slides: patLiveSlides, newFeatures: patNew } = useFeatureGuide("patient");
+
+  // Use live slides if available, fallback to static
+  const proSlides = proLiveSlides.length > 0 ? proLiveSlides : PROFESSIONAL_SLIDES;
+  const patSlides = patLiveSlides.length > 0 ? patLiveSlides : PATIENT_SLIDES;
+
   const handleComplete = (type: "professional" | "patient") => {
     const key = type === "professional" ? STORAGE_KEY_PRO : STORAGE_KEY_PAT;
     localStorage.setItem(key, "true");
