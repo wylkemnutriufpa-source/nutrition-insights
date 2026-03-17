@@ -10,6 +10,11 @@ import {
   MessageSquare, Calendar, Bell, BookOpen,
   ShoppingCart, Heart, Upload, FileUp, UserPlus,
   BarChart3, DollarSign, Activity, Trophy, Zap,
+  FlaskConical, Flame, TrendingUp, Scale, Gauge, Shield,
+  Workflow, Eye, Beaker, Layers, RefreshCw, GitBranch,
+  Microscope, LineChart, PieChart, Shuffle, Waypoints,
+  ScanLine, AlertTriangle, Lightbulb, Rocket, Crown,
+  Map, Compass, BookMarked, Presentation, Globe,
 } from "lucide-react";
 
 export type FeatureTier = "basic" | "premium" | "coming_soon";
