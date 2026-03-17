@@ -78,6 +78,7 @@ function RenderSmartLink({ item, active, collapsed, isProRole, onLinkClick, trac
       <Link
         to={item.route}
         onClick={handleClick}
+        {...(tourId ? { "data-tour": tourId } : {})}
         className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all group border
           hover:translate-x-1 hover:scale-[1.02] active:scale-[0.98]
           ${active
