@@ -4666,6 +4666,60 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_journey_stories: {
+        Row: {
+          created_at: string
+          current_phase: string | null
+          generated_by: string | null
+          id: string
+          metrics_snapshot: Json | null
+          narrative_closing: string | null
+          narrative_diagnosis: string | null
+          narrative_opening: string | null
+          patient_id: string
+          projections: Json | null
+          risk_level: string | null
+          status: string | null
+          story_data: Json
+          updated_at: string
+          weight_trend: string | null
+        }
+        Insert: {
+          created_at?: string
+          current_phase?: string | null
+          generated_by?: string | null
+          id?: string
+          metrics_snapshot?: Json | null
+          narrative_closing?: string | null
+          narrative_diagnosis?: string | null
+          narrative_opening?: string | null
+          patient_id: string
+          projections?: Json | null
+          risk_level?: string | null
+          status?: string | null
+          story_data?: Json
+          updated_at?: string
+          weight_trend?: string | null
+        }
+        Update: {
+          created_at?: string
+          current_phase?: string | null
+          generated_by?: string | null
+          id?: string
+          metrics_snapshot?: Json | null
+          narrative_closing?: string | null
+          narrative_diagnosis?: string | null
+          narrative_opening?: string | null
+          patient_id?: string
+          projections?: Json | null
+          risk_level?: string | null
+          status?: string | null
+          story_data?: Json
+          updated_at?: string
+          weight_trend?: string | null
+        }
+        Relationships: []
+      }
       patient_metabolic_twin: {
         Row: {
           adaptive_resistance_score: number | null
