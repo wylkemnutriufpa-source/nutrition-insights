@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, AlertTriangle, Zap, Save, Send, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Loader2, AlertTriangle, Zap, Save, Send, CheckCircle2, Library } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +8,9 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { WeeklyGrid } from "@/components/meal-editor-v2/WeeklyGrid";
 import { EditorSyncBadge } from "@/components/meal-editor-v2/EditorSyncBadge";
+import { MealLibrarySidebar } from "@/components/meal-editor-v2/MealLibrarySidebar";
 import { toast } from "sonner";
+
 export default function MealPlanEditorV2() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -16,15 +18,14 @@ export default function MealPlanEditorV2() {
   const store = useMealPlanEditorV2Store();
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
 
   // Hydrate on mount / planId change
   useEffect(() => {
     if (id && user?.id) {
       store.hydrate(id, user.id);
     }
-    return () => {
-      // Do NOT reset on unmount — keep cache alive for back-navigation
-    };
+    return () => {};
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user?.id]);
 
@@ -64,7 +65,6 @@ export default function MealPlanEditorV2() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Flush any pending operations first
       await store._flushQueue();
       const { error } = await supabase
         .from("meal_plans")
@@ -110,10 +110,10 @@ export default function MealPlanEditorV2() {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="font-display text-xl font-bold">{plan.title}</h1>
                 <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                  <Zap className="w-3 h-3" /> Premium V2
+                  <Zap className="w-3 h-3" /> Editor Premium
                 </span>
                 {isPublished && (
                   <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-green-600 bg-green-500/10 px-2 py-0.5 rounded-full">
@@ -142,6 +142,15 @@ export default function MealPlanEditorV2() {
             <Button
               variant="outline"
               size="sm"
+              onClick={() => setLibraryOpen(true)}
+              className="gap-1.5"
+            >
+              <Library className="w-4 h-4" />
+              Biblioteca
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={handleSave}
               disabled={saving || store.syncStatus === "saving"}
             >
@@ -154,7 +163,7 @@ export default function MealPlanEditorV2() {
               disabled={publishing || store.syncStatus === "saving"}
             >
               {publishing ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Send className="w-4 h-4 mr-1" />}
-              Publicar para Paciente
+              Publicar
             </Button>
           </div>
         </div>
@@ -162,6 +171,14 @@ export default function MealPlanEditorV2() {
         {/* Weekly grid — always mounted, never unmounted */}
         <WeeklyGrid />
       </div>
+
+      {/* Header-level library sidebar (defaults to breakfast / day 1) */}
+      <MealLibrarySidebar
+        open={libraryOpen}
+        onOpenChange={setLibraryOpen}
+        targetDay={1}
+        targetMealType="breakfast"
+      />
     </DashboardLayout>
   );
 }
