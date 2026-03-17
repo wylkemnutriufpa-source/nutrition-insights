@@ -1342,12 +1342,7 @@ export default function Index() {
 
   const renderContent = () => {
     if (isPatient) {
-      return (
-        <div className="space-y-6">
-          <PatientGridDashboard />
-          <PatientDashboardContent />
-        </div>
-      );
+      return <PatientGridDashboard />;
     }
 
     // Professional / Admin view with toggle
