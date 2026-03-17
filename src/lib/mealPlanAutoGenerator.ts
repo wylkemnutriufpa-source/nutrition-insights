@@ -325,7 +325,7 @@ export function slotsToInserts(
         meal_plan_id: planId,
         title: slot.libraryItem.title,
         description: null as string | null,
-        meal_type: slot.mealType,
+        meal_type: mealType,
         day_of_week: slot.day,
         calories_target: slot.targetKcal,
         protein_target: Math.round(slot.libraryItem.protein * slot.scaleFactor),
