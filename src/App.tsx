@@ -134,6 +134,7 @@ const OnboardingPaciente = lazy(() => import("./pages/OnboardingPaciente"));
 const MagicJourneyStory = lazy(() => import("./pages/MagicJourneyStory"));
 const BodyProjectionExperience = lazy(() => import("./pages/BodyProjectionExperience"));
 const AdminOperationalCosts = lazy(() => import("./pages/AdminOperationalCosts"));
+const TeamManagement = lazy(() => import("./pages/TeamManagement"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -330,6 +331,7 @@ const App = () => (
               <Route path="/platform-governance" element={<AdminRoute><LP section="Governança"><PlatformGovernance /></LP></AdminRoute>} />
               <Route path="/clinical-pipeline" element={<AdminRoute><LP section="Pipeline Clínico"><ClinicalPipeline /></LP></AdminRoute>} />
               <Route path="/integrations" element={<ProfessionalRoute><LP section="Integrações"><Integrations /></LP></ProfessionalRoute>} />
+              <Route path="/team" element={<ProfessionalRoute><LP section="Equipe Clínica"><TeamManagement /></LP></ProfessionalRoute>} />
 
               {/* Personal Trainer routes */}
               <Route path="/personal/dashboard" element={<PersonalRoute><LP section="Personal"><PersonalDashboard /></LP></PersonalRoute>} />

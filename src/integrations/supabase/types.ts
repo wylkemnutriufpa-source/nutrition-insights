@@ -9119,6 +9119,192 @@ export type Database = {
           },
         ]
       }
+      team_member_activity_logs: {
+        Row: {
+          action: string
+          created_at: string
+          head_professional_id: string
+          id: string
+          metadata: Json | null
+          resource_id: string | null
+          resource_type: string | null
+          team_member_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          head_professional_id: string
+          id?: string
+          metadata?: Json | null
+          resource_id?: string | null
+          resource_type?: string | null
+          team_member_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          head_professional_id?: string
+          id?: string
+          metadata?: Json | null
+          resource_id?: string | null
+          resource_type?: string | null
+          team_member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_member_activity_logs_team_member_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_member_patient_assignments: {
+        Row: {
+          created_at: string
+          head_professional_id: string
+          id: string
+          patient_id: string
+          team_member_id: string
+        }
+        Insert: {
+          created_at?: string
+          head_professional_id: string
+          id?: string
+          patient_id: string
+          team_member_id: string
+        }
+        Update: {
+          created_at?: string
+          head_professional_id?: string
+          id?: string
+          patient_id?: string
+          team_member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_member_patient_assignments_team_member_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_member_permissions: {
+        Row: {
+          can_access_financial: boolean
+          can_access_ranking: boolean
+          can_access_reports: boolean
+          can_approve_plans: boolean
+          can_edit_meal_plans: boolean
+          can_manage_automation: boolean
+          can_manage_team: boolean
+          can_respond_feedback: boolean
+          can_view_checkins: boolean
+          can_view_clinical_risk: boolean
+          can_view_meal_plans: boolean
+          can_view_patient_details: boolean
+          can_view_patients: boolean
+          can_view_pending_plans: boolean
+          can_view_projection: boolean
+          can_view_timeline: boolean
+          created_at: string
+          head_professional_id: string
+          id: string
+          team_member_id: string
+          updated_at: string
+        }
+        Insert: {
+          can_access_financial?: boolean
+          can_access_ranking?: boolean
+          can_access_reports?: boolean
+          can_approve_plans?: boolean
+          can_edit_meal_plans?: boolean
+          can_manage_automation?: boolean
+          can_manage_team?: boolean
+          can_respond_feedback?: boolean
+          can_view_checkins?: boolean
+          can_view_clinical_risk?: boolean
+          can_view_meal_plans?: boolean
+          can_view_patient_details?: boolean
+          can_view_patients?: boolean
+          can_view_pending_plans?: boolean
+          can_view_projection?: boolean
+          can_view_timeline?: boolean
+          created_at?: string
+          head_professional_id: string
+          id?: string
+          team_member_id: string
+          updated_at?: string
+        }
+        Update: {
+          can_access_financial?: boolean
+          can_access_ranking?: boolean
+          can_access_reports?: boolean
+          can_approve_plans?: boolean
+          can_edit_meal_plans?: boolean
+          can_manage_automation?: boolean
+          can_manage_team?: boolean
+          can_respond_feedback?: boolean
+          can_view_checkins?: boolean
+          can_view_clinical_risk?: boolean
+          can_view_meal_plans?: boolean
+          can_view_patient_details?: boolean
+          can_view_patients?: boolean
+          can_view_pending_plans?: boolean
+          can_view_projection?: boolean
+          can_view_timeline?: boolean
+          created_at?: string
+          head_professional_id?: string
+          id?: string
+          team_member_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_member_permissions_team_member_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: true
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_members: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          head_professional_id: string
+          id: string
+          role: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          head_professional_id: string
+          id?: string
+          role?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          head_professional_id?: string
+          id?: string
+          role?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       testimonials: {
         Row: {
           avatar_url: string | null
@@ -9901,6 +10087,8 @@ export type Database = {
           total_points: number
         }[]
       }
+      get_team_head_id: { Args: { _user_id: string }; Returns: string }
+      get_team_permissions: { Args: { _user_id: string }; Returns: Json }
       get_user_email_by_id: { Args: { _user_id: string }; Returns: string }
       get_user_id_by_email: { Args: { _email: string }; Returns: string }
       get_user_org_id: { Args: { _user_id: string }; Returns: string }
@@ -9927,12 +10115,27 @@ export type Database = {
         Args: { _program_id: string; _user_id: string }
         Returns: boolean
       }
+      is_team_member_of: {
+        Args: { _head_id: string; _user_id: string }
+        Returns: boolean
+      }
       log_audit: {
         Args: {
           _action: string
           _metadata?: Json
           _resource_id?: string
           _resource_type: string
+        }
+        Returns: undefined
+      }
+      log_team_activity: {
+        Args: {
+          _action: string
+          _head_professional_id: string
+          _metadata?: Json
+          _resource_id?: string
+          _resource_type?: string
+          _team_member_id: string
         }
         Returns: undefined
       }

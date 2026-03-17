@@ -94,6 +94,7 @@ const allRoutes = [
   { to: "/admin/menu-config", icon: Settings, label: "Config Menu", keywords: "configurar menu itens sidebar lateral navegacao ordem", roles: ["admin"], desc: "Configurar menu lateral" },
   { to: "/audit-logs", icon: Shield, label: "Auditoria", keywords: "auditoria logs registro acoes seguranca historico audit trail", roles: ["admin"], desc: "Logs de auditoria" },
   { to: "/import-patients", icon: Users, label: "Importar Pacientes", keywords: "importar pacientes csv planilha excel upload massa bulk", roles: ["nutritionist", "admin"], desc: "Importar via CSV" },
+  { to: "/team", icon: Users, label: "Equipe Clínica", keywords: "equipe team funcionario colaborador permissoes hierarquia clinical employee", roles: ["nutritionist", "personal", "admin"], desc: "Gerenciar equipe clínica" },
   { to: "/physical-assessment", icon: Calculator, label: "Avaliação Física", keywords: "avaliacao fisica medidas antropometria dobras cutaneas perimetros composicao", roles: ["nutritionist", "admin"], desc: "Avaliação física" },
 ];
 
