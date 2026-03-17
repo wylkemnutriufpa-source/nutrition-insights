@@ -316,7 +316,9 @@ export function slotsToInserts(
   slots: GeneratedMealSlot[],
   planId: string,
 ) {
+  type MealTypeEnum = "breakfast" | "morning_snack" | "lunch" | "afternoon_snack" | "dinner" | "evening_snack";
   return slots.flatMap((slot) => {
+    const mealType = slot.mealType as MealTypeEnum;
     const foods = Array.isArray(slot.libraryItem.foods) ? slot.libraryItem.foods : [];
     if (foods.length === 0) {
       return [{
