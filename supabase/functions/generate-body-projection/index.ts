@@ -178,28 +178,34 @@ function computeAdjustedProjection(
 
   switch (analysis.metabolic_response_type) {
     case "weight_cycler":
-      // Expect regain midway: reduce net loss by 30-50%
       regainPenalty = Math.abs(effectiveRate * weeks) * 0.4 * analysis.regain_probability;
       curveType = "oscillating";
       break;
     case "plateau_prone":
-      // Expect stall: reduce progress by plateau probability
       plateauPenalty = Math.abs(effectiveRate * weeks) * 0.3 * analysis.plateau_probability;
       curveType = "stepped";
       break;
     case "rapid_responder":
-      // Initial fast then decelerating
       if (weeks > 12) {
         plateauPenalty = Math.abs(effectiveRate * (weeks - 12)) * 0.2;
       }
       curveType = "decelerating";
       break;
     case "slow_responder":
-      // Gradual but steady
       curveType = "gradual";
       break;
-    case "stable_maintainer":
-      curveType = "stable";
+    case "stable_transformer":
+      curveType = "progressive";
+      break;
+    case "behavioral_inconsistent":
+      // High variance: reduce projected change significantly
+      regainPenalty = Math.abs(effectiveRate * weeks) * 0.35;
+      curveType = "erratic";
+      break;
+    case "resistant_metabolism":
+      // Slow everything down
+      plateauPenalty = Math.abs(effectiveRate * weeks) * 0.4;
+      curveType = "flat";
       break;
     default:
       curveType = "linear";
