@@ -165,6 +165,12 @@ export default function PatientMealPlan() {
   const isToday = date === new Date().toISOString().split("T")[0];
   const weekDates = getWeekDates(date);
 
+  // Journey day calculation
+  const journeyDay = plan ? Math.max(1, Math.ceil((new Date().getTime() - new Date(plan.start_date).getTime()) / 86400000)) : 1;
+
+  // Consecutive followed streak
+  const followedStreak = completions.filter(c => c.adherence_status === "followed").length;
+
   const fetchData = useCallback(async () => {
     if (!user) return;
     setLoading(true);
