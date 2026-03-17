@@ -64,6 +64,15 @@ export function WeeklyGrid() {
   const [saveTemplateItems, setSaveTemplateItems] = useState<MealPlanItem[]>([]);
   const [saveTemplateMealType, setSaveTemplateMealType] = useState<MealType>("breakfast");
 
+  // Meal Library Modal (banco de refeições)
+  const [mlModalOpen, setMlModalOpen] = useState(false);
+  const [mlModalTarget, setMlModalTarget] = useState<{ day: number; mealType: MealType }>({ day: 1, mealType: "breakfast" });
+
+  const openMealLibraryModal = (day: number, mealType: MealType) => {
+    setMlModalTarget({ day, mealType });
+    setMlModalOpen(true);
+  };
+
   const getItems = useCallback(
     (day: number, mealType: MealType) =>
       items.filter((i) => i.day_of_week === day && i.meal_type === mealType),
