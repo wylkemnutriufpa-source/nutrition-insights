@@ -2,12 +2,13 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import GuidedPresentation from "@/components/common/GuidedPresentation";
+import GuidedTour, { PROFESSIONAL_TOUR_STEPS, PATIENT_TOUR_STEPS } from "@/components/common/GuidedTour";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
 import { PROFESSIONAL_SLIDES, PATIENT_SLIDES } from "@/lib/presentationSlides";
-import { GraduationCap, Stethoscope, User, Play, CheckCircle2, RotateCcw, Clapperboard } from "lucide-react";
+import { GraduationCap, Stethoscope, User, Play, CheckCircle2, RotateCcw, Clapperboard, Map } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
