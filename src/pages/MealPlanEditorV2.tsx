@@ -190,6 +190,12 @@ export default function MealPlanEditorV2() {
         targetDay={1}
         targetMealType="breakfast"
       />
+      <MealLibraryModal
+        open={mealLibModalOpen}
+        onOpenChange={setMealLibModalOpen}
+        targetDay={1}
+        targetMealType="breakfast"
+      />
     </DashboardLayout>
   );
 }
