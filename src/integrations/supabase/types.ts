@@ -7380,6 +7380,7 @@ export type Database = {
           plateau_probability: number | null
           ranking_nickname: string | null
           regain_probability: number | null
+          search_vector: unknown
           show_in_ranking: boolean
           updated_at: string
           user_id: string
@@ -7410,6 +7411,7 @@ export type Database = {
           plateau_probability?: number | null
           ranking_nickname?: string | null
           regain_probability?: number | null
+          search_vector?: unknown
           show_in_ranking?: boolean
           updated_at?: string
           user_id: string
@@ -7440,6 +7442,7 @@ export type Database = {
           plateau_probability?: number | null
           ranking_nickname?: string | null
           regain_probability?: number | null
+          search_vector?: unknown
           show_in_ranking?: boolean
           updated_at?: string
           user_id?: string
