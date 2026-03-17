@@ -861,68 +861,45 @@ export default function Patients() {
               </div>
             )}
 
-            {/* Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            {/* Status Tabs (server-side filter) */}
+            <Tabs value={statusTab === "active" ? "ativos" : statusTab === "inactive" ? "inativos" : "todos"} onValueChange={handleTabChange} className="space-y-4">
               <TabsList className="flex flex-wrap h-auto gap-1">
                 <TabsTrigger value="ativos" className="gap-1.5">
                   <UserCheck className="w-3.5 h-3.5" /> Ativos
-                  <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{activePatientsList.length}</Badge>
+                  <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{counts.active}</Badge>
                 </TabsTrigger>
                 <TabsTrigger value="inativos" className="gap-1.5">
                   <UserX className="w-3.5 h-3.5" /> Inativos
-                  <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{inactivePatientsList.length}</Badge>
-                </TabsTrigger>
-                {programs.map(prog => (
-                  <TabsTrigger key={prog.id} value={`prog-${prog.id}`} className="gap-1.5">
-                    <Target className="w-3.5 h-3.5" /> {prog.title}
-                    <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
-                      {programPatientLists.get(prog.id)?.length || 0}
-                    </Badge>
-                  </TabsTrigger>
-                ))}
-                <TabsTrigger value="sem-projeto" className="gap-1.5">
-                  <UserX className="w-3.5 h-3.5" /> Sem projeto
-                  <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
-                    {patients.filter(p => p.status === "active" && (!p.programs || p.programs.length === 0)).length}
-                  </Badge>
+                  <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{counts.inactive}</Badge>
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="ativos">
-                <PatientGrid patients={activePatientsList} navigate={navigateToPatient}
-                  toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
-                  setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
-                  onUpdateExpiry={updateExpiry}
-                  search={search} emptyMessage="Nenhum paciente ativo" layout={layout} allPrestigePlans={prestigePlansList} onlineSet={onlineSet} />
-              </TabsContent>
-
-              <TabsContent value="inativos">
-                <PatientGrid patients={inactivePatientsList} navigate={navigateToPatient}
-                  toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
-                  setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
-                  onUpdateExpiry={updateExpiry}
-                  search={search} emptyMessage="Nenhum paciente inativo" layout={layout} allPrestigePlans={prestigePlansList} onlineSet={onlineSet} />
-              </TabsContent>
-
-              {programs.map(prog => (
-                <TabsContent key={prog.id} value={`prog-${prog.id}`}>
-                  <PatientGrid patients={programPatientLists.get(prog.id) || []} navigate={navigateToPatient}
-                    toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
-                    setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
-                    onUpdateExpiry={updateExpiry}
-                    search={search} emptyMessage={`Nenhum paciente no programa "${prog.title}"`} layout={layout} allPrestigePlans={prestigePlansList} onlineSet={onlineSet} />
-                </TabsContent>
-              ))}
-
-              <TabsContent value="sem-projeto">
+              {/* Single content area with paginated results */}
+              <div>
+                {/* Client-side filtered list from current page */}
                 <PatientGrid
-                  patients={patients.filter(p => p.status === "active" && (!p.programs || p.programs.length === 0) && searchFilter(p) && prestigeFilterFn(p))}
+                  patients={filteredPatients}
                   navigate={navigateToPatient}
-                  toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
-                  setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
+                  toggleStatus={toggleStatus}
+                  setAssignTarget={setAssignTarget}
+                  setAssignDialogOpen={setAssignDialogOpen}
+                  removeFromProgram={removeFromProgram}
                   onUpdateExpiry={updateExpiry}
-                  search={search} emptyMessage="Todos os pacientes ativos estão em pelo menos um projeto 🎉" layout={layout} allPrestigePlans={prestigePlansList} onlineSet={onlineSet} />
-              </TabsContent>
+                  search={search}
+                  emptyMessage={statusTab === "active" ? "Nenhum paciente ativo" : statusTab === "inactive" ? "Nenhum paciente inativo" : "Nenhum paciente encontrado"}
+                  layout={layout}
+                  allPrestigePlans={prestigePlansList}
+                  onlineSet={onlineSet}
+                />
+
+                {/* Pagination Controls */}
+                <PaginationControls
+                  pagination={pagination}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={handlePageSizeChange}
+                  isLoading={isFetching}
+                />
+              </div>
             </Tabs>
           </>
         )}
