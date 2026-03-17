@@ -1927,6 +1927,36 @@ export type Database = {
         }
         Relationships: []
       }
+      clinical_system_parameters: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          parameter_key: string
+          parameter_value: number
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          parameter_key: string
+          parameter_value: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          parameter_key?: string
+          parameter_value?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cluster_protocol_matrix: {
         Row: {
           avg_adherence: number | null
@@ -3157,6 +3187,99 @@ export type Database = {
           patient_id?: string
           previous_type?: string | null
           trigger_source?: string
+        }
+        Relationships: []
+      }
+      metabolic_phase_history: {
+        Row: {
+          calories_after: number | null
+          calories_before: number | null
+          clinical_reason: string | null
+          confidence_score: number | null
+          created_at: string
+          created_by: string | null
+          engine_version: string | null
+          id: string
+          macro_adjustments: Json | null
+          patient_id: string
+          phase_type: string
+          previous_phase: string | null
+          strategy_type: string
+          trigger_source: string | null
+        }
+        Insert: {
+          calories_after?: number | null
+          calories_before?: number | null
+          clinical_reason?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          created_by?: string | null
+          engine_version?: string | null
+          id?: string
+          macro_adjustments?: Json | null
+          patient_id: string
+          phase_type: string
+          previous_phase?: string | null
+          strategy_type?: string
+          trigger_source?: string | null
+        }
+        Update: {
+          calories_after?: number | null
+          calories_before?: number | null
+          clinical_reason?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          created_by?: string | null
+          engine_version?: string | null
+          id?: string
+          macro_adjustments?: Json | null
+          patient_id?: string
+          phase_type?: string
+          previous_phase?: string | null
+          strategy_type?: string
+          trigger_source?: string | null
+        }
+        Relationships: []
+      }
+      metabolic_phase_strategy_rules: {
+        Row: {
+          caloric_adjustment_range: Json | null
+          clinical_guidelines: string | null
+          created_at: string
+          default_adjustment_type: string
+          guardrails: Json | null
+          id: string
+          is_active: boolean | null
+          macro_redistribution: Json | null
+          phase_type: string
+          protein_priority: string | null
+          updated_at: string
+        }
+        Insert: {
+          caloric_adjustment_range?: Json | null
+          clinical_guidelines?: string | null
+          created_at?: string
+          default_adjustment_type?: string
+          guardrails?: Json | null
+          id?: string
+          is_active?: boolean | null
+          macro_redistribution?: Json | null
+          phase_type: string
+          protein_priority?: string | null
+          updated_at?: string
+        }
+        Update: {
+          caloric_adjustment_range?: Json | null
+          clinical_guidelines?: string | null
+          created_at?: string
+          default_adjustment_type?: string
+          guardrails?: Json | null
+          id?: string
+          is_active?: boolean | null
+          macro_redistribution?: Json | null
+          phase_type?: string
+          protein_priority?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -7133,6 +7256,8 @@ export type Database = {
           id: string
           metabolic_confidence_score: number | null
           metabolic_last_evaluated_at: string | null
+          metabolic_phase: string | null
+          metabolic_phase_last_updated_at: string | null
           metabolic_response_type: string | null
           phone: string | null
           plateau_probability: number | null
@@ -7161,6 +7286,8 @@ export type Database = {
           id?: string
           metabolic_confidence_score?: number | null
           metabolic_last_evaluated_at?: string | null
+          metabolic_phase?: string | null
+          metabolic_phase_last_updated_at?: string | null
           metabolic_response_type?: string | null
           phone?: string | null
           plateau_probability?: number | null
@@ -7189,6 +7316,8 @@ export type Database = {
           id?: string
           metabolic_confidence_score?: number | null
           metabolic_last_evaluated_at?: string | null
+          metabolic_phase?: string | null
+          metabolic_phase_last_updated_at?: string | null
           metabolic_response_type?: string | null
           phone?: string | null
           plateau_probability?: number | null
@@ -9758,6 +9887,16 @@ export type Database = {
         | "premium_ambassador"
         | "custom"
       app_role: "nutritionist" | "patient" | "admin" | "personal"
+      caloric_adjustment_type:
+        | "keep_current"
+        | "reduce_calories_light"
+        | "reduce_calories_moderate"
+        | "increase_calories_gradual"
+        | "start_diet_break"
+        | "start_reverse_phase"
+        | "maintain_and_monitor"
+        | "switch_template_same_calories"
+        | "require_manual_review"
       challenge_status: "active" | "completed" | "expired"
       commission_status:
         | "pending"
@@ -9790,6 +9929,16 @@ export type Database = {
         | "afternoon_snack"
         | "dinner"
         | "evening_snack"
+      metabolic_phase_type:
+        | "initial_response"
+        | "active_loss"
+        | "slowing_response"
+        | "plateau_risk"
+        | "plateau_active"
+        | "consolidation"
+        | "recovery"
+        | "maintenance"
+        | "recomposition"
       payment_gateway:
         | "stripe"
         | "mercado_pago"
@@ -9952,6 +10101,17 @@ export const Constants = {
         "custom",
       ],
       app_role: ["nutritionist", "patient", "admin", "personal"],
+      caloric_adjustment_type: [
+        "keep_current",
+        "reduce_calories_light",
+        "reduce_calories_moderate",
+        "increase_calories_gradual",
+        "start_diet_break",
+        "start_reverse_phase",
+        "maintain_and_monitor",
+        "switch_template_same_calories",
+        "require_manual_review",
+      ],
       challenge_status: ["active", "completed", "expired"],
       commission_status: [
         "pending",
@@ -9987,6 +10147,17 @@ export const Constants = {
         "afternoon_snack",
         "dinner",
         "evening_snack",
+      ],
+      metabolic_phase_type: [
+        "initial_response",
+        "active_loss",
+        "slowing_response",
+        "plateau_risk",
+        "plateau_active",
+        "consolidation",
+        "recovery",
+        "maintenance",
+        "recomposition",
       ],
       payment_gateway: ["stripe", "mercado_pago", "pagseguro", "pix", "manual"],
       payout_status: ["pending", "processing", "paid", "failed"],
