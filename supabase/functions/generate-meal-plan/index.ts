@@ -163,7 +163,7 @@ function isDisliked(name: string, desc: string, disliked: string[]): boolean {
 // ──── Generate plan items from template ────
 function generatePlanFromTemplate(
   template: any, kcalTarget: number, macros: { protein: number; carbs: number; fat: number },
-  restrictions: string[], disliked: string[]
+  restrictions: string[], disliked: string[], planOptionIndex: number = 0
 ): any[] {
   const meals = (template.meals || []) as any[];
   const items: any[] = [];
@@ -217,9 +217,13 @@ function generatePlanFromTemplate(
       }
       if (allowedFoods.length === 0) allowedFoods = foods;
 
-      const dayFoods = allowedFoods.map((f: any) => {
-        if (day > 0 && day % 2 === 0 && (f.substitutions || []).length > 0 && !f._substituted) {
-          const subIdx = (day - 1) % f.substitutions.length;
+      // Use planOptionIndex to create different rotation patterns per option
+      const rotationSeed = planOptionIndex * 3;
+      const dayFoods = allowedFoods.map((f: any, fIdx: number) => {
+        // Different option = different days trigger substitution
+        const shouldRotate = (day + rotationSeed + fIdx) % 3 !== 0;
+        if (shouldRotate && (f.substitutions || []).length > 0 && !f._substituted) {
+          const subIdx = (day + planOptionIndex + fIdx) % f.substitutions.length;
           const subName = f.substitutions[subIdx];
           if (isFoodAllowed(subName, "", restrictions) && !isDisliked(subName, "", disliked)) {
             return { ...f, name: subName, _rotated: true };
@@ -462,8 +466,9 @@ serve(async (req) => {
       const generatedPlans: any[] = [];
       const nutritionistId = body.nutritionistId;
 
-      for (const template of topTemplates) {
-        const planItems = generatePlanFromTemplate(template, finalKcal, finalMacros, restrictions, disliked);
+      for (let tplIdx = 0; tplIdx < topTemplates.length; tplIdx++) {
+        const template = topTemplates[tplIdx];
+        const planItems = generatePlanFromTemplate(template, finalKcal, finalMacros, restrictions, disliked, tplIdx);
         const genMeta = buildGenerationMetadata(
           tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
           age, sex, activityLevel, dataSource, template, scoredTemplates,
@@ -476,7 +481,7 @@ serve(async (req) => {
         const { data: newPlan, error: planErr } = await serviceClient
           .from("meal_plans")
           .insert({
-            title: `Opção — ${template.name}`,
+            title: `Opção ${tplIdx + 1} — ${template.name}`,
             description: `Gerado pelo Protocolo FitJourney v${ENGINE_VERSION}. Template: ${template.name}. Meta: ${finalKcal}kcal/dia. Score: ${template._score}pts.`,
             patient_id,
             nutritionist_id: nutritionistId,

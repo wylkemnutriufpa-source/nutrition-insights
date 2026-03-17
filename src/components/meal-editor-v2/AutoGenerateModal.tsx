@@ -17,6 +17,7 @@ import {
   generateMealPlanFromLibrary,
   loadPatientProfile,
   slotsToInserts,
+  setGenerationSeed,
   type PatientProfile,
   type AutoGenerationResult,
   type MealDistribution,
@@ -97,6 +98,8 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
       weight: profile?.weight,
     };
 
+    // Seed with patient ID + timestamp for unique plans
+    setGenerationSeed(plan?.patient_id || "", Date.now() % 1000);
     const res = await generateMealPlanFromLibrary(profileInput, DEFAULT_DIST);
     setResult(res);
     setStep("preview");
