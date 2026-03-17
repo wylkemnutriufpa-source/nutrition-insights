@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,7 +13,8 @@ import {
   CheckCircle2, Circle, Calendar, ChevronLeft, ChevronRight,
   Utensils, Coffee, Apple, Cookie, Moon, Sun, Flame,
   Trophy, Beef, Wheat, Droplets, AlertCircle, MinusCircle,
-  BarChart3, TrendingUp, CalendarDays, CalendarRange, Star
+  BarChart3, TrendingUp, CalendarDays, CalendarRange, Star,
+  Zap, Shield, Focus, Eye, Sparkles, Award, Timer
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { MealDetailModal, type MealDetailData } from "@/components/patient/MealDetailModal";
