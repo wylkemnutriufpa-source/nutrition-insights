@@ -1293,16 +1293,21 @@ export default function Index() {
   const tourKey = isNutritionist ? "tour_professional_completed" : "tour_patient_completed";
   const onboardingKey = isNutritionist ? "fitjourney_professional_onboarding_completed" : "patient_onboarding_completed";
 
-  // Auto-trigger tour after onboarding is done but tour isn't
+  // Auto-trigger tour after onboarding — with 30min cooldown
   useEffect(() => {
     if (loading) return;
     const onboardingDone = localStorage.getItem(onboardingKey) === "true";
     const tourDone = localStorage.getItem(tourKey) === "true";
-    if (onboardingDone && !tourDone) {
-      // Small delay to let the dashboard render first
-      const timer = setTimeout(() => setShowTour(true), 1500);
-      return () => clearTimeout(timer);
+    if (tourDone || !onboardingDone) return;
+
+    const dismissedAt = localStorage.getItem(`${tourKey}_dismissed_at`);
+    if (dismissedAt) {
+      const elapsed = Date.now() - Number(dismissedAt);
+      if (elapsed < 30 * 60 * 1000) return; // 30 min cooldown
     }
+
+    const timer = setTimeout(() => setShowTour(true), 1500);
+    return () => clearTimeout(timer);
   }, [loading, onboardingKey, tourKey]);
 
   if (loading) {
