@@ -12,7 +12,7 @@ import {
   Loader2, Wand2, AlertTriangle, CheckCircle2, Flame, Beef, Wheat, Droplets, Info,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
+import { useMealPlanEditorV2Store, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
 import {
   generateMealPlanFromLibrary,
   loadPatientProfile,
@@ -109,42 +109,68 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
   const handleApply = useCallback(async () => {
     if (!result || !planId) return;
 
-    // Delete existing items first (substitution logic)
-    const existingIds = currentItems.filter((i) => !i.id.startsWith("temp-")).map((i) => i.id);
-    if (existingIds.length > 0) {
-      await supabase.from("meal_plan_items").delete().in("id", existingIds);
-    }
+    try {
+      // 1. Delete existing items from DB
+      const existingIds = currentItems.filter((i) => !i.id.startsWith("temp-")).map((i) => i.id);
+      if (existingIds.length > 0) {
+        await supabase.from("meal_plan_items").delete().in("id", existingIds);
+      }
 
-    // Generate inserts
-    const inserts = slotsToInserts(result.slots, planId);
-    
-    // Reset items in store and add new ones
-    useMealPlanEditorV2Store.setState({ items: [] });
-    addItems(inserts);
+      // 2. Generate inserts from generated slots
+      const inserts = slotsToInserts(result.slots, planId);
 
-    // Update plan status + metadata
-    await supabase
-      .from("meal_plans")
-      .update({
+      // 3. Insert directly into DB (bypass queue to guarantee persistence)
+      const { data: savedItems, error: insertError } = await supabase
+        .from("meal_plan_items")
+        .insert(inserts)
+        .select();
+
+      if (insertError) {
+        console.error("[AutoGenerate] Insert error:", insertError);
+        toast.error("Erro ao salvar refeições geradas: " + insertError.message);
+        return;
+      }
+
+      // 4. Update store with real persisted items
+      useMealPlanEditorV2Store.setState({
+        items: (savedItems || []) as MealPlanItem[],
+        pendingOps: [],
+        syncStatus: "saved",
+        lastSavedAt: Date.now(),
+      });
+
+      // 5. Update plan status + metadata
+      await supabase
+        .from("meal_plans")
+        .update({
+          plan_status: "draft_auto_generated",
+          generation_source: "meal_library_engine",
+          generation_metadata: result.metadata as any,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", planId);
+
+      useMealPlanEditorV2Store.getState().updatePlan({
         plan_status: "draft_auto_generated",
         generation_source: "meal_library_engine",
         generation_metadata: result.metadata as any,
         updated_at: new Date().toISOString(),
-      })
-      .eq("id", planId);
+      } as any);
 
-    useMealPlanEditorV2Store.getState().updatePlan({
-      plan_status: "draft_auto_generated",
-      generation_source: "meal_library_engine",
-      generation_metadata: result.metadata as any,
-      updated_at: new Date().toISOString(),
-    } as any);
+      // 6. Persist snapshot to sessionStorage
+      useMealPlanEditorV2Store.getState()._persistSnapshot();
 
-    toast.success("Plano gerado automaticamente! Revise e salve.");
+      toast.success(`Plano gerado com ${savedItems?.length || 0} refeições! Revise e salve.`);
+    } catch (err: any) {
+      console.error("[AutoGenerate] Error:", err);
+      toast.error("Erro ao aplicar plano: " + (err?.message || "Tente novamente"));
+      return;
+    }
+
     onOpenChange(false);
     setStep("config");
     setResult(null);
-  }, [result, planId, currentItems, addItems, onOpenChange]);
+  }, [result, planId, currentItems, onOpenChange]);
 
   const handleClose = () => {
     onOpenChange(false);
