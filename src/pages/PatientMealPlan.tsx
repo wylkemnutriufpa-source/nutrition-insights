@@ -205,7 +205,7 @@ export default function PatientMealPlan() {
       .eq("meal_plan_id", planData.id)
       .eq("date", date);
 
-    setCompletions(completionsData || []);
+    setCompletions((completionsData || []) as unknown as MealCompletion[]);
 
     // Fetch week completions
     const weekStart = weekDates[0];
