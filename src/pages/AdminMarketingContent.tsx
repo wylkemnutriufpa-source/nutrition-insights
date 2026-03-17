@@ -10,6 +10,7 @@ import {
   Sparkles, Instagram, Copy, Download, RefreshCw, Eye,
   Wand2, CheckCircle, Clock, FileText,
 } from "lucide-react";
+import { MagicSlideButton } from "@/components/common/MagicSlideGenerator";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
