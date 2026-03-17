@@ -97,6 +97,9 @@ export default function BiquiniBrancoDetail() {
   const [selectedPatient, setSelectedPatient] = useState<EnrolledPatient | null>(null);
   const [aiInsight, setAiInsight] = useState<AIInsight | null>(null);
   const [loadingAI, setLoadingAI] = useState(false);
+  const [prestigePlans, setPrestigePlans] = useState<any[]>([]);
+  const [selectedPrestigePlanId, setSelectedPrestigePlanId] = useState<string>("");
+  const [syncingPrestige, setSyncingPrestige] = useState(false);
 
   const fetchAll = useCallback(async () => {
     if (!programId || !user) return;
