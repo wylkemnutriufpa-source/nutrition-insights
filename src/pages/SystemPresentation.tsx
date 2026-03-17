@@ -77,11 +77,11 @@ export default function SystemPresentation() {
   const [cinematicProDone, setCinematicProDone] = useState(() => localStorage.getItem(CINEMATIC_PRO_KEY) === "true");
   const [cinematicPatDone, setCinematicPatDone] = useState(() => localStorage.getItem(CINEMATIC_PAT_KEY) === "true");
 
-  // 🧠 Guide Engine — dynamic slides from feature_registry
-  const { slides: proLiveSlides, newFeatures: proNew } = useFeatureGuide("professional");
-  const { slides: patLiveSlides, newFeatures: patNew } = useFeatureGuide("patient");
+  // 🧠 Guide Engine — dynamic enriched slides from feature_registry
+  const { enrichedSlides: proLiveSlides, newFeatures: proNew } = useFeatureGuide("professional");
+  const { enrichedSlides: patLiveSlides, newFeatures: patNew } = useFeatureGuide("patient");
 
-  // Use live slides if available, fallback to static
+  // Use live enriched slides if available, fallback to static
   const proSlides = proLiveSlides.length > 0 ? proLiveSlides : PROFESSIONAL_SLIDES;
   const patSlides = patLiveSlides.length > 0 ? patLiveSlides : PATIENT_SLIDES;
 
