@@ -108,6 +108,7 @@ const ClinicalRiskDashboard = lazy(() => import("./pages/ClinicalRiskDashboard")
 const AdminProtocolFitJourney = lazy(() => import("./pages/AdminProtocolFitJourney"));
 const AdminProtocolBiquiniBranco = lazy(() => import("./pages/AdminProtocolBiquiniBranco"));
 const AdminNutritionProtocols = lazy(() => import("./pages/AdminNutritionProtocols"));
+const AdminGuideEngine = lazy(() => import("./pages/AdminGuideEngine"));
 const TherapeuticIntelligence = lazy(() => import("./pages/TherapeuticIntelligence"));
 const ProtocolTransitions = lazy(() => import("./pages/ProtocolTransitions"));
 const ClinicalOrchestration = lazy(() => import("./pages/ClinicalOrchestration"));
