@@ -90,6 +90,61 @@ function getMotivationalMessage(pct: number): { emoji: string; message: string; 
   return { emoji: "⏳", message: "Marque suas refeições para acompanhar sua evolução!", color: "text-muted-foreground" };
 }
 
+// XP Popup component
+function XPPopup({ show, points }: { show: boolean; points: number }) {
+  if (!show) return null;
+  return (
+    <motion.div
+      className="fixed top-20 right-6 z-50 pointer-events-none"
+      initial={{ opacity: 0, y: 20, scale: 0.8 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -30, scale: 0.6 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+    >
+      <div className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30 backdrop-blur-sm">
+        <Zap className="w-5 h-5" />
+        <span className="font-display font-bold text-lg">+{points} XP</span>
+      </div>
+    </motion.div>
+  );
+}
+
+// Streak badge component
+function StreakBadge({ count }: { count: number }) {
+  if (count < 2) return null;
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-500/15 border border-orange-500/30 text-orange-500"
+    >
+      <Flame className="w-3.5 h-3.5" />
+      <span className="text-xs font-bold">{count} seguidas!</span>
+    </motion.div>
+  );
+}
+
+// Physiological impact tags
+const IMPACT_TAGS: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
+  satiety: { icon: <Shield className="w-3 h-3" />, label: "Saciedade", color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" },
+  energy: { icon: <Zap className="w-3 h-3" />, label: "Energia", color: "text-amber-500 bg-amber-500/10 border-amber-500/20" },
+  recovery: { icon: <Award className="w-3 h-3" />, label: "Recuperação", color: "text-blue-500 bg-blue-500/10 border-blue-500/20" },
+  glycemic: { icon: <TrendingUp className="w-3 h-3" />, label: "Controle Glicêmico", color: "text-purple-500 bg-purple-500/10 border-purple-500/20" },
+};
+
+function getImpactTags(meal: MealPlanItem) {
+  const tags: string[] = [];
+  const p = Number(meal.protein_target) || 0;
+  const c = Number(meal.carbs_target) || 0;
+  const f = Number(meal.fat_target) || 0;
+  const cal = meal.calories_target || 0;
+  if (p > 20) tags.push("recovery");
+  if (p > 15 && f > 8) tags.push("satiety");
+  if (c > 30 && cal > 200) tags.push("energy");
+  if (p > c && c < 40) tags.push("glycemic");
+  return tags;
+}
+
 export default function PatientMealPlan() {
   const { user } = useAuth();
   const [plan, setPlan] = useState<MealPlan | null>(null);
@@ -101,6 +156,10 @@ export default function PatientMealPlan() {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [viewMode, setViewMode] = useState<"daily" | "weekly">("daily");
   const [selectedMeal, setSelectedMeal] = useState<MealDetailData | null>(null);
+  const [focusMode, setFocusMode] = useState(false);
+  const [xpPopup, setXpPopup] = useState<{ show: boolean; points: number }>({ show: false, points: 0 });
+  const [justCompleted, setJustCompleted] = useState<string | null>(null);
+  const xpTimerRef = useRef<number | null>(null);
 
   const dayOfWeek = new Date(date + "T12:00:00").getDay();
   const isToday = date === new Date().toISOString().split("T")[0];
