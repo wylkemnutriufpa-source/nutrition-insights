@@ -25,10 +25,11 @@ import { useOnlinePatients } from "@/hooks/useOnlinePatients";
 import {
   usePatientsList, useTogglePatientStatus, useAddPatient,
   useRemoveFromProgram, useUpdateExpiry, useBulkToggle, useAssignToProgram,
-  trackPatientView,
+  trackPatientView, DEFAULT_PAGE_SIZE,
 } from "@/hooks/queries/usePatientsList";
-import type { PatientInfo, ProgramInfo } from "@/hooks/queries/usePatientsList";
+import type { PatientInfo, ProgramInfo, PatientsListParams } from "@/hooks/queries/usePatientsList";
 import type { PrestigePlan } from "@/hooks/usePrestige";
+import PaginationControls from "@/components/patients/PaginationControls";
 
 // ─── Score helpers ───
 function getScoreTier(score: number): { label: string; color: string; bg: string; ring: string; icon: React.ReactNode; description: string } {
