@@ -127,6 +127,7 @@ const PlatformGovernance = lazy(() => import("./pages/PlatformGovernance"));
 const ClinicalPipeline = lazy(() => import("./pages/ClinicalPipeline"));
 const Integrations = lazy(() => import("./pages/Integrations"));
 const SystemPresentation = lazy(() => import("./pages/SystemPresentation"));
+const OnboardingProfissional = lazy(() => import("./pages/OnboardingProfissional"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
