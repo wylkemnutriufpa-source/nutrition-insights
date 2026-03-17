@@ -10,15 +10,18 @@ import { toast } from "sonner";
 import {
   ArrowLeft, Share2, Download, Shield, ChevronRight, Sparkles,
   TrendingDown, TrendingUp, Minus, Eye, History, Clock, Lock,
-  CalendarCheck, Plus, Trash2, AlertTriangle, BarChart3
+  CalendarCheck, Plus, Trash2, AlertTriangle, BarChart3,
+  Target, Zap, Brain, Activity, Award
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, ReferenceLine, Area, AreaChart
+  XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, Area, AreaChart
 } from "recharts";
+import { PROJECTION_DISCLAIMER } from "@/services/bodyProjectionVisualizer";
+import { evaluateAccuracy } from "@/services/bodyProjectionEngine";
 
 // ==========================================
 // TYPES
@@ -30,13 +33,24 @@ interface BodyData {
   muscularity_level?: string;
   weight?: number;
   bmi?: number;
+  body_fat?: number | null;
   projected_weight?: number;
   projected_bmi?: number;
+  projected_body_fat?: number | null;
   weight_delta?: number;
   confidence_score: number;
   clinical_phase?: string;
   projected_phase?: string;
   recommended_strategy?: string;
+  metabolic_response_type?: string;
+  historical_analysis?: {
+    metabolic_response_type: string;
+    regain_probability: number;
+    plateau_probability: number;
+    behavioral_consistency_score: number;
+    yoyo_cycles: number;
+    has_sufficient_history: boolean;
+  };
 }
 
 interface Snapshot {
@@ -52,6 +66,14 @@ interface Snapshot {
   confidence_score: number;
   current_metrics_json: any;
   projected_metrics_json: any;
+  projected_body_fat: number | null;
+  metabolic_adaptation_index: number | null;
+  adherence_prediction_score: number | null;
+  plateau_risk: number | null;
+  visual_state_seed: any;
+  projection_accuracy: number | null;
+  accuracy_evaluated_at: string | null;
+  engine_version: string | null;
 }
 
 interface WeightHistoryEntry {
@@ -97,6 +119,17 @@ const TIMEFRAME_LABELS: Record<string, string> = {
   "365d": "1 ano",
 };
 
+const METABOLIC_TYPE_LABELS: Record<string, { label: string; emoji: string; color: string }> = {
+  rapid_responder: { label: "Respondedor Rápido", emoji: "⚡", color: "text-emerald-400" },
+  stable_transformer: { label: "Transformador Estável", emoji: "🎯", color: "text-blue-400" },
+  slow_responder: { label: "Respondedor Gradual", emoji: "🐢", color: "text-amber-400" },
+  plateau_prone: { label: "Propenso a Platô", emoji: "📊", color: "text-orange-400" },
+  weight_cycler: { label: "Ciclo Sanfona", emoji: "🔄", color: "text-red-400" },
+  behavioral_inconsistent: { label: "Padrão Variável", emoji: "📈", color: "text-purple-400" },
+  resistant_metabolism: { label: "Metabolismo Resistente", emoji: "🛡️", color: "text-rose-400" },
+  unknown: { label: "Em Análise", emoji: "🔬", color: "text-muted-foreground" },
+};
+
 // ==========================================
 // BODY SILHOUETTE COMPONENT
 // ==========================================
@@ -136,7 +169,10 @@ function BodySilhouette({ data, label, isProjection = false }: { data: BodyData;
       </div>
       <div className="text-center space-y-0.5">
         <p className="text-base font-bold text-foreground">{data.projected_weight || data.weight || "—"} kg</p>
-        <p className="text-[10px] text-muted-foreground">IMC {data.projected_bmi || data.bmi || "—"} • {config.label}</p>
+        <p className="text-[10px] text-muted-foreground">
+          IMC {data.projected_bmi || data.bmi || "—"} • {config.label}
+          {(data.projected_body_fat || data.body_fat) && ` • ${data.projected_body_fat || data.body_fat}% GC`}
+        </p>
         <div className="flex items-center justify-center gap-1">
           <div className={`w-1.5 h-1.5 rounded-full ${data.confidence_score > 0.6 ? "bg-emerald-400" : "bg-yellow-400"}`} />
           <span className="text-[10px] text-muted-foreground">{Math.round(data.confidence_score * 100)}%</span>
@@ -162,14 +198,10 @@ function WeightHistoryForm({ patientId, onSaved }: { patientId: string; onSaved:
   const handleSave = async () => {
     const validEntries = entries.filter(e => e.weight && e.date);
     if (validEntries.length === 0) { toast.error("Preencha pelo menos um registro"); return; }
-
-    // Validate dates
     const today = new Date().toISOString().slice(0, 10);
     for (const entry of validEntries) {
       if (entry.date > today) { toast.error("Datas futuras não são permitidas"); return; }
     }
-
-    // Check duplicates within entries
     const dates = validEntries.map(e => e.date);
     if (new Set(dates).size !== dates.length) { toast.error("Datas duplicadas encontradas"); return; }
 
@@ -182,11 +214,7 @@ function WeightHistoryForm({ patientId, onSaved }: { patientId: string; onSaved:
         measurement_source: "retrospective",
         body_fat_percentage: e.bodyFat ? parseFloat(e.bodyFat) : null,
       }));
-
-      const { error } = await supabase.from("patient_weight_history").upsert(rows, {
-        onConflict: "patient_id,measurement_date",
-      });
-
+      const { error } = await supabase.from("patient_weight_history").upsert(rows, { onConflict: "patient_id,measurement_date" });
       if (error) throw error;
       toast.success(`${rows.length} registro(s) salvos!`);
       setEntries([{ weight: "", date: "", bodyFat: "" }]);
@@ -204,8 +232,7 @@ function WeightHistoryForm({ patientId, onSaved }: { patientId: string; onSaved:
         <History className="w-4 h-4 text-primary" />
         Histórico Retroativo de Peso
       </h3>
-      <p className="text-[10px] text-muted-foreground">Adicione registros de peso anteriores para melhorar a precisão da projeção.</p>
-
+      <p className="text-[10px] text-muted-foreground">Adicione registros anteriores para calibrar o motor de projeção.</p>
       <div className="space-y-2 max-h-48 overflow-y-auto">
         {entries.map((entry, i) => (
           <div key={i} className="flex items-center gap-2">
@@ -226,7 +253,6 @@ function WeightHistoryForm({ patientId, onSaved }: { patientId: string; onSaved:
           </div>
         ))}
       </div>
-
       <div className="flex items-center gap-2">
         <Button variant="outline" size="sm" className="text-xs h-7" onClick={addRow}>
           <Plus className="w-3 h-3 mr-1" /> Adicionar
@@ -246,54 +272,28 @@ function WeightHistoryForm({ patientId, onSaved }: { patientId: string; onSaved:
 function ProjectionChart({ snapshots, weightHistory }: { snapshots: Snapshot[]; weightHistory: WeightHistoryEntry[] }) {
   const chartData = useMemo(() => {
     const points: { date: string; label: string; weight: number; type: "history" | "current" | "projection" }[] = [];
-
-    // Weight history points
     for (const wh of weightHistory) {
-      points.push({
-        date: wh.measurement_date,
-        label: format(new Date(wh.measurement_date), "MMM/yy", { locale: ptBR }),
-        weight: wh.weight,
-        type: "history",
-      });
+      points.push({ date: wh.measurement_date, label: format(new Date(wh.measurement_date), "MMM/yy", { locale: ptBR }), weight: wh.weight, type: "history" });
     }
-
-    // Current weight from latest snapshot
     const latestGroup = snapshots.filter(s => s.created_at === snapshots[0]?.created_at?.slice(0, 10) || true);
     if (latestGroup.length > 0) {
       const current = latestGroup[0].current_body_json;
       if (current?.weight) {
-        points.push({
-          date: new Date().toISOString().slice(0, 10),
-          label: "Hoje",
-          weight: current.weight,
-          type: "current",
-        });
+        points.push({ date: new Date().toISOString().slice(0, 10), label: "Hoje", weight: current.weight, type: "current" });
       }
     }
-
-    // Projection points
-    const latestByTimeframe = new Map<string, Snapshot>();
+    const latestByTf = new Map<string, Snapshot>();
     for (const snap of snapshots) {
-      if (!latestByTimeframe.has(snap.timeframe)) {
-        latestByTimeframe.set(snap.timeframe, snap);
-      }
+      if (!latestByTf.has(snap.timeframe)) latestByTf.set(snap.timeframe, snap);
     }
-
-    const tfOrder = ["30d", "90d", "180d", "365d"];
-    for (const tf of tfOrder) {
-      const snap = latestByTimeframe.get(tf);
+    for (const tf of ["30d", "90d", "180d", "365d"]) {
+      const snap = latestByTf.get(tf);
       if (snap?.projected_body_json?.projected_weight) {
         const days = parseInt(tf) || 90;
         const futureDate = new Date(Date.now() + days * 86400000);
-        points.push({
-          date: futureDate.toISOString().slice(0, 10),
-          label: TIMEFRAME_LABELS[tf] || tf,
-          weight: snap.projected_body_json.projected_weight,
-          type: "projection",
-        });
+        points.push({ date: futureDate.toISOString().slice(0, 10), label: TIMEFRAME_LABELS[tf] || tf, weight: snap.projected_body_json.projected_weight, type: "projection" });
       }
     }
-
     points.sort((a, b) => a.date.localeCompare(b.date));
     return points;
   }, [snapshots, weightHistory]);
@@ -317,15 +317,11 @@ function ProjectionChart({ snapshots, weightHistory }: { snapshots: Snapshot[]; 
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
           <XAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
           <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} domain={["dataMin - 2", "dataMax + 2"]} />
-          <Tooltip
-            contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }}
-            formatter={(value: number) => [`${value} kg`, "Peso"]}
-          />
+          <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }} formatter={(value: number) => [`${value} kg`, "Peso"]} />
           <Area type="monotone" dataKey="weight" stroke="hsl(var(--primary))" fill="url(#projGrad)" strokeWidth={2} dot={(props: any) => {
             const { cx, cy, payload } = props;
             const color = payload.type === "projection" ? "#10b981" : payload.type === "current" ? "hsl(var(--primary))" : "#94a3b8";
-            const r = payload.type === "current" ? 5 : 4;
-            return <circle cx={cx} cy={cy} r={r} fill={color} stroke="none" />;
+            return <circle cx={cx} cy={cy} r={payload.type === "current" ? 5 : 4} fill={color} stroke="none" />;
           }} />
         </AreaChart>
       </ResponsiveContainer>
@@ -333,6 +329,122 @@ function ProjectionChart({ snapshots, weightHistory }: { snapshots: Snapshot[]; 
         <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-slate-400" /><span className="text-[10px] text-muted-foreground">Histórico</span></div>
         <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-primary" /><span className="text-[10px] text-muted-foreground">Atual</span></div>
         <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500" /><span className="text-[10px] text-muted-foreground">Projeção</span></div>
+      </div>
+    </Card>
+  );
+}
+
+// ==========================================
+// ADVANCED METRICS PANEL
+// ==========================================
+
+function AdvancedMetrics({ snap }: { snap: Snapshot }) {
+  const hist = snap.projected_body_json?.historical_analysis;
+  const metType = hist?.metabolic_response_type || snap.current_body_json?.metabolic_response_type;
+  const metInfo = METABOLIC_TYPE_LABELS[metType || "unknown"] || METABOLIC_TYPE_LABELS.unknown;
+
+  return (
+    <Card className="bg-card/50 border-border/50 p-4 space-y-3">
+      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+        <Brain className="w-4 h-4 text-primary" />
+        Inteligência Metabólica
+      </h3>
+
+      {/* Metabolic profile */}
+      <div className="flex items-center gap-2 p-2 rounded-lg bg-white/5">
+        <span className="text-lg">{metInfo.emoji}</span>
+        <div className="flex-1">
+          <p className={`text-xs font-semibold ${metInfo.color}`}>{metInfo.label}</p>
+          <p className="text-[10px] text-muted-foreground">Perfil metabólico baseado em seu histórico</p>
+        </div>
+      </div>
+
+      {/* Metrics grid */}
+      <div className="grid grid-cols-2 gap-2">
+        {snap.metabolic_adaptation_index !== null && (
+          <div className="p-2 rounded-lg bg-white/5">
+            <div className="flex items-center gap-1 mb-1">
+              <Activity className="w-3 h-3 text-blue-400" />
+              <span className="text-[10px] text-muted-foreground">Adaptação Metabólica</span>
+            </div>
+            <p className="text-sm font-bold text-foreground">{Math.round((snap.metabolic_adaptation_index || 1) * 100)}%</p>
+          </div>
+        )}
+        {snap.plateau_risk !== null && (
+          <div className="p-2 rounded-lg bg-white/5">
+            <div className="flex items-center gap-1 mb-1">
+              <AlertTriangle className="w-3 h-3 text-amber-400" />
+              <span className="text-[10px] text-muted-foreground">Risco de Platô</span>
+            </div>
+            <p className="text-sm font-bold text-foreground">{Math.round((snap.plateau_risk || 0) * 100)}%</p>
+          </div>
+        )}
+        {snap.adherence_prediction_score !== null && (
+          <div className="p-2 rounded-lg bg-white/5">
+            <div className="flex items-center gap-1 mb-1">
+              <Target className="w-3 h-3 text-emerald-400" />
+              <span className="text-[10px] text-muted-foreground">Adesão Prevista</span>
+            </div>
+            <p className="text-sm font-bold text-foreground">{Math.round(snap.adherence_prediction_score || 0)}%</p>
+          </div>
+        )}
+        {snap.projected_body_fat !== null && (
+          <div className="p-2 rounded-lg bg-white/5">
+            <div className="flex items-center gap-1 mb-1">
+              <Zap className="w-3 h-3 text-purple-400" />
+              <span className="text-[10px] text-muted-foreground">% Gordura Projetada</span>
+            </div>
+            <p className="text-sm font-bold text-foreground">{snap.projected_body_fat}%</p>
+          </div>
+        )}
+      </div>
+
+      {/* Historical stats */}
+      {hist?.has_sufficient_history && (
+        <div className="text-[10px] text-muted-foreground border-t border-border/30 pt-2 space-y-1">
+          <p>🔄 Ciclos sanfona: {hist.yoyo_cycles || 0}</p>
+          <p>📊 Prob. platô: {Math.round((hist.plateau_probability || 0) * 100)}%</p>
+          <p>⚠️ Prob. recuperação: {Math.round((hist.regain_probability || 0) * 100)}%</p>
+          <p>🎯 Consistência: {Math.round((hist.behavioral_consistency_score || 0) * 100)}%</p>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+// ==========================================
+// PROJECTION vs ACTUAL COMPARISON
+// ==========================================
+
+function ProjectionVsActual({ snapshots }: { snapshots: Snapshot[] }) {
+  const evaluated = snapshots.filter(s => s.projection_accuracy !== null && s.timeframe === "90d");
+  if (evaluated.length === 0) return null;
+
+  return (
+    <Card className="bg-card/50 border-border/50 p-4 space-y-3">
+      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+        <Award className="w-4 h-4 text-amber-400" />
+        Projeção vs Realidade
+      </h3>
+      <p className="text-[10px] text-muted-foreground">"Meu futuro previsto está se tornando real"</p>
+      <div className="space-y-2">
+        {evaluated.slice(0, 5).map(snap => {
+          const acc = snap.projection_accuracy || 0;
+          const verdict = acc >= 90 ? "🏆 Elite" : acc >= 70 ? "✅ Atingida" : acc >= 50 ? "📊 Próxima" : "⚠️ Divergente";
+          const color = acc >= 90 ? "text-amber-400" : acc >= 70 ? "text-emerald-400" : acc >= 50 ? "text-blue-400" : "text-orange-400";
+          return (
+            <div key={snap.id} className="flex items-center justify-between p-2 rounded-lg bg-white/5">
+              <div>
+                <p className="text-xs text-foreground">{format(new Date(snap.created_at), "dd/MM/yy", { locale: ptBR })}</p>
+                <p className="text-[10px] text-muted-foreground">{snap.projected_body_json?.projected_weight}kg projetado</p>
+              </div>
+              <div className="text-right">
+                <p className={`text-xs font-bold ${color}`}>{Math.round(acc)}% precisão</p>
+                <p className="text-[10px] text-muted-foreground">{verdict}</p>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </Card>
   );
@@ -371,11 +483,9 @@ export default function BodyProjectionExperience() {
         supabase.from("patient_weight_history").select("*").eq("patient_id", user.id)
           .order("measurement_date", { ascending: true }).limit(200),
       ]);
-
       const snaps = (snapRes.data || []) as unknown as Snapshot[];
       setSnapshots(snaps);
       setWeightHistory((histRes.data || []) as unknown as WeightHistoryEntry[]);
-
       if (snaps.length > 0) {
         const latest = snaps[0];
         const lockedUntil = latest.locked_until;
@@ -400,23 +510,15 @@ export default function BodyProjectionExperience() {
     setGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-body-projection", {
-        body: {
-          patient_id: user.id,
-          timeframe: "90d",
-          generation_source: "patient_request",
-          generate_all_timeframes: true,
-        },
+        body: { patient_id: user.id, timeframe: "90d", generation_source: "patient_request", generate_all_timeframes: true },
       });
-
       if (error) throw error;
-
       if (data?.error === "cooldown_active") {
         setCooldownInfo({ locked_until: data.locked_until, eligible: false });
         toast.error("Projeção em período de espera");
         return;
       }
-
-      toast.success("Projeções geradas para todos os horizontes!");
+      toast.success("Projeções geradas pelo FitJourney Intelligence Engine!");
       await loadData();
     } catch (e: any) {
       console.error(e);
@@ -426,7 +528,6 @@ export default function BodyProjectionExperience() {
     }
   };
 
-  // Get latest snapshot for each timeframe
   const latestByTimeframe = useMemo(() => {
     const map = new Map<string, Snapshot>();
     for (const snap of snapshots) {
@@ -438,8 +539,6 @@ export default function BodyProjectionExperience() {
   const activeSnap = latestByTimeframe.get(selectedTimeframe) || snapshots[0] || null;
   const current = activeSnap?.current_body_json;
   const projected = activeSnap?.projected_body_json;
-
-  // Get narrative from 90d snapshot
   const narrative = latestByTimeframe.get("90d")?.narrative || activeSnap?.narrative || null;
 
   const trendIcon = projected?.weight_delta
@@ -470,7 +569,9 @@ export default function BodyProjectionExperience() {
             <Sparkles className="w-5 h-5 text-emerald-400" />
             Body Future Engine
           </h1>
-          <p className="text-xs text-muted-foreground">Projeção Corporal Inteligente</p>
+          <p className="text-[10px] text-muted-foreground">
+            FitJourney Intelligence Engine v{activeSnap?.engine_version || "2.0.0"} • Motor Determinístico + IA Visual
+          </p>
         </div>
         <Button variant="ghost" size="icon" onClick={() => setShowWeightForm(!showWeightForm)} className="text-muted-foreground">
           <Plus className="w-5 h-5" />
@@ -480,7 +581,7 @@ export default function BodyProjectionExperience() {
         </Button>
       </div>
 
-      {/* Clinical Guardrail / Disclaimer */}
+      {/* Guardrail */}
       <AnimatePresence>
         {showDisclaimer && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mx-4 mb-3">
@@ -489,7 +590,7 @@ export default function BodyProjectionExperience() {
                 <Shield className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-xs text-amber-300 font-medium">Guardrail Clínico</p>
-                  <p className="text-[10px] text-amber-300/80 mt-0.5">Esta projeção é uma estimativa educativa e motivacional baseada nos seus dados. Não substitui avaliação profissional. Resultados variam conforme adesão, metabolismo e outros fatores individuais.</p>
+                  <p className="text-[10px] text-amber-300/80 mt-0.5">{PROJECTION_DISCLAIMER.short}</p>
                   <Button variant="ghost" size="sm" className="text-[10px] text-amber-400 mt-1 h-5 px-2" onClick={() => setShowDisclaimer(false)}>Entendi</Button>
                 </div>
               </div>
@@ -498,7 +599,7 @@ export default function BodyProjectionExperience() {
         )}
       </AnimatePresence>
 
-      {/* Cooldown bar */}
+      {/* Cooldown */}
       {activeSnap && (
         <div className="mx-4 mb-3">
           <Card className="bg-card/50 border-primary/20 p-3 flex items-center gap-3">
@@ -508,11 +609,7 @@ export default function BodyProjectionExperience() {
                 Gerada em {format(new Date(activeSnap.created_at), "dd/MM/yyyy", { locale: ptBR })}
               </p>
               <p className="text-[10px] text-muted-foreground">
-                {cooldownInfo?.eligible
-                  ? "✅ Nova projeção disponível"
-                  : cooldownInfo?.locked_until
-                  ? `🔒 Próxima em ${formatDistanceToNow(new Date(cooldownInfo.locked_until), { locale: ptBR })}`
-                  : ""}
+                {cooldownInfo?.eligible ? "✅ Nova projeção disponível" : cooldownInfo?.locked_until ? `🔒 Próxima em ${formatDistanceToNow(new Date(cooldownInfo.locked_until), { locale: ptBR })}` : ""}
               </p>
             </div>
             {cooldownInfo && !cooldownInfo.eligible && <Lock className="w-4 h-4 text-muted-foreground shrink-0" />}
@@ -520,7 +617,7 @@ export default function BodyProjectionExperience() {
         </div>
       )}
 
-      {/* Weight history form */}
+      {/* Weight form */}
       <AnimatePresence>
         {showWeightForm && user && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mx-4 mb-3">
@@ -535,7 +632,7 @@ export default function BodyProjectionExperience() {
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mx-4 mb-3">
             <Card className="bg-card/50 border-border/50 p-4 space-y-3">
               <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <History className="w-4 h-4 text-primary" /> Projeções Anteriores
+                <History className="w-4 h-4 text-primary" /> Linha do Tempo de Projeções
               </h3>
               {snapshots.length === 0 ? (
                 <p className="text-xs text-muted-foreground">Nenhuma projeção salva</p>
@@ -548,9 +645,16 @@ export default function BodyProjectionExperience() {
                         <span className="text-xs font-medium text-foreground">{format(new Date(snap.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</span>
                         <Badge variant="outline" className="text-[10px]">{TIMEFRAME_LABELS[snap.timeframe] || snap.timeframe}</Badge>
                       </div>
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        {snap.generation_source === "assessment" ? "📋 Avaliação" : snap.generation_source === "professional_override" ? "👨‍⚕️ Profissional" : "📊 Manual"} • {Math.round(snap.confidence_score * 100)}%
-                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-[10px] text-muted-foreground">
+                          {snap.generation_source === "assessment" ? "📋 Avaliação" : snap.generation_source === "professional_override" ? "👨‍⚕️ Profissional" : "📊 Manual"}
+                        </p>
+                        {snap.projection_accuracy !== null && (
+                          <Badge className={`text-[9px] h-4 ${snap.projection_accuracy >= 70 ? "bg-emerald-500/20 text-emerald-400" : "bg-amber-500/20 text-amber-400"}`}>
+                            {Math.round(snap.projection_accuracy)}% precisão
+                          </Badge>
+                        )}
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -575,9 +679,7 @@ export default function BodyProjectionExperience() {
               const snap = latestByTimeframe.get(tf);
               const isActive = selectedTimeframe === tf;
               return (
-                <button key={tf}
-                  onClick={() => snap && setSelectedTimeframe(tf)}
-                  disabled={!snap}
+                <button key={tf} onClick={() => snap && setSelectedTimeframe(tf)} disabled={!snap}
                   className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                     isActive ? "bg-primary text-primary-foreground shadow-md" :
                     snap ? "bg-card/50 border border-border/50 text-foreground hover:bg-primary/10" :
@@ -611,10 +713,10 @@ export default function BodyProjectionExperience() {
             </div>
           </Card>
 
-          {/* Projection chart */}
+          {/* Chart */}
           <ProjectionChart snapshots={snapshots} weightHistory={weightHistory} />
 
-          {/* Multi-timeframe summary */}
+          {/* Multi-timeframe grid */}
           <div className="grid grid-cols-2 gap-2">
             {(["30d", "90d", "180d", "365d"] as const).map(tf => {
               const snap = latestByTimeframe.get(tf);
@@ -628,10 +730,19 @@ export default function BodyProjectionExperience() {
                   <p className="text-[10px] text-muted-foreground">
                     {p?.weight_delta ? `${p.weight_delta > 0 ? "+" : ""}${p.weight_delta}kg` : "—"} • {Math.round(snap.confidence_score * 100)}%
                   </p>
+                  {snap.plateau_risk !== null && (
+                    <p className="text-[9px] text-amber-400/70 mt-0.5">Platô: {Math.round((snap.plateau_risk || 0) * 100)}%</p>
+                  )}
                 </Card>
               );
             })}
           </div>
+
+          {/* Advanced metrics */}
+          <AdvancedMetrics snap={activeSnap} />
+
+          {/* Projection vs Actual */}
+          <ProjectionVsActual snapshots={snapshots} />
 
           {/* Phase & strategy */}
           {(current.clinical_phase || projected.projected_phase) && (
@@ -648,19 +759,18 @@ export default function BodyProjectionExperience() {
                 </div>
               </div>
               {projected.recommended_strategy && (
-                <p className="text-xs text-muted-foreground mt-3 border-t border-border/30 pt-3">
-                  💡 {projected.recommended_strategy}
-                </p>
+                <p className="text-xs text-muted-foreground mt-3 border-t border-border/30 pt-3">💡 {projected.recommended_strategy}</p>
               )}
             </Card>
           )}
 
-          {/* Clinical narrative */}
+          {/* Narrative */}
           {narrative && (
             <Card className="bg-card/50 border-border/50 p-5 backdrop-blur-sm">
               <div className="flex items-center gap-2 mb-3">
                 <Eye className="w-4 h-4 text-primary" />
-                <h2 className="text-sm font-semibold text-foreground">Análise Clínica</h2>
+                <h2 className="text-sm font-semibold text-foreground">Narrativa Clínica</h2>
+                <Badge variant="outline" className="text-[9px] h-4">IA + Motor Clínico</Badge>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">{narrative}</p>
             </Card>
@@ -668,11 +778,9 @@ export default function BodyProjectionExperience() {
 
           {/* Actions */}
           <div className="space-y-3">
-            <Button
-              className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50"
+            <Button className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50"
               disabled={generating || (cooldownInfo ? !cooldownInfo.eligible : false)}
-              onClick={requestNewProjection}
-            >
+              onClick={requestNewProjection}>
               {generating ? (
                 <motion.div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full mr-2"
                   animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} />
@@ -683,14 +791,11 @@ export default function BodyProjectionExperience() {
               )}
               {cooldownInfo && !cooldownInfo.eligible ? "Projeção em espera (30 dias)" : "Gerar Nova Projeção Completa"}
             </Button>
-
             <div className="flex gap-3">
               <Button className="flex-1" variant="outline" onClick={() => setShowShareModal(true)}>
                 <Share2 className="w-4 h-4 mr-2" /> Compartilhar
               </Button>
-              <Button variant="outline" onClick={() => navigate("/my-story")}>
-                Minha História
-              </Button>
+              <Button variant="outline" onClick={() => navigate("/my-story")}>Minha História</Button>
             </div>
           </div>
 
@@ -698,7 +803,7 @@ export default function BodyProjectionExperience() {
           <Card className="bg-card/30 border-border/30 p-3">
             <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
               <AlertTriangle className="w-3 h-3 shrink-0" />
-              <span>Baseado em {weightHistory.length} registros históricos. Quanto mais dados, maior a precisão.</span>
+              <span>{PROJECTION_DISCLAIMER.legal}</span>
             </div>
           </Card>
         </div>
@@ -706,7 +811,7 @@ export default function BodyProjectionExperience() {
         <div className="flex flex-col items-center py-20 gap-4 px-4">
           <Sparkles className="w-12 h-12 text-primary/30" />
           <p className="text-sm text-muted-foreground text-center">Nenhuma projeção corporal disponível</p>
-          <p className="text-xs text-muted-foreground text-center">Adicione seu histórico de peso e gere sua primeira projeção para visualizar sua trajetória futura.</p>
+          <p className="text-xs text-muted-foreground text-center">Adicione seu histórico de peso e gere sua primeira projeção.</p>
           {user && (
             <div className="w-full max-w-sm space-y-3">
               <WeightHistoryForm patientId={user.id} onSaved={loadData} />
