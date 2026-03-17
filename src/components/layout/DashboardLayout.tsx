@@ -231,45 +231,14 @@ function SidebarContent({
       {/* Nav links */}
       <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 mt-4" style={{ WebkitOverflowScrolling: 'touch' }}>
         <nav className="space-y-1 pb-4">
-          {!useFlat ? categories.map((cat, idx) => (
-            <div key={cat.category} className={idx > 0 ? "mt-4" : ""}>
-              {!collapsed && (
-                <div className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider ${
-                  CATEGORY_COLORS[cat.category] || "text-muted-foreground/60"
-                }`}>
-                  {cat.category}
-                </div>
-              )}
-              {collapsed && idx > 0 && (
-                <div className="mx-3 my-2 border-t border-border/30" />
-              )}
-              <div className="space-y-0.5">
-                {cat.items.map((item) => (
-                  <RenderSmartLink
-                    key={item.id}
-                    item={item}
-                    active={location.pathname === item.route}
-                    collapsed={collapsed}
-                    isProRole={isProRole}
-                    onLinkClick={onLinkClick}
-                    trackClick={trackClick}
-                    t={t}
-                  />
-                ))}
-              </div>
-            </div>
-          )) : flatItems.map((item) => (
-            <RenderSmartLink
-              key={item.id}
-              item={item}
-              active={location.pathname === item.route}
-              collapsed={collapsed}
-              isProRole={isProRole}
-              onLinkClick={onLinkClick}
-              trackClick={trackClick}
-              t={t}
-            />
-          ))}
+          <AccordionSidebar
+            categories={categories}
+            flatItems={flatItems}
+            collapsed={collapsed}
+            isProRole={isProRole}
+            onLinkClick={onLinkClick}
+            trackClick={trackClick}
+          />
 
           {/* Special buttons: Analyze AI + SOS for patients */}
           {isPatient && (
