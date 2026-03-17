@@ -391,6 +391,7 @@ const App = () => (
               <Route path="/admin/guide-engine" element={<AdminRoute><LP section="Admin"><AdminGuideEngine /></LP></AdminRoute>} />
               <Route path="/admin/marketing-content" element={<AdminRoute><LP section="Admin"><AdminMarketingContent /></LP></AdminRoute>} />
               <Route path="/admin/adaptive-intelligence" element={<AdminRoute><LP section="Admin"><GlobalAdaptiveIntelligence /></LP></AdminRoute>} />
+              <Route path="/admin-operational-costs" element={<AdminRoute><LP section="Admin"><AdminOperationalCosts /></LP></AdminRoute>} />
 
               {/* Public pricing */}
               <Route path="/pricing" element={<LP section="Pricing"><Pricing /></LP>} />
