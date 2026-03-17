@@ -70,6 +70,9 @@ export default function AdminOperationalCosts() {
     cost_per_1000_notifications_usd: 1.0,
     infrastructure_base_cost_usd: 20.0,
     stripe_fee_percent: 2.9,
+    monthly_price_per_professional: 197.0,
+    avg_stripe_fee_percent: 2.9,
+    cost_base_per_professional: 2.0,
   });
 
   const fetchProjection = useCallback(async (skipCache = false) => {
