@@ -1,0 +1,222 @@
+import React from "react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import {
+  Flame, Beef, Wheat, Droplets, Clock, ChefHat, Target,
+  Shuffle, Leaf, UtensilsCrossed, ScrollText,
+} from "lucide-react";
+
+interface FoodItem {
+  name: string;
+  portion: string;
+  calories?: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+}
+
+interface Substitution {
+  replace: string;
+  options: string[];
+}
+
+export interface MealDetailData {
+  title: string;
+  description?: string | null;
+  meal_type?: string;
+  calories_target?: number | null;
+  protein_target?: number | null;
+  carbs_target?: number | null;
+  fat_target?: number | null;
+  metadata?: Record<string, any> | null;
+}
+
+interface MealDetailModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  meal: MealDetailData | null;
+}
+
+const GOAL_LABELS: Record<string, { label: string; color: string }> = {
+  weight_loss: { label: "Emagrecimento", color: "bg-orange-500/15 text-orange-600 border-orange-500/30" },
+  hypertrophy: { label: "Hipertrofia", color: "bg-blue-500/15 text-blue-600 border-blue-500/30" },
+  metabolic: { label: "Metabólico", color: "bg-purple-500/15 text-purple-600 border-purple-500/30" },
+  low_carb: { label: "Low Carb", color: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30" },
+  functional: { label: "Funcional", color: "bg-teal-500/15 text-teal-600 border-teal-500/30" },
+  maintenance: { label: "Manutenção", color: "bg-slate-500/15 text-slate-600 border-slate-500/30" },
+};
+
+const CLINICAL_LABELS: Record<string, string> = {
+  diabetes: "Diabetes",
+  intestinal: "Saúde Intestinal",
+  hormonal: "Equilíbrio Hormonal",
+  anti_inflammatory: "Anti-inflamatório",
+  cardiovascular: "Cardiovascular",
+  detox: "Detox",
+  saciedade: "Alta Saciedade",
+  sono: "Melhora do Sono",
+};
+
+function parseJsonField<T>(value: any): T[] {
+  if (!value) return [];
+  if (Array.isArray(value)) return value as T[];
+  if (typeof value === "string") {
+    try { return JSON.parse(value); } catch { return []; }
+  }
+  return [];
+}
+
+export function MealDetailModal({ open, onOpenChange, meal }: MealDetailModalProps) {
+  if (!meal) return null;
+
+  const meta = meal.metadata || {};
+  const foods: FoodItem[] = parseJsonField<FoodItem>(meta.foods || meta.foods_structure);
+  const substitutions: Substitution[] = parseJsonField<Substitution>(meta.substitutions);
+  const instructions: string | undefined = meta.instructions || meta.preparation;
+  const prepTime: number | undefined = meta.prep_time_minutes || meta.prep_time;
+  const goalTag: string | undefined = meta.goal_tag;
+  const clinicalTags: string[] = parseJsonField<string>(meta.clinical_tags || meta.clinical_tag);
+  const source: string | undefined = meta.source;
+
+  const hasMacros = meal.calories_target || meal.protein_target || meal.carbs_target || meal.fat_target;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md mx-auto max-h-[90vh] overflow-y-auto p-0 gap-0 rounded-2xl">
+        {/* Header */}
+        <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-5 pb-4">
+          <DialogHeader className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
+                <UtensilsCrossed className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <DialogTitle className="text-base font-bold leading-tight">{meal.title}</DialogTitle>
+                {meal.description && (
+                  <DialogDescription className="text-xs mt-0.5 line-clamp-2">{meal.description}</DialogDescription>
+                )}
+              </div>
+            </div>
+          </DialogHeader>
+
+          {/* Tags */}
+          <div className="flex flex-wrap gap-1.5 mt-3">
+            {goalTag && GOAL_LABELS[goalTag] && (
+              <Badge variant="outline" className={`text-[10px] ${GOAL_LABELS[goalTag].color}`}>
+                <Target className="w-2.5 h-2.5 mr-1" />
+                {GOAL_LABELS[goalTag].label}
+              </Badge>
+            )}
+            {clinicalTags.map(tag => (
+              <Badge key={tag} variant="outline" className="text-[10px] bg-accent/50 border-accent">
+                <Leaf className="w-2.5 h-2.5 mr-1" />
+                {CLINICAL_LABELS[tag] || tag}
+              </Badge>
+            ))}
+            {prepTime && (
+              <Badge variant="outline" className="text-[10px]">
+                <Clock className="w-2.5 h-2.5 mr-1" /> {prepTime} min
+              </Badge>
+            )}
+            {source === "library" && (
+              <Badge variant="outline" className="text-[10px] bg-primary/10 border-primary/30 text-primary">
+                Banco FitJourney
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        <div className="p-5 space-y-5">
+          {/* Macros */}
+          {hasMacros && (
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { label: "Calorias", value: meal.calories_target, unit: "", icon: <Flame className="w-4 h-4 text-orange-500" /> },
+                { label: "Proteína", value: meal.protein_target, unit: "g", icon: <Beef className="w-4 h-4 text-red-500" /> },
+                { label: "Carbs", value: meal.carbs_target, unit: "g", icon: <Wheat className="w-4 h-4 text-amber-500" /> },
+                { label: "Gordura", value: meal.fat_target, unit: "g", icon: <Droplets className="w-4 h-4 text-yellow-500" /> },
+              ].map(m => (
+                <div key={m.label} className="rounded-xl bg-secondary/60 p-2.5 text-center">
+                  <div className="flex justify-center mb-1">{m.icon}</div>
+                  <p className="text-[10px] text-muted-foreground">{m.label}</p>
+                  <p className="font-bold text-sm">{m.value != null ? `${Number(m.value).toFixed(0)}${m.unit}` : "—"}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Ingredients */}
+          {foods.length > 0 && (
+            <section>
+              <div className="flex items-center gap-2 mb-2.5">
+                <ChefHat className="w-4 h-4 text-primary" />
+                <h4 className="font-semibold text-sm">Ingredientes</h4>
+              </div>
+              <ul className="space-y-1.5">
+                {foods.map((food, idx) => (
+                  <li key={idx} className="flex items-center gap-2 text-sm">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary/60 shrink-0" />
+                    <span className="flex-1">{food.name}</span>
+                    <span className="text-xs text-muted-foreground font-medium">{food.portion}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {/* Instructions */}
+          {instructions && (
+            <>
+              <Separator />
+              <section>
+                <div className="flex items-center gap-2 mb-2">
+                  <ScrollText className="w-4 h-4 text-primary" />
+                  <h4 className="font-semibold text-sm">Modo de Preparo</h4>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{instructions}</p>
+              </section>
+            </>
+          )}
+
+          {/* Substitutions */}
+          {substitutions.length > 0 && (
+            <>
+              <Separator />
+              <section>
+                <div className="flex items-center gap-2 mb-2.5">
+                  <Shuffle className="w-4 h-4 text-primary" />
+                  <h4 className="font-semibold text-sm">Substituições</h4>
+                </div>
+                <div className="space-y-2">
+                  {substitutions.map((sub, idx) => (
+                    <div key={idx} className="rounded-lg bg-secondary/40 p-2.5">
+                      <p className="text-xs font-medium text-muted-foreground mb-1">
+                        Trocar <span className="text-foreground font-semibold">{sub.replace}</span> por:
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {sub.options.map((opt, oi) => (
+                          <Badge key={oi} variant="secondary" className="text-[10px]">{opt}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </>
+          )}
+
+          {/* Empty state when no extra info */}
+          {foods.length === 0 && !instructions && substitutions.length === 0 && !hasMacros && (
+            <div className="text-center py-6 text-muted-foreground">
+              <UtensilsCrossed className="w-8 h-8 mx-auto mb-2 opacity-40" />
+              <p className="text-sm">Detalhes serão adicionados pelo seu nutricionista.</p>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

@@ -16,6 +16,7 @@ import {
   BarChart3, TrendingUp, CalendarDays, CalendarRange, Star
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import { MealDetailModal, type MealDetailData } from "@/components/patient/MealDetailModal";
 
 type MealType = Database["public"]["Enums"]["meal_type"];
 type AdherenceStatus = "followed" | "partial" | "not_followed";
@@ -30,6 +31,7 @@ interface MealPlanItem {
   protein_target: number | null;
   carbs_target: number | null;
   fat_target: number | null;
+  metadata?: Record<string, any> | null;
 }
 
 interface MealCompletion {
@@ -96,6 +98,7 @@ export default function PatientMealPlan() {
   const [loading, setLoading] = useState(true);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [viewMode, setViewMode] = useState<"daily" | "weekly">("daily");
+  const [selectedMeal, setSelectedMeal] = useState<MealDetailData | null>(null);
 
   const dayOfWeek = new Date(date + "T12:00:00").getDay();
   const isToday = date === new Date().toISOString().split("T")[0];
@@ -430,7 +433,10 @@ export default function PatientMealPlan() {
                               animate={{ opacity: 1, x: 0 }}
                               className={`glass rounded-xl p-4 transition-all ${statusColor}`}
                             >
-                              <div className="flex items-start gap-3">
+                              <div
+                                className="flex items-start gap-3 cursor-pointer"
+                                onClick={() => setSelectedMeal({ ...mealItem, metadata: (mealItem as any).metadata })}
+                              >
                                 <div className="mt-0.5">
                                   {status === "followed" ? <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                                     : status === "partial" ? <MinusCircle className="w-5 h-5 text-amber-500" />
@@ -642,7 +648,10 @@ export default function PatientMealPlan() {
                                       : <Circle className="w-4 h-4 text-muted-foreground hover:text-primary transition-colors" />
                                     }
                                   </button>
-                                  <span className={`text-xs flex-1 ${status === "followed" ? "line-through text-muted-foreground" : ""}`}>
+                                  <span
+                                    className={`text-xs flex-1 cursor-pointer hover:text-primary transition-colors ${status === "followed" ? "line-through text-muted-foreground" : ""}`}
+                                    onClick={() => setSelectedMeal({ ...item, metadata: item.metadata })}
+                                  >
                                     {item.title}
                                   </span>
                                   {!status && (
@@ -686,6 +695,13 @@ export default function PatientMealPlan() {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Meal Detail Modal */}
+        <MealDetailModal
+          open={!!selectedMeal}
+          onOpenChange={(open) => { if (!open) setSelectedMeal(null); }}
+          meal={selectedMeal}
+        />
       </div>
     </DashboardLayout>
   );
