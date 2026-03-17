@@ -186,6 +186,9 @@ export default function SystemPresentation() {
           </div>
           <h1 className="text-2xl md:text-3xl font-display font-bold">Aprender a Usar o FitJourney</h1>
           <p className="text-muted-foreground mt-2 text-sm md:text-base">Apresentações interativas e demos cinemáticas para dominar todas as funcionalidades</p>
+          <div className="mt-4">
+            <MagicSlideButton />
+          </div>
         </motion.div>
 
         {/* Cinematic demos — primary section */}
