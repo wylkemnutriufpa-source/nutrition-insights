@@ -136,8 +136,9 @@ export default function AdminGuideEngine() {
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
               Gerencie os slides dinâmicos do onboarding. Cada feature gera um slide automaticamente.
-            </p>
+          </p>
           </div>
+          <MagicSlideButton />
         </div>
 
         {/* Stats */}
