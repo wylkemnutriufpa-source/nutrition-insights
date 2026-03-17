@@ -96,7 +96,66 @@ export const FEATURE_REGISTRY: FeatureDefinition[] = [
   { name: "health_quiz", label: "Quiz de Saúde", description: "Questionário interativo de avaliação de saúde", icon: Heart, category: "Ferramentas", defaultTier: "basic" },
   { name: "weight_calculator", label: "Calculadora de Peso", description: "Calculadora de peso ideal e composição corporal", icon: Dumbbell, category: "Ferramentas", defaultTier: "basic" },
   { name: "water_calculator", label: "Calculadora de Água", description: "Cálculo de necessidade hídrica diária", icon: Heart, category: "Ferramentas", defaultTier: "basic" },
-  { name: "onboarding_pipeline", label: "Onboarding Automático", description: "Pipeline automatizado: anamnese → dados corporais → preferências → pré-plano IA → aprovação profissional com critérios de programação", icon: Zap, category: "IA & Automação", defaultTier: "premium", addedVersion: "4.0" },
+  { name: "onboarding_pipeline", label: "Onboarding Automático", description: "Pipeline automatizado: anamnese → dados corporais → preferências → pré-plano IA → aprovação profissional", icon: Zap, category: "IA & Automação", defaultTier: "premium", addedVersion: "4.0" },
+
+  // Inteligência Metabólica
+  { name: "metabolic_classification", label: "Classificação Metabólica", description: "Motor de classificação automática do perfil de resposta metabólica do paciente", icon: FlaskConical, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "5.0" },
+  { name: "metabolic_phase_engine", label: "Motor de Fase Metabólica", description: "Classificação automática da fase metabólica atual e estratégia calórica por fase", icon: Flame, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "5.0" },
+  { name: "caloric_strategy_engine", label: "Estratégia Calórica Adaptativa", description: "Ajuste automático de calorias e macros baseado na fase metabólica e adesão", icon: Gauge, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "5.0" },
+  { name: "body_projection_engine", label: "Projeção Corporal Futura", description: "Motor de projeção de evolução de peso e composição corporal com curvas realistas", icon: TrendingUp, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "4.5" },
+  { name: "weight_history_analysis", label: "Análise de Histórico de Peso", description: "Análise retroativa de padrões de peso incluindo efeito sanfona e estagnação", icon: LineChart, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "4.5" },
+  { name: "digital_twin", label: "Digital Twin Corporal", description: "Gêmeo digital do paciente com projeção visual de transformação futura", icon: ScanLine, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "4.5" },
+
+  // Motor Clínico Avançado
+  { name: "clinical_pipeline", label: "Pipeline Clínico Diário", description: "Pipeline automatizado de análise diária de snapshots, riscos e sinais clínicos", icon: Workflow, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "4.0" },
+  { name: "clinical_alerts_engine", label: "Motor de Alertas Clínicos", description: "Detecção e gestão de alertas clínicos com severidade e resolução", icon: AlertTriangle, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "4.0" },
+  { name: "behavioral_recovery", label: "Recuperação Comportamental", description: "Ações de recuperação automáticas para pacientes em risco de abandono", icon: Shield, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "4.0" },
+  { name: "intervention_simulator", label: "Simulador de Intervenções", description: "Simulação de intervenções clínicas com projeção de resultados e riscos", icon: Beaker, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "4.5" },
+  { name: "clinical_experiments", label: "Experimentos Clínicos", description: "Framework de experimentos A/B com grupos, outcomes e insights estatísticos", icon: Microscope, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "4.5" },
+  { name: "action_recommendations", label: "Recomendações de Ação", description: "Motor de recomendações clínicas priorizadas por urgência e impacto esperado", icon: Lightbulb, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "4.0" },
+  { name: "engagement_signals", label: "Sinais de Engajamento", description: "Detecção de sinais de engajamento e desengajamento em tempo real", icon: Eye, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "4.0" },
+  { name: "clinical_daily_snapshots", label: "Snapshots Clínicos Diários", description: "Fotografia diária do estado clínico de cada paciente com scores e tendências", icon: Camera, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "4.0" },
+
+  // Gestão de Portfolio
+  { name: "clinic_portfolio", label: "Portfolio da Clínica", description: "Visão consolidada do portfolio de pacientes com health score e classificação", icon: PieChart, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "4.5" },
+  { name: "clinical_evolution_metrics", label: "Métricas de Evolução Clínica", description: "KPIs de eficácia de protocolos, velocidade de transformação e estabilidade metabólica", icon: BarChart3, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "4.5" },
+  { name: "cluster_protocol_matrix", label: "Matriz Cluster-Protocolo", description: "Análise cruzada de clusters metabólicos vs protocolos com taxa de sucesso", icon: Layers, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "4.5" },
+
+  // Substituições e Templates
+  { name: "food_substitutions", label: "Grupos de Substituição", description: "Grupos de substituição alimentar com equivalência nutricional", icon: Shuffle, category: "Ferramentas", defaultTier: "basic", addedVersion: "4.0" },
+  { name: "diet_template_engine", label: "Motor de Templates de Dieta", description: "Templates avançados com variações calóricas, distribuição por refeição e estratégia semanal", icon: BookMarked, category: "Ferramentas", defaultTier: "premium", addedVersion: "4.0" },
+
+  // Avaliação Corporal
+  { name: "body_assessment_photos", label: "Fotos de Avaliação", description: "Registro e comparação de fotos corporais com análise de progresso", icon: Camera, category: "Gestão de Pacientes", defaultTier: "basic", addedVersion: "4.0" },
+  { name: "body_projection_snapshots", label: "Snapshots de Projeção", description: "Histórico versionado de projeções corporais com métricas e narrativas", icon: GitBranch, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "4.5" },
+
+  // Crescimento e Operações
+  { name: "executive_command", label: "Centro de Comando Executivo", description: "Dashboard executivo com CEI, PSI, ILI e recomendações estratégicas de escala", icon: Rocket, category: "Crescimento", defaultTier: "premium", addedVersion: "4.5" },
+  { name: "affiliate_system", label: "Sistema de Afiliados", description: "Programa de afiliados com tiers, comissões, payouts e métricas de conversão", icon: Crown, category: "Crescimento", defaultTier: "premium", addedVersion: "4.0" },
+  { name: "booking_payments", label: "Pagamentos de Consulta", description: "Sistema de pagamento integrado para agendamento de consultas", icon: DollarSign, category: "Relatórios & Financeiro", defaultTier: "premium", addedVersion: "4.0" },
+
+  // Organizações
+  { name: "organizations", label: "Organizações Multi-Profissional", description: "Gestão de clínicas com múltiplos profissionais, papéis e metodologias compartilhadas", icon: Users, category: "Crescimento", defaultTier: "premium", addedVersion: "4.0" },
+  { name: "clinical_methodologies", label: "Metodologias Clínicas", description: "Framework de metodologias clínicas customizáveis por organização", icon: Compass, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "4.5" },
+  { name: "clinical_rules_engine", label: "Motor de Regras Clínicas", description: "Regras clínicas configuráveis com sinais, condições e recomendações automáticas", icon: Waypoints, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "4.5" },
+
+  // Apresentação e Guias
+  { name: "feature_guide", label: "Guia de Funcionalidades", description: "Apresentação cinematográfica e interativa das funcionalidades do sistema", icon: Presentation, category: "Ferramentas", defaultTier: "basic", addedVersion: "4.0" },
+  { name: "feature_marketing", label: "Marketing de Features", description: "Geração automática de assets de marketing para cada funcionalidade", icon: Globe, category: "Crescimento", defaultTier: "premium", addedVersion: "4.5" },
+
+  // Aprendizado Global
+  { name: "global_learning", label: "Aprendizado Clínico Global", description: "Motor de aprendizado que ajusta parâmetros do sistema com base em evidências agregadas", icon: RefreshCw, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "5.0" },
+
+  // Prestige & Gamificação Avançada
+  { name: "prestige_plans", label: "Planos Prestige", description: "Sistema de planos de prestígio com badges, crowns e identidade visual no ranking", icon: Crown, category: "IA & Automação", defaultTier: "premium", addedVersion: "4.0" },
+  { name: "missions_challenges", label: "Missões e Desafios", description: "Sistema de missões e desafios com XP, conquistas e objetivos personalizados", icon: Target, category: "IA & Automação", defaultTier: "premium", addedVersion: "4.0" },
+
+  // Paciente App
+  { name: "patient_magic_journey", label: "Magic Journey Story", description: "Narrativa clínica personalizada da jornada do paciente com IA", icon: Map, category: "IA & Automação", defaultTier: "premium", addedVersion: "4.5" },
+  { name: "patient_feature_explorer", label: "Explorador de Funcionalidades", description: "Painel gamificado de descoberta de funcionalidades pelo paciente", icon: Compass, category: "Ferramentas", defaultTier: "basic", addedVersion: "4.0" },
+
+  // Auto-ajuste Clínico
+  { name: "clinical_auto_adjustment", label: "Auto-Ajuste Clínico", description: "Ajustes automáticos de protocolo com guardrails e reversão controlada", icon: RefreshCw, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "5.0" },
 ];
 
 /** Retorna os nomes de todas as features registradas */
