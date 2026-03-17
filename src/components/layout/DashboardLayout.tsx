@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import {
   LayoutDashboard, Users, UtensilsCrossed, Trophy, Target, FileBarChart,
   Leaf, LogOut, Moon, Sun, ChevronRight, Sparkles, Settings,
@@ -216,7 +216,7 @@ function SidebarContent({
       </div>
 
       {/* Nav links */}
-      <ScrollArea className="flex-1 px-3 mt-4">
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 mt-4" style={{ WebkitOverflowScrolling: 'touch' }}>
         <nav className="space-y-1 pb-4">
           {!useFlat ? categories.map((cat, idx) => (
             <div key={cat.category} className={idx > 0 ? "mt-4" : ""}>
@@ -310,7 +310,7 @@ function SidebarContent({
             </>
           )}
         </nav>
-      </ScrollArea>
+      </div>
 
       {/* Bottom */}
       <div className="p-3 border-t border-border/50 space-y-2">
@@ -439,7 +439,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   <Menu className="w-5 h-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="p-0 w-72 flex flex-col bg-card/95 backdrop-blur-xl">
+              <SheetContent side="left" className="p-0 w-72 flex flex-col bg-card/95 backdrop-blur-xl h-full max-h-screen overflow-hidden">
                 <SidebarContent {...sidebarProps} collapsed={false} onLinkClick={() => setMobileOpen(false)} />
               </SheetContent>
             </Sheet>
