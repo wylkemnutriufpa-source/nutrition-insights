@@ -198,8 +198,8 @@ export default function PatientMealPlan() {
     setItems((allItemsData || []).filter(i => i.day_of_week === dayOfWeek));
 
     // Fetch daily completions
-    const { data: completionsData } = await (supabase
-      .from("meal_item_completions" as any) as any)
+    const { data: completionsData } = await supabase
+      .from("meal_item_completions")
       .select("*")
       .eq("patient_id", user.id)
       .eq("meal_plan_id", planData.id)
@@ -210,8 +210,8 @@ export default function PatientMealPlan() {
     // Fetch week completions
     const weekStart = weekDates[0];
     const weekEnd = weekDates[6];
-    const { data: weekData } = await (supabase
-      .from("meal_item_completions" as any) as any)
+    const { data: weekData } = await supabase
+      .from("meal_item_completions")
       .select("*")
       .eq("patient_id", user.id)
       .eq("meal_plan_id", planData.id)
