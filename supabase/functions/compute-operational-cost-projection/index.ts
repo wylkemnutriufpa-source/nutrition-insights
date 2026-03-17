@@ -152,6 +152,9 @@ Deno.serve(async (req) => {
         cost_per_1000_notifications_usd: Number(config.cost_per_1000_notifications_usd),
         infrastructure_base_cost_usd: Number(config.infrastructure_base_cost_usd),
         stripe_fee_percent: Number(config.stripe_fee_percent),
+        monthly_price_per_professional: Number(config.monthly_price_per_professional || 197),
+        avg_stripe_fee_percent: Number(config.avg_stripe_fee_percent || 2.9),
+        cost_base_per_professional: Number(config.cost_base_per_professional || 2),
       },
       computed_at: new Date().toISOString(),
     };

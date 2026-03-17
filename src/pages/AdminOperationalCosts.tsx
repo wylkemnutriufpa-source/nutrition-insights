@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { DollarSign, TrendingUp, Users, Cpu, HardDrive, Bell, Settings, BarChart3, AlertTriangle, CheckCircle, RefreshCw, Save } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DollarSign, TrendingUp, Users, Cpu, HardDrive, Bell, Settings, BarChart3, AlertTriangle, CheckCircle, RefreshCw, Save, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import B2BProjectionSection from "@/components/admin/B2BProjectionSection";
 
 interface CostProjection {
   patient_count: number;
@@ -41,6 +43,9 @@ interface CostConfig {
   cost_per_1000_notifications_usd: number;
   infrastructure_base_cost_usd: number;
   stripe_fee_percent: number;
+  monthly_price_per_professional: number;
+  avg_stripe_fee_percent: number;
+  cost_base_per_professional: number;
 }
 
 const CACHE_KEY = "fj_operational_costs_cache";
@@ -65,6 +70,9 @@ export default function AdminOperationalCosts() {
     cost_per_1000_notifications_usd: 1.0,
     infrastructure_base_cost_usd: 20.0,
     stripe_fee_percent: 2.9,
+    monthly_price_per_professional: 197.0,
+    avg_stripe_fee_percent: 2.9,
+    cost_base_per_professional: 2.0,
   });
 
   const fetchProjection = useCallback(async (skipCache = false) => {
@@ -118,6 +126,9 @@ export default function AdminOperationalCosts() {
           cost_per_1000_notifications_usd: configForm.cost_per_1000_notifications_usd,
           infrastructure_base_cost_usd: configForm.infrastructure_base_cost_usd,
           stripe_fee_percent: configForm.stripe_fee_percent,
+          monthly_price_per_professional: configForm.monthly_price_per_professional,
+          avg_stripe_fee_percent: configForm.avg_stripe_fee_percent,
+          cost_base_per_professional: configForm.cost_base_per_professional,
           updated_at: new Date().toISOString(),
           updated_by: user?.id,
         } as any)
@@ -125,7 +136,6 @@ export default function AdminOperationalCosts() {
 
       if (error) throw error;
 
-      // Log audit
       await supabase.rpc("log_audit", {
         _action: "update_cost_config",
         _resource_type: "operational_cost_configuration",
@@ -182,7 +192,13 @@ export default function AdminOperationalCosts() {
             <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : data ? (
-          <>
+          <Tabs defaultValue="current" className="space-y-6">
+            <TabsList className="bg-card/80 border border-border/50">
+              <TabsTrigger value="current" className="gap-1.5"><BarChart3 className="h-3.5 w-3.5" /> Operacional</TabsTrigger>
+              <TabsTrigger value="b2b" className="gap-1.5"><Building2 className="h-3.5 w-3.5" /> Escala B2B</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="current" className="space-y-6">
             {/* ── RESUMO ATUAL ─────────────────────────── */}
             <div>
               <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
@@ -411,7 +427,24 @@ export default function AdminOperationalCosts() {
             <p className="text-xs text-muted-foreground text-center">
               Última atualização: {new Date(data.computed_at).toLocaleString("pt-BR")} · Cache de 10 minutos · Cálculos 100% determinísticos
             </p>
-          </>
+            </TabsContent>
+
+            <TabsContent value="b2b">
+              <B2BProjectionSection
+                config={{
+                  cost_per_ai_call_usd: configForm.cost_per_ai_call_usd,
+                  cost_per_100mb_storage_usd: configForm.cost_per_100mb_storage_usd,
+                  infrastructure_base_cost_usd: configForm.infrastructure_base_cost_usd,
+                  cost_base_per_professional: configForm.cost_base_per_professional,
+                  monthly_price_per_professional: configForm.monthly_price_per_professional,
+                  avg_stripe_fee_percent: configForm.avg_stripe_fee_percent,
+                }}
+                onConfigChange={(c) => setConfigForm({ ...configForm, ...c })}
+                onSave={saveConfig}
+                saving={saving}
+              />
+            </TabsContent>
+          </Tabs>
         ) : null}
       </div>
     </DashboardLayout>
