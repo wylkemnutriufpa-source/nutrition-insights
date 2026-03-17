@@ -736,7 +736,7 @@ export default function PatientDetail() {
               {/* Plan Modal */}
               <Dialog open={openSection === "plan"} onOpenChange={(v) => !v && setOpenSection(null)}>
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display">Plano</DialogTitle></DialogHeader>
+                  <DialogHeader><DialogTitle className="font-display">Plano & Prestígio</DialogTitle></DialogHeader>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="glass rounded-xl p-5">
                       <h3 className="font-display font-semibold flex items-center gap-2 mb-4">
@@ -774,11 +774,66 @@ export default function PatientDetail() {
                         </div>
                       )}
                     </div>
+                    {/* ═══ Prestige Card ═══ */}
                     <div className="glass rounded-xl p-5">
+                      <h3 className="font-display font-semibold flex items-center gap-2 mb-4">
+                        <Crown className="w-5 h-5 text-amber-500" /> Prestígio
+                      </h3>
+                      {currentPrestigePlan ? (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-amber-500/10 to-primary/10 border border-amber-500/20">
+                            <PrestigeBadge plan={currentPrestigePlan} size="md" />
+                            <div>
+                              <p className="font-semibold text-sm">{currentPrestigePlan.name}</p>
+                              <p className="text-xs text-muted-foreground">{currentPrestigePlan.badge_label || "Ativo"}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-2 mb-2">
+                          <Crown className="w-8 h-8 text-muted-foreground/30 mx-auto mb-1" />
+                          <p className="text-xs text-muted-foreground">Sem prestígio ativo</p>
+                        </div>
+                      )}
+                      <div className="mt-3 space-y-2">
+                        <Label className="text-xs">Alterar Prestígio</Label>
+                        <Select
+                          value={selectedPrestigePlanId || currentPrestigePlan?.id || ""}
+                          onValueChange={async (v) => {
+                            if (!patientId || !user) return;
+                            setSelectedPrestigePlanId(v);
+                            // Apply immediately
+                            await supabase.from("patient_prestige").update({ is_active: false }).eq("patient_id", patientId).eq("is_active", true);
+                            if (v && v !== "none") {
+                              await supabase.from("patient_prestige").insert({ patient_id: patientId, plan_id: v, assigned_by: user.id, is_active: true });
+                              const sp = prestigePlans.find((p: any) => p.id === v);
+                              toast.success(`${sp?.badge_icon || "👑"} Prestígio ${sp?.name || ""} aplicado!`);
+                            } else {
+                              toast.success("Prestígio removido");
+                            }
+                            invalidate();
+                          }}
+                        >
+                          <SelectTrigger className="h-9">
+                            <SelectValue placeholder="Selecione um prestígio..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">❌ Sem Prestígio</SelectItem>
+                            {prestigePlans.map((p: any) => (
+                              <SelectItem key={p.id} value={p.id}>
+                                {p.badge_icon || "⭐"} {p.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    {/* Feedback card */}
+                    <div className="glass rounded-xl p-5 md:col-span-2">
                       <h3 className="font-display font-semibold flex items-center gap-2 mb-4">
                         <Send className="w-5 h-5 text-primary" /> Agendar Feedback
                       </h3>
-                      <form onSubmit={scheduleFeedback} className="space-y-3">
+                      <form onSubmit={scheduleFeedback} className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
                         <div>
                           <Label>Enviar daqui a (dias)</Label>
                           <Select value={feedbackForm.days} onValueChange={(v) => setFeedbackForm({ ...feedbackForm, days: v })}>
@@ -794,10 +849,10 @@ export default function PatientDetail() {
                         </div>
                         <div>
                           <Label>Mensagem</Label>
-                          <Textarea value={feedbackForm.message} onChange={(e) => setFeedbackForm({ ...feedbackForm, message: e.target.value })} rows={3} />
+                          <Textarea value={feedbackForm.message} onChange={(e) => setFeedbackForm({ ...feedbackForm, message: e.target.value })} rows={2} />
                         </div>
-                        <Button type="submit" className="w-full gradient-primary gap-2">
-                          <Send className="w-4 h-4" /> Agendar Feedback
+                        <Button type="submit" className="gradient-primary gap-2">
+                          <Send className="w-4 h-4" /> Enviar
                         </Button>
                       </form>
                     </div>

@@ -7676,6 +7676,7 @@ export type Database = {
           image_url: string | null
           is_active: boolean
           max_patients: number | null
+          prestige_plan_id: string | null
           protocol_id: string | null
           start_date: string
           tag: string
@@ -7691,6 +7692,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean
           max_patients?: number | null
+          prestige_plan_id?: string | null
           protocol_id?: string | null
           start_date: string
           tag?: string
@@ -7706,6 +7708,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean
           max_patients?: number | null
+          prestige_plan_id?: string | null
           protocol_id?: string | null
           start_date?: string
           tag?: string
@@ -7713,6 +7716,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "programs_prestige_plan_id_fkey"
+            columns: ["prestige_plan_id"]
+            isOneToOne: false
+            referencedRelation: "prestige_plans"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "programs_protocol_id_fkey"
             columns: ["protocol_id"]
@@ -9865,6 +9875,10 @@ export type Database = {
       }
       self_register_patient: {
         Args: { _referral_code?: string; _user_id: string }
+        Returns: Json
+      }
+      sync_program_prestige: {
+        Args: { _assigned_by: string; _program_id: string }
         Returns: Json
       }
       sync_protocol_checklist: {
