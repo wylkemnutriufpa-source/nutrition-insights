@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { queryKeys } from "./queryKeys";
@@ -25,6 +25,23 @@ export interface PatientInfo {
 export interface ProgramInfo {
   id: string;
   title: string;
+}
+
+export interface PaginationState {
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  totalPages: number;
+}
+
+export interface PatientsListResult {
+  patients: PatientInfo[];
+  programs: ProgramInfo[];
+  prestigePlans: PrestigePlan[];
+  pagination: PaginationState;
+  counts: { active: number; inactive: number };
 }
 
 function computeScore(stats: any, checklistData: any): number {
@@ -77,32 +94,127 @@ function getRecentScore(patientId: string): number {
 
 export { computeScore, getRecentScore };
 
-export function usePatientsList() {
-  const { user } = useAuth();
+export const DEFAULT_PAGE_SIZE = 50;
 
-  return useQuery({
-    queryKey: queryKeys.patients.all(user?.id ?? ""),
+export interface PatientsListParams {
+  page?: number;
+  pageSize?: number;
+  statusFilter?: "active" | "inactive" | "all";
+  search?: string;
+}
+
+export function usePatientsList(params: PatientsListParams = {}) {
+  const { user } = useAuth();
+  const page = params.page ?? 1;
+  const pageSize = params.pageSize ?? DEFAULT_PAGE_SIZE;
+  const statusFilter = params.statusFilter ?? "all";
+  const search = params.search ?? "";
+
+  return useQuery<PatientsListResult>({
+    queryKey: [...queryKeys.patients.all(user?.id ?? ""), page, pageSize, statusFilter, search],
     enabled: !!user,
     staleTime: 2 * 60 * 1000,
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       const userId = user!.id;
       const today = new Date().toISOString().split("T")[0];
 
-      const { data } = await supabase
+      // 1. Get total counts by status (lightweight count queries)
+      const [activeCountRes, inactiveCountRes] = await Promise.all([
+        supabase.from("nutritionist_patients").select("id", { count: "exact", head: true })
+          .eq("nutritionist_id", userId).eq("status", "active"),
+        supabase.from("nutritionist_patients").select("id", { count: "exact", head: true })
+          .eq("nutritionist_id", userId).neq("status", "active"),
+      ]);
+
+      const activeCount = activeCountRes.count || 0;
+      const inactiveCount = inactiveCountRes.count || 0;
+
+      // 2. Build the paginated query with filters
+      let query = supabase
         .from("nutritionist_patients")
-        .select("*")
+        .select("*", { count: "exact" })
         .eq("nutritionist_id", userId)
         .order("created_at", { ascending: false });
 
-      const { data: progs } = await supabase.from("programs")
-        .select("id, title").eq("created_by", userId).eq("is_active", true);
+      if (statusFilter === "active") query = query.eq("status", "active");
+      else if (statusFilter === "inactive") query = query.neq("status", "active");
 
-      if (!data || data.length === 0) return { patients: [] as PatientInfo[], programs: (progs || []) as ProgramInfo[], prestigePlans: [] as PrestigePlan[] };
+      // Server-side search: we filter by patient_id after getting profiles
+      // For now, if search is provided, we fetch all matching and paginate in-memory
+      // This is a tradeoff: true server-side search would require a DB function
+      let allData: any[] = [];
+      let totalCount = 0;
 
-      const patientIds = data.map(p => p.patient_id);
+      if (search.trim()) {
+        // When searching: fetch all links, then filter by profile name
+        const { data: allLinks } = await query;
+        if (!allLinks || allLinks.length === 0) {
+          const { data: progs } = await supabase.from("programs")
+            .select("id, title").eq("created_by", userId).eq("is_active", true);
+          const { data: pPlans } = await supabase.from("prestige_plans").select("*").eq("is_active", true).order("display_order");
+          return {
+            patients: [],
+            programs: (progs || []) as ProgramInfo[],
+            prestigePlans: mapPrestigePlans(pPlans),
+            pagination: { page, pageSize, totalCount: 0, hasNextPage: false, hasPreviousPage: false, totalPages: 0 },
+            counts: { active: activeCount, inactive: inactiveCount },
+          };
+        }
 
-      // BATCH queries instead of N+1 per patient (7 parallel queries total)
-      const [profilesRes, statsRes, checklistRes, enrollmentsRes, prestigeRes, pPlansRes, emailsRes] = await Promise.all([
+        const allPatientIds = allLinks.map((p: any) => p.patient_id);
+        const { data: searchProfiles } = await supabase.from("profiles")
+          .select("user_id, full_name").in("user_id", allPatientIds);
+        
+        const searchLower = search.toLowerCase();
+        const matchingUserIds = new Set(
+          (searchProfiles || [])
+            .filter((p: any) => p.full_name?.toLowerCase().includes(searchLower))
+            .map((p: any) => p.user_id)
+        );
+
+        // Also check emails
+        const { data: emailResults } = await supabase.rpc("get_patient_emails", { _patient_ids: allPatientIds });
+        (emailResults || []).forEach((e: any) => {
+          if (e.email?.toLowerCase().includes(searchLower)) matchingUserIds.add(e.user_id);
+        });
+
+        const filteredLinks = allLinks.filter((l: any) => matchingUserIds.has(l.patient_id));
+        totalCount = filteredLinks.length;
+
+        const start = (page - 1) * pageSize;
+        allData = filteredLinks.slice(start, start + pageSize);
+      } else {
+        // No search: use proper server-side pagination with range
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize - 1;
+        const { data, count } = await query.range(from, to);
+        allData = data || [];
+        totalCount = count || 0;
+      }
+
+      if (allData.length === 0) {
+        const { data: progs } = await supabase.from("programs")
+          .select("id, title").eq("created_by", userId).eq("is_active", true);
+        const { data: pPlans } = await supabase.from("prestige_plans").select("*").eq("is_active", true).order("display_order");
+        return {
+          patients: [],
+          programs: (progs || []) as ProgramInfo[],
+          prestigePlans: mapPrestigePlans(pPlans),
+          pagination: {
+            page, pageSize, totalCount,
+            hasNextPage: page * pageSize < totalCount,
+            hasPreviousPage: page > 1,
+            totalPages: Math.ceil(totalCount / pageSize),
+          },
+          counts: { active: activeCount, inactive: inactiveCount },
+        };
+      }
+
+      const patientIds = allData.map((p: any) => p.patient_id);
+
+      // BATCH queries (7 parallel)
+      const [profilesRes, statsRes, checklistRes, enrollmentsRes, prestigeRes, pPlansRes, emailsRes, progsRes] = await Promise.all([
         supabase.from("profiles").select("user_id, full_name, avatar_url").in("user_id", patientIds),
         supabase.from("player_stats").select("user_id, last_meal_date, total_xp, current_streak").in("user_id", patientIds),
         supabase.from("checklist_tasks").select("patient_id, id, completed").in("patient_id", patientIds).eq("date", today),
@@ -116,27 +228,19 @@ export function usePatientsList() {
           .in("patient_id", patientIds),
         supabase.from("prestige_plans").select("*").eq("is_active", true).order("display_order"),
         supabase.rpc("get_patient_emails", { _patient_ids: patientIds }),
+        supabase.from("programs").select("id, title").eq("created_by", userId).eq("is_active", true),
       ]);
 
-      // Build email map
+      // Build maps
       const emailMap = new Map<string, string>();
-      ((emailsRes.data as any[]) || []).forEach((e: any) => {
-        emailMap.set(e.user_id, e.email);
-      });
+      ((emailsRes.data as any[]) || []).forEach((e: any) => emailMap.set(e.user_id, e.email));
 
-      // Build profile map by user_id
       const profileMap = new Map<string, { full_name: string; avatar_url: string | null }>();
-      (profilesRes.data || []).forEach((p: any) => {
-        profileMap.set(p.user_id, { full_name: p.full_name, avatar_url: p.avatar_url });
-      });
+      (profilesRes.data || []).forEach((p: any) => profileMap.set(p.user_id, { full_name: p.full_name, avatar_url: p.avatar_url }));
 
-      // Build stats map by user_id
       const statsMap = new Map<string, any>();
-      (statsRes.data || []).forEach((s: any) => {
-        statsMap.set(s.user_id, { last_meal_date: s.last_meal_date, total_xp: s.total_xp, current_streak: s.current_streak });
-      });
+      (statsRes.data || []).forEach((s: any) => statsMap.set(s.user_id, { last_meal_date: s.last_meal_date, total_xp: s.total_xp, current_streak: s.current_streak }));
 
-      // Build checklist map by patient_id -> { total, completed }
       const checklistMap = new Map<string, { total: number; completed: number }>();
       (checklistRes.data || []).forEach((t: any) => {
         const entry = checklistMap.get(t.patient_id) || { total: 0, completed: 0 };
@@ -145,7 +249,6 @@ export function usePatientsList() {
         checklistMap.set(t.patient_id, entry);
       });
 
-      // Build prestige map
       const prestigeMap = new Map<string, PrestigePlan>();
       (prestigeRes.data || []).forEach((pp: any) => {
         if (pp.prestige_plans) {
@@ -161,7 +264,6 @@ export function usePatientsList() {
         }
       });
 
-      // Build enrollment map
       const enrollmentMap = new Map<string, { id: string; title: string }[]>();
       (enrollmentsRes.data || []).forEach((e: any) => {
         const list = enrollmentMap.get(e.patient_id) || [];
@@ -169,7 +271,7 @@ export function usePatientsList() {
         enrollmentMap.set(e.patient_id, list);
       });
 
-      const enriched: PatientInfo[] = data.map((p) => {
+      const enriched: PatientInfo[] = allData.map((p: any) => {
         const checkData = checklistMap.get(p.patient_id) || { total: 0, completed: 0 };
         const adherence = checkData.total > 0 ? Math.round((checkData.completed / checkData.total) * 100) : 0;
         const profile = profileMap.get(p.patient_id);
@@ -196,18 +298,35 @@ export function usePatientsList() {
         return (a.priorityScore || 0) - (b.priorityScore || 0);
       });
 
-      const prestigePlans: PrestigePlan[] = (pPlansRes.data || []).map((d: any) => ({
-        id: d.id, name: d.name, slug: d.slug, display_order: d.display_order, color: d.color,
-        badge_icon: d.badge_icon, badge_label: d.badge_label, crown_enabled: d.crown_enabled,
-        effect_type: d.effect_type, ranking_highlight: d.ranking_highlight,
-        ai_usage_multiplier: d.ai_usage_multiplier, features: d.features || [],
-        price_monthly: d.price_monthly, price_quarterly: d.price_quarterly,
-        price_semiannual: d.price_semiannual, price_annual: d.price_annual,
-      }));
+      const totalPages = Math.ceil(totalCount / pageSize);
 
-      return { patients: enriched, programs: (progs || []) as ProgramInfo[], prestigePlans };
+      return {
+        patients: enriched,
+        programs: (progsRes.data || []) as ProgramInfo[],
+        prestigePlans: mapPrestigePlans(pPlansRes.data),
+        pagination: {
+          page,
+          pageSize,
+          totalCount,
+          hasNextPage: page < totalPages,
+          hasPreviousPage: page > 1,
+          totalPages,
+        },
+        counts: { active: activeCount, inactive: inactiveCount },
+      };
     },
   });
+}
+
+function mapPrestigePlans(data: any[] | null): PrestigePlan[] {
+  return (data || []).map((d: any) => ({
+    id: d.id, name: d.name, slug: d.slug, display_order: d.display_order, color: d.color,
+    badge_icon: d.badge_icon, badge_label: d.badge_label, crown_enabled: d.crown_enabled,
+    effect_type: d.effect_type, ranking_highlight: d.ranking_highlight,
+    ai_usage_multiplier: d.ai_usage_multiplier, features: d.features || [],
+    price_monthly: d.price_monthly, price_quarterly: d.price_quarterly,
+    price_semiannual: d.price_semiannual, price_annual: d.price_annual,
+  }));
 }
 
 export function useTogglePatientStatus() {
@@ -226,7 +345,7 @@ export function useTogglePatientStatus() {
       return newStatus;
     },
     onSuccess: (newStatus) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.patients.all(user?.id ?? "") });
+      queryClient.invalidateQueries({ queryKey: ["patients", user?.id ?? ""] });
       toast.success(
         newStatus === "active"
           ? "Paciente ativado — dados incluídos nas métricas"
@@ -266,7 +385,7 @@ export function useAddPatient() {
       return patientId;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.patients.all(user?.id ?? "") });
+      queryClient.invalidateQueries({ queryKey: ["patients", user?.id ?? ""] });
       toast.success("Paciente cadastrado e vinculado! 🎉");
     },
     onError: (err: any) => toast.error("Erro: " + (err.message || "Tente novamente")),
@@ -286,7 +405,7 @@ export function useRemoveFromProgram() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.patients.all(user?.id ?? "") });
+      queryClient.invalidateQueries({ queryKey: ["patients", user?.id ?? ""] });
     },
     onError: (err: any) => toast.error("Erro ao remover do programa"),
   });
@@ -305,7 +424,7 @@ export function useUpdateExpiry() {
       return date;
     },
     onSuccess: (date) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.patients.all(user?.id ?? "") });
+      queryClient.invalidateQueries({ queryKey: ["patients", user?.id ?? ""] });
       toast.success(date ? `Vencimento definido: ${new Date(date).toLocaleDateString("pt-BR")}` : "Vencimento removido");
     },
     onError: (err: any) => toast.error("Erro ao atualizar vencimento"),
@@ -325,7 +444,7 @@ export function useBulkToggle() {
       return { count: ids.length, newStatus };
     },
     onSuccess: ({ count, newStatus }) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.patients.all(user?.id ?? "") });
+      queryClient.invalidateQueries({ queryKey: ["patients", user?.id ?? ""] });
       toast.success(`${count} pacientes ${newStatus === "active" ? "ativados" : "desativados"}`);
     },
     onError: () => toast.error("Erro ao atualizar"),
@@ -349,7 +468,7 @@ export function useAssignToProgram() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.patients.all(user?.id ?? "") });
+      queryClient.invalidateQueries({ queryKey: ["patients", user?.id ?? ""] });
       toast.success("Paciente adicionado ao programa!");
     },
     onError: (err: any) => toast.error(err.message),

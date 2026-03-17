@@ -25,10 +25,11 @@ import { useOnlinePatients } from "@/hooks/useOnlinePatients";
 import {
   usePatientsList, useTogglePatientStatus, useAddPatient,
   useRemoveFromProgram, useUpdateExpiry, useBulkToggle, useAssignToProgram,
-  trackPatientView,
+  trackPatientView, DEFAULT_PAGE_SIZE,
 } from "@/hooks/queries/usePatientsList";
-import type { PatientInfo, ProgramInfo } from "@/hooks/queries/usePatientsList";
+import type { PatientInfo, ProgramInfo, PatientsListParams } from "@/hooks/queries/usePatientsList";
 import type { PrestigePlan } from "@/hooks/usePrestige";
+import PaginationControls from "@/components/patients/PaginationControls";
 
 // ─── Score helpers ───
 function getScoreTier(score: number): { label: string; color: string; bg: string; ring: string; icon: React.ReactNode; description: string } {
@@ -474,8 +475,22 @@ export default function Patients() {
     nav(`/patients/${patientId}`);
   }, [nav]);
 
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [statusTab, setStatusTab] = useState<"active" | "inactive" | "all">("active");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Build params for server-side query
+  const queryParams: PatientsListParams = {
+    page,
+    pageSize,
+    statusFilter: statusTab,
+    search: debouncedSearch,
+  };
+
   // React Query hooks
-  const { data, isLoading, isError } = usePatientsList();
+  const { data, isLoading, isError, isFetching } = usePatientsList(queryParams);
   const toggleStatusMutation = useTogglePatientStatus();
   const addPatientMutation = useAddPatient();
   const removeFromProgramMutation = useRemoveFromProgram();
@@ -485,6 +500,8 @@ export default function Patients() {
   const patients = data?.patients ?? [];
   const programs = data?.programs ?? [];
   const prestigePlansList = data?.prestigePlans ?? [];
+  const pagination = data?.pagination ?? { page: 1, pageSize, totalCount: 0, hasNextPage: false, hasPreviousPage: false, totalPages: 0 };
+  const counts = data?.counts ?? { active: 0, inactive: 0 };
 
   // Local UI state
   const [open, setOpen] = useState(false);
@@ -493,7 +510,6 @@ export default function Patients() {
   const [patientPassword, setPatientPassword] = useState("");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "critical" | "medium" | "good">("all");
-  const [activeTab, setActiveTab] = useState("ativos");
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [assignTarget, setAssignTarget] = useState<PatientInfo | null>(null);
   const [layout, setLayout] = useState<"grid" | "list">("grid");
@@ -505,6 +521,37 @@ export default function Patients() {
   const [bulkMode, setBulkMode] = useState<"deactivate" | "activate">("deactivate");
   const { onlineUsers } = useOnlinePatients();
   const onlineSet = useMemo(() => new Set(onlineUsers.map(u => u.user_id)), [onlineUsers]);
+
+  // Debounced search: when search changes, reset page and debounce
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+    // Debounce server-side search
+    const timer = setTimeout(() => {
+      setDebouncedSearch(value);
+      setPage(1); // Reset to page 1 on search
+    }, 400);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Page change handler
+  const handlePageChange = useCallback((newPage: number) => {
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
+  // Page size change handler
+  const handlePageSizeChange = useCallback((newSize: number) => {
+    setPageSize(newSize);
+    setPage(1); // Reset to page 1
+  }, []);
+
+  // Tab change handler (server-side status filter)
+  const handleTabChange = useCallback((tab: string) => {
+    if (tab === "ativos") setStatusTab("active");
+    else if (tab === "inativos") setStatusTab("inactive");
+    else setStatusTab("all");
+    setPage(1); // Reset page on tab change
+  }, []);
 
   const addPatient = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -607,32 +654,18 @@ export default function Patients() {
   const onlineFilterFn = (p: PatientInfo) =>
     !onlineFilter || onlineSet.has(p.patient_id);
 
-  const activePatientsList = useMemo(() =>
-    patients.filter(p => p.status === "active" && searchFilter(p) && scoreFilter(p) && prestigeFilterFn(p) && onlineFilterFn(p)),
-    [patients, search, filter, prestigeFilter, onlineFilter, onlineSet]
+  // Client-side filters applied on current page of server-paginated results
+  const filteredPatients = useMemo(() =>
+    patients.filter(p => scoreFilter(p) && prestigeFilterFn(p) && onlineFilterFn(p)),
+    [patients, filter, prestigeFilter, onlineFilter, onlineSet]
   );
 
-  const inactivePatientsList = useMemo(() =>
-    patients.filter(p => p.status !== "active" && searchFilter(p) && prestigeFilterFn(p)),
-    [patients, search, prestigeFilter]
-  );
-
-  const programPatientLists = useMemo(() => {
-    const map = new Map<string, PatientInfo[]>();
-    programs.forEach(prog => {
-      map.set(prog.id, patients.filter(p =>
-        p.programs?.some(pp => pp.id === prog.id) && searchFilter(p)
-      ));
-    });
-    return map;
-  }, [patients, programs, search]);
-
-  const activePatients = patients.filter(p => p.status === "active");
-  const counts = {
+  // Client-side score filter counts (on current page only)
+  const scoreCounts = {
     all: patients.length,
-    critical: activePatients.filter(p => (p.priorityScore || 0) < 40).length,
-    medium: activePatients.filter(p => { const s = p.priorityScore || 0; return s >= 40 && s < 70; }).length,
-    good: activePatients.filter(p => (p.priorityScore || 0) >= 70).length,
+    critical: patients.filter(p => (p.priorityScore || 0) < 40).length,
+    medium: patients.filter(p => { const s = p.priorityScore || 0; return s >= 40 && s < 70; }).length,
+    good: patients.filter(p => (p.priorityScore || 0) >= 70).length,
   };
 
   const filterButtons: { key: typeof filter; label: string }[] = [
@@ -658,7 +691,8 @@ export default function Patients() {
                   <Users className="w-7 h-7 text-primary" /> Pacientes
                 </h1>
                 <p className="text-muted-foreground text-sm">
-                  {activePatients.length} ativos · {patients.length - activePatients.length} inativos · ordenados por prioridade
+                  {counts.active} ativos · {counts.inactive} inativos · página {pagination.page} de {pagination.totalPages || 1}
+                  {isFetching && !isLoading && <span className="ml-2 text-xs text-primary animate-pulse">atualizando...</span>}
                 </p>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -721,7 +755,7 @@ export default function Patients() {
                   onClick={() => setFilter(fb.key)}
                   className={`glass-premium rounded-xl p-4 text-left transition-all border-2 metric-glow ${filter === fb.key ? "border-primary shadow-glow" : "border-transparent"}`}
                 >
-                  <p className="text-2xl font-display font-bold">{counts[fb.key]}</p>
+                  <p className="text-2xl font-display font-bold">{scoreCounts[fb.key]}</p>
                   <p className="text-sm text-muted-foreground mt-0.5">{fb.label}</p>
                 </button>
               ))}
@@ -813,68 +847,45 @@ export default function Patients() {
               </div>
             )}
 
-            {/* Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            {/* Status Tabs (server-side filter) */}
+            <Tabs value={statusTab === "active" ? "ativos" : statusTab === "inactive" ? "inativos" : "todos"} onValueChange={handleTabChange} className="space-y-4">
               <TabsList className="flex flex-wrap h-auto gap-1">
                 <TabsTrigger value="ativos" className="gap-1.5">
                   <UserCheck className="w-3.5 h-3.5" /> Ativos
-                  <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{activePatientsList.length}</Badge>
+                  <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{counts.active}</Badge>
                 </TabsTrigger>
                 <TabsTrigger value="inativos" className="gap-1.5">
                   <UserX className="w-3.5 h-3.5" /> Inativos
-                  <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{inactivePatientsList.length}</Badge>
-                </TabsTrigger>
-                {programs.map(prog => (
-                  <TabsTrigger key={prog.id} value={`prog-${prog.id}`} className="gap-1.5">
-                    <Target className="w-3.5 h-3.5" /> {prog.title}
-                    <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
-                      {programPatientLists.get(prog.id)?.length || 0}
-                    </Badge>
-                  </TabsTrigger>
-                ))}
-                <TabsTrigger value="sem-projeto" className="gap-1.5">
-                  <UserX className="w-3.5 h-3.5" /> Sem projeto
-                  <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
-                    {patients.filter(p => p.status === "active" && (!p.programs || p.programs.length === 0)).length}
-                  </Badge>
+                  <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{counts.inactive}</Badge>
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="ativos">
-                <PatientGrid patients={activePatientsList} navigate={navigateToPatient}
-                  toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
-                  setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
-                  onUpdateExpiry={updateExpiry}
-                  search={search} emptyMessage="Nenhum paciente ativo" layout={layout} allPrestigePlans={prestigePlansList} onlineSet={onlineSet} />
-              </TabsContent>
-
-              <TabsContent value="inativos">
-                <PatientGrid patients={inactivePatientsList} navigate={navigateToPatient}
-                  toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
-                  setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
-                  onUpdateExpiry={updateExpiry}
-                  search={search} emptyMessage="Nenhum paciente inativo" layout={layout} allPrestigePlans={prestigePlansList} onlineSet={onlineSet} />
-              </TabsContent>
-
-              {programs.map(prog => (
-                <TabsContent key={prog.id} value={`prog-${prog.id}`}>
-                  <PatientGrid patients={programPatientLists.get(prog.id) || []} navigate={navigateToPatient}
-                    toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
-                    setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
-                    onUpdateExpiry={updateExpiry}
-                    search={search} emptyMessage={`Nenhum paciente no programa "${prog.title}"`} layout={layout} allPrestigePlans={prestigePlansList} onlineSet={onlineSet} />
-                </TabsContent>
-              ))}
-
-              <TabsContent value="sem-projeto">
+              {/* Single content area with paginated results */}
+              <div>
+                {/* Client-side filtered list from current page */}
                 <PatientGrid
-                  patients={patients.filter(p => p.status === "active" && (!p.programs || p.programs.length === 0) && searchFilter(p) && prestigeFilterFn(p))}
+                  patients={filteredPatients}
                   navigate={navigateToPatient}
-                  toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
-                  setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
+                  toggleStatus={toggleStatus}
+                  setAssignTarget={setAssignTarget}
+                  setAssignDialogOpen={setAssignDialogOpen}
+                  removeFromProgram={removeFromProgram}
                   onUpdateExpiry={updateExpiry}
-                  search={search} emptyMessage="Todos os pacientes ativos estão em pelo menos um projeto 🎉" layout={layout} allPrestigePlans={prestigePlansList} onlineSet={onlineSet} />
-              </TabsContent>
+                  search={search}
+                  emptyMessage={statusTab === "active" ? "Nenhum paciente ativo" : statusTab === "inactive" ? "Nenhum paciente inativo" : "Nenhum paciente encontrado"}
+                  layout={layout}
+                  allPrestigePlans={prestigePlansList}
+                  onlineSet={onlineSet}
+                />
+
+                {/* Pagination Controls */}
+                <PaginationControls
+                  pagination={pagination}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={handlePageSizeChange}
+                  isLoading={isFetching}
+                />
+              </div>
             </Tabs>
           </>
         )}
