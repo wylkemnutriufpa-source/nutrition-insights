@@ -2055,6 +2055,53 @@ export type Database = {
           },
         ]
       }
+      feature_marketing_assets: {
+        Row: {
+          caption: string | null
+          created_at: string
+          edited_at: string | null
+          feature_id: string
+          id: string
+          post_image_prompt: string | null
+          post_instagram_data: Json
+          slide_data: Json
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          edited_at?: string | null
+          feature_id: string
+          id?: string
+          post_image_prompt?: string | null
+          post_instagram_data?: Json
+          slide_data?: Json
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          edited_at?: string | null
+          feature_id?: string
+          id?: string
+          post_image_prompt?: string | null
+          post_instagram_data?: Json
+          slide_data?: Json
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_marketing_assets_feature_id_fkey"
+            columns: ["feature_id"]
+            isOneToOne: true
+            referencedRelation: "feature_registry"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feature_registry: {
         Row: {
           bullets: Json
