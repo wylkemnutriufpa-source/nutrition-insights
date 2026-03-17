@@ -377,12 +377,64 @@ export default function PatientMealPlan() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-2xl mx-auto space-y-5">
+      <div className={`max-w-2xl mx-auto space-y-5 transition-all duration-500 ${focusMode ? "pt-2" : ""}`}>
+        {/* XP Popup */}
+        <AnimatePresence>
+          {xpPopup.show && <XPPopup show={xpPopup.show} points={xpPopup.points} />}
+        </AnimatePresence>
+
+        {/* Focus Mode Overlay */}
+        {focusMode && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-10 pointer-events-none"
+          />
+        )}
+
+        <div className={`relative ${focusMode ? "z-20" : ""}`}>
         {/* Header */}
         <div className="text-center">
           <h1 className="font-display text-2xl font-bold">Meu Plano Alimentar</h1>
           <p className="text-muted-foreground text-sm">{plan.title}</p>
         </div>
+
+        {/* Journey Timeline + Focus Mode */}
+        <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+              <Timer className="w-3.5 h-3.5 text-primary" />
+              <span className="text-xs font-bold text-primary">Dia {journeyDay} da Jornada</span>
+            </div>
+            <StreakBadge count={followedStreak} />
+          </div>
+          <Button
+            variant={focusMode ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFocusMode(!focusMode)}
+            className="gap-1.5 text-xs"
+          >
+            <Eye className="w-3.5 h-3.5" />
+            {focusMode ? "Sair do foco" : "Modo foco"}
+          </Button>
+        </div>
+
+        {/* Emotional State */}
+        {isToday && dailyAdherence > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-3 px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/10 text-center"
+          >
+            <p className="text-xs text-muted-foreground">
+              {dailyAdherence >= 80
+                ? "✨ Seu corpo já está respondendo. Continue nesse ritmo!"
+                : dailyAdherence >= 50
+                ? "💪 Bom progresso! Cada refeição seguida faz diferença."
+                : "🌱 O primeiro passo é o mais importante. Siga em frente!"}
+            </p>
+          </motion.div>
+        )}
 
         {/* View Mode Tabs */}
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "daily" | "weekly")} className="w-full">
