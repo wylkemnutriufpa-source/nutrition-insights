@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,7 +13,8 @@ import {
   CheckCircle2, Circle, Calendar, ChevronLeft, ChevronRight,
   Utensils, Coffee, Apple, Cookie, Moon, Sun, Flame,
   Trophy, Beef, Wheat, Droplets, AlertCircle, MinusCircle,
-  BarChart3, TrendingUp, CalendarDays, CalendarRange, Star
+  BarChart3, TrendingUp, CalendarDays, CalendarRange, Star,
+  Zap, Shield, Focus, Eye, Sparkles, Award, Timer
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { MealDetailModal, type MealDetailData } from "@/components/patient/MealDetailModal";
@@ -89,6 +90,61 @@ function getMotivationalMessage(pct: number): { emoji: string; message: string; 
   return { emoji: "⏳", message: "Marque suas refeições para acompanhar sua evolução!", color: "text-muted-foreground" };
 }
 
+// XP Popup component
+function XPPopup({ show, points }: { show: boolean; points: number }) {
+  if (!show) return null;
+  return (
+    <motion.div
+      className="fixed top-20 right-6 z-50 pointer-events-none"
+      initial={{ opacity: 0, y: 20, scale: 0.8 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -30, scale: 0.6 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+    >
+      <div className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30 backdrop-blur-sm">
+        <Zap className="w-5 h-5" />
+        <span className="font-display font-bold text-lg">+{points} XP</span>
+      </div>
+    </motion.div>
+  );
+}
+
+// Streak badge component
+function StreakBadge({ count }: { count: number }) {
+  if (count < 2) return null;
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-500/15 border border-orange-500/30 text-orange-500"
+    >
+      <Flame className="w-3.5 h-3.5" />
+      <span className="text-xs font-bold">{count} seguidas!</span>
+    </motion.div>
+  );
+}
+
+// Physiological impact tags
+const IMPACT_TAGS: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
+  satiety: { icon: <Shield className="w-3 h-3" />, label: "Saciedade", color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" },
+  energy: { icon: <Zap className="w-3 h-3" />, label: "Energia", color: "text-amber-500 bg-amber-500/10 border-amber-500/20" },
+  recovery: { icon: <Award className="w-3 h-3" />, label: "Recuperação", color: "text-blue-500 bg-blue-500/10 border-blue-500/20" },
+  glycemic: { icon: <TrendingUp className="w-3 h-3" />, label: "Controle Glicêmico", color: "text-purple-500 bg-purple-500/10 border-purple-500/20" },
+};
+
+function getImpactTags(meal: MealPlanItem) {
+  const tags: string[] = [];
+  const p = Number(meal.protein_target) || 0;
+  const c = Number(meal.carbs_target) || 0;
+  const f = Number(meal.fat_target) || 0;
+  const cal = meal.calories_target || 0;
+  if (p > 20) tags.push("recovery");
+  if (p > 15 && f > 8) tags.push("satiety");
+  if (c > 30 && cal > 200) tags.push("energy");
+  if (p > c && c < 40) tags.push("glycemic");
+  return tags;
+}
+
 export default function PatientMealPlan() {
   const { user } = useAuth();
   const [plan, setPlan] = useState<MealPlan | null>(null);
@@ -100,10 +156,20 @@ export default function PatientMealPlan() {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [viewMode, setViewMode] = useState<"daily" | "weekly">("daily");
   const [selectedMeal, setSelectedMeal] = useState<MealDetailData | null>(null);
+  const [focusMode, setFocusMode] = useState(false);
+  const [xpPopup, setXpPopup] = useState<{ show: boolean; points: number }>({ show: false, points: 0 });
+  const [justCompleted, setJustCompleted] = useState<string | null>(null);
+  const xpTimerRef = useRef<number | null>(null);
 
   const dayOfWeek = new Date(date + "T12:00:00").getDay();
   const isToday = date === new Date().toISOString().split("T")[0];
   const weekDates = getWeekDates(date);
+
+  // Journey day calculation
+  const journeyDay = plan ? Math.max(1, Math.ceil((new Date().getTime() - new Date(plan.start_date).getTime()) / 86400000)) : 1;
+
+  // Consecutive followed streak
+  const followedStreak = completions.filter(c => c.adherence_status === "followed").length;
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -208,7 +274,23 @@ export default function PatientMealPlan() {
     }
 
     if (status === "followed") {
-      toast.success("✅ Refeição seguida! Ótimo trabalho!");
+      // Show XP popup
+      if (xpTimerRef.current) clearTimeout(xpTimerRef.current);
+      setJustCompleted(item.id);
+      setXpPopup({ show: true, points: 10 });
+      xpTimerRef.current = window.setTimeout(() => {
+        setXpPopup({ show: false, points: 0 });
+        setJustCompleted(null);
+      }, 2000);
+
+      // Check if all meals are now completed
+      const newFollowedCount = followedCount + 1;
+      if (newFollowedCount >= items.length) {
+        confetti();
+        toast.success("🏆 Dia perfeito! Todas as refeições seguidas!");
+      } else {
+        toast.success("✅ Refeição seguida! +10 XP");
+      }
     } else if (status === "partial") {
       toast("⚠️ Parcialmente seguida", { description: "Tente seguir 100% na próxima!" });
     }
@@ -295,12 +377,64 @@ export default function PatientMealPlan() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-2xl mx-auto space-y-5">
+      <div className={`max-w-2xl mx-auto space-y-5 transition-all duration-500 ${focusMode ? "pt-2" : ""}`}>
+        {/* XP Popup */}
+        <AnimatePresence>
+          {xpPopup.show && <XPPopup show={xpPopup.show} points={xpPopup.points} />}
+        </AnimatePresence>
+
+        {/* Focus Mode Overlay */}
+        {focusMode && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-10 pointer-events-none"
+          />
+        )}
+
+        <div className={`relative ${focusMode ? "z-20" : ""}`}>
         {/* Header */}
         <div className="text-center">
           <h1 className="font-display text-2xl font-bold">Meu Plano Alimentar</h1>
           <p className="text-muted-foreground text-sm">{plan.title}</p>
         </div>
+
+        {/* Journey Timeline + Focus Mode */}
+        <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+              <Timer className="w-3.5 h-3.5 text-primary" />
+              <span className="text-xs font-bold text-primary">Dia {journeyDay} da Jornada</span>
+            </div>
+            <StreakBadge count={followedStreak} />
+          </div>
+          <Button
+            variant={focusMode ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFocusMode(!focusMode)}
+            className="gap-1.5 text-xs"
+          >
+            <Eye className="w-3.5 h-3.5" />
+            {focusMode ? "Sair do foco" : "Modo foco"}
+          </Button>
+        </div>
+
+        {/* Emotional State */}
+        {isToday && dailyAdherence > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-3 px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/10 text-center"
+          >
+            <p className="text-xs text-muted-foreground">
+              {dailyAdherence >= 80
+                ? "✨ Seu corpo já está respondendo. Continue nesse ritmo!"
+                : dailyAdherence >= 50
+                ? "💪 Bom progresso! Cada refeição seguida faz diferença."
+                : "🌱 O primeiro passo é o mais importante. Siga em frente!"}
+            </p>
+          </motion.div>
+        )}
 
         {/* View Mode Tabs */}
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "daily" | "weekly")} className="w-full">
@@ -421,6 +555,8 @@ export default function PatientMealPlan() {
                         {mealItems.map((mealItem) => {
                           const status = getItemStatus(mealItem.id);
                           const completedAt = getCompletionTime(mealItem.id);
+                          const isJustDone = justCompleted === mealItem.id;
+                          const impacts = getImpactTags(mealItem);
                           const statusColor = status === "followed" ? "border-emerald-500/30 bg-emerald-500/5"
                             : status === "partial" ? "border-amber-500/30 bg-amber-500/5"
                             : status === "not_followed" ? "border-red-500/30 bg-red-500/5"
@@ -431,9 +567,40 @@ export default function PatientMealPlan() {
                               key={mealItem.id}
                               layout
                               initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
+                              animate={{
+                                opacity: 1,
+                                x: 0,
+                                boxShadow: isJustDone
+                                  ? "0 0 20px rgba(16,185,129,0.3), 0 0 40px rgba(16,185,129,0.1)"
+                                  : "none",
+                              }}
+                              transition={isJustDone ? { duration: 0.5 } : undefined}
                               className={`glass rounded-xl p-4 transition-all ${statusColor}`}
                             >
+                              {/* Celebration particles */}
+                              {isJustDone && (
+                                <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
+                                  {[...Array(6)].map((_, i) => (
+                                    <motion.div
+                                      key={i}
+                                      className="absolute w-1.5 h-1.5 rounded-full bg-emerald-400"
+                                      initial={{
+                                        x: "50%",
+                                        y: "50%",
+                                        opacity: 1,
+                                      }}
+                                      animate={{
+                                        x: `${20 + Math.random() * 60}%`,
+                                        y: `${Math.random() * 100}%`,
+                                        opacity: 0,
+                                        scale: 0,
+                                      }}
+                                      transition={{ duration: 0.8, delay: i * 0.05 }}
+                                    />
+                                  ))}
+                                </div>
+                              )}
+
                               <div
                                 className="flex items-start gap-3 cursor-pointer"
                                 onClick={() => setSelectedMeal({ ...mealItem, metadata: (mealItem as any).metadata })}
@@ -451,6 +618,21 @@ export default function PatientMealPlan() {
                                   {mealItem.description && (
                                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{mealItem.description}</p>
                                   )}
+
+                                  {/* Impact Tags */}
+                                  {impacts.length > 0 && !focusMode && (
+                                    <div className="flex flex-wrap gap-1 mt-1.5">
+                                      {impacts.map(tag => {
+                                        const t = IMPACT_TAGS[tag];
+                                        return (
+                                          <span key={tag} className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-medium border ${t.color}`}>
+                                            {t.icon} {t.label}
+                                          </span>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+
                                   {(mealItem.calories_target || mealItem.protein_target) && (
                                     <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
                                       {mealItem.calories_target && <span className="flex items-center gap-1"><Flame className="w-3 h-3 text-orange-400" /> {mealItem.calories_target} kcal</span>}
@@ -464,7 +646,7 @@ export default function PatientMealPlan() {
                                     {ADHERENCE_OPTIONS.map(opt => (
                                       <button
                                         key={opt.status}
-                                        onClick={() => setAdherence(mealItem, opt.status)}
+                                        onClick={(e) => { e.stopPropagation(); setAdherence(mealItem, opt.status); }}
                                         className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[11px] font-medium transition-all ${
                                           status === opt.status
                                             ? `${opt.bgColor} ${opt.color} ring-1 ring-current`
@@ -703,6 +885,7 @@ export default function PatientMealPlan() {
           onOpenChange={(open) => { if (!open) setSelectedMeal(null); }}
           meal={selectedMeal}
         />
+        </div>{/* close relative z-20 wrapper */}
       </div>
     </DashboardLayout>
   );
