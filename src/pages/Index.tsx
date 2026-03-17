@@ -374,12 +374,14 @@ function NutritionistDashboardContent() {
   const pendingApprovalsCount = usePendingApprovals();
   const [approvalsModalOpen, setApprovalsModalOpen] = useState(false);
 
-  // Auto-open modal when there are pending approvals
+  // Auto-open modal once per session when there are pending approvals
+  const [approvalsShownThisSession, setApprovalsShownThisSession] = useState(false);
   useEffect(() => {
-    if (pendingApprovalsCount > 0) {
+    if (pendingApprovalsCount > 0 && !approvalsShownThisSession) {
       setApprovalsModalOpen(true);
+      setApprovalsShownThisSession(true);
     }
-  }, [pendingApprovalsCount]);
+  }, [pendingApprovalsCount, approvalsShownThisSession]);
 
   // AI-powered
   const [aiInsights, setAiInsights] = useState<any[]>([]);
