@@ -157,6 +157,9 @@ export const FEATURE_REGISTRY: FeatureDefinition[] = [
 
   // Auto-ajuste Clínico
   { name: "clinical_auto_adjustment", label: "Auto-Ajuste Clínico", description: "Ajustes automáticos de protocolo com guardrails e reversão controlada", icon: RefreshCw, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "5.0" },
+
+  // Cockpit Operacional
+  { name: "operational_cost_cockpit", label: "Cockpit de Custos Operacionais", description: "Projeção financeira determinística com simulação de escala para 200-2000 pacientes", icon: DollarSign, category: "Analytics & Relatórios", defaultTier: "premium", addedVersion: "5.0" },
 ];
 
 /** Retorna os nomes de todas as features registradas */

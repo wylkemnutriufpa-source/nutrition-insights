@@ -3689,6 +3689,81 @@ export type Database = {
           },
         ]
       }
+      operational_cost_configuration: {
+        Row: {
+          cost_per_1000_notifications_usd: number
+          cost_per_100mb_storage_usd: number
+          cost_per_ai_call_usd: number
+          id: string
+          infrastructure_base_cost_usd: number
+          stripe_fee_percent: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          cost_per_1000_notifications_usd?: number
+          cost_per_100mb_storage_usd?: number
+          cost_per_ai_call_usd?: number
+          id?: string
+          infrastructure_base_cost_usd?: number
+          stripe_fee_percent?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          cost_per_1000_notifications_usd?: number
+          cost_per_100mb_storage_usd?: number
+          cost_per_ai_call_usd?: number
+          id?: string
+          infrastructure_base_cost_usd?: number
+          stripe_fee_percent?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      operational_cost_metrics: {
+        Row: {
+          ai_calls_body_projection: number
+          ai_calls_meal_analysis: number
+          ai_calls_recipe_generation: number
+          ai_calls_reports: number
+          created_at: string
+          edge_function_runs: number
+          id: string
+          metric_date: string
+          push_notifications_sent: number
+          storage_images_mb: number
+          total_active_patients: number
+        }
+        Insert: {
+          ai_calls_body_projection?: number
+          ai_calls_meal_analysis?: number
+          ai_calls_recipe_generation?: number
+          ai_calls_reports?: number
+          created_at?: string
+          edge_function_runs?: number
+          id?: string
+          metric_date?: string
+          push_notifications_sent?: number
+          storage_images_mb?: number
+          total_active_patients?: number
+        }
+        Update: {
+          ai_calls_body_projection?: number
+          ai_calls_meal_analysis?: number
+          ai_calls_recipe_generation?: number
+          ai_calls_reports?: number
+          created_at?: string
+          edge_function_runs?: number
+          id?: string
+          metric_date?: string
+          push_notifications_sent?: number
+          storage_images_mb?: number
+          total_active_patients?: number
+        }
+        Relationships: []
+      }
       organization_action_groups_snapshot: {
         Row: {
           avg_priority: number | null
