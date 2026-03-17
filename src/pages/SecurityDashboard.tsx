@@ -60,7 +60,7 @@ function ScoreGauge({ score }: { score: number }) {
   return (
     <div className="flex flex-col items-center gap-3">
       <div className={`text-6xl font-black ${color}`}>{score}</div>
-      <Progress value={score} className="w-48 h-3" indicatorClassName={bg} />
+      <Progress value={score} className={`w-48 h-3 [&>div]:${bg}`} />
       <Badge variant={score >= 80 ? "default" : "destructive"} className="text-xs">
         {score >= 80 ? "Seguro" : score >= 50 ? "Atenção" : "Crítico"}
       </Badge>
