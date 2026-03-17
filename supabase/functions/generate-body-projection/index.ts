@@ -292,8 +292,9 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!).auth.getUser(token);
     if (authError || !user) throw new Error("Unauthorized");
 
-    const { patient_id, timeframe = "90d", generation_source = "manual", assessment_id, force_override = false } = await req.json();
+    const { patient_id, timeframe = "90d", generation_source = "manual", assessment_id, force_override = false, generate_all_timeframes = false } = await req.json();
     const targetPatient = patient_id || user.id;
+    const timeframes = generate_all_timeframes ? ["30d", "90d", "180d", "365d"] : [timeframe];
 
     // Check roles
     const { data: userRoles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
