@@ -20,6 +20,9 @@ import { toast } from "sonner";
 
 type ViewMode = "grid" | "list";
 
+const VIEW_MODE_KEY = "fj_editor_view_mode";
+const FULLSCREEN_KEY = "fj_editor_fullscreen";
+
 export default function MealPlanEditorV2() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -30,8 +33,28 @@ export default function MealPlanEditorV2() {
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [mealLibModalOpen, setMealLibModalOpen] = useState(false);
   const [autoGenOpen, setAutoGenOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    const saved = localStorage.getItem(VIEW_MODE_KEY);
+    return saved === "list" ? "list" : "grid";
+  });
+  const [isFullscreen, setIsFullscreen] = useState(() => {
+    return localStorage.getItem(FULLSCREEN_KEY) === "true";
+  });
+
+  // Persist preferences
+  useEffect(() => { localStorage.setItem(VIEW_MODE_KEY, viewMode); }, [viewMode]);
+  useEffect(() => { localStorage.setItem(FULLSCREEN_KEY, String(isFullscreen)); }, [isFullscreen]);
+
+  // Keyboard shortcuts (Esc exits fullscreen)
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [isFullscreen]);
 
   // Hydrate on mount / planId change
   useEffect(() => {
