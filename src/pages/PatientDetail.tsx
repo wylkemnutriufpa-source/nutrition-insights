@@ -46,6 +46,7 @@ import type { PatientSignals } from "@/components/dashboard/SmartRecommendations
 import { MomentumIndicator } from "@/components/gamification/MomentumIndicator";
 import { JourneyTimelineFeed } from "@/components/gamification/JourneyTimelineFeed";
 import { EditorVersionPicker } from "@/components/common/EditorVersionPicker";
+import MealAdherenceWidget from "@/components/patient/MealAdherenceWidget";
 
 export default function PatientDetail() {
   const { patientId } = useParams<{ patientId: string }>();
