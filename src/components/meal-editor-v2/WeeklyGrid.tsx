@@ -11,6 +11,7 @@ import { useMealPlanEditorV2Store, type MealType, type MealPlanItem } from "@/st
 import { MealItemCard } from "./MealItemCard";
 import { DayBlockActions } from "./DayBlockActions";
 import { MealLibrarySidebar } from "./MealLibrarySidebar";
+import { MealLibraryModal } from "./MealLibraryModal";
 import { SaveTemplateDialog } from "./SaveTemplateDialog";
 import MacroBalanceBar from "@/components/meals/MacroBalanceBar";
 import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
