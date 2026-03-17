@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, AlertTriangle, Zap, Save, Send, CheckCircle2, Library } from "lucide-react";
+import { ArrowLeft, Loader2, AlertTriangle, Zap, Save, Send, CheckCircle2, Library, Utensils } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import { supabase } from "@/integrations/supabase/client";
