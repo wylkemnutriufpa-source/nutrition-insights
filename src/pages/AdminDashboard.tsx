@@ -1033,6 +1033,15 @@ export default function AdminDashboard() {
                     </div>
                   </CardContent>
                 </Card>
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/apresentacao")}>
+                  <CardContent className="flex items-center gap-4 py-6">
+                    <GraduationCap className="w-8 h-8 text-primary" />
+                    <div>
+                      <p className="font-display font-semibold">Apresentação do Sistema</p>
+                      <p className="text-sm text-muted-foreground">Guia interativo para profissionais e pacientes</p>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
 
               {/* ─── Simulação de Progresso ─── */}
