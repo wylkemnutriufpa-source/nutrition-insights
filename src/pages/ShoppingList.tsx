@@ -2,10 +2,9 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { ShoppingCart, Plus, Trash2, Check, RefreshCw, Sparkles } from "lucide-react";
@@ -24,6 +23,19 @@ const categoryLabels: Record<string, string> = {
   seasoning: "🧂 Temperos", other: "📦 Outros",
 };
 
+// Try to guess category from food name
+function guessCategory(name: string): string {
+  const lower = name.toLowerCase();
+  if (/frango|carne|peixe|ovo|atum|salmão|tilápia|peito|patinho|alcatra|sardinha|camarão|whey|proteín/i.test(lower)) return "protein";
+  if (/arroz|pão|macarrão|batata|aveia|tapioca|mandioca|inhame|granola|cereal|torrada|cuscuz/i.test(lower)) return "carbs";
+  if (/alface|tomate|brócolis|espinafre|rúcula|cenoura|pepino|abobrinha|couve|chuchu|berinjela|beterraba|vagem/i.test(lower)) return "vegetables";
+  if (/banana|maçã|morango|laranja|melão|mamão|abacate|uva|kiwi|manga|melancia|pera|limão/i.test(lower)) return "fruits";
+  if (/leite|queijo|iogurte|cream cheese|requeijão|ricota|cottage|manteiga/i.test(lower)) return "dairy";
+  if (/azeite|óleo|castanha|nozes|amendoim|amêndoa|linhaça|chia|coco|pasta de amendoim/i.test(lower)) return "oils";
+  if (/sal|pimenta|orégano|alho|cebola|cheiro-verde|manjericão|canela|açúcar|adoçante|vinagre|mostarda|molho/i.test(lower)) return "seasoning";
+  return "other";
+}
+
 export default function ShoppingList() {
   const { user } = useAuth();
   const [items, setItems] = useState<ShoppingItem[]>([]);
@@ -41,7 +53,7 @@ export default function ShoppingList() {
   const addItem = async () => {
     if (!user || !newItem.trim()) return;
     const { error } = await supabase.from("shopping_list_items").insert({
-      patient_id: user.id, item_name: newItem, category: "other",
+      patient_id: user.id, item_name: newItem, category: guessCategory(newItem),
     });
     if (error) toast.error(error.message);
     else { setNewItem(""); fetchItems(); }
@@ -67,30 +79,103 @@ export default function ShoppingList() {
     if (!user) return;
     setGenerating(true);
     try {
-      // Fetch active meal plan items
-      const { data: plans } = await supabase.from("meal_plans").select("id").eq("patient_id", user.id).eq("is_active", true).limit(1);
-      if (!plans?.[0]) { toast.error("Nenhum plano alimentar ativo."); setGenerating(false); return; }
+      // 1. Find active plan — prioritize approved/published status
+      const { data: plans } = await supabase
+        .from("meal_plans")
+        .select("id, title, plan_status")
+        .eq("patient_id", user.id)
+        .eq("is_active", true)
+        .in("plan_status", ["approved", "published_to_patient", "draft"])
+        .order("updated_at", { ascending: false })
+        .limit(1);
 
-      const { data: planItems } = await supabase.from("meal_plan_items").select("description, title").eq("meal_plan_id", plans[0].id);
-
-      if (!planItems?.length) { toast.error("Plano sem itens."); setGenerating(false); return; }
-
-      // Extract food items from descriptions
-      const foodItems = planItems
-        .filter(item => item.description)
-        .flatMap(item => (item.description || "").split(/[,;\n]/).map(s => s.trim()).filter(Boolean));
-
-      // Deduplicate and insert
-      const unique = [...new Set(foodItems.map(f => f.toLowerCase()))];
-      const inserts = unique.map(item => ({
-        patient_id: user.id, item_name: item, meal_plan_id: plans[0].id, category: "other",
-      }));
-
-      if (inserts.length > 0) {
-        const { error } = await supabase.from("shopping_list_items").insert(inserts);
-        if (error) toast.error(error.message);
-        else toast.success(`${inserts.length} itens adicionados do plano!`);
+      if (!plans?.[0]) {
+        toast.error("Nenhum plano alimentar ativo encontrado. Peça ao seu nutricionista para aprovar/publicar seu plano.");
+        setGenerating(false);
+        return;
       }
+
+      const plan = plans[0];
+
+      // 2. Fetch meal_plan_items with descriptions
+      const { data: planItems } = await supabase
+        .from("meal_plan_items")
+        .select("description, title")
+        .eq("meal_plan_id", plan.id);
+
+      if (!planItems?.length) {
+        toast.error("Plano sem refeições cadastradas.");
+        setGenerating(false);
+        return;
+      }
+
+      // 3. Extract food items from descriptions AND titles
+      const foodItems: string[] = [];
+
+      planItems.forEach(item => {
+        // Extract from description (foods are separated by comma, semicolon, newline, or " - ")
+        if (item.description) {
+          const parts = item.description
+            .split(/[;\n]/)
+            .flatMap(line => line.split(/\s*-\s+/))
+            .map(s => s.trim())
+            .filter(Boolean)
+            .filter(s => s.length > 2 && s.length < 80); // Skip too short or too long strings
+          foodItems.push(...parts);
+        }
+      });
+
+      if (foodItems.length === 0) {
+        toast.error("Não foi possível extrair alimentos do plano. Verifique se as descrições das refeições estão preenchidas.");
+        setGenerating(false);
+        return;
+      }
+
+      // 4. Deduplicate and clean up
+      const seen = new Set<string>();
+      const unique: string[] = [];
+      foodItems.forEach(f => {
+        // Clean: remove quantities like "100g", "2 unidades", leading numbers
+        const cleaned = f
+          .replace(/^\d+[\s]*[gG][\s]+/g, '') // "100g "
+          .replace(/^\d+[\s]*(ml|g|kg|un|unidade|colher|xícara|fatia|porção|pedaço)\b[\s]*(de[\s]+)?/gi, '')
+          .replace(/^\d+[\s]*[-–]\s*/g, '')
+          .trim();
+        
+        if (cleaned.length < 2) return;
+        const key = cleaned.toLowerCase();
+        if (!seen.has(key)) {
+          seen.add(key);
+          unique.push(cleaned);
+        }
+      });
+
+      // 5. Get existing items to avoid duplicates
+      const { data: existing } = await supabase
+        .from("shopping_list_items")
+        .select("item_name")
+        .eq("patient_id", user.id);
+      const existingNames = new Set((existing || []).map((e: any) => e.item_name.toLowerCase()));
+
+      const inserts = unique
+        .filter(name => !existingNames.has(name.toLowerCase()))
+        .map(name => ({
+          patient_id: user.id,
+          item_name: name,
+          meal_plan_id: plan.id,
+          category: guessCategory(name),
+        }));
+
+      if (inserts.length === 0) {
+        toast.info("Todos os itens do plano já estão na sua lista!");
+        setGenerating(false);
+        return;
+      }
+
+      const { error } = await supabase.from("shopping_list_items").insert(inserts);
+      if (error) toast.error(error.message);
+      else toast.success(`${inserts.length} itens adicionados do plano "${plan.title}"!`);
+
       fetchItems();
     } catch (e: any) {
       toast.error("Erro ao gerar lista.");
