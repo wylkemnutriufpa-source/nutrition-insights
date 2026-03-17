@@ -312,6 +312,12 @@ function emptyMeta(profile: PatientProfile, distribution: MealDistribution, tota
 }
 
 // ── Helper: convert result to meal_plan_items inserts ────────
+function normalizeGeneratedDayForStorage(day: number) {
+  // Generator uses 1-7 (Seg-Dom), while the database/editor use 0-6 (Dom-Sáb).
+  // This keeps Mon-Sat aligned and maps Sunday (7) to 0.
+  return ((day % 7) + 7) % 7;
+}
+
 export function slotsToInserts(
   slots: GeneratedMealSlot[],
   planId: string,
@@ -319,6 +325,7 @@ export function slotsToInserts(
   type MealTypeEnum = "breakfast" | "morning_snack" | "lunch" | "afternoon_snack" | "dinner" | "evening_snack";
   return slots.flatMap((slot) => {
     const mealType = slot.mealType as MealTypeEnum;
+    const storageDay = normalizeGeneratedDayForStorage(slot.day);
     const foods = Array.isArray(slot.libraryItem.foods) ? slot.libraryItem.foods : [];
     if (foods.length === 0) {
       return [{
@@ -326,7 +333,7 @@ export function slotsToInserts(
         title: slot.libraryItem.title,
         description: null as string | null,
         meal_type: mealType,
-        day_of_week: slot.day,
+        day_of_week: storageDay,
         calories_target: slot.targetKcal,
         protein_target: Math.round(slot.libraryItem.protein * slot.scaleFactor),
         carbs_target: Math.round(slot.libraryItem.carbs * slot.scaleFactor),
@@ -341,7 +348,7 @@ export function slotsToInserts(
         ? `${food.portion} (×${slot.scaleFactor.toFixed(1)})`
         : food.portion || null,
       meal_type: mealType,
-      day_of_week: slot.day,
+      day_of_week: storageDay,
       calories_target: Math.round((slot.libraryItem.base_calories / foods.length) * slot.scaleFactor),
       protein_target: Math.round((slot.libraryItem.protein / foods.length) * slot.scaleFactor),
       carbs_target: Math.round((slot.libraryItem.carbs / foods.length) * slot.scaleFactor),
