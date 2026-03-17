@@ -217,9 +217,13 @@ function generatePlanFromTemplate(
       }
       if (allowedFoods.length === 0) allowedFoods = foods;
 
-      const dayFoods = allowedFoods.map((f: any) => {
-        if (day > 0 && day % 2 === 0 && (f.substitutions || []).length > 0 && !f._substituted) {
-          const subIdx = (day - 1) % f.substitutions.length;
+      // Use planOptionIndex to create different rotation patterns per option
+      const rotationSeed = planOptionIndex * 3;
+      const dayFoods = allowedFoods.map((f: any, fIdx: number) => {
+        // Different option = different days trigger substitution
+        const shouldRotate = (day + rotationSeed + fIdx) % 3 !== 0;
+        if (shouldRotate && (f.substitutions || []).length > 0 && !f._substituted) {
+          const subIdx = (day + planOptionIndex + fIdx) % f.substitutions.length;
           const subName = f.substitutions[subIdx];
           if (isFoodAllowed(subName, "", restrictions) && !isDisliked(subName, "", disliked)) {
             return { ...f, name: subName, _rotated: true };
