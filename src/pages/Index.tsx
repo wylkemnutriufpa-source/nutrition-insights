@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import GuidedTour, { PROFESSIONAL_TOUR_STEPS, PATIENT_TOUR_STEPS } from "@/components/common/GuidedTour";
-import { useQueryClient } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import PatientGridDashboard from "@/components/dashboard/PatientGridDashboard";
 import ProStrategicDashboard from "@/components/dashboard/ProStrategicDashboard";
 import { useLayoutPreference } from "@/hooks/useLayoutPreference";
@@ -18,7 +17,6 @@ import AdherenceAnalytics from "@/components/dashboard/AdherenceAnalytics";
 import DashboardAdvancedCharts from "@/components/dashboard/DashboardAdvancedCharts";
 import AnalyticsDashboard from "@/components/dashboard/AnalyticsDashboard";
 import AIStrategyCenter from "@/components/dashboard/AIStrategyCenter";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import SystemUsageCard from "@/components/dashboard/SystemUsageCard";
 import NutritionCopilot from "@/components/dashboard/NutritionCopilot";
@@ -35,19 +33,15 @@ import { TreatmentInsightsPanel } from "@/components/dashboard/TreatmentInsights
 import ExpandablePanel from "@/components/common/ExpandablePanel";
 import PatientMomentumSummary from "@/components/dashboard/PatientMomentumSummary";
 import {
-  UtensilsCrossed, Users, TrendingUp, Target, Sparkles, Plus,
-  CheckCircle2, Circle, AlertTriangle, Activity, FileText, Rocket,
-  Calendar, ArrowRight, Clock, ClipboardList, Heart, Brain,
+  UtensilsCrossed, Users, TrendingUp, Target, Plus,
+  CheckCircle2, AlertTriangle, Activity, FileText, Rocket,
+  Calendar, ArrowRight, ClipboardList, Heart, Brain,
   BarChart3, Shield, ChefHat, MessageSquare, Bot, Pill
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Link, useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-import { useTranslation } from "react-i18next";
-import type { Tables } from "@/integrations/supabase/types";
 
-type PlayerStats = Tables<"player_stats">;
 
 const container = {
   hidden: { opacity: 0 },
