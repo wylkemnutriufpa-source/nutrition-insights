@@ -109,6 +109,7 @@ const AdminProtocolFitJourney = lazy(() => import("./pages/AdminProtocolFitJourn
 const AdminProtocolBiquiniBranco = lazy(() => import("./pages/AdminProtocolBiquiniBranco"));
 const AdminNutritionProtocols = lazy(() => import("./pages/AdminNutritionProtocols"));
 const AdminGuideEngine = lazy(() => import("./pages/AdminGuideEngine"));
+const AdminMarketingContent = lazy(() => import("./pages/AdminMarketingContent"));
 const TherapeuticIntelligence = lazy(() => import("./pages/TherapeuticIntelligence"));
 const ProtocolTransitions = lazy(() => import("./pages/ProtocolTransitions"));
 const ClinicalOrchestration = lazy(() => import("./pages/ClinicalOrchestration"));
