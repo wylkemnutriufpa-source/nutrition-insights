@@ -237,6 +237,21 @@ export default function PatientMealPlan() {
     if (!user || !plan) return;
     const targetDate = forDate || date;
 
+    // 24h edit window: only allow marking for today or editing within 24h
+    const targetDateObj = new Date(targetDate + "T23:59:59");
+    const now = new Date();
+    const hoursDiff = (now.getTime() - targetDateObj.getTime()) / (1000 * 60 * 60);
+    if (hoursDiff > 24) {
+      toast.error("⏰ Prazo expirado! Só é possível editar refeições até 24h após o dia.");
+      return;
+    }
+    // Cannot mark future dates
+    const todayStr = now.toISOString().split("T")[0];
+    if (targetDate > todayStr) {
+      toast.error("📅 Não é possível marcar refeições de dias futuros.");
+      return;
+    }
+
     const relevantCompletions = forDate
       ? weekCompletions.filter(c => (c as any).date === forDate)
       : completions;
