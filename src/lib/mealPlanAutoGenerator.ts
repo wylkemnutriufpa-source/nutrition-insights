@@ -340,7 +340,7 @@ export function slotsToInserts(
       description: slot.scaleFactor !== 1
         ? `${food.portion} (×${slot.scaleFactor.toFixed(1)})`
         : food.portion || null,
-      meal_type: slot.mealType,
+      meal_type: mealType,
       day_of_week: slot.day,
       calories_target: Math.round((slot.libraryItem.base_calories / foods.length) * slot.scaleFactor),
       protein_target: Math.round((slot.libraryItem.protein / foods.length) * slot.scaleFactor),

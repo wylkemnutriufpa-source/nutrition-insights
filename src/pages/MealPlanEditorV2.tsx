@@ -22,6 +22,7 @@ export default function MealPlanEditorV2() {
   const [publishing, setPublishing] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [mealLibModalOpen, setMealLibModalOpen] = useState(false);
+  const [autoGenOpen, setAutoGenOpen] = useState(false);
 
   // Hydrate on mount / planId change
   useEffect(() => {
