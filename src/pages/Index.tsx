@@ -1327,7 +1327,10 @@ export default function Index() {
         <GuidedTour
           steps={isNutritionist ? PROFESSIONAL_TOUR_STEPS : PATIENT_TOUR_STEPS}
           storageKey={tourKey}
-          onComplete={() => setShowTour(false)}
+          onComplete={() => {
+            setShowTour(false);
+            localStorage.setItem(`${tourKey}_dismissed_at`, String(Date.now()));
+          }}
         />
       )}
     </DashboardLayout>
