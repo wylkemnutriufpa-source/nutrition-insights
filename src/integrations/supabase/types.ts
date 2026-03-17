@@ -3691,31 +3691,43 @@ export type Database = {
       }
       operational_cost_configuration: {
         Row: {
+          avg_stripe_fee_percent: number
+          avg_ticket_per_patient: number | null
+          cost_base_per_professional: number
           cost_per_1000_notifications_usd: number
           cost_per_100mb_storage_usd: number
           cost_per_ai_call_usd: number
           id: string
           infrastructure_base_cost_usd: number
+          monthly_price_per_professional: number
           stripe_fee_percent: number
           updated_at: string
           updated_by: string | null
         }
         Insert: {
+          avg_stripe_fee_percent?: number
+          avg_ticket_per_patient?: number | null
+          cost_base_per_professional?: number
           cost_per_1000_notifications_usd?: number
           cost_per_100mb_storage_usd?: number
           cost_per_ai_call_usd?: number
           id?: string
           infrastructure_base_cost_usd?: number
+          monthly_price_per_professional?: number
           stripe_fee_percent?: number
           updated_at?: string
           updated_by?: string | null
         }
         Update: {
+          avg_stripe_fee_percent?: number
+          avg_ticket_per_patient?: number | null
+          cost_base_per_professional?: number
           cost_per_1000_notifications_usd?: number
           cost_per_100mb_storage_usd?: number
           cost_per_ai_call_usd?: number
           id?: string
           infrastructure_base_cost_usd?: number
+          monthly_price_per_professional?: number
           stripe_fee_percent?: number
           updated_at?: string
           updated_by?: string | null
@@ -3761,6 +3773,36 @@ export type Database = {
           push_notifications_sent?: number
           storage_images_mb?: number
           total_active_patients?: number
+        }
+        Relationships: []
+      }
+      operational_scale_scenarios: {
+        Row: {
+          ai_usage_intensity: Database["public"]["Enums"]["usage_intensity"]
+          avg_patients_per_professional: number
+          created_at: string
+          id: string
+          scenario_name: string
+          storage_intensity: Database["public"]["Enums"]["usage_intensity"]
+          total_professionals: number
+        }
+        Insert: {
+          ai_usage_intensity?: Database["public"]["Enums"]["usage_intensity"]
+          avg_patients_per_professional?: number
+          created_at?: string
+          id?: string
+          scenario_name: string
+          storage_intensity?: Database["public"]["Enums"]["usage_intensity"]
+          total_professionals?: number
+        }
+        Update: {
+          ai_usage_intensity?: Database["public"]["Enums"]["usage_intensity"]
+          avg_patients_per_professional?: number
+          created_at?: string
+          id?: string
+          scenario_name?: string
+          storage_intensity?: Database["public"]["Enums"]["usage_intensity"]
+          total_professionals?: number
         }
         Relationships: []
       }
@@ -10048,6 +10090,7 @@ export type Database = {
         | "completed"
         | "cancelled"
       referral_status: "lead" | "registered" | "paying" | "cancelled"
+      usage_intensity: "low" | "medium" | "high"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -10265,6 +10308,7 @@ export const Constants = {
         "cancelled",
       ],
       referral_status: ["lead", "registered", "paying", "cancelled"],
+      usage_intensity: ["low", "medium", "high"],
     },
   },
 } as const
