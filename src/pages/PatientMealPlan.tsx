@@ -180,6 +180,7 @@ export default function PatientMealPlan() {
       .select("id, title, start_date")
       .eq("patient_id", user.id)
       .eq("is_active", true)
+      .eq("plan_status", "published_to_patient")
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
