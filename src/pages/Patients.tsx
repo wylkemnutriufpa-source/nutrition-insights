@@ -674,12 +674,12 @@ export default function Patients() {
     return map;
   }, [patients, programs, search]);
 
-  const activePatients = patients.filter(p => p.status === "active");
-  const counts = {
+  // Client-side score filter counts (on current page only)
+  const scoreCounts = {
     all: patients.length,
-    critical: activePatients.filter(p => (p.priorityScore || 0) < 40).length,
-    medium: activePatients.filter(p => { const s = p.priorityScore || 0; return s >= 40 && s < 70; }).length,
-    good: activePatients.filter(p => (p.priorityScore || 0) >= 70).length,
+    critical: patients.filter(p => (p.priorityScore || 0) < 40).length,
+    medium: patients.filter(p => { const s = p.priorityScore || 0; return s >= 40 && s < 70; }).length,
+    good: patients.filter(p => (p.priorityScore || 0) >= 70).length,
   };
 
   const filterButtons: { key: typeof filter; label: string }[] = [
