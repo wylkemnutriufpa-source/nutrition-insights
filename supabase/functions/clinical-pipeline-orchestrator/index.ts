@@ -273,7 +273,7 @@ Deno.serve(async (req) => {
 });
 
 async function generateDailySnapshots(supabase: any, runId: string) {
-  // Get all active patients with their latest data
+  // Get all active patients
   const { data: patients } = await supabase
     .from("nutritionist_patients")
     .select("patient_id")
@@ -283,70 +283,69 @@ async function generateDailySnapshots(supabase: any, runId: string) {
   if (!patients || patients.length === 0) return;
 
   const today = new Date().toISOString().split("T")[0];
-  const snapshots = [];
+  const patientIds = patients.map((p: any) => p.patient_id);
 
-  for (const { patient_id } of patients) {
-    // Get latest adherence
-    const { data: adherence } = await supabase
-      .from("patient_adherence_patterns")
-      .select("overall_adherence_score, engagement_level")
-      .eq("patient_id", patient_id)
-      .order("calculated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    // Get latest clinical alert count
-    const { count: alertCount } = await supabase
+  // BATCH: Fetch all data in parallel instead of N+1 per patient
+  const [alertsRes, checkinsRes, dropoutRes] = await Promise.all([
+    supabase
       .from("clinical_alerts")
-      .select("id", { count: "exact", head: true })
-      .eq("patient_id", patient_id)
-      .eq("is_active", true);
-
-    // Get latest weight
-    const { data: latestCheckin } = await supabase
+      .select("patient_id")
+      .in("patient_id", patientIds)
+      .eq("is_active", true),
+    supabase
       .from("patient_checkins")
-      .select("weight, created_at")
-      .eq("patient_id", patient_id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    // Get dropout risk
-    const { data: dropout } = await supabase
+      .select("patient_id, weight, created_at")
+      .in("patient_id", patientIds)
+      .order("created_at", { ascending: false }),
+    supabase
       .from("behavioral_recovery_actions")
-      .select("dropout_risk_score, dropout_risk_level")
-      .eq("patient_id", patient_id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .select("patient_id, dropout_risk_score, dropout_risk_level")
+      .in("patient_id", patientIds)
+      .order("created_at", { ascending: false }),
+  ]);
 
+  // Build maps from batch results
+  const alertCountMap = new Map<string, number>();
+  (alertsRes.data || []).forEach((a: any) => {
+    alertCountMap.set(a.patient_id, (alertCountMap.get(a.patient_id) || 0) + 1);
+  });
+
+  const latestCheckinMap = new Map<string, any>();
+  (checkinsRes.data || []).forEach((c: any) => {
+    if (!latestCheckinMap.has(c.patient_id)) latestCheckinMap.set(c.patient_id, c);
+  });
+
+  const dropoutMap = new Map<string, any>();
+  (dropoutRes.data || []).forEach((d: any) => {
+    if (!dropoutMap.has(d.patient_id)) dropoutMap.set(d.patient_id, d);
+  });
+
+  const snapshots = patientIds.map((patient_id: string) => {
+    const dropout = dropoutMap.get(patient_id);
     const riskScore = dropout?.dropout_risk_score || 0;
     const riskLevel = riskScore >= 60 ? "critical" : riskScore >= 30 ? "risk" : riskScore >= 10 ? "attention" : "stable";
+    const latestCheckin = latestCheckinMap.get(patient_id);
 
-    snapshots.push({
+    return {
       patient_id,
       snapshot_date: today,
       pipeline_run_id: runId,
-      adherence_score: adherence?.overall_adherence_score || 0,
+      adherence_score: 0,
       clinical_risk_score: riskScore,
       risk_level: riskLevel,
-      active_alerts_count: alertCount || 0,
+      active_alerts_count: alertCountMap.get(patient_id) || 0,
       current_weight: latestCheckin?.weight || null,
       dropout_risk_score: riskScore,
-      snapshot_data: {
-        engagement_level: adherence?.engagement_level || "unknown",
-      },
-    });
-  }
+      snapshot_data: { engagement_level: "unknown" },
+    };
+  });
 
   // Batch upsert snapshots
-  if (snapshots.length > 0) {
-    const batchSize = 50;
-    for (let i = 0; i < snapshots.length; i += batchSize) {
-      const batch = snapshots.slice(i, i + batchSize);
-      await supabase.from("clinical_daily_snapshots").upsert(batch, {
-        onConflict: "patient_id,snapshot_date",
-      });
-    }
+  const batchSize = 50;
+  for (let i = 0; i < snapshots.length; i += batchSize) {
+    const batch = snapshots.slice(i, i + batchSize);
+    await supabase.from("clinical_daily_snapshots").upsert(batch, {
+      onConflict: "patient_id,snapshot_date",
+    });
   }
 }
