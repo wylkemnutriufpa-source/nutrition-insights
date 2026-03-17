@@ -387,7 +387,92 @@ export default function BiquiniBrancoDetail() {
             <TabsTrigger value="evolution" className="gap-1"><BarChart3 className="w-4 h-4" /> Evolução</TabsTrigger>
             <TabsTrigger value="ai" className="gap-1"><Brain className="w-4 h-4" /> Insights IA</TabsTrigger>
             <TabsTrigger value="protocol" className="gap-1"><Shield className="w-4 h-4" /> Protocolo Exclusivo</TabsTrigger>
+            <TabsTrigger value="prestige" className="gap-1"><Crown className="w-4 h-4" /> Prestígio</TabsTrigger>
           </TabsList>
+
+          {/* ── PRESTIGE TAB ── */}
+          <TabsContent value="prestige" className="space-y-4">
+            <Card className="glass shadow-card">
+              <CardHeader>
+                <CardTitle className="font-display flex items-center gap-2">
+                  <Crown className="w-5 h-5 text-amber-500" /> Prestígio do Programa
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Vincule um plano de prestígio a este programa. Todos os pacientes inscritos receberão automaticamente o prestígio ao entrar no programa.
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <Label className="text-xs mb-1 block">Prestígio vinculado</Label>
+                    <Select
+                      value={selectedPrestigePlanId || "none"}
+                      onValueChange={async (v) => {
+                        const planId = v === "none" ? null : v;
+                        setSelectedPrestigePlanId(v === "none" ? "" : v);
+                        await (supabase as any).from("programs").update({ prestige_plan_id: planId }).eq("id", programId);
+                        const sp = prestigePlans.find(p => p.id === planId);
+                        toast.success(planId ? `${sp?.badge_icon || "👑"} Prestígio "${sp?.name}" vinculado ao programa!` : "Prestígio desvinculado do programa");
+                      }}
+                    >
+                      <SelectTrigger className="h-10">
+                        <SelectValue placeholder="Selecione um prestígio..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">❌ Sem Prestígio</SelectItem>
+                        {prestigePlans.map((p: any) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.badge_icon || "⭐"} {p.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {selectedPrestigePlanId && (
+                  <div className="border border-amber-500/20 rounded-xl p-4 bg-gradient-to-r from-amber-500/5 to-primary/5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">{prestigePlans.find(p => p.id === selectedPrestigePlanId)?.badge_icon || "⭐"}</span>
+                        <div>
+                          <p className="font-semibold text-sm">{prestigePlans.find(p => p.id === selectedPrestigePlanId)?.name}</p>
+                          <p className="text-xs text-muted-foreground">{patients.length} pacientes inscritos</p>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1 border-amber-500/30 text-amber-600 hover:bg-amber-500/10"
+                        disabled={syncingPrestige}
+                        onClick={async () => {
+                          setSyncingPrestige(true);
+                          try {
+                            const { data, error } = await supabase.rpc("sync_program_prestige", {
+                              _program_id: programId,
+                              _assigned_by: user!.id,
+                            });
+                            if (error) throw error;
+                            const result = data as any;
+                            toast.success(`👑 Prestígio aplicado a ${result.patients_updated} pacientes!`);
+                          } catch (e: any) {
+                            toast.error(e.message || "Erro ao sincronizar");
+                          } finally {
+                            setSyncingPrestige(false);
+                          }
+                        }}
+                      >
+                        {syncingPrestige ? "Sincronizando..." : "Sincronizar Todos"}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      ✅ Novos inscritos recebem automaticamente este prestígio. Use "Sincronizar Todos" para aplicar retroativamente aos já inscritos.
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* ── PHASES TAB ── */}
           <TabsContent value="phases" className="space-y-4">
