@@ -235,50 +235,46 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
         </div>
 
         <div className="flex items-center gap-1.5">
-          {/* Audio controls */}
-          {audio.needsInteraction ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => { e.stopPropagation(); audio.startPlayback(); }}
-              className="text-white/35 hover:text-white/70 hover:bg-white/5 text-xs gap-1.5"
+          {/* Glassmorphism audio control */}
+          <div
+            className="flex items-center gap-1"
+            onMouseEnter={() => setShowVolume(true)}
+            onMouseLeave={() => setShowVolume(false)}
+          >
+            <button
+              onClick={(e) => { e.stopPropagation(); audio.toggleMute(); }}
+              className="w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-xl border transition-all duration-300"
+              style={{
+                background: "rgba(255,255,255,0.08)",
+                borderColor: "rgba(255,255,255,0.12)",
+                boxShadow: audio.isMuted ? "none" : `0 0 16px ${accent}30`,
+              }}
+              title={audio.isMuted ? "Ativar som" : "Silenciar"}
             >
-              <Music className="w-3.5 h-3.5" /> Som
-            </Button>
-          ) : (
-            <div
-              className="flex items-center gap-1"
-              onMouseEnter={() => setShowVolume(true)}
-              onMouseLeave={() => setShowVolume(false)}
-            >
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-7 h-7 text-white/35 hover:text-white/70 hover:bg-white/5"
-                onClick={(e) => { e.stopPropagation(); audio.toggleMute(); }}
-              >
-                {audio.isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-              </Button>
-              <AnimatePresence>
-                {showVolume && (
-                  <motion.div
-                    initial={{ opacity: 0, width: 0 }}
-                    animate={{ opacity: 1, width: 72 }}
-                    exit={{ opacity: 0, width: 0 }}
-                    className="overflow-hidden"
-                  >
-                    <Slider
-                      value={[audio.volume * 100]}
-                      max={100}
-                      step={5}
-                      onValueChange={([v]) => audio.changeVolume(v / 100)}
-                      className="w-[68px]"
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          )}
+              {audio.isMuted || audio.needsInteraction
+                ? <VolumeX className="w-4 h-4 text-white/50" />
+                : <Volume2 className="w-4 h-4 text-white/70" />
+              }
+            </button>
+            <AnimatePresence>
+              {showVolume && !audio.needsInteraction && (
+                <motion.div
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: 72 }}
+                  exit={{ opacity: 0, width: 0 }}
+                  className="overflow-hidden"
+                >
+                  <Slider
+                    value={[audio.volume * 100]}
+                    max={100}
+                    step={5}
+                    onValueChange={([v]) => audio.changeVolume(v / 100)}
+                    className="w-[68px]"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           <Button
             variant="ghost"
