@@ -192,7 +192,13 @@ export default function AdminOperationalCosts() {
             <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : data ? (
-          <>
+          <Tabs defaultValue="current" className="space-y-6">
+            <TabsList className="bg-card/80 border border-border/50">
+              <TabsTrigger value="current" className="gap-1.5"><BarChart3 className="h-3.5 w-3.5" /> Operacional</TabsTrigger>
+              <TabsTrigger value="b2b" className="gap-1.5"><Building2 className="h-3.5 w-3.5" /> Escala B2B</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="current" className="space-y-6">
             {/* ── RESUMO ATUAL ─────────────────────────── */}
             <div>
               <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
