@@ -58,6 +58,9 @@ export const PATIENT_FEATURE_REGISTRY: PatientFeatureDefinition[] = [
   { key: "water_calculator", label: "Calculadora de Água", description: "Calcular necessidade hídrica", icon: Heart, category: "Saúde & Ferramentas" },
   { key: "weekly_report", label: "Relatório Semanal", description: "Ver relatório semanal de progresso", icon: BarChart3, category: "Saúde & Ferramentas" },
   { key: "onboarding_pipeline", label: "Onboarding Automático", description: "Pipeline guiado: anamnese, dados corporais, preferências e plano IA", icon: Zap, category: "Saúde & Ferramentas" },
+
+  // Prestígio
+  { key: "prestige_view", label: "Meu Prestígio", description: "Visualizar seu nível de prestígio, badge e benefícios exclusivos", icon: Crown, category: "Engajamento" },
 ];
 
 export function getPatientFeaturesByCategory(): Record<string, PatientFeatureDefinition[]> {
