@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState as useStateReact } from "react";
+import { ReactNode, useEffect, useMemo, useState as useStateReact } from "react";
 import OfflineSyncBanner from "@/components/common/OfflineSyncBanner";
 import SmartResumeModal from "@/components/common/SmartResumeModal";
 import AccordionSidebar from "@/components/layout/AccordionSidebar";
@@ -35,6 +35,7 @@ import BrainIntelligence from "@/components/common/BrainIntelligence";
 import { AlertTriangle } from "lucide-react";
 import ProtocolBlockedModal from "@/components/biquini/ProtocolBlockedModal";
 import { useSmartMenu, SmartMenuItem, MenuCategory, CATEGORY_COLORS } from "@/hooks/useSmartMenu";
+import { useTeamPermissionsFilter } from "@/hooks/useTeamPermissionsFilter";
 
 // Icon registry - maps string names to Lucide components
 const ICON_MAP: Record<string, any> = {
@@ -358,7 +359,20 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [sosOpen, setSosOpen] = useState(false);
   const [sosInboxOpen, setSosInboxOpen] = useState(false);
   const { showBadge: showOnboardingBadge } = useOnboardingNotification();
-  const { categories, flatItems, loading: menuLoading, trackClick, userRole } = useSmartMenu();
+  const { categories: rawCategories, flatItems: rawFlatItems, loading: menuLoading, trackClick, userRole } = useSmartMenu();
+  const { filterMenuItems, isEmployee } = useTeamPermissionsFilter();
+
+  // Filter menu items by employee permissions
+  const categories = useMemo(() => {
+    if (!isEmployee) return rawCategories;
+    return rawCategories
+      .map(cat => ({ ...cat, items: filterMenuItems(cat.items) }))
+      .filter(cat => cat.items.length > 0);
+  }, [rawCategories, isEmployee, filterMenuItems]);
+
+  const flatItems = useMemo(() => {
+    return filterMenuItems(rawFlatItems);
+  }, [rawFlatItems, filterMenuItems]);
 
   const isPatient = !isNutritionist && !isPersonal && !isAdmin;
   const isProRole = isNutritionist || isPersonal || isAdmin;
