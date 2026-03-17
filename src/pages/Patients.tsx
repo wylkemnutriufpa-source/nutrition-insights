@@ -705,7 +705,8 @@ export default function Patients() {
                   <Users className="w-7 h-7 text-primary" /> Pacientes
                 </h1>
                 <p className="text-muted-foreground text-sm">
-                  {activePatients.length} ativos · {patients.length - activePatients.length} inativos · ordenados por prioridade
+                  {counts.active} ativos · {counts.inactive} inativos · página {pagination.page} de {pagination.totalPages || 1}
+                  {isFetching && !isLoading && <span className="ml-2 text-xs text-primary animate-pulse">atualizando...</span>}
                 </p>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
