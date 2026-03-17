@@ -629,10 +629,8 @@ export default function Patients() {
   };
 
   // Filters
-  const searchFilter = (p: PatientInfo) =>
-    !search || 
-    p.profile?.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-    p.email?.toLowerCase().includes(search.toLowerCase());
+  // Search is handled server-side via debouncedSearch, no client-side filter needed
+  const searchFilter = (_p: PatientInfo) => true;
 
   const scoreFilter = (p: PatientInfo) => {
     const score = p.priorityScore || 0;
