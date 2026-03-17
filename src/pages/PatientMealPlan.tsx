@@ -31,6 +31,7 @@ interface MealPlanItem {
   protein_target: number | null;
   carbs_target: number | null;
   fat_target: number | null;
+  metadata?: Record<string, any> | null;
 }
 
 interface MealCompletion {
