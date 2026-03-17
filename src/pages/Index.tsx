@@ -376,12 +376,15 @@ function NutritionistDashboardContent() {
 
   // Auto-open modal once per session — persists dismissal via sessionStorage
   const APPROVALS_DISMISSED_KEY = "fj_approvals_dismissed";
+  const [approvalsAutoShown, setApprovalsAutoShown] = useState(false);
   useEffect(() => {
+    if (approvalsAutoShown) return;
     const dismissed = sessionStorage.getItem(APPROVALS_DISMISSED_KEY) === "true";
     if (pendingApprovalsCount > 0 && !dismissed) {
       setApprovalsModalOpen(true);
+      setApprovalsAutoShown(true);
     }
-  }, [pendingApprovalsCount]);
+  }, [pendingApprovalsCount, approvalsAutoShown]);
 
   const handleApprovalsModalChange = (open: boolean) => {
     setApprovalsModalOpen(open);

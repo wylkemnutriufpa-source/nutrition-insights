@@ -103,6 +103,8 @@ export function useSmartResume() {
   const [loading, setLoading] = useState(true);
   const [dismissed, setDismissed] = useState(false);
 
+  const userId = user?.id;
+
   const userRole = (roles as string[]).includes("admin")
     ? "admin"
     : roles.includes("nutritionist")
@@ -114,7 +116,7 @@ export function useSmartResume() {
   const userName = profile?.full_name?.split(" ")[0] || "Usuário";
 
   useEffect(() => {
-    if (!user || dismissed) {
+    if (!userId || dismissed) {
       setLoading(false);
       return;
     }
@@ -126,10 +128,13 @@ export function useSmartResume() {
       return;
     }
 
+    let cancelled = false;
+
     const fetchResumeData = async () => {
       try {
         // 1. Check session status
         const { data: sessionData } = await supabase.rpc("check_and_update_session" as any);
+        if (cancelled) return;
         const sessionResult = sessionData as any;
 
         if (!sessionResult?.show_resume) {
@@ -228,12 +233,13 @@ export function useSmartResume() {
       } catch (e) {
         console.error("Error fetching smart resume:", e);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchResumeData();
-  }, [user, dismissed]);
+    return () => { cancelled = true; };
+  }, [userId, dismissed]);
 
   const dismiss = useCallback(() => {
     setDismissed(true);
