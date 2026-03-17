@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { DollarSign, TrendingUp, Users, Cpu, HardDrive, Bell, Settings, BarChart3, AlertTriangle, CheckCircle, RefreshCw, Save } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DollarSign, TrendingUp, Users, Cpu, HardDrive, Bell, Settings, BarChart3, AlertTriangle, CheckCircle, RefreshCw, Save, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import B2BProjectionSection from "@/components/admin/B2BProjectionSection";
 
 interface CostProjection {
   patient_count: number;
@@ -41,6 +43,9 @@ interface CostConfig {
   cost_per_1000_notifications_usd: number;
   infrastructure_base_cost_usd: number;
   stripe_fee_percent: number;
+  monthly_price_per_professional: number;
+  avg_stripe_fee_percent: number;
+  cost_base_per_professional: number;
 }
 
 const CACHE_KEY = "fj_operational_costs_cache";
