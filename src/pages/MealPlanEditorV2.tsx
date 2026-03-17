@@ -1,13 +1,14 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, AlertTriangle, Zap } from "lucide-react";
+import { ArrowLeft, Loader2, AlertTriangle, Zap, Save, Send, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
+import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { WeeklyGrid } from "@/components/meal-editor-v2/WeeklyGrid";
 import { EditorSyncBadge } from "@/components/meal-editor-v2/EditorSyncBadge";
-
+import { toast } from "sonner";
 export default function MealPlanEditorV2() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
