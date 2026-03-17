@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { WeeklyGrid } from "@/components/meal-editor-v2/WeeklyGrid";
 import { EditorSyncBadge } from "@/components/meal-editor-v2/EditorSyncBadge";
 import { MealLibrarySidebar } from "@/components/meal-editor-v2/MealLibrarySidebar";
+import { MealLibraryModal } from "@/components/meal-editor-v2/MealLibraryModal";
 import { toast } from "sonner";
 
 export default function MealPlanEditorV2() {
