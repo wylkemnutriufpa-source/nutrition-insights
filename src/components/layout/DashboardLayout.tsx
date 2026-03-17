@@ -359,7 +359,20 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [sosOpen, setSosOpen] = useState(false);
   const [sosInboxOpen, setSosInboxOpen] = useState(false);
   const { showBadge: showOnboardingBadge } = useOnboardingNotification();
-  const { categories, flatItems, loading: menuLoading, trackClick, userRole } = useSmartMenu();
+  const { categories: rawCategories, flatItems: rawFlatItems, loading: menuLoading, trackClick, userRole } = useSmartMenu();
+  const { filterMenuItems, isEmployee } = useTeamPermissionsFilter();
+
+  // Filter menu items by employee permissions
+  const categories = useMemo(() => {
+    if (!isEmployee) return rawCategories;
+    return rawCategories
+      .map(cat => ({ ...cat, items: filterMenuItems(cat.items) }))
+      .filter(cat => cat.items.length > 0);
+  }, [rawCategories, isEmployee, filterMenuItems]);
+
+  const flatItems = useMemo(() => {
+    return filterMenuItems(rawFlatItems);
+  }, [rawFlatItems, filterMenuItems]);
 
   const isPatient = !isNutritionist && !isPersonal && !isAdmin;
   const isProRole = isNutritionist || isPersonal || isAdmin;
