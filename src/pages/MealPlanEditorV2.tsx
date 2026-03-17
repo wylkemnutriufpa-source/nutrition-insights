@@ -51,7 +51,8 @@ export default function MealPlanEditorV2() {
     );
   }
 
-  const plan = store.plan!;
+  const plan = store.plan;
+  if (!plan) return null;
 
   return (
     <DashboardLayout>
