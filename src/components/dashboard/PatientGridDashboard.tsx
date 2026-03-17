@@ -23,18 +23,18 @@ interface GridCard {
 
 const PATIENT_CARDS: GridCard[] = [
   // Row 1 — Ação imediata
-  { key: "meal-plan", label: "Plano Alimentar", description: "Seu plano nutricional personalizado", icon: UtensilsCrossed, route: "/plano-alimentar", gradient: "from-emerald-500/10 to-emerald-600/5", row: 1 },
+  { key: "meal-plan", label: "Plano Alimentar", description: "Seu plano nutricional personalizado", icon: UtensilsCrossed, route: "/my-diet", gradient: "from-emerald-500/10 to-emerald-600/5", row: 1 },
   { key: "checklist", label: "Checklist Diário", description: "Tarefas e hábitos do dia", icon: CheckCircle2, route: "/checklist", gradient: "from-sky-500/10 to-sky-600/5", row: 1 },
   { key: "agenda", label: "Agenda / Reavaliação", description: "Consultas e compromissos", icon: Calendar, route: "/appointments", gradient: "from-rose-500/10 to-rose-600/5", row: 1 },
 
   // Row 2 — Acompanhamento
-  { key: "physical", label: "Avaliação Física", description: "Evolução corporal e medidas", icon: Dumbbell, route: "/physical-assessment", gradient: "from-violet-500/10 to-violet-600/5", row: 2 },
-  { key: "evolution", label: "Evolução e Gráficos", description: "Visualize seu progresso completo", icon: TrendingUp, route: "/jornada", gradient: "from-teal-500/10 to-teal-600/5", row: 2 },
+  { key: "physical", label: "Avaliação Física", description: "Evolução corporal e medidas", icon: Dumbbell, route: "/checkin", gradient: "from-violet-500/10 to-violet-600/5", row: 2 },
+  { key: "evolution", label: "Evolução e Gráficos", description: "Visualize seu progresso completo", icon: TrendingUp, route: "/journey", gradient: "from-teal-500/10 to-teal-600/5", row: 2 },
   { key: "ai-insights", label: "IA Insights", description: "Análises inteligentes do seu progresso", icon: Brain, route: "/analyze", gradient: "from-amber-500/10 to-amber-600/5", row: 2, badge: { text: "IA", variant: "secondary" } },
 
   // Row 3 — Estratégia futura
-  { key: "body-ai", label: "Projeção Corporal", description: "Projeção visual de transformação com IA", icon: Camera, route: "/body-analysis", gradient: "from-purple-500/10 to-purple-600/5", row: 3, badge: { text: "Novo", variant: "default" } },
-  { key: "protocols", label: "Protocolos Ativos", description: "Protocolos clínicos em andamento", icon: FileText, route: "/protocols", gradient: "from-indigo-500/10 to-indigo-600/5", row: 3 },
+  { key: "body-ai", label: "Projeção Corporal", description: "Projeção visual de transformação com IA", icon: Camera, route: "/body-projection", gradient: "from-purple-500/10 to-purple-600/5", row: 3, badge: { text: "Novo", variant: "default" } },
+  { key: "protocols", label: "Protocolos Ativos", description: "Protocolos clínicos em andamento", icon: FileText, route: "/library", gradient: "from-indigo-500/10 to-indigo-600/5", row: 3 },
   { key: "goals", label: "Metas e Objetivos", description: "Defina e acompanhe suas metas", icon: Target, route: "/checkin", gradient: "from-orange-500/10 to-orange-600/5", row: 3 },
 ];
 

@@ -10,17 +10,17 @@ import {
 
 const STRATEGIC_CARDS = [
   { key: "patients", label: "Central de Pacientes", description: "Gestão completa do portfolio", icon: Users, route: "/patients", gradient: "from-emerald-500/10 to-emerald-600/5", size: "large" },
-  { key: "pending", label: "Planos Pendentes", description: "Aprovações e revisões aguardando", icon: ClipboardCheck, route: "/onboarding-pipeline", gradient: "from-amber-500/10 to-amber-600/5", size: "large" },
-  { key: "alerts", label: "Alertas Clínicos IA", description: "Pacientes que precisam de atenção", icon: AlertTriangle, route: "/alertas-clinicos", gradient: "from-red-500/10 to-red-600/5", badge: "Urgente" },
-  { key: "ranking", label: "Ranking Pacientes", description: "Engajamento e gamificação", icon: Trophy, route: "/ranking-admin", gradient: "from-amber-500/10 to-yellow-500/5" },
+  { key: "pending", label: "Planos Pendentes", description: "Aprovações e revisões aguardando", icon: ClipboardCheck, route: "/meal-plans", gradient: "from-amber-500/10 to-amber-600/5", size: "large" },
+  { key: "alerts", label: "Alertas Clínicos IA", description: "Pacientes que precisam de atenção", icon: AlertTriangle, route: "/clinical-risk", gradient: "from-red-500/10 to-red-600/5", badge: "Urgente" },
+  { key: "ranking", label: "Ranking Pacientes", description: "Engajamento e gamificação", icon: Trophy, route: "/ranking", gradient: "from-amber-500/10 to-yellow-500/5" },
   { key: "evolution", label: "Evoluções Recentes", description: "Últimos progressos registrados", icon: TrendingUp, route: "/patients", gradient: "from-sky-500/10 to-sky-600/5" },
-  { key: "engagement", label: "Engajamento Semanal", description: "Adesão e consistência da semana", icon: Activity, route: "/analytics-advanced", gradient: "from-violet-500/10 to-violet-600/5" },
-  { key: "copilot", label: "Copilot Clínico", description: "Assistente IA de decisão", icon: Brain, route: "/copilot", gradient: "from-purple-500/10 to-purple-600/5", badge: "IA" },
+  { key: "engagement", label: "Engajamento Semanal", description: "Adesão e consistência da semana", icon: Activity, route: "/reports", gradient: "from-violet-500/10 to-violet-600/5" },
+  { key: "copilot", label: "Copilot Clínico", description: "Assistente IA de decisão", icon: Brain, route: "/clinical-intelligence", gradient: "from-purple-500/10 to-purple-600/5", badge: "IA" },
   { key: "agenda", label: "Agenda do Dia", description: "Consultas e compromissos", icon: Calendar, route: "/appointments", gradient: "from-rose-500/10 to-rose-600/5" },
   { key: "chat", label: "Mensagens", description: "Chat com pacientes", icon: MessageSquare, route: "/chat", gradient: "from-teal-500/10 to-teal-600/5" },
-  { key: "analytics", label: "Analytics Avançado", description: "Métricas e tendências", icon: BarChart3, route: "/analytics-advanced", gradient: "from-indigo-500/10 to-indigo-600/5" },
+  { key: "analytics", label: "Analytics Avançado", description: "Métricas e tendências", icon: BarChart3, route: "/reports", gradient: "from-indigo-500/10 to-indigo-600/5" },
   { key: "editor", label: "Editor Premium V2", description: "Criar e editar planos", icon: Zap, route: "/editor-v2", gradient: "from-primary/10 to-primary/5" },
-  { key: "automations", label: "Automações", description: "Regras e gatilhos", icon: Zap, route: "/automacoes", gradient: "from-cyan-500/10 to-cyan-600/5" },
+  { key: "automations", label: "Automações", description: "Regras e gatilhos", icon: Zap, route: "/automation", gradient: "from-cyan-500/10 to-cyan-600/5" },
 ];
 
 const container = {
