@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState as useStateReact } from "react";
+import { ReactNode, useEffect, useMemo, useState as useStateReact } from "react";
 import OfflineSyncBanner from "@/components/common/OfflineSyncBanner";
 import SmartResumeModal from "@/components/common/SmartResumeModal";
 import AccordionSidebar from "@/components/layout/AccordionSidebar";
