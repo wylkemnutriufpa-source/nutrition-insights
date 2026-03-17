@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { MealDetailModal, type MealDetailData } from "@/components/patient/MealDetailModal";
+import { MealDetailProvider, useMealDetail } from "@/components/patient/MealDetailContext";
 
 type MealType = Database["public"]["Enums"]["meal_type"];
 type AdherenceStatus = "followed" | "partial" | "not_followed";

@@ -271,15 +271,19 @@ export default function MealPlanEditorV2() {
   // Fullscreen mode renders outside DashboardLayout
   if (isFullscreen) {
     return (
-      <div className="fixed inset-0 z-50 bg-background overflow-auto p-4">
-        {editorContent}
-      </div>
+      <MealDetailProvider>
+        <div className="fixed inset-0 z-50 bg-background overflow-auto p-4">
+          {editorContent}
+        </div>
+      </MealDetailProvider>
     );
   }
 
   return (
-    <DashboardLayout>
-      {editorContent}
-    </DashboardLayout>
+    <MealDetailProvider>
+      <DashboardLayout>
+        {editorContent}
+      </DashboardLayout>
+    </MealDetailProvider>
   );
 }
