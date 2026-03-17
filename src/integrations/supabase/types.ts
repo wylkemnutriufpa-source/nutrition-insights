@@ -3115,6 +3115,51 @@ export type Database = {
         }
         Relationships: []
       }
+      metabolic_classification_history: {
+        Row: {
+          classification_data: Json | null
+          clinical_interpretation: string | null
+          confidence_score: number
+          created_at: string
+          created_by: string | null
+          dominant_pattern: string | null
+          engine_version: string
+          id: string
+          metabolic_response_type: string
+          patient_id: string
+          previous_type: string | null
+          trigger_source: string
+        }
+        Insert: {
+          classification_data?: Json | null
+          clinical_interpretation?: string | null
+          confidence_score?: number
+          created_at?: string
+          created_by?: string | null
+          dominant_pattern?: string | null
+          engine_version?: string
+          id?: string
+          metabolic_response_type: string
+          patient_id: string
+          previous_type?: string | null
+          trigger_source?: string
+        }
+        Update: {
+          classification_data?: Json | null
+          clinical_interpretation?: string | null
+          confidence_score?: number
+          created_at?: string
+          created_by?: string | null
+          dominant_pattern?: string | null
+          engine_version?: string
+          id?: string
+          metabolic_response_type?: string
+          patient_id?: string
+          previous_type?: string | null
+          trigger_source?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           action_url: string | null
@@ -7086,6 +7131,8 @@ export type Database = {
           full_name: string
           historical_loss_rate: number | null
           id: string
+          metabolic_confidence_score: number | null
+          metabolic_last_evaluated_at: string | null
           metabolic_response_type: string | null
           phone: string | null
           plateau_probability: number | null
@@ -7112,6 +7159,8 @@ export type Database = {
           full_name?: string
           historical_loss_rate?: number | null
           id?: string
+          metabolic_confidence_score?: number | null
+          metabolic_last_evaluated_at?: string | null
           metabolic_response_type?: string | null
           phone?: string | null
           plateau_probability?: number | null
@@ -7138,6 +7187,8 @@ export type Database = {
           full_name?: string
           historical_loss_rate?: number | null
           id?: string
+          metabolic_confidence_score?: number | null
+          metabolic_last_evaluated_at?: string | null
           metabolic_response_type?: string | null
           phone?: string | null
           plateau_probability?: number | null

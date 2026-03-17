@@ -114,17 +114,21 @@ function analyzeWeightHistory(records: WeightRecord[]): HistoricalAnalysis {
   const hasSufficient = totalWeeks >= 4 && sorted.length >= 4;
 
   if (hasSufficient) {
-    if (yoyoCycles >= 3 || regainEvents >= 2) {
+    if (consistencyScore < 0.35 && stdDev > 1.0) {
+      responseType = "behavioral_inconsistent";
+    } else if (yoyoCycles >= 3 || regainEvents >= 2) {
       responseType = "weight_cycler";
     } else if (longestPlateauWeeks >= 4 || (longestPlateau / Math.max(1, sorted.length)) > 0.4) {
       responseType = "plateau_prone";
     } else if (avgWeeklyRate < -0.7) {
       responseType = "rapid_responder";
-    } else if (avgWeeklyRate < -0.15) {
-      responseType = netChange > -2 ? "slow_responder" : "stable_maintainer";
+    } else if (avgWeeklyRate <= -0.15 && avgWeeklyRate >= -0.7 && consistencyScore >= 0.6 && yoyoCycles <= 1) {
+      responseType = "stable_transformer";
+    } else if (avgWeeklyRate < -0.05 && avgWeeklyRate >= -0.15) {
+      responseType = "slow_responder";
     } else if (Math.abs(avgWeeklyRate) <= 0.15 && consistencyScore > 0.7) {
-      responseType = "stable_maintainer";
-    } else if (avgWeeklyRate > -0.15 && avgWeeklyRate < 0) {
+      responseType = "stable_transformer";
+    } else if (avgWeeklyRate < 0) {
       responseType = "slow_responder";
     } else {
       responseType = "slow_responder";
@@ -174,28 +178,34 @@ function computeAdjustedProjection(
 
   switch (analysis.metabolic_response_type) {
     case "weight_cycler":
-      // Expect regain midway: reduce net loss by 30-50%
       regainPenalty = Math.abs(effectiveRate * weeks) * 0.4 * analysis.regain_probability;
       curveType = "oscillating";
       break;
     case "plateau_prone":
-      // Expect stall: reduce progress by plateau probability
       plateauPenalty = Math.abs(effectiveRate * weeks) * 0.3 * analysis.plateau_probability;
       curveType = "stepped";
       break;
     case "rapid_responder":
-      // Initial fast then decelerating
       if (weeks > 12) {
         plateauPenalty = Math.abs(effectiveRate * (weeks - 12)) * 0.2;
       }
       curveType = "decelerating";
       break;
     case "slow_responder":
-      // Gradual but steady
       curveType = "gradual";
       break;
-    case "stable_maintainer":
-      curveType = "stable";
+    case "stable_transformer":
+      curveType = "progressive";
+      break;
+    case "behavioral_inconsistent":
+      // High variance: reduce projected change significantly
+      regainPenalty = Math.abs(effectiveRate * weeks) * 0.35;
+      curveType = "erratic";
+      break;
+    case "resistant_metabolism":
+      // Slow everything down
+      plateauPenalty = Math.abs(effectiveRate * weeks) * 0.4;
+      curveType = "flat";
       break;
     default:
       curveType = "linear";
@@ -220,6 +230,9 @@ function computeAdjustedProjection(
   if (analysis.metabolic_response_type === "weight_cycler") confidence -= 0.1;
   if (analysis.metabolic_response_type === "plateau_prone") confidence -= 0.05;
   if (analysis.metabolic_response_type === "rapid_responder") confidence += 0.05;
+  if (analysis.metabolic_response_type === "behavioral_inconsistent") confidence -= 0.1;
+  if (analysis.metabolic_response_type === "resistant_metabolism") confidence -= 0.08;
+  if (analysis.metabolic_response_type === "stable_transformer") confidence += 0.08;
   confidence = Math.round(Math.min(0.92, Math.max(0.15, confidence)) * 100) / 100;
 
   // Phase determination
@@ -245,8 +258,14 @@ function computeAdjustedProjection(
     case "slow_responder":
       strategy = "Manter consistência a longo prazo. Ajustes calóricos pequenos e frequentes. Paciência é o principal aliado.";
       break;
-    case "stable_maintainer":
-      strategy = "Manter protocolo atual. O metabolismo está respondendo de forma equilibrada. Priorizar qualidade nutricional.";
+    case "stable_transformer":
+      strategy = "Manter protocolo atual. Metabolismo respondendo de forma equilibrada. Priorizar qualidade nutricional e progressão.";
+      break;
+    case "behavioral_inconsistent":
+      strategy = "Foco em estabilização de hábitos diários antes de ajustes calóricos. Simplificar plano e aumentar check-ins.";
+      break;
+    case "resistant_metabolism":
+      strategy = "Considerar intervenções mais intensivas, ciclos calóricos ou investigação metabólica complementar. Avaliar sono e estresse.";
       break;
     default:
       strategy = "Continuar acompanhamento para acumular dados suficientes para personalização avançada do protocolo.";
