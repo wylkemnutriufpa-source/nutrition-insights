@@ -17,6 +17,7 @@ import {
   generateMealPlanFromLibrary,
   loadPatientProfile,
   slotsToInserts,
+  setGenerationSeed,
   type PatientProfile,
   type AutoGenerationResult,
   type MealDistribution,
