@@ -481,14 +481,15 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
               const planId = selectedPipeline.generated_plan_id || selectedPipeline.generated_plan_data?.mealPlanId;
               if (planId) {
                 return (
-                  <Button
+                  <EditorVersionPicker
+                    planId={planId}
+                    onBeforeNavigate={() => onOpenChange(false)}
+                    label="Analisar e Editar o Plano"
+                    variant="default"
+                    size="default"
                     className="flex-1 gradient-primary shadow-glow"
-                    disabled={processing}
-                    onClick={() => handleOpenPlanForReview(planId)}
-                  >
-                    {processing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <FileText className="w-4 h-4 mr-2" />}
-                    Analisar e Editar o Plano
-                  </Button>
+                    icon={<FileText className="w-4 h-4 mr-2" />}
+                  />
                 );
               }
               if (selectedPipeline.generated_plan_data || selectedPipeline.status === 'pending_approval' || selectedPipeline.status === 'pending_plan_generation') {
