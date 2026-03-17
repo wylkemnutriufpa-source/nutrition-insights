@@ -19,6 +19,7 @@ import {
   Target, HeartPulse, AlertTriangle, FileText, Zap, MessageCircle, Trophy, Flame,
 } from "lucide-react";
 import CinematicGuideSlide from "@/components/common/CinematicGuideSlide";
+import { MagicSlideButton } from "@/components/common/MagicSlideGenerator";
 import { cn } from "@/lib/utils";
 import type { EnrichedSlide } from "@/hooks/useFeatureGuide";
 
