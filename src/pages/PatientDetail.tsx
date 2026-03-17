@@ -1041,11 +1041,11 @@ export default function PatientDetail() {
                   <ClinicalDecisionSupport patientId={patientId!} nutritionistId={user!.id} />
                   <div className="border-t border-border pt-6 space-y-4">
                     <SmartRecommendationsPanel signals={{
-                      adherenceScore: 0,
+                      adherenceScore: data?.adherence7d ?? 0,
                       adherenceTrend: 0,
                       streakDays: 0,
                       mealsPerDay: 0,
-                      checklistPct: 0,
+                      checklistPct: checklistStats.total > 0 ? Math.round((checklistStats.completed / checklistStats.total) * 100) : 0,
                     } as PatientSignals} />
                   </div>
                 </DialogContent>
