@@ -7380,6 +7380,7 @@ export type Database = {
           plateau_probability: number | null
           ranking_nickname: string | null
           regain_probability: number | null
+          search_vector: unknown
           show_in_ranking: boolean
           updated_at: string
           user_id: string
@@ -7410,6 +7411,7 @@ export type Database = {
           plateau_probability?: number | null
           ranking_nickname?: string | null
           regain_probability?: number | null
+          search_vector?: unknown
           show_in_ranking?: boolean
           updated_at?: string
           user_id: string
@@ -7440,6 +7442,7 @@ export type Database = {
           plateau_probability?: number | null
           ranking_nickname?: string | null
           regain_probability?: number | null
+          search_vector?: unknown
           show_in_ranking?: boolean
           updated_at?: string
           user_id?: string
@@ -9985,7 +9988,19 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      mv_nutritionist_dashboard: {
+        Row: {
+          checklist_completion_rate: number | null
+          critical_alerts: number | null
+          nutritionist_id: string | null
+          patients_active_today: number | null
+          tasks_completed_today: number | null
+          tasks_total_today: number | null
+          total_patients: number | null
+          unread_messages: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       award_points:
@@ -10179,6 +10194,7 @@ export type Database = {
         Returns: Json
       }
       refresh_affiliate_metrics: { Args: never; Returns: undefined }
+      refresh_dashboard_mv: { Args: never; Returns: undefined }
       refresh_ranking_cache: { Args: never; Returns: undefined }
       refresh_ranking_snapshots: {
         Args: { _period_type?: string }
@@ -10192,6 +10208,16 @@ export type Database = {
       resolve_alert: {
         Args: { _alert_id: string; _resolution_note?: string }
         Returns: Json
+      }
+      search_patients: {
+        Args: { _limit?: number; _nutritionist_id: string; _query: string }
+        Returns: {
+          avatar_url: string
+          full_name: string
+          phone: string
+          relevance: number
+          user_id: string
+        }[]
       }
       self_register_patient: {
         Args: { _referral_code?: string; _user_id: string }
