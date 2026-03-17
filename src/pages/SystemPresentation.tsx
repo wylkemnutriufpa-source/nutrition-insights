@@ -9,7 +9,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
 import { PROFESSIONAL_SLIDES, PATIENT_SLIDES } from "@/lib/presentationSlides";
-import { GraduationCap, Stethoscope, User, Play, CheckCircle2, RotateCcw, Clapperboard, Map, Rocket, Users, LayoutDashboard } from "lucide-react";
+import { useFeatureGuide } from "@/hooks/useFeatureGuide";
+import { GraduationCap, Stethoscope, User, Play, CheckCircle2, RotateCcw, Clapperboard, Map, Rocket, Users, LayoutDashboard, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
@@ -76,6 +77,14 @@ export default function SystemPresentation() {
   const [cinematicProDone, setCinematicProDone] = useState(() => localStorage.getItem(CINEMATIC_PRO_KEY) === "true");
   const [cinematicPatDone, setCinematicPatDone] = useState(() => localStorage.getItem(CINEMATIC_PAT_KEY) === "true");
 
+  // 🧠 Guide Engine — dynamic slides from feature_registry
+  const { slides: proLiveSlides, newFeatures: proNew } = useFeatureGuide("professional");
+  const { slides: patLiveSlides, newFeatures: patNew } = useFeatureGuide("patient");
+
+  // Use live slides if available, fallback to static
+  const proSlides = proLiveSlides.length > 0 ? proLiveSlides : PROFESSIONAL_SLIDES;
+  const patSlides = patLiveSlides.length > 0 ? patLiveSlides : PATIENT_SLIDES;
+
   const handleComplete = (type: "professional" | "patient") => {
     const key = type === "professional" ? STORAGE_KEY_PRO : STORAGE_KEY_PAT;
     localStorage.setItem(key, "true");
@@ -97,10 +106,10 @@ export default function SystemPresentation() {
 
   // Active standard presentation overlay
   if (activePresentation === "professional") {
-    return <GuidedPresentation slides={PROFESSIONAL_SLIDES} title="Guia do Profissional" onComplete={() => handleComplete("professional")} onSkip={() => setActivePresentation(null)} />;
+    return <GuidedPresentation slides={proSlides} title="Guia do Profissional" onComplete={() => handleComplete("professional")} onSkip={() => setActivePresentation(null)} />;
   }
   if (activePresentation === "patient") {
-    return <GuidedPresentation slides={PATIENT_SLIDES} title="Guia do Paciente" onComplete={() => handleComplete("patient")} onSkip={() => setActivePresentation(null)} />;
+    return <GuidedPresentation slides={patSlides} title="Guia do Paciente" onComplete={() => handleComplete("patient")} onSkip={() => setActivePresentation(null)} />;
   }
 
   // Cinematic fullscreen presentation
@@ -137,13 +146,15 @@ export default function SystemPresentation() {
       key: "professional" as const,
       title: "Apresentação do Profissional",
       description: "Conheça o cockpit clínico, editor de planos, dashboard de resultados e o Motor FitJourney™.",
-      icon: Stethoscope, gradient: "from-primary to-accent", done: proDone, slides: PROFESSIONAL_SLIDES.length,
+      icon: Stethoscope, gradient: "from-primary to-accent", done: proDone, slides: proSlides.length,
+      newCount: proNew.length,
     }] : []),
     {
       key: "patient" as const,
       title: "Apresentação do Paciente",
       description: "Aprenda a seguir o plano alimentar, registrar progresso e interpretar seus resultados.",
-      icon: User, gradient: "from-success to-info", done: patDone, slides: PATIENT_SLIDES.length,
+      icon: User, gradient: "from-success to-info", done: patDone, slides: patSlides.length,
+      newCount: patNew.length,
     },
   ];
 
@@ -232,9 +243,10 @@ export default function SystemPresentation() {
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-semibold text-lg">{c.title}</h3>
                           {c.done && <Badge variant="secondary" className="text-xs gap-1"><CheckCircle2 className="w-3 h-3" /> Concluído</Badge>}
+                          {c.newCount > 0 && <Badge className="text-xs gap-1 bg-accent text-accent-foreground"><Sparkles className="w-3 h-3" /> {c.newCount} novo{c.newCount > 1 ? "s" : ""}</Badge>}
                         </div>
                         <p className="text-sm text-muted-foreground">{c.description}</p>
-                        <span className="text-xs text-muted-foreground mt-1 block">{c.slides} slides interativos</span>
+                        <span className="text-xs text-muted-foreground mt-1 block">{c.slides} slides interativos • Guia Vivo auto-atualizado</span>
                       </div>
                       <Button onClick={() => setActivePresentation(c.key)} variant={c.done ? "outline" : "default"} className="flex-shrink-0">
                         {c.done ? <><RotateCcw className="w-4 h-4 mr-1" /> Rever</> : <><Play className="w-4 h-4 mr-1" /> Iniciar</>}

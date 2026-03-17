@@ -2055,6 +2055,69 @@ export type Database = {
           },
         ]
       }
+      feature_registry: {
+        Row: {
+          bullets: Json
+          clinical_impact: string | null
+          created_at: string
+          cta_text: string | null
+          display_order: number | null
+          emoji: string
+          experience_type: string
+          feature_key: string
+          gradient: string
+          icon_name: string
+          id: string
+          is_highlight: boolean
+          journey_priority: number
+          name: string
+          short_description: string
+          status: string
+          target_audience: string
+          updated_at: string
+        }
+        Insert: {
+          bullets?: Json
+          clinical_impact?: string | null
+          created_at?: string
+          cta_text?: string | null
+          display_order?: number | null
+          emoji?: string
+          experience_type?: string
+          feature_key: string
+          gradient?: string
+          icon_name?: string
+          id?: string
+          is_highlight?: boolean
+          journey_priority?: number
+          name: string
+          short_description: string
+          status?: string
+          target_audience?: string
+          updated_at?: string
+        }
+        Update: {
+          bullets?: Json
+          clinical_impact?: string | null
+          created_at?: string
+          cta_text?: string | null
+          display_order?: number | null
+          emoji?: string
+          experience_type?: string
+          feature_key?: string
+          gradient?: string
+          icon_name?: string
+          id?: string
+          is_highlight?: boolean
+          journey_priority?: number
+          name?: string
+          short_description?: string
+          status?: string
+          target_audience?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       feedbacks: {
         Row: {
           category: string

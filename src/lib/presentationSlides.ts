@@ -14,6 +14,10 @@ export interface PresentationSlide {
   emoji: string;
 }
 
+/**
+ * Static fallback slides — used when DB is unavailable.
+ * The Guide Engine (useFeatureGuide) fetches live slides from feature_registry.
+ */
 export const PROFESSIONAL_SLIDES: PresentationSlide[] = [
   {
     id: "overview",
