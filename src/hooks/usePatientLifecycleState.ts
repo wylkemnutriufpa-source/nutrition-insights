@@ -17,7 +17,8 @@
  * 9. onboarding_started         → Just registered
  */
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 
@@ -76,6 +77,38 @@ const ONBOARDING_STATES: LifecycleState[] = [
   "onboarding_ready_for_plan",
 ];
 
+/** Parse RPC result into PatientLifecycle */
+function parseLifecycleResult(r: Record<string, unknown>, refetchFn: () => void): PatientLifecycle {
+  const state = (r.lifecycle_state as LifecycleState) || "onboarding_started";
+  return {
+    state,
+    hasActivePlan: !!r.has_active_plan,
+    hasPendingOnboarding: !!r.has_pending_onboarding,
+    hasClinicalAlert: !!r.has_clinical_alert,
+    hasRetentionRisk: !!r.has_retention_risk,
+    lastCheckinAt: (r.last_checkin_at as string) || null,
+    lastPlanDeliveryAt: (r.last_plan_delivery_at as string) || null,
+    adherenceScore: (r.adherence_score as number) || 0,
+    riskScore: (r.risk_score as number) || 0,
+    daysInactive: (r.days_inactive as number) || 0,
+    planId: (r.plan_id as string) || null,
+    planTitle: (r.plan_title as string) || null,
+    nextRecommendedAction: (r.next_recommended_action as string) || null,
+    onboardingStatus: (r.onboarding_status as string) || null,
+    isLoading: false,
+    showPlan: PLAN_STATES.includes(state) || !!r.has_active_plan,
+    showOnboarding: ONBOARDING_STATES.includes(state) && !r.has_active_plan,
+    showNoPlan: state === "onboarding_started" && !r.has_active_plan && !r.has_pending_onboarding,
+    showWaitingApproval: state === "plan_pending_production" && !r.has_active_plan,
+    showClinicalAlert: state === "clinical_attention",
+    showRetentionRisk: state === "retention_risk",
+    showMaintenance: state === "maintenance_mode",
+    isPaused: state === "paused",
+    isClosed: state === "closed",
+    refetch: refetchFn,
+  };
+}
+
 const EMPTY: PatientLifecycle = {
   state: "loading",
   hasActivePlan: false,
@@ -104,71 +137,38 @@ const EMPTY: PatientLifecycle = {
   refetch: () => {},
 };
 
+/** Fetch lifecycle state from RPC */
+async function fetchLifecycleState(patientId: string): Promise<Record<string, unknown>> {
+  const { data: result, error } = await supabase.rpc(
+    "resolve_patient_lifecycle_state" as any,
+    { _patient_id: patientId }
+  );
+  if (error) {
+    console.error("Error resolving lifecycle state:", error);
+    return { lifecycle_state: "onboarding_started" };
+  }
+  return (result as Record<string, unknown>) || { lifecycle_state: "onboarding_started" };
+}
+
 /**
  * Hook for patient-side usage (uses auth.uid).
+ * Uses React Query for caching — all components share a single cached state.
  */
 export function usePatientLifecycleState(): PatientLifecycle {
   const { user, isPatient } = useAuth();
-  const [data, setData] = useState<PatientLifecycle>(EMPTY);
+  const queryClient = useQueryClient();
 
-  const fetchState = useCallback(async () => {
-    if (!user) return;
-    try {
-      const { data: result, error } = await supabase.rpc(
-        "resolve_patient_lifecycle_state" as any,
-        { _patient_id: user.id }
-      );
+  const { data, refetch } = useQuery({
+    queryKey: ["lifecycle", user?.id],
+    enabled: !!user && isPatient,
+    staleTime: 60 * 1000, // 60s cache
+    refetchInterval: 5 * 60 * 1000, // auto-refresh every 5min
+    queryFn: () => fetchLifecycleState(user!.id),
+  });
 
-      if (error) {
-        console.error("Error resolving lifecycle state:", error);
-        setData((prev) => ({ ...prev, state: "onboarding_started", isLoading: false }));
-        return;
-      }
+  const refetchFn = useCallback(() => { refetch(); }, [refetch]);
 
-      const r = (result as Record<string, unknown>) || {};
-      const state = (r.lifecycle_state as LifecycleState) || "onboarding_started";
-
-      setData({
-        state,
-        hasActivePlan: !!r.has_active_plan,
-        hasPendingOnboarding: !!r.has_pending_onboarding,
-        hasClinicalAlert: !!r.has_clinical_alert,
-        hasRetentionRisk: !!r.has_retention_risk,
-        lastCheckinAt: (r.last_checkin_at as string) || null,
-        lastPlanDeliveryAt: (r.last_plan_delivery_at as string) || null,
-        adherenceScore: (r.adherence_score as number) || 0,
-        riskScore: (r.risk_score as number) || 0,
-        daysInactive: (r.days_inactive as number) || 0,
-        planId: (r.plan_id as string) || null,
-        planTitle: (r.plan_title as string) || null,
-        nextRecommendedAction: (r.next_recommended_action as string) || null,
-        onboardingStatus: (r.onboarding_status as string) || null,
-        isLoading: false,
-
-        showPlan: PLAN_STATES.includes(state) || !!r.has_active_plan,
-        showOnboarding: ONBOARDING_STATES.includes(state) && !r.has_active_plan,
-        showNoPlan: state === "onboarding_started" && !r.has_active_plan && !r.has_pending_onboarding,
-        showWaitingApproval: state === "plan_pending_production" && !r.has_active_plan,
-        showClinicalAlert: state === "clinical_attention",
-        showRetentionRisk: state === "retention_risk",
-        showMaintenance: state === "maintenance_mode",
-        isPaused: state === "paused",
-        isClosed: state === "closed",
-
-        refetch: fetchState,
-      });
-    } catch {
-      setData((prev) => ({ ...prev, state: "onboarding_started", isLoading: false }));
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (user && isPatient) {
-      fetchState();
-    }
-  }, [user, isPatient, fetchState]);
-
-  // Listen for realtime lifecycle changes
+  // Listen for realtime lifecycle changes → invalidate cache
   useEffect(() => {
     if (!user) return;
     const channel = supabase
@@ -181,77 +181,30 @@ export function usePatientLifecycleState(): PatientLifecycle {
           table: "patient_lifecycle_states",
           filter: `patient_id=eq.${user.id}`,
         },
-        () => fetchState()
+        () => queryClient.invalidateQueries({ queryKey: ["lifecycle", user.id] })
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, fetchState]);
+    return () => { supabase.removeChannel(channel); };
+  }, [user, queryClient]);
 
-  return { ...data, refetch: fetchState };
+  if (!data) return { ...EMPTY, refetch: refetchFn };
+  return parseLifecycleResult(data, refetchFn);
 }
 
 /**
  * Hook for professional-side usage (pass patient_id explicitly).
  */
 export function usePatientLifecycleStateFor(patientId: string | null): PatientLifecycle {
-  const [data, setData] = useState<PatientLifecycle>(EMPTY);
+  const { data, refetch } = useQuery({
+    queryKey: ["lifecycle", patientId],
+    enabled: !!patientId,
+    staleTime: 60 * 1000,
+    queryFn: () => fetchLifecycleState(patientId!),
+  });
 
-  const fetchState = useCallback(async () => {
-    if (!patientId) return;
-    try {
-      const { data: result, error } = await supabase.rpc(
-        "resolve_patient_lifecycle_state" as any,
-        { _patient_id: patientId }
-      );
+  const refetchFn = useCallback(() => { refetch(); }, [refetch]);
 
-      if (error) {
-        setData((prev) => ({ ...prev, state: "onboarding_started", isLoading: false }));
-        return;
-      }
-
-      const r = (result as Record<string, unknown>) || {};
-      const state = (r.lifecycle_state as LifecycleState) || "onboarding_started";
-
-      setData({
-        state,
-        hasActivePlan: !!r.has_active_plan,
-        hasPendingOnboarding: !!r.has_pending_onboarding,
-        hasClinicalAlert: !!r.has_clinical_alert,
-        hasRetentionRisk: !!r.has_retention_risk,
-        lastCheckinAt: (r.last_checkin_at as string) || null,
-        lastPlanDeliveryAt: (r.last_plan_delivery_at as string) || null,
-        adherenceScore: (r.adherence_score as number) || 0,
-        riskScore: (r.risk_score as number) || 0,
-        daysInactive: (r.days_inactive as number) || 0,
-        planId: (r.plan_id as string) || null,
-        planTitle: (r.plan_title as string) || null,
-        nextRecommendedAction: (r.next_recommended_action as string) || null,
-        onboardingStatus: (r.onboarding_status as string) || null,
-        isLoading: false,
-
-        showPlan: PLAN_STATES.includes(state) || !!r.has_active_plan,
-        showOnboarding: ONBOARDING_STATES.includes(state) && !r.has_active_plan,
-        showNoPlan: state === "onboarding_started" && !r.has_active_plan && !r.has_pending_onboarding,
-        showWaitingApproval: state === "plan_pending_production" && !r.has_active_plan,
-        showClinicalAlert: state === "clinical_attention",
-        showRetentionRisk: state === "retention_risk",
-        showMaintenance: state === "maintenance_mode",
-        isPaused: state === "paused",
-        isClosed: state === "closed",
-
-        refetch: fetchState,
-      });
-    } catch {
-      setData((prev) => ({ ...prev, state: "onboarding_started", isLoading: false }));
-    }
-  }, [patientId]);
-
-  useEffect(() => {
-    if (patientId) fetchState();
-  }, [patientId, fetchState]);
-
-  return { ...data, refetch: fetchState };
+  if (!data) return { ...EMPTY, refetch: refetchFn };
+  return parseLifecycleResult(data, refetchFn);
 }
