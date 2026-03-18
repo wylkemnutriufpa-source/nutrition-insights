@@ -549,18 +549,36 @@ export function usePendingApprovals() {
   useEffect(() => {
     if (!user) return;
     const check = async () => {
-      const { count: c } = await supabase
+      const { data } = await supabase
         .from("onboarding_pipelines" as any)
-        .select("id", { count: "exact", head: true })
+        .select("id, patient_id")
         .eq("nutritionist_id", user.id)
         .in("status", ["pending_approval", "pending_plan_generation"]);
-      setCount(c || 0);
+
+      const items = (data || []) as Array<{ id: string; patient_id: string }>;
+      if (items.length === 0) {
+        setCount(0);
+        return;
+      }
+
+      const resolvedStatuses = await Promise.all(
+        items.map(async (pipeline) => {
+          const { data: statusData } = await supabase.rpc("resolve_patient_plan_status", {
+            _patient_id: pipeline.patient_id,
+          });
+          return (statusData as any)?.status;
+        })
+      );
+
+      setCount(resolvedStatuses.filter((status) => status !== "plan_delivered").length);
     };
+
     check();
 
     const ch = supabase
       .channel("pending-count")
       .on("postgres_changes", { event: "*", schema: "public", table: "onboarding_pipelines" }, () => check())
+      .on("postgres_changes", { event: "*", schema: "public", table: "meal_plans" }, () => check())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [user]);

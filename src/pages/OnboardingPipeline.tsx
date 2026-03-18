@@ -236,6 +236,23 @@ export default function OnboardingPipeline() {
     );
   }
 
+  if (planStatus.status === "plan_delivered") {
+    return (
+      <DashboardLayout>
+        <div className="max-w-2xl mx-auto py-12 text-center space-y-4">
+          <CheckCircle2 className="w-16 h-16 text-success mx-auto" />
+          <h2 className="text-2xl font-bold">Seu plano já foi entregue ✅</h2>
+          <p className="text-muted-foreground">
+            O onboarding anterior foi encerrado automaticamente porque seu plano já está disponível no painel.
+          </p>
+          <Button onClick={() => navigate("/my-diet")} className="gradient-primary">
+            Ver meu plano
+          </Button>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   if (!pipeline) {
     return (
       <DashboardLayout>

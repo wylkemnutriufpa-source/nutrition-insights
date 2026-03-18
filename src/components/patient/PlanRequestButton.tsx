@@ -17,6 +17,8 @@ export default function PlanRequestButton() {
     planStatus.status === "plan_approved_pending_publish" ||
     planStatus.status === "plan_under_review" ||
     planStatus.status === "plan_pending_approval" ||
+    planStatus.status === "plan_draft" ||
+    planStatus.status === "plan_pending_production" ||
     planStatus.status === "loading"
   ) {
     return null;
