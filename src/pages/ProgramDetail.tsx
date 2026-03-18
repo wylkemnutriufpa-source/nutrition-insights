@@ -389,25 +389,80 @@ export default function ProgramDetail() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Dialog open={enrollOpen} onOpenChange={setEnrollOpen}>
+                  <Dialog open={enrollOpen} onOpenChange={(v) => { setEnrollOpen(v); if (!v) setEnrollSearch(""); }}>
                     <DialogTrigger asChild>
                       <Button size="sm" className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground gap-1 border-0">
-                        <UserPlus className="w-4 h-4" /> Inscrever
+                        <UserPlus className="w-4 h-4" /> Gerenciar
                       </Button>
                     </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader><DialogTitle className="font-display">Inscrever Paciente</DialogTitle></DialogHeader>
-                      <div className="space-y-4">
-                        <Select value={enrollPatientId} onValueChange={setEnrollPatientId}>
-                          <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                          <SelectContent>
-                            {allPatients.filter(ap => !patients.some(p => p.patient_id === ap.id)).map(p => (
-                              <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Button onClick={enrollPatient} className="w-full gradient-primary" disabled={!enrollPatientId}>Inscrever</Button>
+                    <DialogContent className="sm:max-w-md max-h-[80vh]">
+                      <DialogHeader><DialogTitle className="font-display">Gerenciar Pacientes</DialogTitle></DialogHeader>
+                      <Input
+                        placeholder="Buscar por nome..."
+                        value={enrollSearch}
+                        onChange={(e) => setEnrollSearch(e.target.value)}
+                        className="mb-3"
+                        autoFocus
+                      />
+                      <div className="max-h-[50vh] overflow-y-auto space-y-1 pr-1">
+                        {allPatients
+                          .filter(ap => {
+                            const q = enrollSearch.toLowerCase().trim();
+                            if (!q) return true;
+                            return ap.name.toLowerCase().includes(q);
+                          })
+                          .sort((a, b) => {
+                            const aEnrolled = patients.some(p => p.patient_id === a.id);
+                            const bEnrolled = patients.some(p => p.patient_id === b.id);
+                            if (aEnrolled && !bEnrolled) return -1;
+                            if (!aEnrolled && bEnrolled) return 1;
+                            return a.name.localeCompare(b.name);
+                          })
+                          .map(ap => {
+                            const enrolled = patients.find(p => p.patient_id === ap.id);
+                            const isEnrolled = !!enrolled;
+                            return (
+                              <button
+                                key={ap.id}
+                                onClick={() => {
+                                  if (isEnrolled) {
+                                    removePatient(enrolled!.id, ap.name);
+                                  } else {
+                                    enrollPatient(ap.id);
+                                  }
+                                }}
+                                className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all text-left ${
+                                  isEnrolled
+                                    ? "border-primary/30 bg-primary/5 hover:bg-destructive/10 hover:border-destructive/30"
+                                    : "border-border/50 bg-card hover:border-primary/30 hover:bg-primary/5"
+                                }`}
+                              >
+                                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+                                  isEnrolled ? "border-primary bg-primary" : "border-muted-foreground/30"
+                                }`}>
+                                  {isEnrolled && <CheckCircle2 className="w-3.5 h-3.5 text-primary-foreground" />}
+                                </div>
+                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                  <span className="text-xs font-bold text-primary">{ap.name[0]?.toUpperCase()}</span>
+                                </div>
+                                <span className="text-sm font-medium truncate flex-1">{ap.name}</span>
+                                {isEnrolled && (
+                                  <Badge variant="outline" className="text-[10px] shrink-0 border-primary/30 text-primary">Inscrito</Badge>
+                                )}
+                              </button>
+                            );
+                          })}
+                        {allPatients.filter(ap => {
+                          const q = enrollSearch.toLowerCase().trim();
+                          if (!q) return true;
+                          return ap.name.toLowerCase().includes(q);
+                        }).length === 0 && (
+                          <p className="text-sm text-muted-foreground text-center py-6">Nenhum paciente encontrado.</p>
+                        )}
                       </div>
+                      <p className="text-[11px] text-muted-foreground text-center mt-2">
+                        {patients.length} inscrito{patients.length !== 1 ? "s" : ""} • Clique para adicionar ou remover
+                      </p>
                     </DialogContent>
                   </Dialog>
                 </div>
