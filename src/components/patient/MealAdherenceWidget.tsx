@@ -152,7 +152,7 @@ export default function MealAdherenceWidget({ patientId }: MealAdherenceWidgetPr
     return (
       <div className="glass rounded-xl p-4 text-center">
         <Utensils className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-        <p className="text-xs text-muted-foreground">Sem plano ativo</p>
+        <p className="text-xs text-muted-foreground">Sem dados de adesão registrados</p>
       </div>
     );
   }
