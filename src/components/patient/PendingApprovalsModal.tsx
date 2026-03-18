@@ -341,7 +341,16 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
           ) : !selectedPipeline ? (
             /* ── List view ── */
             <div className="space-y-3 py-2">
-              {pipelines.map((p) => {
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar paciente..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9 h-9"
+                />
+              </div>
+              {pipelines.filter((p) => p.patient_name?.toLowerCase().includes(search.toLowerCase())).map((p) => {
                 const template = getSelectedTemplate(p);
                 const altCount = getAlternatives(p).length;
                 return (
