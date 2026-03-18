@@ -324,7 +324,47 @@ export default function ClientDashboard() {
           <NutritionistStatusBanner patientId={user?.id} />
         </motion.div>
 
-        {/* Action Buttons */}
+        {/* Plan Status Banner — SSoT driven */}
+        {planStatus.status === "plan_delivered" && (
+          <motion.div variants={item}>
+            <Link to="/my-diet">
+              <div className="glass-premium rounded-xl p-4 border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-all cursor-pointer flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
+                  <UtensilsCrossed className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-foreground">
+                    ✅ Seu plano alimentar está disponível
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {planStatus.planTitle || "Plano personalizado"} • Toque para visualizar
+                  </p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-primary" />
+              </div>
+            </Link>
+          </motion.div>
+        )}
+
+        {planStatus.showWaitingApproval && (
+          <motion.div variants={item}>
+            <div className="glass-premium rounded-xl p-4 border border-amber-500/30 bg-amber-500/5 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center">
+                <Clock className="w-5 h-5 text-amber-500" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-foreground">
+                  ⏳ Plano em revisão
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Seu profissional está finalizando seu plano alimentar. Você será notificado assim que estiver pronto.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Action Buttons — only show PlanRequestButton if no sovereign plan */}
         <motion.div variants={item} className="flex flex-wrap gap-2">
           <SubscriptionCard />
           <PlanRequestButton />
