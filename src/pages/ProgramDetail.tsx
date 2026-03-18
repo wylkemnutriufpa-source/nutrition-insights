@@ -74,6 +74,7 @@ export default function ProgramDetail() {
   // Dialogs
   const [enrollOpen, setEnrollOpen] = useState(false);
   const [enrollPatientId, setEnrollPatientId] = useState("");
+  const [enrollSearch, setEnrollSearch] = useState("");
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteForm, setNoteForm] = useState({ title: "", description: "", event_type: "note" });
 
