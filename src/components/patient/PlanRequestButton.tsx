@@ -11,8 +11,14 @@ export default function PlanRequestButton() {
   const planStatus = usePatientPlanStatus();
   const [sending, setSending] = useState(false);
 
-  // ── SOVEREIGN RULE: If plan is delivered, don't show "Estou sem Plano" button ──
-  if (planStatus.status === "plan_delivered" || planStatus.status === "loading") {
+  // ── SOVEREIGN RULE: Hide if plan exists in any sovereign/pending state ──
+  if (
+    planStatus.status === "plan_delivered" ||
+    planStatus.status === "plan_approved_pending_publish" ||
+    planStatus.status === "plan_under_review" ||
+    planStatus.status === "plan_pending_approval" ||
+    planStatus.status === "loading"
+  ) {
     return null;
   }
 
