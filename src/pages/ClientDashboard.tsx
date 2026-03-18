@@ -337,7 +337,7 @@ export default function ClientDashboard() {
                     ✅ Seu plano alimentar está disponível
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {planStatus.planTitle || "Plano personalizado"} • Toque para visualizar
+                    {lifecycle.planTitle || "Plano personalizado"} • Toque para visualizar
                   </p>
                 </div>
                 <ArrowRight className="w-4 h-4 text-primary" />
