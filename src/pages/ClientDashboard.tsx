@@ -378,24 +378,22 @@ export default function ClientDashboard() {
           {/* Ranking Widget */}
           <RankingWidget />
 
-          {/* Participar de Projetos - ao lado do Ranking */}
+          {/* Participar de Projetos — destaque estilo Ranking */}
           <motion.button
             whileHover={{ y: -3, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setProgramJoinOpen(true)}
-            className="relative glass-premium rounded-xl p-4 cursor-pointer shimmer-sweep h-full border border-amber-500/30 hover:border-amber-400/60 transition-all duration-300 overflow-hidden group"
+            className="relative glass-premium rounded-xl p-4 cursor-pointer metric-glow h-full transition-all duration-300 shimmer-sweep"
           >
-            {/* Glow effect */}
-            <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-amber-500/20 via-yellow-400/30 to-amber-500/20 blur-sm opacity-60 group-hover:opacity-100 transition-opacity duration-500 animate-pulse" />
-            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-amber-500/5 via-yellow-400/10 to-amber-600/5 group-hover:from-amber-500/10 group-hover:via-yellow-400/15 group-hover:to-amber-600/10 transition-all duration-300" />
-            <div className="relative flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/25 to-amber-600/10 flex items-center justify-center shadow-[0_0_15px_rgba(245,158,11,0.3)] group-hover:shadow-[0_0_25px_rgba(245,158,11,0.5)] transition-shadow duration-300">
-                <Rocket className="w-5 h-5 text-amber-400" />
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center">
+                <Rocket className="w-5 h-5 text-accent" />
               </div>
-              <div className="text-left min-w-0">
-                <p className="text-[10px] uppercase tracking-wider font-bold bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent">✨ Projetos</p>
-                <p className="text-sm font-display font-bold bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 bg-clip-text text-transparent truncate">Participar</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">✨ Projetos</p>
+                <p className="text-lg font-display font-bold">Participar</p>
               </div>
+              <ArrowRight className="w-4 h-4 text-muted-foreground" />
             </div>
           </motion.button>
 
