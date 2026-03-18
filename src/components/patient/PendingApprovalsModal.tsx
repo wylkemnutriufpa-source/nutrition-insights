@@ -368,8 +368,8 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
                                 {template.name} • {template.base_calories}kcal
                               </Badge>
                             ) : (
-                              <Badge variant="outline" className="text-xs border-amber-500 text-amber-600">
-                                ⏳ Sem plano
+                              <Badge variant="outline" className="text-xs border-warning text-warning">
+                                ⏳ Em produção
                               </Badge>
                             )}
                             {altCount > 0 && (
