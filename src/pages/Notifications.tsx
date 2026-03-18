@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, Check, CheckCheck, Trash2, MessageSquare, Calendar, TrendingUp, AlertCircle, Info } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface Notification {
   id: string;
@@ -37,45 +38,41 @@ const typeColors: Record<string, string> = {
 
 export default function Notifications() {
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [filter, setFilter] = useState<"all" | "unread">("all");
+  const queryClient = useQueryClient();
+  const [filter, setFilter] = React.useState<"all" | "unread">("all");
 
-  const fetch_ = async () => {
-    if (!user) return;
-    const { data } = await supabase.from("notifications")
-      .select("*").eq("user_id", user.id)
-      .order("created_at", { ascending: false }).limit(100);
-    setNotifications(data || []);
-  };
+  const { data: notifications = [] } = useQuery<Notification[]>({
+    queryKey: ["notifications", "full", user?.id ?? ""],
+    enabled: !!user,
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(100);
+      return (data || []) as Notification[];
+    },
+  });
 
-  useEffect(() => { fetch_(); }, [user]);
-
-  // Realtime
-  useEffect(() => {
-    if (!user) return;
-    const channel = supabase.channel("notifications-" + user.id)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
-        (payload) => { setNotifications(prev => [payload.new as Notification, ...prev]); })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [user]);
-
-  const markRead = async (id: string) => {
+  const markRead = useCallback(async (id: string) => {
     await supabase.from("notifications").update({ is_read: true }).eq("id", id);
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
-  };
+    queryClient.invalidateQueries({ queryKey: ["notifications"] });
+  }, [queryClient]);
 
-  const markAllRead = async () => {
+  const markAllRead = useCallback(async () => {
     if (!user) return;
     await supabase.from("notifications").update({ is_read: true }).eq("user_id", user.id).eq("is_read", false);
-    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+    queryClient.invalidateQueries({ queryKey: ["notifications"] });
     toast.success("Todas as notificações marcadas como lidas");
-  };
+  }, [user, queryClient]);
 
-  const deleteNotification = async (id: string) => {
+  const deleteNotification = useCallback(async (id: string) => {
     await supabase.from("notifications").delete().eq("id", id);
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  };
+    queryClient.invalidateQueries({ queryKey: ["notifications"] });
+  }, [queryClient]);
 
   const filtered = filter === "unread" ? notifications.filter(n => !n.is_read) : notifications;
   const unreadCount = notifications.filter(n => !n.is_read).length;
