@@ -18,7 +18,7 @@ export function usePatientDetail(patientId: string | undefined) {
         supabase.from("patient_timeline").select("*").eq("patient_id", patientId!).order("created_at", { ascending: false }).limit(50),
         supabase.from("patient_anamnesis").select("*").eq("user_id", patientId!).order("created_at", { ascending: false }).limit(1),
         supabase.from("patient_protocols").select("*").eq("patient_id", patientId!).eq("nutritionist_id", user!.id).order("created_at", { ascending: false }),
-        supabase.from("protocols").select("id, title").eq("created_by", user!.id),
+        supabase.from("protocols").select("id, title, protocol_key").or(`created_by.eq.${user!.id},is_system.eq.true`),
         supabase.from("checklist_tasks").select("id, completed").eq("patient_id", patientId!).eq("date", new Date().toISOString().split("T")[0]),
         supabase.from("subscriptions").select("*").eq("user_id", patientId!).order("created_at", { ascending: false }).limit(1),
         supabase.from("pricing_plans").select("*").eq("is_active", true).order("sort_order"),

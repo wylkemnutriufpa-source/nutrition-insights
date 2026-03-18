@@ -598,6 +598,7 @@ export default function Protocols() {
     const { data: pp, error } = await supabase.from("patient_protocols").insert({
       patient_id: assignForm.patient_id,
       protocol_id: selectedProtocol.id,
+      protocol_key: (selectedProtocol as any).protocol_key || null,
       nutritionist_id: user.id,
       start_date: startDate,
       end_date: endDate.toISOString().split("T")[0],

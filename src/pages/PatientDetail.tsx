@@ -36,6 +36,7 @@ import {
   TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope, Crown, UserCog, Pencil, Sparkles
 } from "lucide-react";
 import BodyProjectionProCard from "@/components/patient/BodyProjectionProCard";
+import ActiveProtocolBadge from "@/components/patient/ActiveProtocolBadge";
 import PrestigeBadge from "@/components/prestige/PrestigeBadge";
 import PrestigeName from "@/components/prestige/PrestigeName";
 import type { PrestigePlan } from "@/hooks/usePrestige";
@@ -165,9 +166,12 @@ export default function PatientDetail() {
   const activateProtocol = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !patientId) return;
+    // Get protocol_key for the selected protocol
+    const selectedProto = protocols.find(p => p.id === activateForm.protocol_id);
     const { data, error } = await supabase.from("patient_protocols").insert({
       patient_id: patientId,
       protocol_id: activateForm.protocol_id,
+      protocol_key: (selectedProto as any)?.protocol_key || null,
       nutritionist_id: user.id,
       status: activateForm.status,
       start_date: activateForm.start_date,
@@ -379,6 +383,7 @@ export default function PatientDetail() {
                 {patientStatus === "active" ? "Ativo" : "Inativo"}
               </Badge>
               {currentPrestigePlan && <PrestigeBadge plan={currentPrestigePlan} allPlans={prestigePlans} size="sm" />}
+              {patientId && <ActiveProtocolBadge patientId={patientId} compact />}
             </div>
             <p className="text-sm text-muted-foreground">
               Checklist hoje: {checklistStats.completed}/{checklistStats.total} tarefas •
