@@ -555,7 +555,9 @@ export function usePendingApprovals() {
         .eq("nutritionist_id", user.id)
         .in("status", ["pending_approval", "pending_plan_generation"]);
 
-      const items = (data || []) as Array<{ id: string; patient_id: string }>;
+      const items = Array.isArray(data)
+        ? (data as unknown as Array<{ id: string; patient_id: string }>)
+        : [];
       if (items.length === 0) {
         setCount(0);
         return;
