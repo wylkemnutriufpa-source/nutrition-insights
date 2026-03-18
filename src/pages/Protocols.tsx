@@ -1025,12 +1025,12 @@ export default function Protocols() {
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium truncate">{pp.patient_name}</p>
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
-                                    pp.status === "active" ? "bg-emerald-500/10 text-emerald-500" :
-                                    pp.status === "paused" ? "bg-amber-500/10 text-amber-500" :
-                                    "bg-muted text-muted-foreground"
-                                  }`}>
-                                    {pp.status === "active" ? "Ativo" : pp.status === "paused" ? "Pausado" : "Finalizado"}
+                                  <ProtocolStatusBadge
+                                    status={pp.status}
+                                    manualInterventionStatus={pp.manual_intervention_status}
+                                    lastManualInterventionAt={pp.last_manual_intervention_at}
+                                    manualAdjustmentsCount={pp.manual_adjustments_count || 0}
+                                    showDetails={false}
                                   </span>
                                   <span>{new Date(pp.start_date).toLocaleDateString("pt-BR")}</span>
                                   {pp.end_date && <span>→ {new Date(pp.end_date).toLocaleDateString("pt-BR")}</span>}
