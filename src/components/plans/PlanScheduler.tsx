@@ -133,11 +133,7 @@ export default function PlanScheduler({ mealPlanId, planTitle }: PlanSchedulerPr
 
   const manualActivate = async (id: string) => {
     await supabase.from("plan_schedules").update({ status: "activated" }).eq("id", id);
-    const { data: currentPlan } = await supabase.from("meal_plans").select("patient_id, nutritionist_id").eq("id", mealPlanId).maybeSingle();
-    if (currentPlan) {
-      await supabase.from("meal_plans").update({ is_active: false }).eq("nutritionist_id", currentPlan.nutritionist_id).eq("patient_id", currentPlan.patient_id);
-    }
-    await supabase.from("meal_plans").update({ is_active: true }).eq("id", mealPlanId);
+    await supabase.rpc("activate_meal_plan" as any, { _plan_id: mealPlanId });
     fetchSchedules();
     toast.success("Plano ativado manualmente! ✅");
   };

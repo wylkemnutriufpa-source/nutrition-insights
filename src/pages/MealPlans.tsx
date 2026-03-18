@@ -127,12 +127,11 @@ export default function MealPlans() {
     setSubmitting(false);
   };
 
-  const toggleActive = async (id: string, patientId: string, current: boolean) => {
+  const toggleActive = async (id: string, _patientId: string, current: boolean) => {
     if (current) {
       await supabase.from("meal_plans").update({ is_active: false }).eq("id", id);
     } else {
-      await supabase.from("meal_plans").update({ is_active: false }).eq("nutritionist_id", user?.id).eq("patient_id", patientId);
-      await supabase.from("meal_plans").update({ is_active: true }).eq("id", id);
+      await supabase.rpc("activate_meal_plan" as any, { _plan_id: id });
     }
     fetchPlans();
   };
