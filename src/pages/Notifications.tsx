@@ -39,7 +39,7 @@ const typeColors: Record<string, string> = {
 export default function Notifications() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [filter, setFilter] = React.useState<"all" | "unread">("all");
+  const [filter, setFilter] = useState<"all" | "unread">("all");
 
   const { data: notifications = [] } = useQuery<Notification[]>({
     queryKey: ["notifications", "full", user?.id ?? ""],
