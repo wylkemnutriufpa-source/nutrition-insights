@@ -14,8 +14,9 @@ import { toast } from "sonner";
 import {
   AlertTriangle, CheckCircle2, XCircle, Loader2, User,
   Target, Sparkles, ChevronRight, Scale,
-  FileText, Zap
+  FileText, Zap, Search
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { EditorVersionPicker } from "@/components/common/EditorVersionPicker";
 
 interface PendingPipeline {
