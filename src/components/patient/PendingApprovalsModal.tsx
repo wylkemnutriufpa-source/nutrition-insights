@@ -14,8 +14,9 @@ import { toast } from "sonner";
 import {
   AlertTriangle, CheckCircle2, XCircle, Loader2, User,
   Target, Sparkles, ChevronRight, Scale,
-  FileText, Zap
+  FileText, Zap, Search
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { EditorVersionPicker } from "@/components/common/EditorVersionPicker";
 
 interface PendingPipeline {
@@ -50,6 +51,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
   const [rejectMode, setRejectMode] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [batchGenerating, setBatchGenerating] = useState(false);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     if (open && user) fetchPending();
@@ -339,7 +341,16 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
           ) : !selectedPipeline ? (
             /* ── List view ── */
             <div className="space-y-3 py-2">
-              {pipelines.map((p) => {
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar paciente..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9 h-9"
+                />
+              </div>
+              {pipelines.filter((p) => p.patient_name?.toLowerCase().includes(search.toLowerCase())).map((p) => {
                 const template = getSelectedTemplate(p);
                 const altCount = getAlternatives(p).length;
                 return (
