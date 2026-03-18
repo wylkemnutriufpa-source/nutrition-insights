@@ -5941,6 +5941,53 @@ export type Database = {
           },
         ]
       }
+      patient_project_history: {
+        Row: {
+          approved_by: string | null
+          created_at: string
+          ended_at: string | null
+          id: string
+          notes: string | null
+          patient_id: string
+          program_id: string | null
+          project_code: string
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          approved_by?: string | null
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          notes?: string | null
+          patient_id: string
+          program_id?: string | null
+          project_code: string
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          approved_by?: string | null
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          program_id?: string | null
+          project_code?: string
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_project_history_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_protocol_history: {
         Row: {
           changed_by: string | null
@@ -8081,6 +8128,7 @@ export type Database = {
           max_patients: number | null
           prestige_plan_id: string | null
           protocol_id: string | null
+          protocol_key: string | null
           start_date: string
           tag: string
           title: string
@@ -8097,6 +8145,7 @@ export type Database = {
           max_patients?: number | null
           prestige_plan_id?: string | null
           protocol_id?: string | null
+          protocol_key?: string | null
           start_date: string
           tag?: string
           title: string
@@ -8113,6 +8162,7 @@ export type Database = {
           max_patients?: number | null
           prestige_plan_id?: string | null
           protocol_id?: string | null
+          protocol_key?: string | null
           start_date?: string
           tag?: string
           title?: string
@@ -10427,6 +10477,10 @@ export type Database = {
           _role?: string
         }
         Returns: string
+      }
+      end_patient_project: {
+        Args: { _patient_id: string; _program_id: string; _reason?: string }
+        Returns: Json
       }
       find_existing_patient_emails: {
         Args: { _emails: string[]; _nutritionist_id: string }

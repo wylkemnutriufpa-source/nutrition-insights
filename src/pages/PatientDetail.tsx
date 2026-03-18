@@ -33,10 +33,11 @@ import OnboardingApprovalQueue from "@/components/patient/OnboardingApprovalQueu
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
-  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope, Crown, UserCog, Pencil, Sparkles
+  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope, Crown, UserCog, Pencil, Sparkles, Rocket
 } from "lucide-react";
 import BodyProjectionProCard from "@/components/patient/BodyProjectionProCard";
 import ActiveProtocolBadge from "@/components/patient/ActiveProtocolBadge";
+import PatientProjectGovernance from "@/components/patient/PatientProjectGovernance";
 import PrestigeBadge from "@/components/prestige/PrestigeBadge";
 import PrestigeName from "@/components/prestige/PrestigeName";
 import type { PrestigePlan } from "@/hooks/usePrestige";
@@ -561,6 +562,7 @@ export default function PatientDetail() {
             { key: "body-projection", label: "Projeção Corporal", icon: Sparkles, color: "from-purple-500/20 to-violet-500/5", iconColor: "text-purple-500" },
             { key: "onboarding", label: "Onboarding", icon: Zap, color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
             { key: "edit-profile", label: "Editar Cadastro", icon: Pencil, color: "from-info/20 to-info/5", iconColor: "text-info" },
+            { key: "projects", label: "Projetos", icon: Rocket, color: "from-pink-500/20 to-pink-500/5", iconColor: "text-pink-500" },
           ];
 
           return (
@@ -1182,6 +1184,20 @@ export default function PatientDetail() {
                       {savingProfile ? "Salvando..." : "Salvar Alterações"}
                     </Button>
                   </form>
+                </DialogContent>
+              </Dialog>
+
+              {/* Projects / Governance Modal */}
+              <Dialog open={openSection === "projects"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display flex items-center gap-2"><Rocket className="w-5 h-5 text-primary" /> Projetos & Governança</DialogTitle></DialogHeader>
+                  {patientId && (
+                    <PatientProjectGovernance
+                      patientId={patientId}
+                      isProfessionalView={true}
+                      onProtocolChanged={invalidate}
+                    />
+                  )}
                 </DialogContent>
               </Dialog>
             </>
