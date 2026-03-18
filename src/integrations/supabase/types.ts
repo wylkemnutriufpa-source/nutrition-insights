@@ -5946,9 +5946,15 @@ export type Database = {
           created_at: string
           end_date: string | null
           id: string
+          last_manual_intervention_at: string | null
+          last_manual_intervention_by: string | null
+          last_protocol_evaluation_at: string | null
+          manual_adjustments_count: number
+          manual_intervention_status: string
           nutritionist_id: string
           patient_id: string
           protocol_id: string
+          protocol_next_action_at: string | null
           schedule_criteria: Json | null
           start_date: string
           status: Database["public"]["Enums"]["protocol_status"]
@@ -5958,9 +5964,15 @@ export type Database = {
           created_at?: string
           end_date?: string | null
           id?: string
+          last_manual_intervention_at?: string | null
+          last_manual_intervention_by?: string | null
+          last_protocol_evaluation_at?: string | null
+          manual_adjustments_count?: number
+          manual_intervention_status?: string
           nutritionist_id: string
           patient_id: string
           protocol_id: string
+          protocol_next_action_at?: string | null
           schedule_criteria?: Json | null
           start_date: string
           status?: Database["public"]["Enums"]["protocol_status"]
@@ -5970,9 +5982,15 @@ export type Database = {
           created_at?: string
           end_date?: string | null
           id?: string
+          last_manual_intervention_at?: string | null
+          last_manual_intervention_by?: string | null
+          last_protocol_evaluation_at?: string | null
+          manual_adjustments_count?: number
+          manual_intervention_status?: string
           nutritionist_id?: string
           patient_id?: string
           protocol_id?: string
+          protocol_next_action_at?: string | null
           schedule_criteria?: Json | null
           start_date?: string
           status?: Database["public"]["Enums"]["protocol_status"]
@@ -8275,6 +8293,59 @@ export type Database = {
             columns: ["protocol_id"]
             isOneToOne: false
             referencedRelation: "nutrition_protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      protocol_intervention_log: {
+        Row: {
+          changes_applied: Json | null
+          created_at: string
+          description: string | null
+          id: string
+          intervention_type: string
+          patient_id: string
+          patient_protocol_id: string
+          performed_by: string
+          protocol_kept_active: boolean
+          protocol_status_after: string
+          protocol_status_before: string
+          source: string
+        }
+        Insert: {
+          changes_applied?: Json | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          intervention_type: string
+          patient_id: string
+          patient_protocol_id: string
+          performed_by: string
+          protocol_kept_active?: boolean
+          protocol_status_after: string
+          protocol_status_before: string
+          source?: string
+        }
+        Update: {
+          changes_applied?: Json | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          intervention_type?: string
+          patient_id?: string
+          patient_protocol_id?: string
+          performed_by?: string
+          protocol_kept_active?: boolean
+          protocol_status_after?: string
+          protocol_status_before?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "protocol_intervention_log_patient_protocol_id_fkey"
+            columns: ["patient_protocol_id"]
+            isOneToOne: false
+            referencedRelation: "patient_protocols"
             referencedColumns: ["id"]
           },
         ]
