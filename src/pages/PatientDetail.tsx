@@ -1186,6 +1186,20 @@ export default function PatientDetail() {
                   </form>
                 </DialogContent>
               </Dialog>
+
+              {/* Projects / Governance Modal */}
+              <Dialog open={openSection === "projects"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display flex items-center gap-2"><Rocket className="w-5 h-5 text-primary" /> Projetos & Governança</DialogTitle></DialogHeader>
+                  {patientId && (
+                    <PatientProjectGovernance
+                      patientId={patientId}
+                      isProfessionalView={true}
+                      onProtocolChanged={invalidate}
+                    />
+                  )}
+                </DialogContent>
+              </Dialog>
             </>
           );
         })()}
