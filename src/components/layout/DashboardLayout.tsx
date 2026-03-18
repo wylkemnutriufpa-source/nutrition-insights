@@ -24,6 +24,7 @@ import { useTranslation } from "react-i18next";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePresenceTracker } from "@/hooks/usePresenceTracker";
+import { useRealtimeEventBus } from "@/hooks/useRealtimeEventBus";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import CommandPalette, { openCommandPalette } from "@/components/common/CommandPalette";
 import { Search } from "lucide-react";
@@ -379,6 +380,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   // Track presence for all logged-in users
   usePresenceTracker();
+
+  // Centralized realtime event bus — invalidates React Query caches on critical events
+  useRealtimeEventBus();
 
   // Preserve native scroll position to avoid interrupting long editing flows.
 
