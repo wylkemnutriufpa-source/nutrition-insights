@@ -346,7 +346,7 @@ export default function ClientDashboard() {
           </motion.div>
         )}
 
-        {planStatus.showWaitingApproval && (
+        {lifecycle.showWaitingApproval && (
           <motion.div variants={item}>
             <div className="glass-premium rounded-xl p-4 border border-amber-500/30 bg-amber-500/5 flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center">
