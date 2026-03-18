@@ -578,14 +578,15 @@ export function usePendingApprovals() {
 
       const resolvedStatuses = await Promise.all(
         items.map(async (pipeline) => {
-          const { data: statusData } = await supabase.rpc("resolve_patient_plan_status", {
+          const { data: statusData } = await supabase.rpc("resolve_patient_lifecycle_state" as any, {
             _patient_id: pipeline.patient_id,
           });
-          return (statusData as any)?.status;
+          return (statusData as any)?.lifecycle_state;
         })
       );
 
-      setCount(resolvedStatuses.filter((status) => status !== "plan_delivered").length);
+      const sovereignStates = ['plan_delivered', 'active_followup', 'maintenance_mode'];
+      setCount(resolvedStatuses.filter((state) => !sovereignStates.includes(state || '')).length);
     };
 
     check();
