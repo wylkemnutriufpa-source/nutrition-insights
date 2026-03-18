@@ -49,6 +49,7 @@ const STEPS = [
 export default function OnboardingPipeline() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const planStatus = usePatientPlanStatus();
   const [pipeline, setPipeline] = useState<Pipeline | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
