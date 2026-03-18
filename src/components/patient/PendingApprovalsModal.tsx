@@ -51,6 +51,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
   const [rejectMode, setRejectMode] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [batchGenerating, setBatchGenerating] = useState(false);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     if (open && user) fetchPending();
