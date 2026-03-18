@@ -380,6 +380,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   // Track presence for all logged-in users
   usePresenceTracker();
 
+  // Centralized realtime event bus — invalidates React Query caches on critical events
+  useRealtimeEventBus();
+
   // Preserve native scroll position to avoid interrupting long editing flows.
 
   // Close mobile sidebar on route change
