@@ -28,7 +28,7 @@ import { DailyMissionsWidget } from "@/components/gamification/DailyMissionsWidg
 import { AdherenceEvolutionChart } from "@/components/gamification/AdherenceEvolutionChart";
 import { JourneyTimelineFeed } from "@/components/gamification/JourneyTimelineFeed";
 import { MomentumIndicator } from "@/components/gamification/MomentumIndicator";
-import { usePatientPlanStatus } from "@/hooks/usePatientPlanStatus";
+import { usePatientLifecycleState } from "@/hooks/usePatientLifecycleState";
 
 interface ProgramInfo {
   id: string;
