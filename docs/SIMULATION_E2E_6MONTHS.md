@@ -852,7 +852,9 @@ Plano Pro Semestral:
 4. 🔧 Mensagens motivacionais personalizadas via chat
 5. 🔧 Decidir entre opções terapêuticas (diet break vs intensificar)
 
-### Tabelas AUSENTES que precisam ser criadas:
-- `patient_milestones` (tracking individual de milestones por paciente)
-- `patient_predictions` (previsões de desfechos clínicos)
-- `weight_trajectory_projections` (projeções de peso persistidas)
+### Tabelas Core Confirmadas (todas existentes):
+- `patient_clinical_milestones` — Tracking individual com 23 colunas (adesão, peso, classificação, lifecycle antes/depois)
+- `patient_predicted_outcomes` — Previsões com probabilidades de meta, estagnação, abandono e regressão + driver principal
+- `patient_weight_projection` — Projeções de peso com body fat, risco, confiança e horizonte em semanas
+
+✅ **Infraestrutura 100% pronta para operação autônoma.**
