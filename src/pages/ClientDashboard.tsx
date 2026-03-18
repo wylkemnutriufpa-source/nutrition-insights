@@ -325,7 +325,7 @@ export default function ClientDashboard() {
         </motion.div>
 
         {/* Plan Status Banner — SSoT driven */}
-        {planStatus.status === "plan_delivered" && (
+        {lifecycle.showPlan && (
           <motion.div variants={item}>
             <Link to="/my-diet">
               <div className="glass-premium rounded-xl p-4 border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-all cursor-pointer flex items-center gap-3">
