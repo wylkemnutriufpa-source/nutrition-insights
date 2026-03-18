@@ -4,16 +4,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { CreditCard } from "lucide-react";
+import { usePatientPlanStatus } from "@/hooks/usePatientPlanStatus";
 
 export default function PlanRequestButton() {
   const { user } = useAuth();
+  const planStatus = usePatientPlanStatus();
   const [sending, setSending] = useState(false);
+
+  // ── SOVEREIGN RULE: If plan is delivered, don't show "Estou sem Plano" button ──
+  if (planStatus.status === "plan_delivered" || planStatus.status === "loading") {
+    return null;
+  }
 
   const handleRequest = async () => {
     if (!user) return;
     setSending(true);
 
-    // Get nutritionist
     const { data: rel } = await supabase
       .from("nutritionist_patients")
       .select("nutritionist_id")
