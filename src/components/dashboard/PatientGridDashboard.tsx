@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useLayoutPreference } from "@/hooks/useLayoutPreference";
 import {
   UtensilsCrossed, CheckCircle2, Calendar, Dumbbell,
-  TrendingUp, Brain, Camera, FileText, Target,
+  TrendingUp, Brain, Camera, Target,
   LayoutGrid, List, ArrowRight, Sparkles,
 } from "lucide-react";
 

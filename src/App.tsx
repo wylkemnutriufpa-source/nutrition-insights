@@ -24,7 +24,7 @@ const Challenges = lazy(() => import("./pages/Challenges"));
 const Patients = lazy(() => import("./pages/Patients"));
 const PatientDetail = lazy(() => import("./pages/PatientDetail"));
 const MealPlans = lazy(() => import("./pages/MealPlans"));
-const MealPlanEditor = lazy(() => import("./pages/MealPlanEditor"));
+// MealPlanEditor (legacy V1) removed — all plans now use V2
 const MealPlanEditorV2 = lazy(() => import("./pages/MealPlanEditorV2"));
 const MealPlanEditorV2Entry = lazy(() => import("./pages/MealPlanEditorV2Entry"));
 const Anamnesis = lazy(() => import("./pages/Anamnesis"));
