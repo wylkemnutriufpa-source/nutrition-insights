@@ -694,11 +694,8 @@ export default function Patients() {
                 </p>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <Button variant="outline" size="sm" onClick={() => openBulkManage("activate")} className="gap-1.5 text-xs">
-                  <ToggleRight className="w-3.5 h-3.5" /> Ativar
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => openBulkManage("deactivate")} className="gap-1.5 text-xs text-destructive border-destructive/30 hover:bg-destructive/10">
-                  <ToggleLeft className="w-3.5 h-3.5" /> Desativar
+                <Button variant="outline" size="sm" onClick={() => { setStatusManagerSearch(""); setStatusManagerOpen(true); }} className="gap-1.5 text-xs">
+                  <ToggleRight className="w-3.5 h-3.5" /> Gerenciar Status
                 </Button>
                 <Dialog open={open} onOpenChange={setOpen}>
                   <DialogTrigger asChild>
