@@ -454,7 +454,11 @@ export default function BiquiniBrancoDetail() {
                             });
                             if (error) throw error;
                             const result = data as any;
-                            toast.success(`👑 Prestígio aplicado a ${result.patients_updated} pacientes!`);
+                            const skipped = result.patients_skipped || 0;
+                            const msg = skipped > 0
+                              ? `👑 Prestígio aplicado a ${result.patients_updated} pacientes! (${skipped} mantiveram prestígio superior)`
+                              : `👑 Prestígio aplicado a ${result.patients_updated} pacientes!`;
+                            toast.success(msg);
                           } catch (e: any) {
                             toast.error(e.message || "Erro ao sincronizar");
                           } finally {
