@@ -166,9 +166,12 @@ export default function PatientDetail() {
   const activateProtocol = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !patientId) return;
+    // Get protocol_key for the selected protocol
+    const selectedProto = protocols.find(p => p.id === activateForm.protocol_id);
     const { data, error } = await supabase.from("patient_protocols").insert({
       patient_id: patientId,
       protocol_id: activateForm.protocol_id,
+      protocol_key: (selectedProto as any)?.protocol_key || null,
       nutritionist_id: user.id,
       status: activateForm.status,
       start_date: activateForm.start_date,
