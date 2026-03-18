@@ -34,8 +34,7 @@ const PATIENT_CARDS: GridCard[] = [
 
   // Row 3 — Estratégia futura
   { key: "body-ai", label: "Projeção Corporal", description: "Projeção visual de transformação com IA", icon: Camera, route: "/body-projection", gradient: "from-purple-500/10 to-purple-600/5", row: 3, badge: { text: "Novo", variant: "default" } },
-  { key: "protocols", label: "Protocolos Ativos", description: "Protocolos clínicos em andamento", icon: FileText, route: "/library", gradient: "from-indigo-500/10 to-indigo-600/5", row: 3 },
-  { key: "goals", label: "Metas e Objetivos", description: "Defina e acompanhe suas metas", icon: Target, route: "/checkin", gradient: "from-orange-500/10 to-orange-600/5", row: 3 },
+  { key: "goals", label: "Metas e Projeção", description: "Metas, objetivos e projeção de peso", icon: Target, route: "/weekly-goals", gradient: "from-orange-500/10 to-orange-600/5", row: 3 },
 ];
 
 const ROW_LABELS: Record<number, string> = {
