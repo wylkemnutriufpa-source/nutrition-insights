@@ -1753,6 +1753,39 @@ export type Database = {
           },
         ]
       }
+      clinical_milestone_definitions: {
+        Row: {
+          actions: Json
+          created_at: string
+          day_offset: number
+          description: string | null
+          id: string
+          is_active: boolean
+          label: string
+          milestone_key: string
+        }
+        Insert: {
+          actions?: Json
+          created_at?: string
+          day_offset: number
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          label: string
+          milestone_key: string
+        }
+        Update: {
+          actions?: Json
+          created_at?: string
+          day_offset?: number
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string
+          milestone_key?: string
+        }
+        Relationships: []
+      }
       clinical_rule_conditions: {
         Row: {
           created_at: string
@@ -4627,6 +4660,92 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "protocols"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_clinical_milestones: {
+        Row: {
+          actions_executed: Json | null
+          adherence_score: number | null
+          alerts_generated: number | null
+          checklist_completion_rate: number | null
+          classification: string | null
+          created_at: string
+          days_since_last_checkin: number | null
+          dropout_risk_score: number | null
+          engagement_index: number | null
+          engine_version: string | null
+          evaluated_at: string | null
+          id: string
+          lifecycle_state_after: string | null
+          lifecycle_state_before: string | null
+          login_frequency: number | null
+          milestone_due_at: string
+          milestone_key: string
+          patient_id: string
+          plan_delivered_at: string
+          plan_id: string | null
+          risk_level: string | null
+          status: string
+          weight_delta: number | null
+        }
+        Insert: {
+          actions_executed?: Json | null
+          adherence_score?: number | null
+          alerts_generated?: number | null
+          checklist_completion_rate?: number | null
+          classification?: string | null
+          created_at?: string
+          days_since_last_checkin?: number | null
+          dropout_risk_score?: number | null
+          engagement_index?: number | null
+          engine_version?: string | null
+          evaluated_at?: string | null
+          id?: string
+          lifecycle_state_after?: string | null
+          lifecycle_state_before?: string | null
+          login_frequency?: number | null
+          milestone_due_at: string
+          milestone_key: string
+          patient_id: string
+          plan_delivered_at: string
+          plan_id?: string | null
+          risk_level?: string | null
+          status?: string
+          weight_delta?: number | null
+        }
+        Update: {
+          actions_executed?: Json | null
+          adherence_score?: number | null
+          alerts_generated?: number | null
+          checklist_completion_rate?: number | null
+          classification?: string | null
+          created_at?: string
+          days_since_last_checkin?: number | null
+          dropout_risk_score?: number | null
+          engagement_index?: number | null
+          engine_version?: string | null
+          evaluated_at?: string | null
+          id?: string
+          lifecycle_state_after?: string | null
+          lifecycle_state_before?: string | null
+          login_frequency?: number | null
+          milestone_due_at?: string
+          milestone_key?: string
+          patient_id?: string
+          plan_delivered_at?: string
+          plan_id?: string | null
+          risk_level?: string | null
+          status?: string
+          weight_delta?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_clinical_milestones_milestone_key_fkey"
+            columns: ["milestone_key"]
+            isOneToOne: false
+            referencedRelation: "clinical_milestone_definitions"
+            referencedColumns: ["milestone_key"]
           },
         ]
       }
