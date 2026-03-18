@@ -55,6 +55,9 @@ interface PatientProtocol {
   created_at: string;
   patient_name?: string;
   adherence?: number;
+  manual_intervention_status?: string;
+  last_manual_intervention_at?: string | null;
+  manual_adjustments_count?: number;
 }
 
 interface PatientOption {
