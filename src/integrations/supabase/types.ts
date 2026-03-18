@@ -10431,6 +10431,7 @@ export type Database = {
       }
     }
     Functions: {
+      activate_meal_plan: { Args: { _plan_id: string }; Returns: undefined }
       award_points:
         | {
             Args: { _action_key: string; _metadata?: Json; _patient_id: string }
