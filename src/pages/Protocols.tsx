@@ -1031,7 +1031,7 @@ export default function Protocols() {
                                     lastManualInterventionAt={pp.last_manual_intervention_at}
                                     manualAdjustmentsCount={pp.manual_adjustments_count || 0}
                                     showDetails={false}
-                                  </span>
+                                  />
                                   <span>{new Date(pp.start_date).toLocaleDateString("pt-BR")}</span>
                                   {pp.end_date && <span>→ {new Date(pp.end_date).toLocaleDateString("pt-BR")}</span>}
                                 </div>
