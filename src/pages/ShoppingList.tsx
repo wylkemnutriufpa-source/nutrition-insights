@@ -79,13 +79,13 @@ export default function ShoppingList() {
     if (!user) return;
     setGenerating(true);
     try {
-      // 1. Find active plan — prioritize approved/published status
+      // 1. Find delivered plan only
       const { data: plans } = await supabase
         .from("meal_plans")
         .select("id, title, plan_status")
         .eq("patient_id", user.id)
         .eq("is_active", true)
-        .in("plan_status", ["approved", "published_to_patient", "draft"])
+        .eq("plan_status", "published_to_patient")
         .order("updated_at", { ascending: false })
         .limit(1);
 

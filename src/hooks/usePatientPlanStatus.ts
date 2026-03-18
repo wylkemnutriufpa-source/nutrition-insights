@@ -22,6 +22,8 @@ export type PatientPlanStatusCode =
   | "plan_approved_pending_publish"
   | "plan_under_review"
   | "plan_pending_approval"
+  | "plan_draft"
+  | "plan_pending_production"
   | "onboarding_in_progress"
   | "no_plan"
   | "loading";

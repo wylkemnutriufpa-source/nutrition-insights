@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { usePatientPlanStatus } from "@/hooks/usePatientPlanStatus";
 import {
   ClipboardCheck, Scale, Camera, Clock, Utensils, Sparkles,
   CheckCircle2, ArrowRight, ArrowLeft, Loader2, AlertCircle,
@@ -48,6 +49,7 @@ const STEPS = [
 export default function OnboardingPipeline() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const planStatus = usePatientPlanStatus();
   const [pipeline, setPipeline] = useState<Pipeline | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -229,6 +231,23 @@ export default function OnboardingPipeline() {
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (planStatus.status === "plan_delivered") {
+    return (
+      <DashboardLayout>
+        <div className="max-w-2xl mx-auto py-12 text-center space-y-4">
+          <CheckCircle2 className="w-16 h-16 text-success mx-auto" />
+          <h2 className="text-2xl font-bold">Seu plano já foi entregue ✅</h2>
+          <p className="text-muted-foreground">
+            O onboarding anterior foi encerrado automaticamente porque seu plano já está disponível no painel.
+          </p>
+          <Button onClick={() => navigate("/my-diet")} className="gradient-primary">
+            Ver meu plano
+          </Button>
         </div>
       </DashboardLayout>
     );

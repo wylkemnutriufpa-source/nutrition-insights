@@ -76,6 +76,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
   async function fetchPending() {
     if (!user) return;
     setLoading(true);
+
     const { data } = await supabase
       .from("onboarding_pipelines" as any)
       .select("*")
@@ -83,23 +84,42 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
       .in("status", ["pending_approval", "pending_plan_generation"]);
 
     const items = (data || []) as any[];
-    if (items.length > 0) {
-      const patientIds = items.map((p: any) => p.patient_id);
-      const { data: profiles } = await supabase
+    if (items.length === 0) {
+      setPipelines([]);
+      setLoading(false);
+      return;
+    }
+
+    const patientIds = items.map((p: any) => p.patient_id);
+    const [{ data: profiles }, resolvedStatuses] = await Promise.all([
+      supabase
         .from("profiles")
         .select("user_id, full_name, avatar_url")
-        .in("user_id", patientIds);
-      const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+        .in("user_id", patientIds),
+      Promise.all(
+        items.map(async (pipeline: any) => {
+          const { data: statusData } = await supabase.rpc("resolve_patient_plan_status", {
+            _patient_id: pipeline.patient_id,
+          });
+          return {
+            pipelineId: pipeline.id,
+            status: (statusData as any)?.status,
+          };
+        })
+      ),
+    ]);
 
-      const enriched = items.map((p: any) => ({
-        ...p,
-        patient_name: profileMap.get(p.patient_id)?.full_name || "Paciente",
-        patient_avatar: profileMap.get(p.patient_id)?.avatar_url,
-      }));
-      setPipelines(enriched);
-    } else {
-      setPipelines([]);
-    }
+    const canonicalMap = new Map(resolvedStatuses.map((entry) => [entry.pipelineId, entry.status]));
+    const eligibleItems = items.filter((pipeline: any) => canonicalMap.get(pipeline.id) !== "plan_delivered");
+    const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+
+    const enriched = eligibleItems.map((p: any) => ({
+      ...p,
+      patient_name: profileMap.get(p.patient_id)?.full_name || "Paciente",
+      patient_avatar: profileMap.get(p.patient_id)?.avatar_url,
+    }));
+
+    setPipelines(enriched);
     setLoading(false);
   }
 
@@ -348,8 +368,8 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
                                 {template.name} • {template.base_calories}kcal
                               </Badge>
                             ) : (
-                              <Badge variant="outline" className="text-xs border-amber-500 text-amber-600">
-                                ⏳ Sem plano
+                              <Badge variant="outline" className="text-xs border-warning text-warning">
+                                ⏳ Em produção
                               </Badge>
                             )}
                             {altCount > 0 && (
@@ -529,18 +549,38 @@ export function usePendingApprovals() {
   useEffect(() => {
     if (!user) return;
     const check = async () => {
-      const { count: c } = await supabase
+      const { data } = await supabase
         .from("onboarding_pipelines" as any)
-        .select("id", { count: "exact", head: true })
+        .select("id, patient_id")
         .eq("nutritionist_id", user.id)
         .in("status", ["pending_approval", "pending_plan_generation"]);
-      setCount(c || 0);
+
+      const items = Array.isArray(data)
+        ? (data as unknown as Array<{ id: string; patient_id: string }>)
+        : [];
+      if (items.length === 0) {
+        setCount(0);
+        return;
+      }
+
+      const resolvedStatuses = await Promise.all(
+        items.map(async (pipeline) => {
+          const { data: statusData } = await supabase.rpc("resolve_patient_plan_status", {
+            _patient_id: pipeline.patient_id,
+          });
+          return (statusData as any)?.status;
+        })
+      );
+
+      setCount(resolvedStatuses.filter((status) => status !== "plan_delivered").length);
     };
+
     check();
 
     const ch = supabase
       .channel("pending-count")
       .on("postgres_changes", { event: "*", schema: "public", table: "onboarding_pipelines" }, () => check())
+      .on("postgres_changes", { event: "*", schema: "public", table: "meal_plans" }, () => check())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [user]);

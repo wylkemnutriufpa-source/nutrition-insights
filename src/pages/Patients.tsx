@@ -837,7 +837,7 @@ export default function Patients() {
                       : "border-border bg-card text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  Sem plano
+                  Sem prestígio
                   <span className="opacity-70">{patients.filter(p => !p.prestigePlan).length}</span>
                 </button>
               </div>
