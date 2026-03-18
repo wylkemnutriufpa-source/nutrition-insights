@@ -380,6 +380,7 @@ export default function PatientDetail() {
                 {patientStatus === "active" ? "Ativo" : "Inativo"}
               </Badge>
               {currentPrestigePlan && <PrestigeBadge plan={currentPrestigePlan} allPlans={prestigePlans} size="sm" />}
+              {patientId && <ActiveProtocolBadge patientId={patientId} compact />}
             </div>
             <p className="text-sm text-muted-foreground">
               Checklist hoje: {checklistStats.completed}/{checklistStats.total} tarefas •
