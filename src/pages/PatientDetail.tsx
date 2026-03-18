@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import BodyProjectionProCard from "@/components/patient/BodyProjectionProCard";
 import ActiveProtocolBadge from "@/components/patient/ActiveProtocolBadge";
+import PatientProjectGovernance from "@/components/patient/PatientProjectGovernance";
 import PrestigeBadge from "@/components/prestige/PrestigeBadge";
 import PrestigeName from "@/components/prestige/PrestigeName";
 import type { PrestigePlan } from "@/hooks/usePrestige";
