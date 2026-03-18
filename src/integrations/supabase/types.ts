@@ -5941,9 +5941,63 @@ export type Database = {
           },
         ]
       }
+      patient_protocol_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          end_reason: string | null
+          ended_at: string | null
+          id: string
+          metadata: Json | null
+          nutritionist_id: string | null
+          patient_id: string
+          phases_completed: Json | null
+          protocol_id: string
+          protocol_key: string | null
+          started_at: string
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          end_reason?: string | null
+          ended_at?: string | null
+          id?: string
+          metadata?: Json | null
+          nutritionist_id?: string | null
+          patient_id: string
+          phases_completed?: Json | null
+          protocol_id: string
+          protocol_key?: string | null
+          started_at: string
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          end_reason?: string | null
+          ended_at?: string | null
+          id?: string
+          metadata?: Json | null
+          nutritionist_id?: string | null
+          patient_id?: string
+          phases_completed?: Json | null
+          protocol_id?: string
+          protocol_key?: string | null
+          started_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_protocol_history_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_protocols: {
         Row: {
           created_at: string
+          current_phase: string | null
           end_date: string | null
           id: string
           last_manual_intervention_at: string | null
@@ -5953,7 +6007,9 @@ export type Database = {
           manual_intervention_status: string
           nutritionist_id: string
           patient_id: string
+          phase_started_at: string | null
           protocol_id: string
+          protocol_key: string | null
           protocol_next_action_at: string | null
           schedule_criteria: Json | null
           start_date: string
@@ -5962,6 +6018,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          current_phase?: string | null
           end_date?: string | null
           id?: string
           last_manual_intervention_at?: string | null
@@ -5971,7 +6028,9 @@ export type Database = {
           manual_intervention_status?: string
           nutritionist_id: string
           patient_id: string
+          phase_started_at?: string | null
           protocol_id: string
+          protocol_key?: string | null
           protocol_next_action_at?: string | null
           schedule_criteria?: Json | null
           start_date: string
@@ -5980,6 +6039,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          current_phase?: string | null
           end_date?: string | null
           id?: string
           last_manual_intervention_at?: string | null
@@ -5989,7 +6049,9 @@ export type Database = {
           manual_intervention_status?: string
           nutritionist_id?: string
           patient_id?: string
+          phase_started_at?: string | null
           protocol_id?: string
+          protocol_key?: string | null
           protocol_next_action_at?: string | null
           schedule_criteria?: Json | null
           start_date?: string
@@ -8672,7 +8734,10 @@ export type Database = {
           description: string | null
           duration_days: number
           id: string
+          is_system: boolean
           is_template: boolean
+          phase_config: Json | null
+          protocol_key: string | null
           title: string
           updated_at: string
         }
@@ -8683,7 +8748,10 @@ export type Database = {
           description?: string | null
           duration_days?: number
           id?: string
+          is_system?: boolean
           is_template?: boolean
+          phase_config?: Json | null
+          protocol_key?: string | null
           title: string
           updated_at?: string
         }
@@ -8694,7 +8762,10 @@ export type Database = {
           description?: string | null
           duration_days?: number
           id?: string
+          is_system?: boolean
           is_template?: boolean
+          phase_config?: Json | null
+          protocol_key?: string | null
           title?: string
           updated_at?: string
         }
@@ -10381,6 +10452,18 @@ export type Database = {
           tier_level: number
           tier_name: string
           total_converted: number
+        }[]
+      }
+      get_patient_active_protocol: {
+        Args: { _patient_id: string }
+        Returns: {
+          current_phase: string
+          manual_intervention_status: string
+          protocol_id: string
+          protocol_key: string
+          protocol_title: string
+          start_date: string
+          status: string
         }[]
       }
       get_patient_emails: {
