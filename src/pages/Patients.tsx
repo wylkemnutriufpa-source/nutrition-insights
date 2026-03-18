@@ -972,6 +972,103 @@ export default function Patients() {
         </DialogContent>
       </Dialog>
 
+      {/* Status Manager Dialog — checkbox toggle all patients */}
+      <Dialog open={statusManagerOpen} onOpenChange={setStatusManagerOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" /> Gerenciar Status dos Pacientes
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground -mt-2">
+            Marque para <span className="text-success font-medium">ativar</span>, desmarque para <span className="text-destructive font-medium">desativar</span>. Apenas pacientes ativos aparecem na sua área de trabalho.
+          </p>
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome ou email..."
+                value={statusManagerSearch}
+                onChange={e => setStatusManagerSearch(e.target.value)}
+                className="pl-10"
+                autoFocus
+              />
+            </div>
+            <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+              <span>{patients.filter(p => p.status === "active").length} ativos de {patients.length}</span>
+            </div>
+            <ScrollArea className="h-[400px] rounded-lg border border-border">
+              <div className="divide-y divide-border">
+                {(() => {
+                  const q = statusManagerSearch.toLowerCase().trim();
+                  const filtered = patients
+                    .filter(p => {
+                      if (!q) return true;
+                      return (p.profile?.full_name?.toLowerCase().includes(q) || p.email?.toLowerCase().includes(q));
+                    })
+                    .sort((a, b) => {
+                      const aActive = a.status === "active" ? 1 : 0;
+                      const bActive = b.status === "active" ? 1 : 0;
+                      if (aActive !== bActive) return bActive - aActive;
+                      const aName = a.profile?.full_name || a.email || "";
+                      const bName = b.profile?.full_name || b.email || "";
+                      return aName.localeCompare(bName);
+                    });
+
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="p-8 text-center text-muted-foreground text-sm">
+                        Nenhum paciente encontrado
+                      </div>
+                    );
+                  }
+
+                  return filtered.map(p => {
+                    const isActive = p.status === "active";
+                    const displayName = p.profile?.full_name || p.email || "Paciente";
+                    const initials = displayName.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        className={`flex items-center gap-3 w-full px-4 py-3 text-left transition-colors hover:bg-muted/50 ${
+                          isActive ? "bg-success/5" : ""
+                        }`}
+                        onClick={() => toggleStatus(p.id, p.status)}
+                      >
+                        <Checkbox
+                          checked={isActive}
+                          onCheckedChange={() => toggleStatus(p.id, p.status)}
+                          onClick={e => e.stopPropagation()}
+                        />
+                        <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${
+                          isActive ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                        }`}>
+                          {initials}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-medium truncate ${!isActive ? "text-muted-foreground" : ""}`}>
+                            {displayName}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground truncate">{p.email || "—"}</p>
+                        </div>
+                        <Badge
+                          variant={isActive ? "default" : "secondary"}
+                          className={`text-[10px] shrink-0 ${isActive ? "bg-success/15 text-success border-success/30" : ""}`}
+                        >
+                          {isActive ? "Ativo" : "Inativo"}
+                        </Badge>
+                      </button>
+                    );
+                  });
+                })()}
+              </div>
+            </ScrollArea>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <AssignProgramDialog
         open={assignDialogOpen}
         onOpenChange={setAssignDialogOpen}
