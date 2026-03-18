@@ -5109,6 +5109,90 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_lifecycle_audit: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          metadata: Json | null
+          new_state: string
+          patient_id: string
+          previous_state: string | null
+          trigger_event: string
+          trigger_source: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metadata?: Json | null
+          new_state: string
+          patient_id: string
+          previous_state?: string | null
+          trigger_event: string
+          trigger_source?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metadata?: Json | null
+          new_state?: string
+          patient_id?: string
+          previous_state?: string | null
+          trigger_event?: string
+          trigger_source?: string | null
+        }
+        Relationships: []
+      }
+      patient_lifecycle_states: {
+        Row: {
+          adherence_score: number | null
+          computed_at: string
+          has_active_plan: boolean
+          has_clinical_alert: boolean
+          has_pending_onboarding: boolean
+          has_retention_risk: boolean
+          last_checkin_at: string | null
+          last_plan_delivery_at: string | null
+          lifecycle_state: Database["public"]["Enums"]["patient_lifecycle_status"]
+          next_recommended_action: string | null
+          patient_id: string
+          risk_score: number | null
+          updated_at: string
+        }
+        Insert: {
+          adherence_score?: number | null
+          computed_at?: string
+          has_active_plan?: boolean
+          has_clinical_alert?: boolean
+          has_pending_onboarding?: boolean
+          has_retention_risk?: boolean
+          last_checkin_at?: string | null
+          last_plan_delivery_at?: string | null
+          lifecycle_state?: Database["public"]["Enums"]["patient_lifecycle_status"]
+          next_recommended_action?: string | null
+          patient_id: string
+          risk_score?: number | null
+          updated_at?: string
+        }
+        Update: {
+          adherence_score?: number | null
+          computed_at?: string
+          has_active_plan?: boolean
+          has_clinical_alert?: boolean
+          has_pending_onboarding?: boolean
+          has_retention_risk?: boolean
+          last_checkin_at?: string | null
+          last_plan_delivery_at?: string | null
+          lifecycle_state?: Database["public"]["Enums"]["patient_lifecycle_status"]
+          next_recommended_action?: string | null
+          patient_id?: string
+          risk_score?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       patient_metabolic_twin: {
         Row: {
           adaptive_resistance_score: number | null
@@ -10242,6 +10326,10 @@ export type Database = {
         Args: { _alert_id: string; _resolution_note?: string }
         Returns: Json
       }
+      resolve_patient_lifecycle_state: {
+        Args: { _patient_id: string }
+        Returns: Json
+      }
       resolve_patient_plan_status: {
         Args: { _patient_id: string }
         Returns: Json
@@ -10259,6 +10347,10 @@ export type Database = {
       }
       self_register_patient: {
         Args: { _referral_code?: string; _user_id: string }
+        Returns: Json
+      }
+      set_patient_lifecycle_state: {
+        Args: { _new_state: string; _patient_id: string; _reason?: string }
         Returns: Json
       }
       sync_program_prestige: {
@@ -10337,6 +10429,17 @@ export type Database = {
         | "recovery"
         | "maintenance"
         | "recomposition"
+      patient_lifecycle_status:
+        | "onboarding_started"
+        | "onboarding_ready_for_plan"
+        | "plan_pending_production"
+        | "plan_delivered"
+        | "active_followup"
+        | "clinical_attention"
+        | "retention_risk"
+        | "maintenance_mode"
+        | "paused"
+        | "closed"
       payment_gateway:
         | "stripe"
         | "mercado_pago"
@@ -10557,6 +10660,18 @@ export const Constants = {
         "recovery",
         "maintenance",
         "recomposition",
+      ],
+      patient_lifecycle_status: [
+        "onboarding_started",
+        "onboarding_ready_for_plan",
+        "plan_pending_production",
+        "plan_delivered",
+        "active_followup",
+        "clinical_attention",
+        "retention_risk",
+        "maintenance_mode",
+        "paused",
+        "closed",
       ],
       payment_gateway: ["stripe", "mercado_pago", "pagseguro", "pix", "manual"],
       payout_status: ["pending", "processing", "paid", "failed"],

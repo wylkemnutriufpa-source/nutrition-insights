@@ -28,7 +28,7 @@ import { DailyMissionsWidget } from "@/components/gamification/DailyMissionsWidg
 import { AdherenceEvolutionChart } from "@/components/gamification/AdherenceEvolutionChart";
 import { JourneyTimelineFeed } from "@/components/gamification/JourneyTimelineFeed";
 import { MomentumIndicator } from "@/components/gamification/MomentumIndicator";
-import { usePatientPlanStatus } from "@/hooks/usePatientPlanStatus";
+import { usePatientLifecycleState } from "@/hooks/usePatientLifecycleState";
 
 interface ProgramInfo {
   id: string;
@@ -98,7 +98,7 @@ interface BiquiniEnrollment {
 
 export default function ClientDashboard() {
   const { user, profile } = useAuth();
-  const planStatus = usePatientPlanStatus();
+  const lifecycle = usePatientLifecycleState();
   const [programs, setPrograms] = useState<ProgramInfo[]>([]);
   const [appointments, setAppointments] = useState<AppointmentInfo[]>([]);
   const [notifications, setNotifications] = useState<NotificationInfo[]>([]);
@@ -325,7 +325,7 @@ export default function ClientDashboard() {
         </motion.div>
 
         {/* Plan Status Banner — SSoT driven */}
-        {planStatus.status === "plan_delivered" && (
+        {lifecycle.showPlan && (
           <motion.div variants={item}>
             <Link to="/my-diet">
               <div className="glass-premium rounded-xl p-4 border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-all cursor-pointer flex items-center gap-3">
@@ -337,7 +337,7 @@ export default function ClientDashboard() {
                     ✅ Seu plano alimentar está disponível
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {planStatus.planTitle || "Plano personalizado"} • Toque para visualizar
+                    {lifecycle.planTitle || "Plano personalizado"} • Toque para visualizar
                   </p>
                 </div>
                 <ArrowRight className="w-4 h-4 text-primary" />
@@ -346,7 +346,7 @@ export default function ClientDashboard() {
           </motion.div>
         )}
 
-        {planStatus.showWaitingApproval && (
+        {lifecycle.showWaitingApproval && (
           <motion.div variants={item}>
             <div className="glass-premium rounded-xl p-4 border border-amber-500/30 bg-amber-500/5 flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center">

@@ -1,21 +1,15 @@
 /**
- * usePatientPlanStatus — Single source of truth for patient meal plan status.
+ * usePatientPlanStatus — COMPATIBILITY LAYER
  *
- * Uses the `resolve_patient_plan_status` RPC to determine the canonical state.
- * ALL patient-facing UI must use this hook instead of querying plan status independently.
+ * This hook now delegates to the canonical usePatientLifecycleState hook.
+ * It exists for backward compatibility with components that still reference
+ * the old plan-status-only interface.
  *
- * Status hierarchy (highest → lowest priority):
- * 1. plan_delivered          → Plan published & active. Show plan, hide everything else.
- * 2. plan_approved_pending_publish → Approved, not yet published.
- * 3. plan_under_review       → Professional is reviewing.
- * 4. plan_pending_approval   → Draft/auto-generated, waiting approval.
- * 5. onboarding_in_progress  → Patient still completing onboarding steps.
- * 6. no_plan                 → No plan exists at all.
+ * NEW CODE SHOULD USE usePatientLifecycleState DIRECTLY.
  */
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
+import { usePatientLifecycleState } from "@/hooks/usePatientLifecycleState";
+import type { PatientLifecycle } from "@/hooks/usePatientLifecycleState";
 
 export type PatientPlanStatusCode =
   | "plan_delivered"
@@ -43,57 +37,44 @@ export interface PatientPlanStatus {
   refetch: () => void;
 }
 
+/** Maps lifecycle state → legacy plan status code */
+function mapLifecycleToPlanStatus(lc: PatientLifecycle): PatientPlanStatusCode {
+  if (lc.isLoading) return "loading";
+
+  switch (lc.state) {
+    case "plan_delivered":
+    case "active_followup":
+    case "maintenance_mode":
+      return "plan_delivered";
+    case "plan_pending_production":
+      return "plan_pending_production";
+    case "onboarding_started":
+    case "onboarding_ready_for_plan":
+      return lc.hasActivePlan ? "plan_delivered" : "onboarding_in_progress";
+    case "clinical_attention":
+    case "retention_risk":
+      return lc.hasActivePlan ? "plan_delivered" : "no_plan";
+    case "paused":
+    case "closed":
+      return lc.hasActivePlan ? "plan_delivered" : "no_plan";
+    default:
+      return "no_plan";
+  }
+}
+
 export function usePatientPlanStatus(): PatientPlanStatus {
-  const { user, isPatient } = useAuth();
-  const [data, setData] = useState<PatientPlanStatus>({
-    status: "loading",
-    showOnboarding: false,
-    showNoPlan: false,
-    showWaitingApproval: false,
-    isLoading: true,
-    refetch: () => {},
-  });
+  const lifecycle = usePatientLifecycleState();
+  const status = mapLifecycleToPlanStatus(lifecycle);
 
-  const fetchStatus = async () => {
-    if (!user) return;
-
-    try {
-      const { data: result, error } = await supabase.rpc(
-        "resolve_patient_plan_status",
-        { _patient_id: user.id }
-      );
-
-      if (error) {
-        console.error("Error resolving plan status:", error);
-        setData((prev) => ({ ...prev, status: "no_plan", isLoading: false }));
-        return;
-      }
-
-      const r = result as Record<string, unknown>;
-      setData({
-        status: (r.status as PatientPlanStatusCode) || "no_plan",
-        planId: r.plan_id as string | undefined,
-        planTitle: r.plan_title as string | undefined,
-        deliverySource: r.delivery_source as string | undefined,
-        lastUpdated: r.last_updated as string | undefined,
-        onboardingId: r.onboarding_id as string | undefined,
-        onboardingStatus: r.onboarding_status as string | undefined,
-        showOnboarding: !!r.show_onboarding,
-        showNoPlan: !!r.show_no_plan,
-        showWaitingApproval: !!r.show_waiting_approval,
-        isLoading: false,
-        refetch: fetchStatus,
-      });
-    } catch {
-      setData((prev) => ({ ...prev, status: "no_plan", isLoading: false }));
-    }
+  return {
+    status,
+    planId: lifecycle.planId || undefined,
+    planTitle: lifecycle.planTitle || undefined,
+    onboardingStatus: lifecycle.onboardingStatus || undefined,
+    showOnboarding: lifecycle.showOnboarding,
+    showNoPlan: lifecycle.showNoPlan,
+    showWaitingApproval: lifecycle.showWaitingApproval,
+    isLoading: lifecycle.isLoading,
+    refetch: lifecycle.refetch,
   };
-
-  useEffect(() => {
-    if (user && isPatient) {
-      fetchStatus();
-    }
-  }, [user, isPatient]);
-
-  return { ...data, refetch: fetchStatus };
 }

@@ -100,19 +100,21 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
         .in("user_id", patientIds),
       Promise.all(
         items.map(async (pipeline: any) => {
-          const { data: statusData } = await supabase.rpc("resolve_patient_plan_status", {
+          const { data: statusData } = await supabase.rpc("resolve_patient_lifecycle_state" as any, {
             _patient_id: pipeline.patient_id,
           });
           return {
             pipelineId: pipeline.id,
-            status: (statusData as any)?.status,
+            lifecycleState: (statusData as any)?.lifecycle_state,
           };
         })
       ),
     ]);
 
-    const canonicalMap = new Map(resolvedStatuses.map((entry) => [entry.pipelineId, entry.status]));
-    const eligibleItems = items.filter((pipeline: any) => canonicalMap.get(pipeline.id) !== "plan_delivered");
+    const canonicalMap = new Map(resolvedStatuses.map((entry) => [entry.pipelineId, entry.lifecycleState]));
+    // Exclude patients with sovereign plan states
+    const sovereignStates = ['plan_delivered', 'active_followup', 'maintenance_mode'];
+    const eligibleItems = items.filter((pipeline: any) => !sovereignStates.includes(canonicalMap.get(pipeline.id) || ''));
     const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
 
     const enriched = eligibleItems.map((p: any) => ({
@@ -576,14 +578,15 @@ export function usePendingApprovals() {
 
       const resolvedStatuses = await Promise.all(
         items.map(async (pipeline) => {
-          const { data: statusData } = await supabase.rpc("resolve_patient_plan_status", {
+          const { data: statusData } = await supabase.rpc("resolve_patient_lifecycle_state" as any, {
             _patient_id: pipeline.patient_id,
           });
-          return (statusData as any)?.status;
+          return (statusData as any)?.lifecycle_state;
         })
       );
 
-      setCount(resolvedStatuses.filter((status) => status !== "plan_delivered").length);
+      const sovereignStates = ['plan_delivered', 'active_followup', 'maintenance_mode'];
+      setCount(resolvedStatuses.filter((state) => !sovereignStates.includes(state || '')).length);
     };
 
     check();
