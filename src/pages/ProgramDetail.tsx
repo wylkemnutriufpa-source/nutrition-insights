@@ -183,22 +183,35 @@ export default function ProgramDetail() {
     return () => { supabase.removeChannel(channel); };
   }, [programId, fetchAll]);
 
-  const enrollPatient = async () => {
-    if (!enrollPatientId || !programId) return;
-    const { error } = await supabase.from("program_patients").insert({ program_id: programId, patient_id: enrollPatientId });
+  const enrollPatient = async (patientId: string) => {
+    if (!patientId || !programId) return;
+    const { error } = await supabase.from("program_patients").insert({ program_id: programId, patient_id: patientId });
     if (error) {
       if (error.code === "23505") toast.info("Paciente já inscrito");
       else toast.error(error.message);
-    } else {
-      await supabase.from("program_timeline" as any).insert({
-        program_id: programId, event_type: "enrollment",
-        title: "Novo paciente inscrito",
-        description: allPatients.find(p => p.id === enrollPatientId)?.name,
-        created_by: user?.id,
-      });
-      toast.success("Paciente inscrito! 🎉");
-      setEnrollOpen(false); setEnrollPatientId(""); fetchAll();
+      return;
     }
+    await supabase.from("program_timeline" as any).insert({
+      program_id: programId, event_type: "enrollment",
+      title: "Novo paciente inscrito",
+      description: allPatients.find(p => p.id === patientId)?.name,
+      created_by: user?.id,
+    });
+    toast.success("Paciente inscrito! 🎉");
+    fetchAll();
+  };
+
+  const removePatient = async (enrollmentId: string, patientName: string) => {
+    const { error } = await supabase.from("program_patients").delete().eq("id", enrollmentId);
+    if (error) { toast.error(error.message); return; }
+    await supabase.from("program_timeline" as any).insert({
+      program_id: programId, event_type: "enrollment",
+      title: "Paciente removido",
+      description: patientName,
+      created_by: user?.id,
+    });
+    toast.success(`${patientName} removido do programa.`);
+    fetchAll();
   };
 
   const addNote = async (e: React.FormEvent) => {
