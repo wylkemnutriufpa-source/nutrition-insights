@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useSmartResume, SmartResumeData } from "@/hooks/useSmartResume";
+import { useSmartResume, SmartResumeData, IntelligenceMetric } from "@/hooks/useSmartResume";
 import {
   LayoutDashboard, Users, UtensilsCrossed, Trophy, Target,
   Leaf, ClipboardCheck, CheckCircle2, Activity,
@@ -218,6 +218,73 @@ export default function SmartResumeModal({ externalOpen, onExternalOpenChange }:
               </motion.div>
             )}
           </div>
+
+          {/* Intelligence Collected Metrics */}
+          {data.collectedMetrics && data.collectedMetrics.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.28 }}
+              className="px-6 pt-4"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <motion.div
+                  className="w-1.5 h-1.5 rounded-full bg-emerald-400"
+                  animate={{ opacity: [1, 0.3, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                />
+                <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-500/80">
+                  Dados coletados pela IA
+                </p>
+                <motion.div
+                  className="w-1.5 h-1.5 rounded-full bg-emerald-400"
+                  animate={{ opacity: [0.3, 1, 0.3] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {data.collectedMetrics.map((metric, idx) => {
+                  const MetricIcon = getIcon(metric.icon);
+                  const colorMap: Record<string, { bg: string; text: string; border: string }> = {
+                    emerald: { bg: "bg-emerald-500/10", text: "text-emerald-500", border: "border-emerald-500/20" },
+                    amber: { bg: "bg-amber-500/10", text: "text-amber-500", border: "border-amber-500/20" },
+                    sky: { bg: "bg-sky-500/10", text: "text-sky-500", border: "border-sky-500/20" },
+                    rose: { bg: "bg-rose-500/10", text: "text-rose-500", border: "border-rose-500/20" },
+                    violet: { bg: "bg-violet-500/10", text: "text-violet-500", border: "border-violet-500/20" },
+                    orange: { bg: "bg-orange-500/10", text: "text-orange-500", border: "border-orange-500/20" },
+                  };
+                  const colors = colorMap[metric.color] || colorMap.sky;
+                  return (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.3 + idx * 0.06 }}
+                      className={`relative rounded-xl ${colors.bg} border ${colors.border} p-3 overflow-hidden`}
+                    >
+                      {/* Subtle scanning effect */}
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
+                        initial={{ x: "-100%" }}
+                        animate={{ x: "200%" }}
+                        transition={{ duration: 3, repeat: Infinity, delay: idx * 0.4, ease: "linear" }}
+                      />
+                      <div className="relative z-10">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <MetricIcon className={`w-3 h-3 ${colors.text}`} />
+                          <span className="text-[10px] text-muted-foreground font-medium truncate">{metric.label}</span>
+                        </div>
+                        <p className={`text-base font-bold ${colors.text} leading-tight`}>{metric.value}</p>
+                        {metric.detail && (
+                          <p className="text-[9px] text-muted-foreground/70 mt-0.5 truncate">{metric.detail}</p>
+                        )}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
 
           <div className="p-6 pt-4 space-y-5">
             {/* Recent Activities */}
