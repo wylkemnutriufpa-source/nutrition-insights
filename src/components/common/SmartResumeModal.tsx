@@ -456,7 +456,7 @@ export default function SmartResumeModal({ externalOpen, onExternalOpenChange }:
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className="bg-card rounded-2xl border border-border/50 overflow-hidden"
+          className="bg-card rounded-2xl border border-border/50 overflow-hidden overflow-y-auto max-h-[85vh] scrollbar-none"
         >
           {/* Header with gradient + Brain Intelligence */}
           <div className="relative overflow-hidden bg-gradient-to-br from-[hsl(150_60%_15%/0.6)] via-[hsl(170_50%_12%/0.4)] to-primary/5 p-6 pb-4">
