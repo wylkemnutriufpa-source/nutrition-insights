@@ -286,13 +286,15 @@ export default function MealPlanEditorV2() {
               size="sm"
               onClick={async () => {
                 if (!plan) return; setValidating(true);
+                setValidationResult(null);
                 try {
                   const { data, error } = await supabase.functions.invoke("validate-meal-plan", { body: { meal_plan_id: plan.id } });
                   if (error) throw error;
-                  if (!data?.success) { 
-                    const errorMsg = data?.errors ? data.errors.join("\n") : "O plano possui divergências com a meta clínica."; 
-                    toast.error("Motor Clínico: Plano Reprovado!\n" + errorMsg, { duration: 8000 }); 
+                  if (!data?.success) {
+                    setValidationResult(data as ValidationResult);
+                    toast.error("Motor Clínico: Plano Reprovado! Veja as sugestões abaixo.", { duration: 5000 }); 
                   } else { 
+                    setValidationResult(null);
                     toast.success(data.message || "Motor Clínico: Plano Válido! Pode ser ativado. ✅"); 
                     store.hydrate(plan.id, user?.id ?? "");
                   }
