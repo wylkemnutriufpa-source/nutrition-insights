@@ -49,6 +49,7 @@ export interface SmartResumeData {
   suggestion: string;
   streakDays: number;
   collectedMetrics: IntelligenceMetric[];
+  engineStatus: ClinicalEngineStatus | null;
 }
 
 // Priority map: lower number = higher priority
