@@ -273,6 +273,50 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     });
   },
 
+  // ── Delete all items in a cell (day + mealType) ────────────
+  deleteItemsInCell: (day, mealType) => {
+    const toDelete = get().items.filter((i) => i.day_of_week === day && i.meal_type === mealType);
+    if (toDelete.length === 0) return;
+    const prev = get().items;
+    const deleteIds = toDelete.map((i) => i.id);
+    set((s) => ({ items: s.items.filter((i) => !(i.day_of_week === day && i.meal_type === mealType)) }));
+
+    get()._enqueue({
+      key: `deleteCell:${day}-${mealType}`,
+      itemIds: deleteIds,
+      queuedAt: Date.now(),
+      persist: async () => {
+        const realIds = deleteIds.filter((id) => !id.startsWith("temp-"));
+        if (realIds.length > 0) {
+          const { error } = await supabase.from("meal_plan_items").delete().in("id", realIds);
+          if (error) throw error;
+        }
+      },
+      rollback: () => set({ items: prev }),
+    });
+  },
+
+  // ── Clear ALL items from the plan ─────────────────────────
+  clearAllItems: () => {
+    const prev = get().items;
+    if (prev.length === 0) return;
+    const allIds = prev.map((i) => i.id);
+    set({ items: [], pendingOps: [] });
+
+    get()._enqueue({
+      key: `clearAll:${Date.now()}`,
+      itemIds: allIds,
+      queuedAt: Date.now(),
+      persist: async () => {
+        const planId = get().planId;
+        if (!planId) return;
+        const { error } = await supabase.from("meal_plan_items").delete().eq("meal_plan_id", planId);
+        if (error) throw error;
+      },
+      rollback: () => set({ items: prev }),
+    });
+  },
+
   // ── Move item ─────────────────────────────────────────────
   moveItem: (itemId, targetDay, targetMealType) => {
     get().updateItem(itemId, {
