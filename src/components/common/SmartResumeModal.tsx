@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -8,9 +8,9 @@ import {
   Leaf, ClipboardCheck, CheckCircle2, Activity,
   MessageSquare, ChefHat, ShoppingCart, Apple,
   BarChart3, Zap, TrendingUp, BookOpen, Pill, Dumbbell,
-  Flame, ArrowRight, Compass, Sparkles,
+  Flame, ArrowRight, Compass, Sparkles, Monitor, Cpu, Wifi,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 const ICON_MAP: Record<string, any> = {
   LayoutDashboard, Users, UtensilsCrossed, Trophy, Target,
