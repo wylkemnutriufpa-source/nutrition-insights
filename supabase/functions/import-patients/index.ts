@@ -51,7 +51,7 @@ async function importOnePatient(
         finalId = newUser.user.id;
 
         // Fix NULL tokens
-        await supabase.rpc("fix_user_null_tokens", { _user_id: finalId }).catch(() => {});
+        try { await supabase.rpc("fix_user_null_tokens" as any, { _user_id: finalId }); } catch (_) {}
       }
 
       // Ensure role
@@ -188,7 +188,7 @@ Deno.serve(async (req) => {
     }
 
     // Fix any remaining NULL tokens (fast, idempotent)
-    await supabase.rpc("fix_all_null_tokens").catch(() => {});
+    try { await supabase.rpc("fix_all_null_tokens" as any); } catch (_) {}
 
     console.log("[import-patients] done:", JSON.stringify(results));
 
