@@ -139,6 +139,9 @@ export function MealLibraryModal({
       substitutions: meal.substitutions,
     };
 
+    // Clear existing items in this cell BEFORE inserting
+    deleteItemsInCell(targetDay, targetMealType as any);
+
     // Always insert a header item with the meal title first
     const headerItem = {
       meal_plan_id: planId,
@@ -157,9 +160,9 @@ export function MealLibraryModal({
 
     addItem(headerItem as any);
 
-    toast.success(`"${meal.title}" adicionado ao plano`);
+    toast.success(`"${meal.title}" substituído no plano`);
     onOpenChange(false);
-  }, [planId, targetDay, targetMealType, patientTargetKcal, addItem, onOpenChange]);
+  }, [planId, targetDay, targetMealType, patientTargetKcal, addItem, deleteItemsInCell, onOpenChange]);
 
   const dayLabel = targetDay === 0 ? "Domingo" : ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"][targetDay - 1];
   const mealLabel = MEAL_TABS.find((t) => t.key === targetMealType)?.label || targetMealType;
