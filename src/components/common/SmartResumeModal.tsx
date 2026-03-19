@@ -86,38 +86,6 @@ function EngineStatusPanel({ engine }: { engine: ClinicalEngineStatus }) {
           ))}
         </div>
 
-        {/* Life Bar - Video Game Style */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="mt-4"
-        >
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[7px] text-muted-foreground/40 font-mono uppercase tracking-widest">⚡ Energia do Motor</span>
-            <span className="text-[9px] font-bold font-mono" style={{ color: "hsl(200 90% 65%)" }}>
-              {engine.energyLevel}%
-            </span>
-          </div>
-          <div
-            className="w-full h-[5px] rounded-full overflow-hidden"
-            style={{
-              background: "hsl(210 30% 15% / 0.6)",
-              boxShadow: "inset 0 1px 2px hsl(0 0% 0% / 0.3)",
-            }}
-          >
-            <motion.div
-              className="h-full rounded-full relative"
-              style={{
-                background: "linear-gradient(90deg, hsl(200 80% 45%), hsl(190 90% 55%), hsl(200 85% 60%))",
-                boxShadow: "0 0 10px hsl(200 90% 55% / 0.5), 0 0 4px hsl(200 90% 60% / 0.3)",
-              }}
-              initial={{ width: "0%" }}
-              animate={{ width: `${engine.energyLevel}%` }}
-              transition={{ duration: 3.5, ease: [0.25, 0.1, 0.25, 1], delay: 0.5 }}
-            />
-          </div>
-        </motion.div>
       </div>
     </motion.div>
   );
