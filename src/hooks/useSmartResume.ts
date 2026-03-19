@@ -246,17 +246,18 @@ export function useSmartResume() {
 
     fetchResumeData();
     return () => { cancelled = true; };
-  }, [userId, dismissed]);
+  }, [userId, dismissed, forced]);
 
   const dismiss = useCallback(() => {
     setDismissed(true);
+    setForced(false);
     setData(null);
   }, []);
 
   const forceShow = useCallback(() => {
     setDismissed(false);
+    setForced(true);
     setLoading(true);
-    // Remove session flag so data re-fetches
     sessionStorage.removeItem(RESUME_SHOWN_KEY);
   }, []);
 
