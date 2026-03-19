@@ -5,12 +5,14 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Leaf, LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck } from "lucide-react";
+import { LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck, Brain } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSmartMenu } from "@/hooks/useSmartMenu";
 import AccordionSidebar from "@/components/layout/AccordionSidebar";
 import PendingApprovalsModal, { usePendingApprovals } from "@/components/patient/PendingApprovalsModal";
+import FitJourneyLogo from "@/components/common/FitJourneyLogo";
+import SmartResumeModal from "@/components/common/SmartResumeModal";
 
 function SidebarFooter({
   collapsed,
@@ -107,22 +109,41 @@ function DynamicSidebar({
   const { isNutritionist, isPersonal, isAdmin } = useAuth();
   const pendingCount = usePendingApprovals();
   const [approvalsOpen, setApprovalsOpen] = useState(false);
+  const [smartResumeOpen, setSmartResumeOpen] = useState(false);
 
   const isProRole = useMemo(() => isNutritionist || isPersonal || isAdmin, [isNutritionist, isPersonal, isAdmin]);
   const showPending = isProRole && pendingCount > 0;
 
   return (
     <>
-      <div className="p-4 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center flex-shrink-0 shadow-glow">
-          <Leaf className="w-5 h-5 text-primary-foreground" />
-        </div>
-        {!collapsed && (
-          <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="font-display font-bold text-lg">
-            Fit<span className="text-gradient">Journey</span>
-          </motion.span>
-        )}
+      <div className="p-4 flex items-center">
+        <FitJourneyLogo collapsed={collapsed} size="sm" />
       </div>
+
+      {/* Inteligência FitJourney floating button */}
+      <div className="px-3 mb-1">
+        <button
+          onClick={() => setSmartResumeOpen(true)}
+          className={`flex items-center gap-2 w-full rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all px-3 py-2.5 ${collapsed ? "justify-center" : ""}`}
+        >
+          <div className="relative flex-shrink-0">
+            <motion.span
+              className="text-lg leading-none select-none"
+              animate={{ rotate: [0, 5, -5, 0] }}
+              transition={{ duration: 6, repeat: Infinity }}
+            >
+              🧠
+            </motion.span>
+          </div>
+          {!collapsed && (
+            <span className="text-xs font-semibold text-emerald-500 truncate">
+              Inteligência FitJourney
+            </span>
+          )}
+        </button>
+      </div>
+
+      <SmartResumeModal />
 
       <AnimatePresence>
         {showPending && (
@@ -228,14 +249,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <DynamicSidebar {...sidebarProps} collapsed={false} onLinkClick={() => setMobileOpen(false)} />
               </SheetContent>
             </Sheet>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center shadow-glow">
-                <Leaf className="w-4 h-4 text-primary-foreground" />
-              </div>
-              <span className="font-display font-bold text-sm">
-                Fit<span className="text-gradient">Journey</span>
-              </span>
-            </div>
+            <FitJourneyLogo collapsed={false} size="sm" />
           </div>
           <NotificationBell />
         </div>
