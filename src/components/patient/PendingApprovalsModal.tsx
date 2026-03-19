@@ -554,7 +554,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
   );
 }
 
-/** Hook to check for pending approvals count */
+/** Hook to check for pending approvals count — lightweight, no N+1 RPC calls */
 export function usePendingApprovals() {
   const { user } = useAuth();
   const [count, setCount] = useState(0);
@@ -562,31 +562,15 @@ export function usePendingApprovals() {
   useEffect(() => {
     if (!user) return;
     const check = async () => {
-      const { data } = await supabase
+      const { count: total, error } = await supabase
         .from("onboarding_pipelines" as any)
-        .select("id, patient_id")
+        .select("id", { count: "exact", head: true })
         .eq("nutritionist_id", user.id)
         .in("status", ["pending_approval", "pending_plan_generation"]);
 
-      const items = Array.isArray(data)
-        ? (data as unknown as Array<{ id: string; patient_id: string }>)
-        : [];
-      if (items.length === 0) {
-        setCount(0);
-        return;
+      if (!error) {
+        setCount(total ?? 0);
       }
-
-      const resolvedStatuses = await Promise.all(
-        items.map(async (pipeline) => {
-          const { data: statusData } = await supabase.rpc("resolve_patient_lifecycle_state" as any, {
-            _patient_id: pipeline.patient_id,
-          });
-          return (statusData as any)?.lifecycle_state;
-        })
-      );
-
-      const sovereignStates = ['plan_delivered', 'active_followup', 'maintenance_mode'];
-      setCount(resolvedStatuses.filter((state) => !sovereignStates.includes(state || '')).length);
     };
 
     check();
@@ -598,6 +582,9 @@ export function usePendingApprovals() {
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [user]);
+
+  return count;
+}
 
   return count;
 }
