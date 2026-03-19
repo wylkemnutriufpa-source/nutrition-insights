@@ -249,7 +249,7 @@ Deno.serve(async (req) => {
 
     // Refresh ranking cache
     if (!dryRun) {
-      await supabase.rpc("refresh_ranking_cache").catch(() => {});
+      try { await supabase.rpc("refresh_ranking_cache" as any); } catch (_) {}
     }
 
     return new Response(
