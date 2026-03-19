@@ -585,6 +585,3 @@ export function usePendingApprovals() {
 
   return count;
 }
-
-  return count;
-}
