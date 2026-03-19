@@ -73,7 +73,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRoles(data?.map((r) => r.role) || []);
   };
 
+  const subCheckRef = { current: false };
   const checkSubscription = async () => {
+    if (subCheckRef.current) return; // deduplicate concurrent calls
+    subCheckRef.current = true;
     try {
       const { data, error } = await supabase.functions.invoke("check-subscription");
       if (!error && data) {
@@ -87,6 +90,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (e) {
       console.error("Error checking subscription:", e);
+    } finally {
+      subCheckRef.current = false;
     }
   };
 
