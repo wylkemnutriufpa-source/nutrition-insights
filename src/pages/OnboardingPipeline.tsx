@@ -164,12 +164,18 @@ export default function OnboardingPipeline() {
         status: "pending_plan_generation",
       } as any)
       .eq("id", pipeline.id);
-    if (error) toast.error("Erro ao salvar");
-    else {
-      toast.success("Preferências salvas!");
-      fetchPipeline();
+    if (error) {
+      toast.error("Erro ao salvar");
+      setSaving(false);
+      return;
     }
+
+    toast.success("Preferências salvas! Gerando plano automaticamente...");
+    fetchPipeline();
     setSaving(false);
+
+    // Auto-trigger plan generation after preferences are completed
+    setTimeout(() => handleGeneratePlan(), 500);
   }
 
   async function handleGeneratePlan() {
@@ -188,34 +194,43 @@ export default function OnboardingPipeline() {
           cookingPreference: pipeline.cooking_preference,
           foodPreferences: pipeline.food_preferences,
           isPipeline: true,
+          planCount: 3,
         },
       });
 
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || "Falha na geração");
 
-      // Update pipeline
+      // Update pipeline — handle both multi-plan and single-plan responses
+      const resolvedPlanId = data.multiPlan && data.plans?.length > 0
+        ? data.plans[0].mealPlanId
+        : data.mealPlanId || null;
+
       await supabase
         .from("onboarding_pipelines" as any)
         .update({
           plan_generated: true,
-          generated_plan_id: data.mealPlanId || null,
+          generated_plan_id: resolvedPlanId,
           generated_plan_data: data,
           status: "pending_approval",
         } as any)
         .eq("id", pipeline.id);
 
       // Notify nutritionist
+      const planCountMsg = data.multiPlan ? `${data.plans.length} opções de plano` : "Pré-plano";
       const patientName = (await supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle()).data?.full_name || "Paciente";
       await supabase.from("notifications").insert({
         user_id: pipeline.nutritionist_id,
-        title: "🔔 Pré-Plano Aguardando Aprovação",
-        message: `${patientName} completou o onboarding. Pré-plano de ${data.explainability?.calculation?.final_kcal || ''}kcal gerado via Protocolo FitJourney.`,
+        title: "🔔 Plano Aguardando Aprovação",
+        message: `${patientName} completou o onboarding. ${planCountMsg} de ${data.explainability?.calculation?.final_kcal || ''}kcal gerado(s) via Protocolo FitJourney.`,
         type: "warning",
         action_url: `/patients/${user.id}?tab=onboarding`,
       });
 
-      toast.success("Pré-plano gerado! Aguardando aprovação do profissional.");
+      toast.success(data.multiPlan 
+        ? `${data.plans.length} opções de plano geradas! Aguardando aprovação do profissional.`
+        : "Pré-plano gerado! Aguardando aprovação do profissional."
+      );
       fetchPipeline();
     } catch (err: any) {
       toast.error("Erro ao gerar plano: " + (err.message || "Tente novamente"));

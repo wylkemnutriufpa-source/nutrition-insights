@@ -217,7 +217,7 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
 
     toast.success(`"${template.name}" inserido no plano`);
     onOpenChange(false);
-  }, [planId, targetDay, targetMealType, addItem, addItems, onOpenChange]);
+  }, [planId, targetDay, targetMealType, addItem, addItems, deleteItem, items, onOpenChange]);
 
   // Import diet template — inserts meals for target meal type into target day
   const handleImportDietTemplate = useCallback((template: DietTemplate) => {
