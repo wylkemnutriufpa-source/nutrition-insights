@@ -17,7 +17,7 @@ const ICON_MAP: Record<string, any> = {
   Leaf, ClipboardCheck, CheckCircle2, Activity,
   MessageSquare, ChefHat, ShoppingCart, Apple,
   BarChart3, Zap, TrendingUp, BookOpen, Pill, Dumbbell,
-  Flame, Compass, Sparkles,
+  Flame, Compass, Sparkles, Monitor, Cpu, Wifi,
 };
 
 function getIcon(name: string) {
