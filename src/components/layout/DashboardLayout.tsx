@@ -1,15 +1,18 @@
 import { ReactNode, useEffect, useMemo, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Leaf, LogOut, Moon, Sun, ChevronRight, Settings, Menu } from "lucide-react";
+import { Leaf, LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSmartMenu } from "@/hooks/useSmartMenu";
 import AccordionSidebar from "@/components/layout/AccordionSidebar";
+import { usePendingApprovals } from "@/components/patient/PendingApprovalsModal";
+import PendingApprovalsModal from "@/components/patient/PendingApprovalsModal";
+import { Badge } from "@/components/ui/badge";
 
 function SidebarFooter({
   collapsed,
