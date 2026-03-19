@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ success: true, message_id: data.result?.message_id }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error sending Telegram message:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(JSON.stringify({ success: false, error: errorMessage }), {

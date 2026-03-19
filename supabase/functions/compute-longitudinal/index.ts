@@ -198,8 +198,8 @@ async function processBatch(supabase: any, patientIds: string[]) {
     let dataPointsWeight = assessments.length;
 
     if (assessments.length >= 2) {
-      const first = assessments[0];
-      const last = assessments[assessments.length - 1];
+      const first: any = assessments[0];
+      const last: any = assessments[assessments.length - 1];
       const daysBetween =
         (new Date(last.assessment_date).getTime() -
           new Date(first.assessment_date).getTime()) /

@@ -191,7 +191,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ success: true, results }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error) {
+  } catch (error: any) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error("[SMART-PUSH] Error:", msg);
     return new Response(JSON.stringify({ error: msg }), {

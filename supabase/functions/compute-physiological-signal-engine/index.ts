@@ -262,7 +262,7 @@ serve(async (req) => {
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (err) {
+  } catch (err: any) {
     console.error("[PHYSIO-ENGINE] Fatal:", err);
     return new Response(JSON.stringify({ error: String(err) }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

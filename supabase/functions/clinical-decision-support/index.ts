@@ -291,7 +291,7 @@ serve(async (req) => {
     return new Response(JSON.stringify(engineResult), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (err) {
+  } catch (err: any) {
     console.error("Clinical decision support error:", err);
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
