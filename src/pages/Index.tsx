@@ -331,31 +331,24 @@ function NutritionistDashboardContent() {
         </motion.div>
       )}
 
-      {/* ── Premium Tab Switcher ── */}
-      <div className="flex items-center gap-1 glass-premium rounded-xl p-1.5 w-fit">
+      {/* ── Quick Access: Other Views ── */}
+      <div className="flex flex-wrap items-center gap-2">
         {[
-          { key: "clinical", icon: Heart, label: "Clínico" },
-          { key: "analytics", icon: BarChart3, label: "Analytics" },
-          { key: "strategy", icon: Brain, label: "IA Estratégica" },
-          { key: "risk", icon: Shield, label: "Risco Clínico" },
+          { key: "analytics", icon: BarChart3, label: "Analytics", desc: "Visão estratégica" },
+          { key: "strategy", icon: Brain, label: "IA Estratégica", desc: "Diagnóstico com IA" },
+          { key: "risk", icon: Shield, label: "Risco Clínico", desc: "Monitoramento de alertas" },
         ].map((tab) => (
           <button
             key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`relative flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-lg transition-all duration-300 ${
+            onClick={() => setActiveTab(activeTab === tab.key ? "clinical" : tab.key)}
+            className={`flex items-center gap-2 text-xs font-medium px-3 py-2 rounded-lg border transition-all duration-200 ${
               activeTab === tab.key
-                ? "bg-gradient-to-r from-primary/10 to-primary/5 text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                ? "border-primary/40 bg-primary/10 text-foreground shadow-sm"
+                : "border-border/50 bg-card/50 text-muted-foreground hover:text-foreground hover:border-primary/20 hover:bg-muted/30"
             }`}
           >
-            <tab.icon className={`w-4 h-4 ${activeTab === tab.key ? "text-primary" : ""}`} />
+            <tab.icon className={`w-3.5 h-3.5 ${activeTab === tab.key ? "text-primary" : ""}`} />
             {tab.label}
-            {activeTab === tab.key && (
-              <motion.div
-                layoutId="activeTab"
-                className="absolute bottom-0 left-2 right-2 h-0.5 gradient-primary rounded-full"
-              />
-            )}
           </button>
         ))}
       </div>
@@ -366,7 +359,9 @@ function NutritionistDashboardContent() {
         <AIStrategyCenter />
       ) : activeTab === "risk" ? (
         <ClinicalRiskDashboardContent />
-      ) : (
+      ) : null}
+
+      {/* ── Clinical Dashboard — Always visible as main content ── */}
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
       {/* ── Premium Header ── */}
       <motion.div variants={item} className="relative overflow-hidden rounded-2xl gradient-border particles-bg">
@@ -779,7 +774,6 @@ function NutritionistDashboardContent() {
         </div>
       </motion.div>
     </motion.div>
-      )}
     </div>
   );
 }
