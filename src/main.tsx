@@ -1,5 +1,4 @@
 import { createRoot } from "react-dom/client";
-import { registerSW } from "virtual:pwa-register";
 import "./i18n";
 import App from "./App.tsx";
 import "./index.css";
@@ -29,16 +28,7 @@ if (import.meta.env.PROD && "serviceWorker" in navigator) {
     refreshing = true;
     window.location.reload();
   });
-
-  const updateSW = registerSW({
-    immediate: true,
-    onNeedRefresh() {
-      void updateSW(true);
-    },
-    onRegisteredSW(_swUrl, registration) {
-      registration?.update();
-    },
-  });
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
+
