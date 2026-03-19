@@ -3,7 +3,7 @@ import { MealDetailProvider } from "@/components/patient/MealDetailContext";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Loader2, AlertTriangle, Zap, Save, Send, CheckCircle2,
-  Library, Utensils, Wand2, LayoutGrid, List, Maximize2, Minimize2,
+  Wand2, Trash2, Library, LayoutGrid, List, Minimize2, Maximize2, Sparkles
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
@@ -31,6 +31,7 @@ export default function MealPlanEditorV2() {
   const store = useMealPlanEditorV2Store();
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [validating, setValidating] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [mealLibModalOpen, setMealLibModalOpen] = useState(false);
   const [autoGenOpen, setAutoGenOpen] = useState(false);
@@ -277,6 +278,30 @@ export default function MealPlanEditorV2() {
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />}
               Salvar
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                if (!plan) return; setValidating(true);
+                try {
+                  const { data, error } = await supabase.functions.invoke("validate-meal-plan", { body: { meal_plan_id: plan.id } });
+                  if (error) throw error;
+                  if (!data?.success) { 
+                    const errorMsg = data?.errors ? data.errors.join("\n") : "O plano possui divergências com a meta clínica."; 
+                    toast.error("Motor Clínico: Plano Reprovado!\n" + errorMsg, { duration: 8000 }); 
+                  } else { 
+                    toast.success(data.message || "Motor Clínico: Plano Válido! Pode ser ativado. ✅"); 
+                    store.hydrate(plan.id, user?.id ?? "");
+                  }
+                } catch (e: any) { toast.error(e.message || "Erro de conexão com o Motor Clínico"); }
+                setValidating(false);
+              }}
+              disabled={validating || store.syncStatus === "saving"}
+              className="gradient-primary text-white border-0 gap-1.5 shadow-glow"
+            >
+              {validating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+              <span className="hidden sm:inline">Validar</span>
             </Button>
             <Button
               size="sm"
