@@ -102,6 +102,7 @@ export function useSmartResume() {
   const [data, setData] = useState<SmartResumeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [dismissed, setDismissed] = useState(false);
+  const [forced, setForced] = useState(false);
 
   const userId = user?.id;
 
