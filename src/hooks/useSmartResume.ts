@@ -26,6 +26,20 @@ export interface IntelligenceMetric {
   detail?: string;
 }
 
+export interface ClinicalEngineStatus {
+  dataAnalyzed: number;
+  patternsDetected: number;
+  preventiveAlerts: number;
+  evolutionIndex: number; // percentage
+  energyLevel: number; // 0-100
+  totalPatients: number;
+  portfolioHealth: number;
+  avgAdherence: number;
+  dropoutRate: number;
+  lastPipelineAt: string | null;
+  pipelineStatus: string;
+}
+
 export interface SmartResumeData {
   shouldShow: boolean;
   hoursAway: number;
@@ -35,6 +49,7 @@ export interface SmartResumeData {
   suggestion: string;
   streakDays: number;
   collectedMetrics: IntelligenceMetric[];
+  engineStatus: ClinicalEngineStatus | null;
 }
 
 // Priority map: lower number = higher priority
@@ -234,21 +249,63 @@ export function useSmartResume() {
           }
         } catch { /* not a patient or no data */ }
 
-        // 6. Collect intelligence metrics — makes it feel like the AI is always watching
+        // 6. Collect intelligence metrics + clinical engine status
         const collectedMetrics: IntelligenceMetric[] = [];
+        let engineStatus: ClinicalEngineStatus | null = null;
         try {
           const today = new Date().toISOString().split("T")[0];
           const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
 
-          // Parallel fetch for speed
-          const [checklistRes, mealsRes, checkinsRes, weightRes, chatRes, xpRes] = await Promise.all([
+          // Parallel fetch — clinical engine data + patient metrics
+          const [
+            checklistRes, mealsRes, checkinsRes, weightRes, chatRes, xpRes,
+            portfolioRes, pipelineRes, alertsRes, snapshotsRes, clinicalMetricsRes,
+          ] = await Promise.all([
             supabase.from("checklist_tasks").select("id, completed", { count: "exact" }).eq("patient_id", user.id).eq("date", today),
             supabase.from("meals").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("logged_at", weekAgo),
             supabase.from("patient_checkins").select("id", { count: "exact", head: true }).eq("patient_id", user.id),
             supabase.from("physical_assessments").select("weight, assessment_date").eq("patient_id", user.id).order("assessment_date", { ascending: false }).limit(2),
             supabase.from("chat_messages").select("id", { count: "exact", head: true }).eq("receiver_id", user.id).eq("is_read", false),
-            supabase.from("player_stats").select("xp, level, current_streak, meals_logged").eq("user_id", user.id).maybeSingle(),
+            supabase.from("player_stats").select("total_xp, level, current_streak, meals_logged").eq("user_id", user.id).maybeSingle(),
+            // Clinical engine data (for nutritionists/admins)
+            supabase.from("clinic_portfolio_state").select("*").eq("nutritionist_id", user.id).maybeSingle(),
+            supabase.from("pipeline_runs").select("status, completed_at, total_patients_processed, steps_completed").order("created_at", { ascending: false }).limit(1).maybeSingle(),
+            supabase.from("clinical_alerts").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id).eq("is_active", true),
+            supabase.from("clinical_daily_snapshots").select("id", { count: "exact", head: true }).gte("snapshot_date", weekAgo),
+            supabase.from("clinic_clinical_evolution_metrics").select("*").eq("nutritionist_id", user.id).maybeSingle(),
           ]);
+
+          // Build clinical engine status (for pro users)
+          const portfolio = portfolioRes.data as any;
+          const pipeline = pipelineRes.data as any;
+          const activeAlerts = alertsRes.count || 0;
+          const totalSnapshots = snapshotsRes.count || 0;
+          const clinicalEvolution = clinicalMetricsRes.data as any;
+
+          if (portfolio || pipeline) {
+            const patientsAnalyzed = portfolio?.total_patients || 0;
+            const avgAdh = portfolio?.avg_adherence || 0;
+            const healthScore = portfolio?.portfolio_health_score || 0;
+            const evolIdx = clinicalEvolution?.avg_protocol_efficacy || portfolio?.avg_plan_efficacy || 0;
+            // Energy level = weighted composite of health score + adherence + evolution
+            const energyLevel = Math.min(100, Math.round(
+              (healthScore * 0.4) + (avgAdh * 0.35) + (evolIdx * 0.25)
+            ));
+
+            engineStatus = {
+              dataAnalyzed: totalSnapshots + (pipeline?.total_patients_processed || 0) * 10,
+              patternsDetected: Math.max(0, Math.round((totalSnapshots / 7) * patientsAnalyzed * 0.3)),
+              preventiveAlerts: activeAlerts,
+              evolutionIndex: Math.round(evolIdx),
+              energyLevel,
+              totalPatients: patientsAnalyzed,
+              portfolioHealth: Math.round(healthScore),
+              avgAdherence: Math.round(avgAdh),
+              dropoutRate: Math.round(portfolio?.dropout_rate || 0),
+              lastPipelineAt: pipeline?.completed_at || null,
+              pipelineStatus: pipeline?.status || "idle",
+            };
+          }
 
           // Checklist adherence today
           const checkTasks = checklistRes.data || [];
@@ -305,7 +362,7 @@ export function useSmartResume() {
               value: `Lv.${stats.level || 1}`,
               icon: "Trophy",
               color: "violet",
-              detail: `${stats.xp || 0} XP · ${stats.meals_logged || 0} refeições`,
+              detail: `${stats.total_xp || 0} XP · ${stats.meals_logged || 0} refeições`,
             });
           }
 
@@ -332,6 +389,28 @@ export function useSmartResume() {
               detail: "avaliações registradas",
             });
           }
+
+          // Clinical engine metrics for pros
+          if (engineStatus) {
+            if (engineStatus.totalPatients > 0) {
+              collectedMetrics.push({
+                label: "Pacientes monitorados",
+                value: `${engineStatus.totalPatients}`,
+                icon: "Users",
+                color: "emerald",
+                detail: `Saúde do portfólio: ${engineStatus.portfolioHealth}%`,
+              });
+            }
+            if (engineStatus.preventiveAlerts > 0) {
+              collectedMetrics.push({
+                label: "Alertas ativos",
+                value: `${engineStatus.preventiveAlerts}`,
+                icon: "Zap",
+                color: engineStatus.preventiveAlerts > 5 ? "rose" : "amber",
+                detail: "alertas preventivos",
+              });
+            }
+          }
         } catch (e) {
           console.error("Intelligence metrics error:", e);
         }
@@ -345,6 +424,7 @@ export function useSmartResume() {
           suggestion: getSuggestion(topPending, userRole),
           streakDays,
           collectedMetrics,
+          engineStatus,
         };
 
         setData(resumeData);

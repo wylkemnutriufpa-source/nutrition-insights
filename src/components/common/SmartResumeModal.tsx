@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useSmartResume, SmartResumeData, IntelligenceMetric } from "@/hooks/useSmartResume";
+import { useSmartResume, SmartResumeData, IntelligenceMetric, ClinicalEngineStatus } from "@/hooks/useSmartResume";
 import {
   LayoutDashboard, Users, UtensilsCrossed, Trophy, Target,
   Leaf, ClipboardCheck, CheckCircle2, Activity,
@@ -31,19 +31,116 @@ function formatTimeAway(hours: number): string {
   return `${days} dia${days > 1 ? "s" : ""}`;
 }
 
+/* ─── Engine Status Panel ─── */
+function EngineStatusPanel({ engine }: { engine: ClinicalEngineStatus }) {
+  const statItems = [
+    { label: "DADOS ANALISADOS", value: engine.dataAnalyzed.toLocaleString("pt-BR"), color: "text-emerald-400" },
+    { label: "PADRÕES DETECTADOS", value: engine.patternsDetected.toLocaleString("pt-BR"), color: "text-sky-400" },
+    { label: "ALERTAS PREVENTIVOS", value: `${engine.preventiveAlerts}`, color: engine.preventiveAlerts > 0 ? "text-amber-400" : "text-emerald-400" },
+    { label: "ÍNDICE DE EVOLUÇÃO", value: `+${engine.evolutionIndex}%`, color: engine.evolutionIndex >= 0 ? "text-emerald-400" : "text-rose-400" },
+  ];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.1 }}
+      className="relative rounded-xl overflow-hidden p-4"
+      style={{
+        background: "linear-gradient(135deg, hsl(150 30% 12% / 0.6), hsl(160 25% 10% / 0.8))",
+        border: "1px solid hsl(150 50% 30% / 0.3)",
+      }}
+    >
+      {/* Scanning effect */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: "linear-gradient(180deg, transparent, hsl(150 60% 50% / 0.04), transparent)" }}
+        animate={{ y: ["-100%", "200%"] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+      />
+
+      <div className="relative z-10">
+        <div className="flex items-center gap-2 mb-3">
+          <Zap className="w-3.5 h-3.5 text-emerald-500" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-500/80">
+            Status do Motor Clínico
+          </span>
+          <motion.div
+            className="w-1.5 h-1.5 rounded-full bg-emerald-500 ml-auto"
+            animate={{ opacity: [1, 0.3, 1] }}
+            transition={{ duration: 1, repeat: Infinity }}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+          {statItems.map((item, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.15 + i * 0.06 }}
+            >
+              <p className="text-[8px] text-muted-foreground/50 font-mono uppercase tracking-wider">{item.label}</p>
+              <p className={`text-lg font-bold font-mono ${item.color} leading-tight`}>{item.value}</p>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Energy Bar */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="mt-4"
+        >
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[8px] text-muted-foreground/50 font-mono uppercase tracking-wider">Nível de energia do motor</span>
+            <span className="text-[10px] font-bold font-mono text-emerald-400">{engine.energyLevel}%</span>
+          </div>
+          <div className="h-2 rounded-full overflow-hidden" style={{ background: "hsl(150 20% 15% / 0.6)" }}>
+            <motion.div
+              className="h-full rounded-full relative overflow-hidden"
+              style={{
+                background: engine.energyLevel >= 70
+                  ? "linear-gradient(90deg, hsl(150 80% 40%), hsl(150 90% 50%))"
+                  : engine.energyLevel >= 40
+                  ? "linear-gradient(90deg, hsl(40 80% 40%), hsl(40 90% 50%))"
+                  : "linear-gradient(90deg, hsl(0 70% 40%), hsl(0 80% 50%))",
+                boxShadow: `0 0 12px ${engine.energyLevel >= 70 ? "hsl(150 80% 50% / 0.5)" : engine.energyLevel >= 40 ? "hsl(40 80% 50% / 0.5)" : "hsl(0 70% 50% / 0.5)"}`,
+              }}
+              initial={{ width: "0%" }}
+              animate={{ width: `${engine.energyLevel}%` }}
+              transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
+            >
+              {/* Shimmer */}
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                animate={{ x: ["-100%", "200%"] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear", delay: 1.5 }}
+              />
+            </motion.div>
+          </div>
+        </motion.div>
+      </div>
+    </motion.div>
+  );
+}
+
 /* ─── Intelligence Projection Modal ─── */
 function IntelligenceProjectionModal({
   open,
   onClose,
   metrics,
+  engineStatus,
 }: {
   open: boolean;
   onClose: () => void;
   metrics: IntelligenceMetric[];
+  engineStatus: ClinicalEngineStatus | null;
 }) {
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-lg p-0 overflow-hidden border-0 bg-transparent shadow-2xl">
+      <DialogContent className="sm:max-w-lg p-0 overflow-hidden border-0 bg-transparent shadow-2xl max-h-[90vh]">
         <AnimatePresence>
           {open && (
             <motion.div
@@ -51,7 +148,7 @@ function IntelligenceProjectionModal({
               animate={{ opacity: 1, scale: 1, rotateX: 0 }}
               exit={{ opacity: 0, scale: 0.9, rotateX: 10 }}
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="relative rounded-2xl overflow-hidden"
+              className="relative rounded-2xl overflow-hidden overflow-y-auto max-h-[85vh]"
               style={{
                 background: "linear-gradient(135deg, hsl(160 30% 8% / 0.95), hsl(180 20% 6% / 0.98))",
                 border: "1px solid hsl(150 60% 40% / 0.2)",
@@ -88,7 +185,7 @@ function IntelligenceProjectionModal({
                   </motion.div>
                   <div>
                     <h3 className="text-sm font-bold text-emerald-400 tracking-wide">CENTRAL DE INTELIGÊNCIA</h3>
-                    <p className="text-[10px] text-emerald-500/50 uppercase tracking-widest">Monitoramento contínuo ativo</p>
+                    <p className="text-[10px] text-emerald-500/50 uppercase tracking-widest">Motor clínico determinístico ativo</p>
                   </div>
                   <motion.div
                     className="ml-auto flex items-center gap-1.5"
@@ -111,63 +208,73 @@ function IntelligenceProjectionModal({
                 </div>
               </div>
 
-              {/* Metrics Grid */}
-              <div className="relative z-10 px-6 pb-6 pt-2">
-                <div className="grid grid-cols-2 gap-3">
-                  {metrics.map((metric, idx) => {
-                    const MetricIcon = getIcon(metric.icon);
-                    const colorMap: Record<string, { glow: string; text: string; border: string; bg: string }> = {
-                      emerald: { glow: "hsl(150 80% 50%)", text: "text-emerald-400", border: "border-emerald-500/20", bg: "bg-emerald-500/8" },
-                      amber: { glow: "hsl(40 90% 50%)", text: "text-amber-400", border: "border-amber-500/20", bg: "bg-amber-500/8" },
-                      sky: { glow: "hsl(200 90% 50%)", text: "text-sky-400", border: "border-sky-500/20", bg: "bg-sky-500/8" },
-                      rose: { glow: "hsl(350 80% 55%)", text: "text-rose-400", border: "border-rose-500/20", bg: "bg-rose-500/8" },
-                      violet: { glow: "hsl(270 80% 60%)", text: "text-violet-400", border: "border-violet-500/20", bg: "bg-violet-500/8" },
-                      orange: { glow: "hsl(25 90% 55%)", text: "text-orange-400", border: "border-orange-500/20", bg: "bg-orange-500/8" },
-                    };
-                    const colors = colorMap[metric.color] || colorMap.sky;
-                    return (
-                      <motion.div
-                        key={idx}
-                        initial={{ opacity: 0, y: 15, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        transition={{ delay: 0.1 + idx * 0.08, duration: 0.35 }}
-                        className={`relative rounded-xl ${colors.bg} border ${colors.border} p-3.5 overflow-hidden backdrop-blur-sm`}
-                      >
-                        {/* Scanning light */}
-                        <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent"
-                          initial={{ x: "-100%" }}
-                          animate={{ x: "200%" }}
-                          transition={{ duration: 4, repeat: Infinity, delay: idx * 0.5, ease: "linear" }}
-                        />
-                        {/* Corner glow */}
-                        <div
-                          className="absolute -top-1 -right-1 w-8 h-8 rounded-full opacity-20 blur-lg"
-                          style={{ background: colors.glow }}
-                        />
-                        <div className="relative z-10">
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: `${colors.glow}15` }}>
-                              <MetricIcon className={`w-3.5 h-3.5 ${colors.text}`} />
+              <div className="relative z-10 px-6 pb-6 pt-2 space-y-4">
+                {/* Engine Status Panel */}
+                {engineStatus && <EngineStatusPanel engine={engineStatus} />}
+
+                {/* Metrics Grid */}
+                {metrics.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Activity className="w-3 h-3 text-sky-500/70" />
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-sky-500/60">Sinais capturados</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {metrics.map((metric, idx) => {
+                        const MetricIcon = getIcon(metric.icon);
+                        const colorMap: Record<string, { glow: string; text: string; border: string; bg: string }> = {
+                          emerald: { glow: "hsl(150 80% 50%)", text: "text-emerald-400", border: "border-emerald-500/20", bg: "bg-emerald-500/8" },
+                          amber: { glow: "hsl(40 90% 50%)", text: "text-amber-400", border: "border-amber-500/20", bg: "bg-amber-500/8" },
+                          sky: { glow: "hsl(200 90% 50%)", text: "text-sky-400", border: "border-sky-500/20", bg: "bg-sky-500/8" },
+                          rose: { glow: "hsl(350 80% 55%)", text: "text-rose-400", border: "border-rose-500/20", bg: "bg-rose-500/8" },
+                          violet: { glow: "hsl(270 80% 60%)", text: "text-violet-400", border: "border-violet-500/20", bg: "bg-violet-500/8" },
+                          orange: { glow: "hsl(25 90% 55%)", text: "text-orange-400", border: "border-orange-500/20", bg: "bg-orange-500/8" },
+                        };
+                        const colors = colorMap[metric.color] || colorMap.sky;
+                        return (
+                          <motion.div
+                            key={idx}
+                            initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            transition={{ delay: 0.1 + idx * 0.08, duration: 0.35 }}
+                            className={`relative rounded-xl ${colors.bg} border ${colors.border} p-3.5 overflow-hidden backdrop-blur-sm`}
+                          >
+                            <motion.div
+                              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent"
+                              initial={{ x: "-100%" }}
+                              animate={{ x: "200%" }}
+                              transition={{ duration: 4, repeat: Infinity, delay: idx * 0.5, ease: "linear" }}
+                            />
+                            <div
+                              className="absolute -top-1 -right-1 w-8 h-8 rounded-full opacity-20 blur-lg"
+                              style={{ background: colors.glow }}
+                            />
+                            <div className="relative z-10">
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: `${colors.glow}15` }}>
+                                  <MetricIcon className={`w-3.5 h-3.5 ${colors.text}`} />
+                                </div>
+                                <span className="text-[10px] text-muted-foreground/80 font-medium tracking-wide uppercase">{metric.label}</span>
+                              </div>
+                              <p className={`text-lg font-bold ${colors.text} leading-tight font-mono`}>{metric.value}</p>
+                              {metric.detail && (
+                                <p className="text-[9px] text-muted-foreground/50 mt-1 font-mono">{metric.detail}</p>
+                              )}
                             </div>
-                            <span className="text-[10px] text-muted-foreground/80 font-medium tracking-wide uppercase">{metric.label}</span>
-                          </div>
-                          <p className={`text-lg font-bold ${colors.text} leading-tight font-mono`}>{metric.value}</p>
-                          {metric.detail && (
-                            <p className="text-[9px] text-muted-foreground/50 mt-1 font-mono">{metric.detail}</p>
-                          )}
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {/* Bottom status bar */}
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.6 }}
-                  className="mt-4 flex items-center justify-between px-2"
+                  className="flex items-center justify-between px-2 pt-2"
+                  style={{ borderTop: "1px solid hsl(150 30% 20% / 0.3)" }}
                 >
                   <div className="flex items-center gap-1.5">
                     <motion.div
@@ -176,7 +283,7 @@ function IntelligenceProjectionModal({
                       transition={{ duration: 1.5, repeat: Infinity }}
                     />
                     <span className="text-[9px] text-emerald-500/50 font-mono uppercase">
-                      {metrics.length} sinais capturados
+                      {metrics.length} sinais · motor clínico ativo
                     </span>
                   </div>
                   <span className="text-[9px] text-muted-foreground/30 font-mono">
@@ -582,6 +689,7 @@ export default function SmartResumeModal({ externalOpen, onExternalOpenChange }:
         open={projectionOpen}
         onClose={() => setProjectionOpen(false)}
         metrics={data.collectedMetrics}
+        engineStatus={data.engineStatus || null}
       />
     )}
     </>
