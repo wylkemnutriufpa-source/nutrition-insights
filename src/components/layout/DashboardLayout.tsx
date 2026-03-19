@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck, Brain } from "lucide-react";
+import { LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { useIsMobile, useIsTablet } from "@/hooks/use-mobile";
 import { useSmartMenu } from "@/hooks/useSmartMenu";
@@ -13,7 +13,207 @@ import AccordionSidebar from "@/components/layout/AccordionSidebar";
 import PendingApprovalsModal, { usePendingApprovals } from "@/components/patient/PendingApprovalsModal";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import SmartResumeModal from "@/components/common/SmartResumeModal";
-...
+
+function SidebarFooter({
+  collapsed,
+  dark,
+  toggleDark,
+  initials,
+  profileName,
+  signOut,
+  setCollapsed,
+  onLinkClick,
+}: {
+  collapsed: boolean;
+  dark: boolean;
+  toggleDark: () => void;
+  initials: string;
+  profileName: string;
+  signOut: () => void;
+  setCollapsed?: (v: boolean) => void;
+  onLinkClick?: () => void;
+}) {
+  return (
+    <div className="p-3 border-t border-border space-y-2">
+      <Link
+        to="/settings"
+        onClick={onLinkClick}
+        className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted w-full transition-all"
+      >
+        <Settings className="w-5 h-5" />
+        {!collapsed && <span className="text-sm">Configurações</span>}
+      </Link>
+
+      <button
+        onClick={toggleDark}
+        className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted w-full transition-all"
+      >
+        {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+        {!collapsed && <span className="text-sm">{dark ? "Modo claro" : "Modo escuro"}</span>}
+      </button>
+
+      <div className="flex items-center gap-3 px-3 py-2">
+        <Avatar className="w-8 h-8">
+          <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">{initials}</AvatarFallback>
+        </Avatar>
+        {!collapsed && (
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate">{profileName}</p>
+          </div>
+        )}
+      </div>
+
+      <button
+        onClick={() => {
+          signOut();
+          onLinkClick?.();
+        }}
+        className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 w-full transition-all"
+      >
+        <LogOut className="w-5 h-5" />
+        {!collapsed && <span className="text-sm">Sair</span>}
+      </button>
+
+      {setCollapsed && (
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="flex items-center justify-center w-full py-1 text-muted-foreground hover:text-foreground"
+        >
+          <ChevronRight className={`w-4 h-4 transition-transform ${collapsed ? "" : "rotate-180"}`} />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function DynamicSidebar({
+  collapsed,
+  dark,
+  toggleDark,
+  initials,
+  profileName,
+  signOut,
+  setCollapsed,
+  onLinkClick,
+}: {
+  collapsed: boolean;
+  dark: boolean;
+  toggleDark: () => void;
+  initials: string;
+  profileName: string;
+  signOut: () => void;
+  setCollapsed?: (v: boolean) => void;
+  onLinkClick?: () => void;
+}) {
+  const { categories, flatItems, trackClick } = useSmartMenu();
+  const { isNutritionist, isPersonal, isAdmin } = useAuth();
+  const pendingCount = usePendingApprovals();
+  const [approvalsOpen, setApprovalsOpen] = useState(false);
+  const [smartResumeOpen, setSmartResumeOpen] = useState(false);
+
+  const isProRole = useMemo(() => isNutritionist || isPersonal || isAdmin, [isNutritionist, isPersonal, isAdmin]);
+  const showPending = isProRole && pendingCount > 0;
+
+  return (
+    <>
+      <div className="p-4 flex items-center">
+        <FitJourneyLogo collapsed={collapsed} size="sm" />
+      </div>
+
+      <div className="px-3 mb-1">
+        <button
+          onClick={() => setSmartResumeOpen(true)}
+          className={`flex items-center gap-2 w-full rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
+        >
+          <div className="relative flex-shrink-0">
+            <motion.div
+              className="absolute -inset-1.5 rounded-full"
+              style={{
+                background: "radial-gradient(circle, hsl(150 80% 50% / 0.3), transparent 70%)",
+              }}
+              animate={{ scale: [1, 1.4, 1], opacity: [0.3, 0.7, 0.3] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <motion.span
+              className="text-lg leading-none select-none relative z-10"
+              animate={{ rotate: [0, 8, -8, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              style={{ filter: "drop-shadow(0 0 6px hsl(150 80% 50% / 0.5))" }}
+            >
+              🧠
+            </motion.span>
+            <motion.div
+              className="absolute inset-0 rounded-full"
+              style={{ border: "1px solid hsl(150 70% 50% / 0.4)" }}
+              animate={{ scale: [1, 1.8], opacity: [0.5, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+            />
+          </div>
+          {!collapsed && (
+            <span className="text-xs font-semibold text-emerald-500 truncate group-hover:text-emerald-400 transition-colors">
+              Inteligência FitJourney
+            </span>
+          )}
+        </button>
+      </div>
+
+      <SmartResumeModal externalOpen={smartResumeOpen} onExternalOpenChange={setSmartResumeOpen} />
+
+      <AnimatePresence>
+        {showPending && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="px-3 mb-2"
+          >
+            <button
+              onClick={() => setApprovalsOpen(true)}
+              className={`flex items-center gap-2 w-full rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 transition-all px-3 py-2.5 ${collapsed ? "justify-center" : ""}`}
+            >
+              <div className="relative flex-shrink-0">
+                <ClipboardCheck className="w-4 h-4 text-amber-500" />
+                <span className="absolute -top-1.5 -right-2 w-4 h-4 rounded-full bg-destructive text-[9px] font-bold text-white flex items-center justify-center">
+                  {pendingCount > 9 ? "9+" : pendingCount}
+                </span>
+              </div>
+              {!collapsed && (
+                <span className="text-xs font-semibold text-amber-500 truncate">
+                  Planos Pendentes
+                </span>
+              )}
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <PendingApprovalsModal open={approvalsOpen} onOpenChange={setApprovalsOpen} />
+
+      <nav className="flex-1 px-3 overflow-y-auto">
+        <AccordionSidebar
+          categories={categories}
+          flatItems={flatItems}
+          collapsed={collapsed}
+          isProRole={isProRole}
+          onLinkClick={onLinkClick}
+          trackClick={trackClick}
+        />
+      </nav>
+
+      <SidebarFooter
+        collapsed={collapsed}
+        dark={dark}
+        toggleDark={toggleDark}
+        initials={initials}
+        profileName={profileName}
+        signOut={signOut}
+        setCollapsed={setCollapsed}
+        onLinkClick={onLinkClick}
+      />
+    </>
+  );
+}
+
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { profile, signOut } = useAuth();
   const location = useLocation();
