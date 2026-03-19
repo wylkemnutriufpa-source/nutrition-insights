@@ -30,32 +30,51 @@ function formatTimeAway(hours: number): string {
   return `${days} dia${days > 1 ? "s" : ""}`;
 }
 
-export default function SmartResumeModal() {
-  const { data, loading, dismiss } = useSmartResume();
+interface SmartResumeModalProps {
+  externalOpen?: boolean;
+  onExternalOpenChange?: (open: boolean) => void;
+}
+
+export default function SmartResumeModal({ externalOpen, onExternalOpenChange }: SmartResumeModalProps = {}) {
+  const { data, loading, dismiss, forceShow } = useSmartResume();
   const navigate = useNavigate();
 
-  if (loading || !data || !data.shouldShow) return null;
+  // When external trigger opens the modal, force-fetch data
+  useEffect(() => {
+    if (externalOpen) {
+      forceShow();
+    }
+  }, [externalOpen, forceShow]);
+
+  const isOpen = externalOpen || (!loading && data?.shouldShow);
+
+  const handleClose = () => {
+    dismiss();
+    onExternalOpenChange?.(false);
+  };
 
   const handleContinue = () => {
-    if (data.pendingAction) {
+    if (data?.pendingAction) {
       navigate(data.pendingAction.route);
     } else {
       navigate("/");
     }
-    dismiss();
+    handleClose();
   };
 
   const handleDashboard = () => {
     navigate("/");
-    dismiss();
+    handleClose();
   };
 
   const handleExplore = () => {
-    dismiss();
+    handleClose();
   };
 
+  if (!isOpen || (!data && !loading)) return null;
+
   return (
-    <Dialog open={true} onOpenChange={(open) => !open && dismiss()}>
+    <Dialog open={!!isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="sm:max-w-md p-0 overflow-hidden border-0 bg-transparent shadow-2xl">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
