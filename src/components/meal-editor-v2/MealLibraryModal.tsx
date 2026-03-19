@@ -67,7 +67,7 @@ const CLINICAL_FILTERS = [
 export function MealLibraryModal({
   open, onOpenChange, targetDay, targetMealType, patientTargetKcal,
 }: MealLibraryModalProps) {
-  const { planId, addItems, addItem } = useMealPlanEditorV2Store();
+  const { planId, addItems, addItem, items: storeItems, deleteItemsInCell } = useMealPlanEditorV2Store();
   const [items, setItems] = useState<MealLibraryItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
