@@ -26,6 +26,20 @@ export interface IntelligenceMetric {
   detail?: string;
 }
 
+export interface ClinicalEngineStatus {
+  dataAnalyzed: number;
+  patternsDetected: number;
+  preventiveAlerts: number;
+  evolutionIndex: number; // percentage
+  energyLevel: number; // 0-100
+  totalPatients: number;
+  portfolioHealth: number;
+  avgAdherence: number;
+  dropoutRate: number;
+  lastPipelineAt: string | null;
+  pipelineStatus: string;
+}
+
 export interface SmartResumeData {
   shouldShow: boolean;
   hoursAway: number;
