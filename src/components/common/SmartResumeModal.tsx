@@ -145,7 +145,7 @@ function IntelligenceProjectionModal({
               animate={{ opacity: 1, scale: 1, rotateX: 0 }}
               exit={{ opacity: 0, scale: 0.9, rotateX: 10 }}
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="relative rounded-2xl overflow-hidden overflow-y-auto max-h-[85vh]"
+              className="relative rounded-2xl overflow-hidden overflow-y-auto max-h-[85vh] scrollbar-none"
               style={{
                 background: "linear-gradient(135deg, hsl(160 30% 8% / 0.95), hsl(180 20% 6% / 0.98))",
                 border: "1px solid hsl(150 60% 40% / 0.2)",
