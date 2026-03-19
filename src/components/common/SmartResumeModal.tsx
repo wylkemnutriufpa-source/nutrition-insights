@@ -689,6 +689,7 @@ export default function SmartResumeModal({ externalOpen, onExternalOpenChange }:
         open={projectionOpen}
         onClose={() => setProjectionOpen(false)}
         metrics={data.collectedMetrics}
+        engineStatus={data.engineStatus || null}
       />
     )}
     </>
