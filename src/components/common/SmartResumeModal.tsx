@@ -642,6 +642,46 @@ export default function SmartResumeModal({ externalOpen, onExternalOpenChange }:
                 </Button>
               </div>
             </motion.div>
+
+            {data.engineStatus && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7, duration: 0.6 }}
+                className="pt-1"
+              >
+                <div className="flex items-center justify-between mb-2 px-0.5">
+                  <span className="text-[8px] font-mono uppercase tracking-[0.24em] text-sky-500/70">
+                    Energia clínica em processamento
+                  </span>
+                  <span className="text-[10px] font-mono font-bold text-sky-400">
+                    {data.engineStatus.energyLevel}%
+                  </span>
+                </div>
+                <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-secondary/70 border border-border/40">
+                  <motion.div
+                    className="absolute inset-y-0 left-0 rounded-full"
+                    style={{
+                      background: "linear-gradient(90deg, hsl(205 85% 52%), hsl(195 90% 62%), hsl(185 95% 68%))",
+                      boxShadow: "0 0 14px hsl(200 90% 60% / 0.45)",
+                    }}
+                    initial={{ width: "0%" }}
+                    animate={{ width: `${data.engineStatus.energyLevel}%` }}
+                    transition={{ duration: 6, ease: "easeInOut", delay: 0.4 }}
+                  >
+                    <motion.div
+                      className="absolute inset-0"
+                      style={{
+                        background: "linear-gradient(90deg, transparent 0%, hsl(0 0% 100% / 0.12) 45%, transparent 100%)",
+                        backgroundSize: "120px 100%",
+                      }}
+                      animate={{ x: ["-120px", "520px"] }}
+                      transition={{ duration: 5.5, repeat: Infinity, ease: "linear" }}
+                    />
+                  </motion.div>
+                </div>
+              </motion.div>
+            )}
           </div>
         </motion.div>
         ) : null}
