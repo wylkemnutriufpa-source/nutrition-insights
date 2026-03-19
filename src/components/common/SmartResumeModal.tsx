@@ -86,39 +86,59 @@ function EngineStatusPanel({ engine }: { engine: ClinicalEngineStatus }) {
           ))}
         </div>
 
-        {/* Energy Bar */}
+        {/* Battery Energy Bar */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
           className="mt-4"
         >
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[8px] text-muted-foreground/50 font-mono uppercase tracking-wider">Nível de energia do motor</span>
-            <span className="text-[10px] font-bold font-mono text-emerald-400">{engine.energyLevel}%</span>
-          </div>
-          <div className="h-2 rounded-full overflow-hidden" style={{ background: "hsl(150 20% 15% / 0.6)" }}>
-            <motion.div
-              className="h-full rounded-full relative overflow-hidden"
-              style={{
-                background: engine.energyLevel >= 70
-                  ? "linear-gradient(90deg, hsl(150 80% 40%), hsl(150 90% 50%))"
-                  : engine.energyLevel >= 40
-                  ? "linear-gradient(90deg, hsl(40 80% 40%), hsl(40 90% 50%))"
-                  : "linear-gradient(90deg, hsl(0 70% 40%), hsl(0 80% 50%))",
-                boxShadow: `0 0 12px ${engine.energyLevel >= 70 ? "hsl(150 80% 50% / 0.5)" : engine.energyLevel >= 40 ? "hsl(40 80% 50% / 0.5)" : "hsl(0 70% 50% / 0.5)"}`,
-              }}
-              initial={{ width: "0%" }}
-              animate={{ width: `${engine.energyLevel}%` }}
-              transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
-            >
-              {/* Shimmer */}
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                animate={{ x: ["-100%", "200%"] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear", delay: 1.5 }}
-              />
-            </motion.div>
+          <div className="flex items-center gap-2">
+            {/* Battery body */}
+            <div className="flex-1 relative">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[7px] text-muted-foreground/40 font-mono uppercase tracking-widest">Motor Clínico</span>
+                <span className="text-[9px] font-bold font-mono" style={{ color: engine.energyLevel >= 70 ? "hsl(150 80% 55%)" : engine.energyLevel >= 40 ? "hsl(40 85% 55%)" : "hsl(0 70% 55%)" }}>
+                  {engine.energyLevel}%
+                </span>
+              </div>
+              <div
+                className="h-[6px] rounded-sm overflow-hidden relative"
+                style={{
+                  background: "hsl(150 15% 12% / 0.8)",
+                  border: "1px solid hsl(150 20% 20% / 0.3)",
+                }}
+              >
+                <motion.div
+                  className="h-full rounded-sm relative"
+                  style={{
+                    background: engine.energyLevel >= 70
+                      ? "linear-gradient(90deg, hsl(150 70% 35%), hsl(150 80% 45%), hsl(150 70% 35%))"
+                      : engine.energyLevel >= 40
+                      ? "linear-gradient(90deg, hsl(40 70% 40%), hsl(40 85% 50%), hsl(40 70% 40%))"
+                      : "linear-gradient(90deg, hsl(0 60% 35%), hsl(0 70% 45%), hsl(0 60% 35%))",
+                    boxShadow: `0 0 8px ${engine.energyLevel >= 70 ? "hsl(150 80% 50% / 0.4)" : engine.energyLevel >= 40 ? "hsl(40 80% 50% / 0.4)" : "hsl(0 70% 50% / 0.4)"}`,
+                  }}
+                  initial={{ width: "0%" }}
+                  animate={{ width: `${engine.energyLevel}%` }}
+                  transition={{ duration: 2, ease: "easeOut", delay: 0.5 }}
+                />
+                {/* Subtle pulse glow overlay */}
+                <motion.div
+                  className="absolute inset-0 rounded-sm pointer-events-none"
+                  style={{
+                    background: `linear-gradient(90deg, transparent 60%, ${engine.energyLevel >= 70 ? "hsl(150 80% 50% / 0.15)" : "hsl(40 80% 50% / 0.15)"} 100%)`,
+                  }}
+                  animate={{ opacity: [0.3, 0.8, 0.3] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                />
+              </div>
+            </div>
+            {/* Battery tip */}
+            <div
+              className="w-[3px] h-[4px] rounded-r-sm self-end mb-[1px]"
+              style={{ background: "hsl(150 20% 25% / 0.5)" }}
+            />
           </div>
         </motion.div>
       </div>
