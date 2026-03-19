@@ -574,5 +574,15 @@ export default function SmartResumeModal({ externalOpen, onExternalOpenChange }:
         ) : null}
       </DialogContent>
     </Dialog>
+
+    {/* Intelligence Projection — second modal */}
+    {data?.collectedMetrics && (
+      <IntelligenceProjectionModal
+        open={projectionOpen}
+        onClose={() => setProjectionOpen(false)}
+        metrics={data.collectedMetrics}
+      />
+    )}
+    </>
   );
 }
