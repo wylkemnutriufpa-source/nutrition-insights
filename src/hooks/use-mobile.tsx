@@ -1,19 +1,39 @@
 import * as React from "react";
 
 const MOBILE_BREAKPOINT = 768;
+const TABLET_BREAKPOINT = 1024;
 
-export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined);
+function useViewportBelow(breakpoint: number) {
+  const getMatches = React.useCallback(() => {
+    if (typeof window === "undefined") return false;
+    return window.innerWidth < breakpoint;
+  }, [breakpoint]);
+
+  const [matches, setMatches] = React.useState<boolean>(getMatches);
 
   React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
-    const onChange = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-    };
-    mql.addEventListener("change", onChange);
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-    return () => mql.removeEventListener("change", onChange);
-  }, []);
+    const mql = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+    const onChange = () => setMatches(getMatches());
 
-  return !!isMobile;
+    onChange();
+    mql.addEventListener("change", onChange);
+    window.addEventListener("resize", onChange);
+
+    return () => {
+      mql.removeEventListener("change", onChange);
+      window.removeEventListener("resize", onChange);
+    };
+  }, [breakpoint, getMatches]);
+
+  return matches;
+}
+
+export function useIsMobile() {
+  return useViewportBelow(MOBILE_BREAKPOINT);
+}
+
+export function useIsTablet() {
+  const isMobile = useIsMobile();
+  const isTabletWidth = useViewportBelow(TABLET_BREAKPOINT);
+  return isTabletWidth && !isMobile;
 }
