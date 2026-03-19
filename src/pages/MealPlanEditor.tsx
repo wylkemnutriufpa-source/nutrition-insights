@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback, useRef, useReducer } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,33 +14,16 @@ import {
   ArrowLeft, Plus, Trash2, Copy, GripVertical, Utensils,
   Sun, Coffee, Apple, Sandwich, Moon, Cookie, Save, ChevronLeft, ChevronRight,
   Flame, Beef, Wheat, Droplets, Leaf, PencilLine, X, Check, Sparkles, Loader2,
-  Bookmark, BookmarkCheck, FolderDown, FolderUp, BookOpen, CalendarDays, CalendarRange,
-  AlertTriangle, ArrowLeftRight, BarChart3, ArrowRightLeft, Maximize2, Minimize2,
-  Wand2, TrendingUp, TrendingDown, Equal, Clipboard, ClipboardPaste, CopyPlus, Zap
+  Bookmark, BookmarkCheck, FolderDown, FolderUp, BookOpen
 } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import PlanScheduler from "@/components/plans/PlanScheduler";
-import DocumentUpload from "@/components/common/DocumentUpload";
+import PlanAuditPanel from "@/components/plans/PlanAuditPanel";
 import FoodAutocomplete, { type FoodItem } from "@/components/meals/FoodAutocomplete";
-import CalorieTemplates from "@/components/meals/CalorieTemplates";
-import FoodSubstitutions, { getCategoryDot } from "@/components/meals/FoodSubstitutions";
-import MacroBalanceBar from "@/components/meals/MacroBalanceBar";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import type { TablesInsert } from "@/integrations/supabase/types";
+import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
-import TemplateQuickInsertPanel from "@/components/meals/TemplateQuickInsertPanel";
-import SaveMealTemplateDialog from "@/components/meals/SaveMealTemplateDialog";
-import {
-  editorPlanoReducer,
-  getEditorPlanoInitialState,
-  persistActiveEditorRoute,
-  persistEditorPlanoState,
-  type EditorPlanoSyncStatus,
-  type MealPlan,
-  type MealPlanItem,
-} from "@/lib/mealPlanEditorStore";
 
+type MealPlan = Tables<"meal_plans">;
+type MealPlanItem = Tables<"meal_plan_items">;
 type MealType = Database["public"]["Enums"]["meal_type"];
 
 const MEAL_TYPES: { key: MealType; label: string; icon: React.ReactNode; color: string }[] = [
@@ -53,292 +36,37 @@ const MEAL_TYPES: { key: MealType; label: string; icon: React.ReactNode; color: 
 ];
 
 const DAYS = [
-  { key: 0, label: "Domingo", short: "Dom" },
-  { key: 1, label: "Segunda", short: "Seg" },
-  { key: 2, label: "Terça", short: "Ter" },
-  { key: 3, label: "Quarta", short: "Qua" },
-  { key: 4, label: "Quinta", short: "Qui" },
-  { key: 5, label: "Sexta", short: "Sex" },
+  { key: 0, label: "Domingo", short: "Dom" }, { key: 1, label: "Segunda", short: "Seg" },
+  { key: 2, label: "Terça", short: "Ter" }, { key: 3, label: "Quarta", short: "Qua" },
+  { key: 4, label: "Quinta", short: "Qui" }, { key: 5, label: "Sexta", short: "Sex" },
   { key: 6, label: "Sábado", short: "Sáb" },
 ];
 
 interface ItemForm {
-  title: string;
-  description: string;
-  calories_target: string;
-  protein_target: string;
-  carbs_target: string;
-  fat_target: string;
+  title: string; description: string; calories_target: string;
+  protein_target: string; carbs_target: string; fat_target: string;
 }
 
-const emptyForm: ItemForm = {
-  title: "",
-  description: "",
-  calories_target: "",
-  protein_target: "",
-  carbs_target: "",
-  fat_target: "",
-};
-
-// Helper: match text against food database for quick-add with macros
-import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
-
-const findFoodMatch = (text: string): FoodItem | null => {
-  const query = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  return FOOD_DATABASE.find(f => {
-    const name = f.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    return name === query || query.includes(name) || name.includes(query);
-  }) || null;
-};
+const emptyForm: ItemForm = { title: "", description: "", calories_target: "", protein_target: "", carbs_target: "", fat_target: "" };
 
 export default function MealPlanEditor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const location = useLocation();
   const { user } = useAuth();
-  const userId = user?.id;
-  const [editorState, dispatchEditor] = useReducer(editorPlanoReducer, id, getEditorPlanoInitialState);
-  const { plan, patientName, items, isHydratingPlano, syncingMap, statusSync, pendingMutationsQueue } = editorState;
-  const editorStateRef = useRef(editorState);
-  const [planDocs, setPlanDocs] = useState<any[]>([]);
 
-  const syncBadgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isFlushingQueueRef = useRef(false);
-  const pendingPersistenceRef = useRef(
-    new Map<
-      string,
-      {
-        itemIds: string[];
-        persist: () => Promise<void>;
-        rollback?: () => void;
-        errorMessage?: string;
-      }
-    >()
-  );
-
-  const setEditorSyncStatus = useCallback((status: EditorPlanoSyncStatus) => {
-    dispatchEditor({ type: "set_status_sync", status });
-  }, []);
-
-  const showSyncSaving = useCallback(() => {
-    setEditorSyncStatus("saving");
-    if (syncBadgeTimerRef.current) clearTimeout(syncBadgeTimerRef.current);
-  }, [setEditorSyncStatus]);
-
-  const showSyncDone = useCallback((success: boolean = true) => {
-    setEditorSyncStatus(success ? "saved" : "error");
-    if (syncBadgeTimerRef.current) clearTimeout(syncBadgeTimerRef.current);
-    syncBadgeTimerRef.current = setTimeout(() => setEditorSyncStatus("idle"), 2500);
-  }, [setEditorSyncStatus]);
-
-  // ─── Scroll preservation ───
-  const editorContainerRef = useRef<HTMLDivElement>(null);
-  const savedScrollRef = useRef<number>(0);
-  const preserveScroll = useCallback(() => {
-    if (editorContainerRef.current) {
-      savedScrollRef.current = editorContainerRef.current.scrollTop;
-    } else {
-      savedScrollRef.current = window.scrollY;
-    }
-  }, []);
-  const restoreScroll = useCallback(() => {
-    requestAnimationFrame(() => {
-      if (editorContainerRef.current) {
-        editorContainerRef.current.scrollTop = savedScrollRef.current;
-      } else {
-        window.scrollTo(0, savedScrollRef.current);
-      }
-    });
-  }, []);
-  const setItemsStable = useCallback((updater: React.SetStateAction<MealPlanItem[]>) => {
-    preserveScroll();
-    const nextItems = typeof updater === "function"
-      ? updater(editorStateRef.current.items)
-      : updater;
-    dispatchEditor({ type: "replace_items", items: nextItems });
-    restoreScroll();
-  }, [preserveScroll, restoreScroll]);
-  const setSyncingItems = useCallback((itemIds: string[], value: boolean) => {
-    dispatchEditor({ type: "set_syncing", itemIds, value });
-  }, []);
-  const mergePlanLocal = useCallback((payload: Partial<MealPlan>) => {
-    dispatchEditor({ type: "merge_plan", payload });
-  }, []);
-
-  const flushQueuedMutations = useCallback(async () => {
-    if (isFlushingQueueRef.current) return;
-
-    const queueSnapshot = Array.from(pendingPersistenceRef.current.entries());
-    if (queueSnapshot.length === 0) {
-      if (editorStateRef.current.statusSync === "saving") showSyncDone(true);
-      return;
-    }
-
-    isFlushingQueueRef.current = true;
-
-    try {
-      const results = await Promise.all(
-        queueSnapshot.map(async ([key, mutation]) => {
-          try {
-            await mutation.persist();
-            return { key, success: true, itemIds: mutation.itemIds, errorMessage: mutation.errorMessage };
-          } catch (error) {
-            mutation.rollback?.();
-            return { key, success: false, itemIds: mutation.itemIds, errorMessage: mutation.errorMessage, error };
-          }
-        })
-      );
-
-      const processedKeys = results.map((result) => result.key);
-      processedKeys.forEach((key) => pendingPersistenceRef.current.delete(key));
-      dispatchEditor({ type: "dequeue_mutations", keys: processedKeys });
-
-      const processedItemIds = [...new Set(results.flatMap((result) => result.itemIds))];
-      const stillPendingIds = new Set(
-        Array.from(pendingPersistenceRef.current.values()).flatMap((mutation) => mutation.itemIds)
-      );
-      const idsToUnlock = processedItemIds.filter((itemId) => !stillPendingIds.has(itemId));
-      if (idsToUnlock.length > 0) {
-        setSyncingItems(idsToUnlock, false);
-      }
-
-      const failedResults = results.filter((result) => !result.success);
-      if (failedResults.length > 0) {
-        toast.error(failedResults[0].errorMessage || "Erro ao sincronizar alterações");
-        showSyncDone(false);
-      } else {
-        showSyncDone(true);
-      }
-    } finally {
-      isFlushingQueueRef.current = false;
-      if (pendingPersistenceRef.current.size > 0) {
-        if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
-        autoSaveTimerRef.current = setTimeout(() => {
-          void flushQueuedMutations();
-        }, 1200);
-      }
-    }
-  }, [setSyncingItems, showSyncDone]);
-
-  const scheduleAutoSave = useCallback(() => {
-    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
-    autoSaveTimerRef.current = setTimeout(() => {
-      void flushQueuedMutations();
-    }, 1200);
-  }, [flushQueuedMutations]);
-
-  const enqueuePersistencia = useCallback((
-    key: string,
-    itemIds: string[],
-    persist: () => Promise<void>,
-    options?: { rollback?: () => void; errorMessage?: string }
-  ) => {
-    pendingPersistenceRef.current.set(key, {
-      itemIds,
-      persist,
-      rollback: options?.rollback,
-      errorMessage: options?.errorMessage,
-    });
-
-    dispatchEditor({
-      type: "enqueue_mutation",
-      mutation: { key, itemIds, queuedAt: Date.now() },
-    });
-
-    if (itemIds.length > 0) {
-      setSyncingItems(itemIds, true);
-    }
-
-    showSyncSaving();
-    scheduleAutoSave();
-  }, [scheduleAutoSave, setSyncingItems, showSyncSaving]);
-
-  const buildOptimisticItems = useCallback((inserts: TablesInsert<"meal_plan_items">[]) => {
-    const baseTimestamp = Date.now();
-    return inserts.map((insert, index) => ({
-      id: `temp-${baseTimestamp}-${index}`,
-      meal_plan_id: insert.meal_plan_id,
-      title: insert.title,
-      description: insert.description ?? null,
-      meal_type: insert.meal_type,
-      day_of_week: insert.day_of_week ?? 1,
-      calories_target: insert.calories_target ?? null,
-      protein_target: insert.protein_target ?? null,
-      carbs_target: insert.carbs_target ?? null,
-      fat_target: insert.fat_target ?? null,
-      created_at: new Date(baseTimestamp + index).toISOString(),
-    } as MealPlanItem));
-  }, []);
-
-  const queueInsertMealItems = useCallback((
-    inserts: TablesInsert<"meal_plan_items">[],
-    options?: { successMessage?: string; errorMessage?: string; afterSuccess?: (rows: MealPlanItem[]) => void; afterRollback?: () => void }
-  ) => {
-    if (inserts.length === 0) return;
-
-    const optimisticItems = buildOptimisticItems(inserts);
-    const tempIds = optimisticItems.map((item) => item.id);
-    setItemsStable((prev) => [...prev, ...optimisticItems]);
-
-    if (options?.successMessage) {
-      toast.success(options.successMessage);
-    }
-
-    enqueuePersistencia(
-      `insert:${tempIds.join(",")}:${Date.now()}`,
-      tempIds,
-      async () => {
-        const { data, error } = await supabase.from("meal_plan_items").insert(inserts).select();
-        if (error) throw error;
-
-        const rows = ((data || []) as MealPlanItem[]);
-        const replacementMap = new Map(tempIds.map((tempId, index) => [tempId, rows[index] ?? null]));
-
-        setItemsStable((prev) => prev.flatMap((item) => {
-          if (!replacementMap.has(item.id)) return [item];
-          const replacement = replacementMap.get(item.id);
-          return replacement ? [replacement] : [];
-        }));
-
-        options?.afterSuccess?.(rows);
-      },
-      {
-        rollback: () => {
-          setItemsStable((prev) => prev.filter((item) => !tempIds.includes(item.id)));
-          options?.afterRollback?.();
-        },
-        errorMessage: options?.errorMessage || "Erro ao salvar refeição",
-      }
-    );
-  }, [buildOptimisticItems, enqueuePersistencia, setItemsStable]);
-
-  // Dialog state
+  const [plan, setPlan] = useState<MealPlan | null>(null);
+  const [patientName, setPatientName] = useState("");
+  const [items, setItems] = useState<MealPlanItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MealPlanItem | null>(null);
   const [dialogMealType, setDialogMealType] = useState<MealType>("breakfast");
   const [dialogDay, setDialogDay] = useState<number>(1);
   const [form, setForm] = useState<ItemForm>(emptyForm);
   const [saving, setSaving] = useState(false);
-  const [approving, setApproving] = useState(false);
-
   const [copySource, setCopySource] = useState<{ day: number; mealType: MealType } | null>(null);
   const [generating, setGenerating] = useState(false);
-
-  // Quick-add state
-  const [quickAddKey, setQuickAddKey] = useState<string | null>(null);
-  const [quickAddText, setQuickAddText] = useState("");
-  const [quickAdding, setQuickAdding] = useState(false);
-  const [batchMode, setBatchMode] = useState(false);
-  const [batchText, setBatchText] = useState("");
-  const [batchAdding, setBatchAdding] = useState(false);
-  const [batchTarget, setBatchTarget] = useState<{ day: number; mealType: MealType } | null>(null);
-
-  // View mode
-  const [editorView, setEditorView] = useState<"weekly" | "daily">("weekly");
-  const [selectedDay, setSelectedDay] = useState<number>(new Date().getDay());
-
-  // Save/Import state
+  const [validating, setValidating] = useState(false);
   const [savingMeal, setSavingMeal] = useState(false);
   const [savingPlan, setSavingPlan] = useState(false);
   const [savedMealsDialogOpen, setSavedMealsDialogOpen] = useState(false);
@@ -348,1815 +76,314 @@ export default function MealPlanEditor() {
   const [savedPlans, setSavedPlans] = useState<any[]>([]);
   const [loadingSavedPlans, setLoadingSavedPlans] = useState(false);
 
-  const [emptyPlanWarning, setEmptyPlanWarning] = useState(false);
-  const [regenerating, setRegenerating] = useState(false);
-
-  // Drag-and-drop swap state
-  const [dragSource, setDragSource] = useState<{ day: number; mealType: MealType } | null>(null);
-  const [dragOver, setDragOver] = useState<{ day: number; mealType: MealType } | null>(null);
-  const [swapping, setSwapping] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  // Inline editing state
-  const [inlineEditId, setInlineEditId] = useState<string | null>(null);
-  const [inlineEditValue, setInlineEditValue] = useState("");
-  const [inlineEditSaving, setInlineEditSaving] = useState(false);
-
-  // Smart drawer panel state  
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [drawerItem, setDrawerItem] = useState<MealPlanItem | null>(null);
-
-  // Fullscreen mode
-  const [isFullscreen, setIsFullscreen] = useState(false);
-
-  // Bulk Smart Edit state
-  const [bulkEditOpen, setBulkEditOpen] = useState(false);
-  const [bulkEditMealType, setBulkEditMealType] = useState<MealType | "all">("all");
-  const [bulkEditMacro, setBulkEditMacro] = useState<"protein_target" | "carbs_target" | "fat_target" | "calories_target">("protein_target");
-  const [bulkEditMode, setBulkEditMode] = useState<"add" | "subtract" | "set" | "multiply">("add");
-  const [bulkEditValue, setBulkEditValue] = useState("");
-  const [bulkEditSaving, setBulkEditSaving] = useState(false);
-
-  // Clipboard for individual item copy/paste
-  const [clipboardItem, setClipboardItem] = useState<MealPlanItem | null>(null);
-
-  // Template Quick Insert Panel state
-  const [templatePanelOpen, setTemplatePanelOpen] = useState(false);
-  const [templatePanelTarget, setTemplatePanelTarget] = useState<{ day: number; mealType: MealType }>({ day: 1, mealType: "breakfast" })
-
-  // Save as template dialog state
-  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
-  const [saveTemplateItems, setSaveTemplateItems] = useState<MealPlanItem[]>([]);
-  const [saveTemplateMealType, setSaveTemplateMealType] = useState<string>("lunch");
-
-  // Guard: only fetch once per plan ID
-  const hasFetchedRef = useRef<string | null>(null);
   const fetchData = useCallback(async () => {
-    if (!id || !userId) return;
-
-    if (hasFetchedRef.current === id && editorStateRef.current.plan) return;
-    hasFetchedRef.current = id;
-
-    if (!editorStateRef.current.plan) {
-      dispatchEditor({ type: "set_hydrating", value: true });
-    }
-
+    if (!id || !user) return;
+    setLoading(true);
     const [{ data: planData }, { data: itemsData }] = await Promise.all([
-      supabase.from("meal_plans").select("*").eq("id", id).maybeSingle(),
+      supabase.from("meal_plans").select("*").eq("id", id).single(),
       supabase.from("meal_plan_items").select("*").eq("meal_plan_id", id).order("created_at"),
     ]);
-
-    let nextPatientName = editorStateRef.current.patientName;
-
     if (planData) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("user_id", planData.patient_id)
-        .maybeSingle();
-
-      nextPatientName = profile?.full_name || "Paciente";
-      dispatchEditor({
-        type: "hydrate",
-        plan: planData,
-        patientName: nextPatientName,
-        items: itemsData || [],
-      });
-
-      if ((!itemsData || itemsData.length === 0) && planData.generation_source === "protocol_fitjourney") {
-        setEmptyPlanWarning(true);
-      }
-    } else {
-      dispatchEditor({ type: "set_hydrating", value: false });
+      setPlan(planData);
+      const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", planData.patient_id).single();
+      setPatientName(profile?.full_name || "Paciente");
     }
-
-    const { data: docs } = await supabase
-      .from("patient_documents" as any)
-      .select("*")
-      .eq("meal_plan_id", id)
-      .eq("document_type", "meal_plan")
-      .order("created_at", { ascending: false });
-    setPlanDocs(docs || []);
-  }, [id, userId]);
-
-  // Silent refresh: only updates the local snapshot without page-level loading
-  const refreshItems = useCallback(async () => {
-    if (!id) return;
-    preserveScroll();
-    const { data } = await supabase
-      .from("meal_plan_items")
-      .select("*")
-      .eq("meal_plan_id", id)
-      .order("created_at");
-    if (data) {
-      dispatchEditor({ type: "replace_items", items: data });
-    }
-    restoreScroll();
-  }, [id, preserveScroll, restoreScroll]);
-
-  const fetchDocs = async () => {
-    if (!id) return;
-    const { data } = await supabase
-      .from("patient_documents" as any)
-      .select("*")
-      .eq("meal_plan_id", id)
-      .eq("document_type", "meal_plan")
-      .order("created_at", { ascending: false });
-    setPlanDocs(data || []);
-  };
-
-  useEffect(() => {
-    editorStateRef.current = editorState;
-  }, [editorState]);
+    setItems(itemsData || []);
+    setLoading(false);
+  }, [id, user]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  useEffect(() => {
-    if (!id) return;
-
-    persistActiveEditorRoute({
-      planId: id,
-      route: `${location.pathname}${location.search}${location.hash}`,
-      shouldRestore: statusSync === "saving" || pendingMutationsQueue.length > 0,
-    });
-
-    if (!plan) return;
-    persistEditorPlanoState(id, editorState);
-  }, [editorState, id, location.hash, location.pathname, location.search, pendingMutationsQueue.length, plan, statusSync]);
-
-  useEffect(() => {
-    return () => {
-      if (syncBadgeTimerRef.current) clearTimeout(syncBadgeTimerRef.current);
-      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
-    };
-  }, []);
-
-  const getItems = (day: number, mealType: MealType) =>
-    items.filter((i) => i.day_of_week === day && i.meal_type === mealType);
+  const getItems = (day: number, mealType: MealType) => items.filter((i) => i.day_of_week === day && i.meal_type === mealType);
 
   const openAddDialog = (day: number, mealType: MealType) => {
-    setEditingItem(null);
-    setDialogDay(day);
-    setDialogMealType(mealType);
-    setForm(emptyForm);
-    setDialogOpen(true);
+    setEditingItem(null); setDialogDay(day); setDialogMealType(mealType); setForm(emptyForm); setDialogOpen(true);
   };
 
   const openEditDialog = (item: MealPlanItem) => {
-    setEditingItem(item);
-    setDialogDay(item.day_of_week ?? 1);
-    setDialogMealType(item.meal_type);
-    setForm({
-      title: item.title,
-      description: item.description || "",
-      calories_target: item.calories_target?.toString() || "",
-      protein_target: item.protein_target?.toString() || "",
-      carbs_target: item.carbs_target?.toString() || "",
-      fat_target: item.fat_target?.toString() || "",
-    });
+    setEditingItem(item); setDialogDay(item.day_of_week ?? 1); setDialogMealType(item.meal_type);
+    setForm({ title: item.title, description: item.description || "", calories_target: item.calories_target?.toString() || "", protein_target: item.protein_target?.toString() || "", carbs_target: item.carbs_target?.toString() || "", fat_target: item.fat_target?.toString() || "" });
     setDialogOpen(true);
   };
 
   const handleSaveItem = async () => {
     if (!id || !form.title.trim()) return;
     setSaving(true);
-
-    const payload = {
-      meal_plan_id: id,
-      title: form.title.trim(),
-      description: form.description.trim() || null,
-      meal_type: dialogMealType,
-      day_of_week: dialogDay,
-      calories_target: form.calories_target ? parseInt(form.calories_target) : null,
-      protein_target: form.protein_target ? parseFloat(form.protein_target) : null,
-      carbs_target: form.carbs_target ? parseFloat(form.carbs_target) : null,
-      fat_target: form.fat_target ? parseFloat(form.fat_target) : null,
-    };
-
+    const payload = { meal_plan_id: id, title: form.title.trim(), description: form.description.trim() || null, meal_type: dialogMealType, day_of_week: dialogDay, calories_target: form.calories_target ? parseInt(form.calories_target) : null, protein_target: form.protein_target ? parseFloat(form.protein_target) : null, carbs_target: form.carbs_target ? parseFloat(form.carbs_target) : null, fat_target: form.fat_target ? parseFloat(form.fat_target) : null };
     if (editingItem) {
-      const previousItems = items;
-      setItemsStable(prev => prev.map(i => i.id === editingItem.id ? { ...i, ...payload } as MealPlanItem : i));
-      enqueuePersistencia(
-        `update:${editingItem.id}:save-item`,
-        [editingItem.id],
-        async () => {
-          const { error } = await supabase
-            .from("meal_plan_items")
-            .update(payload)
-            .eq("id", editingItem.id);
-          if (error) throw error;
-          toast.success("Item atualizado!");
-        },
-        {
-          rollback: () => setItemsStable(previousItems),
-          errorMessage: "Erro ao atualizar item",
-        }
-      );
+      const { error } = await supabase.from("meal_plan_items").update(payload).eq("id", editingItem.id);
+      if (error) toast.error("Erro ao atualizar: " + error.message); else toast.success("Item atualizado!");
     } else {
-      queueInsertMealItems([
-        payload,
-      ], {
-        successMessage: "Item adicionado!",
-        errorMessage: "Erro ao adicionar item",
-      });
+      const { error } = await supabase.from("meal_plan_items").insert(payload);
+      if (error) toast.error("Erro ao adicionar: " + error.message); else toast.success("Item adicionado!");
     }
-
-    setSaving(false);
-    setDialogOpen(false);
+    setSaving(false); setDialogOpen(false); fetchData();
   };
 
   const handleDeleteItem = async (itemId: string) => {
-    const previousItems = items;
-    setItemsStable(prev => prev.filter(i => i.id !== itemId));
-    enqueuePersistencia(
-      `delete:${itemId}`,
-      [itemId],
-      async () => {
-        const { error } = await supabase.from("meal_plan_items").delete().eq("id", itemId);
-        if (error) throw error;
-        toast.success("Removido!");
-      },
-      {
-        rollback: () => setItemsStable(previousItems),
-        errorMessage: "Erro ao remover refeição",
-      }
-    );
-  };
-
-  const handleDeleteDay = async (day: number) => {
-    const dayItems = items.filter(i => i.day_of_week === day);
-    if (dayItems.length === 0) { toast.error("Dia já está vazio"); return; }
-    const previousItems = items;
-    const ids = dayItems.map(i => i.id);
-    setItemsStable(prev => prev.filter(i => i.day_of_week !== day));
-    enqueuePersistencia(
-      `delete-day:${day}:${ids.join(",")}`,
-      ids,
-      async () => {
-        const { error } = await supabase.from("meal_plan_items").delete().in("id", ids);
-        if (error) throw error;
-        toast.success(`${DAYS[day].label} limpo! (${dayItems.length} itens removidos)`);
-      },
-      {
-        rollback: () => setItemsStable(previousItems),
-        errorMessage: "Erro ao limpar dia",
-      }
-    );
+    const { error } = await supabase.from("meal_plan_items").delete().eq("id", itemId);
+    if (error) toast.error("Erro ao remover: " + error.message); else { toast.success("Removido!"); fetchData(); }
   };
 
   const handleCopyDay = async (sourceDay: number, targetDay: number) => {
     if (!id) return;
     const sourceItems = items.filter((i) => i.day_of_week === sourceDay);
-    if (sourceItems.length === 0) {
-      toast.error("Dia de origem vazio");
-      return;
-    }
-
-    const inserts = sourceItems.map((item) => ({
-      meal_plan_id: id,
-      title: item.title,
-      description: item.description,
-      meal_type: item.meal_type,
-      day_of_week: targetDay,
-      calories_target: item.calories_target,
-      protein_target: item.protein_target,
-      carbs_target: item.carbs_target,
-      fat_target: item.fat_target,
-    }));
-
-    setCopySource(null);
-    queueInsertMealItems(inserts, {
-      successMessage: `Copiado para ${DAYS[targetDay].label}!`,
-      errorMessage: "Erro ao copiar dia",
-    });
+    if (sourceItems.length === 0) { toast.error("Dia de origem vazio"); return; }
+    const inserts = sourceItems.map((item) => ({ meal_plan_id: id, title: item.title, description: item.description, meal_type: item.meal_type, day_of_week: targetDay, calories_target: item.calories_target, protein_target: item.protein_target, carbs_target: item.carbs_target, fat_target: item.fat_target }));
+    const { error } = await supabase.from("meal_plan_items").insert(inserts);
+    if (error) toast.error("Erro ao copiar: " + error.message);
+    else { toast.success(`Copiado para ${DAYS[targetDay].label}!`); setCopySource(null); fetchData(); }
   };
 
   const getDayTotals = (day: number) => {
     const dayItems = items.filter((i) => i.day_of_week === day);
-    return {
-      calories: dayItems.reduce((s, i) => s + (i.calories_target || 0), 0),
-      protein: dayItems.reduce((s, i) => s + (Number(i.protein_target) || 0), 0),
-      carbs: dayItems.reduce((s, i) => s + (Number(i.carbs_target) || 0), 0),
-      fat: dayItems.reduce((s, i) => s + (Number(i.fat_target) || 0), 0),
-    };
+    return { calories: dayItems.reduce((s, i) => s + (i.calories_target || 0), 0), protein: dayItems.reduce((s, i) => s + (Number(i.protein_target) || 0), 0), carbs: dayItems.reduce((s, i) => s + (Number(i.carbs_target) || 0), 0), fat: dayItems.reduce((s, i) => s + (Number(i.fat_target) || 0), 0) };
   };
 
   const getMealTypeTotals = (mealType: MealType) => {
     const mealItems = items.filter((i) => i.meal_type === mealType);
-    const totalCal = mealItems.reduce((s, i) => s + (i.calories_target || 0), 0);
-    const totalProt = mealItems.reduce((s, i) => s + (Number(i.protein_target) || 0), 0);
-    const daysWithItems = new Set(mealItems.map(i => i.day_of_week)).size || 1;
-    return {
-      calories: totalCal,
-      protein: totalProt,
-      avgCalories: Math.round(totalCal / daysWithItems),
-      avgProtein: totalProt / daysWithItems,
-      daysCount: daysWithItems,
-    };
+    return { calories: mealItems.reduce((s, i) => s + (i.calories_target || 0), 0), protein: mealItems.reduce((s, i) => s + (Number(i.protein_target) || 0), 0) };
   };
 
-  // Drag-and-drop swap: swap all items between two cells
-  const handleSwapCells = async (
-    source: { day: number; mealType: MealType },
-    target: { day: number; mealType: MealType }
-  ) => {
-    if (source.day === target.day && source.mealType === target.mealType) return;
-    if (!id) return;
-    setSwapping(true);
-
-    const previousItems = items;
-    const sourceItems = items.filter(i => i.day_of_week === source.day && i.meal_type === source.mealType);
-    const targetItems = items.filter(i => i.day_of_week === target.day && i.meal_type === target.mealType);
-    const syncingIds = [...sourceItems, ...targetItems].map(item => item.id);
-
-    setItemsStable(prev => prev.map(i => {
-      if (sourceItems.some(s => s.id === i.id)) return { ...i, day_of_week: target.day, meal_type: target.mealType };
-      if (targetItems.some(t => t.id === i.id)) return { ...i, day_of_week: source.day, meal_type: source.mealType };
-      return i;
-    }));
-    setSwapping(false);
-    setDragSource(null);
-    setDragOver(null);
-
-    const srcLabel = `${MEAL_TYPES.find(m => m.key === source.mealType)?.label} (${DAYS[source.day]?.short})`;
-    const tgtLabel = `${MEAL_TYPES.find(m => m.key === target.mealType)?.label} (${DAYS[target.day]?.short})`;
-    toast.success(`Trocado: ${srcLabel} ↔ ${tgtLabel}`);
-
-    enqueuePersistencia(
-      `swap:${source.day}:${source.mealType}:${target.day}:${target.mealType}`,
-      syncingIds,
-      async () => {
-        const sourceUpdates = sourceItems.map(item =>
-          supabase.from("meal_plan_items").update({ day_of_week: target.day, meal_type: target.mealType }).eq("id", item.id)
-        );
-        const targetUpdates = targetItems.map(item =>
-          supabase.from("meal_plan_items").update({ day_of_week: source.day, meal_type: source.mealType }).eq("id", item.id)
-        );
-        const results = await Promise.all([...sourceUpdates, ...targetUpdates]);
-        const failed = results.find((result) => result.error);
-        if (failed?.error) throw failed.error;
-      },
-      {
-        rollback: () => {
-          setItemsStable(previousItems);
-          setSwapping(false);
-          setDragSource(null);
-          setDragOver(null);
-        },
-        errorMessage: "Erro ao salvar troca",
-      }
-    );
-  };
-
-  // Inline edit: save title directly
-  const handleInlineEdit = async (itemId: string, newTitle: string) => {
-    if (!newTitle.trim()) { setInlineEditId(null); return; }
-    setInlineEditSaving(true);
-    const match = findFoodMatch(newTitle.trim());
-    const updatePayload: any = { title: newTitle.trim() };
-    if (match) {
-      updatePayload.calories_target = match.calories;
-      updatePayload.protein_target = match.protein;
-      updatePayload.carbs_target = match.carbs;
-      updatePayload.fat_target = match.fat;
-      updatePayload.description = match.portion;
-    }
-    const previousItems = items;
-    setItemsStable(prev => prev.map(i => i.id === itemId ? { ...i, ...updatePayload } as MealPlanItem : i));
-    setInlineEditSaving(false);
-    setInlineEditId(null);
-    enqueuePersistencia(
-      `inline:${itemId}`,
-      [itemId],
-      async () => {
-        const { error } = await supabase.from("meal_plan_items").update(updatePayload).eq("id", itemId);
-        if (error) throw error;
-        toast.success(match ? "Atualizado com macros ✨" : "Atualizado!");
-      },
-      {
-        rollback: () => setItemsStable(previousItems),
-        errorMessage: "Erro ao editar refeição",
-      }
-    );
-  };
-
-  // Bulk Smart Edit: adjust macros across multiple items at once
-  const handleBulkMacroEdit = async () => {
-    if (!id || !bulkEditValue.trim()) return;
-    setBulkEditSaving(true);
-
-    const val = parseFloat(bulkEditValue);
-    if (isNaN(val)) {
-      toast.error("Valor inválido");
-      setBulkEditSaving(false);
-      return;
-    }
-
-    const targetItems = bulkEditMealType === "all"
-      ? items
-      : items.filter(i => i.meal_type === bulkEditMealType);
-
-    if (targetItems.length === 0) {
-      toast.error("Nenhum item encontrado para esse tipo de refeição");
-      setBulkEditSaving(false);
-      return;
-    }
-
-    const previousItems = items;
-    const updates = targetItems.map(item => {
-      const currentVal = Number(item[bulkEditMacro]) || 0;
-      let newVal: number;
-
-      switch (bulkEditMode) {
-        case "add": newVal = currentVal + val; break;
-        case "subtract": newVal = Math.max(0, currentVal - val); break;
-        case "set": newVal = val; break;
-        case "multiply": newVal = Math.round(currentVal * (val / 100) * 100) / 100; break;
-        default: newVal = currentVal;
-      }
-
-      const roundedValue = Math.round(newVal * 10) / 10;
-      return {
-        id: item.id,
-        payload: { [bulkEditMacro]: roundedValue } as Record<string, number | null>,
-      };
-    });
-
-    setItemsStable(prev => prev.map(item => {
-      const update = updates.find(entry => entry.id === item.id);
-      return update ? { ...item, ...update.payload } as MealPlanItem : item;
-    }));
-
-    enqueuePersistencia(
-      `bulk:${bulkEditMealType}:${bulkEditMacro}:${bulkEditMode}:${val}`,
-      updates.map((entry) => entry.id),
-      async () => {
-        const results = await Promise.all(
-          updates.map(({ id: itemId, payload }) =>
-            supabase.from("meal_plan_items").update(payload).eq("id", itemId)
-          )
-        );
-        const failed = results.find((result) => result.error);
-        if (failed?.error) throw failed.error;
-
-        const macroLabels: Record<string, string> = {
-          protein_target: "Proteína",
-          carbs_target: "Carboidratos",
-          fat_target: "Gordura",
-          calories_target: "Calorias",
-        };
-        const modeLabels: Record<string, string> = {
-          add: `+${val}`,
-          subtract: `-${val}`,
-          set: `= ${val}`,
-          multiply: `× ${val}%`,
-        };
-        const mealLabel = bulkEditMealType === "all" ? "todas as refeições" : MEAL_TYPES.find(m => m.key === bulkEditMealType)?.label;
-        toast.success(`${macroLabels[bulkEditMacro]} ajustada (${modeLabels[bulkEditMode]}) em ${targetItems.length} itens de ${mealLabel} ✨`);
-        setBulkEditOpen(false);
-        setBulkEditValue("");
-      },
-      {
-        rollback: () => setItemsStable(previousItems),
-        errorMessage: "Erro ao aplicar edição em lote",
-      }
-    );
-
-    setBulkEditSaving(false);
-  };
-
-  // Duplicate a meal item (same day/meal_type)
-  const handleDuplicateItem = async (item: MealPlanItem) => {
-    if (!id) return;
-    queueInsertMealItems([
-      {
-        meal_plan_id: id,
-        title: item.title,
-        description: item.description,
-        meal_type: item.meal_type,
-        day_of_week: item.day_of_week,
-        calories_target: item.calories_target,
-        protein_target: item.protein_target,
-        carbs_target: item.carbs_target,
-        fat_target: item.fat_target,
-      },
-    ], {
-      successMessage: "Refeição duplicada! 📋",
-      errorMessage: "Erro ao duplicar refeição",
-    });
-  };
-
-  // Copy item to clipboard
-  const handleCopyItemToClipboard = (item: MealPlanItem) => {
-    setClipboardItem(item);
-    toast.success("Refeição copiada! Cole em qualquer célula 📋");
-  };
-
-  // Paste clipboard item into a specific cell
-  const handlePasteItem = async (day: number, mealType: MealType) => {
-    if (!id || !clipboardItem) return;
-    queueInsertMealItems([
-      {
-        meal_plan_id: id,
-        title: clipboardItem.title,
-        description: clipboardItem.description,
-        meal_type: mealType,
-        day_of_week: day,
-        calories_target: clipboardItem.calories_target,
-        protein_target: clipboardItem.protein_target,
-        carbs_target: clipboardItem.carbs_target,
-        fat_target: clipboardItem.fat_target,
-      },
-    ], {
-      successMessage: `"${clipboardItem.title}" colado! ✅`,
-      errorMessage: "Erro ao colar refeição",
-    });
-  };
-
-  // Open drawer panel for detailed view
-  const openDrawerPanel = (item: MealPlanItem) => {
-    setDrawerItem(item);
-    setDrawerOpen(true);
-  };
-
-  // Handle substitution from drawer
-  const handleSubstitute = async (item: MealPlanItem, food: FoodItem) => {
-    const previousItems = items;
-    const payload = {
-      title: food.name,
-      description: food.portion,
-      calories_target: food.calories,
-      protein_target: food.protein,
-      carbs_target: food.carbs,
-      fat_target: food.fat,
-    };
-
-    setDrawerOpen(false);
-    setItemsStable(prev => prev.map(i => i.id === item.id ? { ...i, ...payload } as MealPlanItem : i));
-
-    enqueuePersistencia(
-      `substitute:${item.id}`,
-      [item.id],
-      async () => {
-        const { error } = await supabase.from("meal_plan_items").update(payload).eq("id", item.id);
-        if (error) throw error;
-        toast.success(`Substituído por ${food.name} ✨`);
-      },
-      {
-        rollback: () => {
-          setItemsStable(previousItems);
-          setDrawerOpen(true);
-        },
-        errorMessage: "Erro ao substituir refeição",
-      }
-    );
-  };
-
-
-  const handleQuickAdd = async (day: number, mealType: MealType) => {
-    if (!id || !quickAddText.trim()) return;
-    setQuickAdding(true);
-    
-    const match = findFoodMatch(quickAddText.trim());
-    const addedText = quickAddText.trim();
-    setQuickAddText("");
-    setQuickAddKey(null);
-    setQuickAdding(false);
-
-    queueInsertMealItems([
-      {
-        meal_plan_id: id,
-        title: addedText,
-        description: match ? match.portion : null,
-        meal_type: mealType,
-        day_of_week: day,
-        calories_target: match ? match.calories : null,
-        protein_target: match ? match.protein : null,
-        carbs_target: match ? match.carbs : null,
-        fat_target: match ? match.fat : null,
-      },
-    ], {
-      successMessage: match ? `${addedText} adicionado com macros! ✨` : "Item adicionado!",
-      errorMessage: "Erro ao salvar refeição",
-    });
-  };
-
-  // Batch add: multiple foods at once (one per line)
-  const handleBatchAdd = async (day: number, mealType: MealType) => {
-    if (!id || !batchText.trim()) return;
-    setBatchAdding(true);
-    
-    const lines = batchText.split("\n").map(l => l.trim()).filter(Boolean);
-    const inserts = lines.map(line => {
-      const match = findFoodMatch(line);
-      return {
-        meal_plan_id: id,
-        title: line,
-        description: match ? match.portion : null,
-        meal_type: mealType,
-        day_of_week: day,
-        calories_target: match ? match.calories : null,
-        protein_target: match ? match.protein : null,
-        carbs_target: match ? match.carbs : null,
-        fat_target: match ? match.fat : null,
-      };
-    });
-
-    setBatchAdding(false);
-    setBatchText("");
-    setBatchTarget(null);
-
-    queueInsertMealItems(inserts, {
-      successMessage: `${lines.length} itens adicionados! ${inserts.filter(i => i.calories_target !== null).length > 0 ? `(${inserts.filter(i => i.calories_target !== null).length} com macros automáticos ✨)` : ""}`,
-      errorMessage: "Erro ao adicionar itens em lote",
-    });
-  };
-
-  // Save current meal item as reusable
   const handleSaveMeal = async () => {
     if (!user || !form.title.trim()) return;
     setSavingMeal(true);
-    const { error } = await supabase.from("saved_meals" as any).insert({
-      nutritionist_id: user.id,
-      title: form.title.trim(),
-      description: form.description.trim() || null,
-      meal_type: dialogMealType,
-      calories_target: form.calories_target ? parseInt(form.calories_target) : null,
-      protein_target: form.protein_target ? parseFloat(form.protein_target) : null,
-      carbs_target: form.carbs_target ? parseFloat(form.carbs_target) : null,
-      fat_target: form.fat_target ? parseFloat(form.fat_target) : null,
-    });
+    const { error } = await supabase.from("saved_meals" as any).insert({ nutritionist_id: user.id, title: form.title.trim(), description: form.description.trim() || null, meal_type: dialogMealType, calories_target: form.calories_target ? parseInt(form.calories_target) : null, protein_target: form.protein_target ? parseFloat(form.protein_target) : null, carbs_target: form.carbs_target ? parseFloat(form.carbs_target) : null, fat_target: form.fat_target ? parseFloat(form.fat_target) : null });
     setSavingMeal(false);
-    if (error) toast.error("Erro ao salvar refeição: " + error.message);
-    else toast.success("Refeição salva para reutilização! ⭐");
+    if (error) toast.error("Erro ao salvar refeição: " + error.message); else toast.success("Refeição salva para reutilização! ⭐");
   };
 
-  // Load saved meals
   const loadSavedMeals = async () => {
     if (!user) return;
     setLoadingSavedMeals(true);
-    const { data } = await supabase
-      .from("saved_meals" as any)
-      .select("*")
-      .eq("nutritionist_id", user.id)
-      .order("created_at", { ascending: false });
+    const { data } = await supabase.from("saved_meals" as any).select("*").eq("nutritionist_id", user.id).order("created_at", { ascending: false });
     setSavedMeals(data || []);
     setLoadingSavedMeals(false);
   };
 
-  // Import saved meal into form
   const importSavedMeal = (meal: any) => {
-    setForm({
-      title: meal.title,
-      description: meal.description || "",
-      calories_target: meal.calories_target?.toString() || "",
-      protein_target: meal.protein_target?.toString() || "",
-      carbs_target: meal.carbs_target?.toString() || "",
-      fat_target: meal.fat_target?.toString() || "",
-    });
+    setForm({ title: meal.title, description: meal.description || "", calories_target: meal.calories_target?.toString() || "", protein_target: meal.protein_target?.toString() || "", carbs_target: meal.carbs_target?.toString() || "", fat_target: meal.fat_target?.toString() || "" });
     setSavedMealsDialogOpen(false);
     toast.success("Refeição importada!");
   };
 
-  // Delete saved meal
   const deleteSavedMeal = async (mealId: string) => {
     await supabase.from("saved_meals" as any).delete().eq("id", mealId);
     setSavedMeals((prev) => prev.filter((m) => m.id !== mealId));
     toast.success("Refeição removida dos salvos");
   };
 
-  // Save entire plan as template
   const handleSavePlanTemplate = async () => {
     if (!user || !plan || items.length === 0) return;
     setSavingPlan(true);
-    const templateItems = items.map((i) => ({
-      title: i.title,
-      description: i.description,
-      meal_type: i.meal_type,
-      day_of_week: i.day_of_week,
-      calories_target: i.calories_target,
-      protein_target: i.protein_target,
-      carbs_target: i.carbs_target,
-      fat_target: i.fat_target,
-    }));
-    const { error } = await supabase.from("saved_plan_templates" as any).insert({
-      nutritionist_id: user.id,
-      title: plan.title + " (Modelo)",
-      description: `${items.length} itens • Salvo em ${new Date().toLocaleDateString("pt-BR")}`,
-      source_plan_id: plan.id,
-      items: templateItems,
-    });
+    const templateItems = items.map((i) => ({ title: i.title, description: i.description, meal_type: i.meal_type, day_of_week: i.day_of_week, calories_target: i.calories_target, protein_target: i.protein_target, carbs_target: i.carbs_target, fat_target: i.fat_target }));
+    const { error } = await supabase.from("saved_plan_templates" as any).insert({ nutritionist_id: user.id, title: plan.title + " (Modelo)", description: `${items.length} itens • Salvo em ${new Date().toLocaleDateString("pt-BR")}`, source_plan_id: plan.id, items: templateItems });
     setSavingPlan(false);
-    if (error) toast.error("Erro ao salvar modelo: " + error.message);
-    else toast.success("Plano salvo como modelo! 📋");
+    if (error) toast.error("Erro ao salvar modelo: " + error.message); else toast.success("Plano salvo como modelo! 📋");
   };
 
-  // Load saved plan templates
   const loadSavedPlans = async () => {
     if (!user) return;
     setLoadingSavedPlans(true);
-    const { data } = await supabase
-      .from("saved_plan_templates" as any)
-      .select("*")
-      .eq("nutritionist_id", user.id)
-      .order("created_at", { ascending: false });
+    const { data } = await supabase.from("saved_plan_templates" as any).select("*").eq("nutritionist_id", user.id).order("created_at", { ascending: false });
     setSavedPlans(data || []);
     setLoadingSavedPlans(false);
   };
 
-  // Apply a saved plan template to current plan
   const applySavedPlan = async (template: any) => {
     if (!id) return;
-
-    const templateItems = (template.items as any[]).map((item: any) => ({
-      meal_plan_id: id,
-      title: item.title,
-      description: item.description,
-      meal_type: item.meal_type,
-      day_of_week: item.day_of_week,
-      calories_target: item.calories_target,
-      protein_target: item.protein_target ? Number(item.protein_target) : null,
-      carbs_target: item.carbs_target ? Number(item.carbs_target) : null,
-      fat_target: item.fat_target ? Number(item.fat_target) : null,
-    }));
-
-    const { error: deleteError } = await supabase
-      .from("meal_plan_items")
-      .delete()
-      .eq("meal_plan_id", id);
-
-    if (deleteError) {
-      toast.error("Erro ao limpar plano atual: " + deleteError.message);
-      return;
-    }
-
+    const templateItems = (template.items as any[]).map((item: any) => ({ meal_plan_id: id, title: item.title, description: item.description, meal_type: item.meal_type, day_of_week: item.day_of_week, calories_target: item.calories_target, protein_target: item.protein_target ? Number(item.protein_target) : null, carbs_target: item.carbs_target ? Number(item.carbs_target) : null, fat_target: item.fat_target ? Number(item.fat_target) : null }));
     const { error } = await supabase.from("meal_plan_items").insert(templateItems);
     if (error) toast.error("Erro ao aplicar modelo: " + error.message);
-    else {
-      toast.success(`Modelo aplicado com ${templateItems.length} itens! 🎉`);
-      setSavedPlansDialogOpen(false);
-      refreshItems();
-    }
+    else { toast.success(`Modelo aplicado com ${templateItems.length} itens! 🎉`); setSavedPlansDialogOpen(false); fetchData(); }
   };
 
-  // Delete saved plan template
   const deleteSavedPlan = async (templateId: string) => {
     await supabase.from("saved_plan_templates" as any).delete().eq("id", templateId);
     setSavedPlans((prev) => prev.filter((p) => p.id !== templateId));
     toast.success("Modelo removido");
   };
 
-  if (isHydratingPlano && !plan) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (loading) return <DashboardLayout><div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div></DashboardLayout>;
+  if (!plan) return <DashboardLayout><div className="text-center py-20"><p className="text-muted-foreground">Plano não encontrado.</p><Button variant="ghost" onClick={() => navigate("/meal-plans")} className="mt-4"><ArrowLeft className="w-4 h-4 mr-2" /> Voltar</Button></div></DashboardLayout>;
 
-  if (!plan) {
-    return (
-      <DashboardLayout>
-        <div className="text-center py-20">
-          <p className="text-muted-foreground">Plano não encontrado.</p>
-          <Button variant="ghost" onClick={() => navigate("/meal-plans")} className="mt-4">
-            <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
-          </Button>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  // Empty pipeline plan detection - offer regeneration or redirect
-  if (emptyPlanWarning && items.length === 0) {
-    const handleRegenerate = async () => {
-      setRegenerating(true);
-      try {
-        const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
-          body: {
-            patientId: plan.patient_id,
-            nutritionistId: user?.id,
-            isPipeline: true,
-            meal_plan_id: plan.id,
-          },
-        });
-        if (error) throw error;
-        if (!data?.success) throw new Error(data?.error || "Falha na geração");
-        toast.success(`Plano regenerado com ${data.items_count} itens!`);
-        setEmptyPlanWarning(false);
-        refreshItems();
-      } catch (err: any) {
-        toast.error("Erro ao regenerar: " + (err.message || "Tente novamente"));
-      } finally {
-        setRegenerating(false);
-      }
-    };
-
-    return (
-      <DashboardLayout>
-        <div className="flex flex-col items-center justify-center py-20 space-y-6 max-w-lg mx-auto text-center">
-          <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center">
-            <AlertTriangle className="w-8 h-8 text-amber-500" />
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-xl font-bold">Plano sem refeições</h2>
-            <p className="text-sm text-muted-foreground">
-              Este plano foi criado pelo onboarding mas está sem itens. Isso pode acontecer quando os templates não possuem refeições cadastradas ou houve uma falha na geração.
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Paciente: <strong>{patientName}</strong>
-            </p>
-          </div>
-          <div className="flex gap-3 w-full">
-            <Button variant="outline" onClick={() => navigate(-1)} className="flex-1">
-              <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
-            </Button>
-            <Button onClick={handleRegenerate} disabled={regenerating} className="flex-1">
-              {regenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
-              {regenerating ? "Gerando..." : "Regenerar Plano"}
-            </Button>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => { setEmptyPlanWarning(false); }}
-            className="text-muted-foreground"
-          >
-            Continuar mesmo assim (editor vazio)
-          </Button>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  const fullscreenContent = (
-      <div ref={editorContainerRef} className={isFullscreen ? "fixed inset-0 z-50 bg-background overflow-y-auto p-4 md:p-6" : "space-y-4"}>
-        {/* Sync Status Badge */}
-        {statusSync !== "idle" && (
-          <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border border-border shadow-lg text-xs font-medium animate-in fade-in slide-in-from-bottom-2 duration-200">
-            {statusSync === "saving" && (
-              <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
-                <span className="text-muted-foreground">Salvando alterações…</span>
-              </>
-            )}
-            {statusSync === "saved" && (
-              <>
-                <Check className="w-3.5 h-3.5 text-primary" />
-                <span className="text-muted-foreground">Sincronizado</span>
-              </>
-            )}
-            {statusSync === "error" && (
-              <>
-                <AlertTriangle className="w-3.5 h-3.5 text-destructive" />
-                <span className="text-destructive">Erro ao salvar</span>
-              </>
-            )}
-          </div>
-        )}
+  return (
+    <DashboardLayout>
+      <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => isFullscreen ? setIsFullscreen(false) : navigate("/meal-plans")}
-              className="shrink-0"
-            >
+            <Button variant="ghost" size="icon" onClick={() => navigate("/meal-plans")} className="shrink-0">
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
               <h1 className="font-display text-xl font-bold">{plan.title}</h1>
-              <p className="text-sm text-muted-foreground">
-                Paciente: {patientName} • Início: {new Date(plan.start_date).toLocaleDateString("pt-BR")}
-              </p>
+              <p className="text-sm text-muted-foreground">Paciente: {patientName} • Início: {new Date(plan.start_date).toLocaleDateString("pt-BR")}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsFullscreen(!isFullscreen)}
-              className="gap-1.5"
-            >
-              {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-              {isFullscreen ? "Minimizar" : "Tela Cheia"}
-            </Button>
-          </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <Button
-              size="sm"
-              onClick={() => setBulkEditOpen(true)}
-              disabled={items.length === 0}
-              className="gap-1.5 gradient-primary shadow-glow"
-            >
-              <Wand2 className="w-4 h-4" /> Edição Inteligente (Macros em Lote)
-            </Button>
-            <CalorieTemplates mealPlanId={plan.id} onApplied={async () => {
-              showSyncSaving();
-              const { data } = await supabase
-                .from("meal_plan_items")
-                .select("*")
-                .eq("meal_plan_id", plan.id)
-                .order("created_at");
-              if (data) setItemsStable(data);
-              showSyncDone(true);
-            }} />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate(`/diet-templates?patientId=${plan.patient_id}&mealPlanId=${plan.id}`)}
-              className="gap-1.5"
-            >
+            <Button variant="outline" size="sm" onClick={() => navigate(`/diet-templates?patientId=${plan.patient_id}&mealPlanId=${plan.id}`)} className="gap-1.5">
               <BookOpen className="w-4 h-4" /> Modelos Pré-Prontos
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => { loadSavedPlans(); setSavedPlansDialogOpen(true); }}
-              className="gap-1.5"
-            >
+            <Button variant="outline" size="sm" onClick={() => { loadSavedPlans(); setSavedPlansDialogOpen(true); }} className="gap-1.5">
               <FolderDown className="w-4 h-4" /> Importar Modelo
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSavePlanTemplate}
-              disabled={savingPlan || items.length === 0}
-              className="gap-1.5"
-            >
-              {savingPlan ? <Loader2 className="w-4 h-4 animate-spin" /> : <BookmarkCheck className="w-4 h-4" />}
-              Salvar Plano
+            <Button variant="outline" size="sm" onClick={handleSavePlanTemplate} disabled={savingPlan || items.length === 0} className="gap-1.5">
+              {savingPlan ? <Loader2 className="w-4 h-4 animate-spin" /> : <BookmarkCheck className="w-4 h-4" />} Salvar Plano
             </Button>
-            <Button
-              onClick={async () => {
-                if (!plan) return;
-                setGenerating(true);
-                try {
-                  const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
-                    body: { patient_id: plan.patient_id, meal_plan_id: plan.id },
-                  });
-                  if (error) throw error;
-                  if (data?.error) throw new Error(data.error);
-                  toast.success(`AI Plan gerou ${data.items_count} itens e ${data.tips_count} dicas! 🤖`);
-                  refreshItems();
-                } catch (e: any) {
-                  toast.error(e.message || "Erro ao gerar plano");
-                }
-                setGenerating(false);
-              }}
-              disabled={generating}
-              className="gradient-primary gap-2 shadow-glow"
-            >
-              {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-              {generating ? "Gerando..." : "AI Plan ✨"}
+            <Button onClick={async () => {
+              if (!plan) return; setValidating(true);
+              try {
+                const { data, error } = await supabase.functions.invoke("validate-meal-plan", { body: { meal_plan_id: plan.id } });
+                if (error) throw error;
+                if (!data?.success) { const errorMsg = data?.errors ? data.errors.join("\n") : "O plano possui divergências com a meta clínica."; toast.error("Motor Clínico: Plano Reprovado!\n" + errorMsg, { duration: 8000 }); }
+                else { toast.success(data.message || "Motor Clínico: Plano Válido! Pode ser ativado. ✅"); fetchData(); }
+              } catch (e: any) { toast.error(e.message || "Erro de conexão com o Motor Clínico"); }
+              setValidating(false);
+            }} disabled={validating} className="gradient-primary gap-2 shadow-glow">
+              {validating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />} Validar (Motor Clínico)
             </Button>
           </div>
         </div>
 
-        {/* Approve/Publish Banner for pending plans */}
-        {plan && plan.plan_status !== "published_to_patient" && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="glass rounded-xl p-4 border border-primary/30 bg-primary/5"
-          >
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Check className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <p className="font-semibold text-sm">
-                    Status: {plan.plan_status === "approved" ? "Aprovado" : plan.plan_status === "draft_auto_generated" ? "Gerado por IA" : plan.plan_status === "under_professional_review" ? "Em Revisão" : "Rascunho"}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {plan.plan_status === "approved"
-                      ? "Plano aprovado. Publique para o paciente visualizar."
-                      : "Revise o plano e aprove para ativá-lo para o paciente."}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {plan.plan_status !== "approved" && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={approving || items.length === 0}
-                    onClick={async () => {
-                      setApproving(true);
-                      const nextStatus = "approved" as const;
-                      const { error } = await supabase
-                        .from("meal_plans")
-                        .update({ plan_status: nextStatus } as any)
-                        .eq("id", plan.id);
-                      if (error) toast.error("Erro: " + error.message);
-                      else {
-                        toast.success("Plano aprovado! ✅");
-                        mergePlanLocal({ plan_status: nextStatus });
-                      }
-                      setApproving(false);
-                    }}
-                    className="gap-1.5"
-                  >
-                    {approving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                    Aprovar
-                  </Button>
-                )}
-                  <Button
-                    size="sm"
-                    disabled={approving || items.length === 0}
-                    onClick={async () => {
-                      setApproving(true);
-                      try {
-                        const startDate = new Date();
-                        const endDate = new Date(startDate);
-                        endDate.setDate(endDate.getDate() + 30);
-
-                        // Step 1: approve first if not yet approved (trigger requires approved -> published)
-                        if (plan.plan_status !== "approved") {
-                          const { error: approveErr } = await supabase
-                            .from("meal_plans")
-                            .update({ plan_status: "approved" } as any)
-                            .eq("id", plan.id);
-                          if (approveErr) throw approveErr;
-                        }
-
-                        // Step 2: publish
-                        const publishedPayload = {
-                          plan_status: "published_to_patient",
-                          is_active: true,
-                          start_date: startDate.toISOString().split("T")[0],
-                          end_date: endDate.toISOString().split("T")[0],
-                        } as any;
-                        const { error } = await supabase
-                          .from("meal_plans")
-                          .update(publishedPayload)
-                          .eq("id", plan.id);
-                        if (error) throw error;
-
-                        // Step 3: update onboarding pipeline if linked
-                        if (user) {
-                          await supabase
-                            .from("onboarding_pipelines" as any)
-                            .update({
-                              plan_approved: true,
-                              approved_by: user.id,
-                              approved_at: new Date().toISOString(),
-                              status: "completed",
-                            } as any)
-                            .eq("generated_plan_id", plan.id)
-                            .eq("status", "pending_approval");
-                        }
-
-                        // Step 4: notify patient
-                        await supabase.from("notifications").insert({
-                          user_id: plan.patient_id,
-                          title: "Novo plano alimentar ativado! 🎉",
-                          message: `Seu plano "${plan.title}" foi aprovado e está ativo por 30 dias. Confira agora!`,
-                          type: "meal_plan",
-                          action_url: "/my-diet",
-                        });
-
-                        mergePlanLocal(publishedPayload);
-                        toast.success("Plano publicado e paciente notificado! 🎉");
-                      } catch (err: any) {
-                        toast.error("Erro: " + (err?.message || "Falha ao publicar"));
-                      }
-                      setApproving(false);
-                    }}
-                    className="gradient-primary gap-1.5 shadow-glow"
-                  >
-                  {approving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                  Aprovar e Publicar
-                </Button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {plan && user && (
-          <div className="glass rounded-xl p-5">
-            <h3 className="font-display font-semibold text-sm mb-3 flex items-center gap-2">
-              📎 Documentos do Plano
-            </h3>
-            <DocumentUpload
-              patientId={plan.patient_id}
-              nutritionistId={user.id}
-              documentType="meal_plan"
-              referenceId={plan.id}
-              documents={planDocs}
-              onUploadComplete={fetchDocs}
-            />
-          </div>
-        )}
-
-        {/* View Mode Tabs */}
-        <Tabs value={editorView} onValueChange={(v) => setEditorView(v as "weekly" | "daily")} className="w-full">
-          <TabsList className="w-full grid grid-cols-2">
-            <TabsTrigger value="weekly" className="gap-1.5">
-              <CalendarRange className="w-4 h-4" /> Visão Semanal
-            </TabsTrigger>
-            <TabsTrigger value="daily" className="gap-1.5">
-              <CalendarDays className="w-4 h-4" /> Visão Diária
-            </TabsTrigger>
-          </TabsList>
-
-          {/* ========== WEEKLY VIEW ========== */}
-          <TabsContent value="weekly" className="mt-4">
-            <div className="overflow-x-auto -mx-4 px-4 pb-4">
-              <div className="min-w-[1100px]">
-                {/* Day Headers */}
-                <div className="grid grid-cols-[180px_repeat(7,1fr)] gap-1 mb-1">
-                  <div className="p-2" />
-                  {DAYS.map((day) => {
-                    const totals = getDayTotals(day.key);
-                    return (
-                      <div key={day.key} className="glass rounded-lg p-2 text-center">
-                        <p className="font-display font-semibold text-sm">{day.label}</p>
-                        <div className="flex items-center justify-center gap-2 mt-1 text-[10px] text-muted-foreground">
-                          <span className="flex items-center gap-0.5">
-                            <Flame className="w-3 h-3 text-orange-400" />
-                            {totals.calories}
-                          </span>
-                          <span className="flex items-center gap-0.5">
-                            <Beef className="w-3 h-3 text-red-400" />
-                            {totals.protein.toFixed(0)}g
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-center gap-1 mt-1.5">
-                          <Button
-                            size="sm"
-                            variant={copySource?.day === day.key ? "default" : "outline"}
-                            className="h-6 text-[10px] px-1.5 gap-0.5"
-                            onClick={() => setCopySource(copySource?.day === day.key ? null : { day: day.key, mealType: "breakfast" })}
-                            title="Copiar este dia"
-                          >
-                            <Copy className="w-3 h-3" />
-                            {copySource?.day === day.key ? "Copiando..." : "Copiar"}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-6 text-[10px] px-1.5 gap-0.5 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
-                            onClick={() => handleDeleteDay(day.key)}
-                            disabled={getItems(day.key, "breakfast").length === 0 && getItems(day.key, "lunch").length === 0 && getItems(day.key, "dinner").length === 0 && items.filter(i => i.day_of_week === day.key).length === 0}
-                            title="Limpar todos os itens deste dia"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                            Limpar
-                          </Button>
-                        </div>
-                        {copySource && copySource.day !== day.key && (
-                          <Button size="sm" variant="outline" className="mt-1 h-6 text-[10px] px-2 border-primary/50 text-primary" onClick={() => handleCopyDay(copySource.day, day.key)}>
-                            <ClipboardPaste className="w-3 h-3 mr-0.5" /> Colar aqui
-                          </Button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Meal Rows */}
-                {MEAL_TYPES.map((meal) => (
-                  <div key={meal.key} className="grid grid-cols-[180px_repeat(7,1fr)] gap-1 mb-1">
-                    <div className="glass rounded-lg p-3 flex flex-col justify-center">
-                      <div className="flex items-center gap-2">
-                        <span className={meal.color}>{meal.icon}</span>
-                        <span className="font-display text-xs font-semibold">{meal.label}</span>
-                      </div>
-                      <div className="text-[10px] text-muted-foreground mt-1">
-                        {(() => { const t = getMealTypeTotals(meal.key); return `~${t.avgCalories} kcal/dia • ${t.avgProtein.toFixed(0)}g prot/dia`; })()}
-                      </div>
-                    </div>
-
-                    {DAYS.map((day) => {
-                      const cellItems = getItems(day.key, meal.key);
-                      const cellKey = `${day.key}-${meal.key}`;
-                      const isDragSource = dragSource?.day === day.key && dragSource?.mealType === meal.key;
-                      const isDragOver = dragOver?.day === day.key && dragOver?.mealType === meal.key;
-                      return (
-                        <div
-                          key={day.key}
-                          draggable={cellItems.length > 0 && !swapping}
-                          onDragStart={(e) => {
-                            setDragSource({ day: day.key, mealType: meal.key });
-                            e.dataTransfer.effectAllowed = "move";
-                            e.dataTransfer.setData("text/plain", cellKey);
-                          }}
-                          onDragEnd={() => { setDragSource(null); setDragOver(null); }}
-                          onDragOver={(e) => {
-                            e.preventDefault();
-                            e.dataTransfer.dropEffect = "move";
-                            if (!isDragOver) setDragOver({ day: day.key, mealType: meal.key });
-                          }}
-                          onDragLeave={() => { if (isDragOver) setDragOver(null); }}
-                          onDrop={(e) => {
-                            e.preventDefault();
-                            if (dragSource && !(dragSource.day === day.key && dragSource.mealType === meal.key)) {
-                              handleSwapCells(dragSource, { day: day.key, mealType: meal.key });
-                            }
-                            setDragOver(null);
-                          }}
-                          className={`glass rounded-lg p-2 min-h-[100px] flex flex-col group relative transition-all duration-200 ${
-                            isDragSource ? "opacity-50 scale-95 border-primary/50" : ""
-                          } ${isDragOver ? "ring-2 ring-primary/60 bg-primary/5 scale-[1.02]" : "hover:border-primary/30"
-                          } ${cellItems.length > 0 && !swapping ? "cursor-grab active:cursor-grabbing" : ""}`}
-                        >
-                          {/* Drag handle indicator */}
-                          {cellItems.length > 0 && (
-                            <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-60 transition-opacity">
-                              <ArrowLeftRight className="w-3 h-3 text-muted-foreground" />
-                            </div>
-                          )}
-                          {isDragOver && dragSource && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-primary/10 rounded-lg z-10 pointer-events-none">
-                              <span className="text-[10px] font-semibold text-primary flex items-center gap-1">
-                                <ArrowLeftRight className="w-3.5 h-3.5" /> Trocar
-                              </span>
-                            </div>
-                          )}
-                          <div className="flex-1 space-y-1.5">
-                            <AnimatePresence initial={false}>
-                              {cellItems.map((item) => {
-                                const catDot = getCategoryDot(item.title);
-                                const isInlineEditing = inlineEditId === item.id;
-                                return (
-                                <motion.div
-                                  key={item.id}
-                                  initial={{ opacity: 0, scale: 0.95 }}
-                                  animate={{ opacity: 1, scale: 1 }}
-                                  exit={{ opacity: 0, scale: 0.95 }}
-                                  onClick={isInlineEditing ? undefined : () => openEditDialog(item)}
-                                  role={isInlineEditing ? undefined : "button"}
-                                  tabIndex={isInlineEditing ? -1 : 0}
-                                  onKeyDown={(e) => {
-                                    if (!isInlineEditing && (e.key === "Enter" || e.key === " ")) {
-                                      e.preventDefault();
-                                      openEditDialog(item);
-                                    }
-                                  }}
-                                  className="bg-secondary/60 rounded-md px-2 py-1.5 hover:bg-secondary transition-colors group/item relative cursor-pointer"
-                                >
-                                  {isInlineEditing ? (
-                                    <div className="flex gap-1">
-                                      <input
-                                        autoFocus
-                                        value={inlineEditValue}
-                                        onChange={(e) => setInlineEditValue(e.target.value)}
-                                        onKeyDown={(e) => {
-                                          if (e.key === "Enter") handleInlineEdit(item.id, inlineEditValue);
-                                          if (e.key === "Escape") setInlineEditId(null);
-                                        }}
-                                        onBlur={() => handleInlineEdit(item.id, inlineEditValue)}
-                                        className="w-full text-[11px] bg-transparent border-b border-primary outline-none"
-                                        disabled={inlineEditSaving}
-                                      />
-                                    </div>
-                                  ) : (
-                                    <>
-                                      <div className="flex items-center gap-1">
-                                        {catDot && <span className={`w-1.5 h-1.5 rounded-full ${catDot} shrink-0`} />}
-                                        <p className="text-[11px] font-medium leading-tight truncate flex-1">{item.title}</p>
-                                      </div>
-                                      {item.description && <p className="text-[9px] text-muted-foreground leading-tight mt-0.5 line-clamp-2">{item.description}</p>}
-                                      <div className="flex items-center gap-1.5 mt-1 text-[9px] text-muted-foreground">
-                                        {item.calories_target && <span className="flex items-center gap-0.5"><Flame className="w-2.5 h-2.5 text-orange-400" />{item.calories_target}</span>}
-                                        {item.protein_target && <span className="flex items-center gap-0.5"><Beef className="w-2.5 h-2.5 text-red-400" />{Number(item.protein_target).toFixed(0)}g</span>}
-                                      </div>
-                                      <div className="flex items-center gap-1 mt-1 text-[9px] text-muted-foreground">
-                                        {syncingMap[item.id] && (
-                                          <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-1.5 py-0.5 text-[8px] font-medium text-muted-foreground">
-                                            <Loader2 className="w-2.5 h-2.5 animate-spin text-primary" />
-                                            sincronizando...
-                                          </span>
-                                        )}
-                                      </div>
-                                      <div className="absolute top-1 right-1 z-10 flex gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
-                                        <button type="button" onClick={(e) => { e.stopPropagation(); setInlineEditId(item.id); setInlineEditValue(item.title); }} className="p-0.5 rounded hover:bg-accent/50" title="Editar inline">
-                                          <PencilLine className="w-2.5 h-2.5 text-muted-foreground" />
-                                        </button>
-                                        <button type="button" onClick={(e) => { e.stopPropagation(); handleDuplicateItem(item); }} className="p-0.5 rounded hover:bg-accent/50" title="Duplicar">
-                                          <CopyPlus className="w-2.5 h-2.5 text-muted-foreground" />
-                                        </button>
-                                        <button type="button" onClick={(e) => { e.stopPropagation(); handleCopyItemToClipboard(item); }} className="p-0.5 rounded hover:bg-accent/50" title="Copiar">
-                                          <Clipboard className="w-2.5 h-2.5 text-muted-foreground" />
-                                        </button>
-                                        <button type="button" onClick={(e) => { e.stopPropagation(); openDrawerPanel(item); }} className="p-0.5 rounded hover:bg-accent/50" title="Painel detalhado">
-                                          <ArrowRightLeft className="w-2.5 h-2.5 text-muted-foreground" />
-                                        </button>
-                                        <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }} className="p-0.5 rounded hover:bg-destructive/10" title="Remover">
-                                          <X className="w-3 h-3 text-destructive" />
-                                        </button>
-                                      </div>
-                                    </>
-                                  )}
-                                </motion.div>
-                              );
-                              })}
-                            </AnimatePresence>
-                          </div>
-
-                          {/* Quick-add inline */}
-                          <div onClick={(e) => e.stopPropagation()}>
-                          {quickAddKey === cellKey ? (
-                            <div className="mt-1 flex gap-1">
-                              <Input
-                                autoFocus
-                                value={quickAddText}
-                                onChange={(e) => setQuickAddText(e.target.value)}
-                                onKeyDown={(e) => { if (e.key === "Enter") handleQuickAdd(day.key, meal.key); if (e.key === "Escape") { setQuickAddKey(null); setQuickAddText(""); } }}
-                                placeholder="Ex: 2 ovos cozidos"
-                                className="h-7 text-[11px]"
-                                disabled={quickAdding}
-                              />
-                              <Button size="icon" className="h-7 w-7 shrink-0" onClick={() => handleQuickAdd(day.key, meal.key)} disabled={quickAdding || !quickAddText.trim()}>
-                                {quickAdding ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
-                              </Button>
-                            </div>
-                          ) : (
-                            <div className="mt-1 space-y-0.5">
-                              <div className="flex gap-0.5">
-                                <button
-                                  type="button"
-                                  onClick={() => { setQuickAddKey(cellKey); setQuickAddText(""); }}
-                                  className="flex-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-primary"
-                                >
-                                  <Plus className="w-3 h-3" /> Rápido
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setTemplatePanelTarget({ day: day.key, mealType: meal.key });
-                                    setTemplatePanelOpen(true);
-                                  }}
-                                  className="flex-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-amber-500 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-amber-500/50 hover:bg-amber-500/5"
-                                >
-                                  <Zap className="w-3 h-3" /> Template
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => openAddDialog(day.key, meal.key)}
-                                  className="flex-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-primary"
-                                >
-                                  <PencilLine className="w-3 h-3" /> Detalhado
-                                </button>
-                              </div>
-                              {cellItems.length > 0 && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setSaveTemplateItems(cellItems);
-                                    setSaveTemplateMealType(meal.key);
-                                    setSaveTemplateOpen(true);
-                                  }}
-                                  className="w-full flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-border hover:border-primary"
-                                >
-                                  <Bookmark className="w-3 h-3" /> Salvar como Template
-                                </button>
-                              )}
-                              {clipboardItem && (
-                                <button
-                                  type="button"
-                                  onClick={() => handlePasteItem(day.key, meal.key)}
-                                  className="w-full flex items-center justify-center gap-1 text-[10px] text-primary hover:text-primary/80 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-dashed border-primary/40 hover:border-primary bg-primary/5"
-                                >
-                                  <ClipboardPaste className="w-3 h-3" /> Colar {clipboardItem.title}
-                                </button>
-                              )}
-                            </div>
-                          )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
-
-                {/* Totals row */}
-                <div className="grid grid-cols-[180px_repeat(7,1fr)] gap-1 mt-2">
-                  <div className="glass rounded-lg p-3 flex items-center">
-                    <span className="font-display text-xs font-bold text-primary">TOTAL DIÁRIO</span>
-                  </div>
-                  {DAYS.map((day) => {
-                    const t = getDayTotals(day.key);
-                    return (
-                      <div key={day.key} className="glass rounded-lg p-2 border-primary/20">
-                        <div className="grid grid-cols-2 gap-1 text-[10px]">
-                          <div className="flex items-center gap-1"><Flame className="w-3 h-3 text-orange-400" /><span className="font-semibold">{t.calories}</span><span className="text-muted-foreground">kcal</span></div>
-                          <div className="flex items-center gap-1"><Beef className="w-3 h-3 text-red-400" /><span className="font-semibold">{t.protein.toFixed(0)}g</span><span className="text-muted-foreground">prot</span></div>
-                          <div className="flex items-center gap-1"><Wheat className="w-3 h-3 text-amber-500" /><span className="font-semibold">{t.carbs.toFixed(0)}g</span><span className="text-muted-foreground">carb</span></div>
-                          <div className="flex items-center gap-1"><Droplets className="w-3 h-3 text-blue-400" /><span className="font-semibold">{t.fat.toFixed(0)}g</span><span className="text-muted-foreground">gord</span></div>
-                        </div>
-                        <div className="mt-1.5">
-                          <MacroBalanceBar protein={t.protein} carbs={t.carbs} fat={t.fat} calories={t.calories} compact />
-                        </div>
-                        <div className="mt-1 flex justify-center">
-                          <button
-                            onClick={() => setCopySource(copySource?.day === day.key ? null : { day: day.key, mealType: "breakfast" })}
-                            className={`text-[9px] flex items-center gap-0.5 px-1.5 py-0.5 rounded transition-colors ${copySource?.day === day.key ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-primary"}`}
-                          >
-                            <Copy className="w-2.5 h-2.5" />
-                            {copySource?.day === day.key ? "Copiando..." : "Copiar dia"}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          {/* ========== DAILY VIEW ========== */}
-          <TabsContent value="daily" className="mt-4 space-y-4">
-            {/* Day selector */}
-            <div className="flex items-center justify-center gap-2">
-              <Button variant="ghost" size="icon" onClick={() => setSelectedDay((selectedDay + 6) % 7)}>
-                <ChevronLeft className="w-5 h-5" />
-              </Button>
-              <div className="flex gap-1">
-                {DAYS.map((day) => (
-                  <Button
-                    key={day.key}
-                    variant={selectedDay === day.key ? "default" : "outline"}
-                    size="sm"
-                    className="h-8 px-2.5 text-xs"
-                    onClick={() => setSelectedDay(day.key)}
-                  >
-                    {day.short}
-                  </Button>
-                ))}
-              </div>
-              <Button variant="ghost" size="icon" onClick={() => setSelectedDay((selectedDay + 1) % 7)}>
-                <ChevronRight className="w-5 h-5" />
-              </Button>
-            </div>
-
-            {/* Day totals */}
-            {(() => {
-              const t = getDayTotals(selectedDay);
-              return (
-                <div className="space-y-2">
-                  <div className="grid grid-cols-4 gap-2">
-                    <div className="glass rounded-xl p-3 text-center"><Flame className="w-4 h-4 mx-auto text-orange-500 mb-1" /><p className="text-xs text-muted-foreground">Calorias</p><p className="font-display font-bold text-sm">{t.calories}</p></div>
-                    <div className="glass rounded-xl p-3 text-center"><Beef className="w-4 h-4 mx-auto text-red-500 mb-1" /><p className="text-xs text-muted-foreground">Proteína</p><p className="font-display font-bold text-sm">{t.protein.toFixed(0)}g</p></div>
-                    <div className="glass rounded-xl p-3 text-center"><Wheat className="w-4 h-4 mx-auto text-amber-500 mb-1" /><p className="text-xs text-muted-foreground">Carbs</p><p className="font-display font-bold text-sm">{t.carbs.toFixed(0)}g</p></div>
-                    <div className="glass rounded-xl p-3 text-center"><Droplets className="w-4 h-4 mx-auto text-blue-400 mb-1" /><p className="text-xs text-muted-foreground">Gordura</p><p className="font-display font-bold text-sm">{t.fat.toFixed(0)}g</p></div>
-                  </div>
-                  <div className="glass rounded-xl p-3">
-                    <p className="text-[10px] font-semibold text-muted-foreground mb-1.5">Distribuição de Macros</p>
-                    <MacroBalanceBar protein={t.protein} carbs={t.carbs} fat={t.fat} calories={t.calories} />
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* Meals for selected day */}
-            <div className="space-y-4">
-              {MEAL_TYPES.map((meal) => {
-                const cellItems = getItems(selectedDay, meal.key);
-                const cellKey = `daily-${selectedDay}-${meal.key}`;
+        {/* Weekly Grid */}
+        <div className="overflow-x-auto -mx-4 px-4 pb-4">
+          <div className="min-w-[1100px]">
+            {/* Day Headers */}
+            <div className="grid grid-cols-[180px_repeat(7,1fr)] gap-1 mb-1">
+              <div className="p-2" />
+              {DAYS.map((day) => {
+                const totals = getDayTotals(day.key);
                 return (
-                  <div key={meal.key} className="glass rounded-xl overflow-hidden">
-                    <div className="flex items-center gap-2 p-3 bg-secondary/30">
-                      <span className={meal.color}>{meal.icon}</span>
-                      <span className="font-display text-sm font-semibold flex-1">{meal.label}</span>
-                      <span className="text-[10px] text-muted-foreground">{cellItems.length} itens</span>
+                  <div key={day.key} className="glass rounded-lg p-2 text-center">
+                    <p className="font-display font-semibold text-sm">{day.label}</p>
+                    <div className="flex items-center justify-center gap-2 mt-1 text-[10px] text-muted-foreground">
+                      <span className="flex items-center gap-0.5"><Flame className="w-3 h-3 text-orange-400" />{totals.calories}</span>
+                      <span className="flex items-center gap-0.5"><Beef className="w-3 h-3 text-red-400" />{totals.protein.toFixed(0)}g</span>
                     </div>
-                    <div className="p-3 space-y-2">
-                      {cellItems.map((item) => {
-                        const catDot = getCategoryDot(item.title);
-                        return (
-                        <div
-                          key={item.id}
-                          className="flex items-center gap-3 p-2.5 rounded-lg bg-secondary/40 hover:bg-secondary/60 transition-colors cursor-pointer group/item relative"
-                          onClick={() => openEditDialog(item)}
-                          role="button"
-                          tabIndex={0}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
-                              openEditDialog(item);
-                            }
-                          }}
-                        >
-                          {catDot && <span className={`w-2 h-2 rounded-full ${catDot} shrink-0`} />}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{item.title}</p>
-                            {item.description && <p className="text-xs text-muted-foreground truncate">{item.description}</p>}
-                            <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
-                              {item.calories_target && <span className="flex items-center gap-0.5"><Flame className="w-3 h-3 text-orange-400" />{item.calories_target} kcal</span>}
-                              {item.protein_target && <span className="flex items-center gap-0.5"><Beef className="w-3 h-3 text-red-400" />{Number(item.protein_target).toFixed(0)}g</span>}
-                              {item.carbs_target && <span className="flex items-center gap-0.5"><Wheat className="w-3 h-3 text-amber-500" />{Number(item.carbs_target).toFixed(0)}g</span>}
-                              {item.fat_target && <span className="flex items-center gap-0.5"><Droplets className="w-3 h-3 text-blue-400" />{Number(item.fat_target).toFixed(0)}g</span>}
-                            </div>
-                            {syncingMap[item.id] && (
-                              <div className="mt-1 inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 text-[9px] font-medium text-muted-foreground">
-                                <Loader2 className="w-3 h-3 animate-spin text-primary" />
-                                sincronizando...
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
-                            <button
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); openEditDialog(item); }}
-                              className="p-1 rounded hover:bg-accent/50"
-                              title="Editar refeição"
-                            >
-                              <PencilLine className="w-3.5 h-3.5 text-muted-foreground" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); handleDuplicateItem(item); }}
-                              className="p-1 rounded hover:bg-accent/50"
-                              title="Duplicar refeição"
-                            >
-                              <CopyPlus className="w-3.5 h-3.5 text-muted-foreground" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); handleCopyItemToClipboard(item); }}
-                              className="p-1 rounded hover:bg-accent/50"
-                              title="Copiar refeição"
-                            >
-                              <Clipboard className="w-3.5 h-3.5 text-muted-foreground" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); openDrawerPanel(item); }}
-                              className="p-1 rounded hover:bg-accent/50"
-                              title="Painel inteligente"
-                            >
-                              <ArrowRightLeft className="w-3.5 h-3.5 text-muted-foreground" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }}
-                              className="p-1 rounded hover:bg-destructive/10"
-                              title="Remover refeição"
-                            >
-                              <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                            </button>
-                          </div>
-                        </div>
-                      );
-                      })}
-
-                      {/* Quick-add inline for daily view */}
-                      {quickAddKey === cellKey ? (
-                        <div className="flex gap-1.5">
-                          <Input
-                            autoFocus
-                            value={quickAddText}
-                            onChange={(e) => setQuickAddText(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === "Enter") handleQuickAdd(selectedDay, meal.key); if (e.key === "Escape") { setQuickAddKey(null); setQuickAddText(""); } }}
-                            placeholder="Ex: 150g frango grelhado"
-                            className="h-9 text-sm"
-                            disabled={quickAdding}
-                          />
-                          <Button size="sm" className="h-9" onClick={() => handleQuickAdd(selectedDay, meal.key)} disabled={quickAdding || !quickAddText.trim()}>
-                            {quickAdding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="space-y-1.5">
-                          <div className="flex gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="flex-1 h-9 gap-1.5 border border-dashed border-border hover:border-primary text-muted-foreground hover:text-primary"
-                              onClick={() => { setQuickAddKey(cellKey); setQuickAddText(""); }}
-                            >
-                              <Plus className="w-3.5 h-3.5" /> Rápido
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-9 gap-1.5 border border-dashed border-border hover:border-primary text-muted-foreground hover:text-primary"
-                              onClick={() => { setBatchTarget({ day: selectedDay, mealType: meal.key }); setBatchText(""); }}
-                            >
-                              <Leaf className="w-3.5 h-3.5" /> Lote
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-9 gap-1.5 border border-dashed border-border hover:border-primary text-muted-foreground hover:text-primary"
-                              onClick={() => openAddDialog(selectedDay, meal.key)}
-                            >
-                              <PencilLine className="w-3.5 h-3.5" /> Detalhado
-                            </Button>
-                          </div>
-                          {clipboardItem && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="w-full h-9 gap-1.5 border border-dashed border-primary/40 hover:border-primary text-primary hover:text-primary/80 bg-primary/5"
-                              onClick={() => handlePasteItem(selectedDay, meal.key)}
-                            >
-                              <ClipboardPaste className="w-3.5 h-3.5" /> Colar {clipboardItem.title}
-                            </Button>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                    {copySource && <Button size="sm" variant="outline" className="mt-1 h-6 text-[10px] px-2" onClick={() => handleCopyDay(copySource.day, day.key)}>Colar aqui</Button>}
                   </div>
                 );
               })}
             </div>
 
-            {/* Copy day button */}
-            <div className="flex justify-center gap-3">
-              <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setCopySource(copySource?.day === selectedDay ? null : { day: selectedDay, mealType: "breakfast" })}>
-                <Copy className="w-4 h-4" />
-                {copySource?.day === selectedDay ? "Cancelar cópia" : "Copiar este dia"}
-              </Button>
-              {copySource && copySource.day !== selectedDay && (
-                <Button size="sm" className="gap-1.5" onClick={() => handleCopyDay(copySource.day, selectedDay)}>
-                  Colar de {DAYS.find(d => d.key === copySource.day)?.label}
-                </Button>
-              )}
+            {/* Meal Rows */}
+            {MEAL_TYPES.map((meal) => (
+              <div key={meal.key} className="grid grid-cols-[180px_repeat(7,1fr)] gap-1 mb-1">
+                <div className="glass rounded-lg p-3 flex flex-col justify-center">
+                  <div className="flex items-center gap-2">
+                    <span className={meal.color}>{meal.icon}</span>
+                    <span className="font-display text-xs font-semibold">{meal.label}</span>
+                  </div>
+                  <div className="text-[10px] text-muted-foreground mt-1">
+                    {(() => { const t = getMealTypeTotals(meal.key); return `${t.calories} kcal • ${t.protein.toFixed(0)}g prot (semana)`; })()}
+                  </div>
+                </div>
+                {DAYS.map((day) => {
+                  const cellItems = getItems(day.key, meal.key);
+                  return (
+                    <div key={day.key} className="glass rounded-lg p-2 min-h-[100px] flex flex-col group relative hover:border-primary/30 transition-colors">
+                      <div className="flex-1 space-y-1.5">
+                        <AnimatePresence mode="popLayout">
+                          {cellItems.map((item) => (
+                            <motion.div key={item.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+                              className="bg-secondary/60 rounded-md px-2 py-1.5 cursor-pointer hover:bg-secondary transition-colors group/item"
+                              onClick={() => openEditDialog(item)}
+                            >
+                              <p className="text-[11px] font-medium leading-tight truncate">{item.title}</p>
+                              {item.description && <p className="text-[9px] text-muted-foreground leading-tight mt-0.5 line-clamp-2">{item.description}</p>}
+                              <div className="flex items-center gap-1.5 mt-1 text-[9px] text-muted-foreground">
+                                {item.calories_target && <span className="flex items-center gap-0.5"><Flame className="w-2.5 h-2.5 text-orange-400" />{item.calories_target}</span>}
+                                {item.protein_target && <span className="flex items-center gap-0.5"><Beef className="w-2.5 h-2.5 text-red-400" />{Number(item.protein_target).toFixed(0)}g</span>}
+                                {item.carbs_target && <span className="flex items-center gap-0.5"><Wheat className="w-2.5 h-2.5 text-amber-500" />{Number(item.carbs_target).toFixed(0)}g</span>}
+                                {item.fat_target && <span className="flex items-center gap-0.5"><Droplets className="w-2.5 h-2.5 text-blue-400" />{Number(item.fat_target).toFixed(0)}g</span>}
+                              </div>
+                              {/* Delete — visible on hover (desktop) and always visible on touch */}
+                              <button onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }}
+                                className="absolute top-1 right-1 opacity-0 group-hover/item:opacity-100 [@media(hover:none)]:opacity-60 transition-opacity p-1 rounded hover:bg-destructive/10 min-w-[20px] min-h-[20px]"
+                              >
+                                <X className="w-3 h-3 text-destructive" />
+                              </button>
+                            </motion.div>
+                          ))}
+                        </AnimatePresence>
+                      </div>
+                      {/* Add button — always visible on touch devices */}
+                      <button onClick={() => openAddDialog(day.key, meal.key)}
+                        className="mt-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1.5 rounded opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity border border-dashed border-border hover:border-primary min-h-[32px]"
+                      >
+                        <Plus className="w-3 h-3" /> Adicionar
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+
+            {/* Totals row */}
+            <div className="grid grid-cols-[180px_repeat(7,1fr)] gap-1 mt-2">
+              <div className="glass rounded-lg p-3 flex items-center"><span className="font-display text-xs font-bold text-primary">TOTAL DIÁRIO</span></div>
+              {DAYS.map((day) => {
+                const t = getDayTotals(day.key);
+                return (
+                  <div key={day.key} className="glass rounded-lg p-2 border-primary/20">
+                    <div className="grid grid-cols-2 gap-1 text-[10px]">
+                      <div className="flex items-center gap-1"><Flame className="w-3 h-3 text-orange-400" /><span className="font-semibold">{t.calories}</span><span className="text-muted-foreground">kcal</span></div>
+                      <div className="flex items-center gap-1"><Beef className="w-3 h-3 text-red-400" /><span className="font-semibold">{t.protein.toFixed(0)}g</span><span className="text-muted-foreground">prot</span></div>
+                      <div className="flex items-center gap-1"><Wheat className="w-3 h-3 text-amber-500" /><span className="font-semibold">{t.carbs.toFixed(0)}g</span><span className="text-muted-foreground">carb</span></div>
+                      <div className="flex items-center gap-1"><Droplets className="w-3 h-3 text-blue-400" /><span className="font-semibold">{t.fat.toFixed(0)}g</span><span className="text-muted-foreground">gord</span></div>
+                      <PlanScheduler mealPlanId={plan.id} planTitle={plan.title} />
+                    </div>
+                    <div className="mt-1 flex justify-center">
+                      <button onClick={() => setCopySource(copySource?.day === day.key ? null : { day: day.key, mealType: "breakfast" })}
+                        className={`text-[9px] flex items-center gap-0.5 px-1.5 py-0.5 rounded transition-colors ${copySource?.day === day.key ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-primary"}`}
+                      >
+                        <Copy className="w-2.5 h-2.5" />{copySource?.day === day.key ? "Copiando..." : "Copiar dia"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </TabsContent>
-        </Tabs>
-
-        {/* Plan Scheduler */}
-        <PlanScheduler mealPlanId={plan.id} planTitle={plan.title} />
+          </div>
+        </div>
       </div>
-  );
 
-  return (
-    <>
-      {isFullscreen ? fullscreenContent : <DashboardLayout>{fullscreenContent}</DashboardLayout>}
+      {/* Audit Panel */}
+      {plan && (
+        <div className="glass rounded-xl p-5">
+          <h3 className="font-display font-semibold text-sm mb-3 flex items-center gap-2">🧠 Auditoria Clínica (Motor Determinístico)</h3>
+          <PlanAuditPanel mealPlanId={plan.id} onApproved={() => fetchData()} />
+        </div>
+      )}
 
       {/* Add/Edit Item Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="font-display flex items-center gap-2">
-              <span className={MEAL_TYPES.find((m) => m.key === dialogMealType)?.color}>
-                {MEAL_TYPES.find((m) => m.key === dialogMealType)?.icon}
-              </span>
-              {editingItem ? "Editar Refeição" : "Adicionar Refeição"}
-            </DialogTitle>
-            <p className="text-sm text-muted-foreground">
-              {MEAL_TYPES.find((m) => m.key === dialogMealType)?.label} — {DAYS[dialogDay]?.label}
-            </p>
-          </DialogHeader>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader><DialogTitle className="font-display">{editingItem ? "Editar Item" : "Adicionar Item"}</DialogTitle></DialogHeader>
           <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span className={MEAL_TYPES.find((m) => m.key === dialogMealType)?.color}>{MEAL_TYPES.find((m) => m.key === dialogMealType)?.icon}</span>
+              {MEAL_TYPES.find((m) => m.key === dialogMealType)?.label} — {DAYS[dialogDay]?.label}
+            </div>
             <div>
               <Label>Alimento / Preparação</Label>
-              <FoodAutocomplete
-                value={form.title}
-                onChange={(val) => setForm({ ...form, title: val })}
-                onSelect={(food: FoodItem) => {
-                  setForm({
-                    ...form,
-                    title: food.name,
-                    description: food.portion,
-                    calories_target: food.calories.toString(),
-                    protein_target: food.protein.toString(),
-                    carbs_target: food.carbs.toString(),
-                    fat_target: food.fat.toString(),
-                  });
-                }}
-              />
+              <FoodAutocomplete value={form.title} onChange={(val) => setForm({ ...form, title: val })} onSelect={(food: FoodItem) => { setForm({ ...form, title: food.name, description: food.portion, calories_target: food.calories.toString(), protein_target: food.protein.toString(), carbs_target: food.carbs.toString(), fat_target: food.fat.toString() }); }} />
             </div>
-
-            <div>
-              <Label>Descrição / Porção</Label>
-              <Textarea
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                placeholder="Ex: 150g de arroz + 120g de frango + salada"
-                rows={2}
-              />
-            </div>
-
+            <div><Label>Descrição / Porção</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Ex: 150g de arroz + 120g de frango + salada" rows={2} /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="flex items-center gap-1 text-xs">
-                  <Flame className="w-3 h-3 text-orange-400" /> Calorias (kcal)
-                </Label>
-                <Input
-                  type="number"
-                  value={form.calories_target}
-                  onChange={(e) => setForm({ ...form, calories_target: e.target.value })}
-                  placeholder="0"
-                />
-              </div>
-              <div>
-                <Label className="flex items-center gap-1 text-xs">
-                  <Beef className="w-3 h-3 text-red-400" /> Proteína (g)
-                </Label>
-                <Input
-                  type="number"
-                  step="0.1"
-                  value={form.protein_target}
-                  onChange={(e) => setForm({ ...form, protein_target: e.target.value })}
-                  placeholder="0"
-                />
-              </div>
-              <div>
-                <Label className="flex items-center gap-1 text-xs">
-                  <Wheat className="w-3 h-3 text-amber-500" /> Carboidratos (g)
-                </Label>
-                <Input
-                  type="number"
-                  step="0.1"
-                  value={form.carbs_target}
-                  onChange={(e) => setForm({ ...form, carbs_target: e.target.value })}
-                  placeholder="0"
-                />
-              </div>
-              <div>
-                <Label className="flex items-center gap-1 text-xs">
-                  <Droplets className="w-3 h-3 text-blue-400" /> Gordura (g)
-                </Label>
-                <Input
-                  type="number"
-                  step="0.1"
-                  value={form.fat_target}
-                  onChange={(e) => setForm({ ...form, fat_target: e.target.value })}
-                  placeholder="0"
-                />
-              </div>
+              <div><Label className="flex items-center gap-1 text-xs"><Flame className="w-3 h-3 text-orange-400" /> Calorias (kcal)</Label><Input type="number" value={form.calories_target} onChange={(e) => setForm({ ...form, calories_target: e.target.value })} placeholder="0" /></div>
+              <div><Label className="flex items-center gap-1 text-xs"><Beef className="w-3 h-3 text-red-400" /> Proteína (g)</Label><Input type="number" step="0.1" value={form.protein_target} onChange={(e) => setForm({ ...form, protein_target: e.target.value })} placeholder="0" /></div>
+              <div><Label className="flex items-center gap-1 text-xs"><Wheat className="w-3 h-3 text-amber-500" /> Carboidratos (g)</Label><Input type="number" step="0.1" value={form.carbs_target} onChange={(e) => setForm({ ...form, carbs_target: e.target.value })} placeholder="0" /></div>
+              <div><Label className="flex items-center gap-1 text-xs"><Droplets className="w-3 h-3 text-blue-400" /> Gordura (g)</Label><Input type="number" step="0.1" value={form.fat_target} onChange={(e) => setForm({ ...form, fat_target: e.target.value })} placeholder="0" /></div>
             </div>
-
-            {/* Macro Balance Preview */}
-            {(form.protein_target || form.carbs_target || form.fat_target) && (
-              <MacroBalanceBar
-                protein={parseFloat(form.protein_target) || 0}
-                carbs={parseFloat(form.carbs_target) || 0}
-                fat={parseFloat(form.fat_target) || 0}
-                calories={parseInt(form.calories_target) || 0}
-              />
-            )}
-
-            {/* Smart Substitutions */}
-            {form.title.trim() && (
-              <FoodSubstitutions
-                currentFood={form.title}
-                onSelect={(food) => {
-                  setForm({
-                    ...form,
-                    title: food.name,
-                    description: food.portion,
-                    calories_target: food.calories.toString(),
-                    protein_target: food.protein.toString(),
-                    carbs_target: food.carbs.toString(),
-                    fat_target: food.fat.toString(),
-                  });
-                  toast.success(`Substituído por ${food.name}`);
-                }}
-              />
-            )}
-
-            {/* Save & Import meal buttons */}
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1 gap-1.5"
-                onClick={() => { loadSavedMeals(); setSavedMealsDialogOpen(true); }}
-              >
-                <FolderDown className="w-3.5 h-3.5" /> Importar Salva
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1 gap-1.5"
-                onClick={handleSaveMeal}
-                disabled={savingMeal || !form.title.trim()}
-              >
-                {savingMeal ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Bookmark className="w-3.5 h-3.5" />}
-                Salvar Refeição
-              </Button>
+              <Button variant="outline" size="sm" className="flex-1 gap-1.5" onClick={() => { loadSavedMeals(); setSavedMealsDialogOpen(true); }}><FolderDown className="w-3.5 h-3.5" /> Importar Salva</Button>
+              <Button variant="outline" size="sm" className="flex-1 gap-1.5" onClick={handleSaveMeal} disabled={savingMeal || !form.title.trim()}>{savingMeal ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Bookmark className="w-3.5 h-3.5" />} Salvar Refeição</Button>
             </div>
-
             <div className="flex gap-2">
-              {editingItem && (
-                <Button
-                  variant="destructive"
-                  className="flex-1"
-                  onClick={async () => {
-                    await handleDeleteItem(editingItem.id);
-                    setDialogOpen(false);
-                  }}
-                >
-                  <Trash2 className="w-4 h-4 mr-1" /> Remover
-                </Button>
-              )}
-              <Button
-                className="flex-1 gradient-primary"
-                onClick={handleSaveItem}
-                disabled={saving || !form.title.trim()}
-              >
-                {saving ? "Salvando..." : editingItem ? "Atualizar" : "Adicionar"}
-              </Button>
+              {editingItem && (<Button variant="destructive" className="flex-1" onClick={async () => { await handleDeleteItem(editingItem.id); setDialogOpen(false); }}><Trash2 className="w-4 h-4 mr-1" /> Remover</Button>)}
+              <Button className="flex-1 gradient-primary" onClick={handleSaveItem} disabled={saving || !form.title.trim()}>{saving ? "Salvando..." : editingItem ? "Atualizar" : "Adicionar"}</Button>
             </div>
           </div>
         </DialogContent>
@@ -2165,46 +392,13 @@ export default function MealPlanEditor() {
       {/* Saved Meals Dialog */}
       <Dialog open={savedMealsDialogOpen} onOpenChange={setSavedMealsDialogOpen}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="font-display flex items-center gap-2">
-              <Bookmark className="w-5 h-5 text-primary" /> Refeições Salvas
-            </DialogTitle>
-          </DialogHeader>
-          {loadingSavedMeals ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-primary" />
-            </div>
-          ) : savedMeals.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Bookmark className="w-8 h-8 mx-auto mb-2 opacity-40" />
-              <p className="text-sm">Nenhuma refeição salva ainda.</p>
-              <p className="text-xs mt-1">Salve refeições ao adicionar itens ao plano.</p>
-            </div>
-          ) : (
+          <DialogHeader><DialogTitle className="font-display flex items-center gap-2"><Bookmark className="w-5 h-5 text-primary" /> Refeições Salvas</DialogTitle></DialogHeader>
+          {loadingSavedMeals ? <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div> : savedMeals.length === 0 ? <div className="text-center py-8 text-muted-foreground"><Bookmark className="w-8 h-8 mx-auto mb-2 opacity-40" /><p className="text-sm">Nenhuma refeição salva ainda.</p><p className="text-xs mt-1">Salve refeições ao adicionar itens ao plano.</p></div> : (
             <div className="space-y-2 max-h-[400px] overflow-y-auto">
               {savedMeals.map((meal) => (
-                <div
-                  key={meal.id}
-                  className="flex items-center gap-2 p-3 rounded-lg bg-secondary/40 hover:bg-secondary/60 transition-colors group cursor-pointer"
-                  onClick={() => importSavedMeal(meal)}
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{meal.title}</p>
-                    {meal.description && (
-                      <p className="text-xs text-muted-foreground truncate">{meal.description}</p>
-                    )}
-                    <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
-                      {meal.calories_target && <span>{meal.calories_target} kcal</span>}
-                      {meal.protein_target && <span>{Number(meal.protein_target).toFixed(0)}g prot</span>}
-                      {meal.carbs_target && <span>{Number(meal.carbs_target).toFixed(0)}g carb</span>}
-                    </div>
-                  </div>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); deleteSavedMeal(meal.id); }}
-                    className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-destructive/10 transition-opacity"
-                  >
-                    <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                  </button>
+                <div key={meal.id} className="flex items-center gap-2 p-3 rounded-lg bg-secondary/40 hover:bg-secondary/60 transition-colors group cursor-pointer" onClick={() => importSavedMeal(meal)}>
+                  <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{meal.title}</p>{meal.description && <p className="text-xs text-muted-foreground truncate">{meal.description}</p>}<div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">{meal.calories_target && <span>{meal.calories_target} kcal</span>}{meal.protein_target && <span>{Number(meal.protein_target).toFixed(0)}g prot</span>}{meal.carbs_target && <span>{Number(meal.carbs_target).toFixed(0)}g carb</span>}</div></div>
+                  <button onClick={(e) => { e.stopPropagation(); deleteSavedMeal(meal.id); }} className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-destructive/10 transition-opacity"><Trash2 className="w-3.5 h-3.5 text-destructive" /></button>
                 </div>
               ))}
             </div>
@@ -2215,46 +409,15 @@ export default function MealPlanEditor() {
       {/* Saved Plan Templates Dialog */}
       <Dialog open={savedPlansDialogOpen} onOpenChange={setSavedPlansDialogOpen}>
         <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="font-display flex items-center gap-2">
-              <BookmarkCheck className="w-5 h-5 text-primary" /> Modelos de Plano Salvos
-            </DialogTitle>
-          </DialogHeader>
-          {loadingSavedPlans ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-primary" />
-            </div>
-          ) : savedPlans.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <BookmarkCheck className="w-8 h-8 mx-auto mb-2 opacity-40" />
-              <p className="text-sm">Nenhum modelo salvo ainda.</p>
-              <p className="text-xs mt-1">Clique em "Salvar Plano" para criar um modelo reutilizável.</p>
-            </div>
-          ) : (
+          <DialogHeader><DialogTitle className="font-display flex items-center gap-2"><BookmarkCheck className="w-5 h-5 text-primary" /> Modelos de Plano Salvos</DialogTitle></DialogHeader>
+          {loadingSavedPlans ? <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div> : savedPlans.length === 0 ? <div className="text-center py-8 text-muted-foreground"><BookmarkCheck className="w-8 h-8 mx-auto mb-2 opacity-40" /><p className="text-sm">Nenhum modelo salvo ainda.</p><p className="text-xs mt-1">Clique em "Salvar Plano" para criar um modelo reutilizável.</p></div> : (
             <div className="space-y-2 max-h-[400px] overflow-y-auto">
               {savedPlans.map((tpl) => {
                 const itemCount = Array.isArray(tpl.items) ? tpl.items.length : 0;
                 return (
-                  <div
-                    key={tpl.id}
-                    className="flex items-center gap-3 p-3 rounded-lg bg-secondary/40 hover:bg-secondary/60 transition-colors group cursor-pointer"
-                    onClick={() => applySavedPlan(tpl)}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{tpl.title}</p>
-                      {tpl.description && (
-                        <p className="text-xs text-muted-foreground truncate">{tpl.description}</p>
-                      )}
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        {itemCount} itens • {new Date(tpl.created_at).toLocaleDateString("pt-BR")}
-                      </p>
-                    </div>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); deleteSavedPlan(tpl.id); }}
-                      className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-destructive/10 transition-opacity"
-                    >
-                      <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                    </button>
+                  <div key={tpl.id} className="flex items-center gap-3 p-3 rounded-lg bg-secondary/40 hover:bg-secondary/60 transition-colors group cursor-pointer" onClick={() => applySavedPlan(tpl)}>
+                    <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{tpl.title}</p>{tpl.description && <p className="text-xs text-muted-foreground truncate">{tpl.description}</p>}<p className="text-[10px] text-muted-foreground mt-1">{itemCount} itens • {new Date(tpl.created_at).toLocaleDateString("pt-BR")}</p></div>
+                    <button onClick={(e) => { e.stopPropagation(); deleteSavedPlan(tpl.id); }} className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-destructive/10 transition-opacity"><Trash2 className="w-3.5 h-3.5 text-destructive" /></button>
                   </div>
                 );
               })}
@@ -2262,352 +425,6 @@ export default function MealPlanEditor() {
           )}
         </DialogContent>
       </Dialog>
-
-      {/* Batch Add Dialog */}
-      <Dialog open={!!batchTarget} onOpenChange={(open) => { if (!open) setBatchTarget(null); }}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="font-display flex items-center gap-2">
-              <Leaf className="w-5 h-5 text-primary" /> Adicionar em Lote
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Digite um alimento por linha. Alimentos reconhecidos terão macros preenchidos automaticamente.
-            </p>
-            {batchTarget && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span className={MEAL_TYPES.find((m) => m.key === batchTarget.mealType)?.color}>
-                  {MEAL_TYPES.find((m) => m.key === batchTarget.mealType)?.icon}
-                </span>
-                {MEAL_TYPES.find((m) => m.key === batchTarget.mealType)?.label} — {DAYS[batchTarget.day]?.label}
-              </div>
-            )}
-            <Textarea
-              autoFocus
-              value={batchText}
-              onChange={(e) => setBatchText(e.target.value)}
-              placeholder={"Frango grelhado\nArroz integral\nBrócolis cozido\nAzeite de oliva"}
-              rows={8}
-              className="font-mono text-sm"
-            />
-            {batchText.trim() && (
-              <div className="bg-secondary/40 rounded-lg p-3 space-y-1">
-                <p className="text-xs font-medium text-muted-foreground">
-                  Pré-visualização ({batchText.split("\n").filter(l => l.trim()).length} itens):
-                </p>
-                {batchText.split("\n").filter(l => l.trim()).map((line, i) => {
-                  const match = findFoodMatch(line.trim());
-                  return (
-                    <div key={i} className="flex items-center justify-between text-xs">
-                      <span className="truncate flex-1">{line.trim()}</span>
-                      {match ? (
-                        <span className="text-primary ml-2 shrink-0">
-                          {match.calories} kcal • {match.protein}g P
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground/50 ml-2 shrink-0">sem macros</span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-            <Button
-              className="w-full gradient-primary gap-2"
-              onClick={() => batchTarget && handleBatchAdd(batchTarget.day, batchTarget.mealType)}
-              disabled={batchAdding || !batchText.trim()}
-            >
-              {batchAdding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-              Adicionar {batchText.split("\n").filter(l => l.trim()).length} itens
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Bulk Smart Edit Dialog */}
-      <Dialog open={bulkEditOpen} onOpenChange={setBulkEditOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="font-display flex items-center gap-2">
-              <Wand2 className="w-5 h-5 text-primary" /> Edição Inteligente em Lote
-            </DialogTitle>
-            <p className="text-sm text-muted-foreground">
-              Ajuste macros de múltiplas refeições de uma só vez em todos os dias.
-            </p>
-          </DialogHeader>
-          <div className="space-y-4">
-            {/* Meal type filter */}
-            <div>
-              <Label className="text-xs font-semibold">Tipo de Refeição</Label>
-              <Select value={bulkEditMealType} onValueChange={(v) => setBulkEditMealType(v as MealType | "all")}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">
-                    <span className="flex items-center gap-2"><Utensils className="w-3.5 h-3.5" /> Todas as refeições</span>
-                  </SelectItem>
-                  {MEAL_TYPES.map(m => (
-                    <SelectItem key={m.key} value={m.key}>
-                      <span className="flex items-center gap-2">
-                        <span className={m.color}>{m.icon}</span> {m.label}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-[10px] text-muted-foreground mt-1">
-                {bulkEditMealType === "all"
-                  ? `${items.length} itens serão afetados`
-                  : `${items.filter(i => i.meal_type === bulkEditMealType).length} itens serão afetados`}
-              </p>
-            </div>
-
-            {/* Macro to adjust */}
-            <div>
-              <Label className="text-xs font-semibold">Macro a Ajustar</Label>
-              <div className="grid grid-cols-2 gap-2 mt-1">
-                {([
-                  { key: "protein_target" as const, label: "Proteína (g)", icon: <Beef className="w-3.5 h-3.5" />, color: "text-red-400" },
-                  { key: "carbs_target" as const, label: "Carboidratos (g)", icon: <Wheat className="w-3.5 h-3.5" />, color: "text-amber-500" },
-                  { key: "fat_target" as const, label: "Gordura (g)", icon: <Droplets className="w-3.5 h-3.5" />, color: "text-blue-400" },
-                  { key: "calories_target" as const, label: "Calorias (kcal)", icon: <Flame className="w-3.5 h-3.5" />, color: "text-orange-400" },
-                ]).map(m => (
-                  <button
-                    key={m.key}
-                    type="button"
-                    onClick={() => setBulkEditMacro(m.key)}
-                    className={`flex items-center gap-2 p-2.5 rounded-lg border text-xs font-medium transition-all ${
-                      bulkEditMacro === m.key
-                        ? "border-primary bg-primary/10 text-foreground"
-                        : "border-border bg-secondary/30 text-muted-foreground hover:border-primary/40"
-                    }`}
-                  >
-                    <span className={m.color}>{m.icon}</span>
-                    {m.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Operation mode */}
-            <div>
-              <Label className="text-xs font-semibold">Operação</Label>
-              <div className="grid grid-cols-4 gap-1.5 mt-1">
-                {([
-                  { key: "add" as const, label: "Adicionar", icon: <TrendingUp className="w-3.5 h-3.5" />, desc: "+valor" },
-                  { key: "subtract" as const, label: "Reduzir", icon: <TrendingDown className="w-3.5 h-3.5" />, desc: "-valor" },
-                  { key: "set" as const, label: "Definir", icon: <Equal className="w-3.5 h-3.5" />, desc: "=valor" },
-                  { key: "multiply" as const, label: "Escalar %", icon: <span className="text-xs font-bold">×</span>, desc: "×%" },
-                ]).map(op => (
-                  <button
-                    key={op.key}
-                    type="button"
-                    onClick={() => setBulkEditMode(op.key)}
-                    className={`flex flex-col items-center gap-0.5 p-2 rounded-lg border text-[10px] transition-all ${
-                      bulkEditMode === op.key
-                        ? "border-primary bg-primary/10 text-foreground"
-                        : "border-border bg-secondary/30 text-muted-foreground hover:border-primary/40"
-                    }`}
-                  >
-                    {op.icon}
-                    <span className="font-medium">{op.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Value input */}
-            <div>
-              <Label className="text-xs font-semibold">
-                {bulkEditMode === "add" ? "Quantidade a adicionar" :
-                 bulkEditMode === "subtract" ? "Quantidade a reduzir" :
-                 bulkEditMode === "set" ? "Novo valor fixo" :
-                 "Porcentagem (ex: 120 = +20%)"}
-              </Label>
-              <Input
-                type="number"
-                step="0.1"
-                min="0"
-                value={bulkEditValue}
-                onChange={(e) => setBulkEditValue(e.target.value)}
-                placeholder={bulkEditMode === "multiply" ? "Ex: 120 (= 120% do atual)" : "Ex: 5"}
-                className="mt-1"
-              />
-            </div>
-
-            {/* Preview */}
-            {bulkEditValue && !isNaN(parseFloat(bulkEditValue)) && (() => {
-              const targetItems = bulkEditMealType === "all" ? items : items.filter(i => i.meal_type === bulkEditMealType);
-              const val = parseFloat(bulkEditValue);
-              const sample = targetItems.slice(0, 3);
-              const macroLabel = { protein_target: "prot", carbs_target: "carb", fat_target: "gord", calories_target: "kcal" }[bulkEditMacro];
-              return (
-                <div className="bg-secondary/40 rounded-lg p-3 space-y-1.5">
-                  <p className="text-[10px] font-semibold text-muted-foreground">Pré-visualização ({targetItems.length} itens):</p>
-                  {sample.map(item => {
-                    const current = Number(item[bulkEditMacro]) || 0;
-                    let newVal: number;
-                    switch (bulkEditMode) {
-                      case "add": newVal = current + val; break;
-                      case "subtract": newVal = Math.max(0, current - val); break;
-                      case "set": newVal = val; break;
-                      case "multiply": newVal = Math.round(current * (val / 100) * 100) / 100; break;
-                      default: newVal = current;
-                    }
-                    return (
-                      <div key={item.id} className="flex items-center justify-between text-xs">
-                        <span className="truncate flex-1">{item.title}</span>
-                        <span className="ml-2 shrink-0">
-                          <span className="text-muted-foreground">{current.toFixed(0)}</span>
-                          <span className="mx-1 text-primary">→</span>
-                          <span className="font-semibold text-foreground">{Math.round(newVal * 10) / 10}</span>
-                          <span className="text-muted-foreground ml-0.5">{macroLabel}</span>
-                        </span>
-                      </div>
-                    );
-                  })}
-                  {targetItems.length > 3 && (
-                    <p className="text-[10px] text-muted-foreground">...e mais {targetItems.length - 3} itens</p>
-                  )}
-                </div>
-              );
-            })()}
-
-            <Button
-              className="w-full gradient-primary gap-2"
-              onClick={handleBulkMacroEdit}
-              disabled={bulkEditSaving || !bulkEditValue.trim()}
-            >
-              {bulkEditSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
-              Aplicar em {bulkEditMealType === "all" ? items.length : items.filter(i => i.meal_type === bulkEditMealType).length} itens
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Smart Drawer Panel */}
-      <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
-        <SheetContent className="sm:max-w-md overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle className="font-display flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-primary" /> Painel Inteligente
-            </SheetTitle>
-          </SheetHeader>
-          {drawerItem && (
-            <div className="space-y-4 mt-4">
-              {/* Current item info */}
-              <div className="glass rounded-xl p-4 space-y-2">
-                <h3 className="font-semibold text-sm">{drawerItem.title}</h3>
-                {drawerItem.description && (
-                  <p className="text-xs text-muted-foreground">{drawerItem.description}</p>
-                )}
-                <div className="grid grid-cols-4 gap-2 text-[10px]">
-                  <div className="text-center p-2 rounded-lg bg-secondary/40">
-                    <Flame className="w-3.5 h-3.5 mx-auto text-orange-400 mb-0.5" />
-                    <p className="font-semibold">{drawerItem.calories_target || 0}</p>
-                    <p className="text-muted-foreground">kcal</p>
-                  </div>
-                  <div className="text-center p-2 rounded-lg bg-secondary/40">
-                    <Beef className="w-3.5 h-3.5 mx-auto text-red-400 mb-0.5" />
-                    <p className="font-semibold">{Number(drawerItem.protein_target || 0).toFixed(0)}g</p>
-                    <p className="text-muted-foreground">prot</p>
-                  </div>
-                  <div className="text-center p-2 rounded-lg bg-secondary/40">
-                    <Wheat className="w-3.5 h-3.5 mx-auto text-amber-500 mb-0.5" />
-                    <p className="font-semibold">{Number(drawerItem.carbs_target || 0).toFixed(0)}g</p>
-                    <p className="text-muted-foreground">carb</p>
-                  </div>
-                  <div className="text-center p-2 rounded-lg bg-secondary/40">
-                    <Droplets className="w-3.5 h-3.5 mx-auto text-blue-400 mb-0.5" />
-                    <p className="font-semibold">{Number(drawerItem.fat_target || 0).toFixed(0)}g</p>
-                    <p className="text-muted-foreground">gord</p>
-                  </div>
-                </div>
-                <MacroBalanceBar
-                  protein={Number(drawerItem.protein_target) || 0}
-                  carbs={Number(drawerItem.carbs_target) || 0}
-                  fat={Number(drawerItem.fat_target) || 0}
-                  calories={drawerItem.calories_target || 0}
-                />
-              </div>
-
-              {/* Quick edit button */}
-              <Button
-                variant="outline"
-                className="w-full gap-2"
-                onClick={() => {
-                  setDrawerOpen(false);
-                  openEditDialog(drawerItem);
-                }}
-              >
-                <PencilLine className="w-4 h-4" /> Editar no Modal Detalhado
-              </Button>
-
-              {/* Substitution suggestions */}
-              <div>
-                <h4 className="text-xs font-semibold mb-2 flex items-center gap-1.5">
-                  <ArrowRightLeft className="w-3.5 h-3.5 text-primary" />
-                  Substituir por Equivalente
-                </h4>
-                <FoodSubstitutions
-                  currentFood={drawerItem.title}
-                  onSelect={(food) => handleSubstitute(drawerItem, food)}
-                />
-              </div>
-
-              {/* Search in database */}
-              <div>
-                <h4 className="text-xs font-semibold mb-2">Buscar na Base de Alimentos</h4>
-                <FoodAutocomplete
-                  value=""
-                  onChange={() => {}}
-                  onSelect={(food) => handleSubstitute(drawerItem, food)}
-                  placeholder="Buscar alimento..."
-                />
-              </div>
-
-              {/* Action buttons */}
-              <div className="flex gap-2 pt-2 border-t border-border">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="flex-1 gap-1.5"
-                  onClick={async () => {
-                    await handleDeleteItem(drawerItem.id);
-                    setDrawerOpen(false);
-                  }}
-                >
-                  <Trash2 className="w-3.5 h-3.5" /> Remover
-                </Button>
-              </div>
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
-      {/* Template Quick Insert Panel */}
-      <TemplateQuickInsertPanel
-        open={templatePanelOpen}
-        onOpenChange={setTemplatePanelOpen}
-        mealType={templatePanelTarget.mealType}
-        dayOfWeek={templatePanelTarget.day}
-        planId={plan?.id || ""}
-        patientTargetKcal={(() => { try { const m = plan?.generation_metadata as any; return m?.target_kcal || m?.caloric_target || undefined; } catch { return undefined; } })()}
-        onInserted={(newItems: MealPlanItem[]) => {
-          setItemsStable((prev: MealPlanItem[]) => [...prev, ...newItems]);
-          showSyncDone(true);
-        }}
-      />
-
-      {/* Save Meal as Template Dialog */}
-      <SaveMealTemplateDialog
-        open={saveTemplateOpen}
-        onOpenChange={setSaveTemplateOpen}
-        items={saveTemplateItems}
-        mealType={saveTemplateMealType}
-        defaultName=""
-      />
-    </>
+    </DashboardLayout>
   );
 }
