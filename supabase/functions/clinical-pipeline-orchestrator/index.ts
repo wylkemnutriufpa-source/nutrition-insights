@@ -185,7 +185,7 @@ Deno.serve(async (req) => {
             }
           }
         }
-      } catch (err) {
+      } catch (err: any) {
         const stepDuration = Date.now() - stepStart;
         logEntry.status = "error";
         logEntry.error = err.message?.substring(0, 500);
@@ -218,7 +218,7 @@ Deno.serve(async (req) => {
     if (!dryRun && stepsFailed.length === 0) {
       try {
         await generateDailySnapshots(supabase, runId);
-      } catch (err) {
+      } catch (err: any) {
         executionLog.push({
           step: 99,
           name: "Generate Daily Snapshots",
@@ -264,7 +264,7 @@ Deno.serve(async (req) => {
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (err) {
+  } catch (err: any) {
     return new Response(
       JSON.stringify({ error: err.message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

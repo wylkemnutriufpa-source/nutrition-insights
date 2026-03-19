@@ -50,7 +50,7 @@ serve(async (req) => {
           rawBody, signature, webhookSecret, undefined,
           Stripe.createSubtleCryptoProvider()
         );
-      } catch (err) {
+      } catch (err: any) {
         log("SIGNATURE VERIFICATION FAILED", { error: String(err) });
         return new Response(JSON.stringify({ error: "Invalid signature" }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -293,7 +293,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ received: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error) {
+  } catch (error: any) {
     log("ERROR", { message: String(error) });
     return new Response(JSON.stringify({ error: String(error) }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },

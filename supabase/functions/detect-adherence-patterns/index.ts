@@ -300,7 +300,7 @@ Deno.serve(async (req) => {
       JSON.stringify({ patterns_detected: patternsDetected }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error detecting patterns:", error);
     return new Response(
       JSON.stringify({ error: error.message }),

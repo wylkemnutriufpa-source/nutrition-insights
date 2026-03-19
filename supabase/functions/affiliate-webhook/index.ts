@@ -56,7 +56,7 @@ serve(async (req) => {
           undefined,
           Stripe.createSubtleCryptoProvider()
         );
-      } catch (err) {
+      } catch (err: any) {
         const msg = err instanceof Error ? err.message : String(err);
         log("SIGNATURE VERIFICATION FAILED", { error: msg });
         return new Response(JSON.stringify({ error: "Invalid signature" }), {
@@ -374,7 +374,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ ok: true, action: "no_action" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error) {
+  } catch (error: any) {
     const msg = error instanceof Error ? error.message : String(error);
     log("ERROR", { message: msg });
     return new Response(JSON.stringify({ error: msg }), {
