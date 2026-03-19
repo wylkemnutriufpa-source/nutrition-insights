@@ -93,9 +93,8 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
       {!collapsed && (
         <motion.div
           initial={{ opacity: 0 }}
-          style={{ marginLeft: -12 }}
           animate={{ opacity: 1 }}
-          className={`font-display font-bold ${s.text} tracking-tight select-none`}
+          className={`font-display font-bold ${s.text} tracking-tight select-none ml-2`}
         >
           <span
             style={{
