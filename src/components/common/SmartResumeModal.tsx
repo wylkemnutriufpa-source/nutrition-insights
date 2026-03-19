@@ -323,6 +323,7 @@ export default function SmartResumeModal({ externalOpen, onExternalOpenChange }:
             </motion.div>
           </div>
         </motion.div>
+        ) : null}
       </DialogContent>
     </Dialog>
   );
