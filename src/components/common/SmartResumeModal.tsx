@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -30,33 +31,81 @@ function formatTimeAway(hours: number): string {
   return `${days} dia${days > 1 ? "s" : ""}`;
 }
 
-export default function SmartResumeModal() {
-  const { data, loading, dismiss } = useSmartResume();
+interface SmartResumeModalProps {
+  externalOpen?: boolean;
+  onExternalOpenChange?: (open: boolean) => void;
+}
+
+export default function SmartResumeModal({ externalOpen, onExternalOpenChange }: SmartResumeModalProps = {}) {
+  const { data, loading, dismiss, forceShow } = useSmartResume();
   const navigate = useNavigate();
 
-  if (loading || !data || !data.shouldShow) return null;
+  // When external trigger opens the modal, force-fetch data
+  useEffect(() => {
+    if (externalOpen) {
+      forceShow();
+    }
+  }, [externalOpen, forceShow]);
+
+  const isOpen = externalOpen || (!loading && data?.shouldShow);
+
+  const handleClose = () => {
+    dismiss();
+    onExternalOpenChange?.(false);
+  };
 
   const handleContinue = () => {
-    if (data.pendingAction) {
+    if (data?.pendingAction) {
       navigate(data.pendingAction.route);
     } else {
       navigate("/");
     }
-    dismiss();
+    handleClose();
   };
 
   const handleDashboard = () => {
     navigate("/");
-    dismiss();
+    handleClose();
   };
 
   const handleExplore = () => {
-    dismiss();
+    handleClose();
   };
 
+  if (!isOpen || (!data && !loading)) return null;
+
   return (
-    <Dialog open={true} onOpenChange={(open) => !open && dismiss()}>
+    <Dialog open={!!isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="sm:max-w-md p-0 overflow-hidden border-0 bg-transparent shadow-2xl">
+        {loading && !data ? (
+          <div className="bg-card rounded-2xl border border-border/50 p-8 flex flex-col items-center gap-4">
+            <motion.div
+              className="relative"
+              animate={{ rotate: [0, 5, -5, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <motion.div
+                className="absolute -inset-3 rounded-full"
+                style={{ background: "radial-gradient(circle, hsl(150 80% 50% / 0.3), transparent 70%)" }}
+                animate={{ scale: [1, 1.5, 1], opacity: [0.3, 0.8, 0.3] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              />
+              <span className="text-4xl select-none relative z-10">🧠</span>
+            </motion.div>
+            <div className="text-center">
+              <p className="text-sm font-semibold text-foreground">Analisando seus dados...</p>
+              <p className="text-xs text-muted-foreground mt-1">Inteligência FitJourney está processando</p>
+            </div>
+            <div className="w-32 h-1 rounded-full bg-muted overflow-hidden">
+              <motion.div
+                className="h-full rounded-full bg-emerald-500"
+                initial={{ width: "0%" }}
+                animate={{ width: "100%" }}
+                transition={{ duration: 3, ease: "easeInOut" }}
+              />
+            </div>
+          </div>
+        ) : data ? (
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -274,6 +323,7 @@ export default function SmartResumeModal() {
             </motion.div>
           </div>
         </motion.div>
+        ) : null}
       </DialogContent>
     </Dialog>
   );

@@ -102,6 +102,7 @@ export function useSmartResume() {
   const [data, setData] = useState<SmartResumeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [dismissed, setDismissed] = useState(false);
+  const [forced, setForced] = useState(false);
 
   const userId = user?.id;
 
@@ -121,25 +122,31 @@ export function useSmartResume() {
       return;
     }
 
-    // Check if already shown this session
-    const shownAt = sessionStorage.getItem(RESUME_SHOWN_KEY);
-    if (shownAt) {
-      setLoading(false);
-      return;
+    // Check if already shown this session (skip if forced by user click)
+    if (!forced) {
+      const shownAt = sessionStorage.getItem(RESUME_SHOWN_KEY);
+      if (shownAt) {
+        setLoading(false);
+        return;
+      }
     }
 
     let cancelled = false;
 
     const fetchResumeData = async () => {
       try {
-        // 1. Check session status
-        const { data: sessionData } = await supabase.rpc("check_and_update_session" as any);
-        if (cancelled) return;
-        const sessionResult = sessionData as any;
+        let hoursAway = 0;
 
-        if (!sessionResult?.show_resume) {
-          setLoading(false);
-          return;
+        // Only check session RPC if not forced
+        if (!forced) {
+          const { data: sessionData } = await supabase.rpc("check_and_update_session" as any);
+          if (cancelled) return;
+          const sessionResult = sessionData as any;
+          if (!sessionResult?.show_resume) {
+            setLoading(false);
+            return;
+          }
+          hoursAway = sessionResult.hours_away || 0;
         }
 
         // 2. Fetch recent activities (top 3 from menu usage)
@@ -220,7 +227,7 @@ export function useSmartResume() {
 
         const resumeData: SmartResumeData = {
           shouldShow: true,
-          hoursAway: sessionResult.hours_away || 0,
+          hoursAway,
           greeting: getGreeting(userName),
           recentActivities,
           pendingAction: topPending,
@@ -239,14 +246,22 @@ export function useSmartResume() {
 
     fetchResumeData();
     return () => { cancelled = true; };
-  }, [userId, dismissed]);
+  }, [userId, dismissed, forced]);
 
   const dismiss = useCallback(() => {
     setDismissed(true);
+    setForced(false);
     setData(null);
   }, []);
 
-  return { data, loading, dismiss };
+  const forceShow = useCallback(() => {
+    setDismissed(false);
+    setForced(true);
+    setLoading(true);
+    sessionStorage.removeItem(RESUME_SHOWN_KEY);
+  }, []);
+
+  return { data, loading, dismiss, forceShow };
 }
 
 // Detect pending actions from real data (no mocks)
