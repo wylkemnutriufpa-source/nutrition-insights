@@ -637,7 +637,8 @@ serve(async (req) => {
     }
 
     // ── Single plan flow (original) ──
-    const planItems = generatePlanFromTemplate(bestTemplate, finalKcal, finalMacros, restrictions, disliked);
+    const rawPlanItems = generatePlanFromTemplate(bestTemplate, finalKcal, finalMacros, restrictions, disliked);
+    const planItems = reconcileDailyMacros(rawPlanItems, finalKcal, finalMacros);
 
     // ── 8. Build standardized generation_metadata ──
     const generationMetadata = buildGenerationMetadata(
