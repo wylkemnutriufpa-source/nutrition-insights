@@ -157,7 +157,7 @@ function PendingPlansWidget({ collapsed, onLinkClick }: { collapsed: boolean; on
 
   return (
     <Link
-      to="/onboarding-pipeline"
+      to="/onboarding"
       onClick={onLinkClick}
       className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 mt-3 w-full hover:bg-amber-500/15 transition-all group"
     >
