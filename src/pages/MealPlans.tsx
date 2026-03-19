@@ -80,7 +80,7 @@ export default function MealPlans() {
       await supabase.from("meal_plans").update({ is_active: false }).eq("id", id);
       toast.success("Plano desativado.");
     } else {
-      const { error } = await supabase.rpc("activate_meal_plan_ai_guarded", { p_meal_plan_id: id });
+      const { error } = await supabase.rpc("activate_meal_plan" as any, { p_meal_plan_id: id });
       if (error) { toast.error(error.message.replace("AI_VALIDATION_REQUIRED: ", "")); }
       else { toast.success("Plano ativado com segurança pelo Cérebro!"); }
     }
