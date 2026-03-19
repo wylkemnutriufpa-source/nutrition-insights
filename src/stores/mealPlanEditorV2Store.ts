@@ -44,6 +44,8 @@ interface EditorV2State {
   addItems: (inserts: TablesInsert<"meal_plan_items">[]) => void;
   updateItem: (itemId: string, patch: Partial<MealPlanItem>) => void;
   deleteItem: (itemId: string) => void;
+  deleteItemsInCell: (day: number, mealType: MealType) => void;
+  clearAllItems: () => void;
   moveItem: (itemId: string, targetDay: number, targetMealType: MealType) => void;
   duplicateItem: (itemId: string) => void;
   swapCells: (
