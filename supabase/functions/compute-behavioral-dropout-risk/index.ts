@@ -355,14 +355,14 @@ async function processBatch(
   let processed = 0;
 
   for (const pid of patientIds) {
-    const profile = profileMap[pid];
+    const profile: any = profileMap[pid];
     if (!profile) continue;
     processed++;
 
-    const session = sessionMap[pid];
-    const cluster = clusterMap[pid]?.metabolic_cluster || "unknown";
+    const session: any = sessionMap[pid];
+    const cluster = (clusterMap[pid] as any)?.metabolic_cluster || "unknown";
     const alerts = alertsByP[pid] || [];
-    const plan = planMap[pid];
+    const plan: any = planMap[pid];
     const snapshots = snapshotsByP[pid] || [];
 
     // Calculate days without login
@@ -387,7 +387,7 @@ async function processBatch(
     if (snapshots.length >= 2) {
       const first = snapshots[0];
       const last = snapshots[snapshots.length - 1];
-      engagementVelocity = (last.engagement_stability_index || 50) - (first.engagement_stability_index || 50);
+      engagementVelocity = ((last as any).engagement_stability_index || 50) - ((first as any).engagement_stability_index || 50);
     }
 
     // Plan efficacy

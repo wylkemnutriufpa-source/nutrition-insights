@@ -463,12 +463,12 @@ async function processBatch(
   const planUpdates: any[] = [];
 
   for (const pid of patientIds) {
-    const profile = profileMap[pid];
-    const plan = planMap[pid];
+    const profile: any = profileMap[pid];
+    const plan: any = planMap[pid];
     const meals = mealsByP[pid] || [];
     const checklist = checklistByP[pid] || [];
     const assessments = assessByP[pid] || [];
-    const session = sessionMap[pid];
+    const session: any = sessionMap[pid];
     const alerts = alertsByP[pid] || [];
     const existingSugs = existingSuggByP[pid] || [];
 
