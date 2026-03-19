@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useSmartResume, SmartResumeData, IntelligenceMetric } from "@/hooks/useSmartResume";
+import { useSmartResume, SmartResumeData, IntelligenceMetric, ClinicalEngineStatus } from "@/hooks/useSmartResume";
 import {
   LayoutDashboard, Users, UtensilsCrossed, Trophy, Target,
   Leaf, ClipboardCheck, CheckCircle2, Activity,
