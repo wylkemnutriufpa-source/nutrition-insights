@@ -122,25 +122,31 @@ export function useSmartResume() {
       return;
     }
 
-    // Check if already shown this session
-    const shownAt = sessionStorage.getItem(RESUME_SHOWN_KEY);
-    if (shownAt) {
-      setLoading(false);
-      return;
+    // Check if already shown this session (skip if forced by user click)
+    if (!forced) {
+      const shownAt = sessionStorage.getItem(RESUME_SHOWN_KEY);
+      if (shownAt) {
+        setLoading(false);
+        return;
+      }
     }
 
     let cancelled = false;
 
     const fetchResumeData = async () => {
       try {
-        // 1. Check session status
-        const { data: sessionData } = await supabase.rpc("check_and_update_session" as any);
-        if (cancelled) return;
-        const sessionResult = sessionData as any;
+        let hoursAway = 0;
 
-        if (!sessionResult?.show_resume) {
-          setLoading(false);
-          return;
+        // Only check session RPC if not forced
+        if (!forced) {
+          const { data: sessionData } = await supabase.rpc("check_and_update_session" as any);
+          if (cancelled) return;
+          const sessionResult = sessionData as any;
+          if (!sessionResult?.show_resume) {
+            setLoading(false);
+            return;
+          }
+          hoursAway = sessionResult.hours_away || 0;
         }
 
         // 2. Fetch recent activities (top 3 from menu usage)
