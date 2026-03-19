@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useMemo, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -10,9 +10,7 @@ import NotificationBell from "@/components/notifications/NotificationBell";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSmartMenu } from "@/hooks/useSmartMenu";
 import AccordionSidebar from "@/components/layout/AccordionSidebar";
-import { usePendingApprovals } from "@/components/patient/PendingApprovalsModal";
-import PendingApprovalsModal from "@/components/patient/PendingApprovalsModal";
-import { Badge } from "@/components/ui/badge";
+import PendingApprovalsModal, { usePendingApprovals } from "@/components/patient/PendingApprovalsModal";
 
 function SidebarFooter({
   collapsed,
@@ -107,8 +105,11 @@ function DynamicSidebar({
 }) {
   const { categories, flatItems, trackClick } = useSmartMenu();
   const { isNutritionist, isPersonal, isAdmin } = useAuth();
+  const pendingCount = usePendingApprovals();
+  const [approvalsOpen, setApprovalsOpen] = useState(false);
 
   const isProRole = useMemo(() => isNutritionist || isPersonal || isAdmin, [isNutritionist, isPersonal, isAdmin]);
+  const showPending = isProRole && pendingCount > 0;
 
   return (
     <>
@@ -123,7 +124,37 @@ function DynamicSidebar({
         )}
       </div>
 
-      <nav className="flex-1 px-3 mt-4 overflow-y-auto">
+      <AnimatePresence>
+        {showPending && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="px-3 mb-2"
+          >
+            <button
+              onClick={() => setApprovalsOpen(true)}
+              className={`flex items-center gap-2 w-full rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 transition-all px-3 py-2.5 ${collapsed ? "justify-center" : ""}`}
+            >
+              <div className="relative flex-shrink-0">
+                <ClipboardCheck className="w-4 h-4 text-amber-500" />
+                <span className="absolute -top-1.5 -right-2 w-4 h-4 rounded-full bg-destructive text-[9px] font-bold text-white flex items-center justify-center">
+                  {pendingCount > 9 ? "9+" : pendingCount}
+                </span>
+              </div>
+              {!collapsed && (
+                <span className="text-xs font-semibold text-amber-500 truncate">
+                  Planos Pendentes
+                </span>
+              )}
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <PendingApprovalsModal open={approvalsOpen} onOpenChange={setApprovalsOpen} />
+
+      <nav className="flex-1 px-3 overflow-y-auto">
         <AccordionSidebar
           categories={categories}
           flatItems={flatItems}
