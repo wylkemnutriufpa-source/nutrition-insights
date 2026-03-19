@@ -249,14 +249,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <DynamicSidebar {...sidebarProps} collapsed={false} onLinkClick={() => setMobileOpen(false)} />
               </SheetContent>
             </Sheet>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center shadow-glow">
-                <Leaf className="w-4 h-4 text-primary-foreground" />
-              </div>
-              <span className="font-display font-bold text-sm">
-                Fit<span className="text-gradient">Journey</span>
-              </span>
-            </div>
+            <FitJourneyLogo collapsed={false} size="sm" />
           </div>
           <NotificationBell />
         </div>
