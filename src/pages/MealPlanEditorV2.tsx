@@ -318,6 +318,15 @@ export default function MealPlanEditorV2() {
           </div>
         </div>
 
+        {/* Validation Correction Panel */}
+        {validationResult && !validationResult.success && (
+          <ValidationCorrectionPanel
+            result={validationResult}
+            onClose={() => setValidationResult(null)}
+            onCorrectionApplied={() => {}}
+          />
+        )}
+
         {/* Editor Content */}
         {viewMode === "grid" ? <WeeklyGrid /> : <ListView />}
 
