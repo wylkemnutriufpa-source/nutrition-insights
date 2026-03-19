@@ -116,16 +116,34 @@ function DynamicSidebar({
 
   return (
     <>
-      <div className="p-4 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center flex-shrink-0 shadow-glow">
-          <Leaf className="w-5 h-5 text-primary-foreground" />
-        </div>
-        {!collapsed && (
-          <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="font-display font-bold text-lg">
-            Fit<span className="text-gradient">Journey</span>
-          </motion.span>
-        )}
+      <div className="p-4 flex items-center">
+        <FitJourneyLogo collapsed={collapsed} size="sm" />
       </div>
+
+      {/* Inteligência FitJourney floating button */}
+      <div className="px-3 mb-1">
+        <button
+          onClick={() => setSmartResumeOpen(true)}
+          className={`flex items-center gap-2 w-full rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all px-3 py-2.5 ${collapsed ? "justify-center" : ""}`}
+        >
+          <div className="relative flex-shrink-0">
+            <motion.span
+              className="text-lg leading-none select-none"
+              animate={{ rotate: [0, 5, -5, 0] }}
+              transition={{ duration: 6, repeat: Infinity }}
+            >
+              🧠
+            </motion.span>
+          </div>
+          {!collapsed && (
+            <span className="text-xs font-semibold text-emerald-500 truncate">
+              Inteligência FitJourney
+            </span>
+          )}
+        </button>
+      </div>
+
+      <SmartResumeModal />
 
       <AnimatePresence>
         {showPending && (
