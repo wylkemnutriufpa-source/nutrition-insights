@@ -13,6 +13,7 @@ const ROUTE_PERMISSION_MAP: Record<string, keyof TeamPermissions> = {
   "/patient/": "can_view_patient_details",
   "/plano-alimentar": "can_view_meal_plans",
   "/editor-v2": "can_edit_meal_plans",
+  "/onboarding": "can_view_pending_plans",
   "/onboarding-pipeline": "can_view_pending_plans",
   "/checkin": "can_view_checkins",
   "/chat": "can_respond_feedback",
