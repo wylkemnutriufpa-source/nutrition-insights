@@ -194,6 +194,7 @@ export default function OnboardingPipeline() {
           cookingPreference: pipeline.cooking_preference,
           foodPreferences: pipeline.food_preferences,
           isPipeline: true,
+          planCount: 3,
         },
       });
 
