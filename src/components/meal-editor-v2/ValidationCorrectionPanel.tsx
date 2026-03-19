@@ -149,7 +149,7 @@ export function ValidationCorrectionPanel({ result, onClose, onCorrectionApplied
           .normalize("NFD")
           .replace(/[\u0300-\u036f]/g, "");
         if (desc.includes(keyword)) {
-          store.removeItem(item.id);
+          store.deleteItem(item.id);
           removed++;
         }
       }
