@@ -5,12 +5,14 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Leaf, LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck } from "lucide-react";
+import { LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck, Brain } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSmartMenu } from "@/hooks/useSmartMenu";
 import AccordionSidebar from "@/components/layout/AccordionSidebar";
 import PendingApprovalsModal, { usePendingApprovals } from "@/components/patient/PendingApprovalsModal";
+import FitJourneyLogo from "@/components/common/FitJourneyLogo";
+import SmartResumeModal from "@/components/common/SmartResumeModal";
 
 function SidebarFooter({
   collapsed,
