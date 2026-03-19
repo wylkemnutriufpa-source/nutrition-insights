@@ -276,6 +276,7 @@ interface SmartResumeModalProps {
 export default function SmartResumeModal({ externalOpen, onExternalOpenChange }: SmartResumeModalProps = {}) {
   const { data, loading, dismiss, forceShow } = useSmartResume();
   const navigate = useNavigate();
+  const [projectionOpen, setProjectionOpen] = useState(false);
 
   // When external trigger opens the modal, force-fetch data
   useEffect(() => {
