@@ -18,6 +18,14 @@ interface RecentActivity {
   last_access_at: string;
 }
 
+export interface IntelligenceMetric {
+  label: string;
+  value: string;
+  icon: string;
+  color: "emerald" | "amber" | "sky" | "rose" | "violet" | "orange";
+  detail?: string;
+}
+
 export interface SmartResumeData {
   shouldShow: boolean;
   hoursAway: number;
@@ -26,6 +34,7 @@ export interface SmartResumeData {
   pendingAction: PendingAction | null;
   suggestion: string;
   streakDays: number;
+  collectedMetrics: IntelligenceMetric[];
 }
 
 // Priority map: lower number = higher priority
