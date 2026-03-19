@@ -234,6 +234,108 @@ export function useSmartResume() {
           }
         } catch { /* not a patient or no data */ }
 
+        // 6. Collect intelligence metrics — makes it feel like the AI is always watching
+        const collectedMetrics: IntelligenceMetric[] = [];
+        try {
+          const today = new Date().toISOString().split("T")[0];
+          const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+
+          // Parallel fetch for speed
+          const [checklistRes, mealsRes, checkinsRes, weightRes, chatRes, xpRes] = await Promise.all([
+            supabase.from("checklist_tasks").select("id, completed", { count: "exact" }).eq("patient_id", user.id).eq("date", today),
+            supabase.from("meals").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("logged_at", weekAgo),
+            supabase.from("patient_checkins").select("id", { count: "exact", head: true }).eq("patient_id", user.id),
+            supabase.from("physical_assessments").select("weight, assessment_date").eq("patient_id", user.id).order("assessment_date", { ascending: false }).limit(2),
+            supabase.from("chat_messages").select("id", { count: "exact", head: true }).eq("receiver_id", user.id).eq("is_read", false),
+            supabase.from("player_stats").select("xp, level, current_streak, meals_logged").eq("user_id", user.id).maybeSingle(),
+          ]);
+
+          // Checklist adherence today
+          const checkTasks = checklistRes.data || [];
+          const checkTotal = checkTasks.length;
+          const checkDone = checkTasks.filter((t: any) => t.completed).length;
+          if (checkTotal > 0) {
+            const pct = Math.round((checkDone / checkTotal) * 100);
+            collectedMetrics.push({
+              label: "Adesão hoje",
+              value: `${pct}%`,
+              icon: "CheckCircle2",
+              color: pct >= 70 ? "emerald" : pct >= 40 ? "amber" : "rose",
+              detail: `${checkDone}/${checkTotal} tarefas concluídas`,
+            });
+          }
+
+          // Meals this week
+          const mealCount = mealsRes.count || 0;
+          collectedMetrics.push({
+            label: "Refeições registradas",
+            value: `${mealCount}`,
+            icon: "UtensilsCrossed",
+            color: mealCount >= 14 ? "emerald" : mealCount >= 7 ? "sky" : "amber",
+            detail: "nos últimos 7 dias",
+          });
+
+          // Weight trend
+          const weights = weightRes.data || [];
+          if (weights.length >= 2) {
+            const diff = Number(weights[0].weight) - Number(weights[1].weight);
+            const trend = diff < 0 ? "↓" : diff > 0 ? "↑" : "→";
+            collectedMetrics.push({
+              label: "Tendência de peso",
+              value: `${trend} ${Math.abs(diff).toFixed(1)}kg`,
+              icon: "TrendingUp",
+              color: diff <= 0 ? "emerald" : "amber",
+              detail: `Último: ${Number(weights[0].weight).toFixed(1)}kg`,
+            });
+          } else if (weights.length === 1) {
+            collectedMetrics.push({
+              label: "Último peso",
+              value: `${Number(weights[0].weight).toFixed(1)}kg`,
+              icon: "TrendingUp",
+              color: "sky",
+              detail: weights[0].assessment_date,
+            });
+          }
+
+          // XP & Level
+          if (xpRes.data) {
+            const stats = xpRes.data as any;
+            collectedMetrics.push({
+              label: "Nível / XP",
+              value: `Lv.${stats.level || 1}`,
+              icon: "Trophy",
+              color: "violet",
+              detail: `${stats.xp || 0} XP · ${stats.meals_logged || 0} refeições`,
+            });
+          }
+
+          // Unread messages
+          const unread = chatRes.count || 0;
+          if (unread > 0) {
+            collectedMetrics.push({
+              label: "Mensagens",
+              value: `${unread}`,
+              icon: "MessageSquare",
+              color: "orange",
+              detail: `não lida${unread > 1 ? "s" : ""}`,
+            });
+          }
+
+          // Total check-ins
+          const totalCheckins = checkinsRes.count || 0;
+          if (totalCheckins > 0) {
+            collectedMetrics.push({
+              label: "Check-ins realizados",
+              value: `${totalCheckins}`,
+              icon: "Activity",
+              color: "sky",
+              detail: "avaliações registradas",
+            });
+          }
+        } catch (e) {
+          console.error("Intelligence metrics error:", e);
+        }
+
         const resumeData: SmartResumeData = {
           shouldShow: true,
           hoursAway,
@@ -242,6 +344,7 @@ export function useSmartResume() {
           pendingAction: topPending,
           suggestion: getSuggestion(topPending, userRole),
           streakDays,
+          collectedMetrics,
         };
 
         setData(resumeData);
