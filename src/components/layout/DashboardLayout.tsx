@@ -5,9 +5,9 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck, Brain } from "lucide-react";
+import { LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile, useIsTablet } from "@/hooks/use-mobile";
 import { useSmartMenu } from "@/hooks/useSmartMenu";
 import AccordionSidebar from "@/components/layout/AccordionSidebar";
 import PendingApprovalsModal, { usePendingApprovals } from "@/components/patient/PendingApprovalsModal";
@@ -120,14 +120,12 @@ function DynamicSidebar({
         <FitJourneyLogo collapsed={collapsed} size="sm" />
       </div>
 
-      {/* Inteligência FitJourney floating button */}
       <div className="px-3 mb-1">
         <button
           onClick={() => setSmartResumeOpen(true)}
           className={`flex items-center gap-2 w-full rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
         >
           <div className="relative flex-shrink-0">
-            {/* Ambient glow */}
             <motion.div
               className="absolute -inset-1.5 rounded-full"
               style={{
@@ -144,7 +142,6 @@ function DynamicSidebar({
             >
               🧠
             </motion.span>
-            {/* Pulse ring */}
             <motion.div
               className="absolute inset-0 rounded-full"
               style={{ border: "1px solid hsl(150 70% 50% / 0.4)" }}
@@ -221,9 +218,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { profile, signOut } = useAuth();
   const location = useLocation();
   const isMobile = useIsMobile();
-  const isTablet = !isMobile && typeof window !== "undefined" && window.innerWidth < 1024;
+  const isTablet = useIsTablet();
   const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
-  const [collapsed, setCollapsed] = useState(isTablet);
+  const [collapsed, setCollapsed] = useState(() => isTablet);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
@@ -233,6 +230,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    setCollapsed(isTablet);
+  }, [isTablet]);
 
   const toggleDark = () => {
     const newDark = !dark;
