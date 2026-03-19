@@ -16,6 +16,7 @@ import { EditorSyncBadge } from "@/components/meal-editor-v2/EditorSyncBadge";
 import { MealLibrarySidebar } from "@/components/meal-editor-v2/MealLibrarySidebar";
 import { MealLibraryModal } from "@/components/meal-editor-v2/MealLibraryModal";
 import { AutoGenerateModal } from "@/components/meal-editor-v2/AutoGenerateModal";
+import PlanAuditPanel from "@/components/plans/PlanAuditPanel";
 import { toast } from "sonner";
 
 type ViewMode = "grid" | "list";
@@ -290,6 +291,17 @@ export default function MealPlanEditorV2() {
 
         {/* Editor Content */}
         {viewMode === "grid" ? <WeeklyGrid /> : <ListView />}
+
+        {/* Auditoria Clínica — Motor Determinístico */}
+        <div className="glass rounded-xl p-5 mt-4">
+          <h3 className="font-display font-semibold text-sm mb-3 flex items-center gap-2">
+            🧠 Auditoria Clínica (Motor Determinístico)
+          </h3>
+          <PlanAuditPanel
+            mealPlanId={plan.id}
+            onApproved={() => store.hydrate(plan.id, user?.id ?? "")}
+          />
+        </div>
       </div>
 
       {/* Modals & Sidebars */}
