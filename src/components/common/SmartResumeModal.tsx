@@ -77,6 +77,35 @@ export default function SmartResumeModal({ externalOpen, onExternalOpenChange }:
   return (
     <Dialog open={!!isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="sm:max-w-md p-0 overflow-hidden border-0 bg-transparent shadow-2xl">
+        {loading && !data ? (
+          <div className="bg-card rounded-2xl border border-border/50 p-8 flex flex-col items-center gap-4">
+            <motion.div
+              className="relative"
+              animate={{ rotate: [0, 5, -5, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <motion.div
+                className="absolute -inset-3 rounded-full"
+                style={{ background: "radial-gradient(circle, hsl(150 80% 50% / 0.3), transparent 70%)" }}
+                animate={{ scale: [1, 1.5, 1], opacity: [0.3, 0.8, 0.3] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              />
+              <span className="text-4xl select-none relative z-10">🧠</span>
+            </motion.div>
+            <div className="text-center">
+              <p className="text-sm font-semibold text-foreground">Analisando seus dados...</p>
+              <p className="text-xs text-muted-foreground mt-1">Inteligência FitJourney está processando</p>
+            </div>
+            <div className="w-32 h-1 rounded-full bg-muted overflow-hidden">
+              <motion.div
+                className="h-full rounded-full bg-emerald-500"
+                initial={{ width: "0%" }}
+                animate={{ width: "100%" }}
+                transition={{ duration: 3, ease: "easeInOut" }}
+              />
+            </div>
+          </div>
+        ) : data ? (
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
