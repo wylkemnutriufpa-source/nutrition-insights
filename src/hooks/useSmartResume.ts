@@ -246,7 +246,14 @@ export function useSmartResume() {
     setData(null);
   }, []);
 
-  return { data, loading, dismiss };
+  const forceShow = useCallback(() => {
+    setDismissed(false);
+    setLoading(true);
+    // Remove session flag so data re-fetches
+    sessionStorage.removeItem(RESUME_SHOWN_KEY);
+  }, []);
+
+  return { data, loading, dismiss, forceShow };
 }
 
 // Detect pending actions from real data (no mocks)
