@@ -422,7 +422,7 @@ export default function SmartResumeModal({ externalOpen, onExternalOpenChange }:
   return (
     <>
     <Dialog open={!!isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden border-0 bg-transparent shadow-2xl">
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden border-0 bg-transparent shadow-2xl max-h-[90vh]">
         {loading && !data ? (
           <div className="bg-card rounded-2xl border border-border/50 p-8 flex flex-col items-center gap-4">
             <motion.div
