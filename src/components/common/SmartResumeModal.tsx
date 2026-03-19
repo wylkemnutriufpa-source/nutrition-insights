@@ -313,6 +313,7 @@ export default function SmartResumeModal({ externalOpen, onExternalOpenChange }:
   if (!isOpen || (!data && !loading)) return null;
 
   return (
+    <>
     <Dialog open={!!isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="sm:max-w-md p-0 overflow-hidden border-0 bg-transparent shadow-2xl">
         {loading && !data ? (
