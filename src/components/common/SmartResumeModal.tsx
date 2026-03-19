@@ -286,6 +286,7 @@ export default function SmartResumeModal({ externalOpen, onExternalOpenChange }:
             </motion.div>
           )}
 
+          <div className="p-6 pt-4 space-y-5">
             {/* Recent Activities */}
             {data.recentActivities.length > 0 && (
               <motion.div
