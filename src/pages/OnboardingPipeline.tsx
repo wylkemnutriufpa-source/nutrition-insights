@@ -164,12 +164,18 @@ export default function OnboardingPipeline() {
         status: "pending_plan_generation",
       } as any)
       .eq("id", pipeline.id);
-    if (error) toast.error("Erro ao salvar");
-    else {
-      toast.success("Preferências salvas!");
-      fetchPipeline();
+    if (error) {
+      toast.error("Erro ao salvar");
+      setSaving(false);
+      return;
     }
+
+    toast.success("Preferências salvas! Gerando plano automaticamente...");
+    fetchPipeline();
     setSaving(false);
+
+    // Auto-trigger plan generation after preferences are completed
+    setTimeout(() => handleGeneratePlan(), 500);
   }
 
   async function handleGeneratePlan() {
