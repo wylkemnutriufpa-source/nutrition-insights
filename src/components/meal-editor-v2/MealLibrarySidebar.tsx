@@ -83,7 +83,7 @@ const GOAL_LABELS: Record<string, string> = {
 
 export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealType }: MealLibrarySidebarProps) {
   const { user } = useAuth();
-  const { planId, addItem, addItems } = useMealPlanEditorV2Store();
+  const { planId, items, addItem, addItems, deleteItem } = useMealPlanEditorV2Store();
   const [templates, setTemplates] = useState<TemplateRow[]>([]);
   const [dietTemplates, setDietTemplates] = useState<DietTemplate[]>([]);
   const [loading, setLoading] = useState(false);
@@ -170,6 +170,12 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
     const foods = Array.isArray(template.foods_structure) ? template.foods_structure : [];
 
     if (foods.length > 0) {
+      // Clear existing items in this cell
+      const existingIds = items
+        .filter((i) => i.day_of_week === targetDay && i.meal_type === targetMealType)
+        .map((i) => i.id);
+      existingIds.forEach((id) => deleteItem(id));
+
       const inserts = foods.map((food: any) => ({
         meal_plan_id: planId,
         title: food.name || food.title || template.name,
@@ -183,6 +189,12 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
       }));
       addItems(inserts);
     } else {
+      // Clear existing items in this cell
+      const existingIds = items
+        .filter((i) => i.day_of_week === targetDay && i.meal_type === targetMealType)
+        .map((i) => i.id);
+      existingIds.forEach((id) => deleteItem(id));
+
       addItem({
         meal_plan_id: planId,
         title: template.name,
@@ -235,12 +247,24 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
       });
 
       if (allFoods.length > 0) {
+        // Clear existing items in this cell
+        const existingIds = items
+          .filter((i) => i.day_of_week === targetDay && i.meal_type === targetMealType)
+          .map((i) => i.id);
+        existingIds.forEach((id) => deleteItem(id));
+
         addItems(allFoods);
         toast.success(`${allFoods.length} itens importados de "${template.name}"`);
         onOpenChange(false);
         return;
       }
     }
+
+    // Clear existing items in this cell for fallback
+    const existingFallbackIds = items
+      .filter((i) => i.day_of_week === targetDay && i.meal_type === targetMealType)
+      .map((i) => i.id);
+    existingFallbackIds.forEach((id) => deleteItem(id));
 
     // Fallback: insert distribution-based entry
     const distribution = template.meal_distribution as Record<string, number> | null;

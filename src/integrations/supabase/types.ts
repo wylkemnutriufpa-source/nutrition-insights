@@ -4424,12 +4424,10 @@ export type Database = {
       patient_anamnesis: {
         Row: {
           answers: Json
-          audit_metadata: Json | null
           computed_carbs: number | null
           computed_fat: number | null
           computed_kcal_target: number | null
           computed_protein: number | null
-          computed_tdee: number | null
           computed_tmb: number | null
           created_at: string
           id: string
@@ -4439,12 +4437,10 @@ export type Database = {
         }
         Insert: {
           answers?: Json
-          audit_metadata?: Json | null
           computed_carbs?: number | null
           computed_fat?: number | null
           computed_kcal_target?: number | null
           computed_protein?: number | null
-          computed_tdee?: number | null
           computed_tmb?: number | null
           created_at?: string
           id?: string
@@ -4454,12 +4450,10 @@ export type Database = {
         }
         Update: {
           answers?: Json
-          audit_metadata?: Json | null
           computed_carbs?: number | null
           computed_fat?: number | null
           computed_kcal_target?: number | null
           computed_protein?: number | null
-          computed_tdee?: number | null
           computed_tmb?: number | null
           created_at?: string
           id?: string
@@ -10438,21 +10432,6 @@ export type Database = {
     }
     Functions: {
       activate_meal_plan: { Args: { _plan_id: string }; Returns: undefined }
-      activate_meal_plan_ai_guarded: {
-        Args: { p_meal_plan_id: string }
-        Returns: undefined
-      }
-      activate_protocol_atomic: {
-        Args: {
-          p_end_date?: string
-          p_nutritionist_id: string
-          p_patient_id: string
-          p_protocol_id: string
-          p_start_date?: string
-          p_status?: string
-        }
-        Returns: string
-      }
       award_points:
         | {
             Args: { _action_key: string; _metadata?: Json; _patient_id: string }
@@ -10675,12 +10654,10 @@ export type Database = {
         Args: { _alert_id: string; _resolution_note?: string }
         Returns: Json
       }
-      resolve_patient_lifecycle_state:
-        | { Args: { _patient_id: string }; Returns: Json }
-        | {
-            Args: { p_nutritionist_id?: string; p_patient_id: string }
-            Returns: string
-          }
+      resolve_patient_lifecycle_state: {
+        Args: { _patient_id: string }
+        Returns: Json
+      }
       resolve_patient_plan_status: {
         Args: { _patient_id: string }
         Returns: Json
