@@ -514,7 +514,8 @@ serve(async (req) => {
 
       for (let tplIdx = 0; tplIdx < topTemplates.length; tplIdx++) {
         const template = topTemplates[tplIdx];
-        const planItems = generatePlanFromTemplate(template, finalKcal, finalMacros, restrictions, disliked, tplIdx);
+        const rawItems = generatePlanFromTemplate(template, finalKcal, finalMacros, restrictions, disliked, tplIdx);
+        const planItems = reconcileDailyMacros(rawItems, finalKcal, finalMacros);
         const genMeta = buildGenerationMetadata(
           tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
           age, sex, activityLevel, dataSource, template, scoredTemplates,
