@@ -16,6 +16,7 @@ import { EditorSyncBadge } from "@/components/meal-editor-v2/EditorSyncBadge";
 import { MealLibrarySidebar } from "@/components/meal-editor-v2/MealLibrarySidebar";
 import { MealLibraryModal } from "@/components/meal-editor-v2/MealLibraryModal";
 import { AutoGenerateModal } from "@/components/meal-editor-v2/AutoGenerateModal";
+import { ValidationCorrectionPanel, type ValidationResult } from "@/components/meal-editor-v2/ValidationCorrectionPanel";
 import PlanAuditPanel from "@/components/plans/PlanAuditPanel";
 import { toast } from "sonner";
 
@@ -32,6 +33,7 @@ export default function MealPlanEditorV2() {
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [validating, setValidating] = useState(false);
+  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [mealLibModalOpen, setMealLibModalOpen] = useState(false);
   const [autoGenOpen, setAutoGenOpen] = useState(false);
@@ -284,13 +286,15 @@ export default function MealPlanEditorV2() {
               size="sm"
               onClick={async () => {
                 if (!plan) return; setValidating(true);
+                setValidationResult(null);
                 try {
                   const { data, error } = await supabase.functions.invoke("validate-meal-plan", { body: { meal_plan_id: plan.id } });
                   if (error) throw error;
-                  if (!data?.success) { 
-                    const errorMsg = data?.errors ? data.errors.join("\n") : "O plano possui divergências com a meta clínica."; 
-                    toast.error("Motor Clínico: Plano Reprovado!\n" + errorMsg, { duration: 8000 }); 
+                  if (!data?.success) {
+                    setValidationResult(data as ValidationResult);
+                    toast.error("Motor Clínico: Plano Reprovado! Veja as sugestões abaixo.", { duration: 5000 }); 
                   } else { 
+                    setValidationResult(null);
                     toast.success(data.message || "Motor Clínico: Plano Válido! Pode ser ativado. ✅"); 
                     store.hydrate(plan.id, user?.id ?? "");
                   }
@@ -313,6 +317,15 @@ export default function MealPlanEditorV2() {
             </Button>
           </div>
         </div>
+
+        {/* Validation Correction Panel */}
+        {validationResult && !validationResult.success && (
+          <ValidationCorrectionPanel
+            result={validationResult}
+            onClose={() => setValidationResult(null)}
+            onCorrectionApplied={() => {}}
+          />
+        )}
 
         {/* Editor Content */}
         {viewMode === "grid" ? <WeeklyGrid /> : <ListView />}
