@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ClipboardList, Plus, Calendar, ToggleLeft, ToggleRight, PencilLine } from "lucide-react";
+import { ClipboardList, Plus, Calendar, ToggleLeft, ToggleRight, PencilLine, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -85,6 +85,17 @@ export default function MealPlans() {
       else { toast.success("Plano ativado com segurança pelo Cérebro!"); }
     }
     fetchPlans();
+  };
+
+  const handleDeletePlan = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir permanentemente este plano e todas as suas refeições?")) return;
+    
+    // Deleta os items primeiro (se não houver cascade na FK do bd) e depois o plano
+    await supabase.from("meal_plan_items").delete().eq("meal_plan_id", id);
+    const { error } = await supabase.from("meal_plans").delete().eq("id", id);
+    
+    if (error) { toast.error("Erro ao deletar: " + error.message); }
+    else { toast.success("Plano excluído definitivamente."); fetchPlans(); }
   };
 
   return (
@@ -163,6 +174,10 @@ export default function MealPlans() {
                     <Button variant="ghost" size="icon" className="h-9 w-9"
                       onClick={(e) => { e.stopPropagation(); navigate(`/meal-plans/${p.id}`); }}>
                       <PencilLine className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={(e) => { e.stopPropagation(); handleDeletePlan(p.id); }}>
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                     <button onClick={(e) => { e.stopPropagation(); toggleActive(p.id, p.is_active); }}
                       className="p-2 rounded-lg hover:bg-muted transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center"
