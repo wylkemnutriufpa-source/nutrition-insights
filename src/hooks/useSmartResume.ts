@@ -227,7 +227,7 @@ export function useSmartResume() {
 
         const resumeData: SmartResumeData = {
           shouldShow: true,
-          hoursAway: sessionResult.hours_away || 0,
+          hoursAway,
           greeting: getGreeting(userName),
           recentActivities,
           pendingAction: topPending,
