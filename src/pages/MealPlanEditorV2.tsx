@@ -273,6 +273,19 @@ export default function MealPlanEditorV2() {
               <span className="hidden sm:inline">Meus Modelos</span>
             </Button>
             <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                if (!confirm("Tem certeza que deseja apagar TODAS as refeições deste plano? Esta ação não pode ser desfeita.")) return;
+                store.clearAllItems();
+                toast.success("Todas as refeições foram removidas do plano.");
+              }}
+              className="gap-1.5"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Apagar Plano</span>
+            </Button>
+            <Button
               variant="outline"
               size="sm"
               onClick={handleSave}
