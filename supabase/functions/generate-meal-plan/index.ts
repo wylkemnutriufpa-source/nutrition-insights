@@ -257,6 +257,52 @@ function generatePlanFromTemplate(
   return items;
 }
 
+// ──── Post-generation macro reconciliation ────
+// Ensures daily totals match patient targets within clinical tolerance.
+// Adjusts each item proportionally so the sum aligns perfectly.
+function reconcileDailyMacros(
+  items: any[],
+  dailyKcalTarget: number,
+  dailyMacros: { protein: number; carbs: number; fat: number },
+): any[] {
+  // Group items by day
+  const byDay = new Map<number, any[]>();
+  for (const item of items) {
+    const day = item.day_of_week;
+    if (!byDay.has(day)) byDay.set(day, []);
+    byDay.get(day)!.push(item);
+  }
+
+  const reconciled: any[] = [];
+
+  for (const [, dayItems] of byDay) {
+    // Sum current day totals
+    const totalCals = dayItems.reduce((s: number, i: any) => s + (i.calories_target || 0), 0);
+    const totalP = dayItems.reduce((s: number, i: any) => s + (i.protein_target || 0), 0);
+    const totalC = dayItems.reduce((s: number, i: any) => s + (i.carbs_target || 0), 0);
+    const totalF = dayItems.reduce((s: number, i: any) => s + (i.fat_target || 0), 0);
+
+    // Calculate correction factors (avoid div by zero)
+    const calFactor = totalCals > 0 ? dailyKcalTarget / totalCals : 1;
+    const pFactor = totalP > 0 ? dailyMacros.protein / totalP : 1;
+    const cFactor = totalC > 0 ? dailyMacros.carbs / totalC : 1;
+    const fFactor = totalF > 0 ? dailyMacros.fat / totalF : 1;
+
+    // Apply proportional correction to each item
+    for (const item of dayItems) {
+      reconciled.push({
+        ...item,
+        calories_target: Math.round((item.calories_target || 0) * calFactor),
+        protein_target: Math.round((item.protein_target || 0) * pFactor),
+        carbs_target: Math.round((item.carbs_target || 0) * cFactor),
+        fat_target: Math.round((item.fat_target || 0) * fFactor),
+      });
+    }
+  }
+
+  return reconciled;
+}
+
 // ──── Deterministic tips engine ────
 function generateTips(answers: Record<string, any>): { tip: string; category: string; icon: string }[] {
   const tips: { tip: string; category: string; icon: string }[] = [];
@@ -468,7 +514,8 @@ serve(async (req) => {
 
       for (let tplIdx = 0; tplIdx < topTemplates.length; tplIdx++) {
         const template = topTemplates[tplIdx];
-        const planItems = generatePlanFromTemplate(template, finalKcal, finalMacros, restrictions, disliked, tplIdx);
+        const rawItems = generatePlanFromTemplate(template, finalKcal, finalMacros, restrictions, disliked, tplIdx);
+        const planItems = reconcileDailyMacros(rawItems, finalKcal, finalMacros);
         const genMeta = buildGenerationMetadata(
           tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
           age, sex, activityLevel, dataSource, template, scoredTemplates,
@@ -590,7 +637,8 @@ serve(async (req) => {
     }
 
     // ── Single plan flow (original) ──
-    const planItems = generatePlanFromTemplate(bestTemplate, finalKcal, finalMacros, restrictions, disliked);
+    const rawPlanItems = generatePlanFromTemplate(bestTemplate, finalKcal, finalMacros, restrictions, disliked);
+    const planItems = reconcileDailyMacros(rawPlanItems, finalKcal, finalMacros);
 
     // ── 8. Build standardized generation_metadata ──
     const generationMetadata = buildGenerationMetadata(
