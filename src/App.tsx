@@ -8,6 +8,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import PageLoader from "@/components/common/PageLoader";
+import CommandPalette from "@/components/common/CommandPalette";
 import { readActiveEditorRoute } from "@/lib/mealPlanEditorStore";
 
 // ── Eager-loaded (critical path) ────────────────────────────
@@ -268,6 +269,7 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <DarkModeInit />
+            <CommandPalette />
             <Routes>
               {/* Public landing pages */}
               <Route path="/landing" element={<LP section="Landing"><Landing /></LP>} />
