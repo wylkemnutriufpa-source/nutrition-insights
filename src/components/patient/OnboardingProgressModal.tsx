@@ -65,6 +65,9 @@ export default function OnboardingProgressModal() {
 
       setPipelineId(pipeline.id);
 
+      // Read progressive step state
+      const stepState = (pipeline as any).onboarding_step_completed || {};
+
       const allPatientStepsDone = !!pipeline.anamnesis_completed && !!pipeline.body_data_completed && !!pipeline.preferences_completed;
 
       const detectedSteps: PipelineStep[] = [

@@ -3930,6 +3930,7 @@ export type Database = {
           id: string
           meal_count: number | null
           nutritionist_id: string
+          onboarding_step_completed: Json | null
           patient_id: string
           photo_back_url: string | null
           photo_front_url: string | null
@@ -3965,6 +3966,7 @@ export type Database = {
           id?: string
           meal_count?: number | null
           nutritionist_id: string
+          onboarding_step_completed?: Json | null
           patient_id: string
           photo_back_url?: string | null
           photo_front_url?: string | null
@@ -4000,6 +4002,7 @@ export type Database = {
           id?: string
           meal_count?: number | null
           nutritionist_id?: string
+          onboarding_step_completed?: Json | null
           patient_id?: string
           photo_back_url?: string | null
           photo_front_url?: string | null
@@ -10925,6 +10928,7 @@ export type Database = {
         }
         Returns: string
       }
+      auto_activate_onboarding_for_paid_patients: { Args: never; Returns: Json }
       award_points:
         | {
             Args: { _action_key: string; _metadata?: Json; _patient_id: string }
@@ -11127,6 +11131,10 @@ export type Database = {
         Returns: Json
       }
       promote_to_admin: { Args: { _user_email: string }; Returns: string }
+      recalculate_meal_plan_totals: {
+        Args: { plan_id: string }
+        Returns: undefined
+      }
       record_ai_usage: {
         Args: { _feature_key: string; _plan_tier?: string; _user_id: string }
         Returns: Json
