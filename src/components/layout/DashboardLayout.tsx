@@ -112,7 +112,7 @@ function DynamicSidebar({
   const { isNutritionist, isPersonal, isAdmin } = useAuth();
   const pendingCount = usePendingApprovals();
   const [approvalsOpen, setApprovalsOpen] = useState(false);
-  const [smartResumeOpen, setSmartResumeOpen] = useState(false);
+  const [intelligenceOpen, setIntelligenceOpen] = useState(false);
 
   const isProRole = useMemo(() => isNutritionist || isPersonal || isAdmin, [isNutritionist, isPersonal, isAdmin]);
   const showPending = isProRole && pendingCount > 0;
