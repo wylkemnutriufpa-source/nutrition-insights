@@ -160,7 +160,8 @@ function DynamicSidebar({
         </button>
       </div>
 
-      <SmartResumeModal externalOpen={smartResumeOpen} onExternalOpenChange={setSmartResumeOpen} />
+      <IntelligenceModal open={intelligenceOpen} onOpenChange={setIntelligenceOpen} />
+      <SmartResumeModal />
 
       <AnimatePresence>
         {showPending && (
