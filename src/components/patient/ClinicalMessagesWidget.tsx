@@ -21,7 +21,7 @@ interface ClinicalMessage {
 
 interface Props {
   patientId?: string;
-  channel?: string; // filter by channel
+  channel?: string;
   dismissable?: boolean;
   compact?: boolean;
   limit?: number;
@@ -39,7 +39,7 @@ export default function ClinicalMessagesWidget({
   channel,
   dismissable = true,
   compact = false,
-  limit = 5,
+  limit = 3, // reduced default to avoid clutter
 }: Props) {
   const { user } = useAuth();
   const targetId = patientId || user?.id;
@@ -78,6 +78,10 @@ export default function ClinicalMessagesWidget({
 
   if (messages.length === 0) return null;
 
+  // Hero message = highest priority
+  const heroMessage = messages[0];
+  const secondaryMessages = messages.slice(1);
+
   const flagCategory = (flag: string | null) => {
     if (!flag) return "geral";
     if (flag.includes("water") || flag.includes("hydra")) return "hidratacao";
@@ -90,61 +94,68 @@ export default function ClinicalMessagesWidget({
     return "geral";
   };
 
+  const renderMessage = (msg: ClinicalMessage, idx: number, isHero = false) => {
+    const cat = flagCategory(msg.source_flag);
+    const config = DOMAIN_CONFIG[cat] || DOMAIN_CONFIG.geral;
+    const Icon = channelIcons[msg.channel] || Lightbulb;
+
+    return (
+      <motion.div
+        key={msg.id}
+        layout
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ delay: idx * 0.05, duration: 0.4 }}
+        className={`relative rounded-xl border space-y-1.5 ${
+          isHero
+            ? "p-5 border-primary/25 bg-primary/8 shadow-sm"
+            : "p-4 border-primary/15 bg-primary/5"
+        }`}
+      >
+        {dismissable && (
+          <button
+            onClick={() => dismiss(msg.id)}
+            className="absolute top-3 right-3 p-1 rounded-md hover:bg-muted transition-colors"
+          >
+            <X className="w-3.5 h-3.5 text-muted-foreground" />
+          </button>
+        )}
+
+        <div className="flex items-center gap-2 pr-6">
+          <span className={`${isHero ? "text-lg" : "text-base"}`}>{config.icon}</span>
+          <Icon className={`${isHero ? "w-5 h-5" : "w-4 h-4"} text-primary`} />
+          <p className={`font-semibold text-foreground ${isHero ? "text-base" : "text-sm"}`}>{msg.title}</p>
+        </div>
+
+        {!compact && (
+          <p className={`text-muted-foreground leading-relaxed pl-1 ${isHero ? "text-sm" : "text-xs"}`}>
+            {msg.body}
+          </p>
+        )}
+
+        <div className="flex items-center gap-2 pl-1">
+          <Badge variant="outline" className="text-[10px] py-0">
+            {msg.channel === "dashboard_highlight" ? "Destaque" :
+             msg.channel === "checklist_hint" ? "Dica" :
+             msg.channel === "notification" ? "Notificação" :
+             msg.channel === "modal" ? "Educativo" : msg.channel}
+          </Badge>
+          {msg.generated_by === "rule_engine" && (
+            <Badge variant="secondary" className="text-[10px] py-0 gap-0.5">
+              ✨ Automática
+            </Badge>
+          )}
+        </div>
+      </motion.div>
+    );
+  };
+
   return (
     <div className="space-y-2">
       <AnimatePresence mode="popLayout">
-        {messages.map((msg, idx) => {
-          const cat = flagCategory(msg.source_flag);
-          const config = DOMAIN_CONFIG[cat] || DOMAIN_CONFIG.geral;
-          const Icon = channelIcons[msg.channel] || Lightbulb;
-
-          return (
-            <motion.div
-              key={msg.id}
-              layout
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ delay: idx * 0.05, duration: 0.4 }}
-              className="relative p-4 rounded-xl border border-primary/15 bg-primary/5 space-y-1.5"
-            >
-              {dismissable && (
-                <button
-                  onClick={() => dismiss(msg.id)}
-                  className="absolute top-3 right-3 p-1 rounded-md hover:bg-muted transition-colors"
-                >
-                  <X className="w-3.5 h-3.5 text-muted-foreground" />
-                </button>
-              )}
-
-              <div className="flex items-center gap-2 pr-6">
-                <span className="text-base">{config.icon}</span>
-                <Icon className="w-4 h-4 text-primary" />
-                <p className="text-sm font-semibold text-foreground">{msg.title}</p>
-              </div>
-
-              {!compact && (
-                <p className="text-sm text-muted-foreground leading-relaxed pl-1">
-                  {msg.body}
-                </p>
-              )}
-
-              <div className="flex items-center gap-2 pl-1">
-                <Badge variant="outline" className="text-[10px] py-0">
-                  {msg.channel === "dashboard_highlight" ? "Destaque" :
-                   msg.channel === "checklist_hint" ? "Dica" :
-                   msg.channel === "notification" ? "Notificação" :
-                   msg.channel === "modal" ? "Educativo" : msg.channel}
-                </Badge>
-                {msg.generated_by === "rule_engine" && (
-                  <Badge variant="secondary" className="text-[10px] py-0 gap-0.5">
-                    ✨ Automática
-                  </Badge>
-                )}
-              </div>
-            </motion.div>
-          );
-        })}
+        {renderMessage(heroMessage, 0, true)}
+        {secondaryMessages.map((msg, idx) => renderMessage(msg, idx + 1))}
       </AnimatePresence>
     </div>
   );

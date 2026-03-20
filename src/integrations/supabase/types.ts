@@ -4887,10 +4887,14 @@ export type Database = {
           frequency: string
           generated_by: string
           id: string
+          objective_context: string | null
           patient_id: string
+          phase_context: string | null
           priority: number
+          priority_reason: string | null
           source_flag: string | null
           status: string
+          strategy_context: string | null
           template_code: string | null
           title: string
           updated_at: string
@@ -4902,10 +4906,14 @@ export type Database = {
           frequency?: string
           generated_by?: string
           id?: string
+          objective_context?: string | null
           patient_id: string
+          phase_context?: string | null
           priority?: number
+          priority_reason?: string | null
           source_flag?: string | null
           status?: string
+          strategy_context?: string | null
           template_code?: string | null
           title: string
           updated_at?: string
@@ -4917,10 +4925,14 @@ export type Database = {
           frequency?: string
           generated_by?: string
           id?: string
+          objective_context?: string | null
           patient_id?: string
+          phase_context?: string | null
           priority?: number
+          priority_reason?: string | null
           source_flag?: string | null
           status?: string
+          strategy_context?: string | null
           template_code?: string | null
           title?: string
           updated_at?: string
@@ -5080,10 +5092,14 @@ export type Database = {
           generated_by: string
           id: string
           message_code: string | null
+          objective_context: string | null
           patient_id: string
+          phase_context: string | null
           priority: number
+          priority_reason: string | null
           source_flag: string | null
           status: string
+          strategy_context: string | null
           title: string
           updated_at: string
         }
@@ -5094,10 +5110,14 @@ export type Database = {
           generated_by?: string
           id?: string
           message_code?: string | null
+          objective_context?: string | null
           patient_id: string
+          phase_context?: string | null
           priority?: number
+          priority_reason?: string | null
           source_flag?: string | null
           status?: string
+          strategy_context?: string | null
           title: string
           updated_at?: string
         }
@@ -5108,10 +5128,14 @@ export type Database = {
           generated_by?: string
           id?: string
           message_code?: string | null
+          objective_context?: string | null
           patient_id?: string
+          phase_context?: string | null
           priority?: number
+          priority_reason?: string | null
           source_flag?: string | null
           status?: string
+          strategy_context?: string | null
           title?: string
           updated_at?: string
         }

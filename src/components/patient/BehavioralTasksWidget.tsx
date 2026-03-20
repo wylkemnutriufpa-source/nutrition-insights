@@ -3,9 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle2, Circle, SkipForward, Sparkles, ListChecks } from "lucide-react";
+import { CheckCircle2, Circle, SkipForward, Sparkles, ListChecks, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { DOMAIN_CONFIG } from "@/lib/clinicalFlags";
 
@@ -23,16 +22,19 @@ interface BehavioralTask {
 }
 
 interface Props {
-  patientId?: string; // if not provided, uses current user
+  patientId?: string;
   editable?: boolean;
   compact?: boolean;
 }
+
+const MAX_VISIBLE_PRIORITY = 5;
 
 export default function BehavioralTasksWidget({ patientId, editable = true, compact = false }: Props) {
   const { user } = useAuth();
   const targetId = patientId || user?.id;
   const [tasks, setTasks] = useState<BehavioralTask[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showSecondary, setShowSecondary] = useState(false);
 
   const fetchTasks = async () => {
     if (!targetId) return;
@@ -91,7 +93,13 @@ export default function BehavioralTasksWidget({ patientId, editable = true, comp
     );
   }
 
-  const displayTasks = compact ? pending.slice(0, 4) : tasks;
+  // Split into priority (top N) and secondary
+  const priorityTasks = pending.slice(0, MAX_VISIBLE_PRIORITY);
+  const secondaryTasks = pending.slice(MAX_VISIBLE_PRIORITY);
+  const heroTask = priorityTasks[0];
+
+  // In compact mode show only priority tasks
+  const displayPrimary = compact ? priorityTasks.slice(0, 4) : priorityTasks;
 
   const flagCategory = (flag: string | null) => {
     if (!flag) return "geral";
@@ -103,6 +111,69 @@ export default function BehavioralTasksWidget({ patientId, editable = true, comp
     if (flag.includes("emotional") || flag.includes("anxiety") || flag.includes("binge") || flag.includes("compuls")) return "comportamental";
     if (flag.includes("insulin") || flag.includes("weight") || flag.includes("muscle")) return "metabolico";
     return "geral";
+  };
+
+  const renderTask = (task: BehavioralTask, idx: number, isHero = false) => {
+    const cat = flagCategory(task.source_flag);
+    const config = DOMAIN_CONFIG[cat] || DOMAIN_CONFIG.geral;
+    const isDone = task.status === "completed";
+
+    return (
+      <motion.div
+        key={task.id}
+        layout
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        transition={{ delay: idx * 0.04, duration: 0.35 }}
+        className={`group flex items-center gap-3 rounded-xl border transition-all ${
+          isHero && !isDone
+            ? "p-4 border-primary/30 bg-primary/5 shadow-sm"
+            : isDone
+              ? "p-3 border-primary/20 bg-primary/5 opacity-70"
+              : "p-3 border-border bg-card hover:border-primary/30 hover:bg-primary/5"
+        }`}
+      >
+        <button
+          onClick={() => toggleTask(task.id, task.status)}
+          className="shrink-0 transition-transform active:scale-90"
+          disabled={!editable}
+        >
+          {isDone ? (
+            <CheckCircle2 className="w-5 h-5 text-primary" />
+          ) : (
+            <Circle className={`w-5 h-5 ${isHero ? "text-primary" : "text-muted-foreground"} group-hover:text-primary transition-colors`} />
+          )}
+        </button>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-sm">{config.icon}</span>
+            <p className={`text-sm font-medium truncate ${isDone ? "line-through text-muted-foreground" : ""} ${isHero && !isDone ? "font-semibold" : ""}`}>
+              {task.title}
+            </p>
+          </div>
+          {task.description && !compact && (
+            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1 pl-6">{task.description}</p>
+          )}
+        </div>
+
+        <div className="flex items-center gap-1.5 shrink-0">
+          <Badge variant="outline" className="text-[10px] py-0">
+            {task.frequency === "daily" ? "Diária" : task.frequency === "weekly" ? "Semanal" : task.frequency}
+          </Badge>
+          {editable && !isDone && (
+            <button
+              onClick={() => skipTask(task.id)}
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-muted"
+              title="Pular"
+            >
+              <SkipForward className="w-3.5 h-3.5 text-muted-foreground" />
+            </button>
+          )}
+        </div>
+      </motion.div>
+    );
   };
 
   return (
@@ -124,71 +195,29 @@ export default function BehavioralTasksWidget({ patientId, editable = true, comp
         />
       </div>
 
-      {/* Tasks */}
+      {/* Priority tasks */}
       <div className="space-y-2">
         <AnimatePresence mode="popLayout">
-          {displayTasks.map((task, idx) => {
-            const cat = flagCategory(task.source_flag);
-            const config = DOMAIN_CONFIG[cat] || DOMAIN_CONFIG.geral;
-            const isDone = task.status === "completed";
-
-            return (
-              <motion.div
-                key={task.id}
-                layout
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ delay: idx * 0.04, duration: 0.35 }}
-                className={`group flex items-center gap-3 p-3 rounded-xl border transition-all ${
-                  isDone
-                    ? "border-primary/20 bg-primary/5 opacity-70"
-                    : "border-border bg-card hover:border-primary/30 hover:bg-primary/5"
-                }`}
-              >
-                <button
-                  onClick={() => toggleTask(task.id, task.status)}
-                  className="shrink-0 transition-transform active:scale-90"
-                  disabled={!editable}
-                >
-                  {isDone ? (
-                    <CheckCircle2 className="w-5 h-5 text-primary" />
-                  ) : (
-                    <Circle className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                  )}
-                </button>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm">{config.icon}</span>
-                    <p className={`text-sm font-medium truncate ${isDone ? "line-through text-muted-foreground" : ""}`}>
-                      {task.title}
-                    </p>
-                  </div>
-                  {task.description && !compact && (
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <Badge variant="outline" className="text-[10px] py-0">
-                    {task.frequency === "daily" ? "Diária" : task.frequency === "weekly" ? "Semanal" : task.frequency}
-                  </Badge>
-                  {editable && !isDone && (
-                    <button
-                      onClick={() => skipTask(task.id)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-muted"
-                      title="Pular"
-                    >
-                      <SkipForward className="w-3.5 h-3.5 text-muted-foreground" />
-                    </button>
-                  )}
-                </div>
-              </motion.div>
-            );
-          })}
+          {displayPrimary.map((task, idx) => renderTask(task, idx, idx === 0))}
+          {completed.slice(0, compact ? 0 : 3).map((task, idx) => renderTask(task, idx + displayPrimary.length))}
         </AnimatePresence>
       </div>
+
+      {/* Secondary tasks expandable */}
+      {secondaryTasks.length > 0 && !compact && (
+        <div className="space-y-2">
+          <button
+            onClick={() => setShowSecondary(!showSecondary)}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors w-full justify-center py-1"
+          >
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showSecondary ? "rotate-180" : ""}`} />
+            {showSecondary ? "Ocultar" : `+${secondaryTasks.length} tarefas adicionais`}
+          </button>
+          <AnimatePresence>
+            {showSecondary && secondaryTasks.map((task, idx) => renderTask(task, idx))}
+          </AnimatePresence>
+        </div>
+      )}
 
       {compact && pending.length > 4 && (
         <p className="text-xs text-center text-muted-foreground">
