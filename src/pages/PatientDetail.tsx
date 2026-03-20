@@ -50,6 +50,7 @@ import { MomentumIndicator } from "@/components/gamification/MomentumIndicator";
 import { JourneyTimelineFeed } from "@/components/gamification/JourneyTimelineFeed";
 import { EditorVersionPicker } from "@/components/common/EditorVersionPicker";
 import MealAdherenceWidget from "@/components/patient/MealAdherenceWidget";
+import OnboardingReleaseDialog from "@/components/patient/OnboardingReleaseDialog";
 
 export default function PatientDetail() {
   const { patientId } = useParams<{ patientId: string }>();
@@ -113,6 +114,7 @@ export default function PatientDetail() {
     phone: profile?.phone || "",
   });
   const [savingProfile, setSavingProfile] = useState(false);
+  const [releaseOnboardingOpen, setReleaseOnboardingOpen] = useState(false);
 
   // Invalidation helper
   const invalidate = () => {
@@ -491,6 +493,9 @@ export default function PatientDetail() {
             </Button>
             <Button variant="outline" className="gap-2" onClick={() => navigate(`/anamnesis?patientId=${patientId}`)}>
               <Heart className="w-4 h-4" /> {anamnesis ? "Editar Anamnese" : "Preencher Anamnese"}
+            </Button>
+            <Button variant="outline" className="gap-2 border-warning/30 text-warning hover:bg-warning/10" onClick={() => setReleaseOnboardingOpen(true)}>
+              <Rocket className="w-4 h-4" /> Liberar Onboarding
             </Button>
             <Dialog open={activateOpen} onOpenChange={setActivateOpen}>
               <DialogTrigger asChild>
@@ -1203,6 +1208,15 @@ export default function PatientDetail() {
             </>
           );
         })()}
+
+        {/* Onboarding Release Dialog */}
+        <OnboardingReleaseDialog
+          patientId={patientId!}
+          patientName={profile?.full_name || "Paciente"}
+          open={releaseOnboardingOpen}
+          onOpenChange={setReleaseOnboardingOpen}
+          onReleased={invalidate}
+        />
       </div>
     </DashboardLayout>
   );

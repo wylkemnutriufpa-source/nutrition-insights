@@ -3698,6 +3698,7 @@ export type Database = {
           approved_at: string | null
           approved_by: string | null
           body_data_completed: boolean | null
+          clinical_flags: Json | null
           cooking_preference: string | null
           created_at: string | null
           food_preferences: Json | null
@@ -3715,6 +3716,10 @@ export type Database = {
           plan_generated: boolean | null
           preferences_completed: boolean | null
           rejection_reason: string | null
+          release_config: Json | null
+          release_status: string
+          released_at: string | null
+          released_by: string | null
           scheduling_criteria: Json | null
           sleep_time: string | null
           status: string
@@ -3728,6 +3733,7 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           body_data_completed?: boolean | null
+          clinical_flags?: Json | null
           cooking_preference?: string | null
           created_at?: string | null
           food_preferences?: Json | null
@@ -3745,6 +3751,10 @@ export type Database = {
           plan_generated?: boolean | null
           preferences_completed?: boolean | null
           rejection_reason?: string | null
+          release_config?: Json | null
+          release_status?: string
+          released_at?: string | null
+          released_by?: string | null
           scheduling_criteria?: Json | null
           sleep_time?: string | null
           status?: string
@@ -3758,6 +3768,7 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           body_data_completed?: boolean | null
+          clinical_flags?: Json | null
           cooking_preference?: string | null
           created_at?: string | null
           food_preferences?: Json | null
@@ -3775,6 +3786,10 @@ export type Database = {
           plan_generated?: boolean | null
           preferences_completed?: boolean | null
           rejection_reason?: string | null
+          release_config?: Json | null
+          release_status?: string
+          released_at?: string | null
+          released_by?: string | null
           scheduling_criteria?: Json | null
           sleep_time?: string | null
           status?: string

@@ -6,9 +6,10 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Sparkles, Check, Heart, Brain, Loader2, UserCheck, Save } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles, Check, Heart, Brain, Loader2, UserCheck, Save, Lock, AlertTriangle } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
+import { getActiveAdaptiveBlocks, extractClinicalFlags, type AdaptiveBlock } from "@/lib/adaptiveAnamnesisBlocks";
 
 // ──── Question definitions ────
 interface Option {
@@ -513,6 +514,9 @@ export default function Anamnesis() {
   const [patientName, setPatientName] = useState<string>("");
   const [draftId, setDraftId] = useState<string | null>(null);
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [showAdaptiveBlocks, setShowAdaptiveBlocks] = useState(false);
+  const [adaptiveStep, setAdaptiveStep] = useState(0);
+  const [onboardingBlocked, setOnboardingBlocked] = useState(false);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // The target user: either the patient themselves or the patient being filled by nutritionist
@@ -529,6 +533,24 @@ export default function Anamnesis() {
         .then(({ data }) => setPatientName(data?.full_name || "Paciente"));
     }
   }, [isNutritionistMode, forPatientId]);
+
+  // Check if onboarding is released for patient (non-nutritionist mode)
+  useEffect(() => {
+    if (isNutritionistMode || !targetUserId) return;
+    supabase
+      .from("onboarding_pipelines")
+      .select("release_status")
+      .eq("patient_id", targetUserId)
+      .not("status", "in", '("completed","superseded_by_active_plan","superseded_by_published_plan")')
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data && (data as any).release_status !== "released") {
+          setOnboardingBlocked(true);
+        }
+      });
+  }, [targetUserId, isNutritionistMode]);
 
   // Load existing draft on mount
   useEffect(() => {
@@ -666,6 +688,9 @@ export default function Anamnesis() {
     const carbs = Math.round((kcalTarget * 0.45) / 4);
     const fat = Math.round((kcalTarget * 0.25) / 9);
 
+    // Extract clinical flags from adaptive blocks
+    const clinicalFlags = extractClinicalFlags(answers);
+
     const payload = {
       user_id: targetUserId,
       answers,
@@ -674,6 +699,7 @@ export default function Anamnesis() {
       computed_protein: protein,
       computed_carbs: carbs,
       computed_fat: fat,
+      clinical_flags: clinicalFlags,
       status: "completed",
     };
 
@@ -743,6 +769,35 @@ export default function Anamnesis() {
         .eq("patient_id", targetUserId);
     }
   };
+
+  // Blocked state — onboarding not released
+  if (onboardingBlocked && !isNutritionistMode) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-lg mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
+          <div className="w-20 h-20 rounded-full bg-warning/10 flex items-center justify-center">
+            <Lock className="w-10 h-10 text-warning" />
+          </div>
+          <h1 className="font-display text-2xl font-bold">Aguardando Ativação Clínica</h1>
+          <p className="text-muted-foreground max-w-md">
+            Seu nutricionista precisa liberar o onboarding antes que você possa preencher a anamnese.
+            Isso garante que sua jornada seja personalizada e alinhada ao seu plano de atendimento.
+          </p>
+          <div className="p-4 rounded-xl bg-muted/30 border border-border text-sm text-muted-foreground">
+            <AlertTriangle className="w-4 h-4 inline mr-1.5 text-warning" />
+            Entre em contato com seu profissional caso já tenha realizado o pagamento.
+          </div>
+          <Button variant="outline" onClick={() => navigate("/")}>
+            Voltar ao Dashboard
+          </Button>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Compute active adaptive blocks based on current answers
+  const activeAdaptiveBlocks = getActiveAdaptiveBlocks(answers);
+  const allAdaptiveQuestions = activeAdaptiveBlocks.flatMap((b) => b.questions);
 
   if (completed) {
     return (
@@ -1017,6 +1072,18 @@ export default function Anamnesis() {
             >
               Próxima <ChevronRight className="w-4 h-4" />
             </Button>
+          ) : !showAdaptiveBlocks && activeAdaptiveBlocks.length > 0 ? (
+            <Button
+              onClick={() => {
+                setShowAdaptiveBlocks(true);
+                setAdaptiveStep(0);
+              }}
+              disabled={!canNext()}
+              className="gradient-primary gap-2 shadow-glow"
+            >
+              <Brain className="w-4 h-4" />
+              Avaliação Personalizada →
+            </Button>
           ) : (
             <Button
               onClick={handleSubmit}
@@ -1028,6 +1095,111 @@ export default function Anamnesis() {
             </Button>
           )}
         </div>
+
+        {/* Adaptive Blocks Phase */}
+        {showAdaptiveBlocks && activeAdaptiveBlocks.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-8 space-y-6"
+          >
+            <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
+              <h3 className="font-display font-bold text-lg flex items-center gap-2 mb-2">
+                <Brain className="w-5 h-5 text-primary" />
+                Avaliação Adaptativa Personalizada
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Com base nas suas respostas, identificamos áreas que merecem atenção especial.
+                Responda os blocos abaixo para uma análise mais precisa.
+              </p>
+            </div>
+
+            {activeAdaptiveBlocks.map((block, bIdx) => (
+              <motion.div
+                key={block.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: bIdx * 0.1 }}
+                className="space-y-4 p-5 rounded-xl border border-border bg-card/50"
+              >
+                <h4 className="font-display font-semibold text-base">{block.label}</h4>
+                {block.questions.map((aq) => (
+                  <div key={aq.id} className="space-y-2">
+                    <p className="text-sm font-medium">{aq.title}</p>
+                    <p className="text-xs text-muted-foreground">{aq.subtitle}</p>
+
+                    {aq.type === "single" && aq.options && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {aq.options.map((opt) => (
+                          <OptionCard
+                            key={opt.value}
+                            opt={opt}
+                            selected={answers[aq.id] === opt.value}
+                            onClick={() => setAnswers((prev) => ({ ...prev, [aq.id]: opt.value }))}
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    {aq.type === "multi" && aq.options && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {aq.options.map((opt) => {
+                          const current: string[] = answers[aq.id] || [];
+                          const selected = current.includes(opt.value);
+                          return (
+                            <OptionCard
+                              key={opt.value}
+                              opt={opt}
+                              selected={selected}
+                              onClick={() => {
+                                if (opt.value === "none") {
+                                  setAnswers((prev) => ({ ...prev, [aq.id]: ["none"] }));
+                                } else {
+                                  const filtered = current.filter((v) => v !== "none");
+                                  setAnswers((prev) => ({
+                                    ...prev,
+                                    [aq.id]: selected ? filtered.filter((v) => v !== opt.value) : [...filtered, opt.value],
+                                  }));
+                                }
+                              }}
+                            />
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {aq.type === "slider" && (
+                      <SliderInput
+                        value={answers[aq.id] ?? aq.min ?? 1}
+                        onChange={(v) => setAnswers((prev) => ({ ...prev, [aq.id]: v }))}
+                        min={aq.min || 0} max={aq.max || 100} step={aq.step || 1} unit={aq.unit || ""}
+                      />
+                    )}
+
+                    {aq.type === "text" && (
+                      <textarea
+                        value={answers[aq.id] || ""} onChange={(e) => setAnswers((prev) => ({ ...prev, [aq.id]: e.target.value }))}
+                        placeholder={aq.placeholder} rows={2}
+                        className="w-full bg-card border-2 border-border rounded-xl px-3 py-2 focus:border-primary focus:outline-none transition-colors resize-none text-sm"
+                      />
+                    )}
+                  </div>
+                ))}
+              </motion.div>
+            ))}
+
+            <div className="flex justify-end">
+              <Button
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="gradient-primary gap-2 shadow-glow"
+              >
+                <Sparkles className="w-4 h-4" />
+                {submitting ? "Salvando..." : "Concluir Anamnese Completa ✨"}
+              </Button>
+            </div>
+          </motion.div>
+        )}
       </div>
     </DashboardLayout>
   );
