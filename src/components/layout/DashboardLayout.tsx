@@ -15,6 +15,7 @@ import AccordionSidebar from "@/components/layout/AccordionSidebar";
 import PendingApprovalsModal, { usePendingApprovals } from "@/components/patient/PendingApprovalsModal";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import SmartResumeModal from "@/components/common/SmartResumeModal";
+import IntelligenceModal from "@/components/common/IntelligenceModal";
 
 function SidebarFooter({
   collapsed,
