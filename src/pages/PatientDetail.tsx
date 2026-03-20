@@ -494,6 +494,9 @@ export default function PatientDetail() {
             <Button variant="outline" className="gap-2" onClick={() => navigate(`/anamnesis?patientId=${patientId}`)}>
               <Heart className="w-4 h-4" /> {anamnesis ? "Editar Anamnese" : "Preencher Anamnese"}
             </Button>
+            <Button variant="outline" className="gap-2 border-warning/30 text-warning hover:bg-warning/10" onClick={() => setReleaseOnboardingOpen(true)}>
+              <Rocket className="w-4 h-4" /> Liberar Onboarding
+            </Button>
             <Dialog open={activateOpen} onOpenChange={setActivateOpen}>
               <DialogTrigger asChild>
                 <Button className="gradient-primary gap-2 shadow-glow">
