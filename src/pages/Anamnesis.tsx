@@ -741,8 +741,16 @@ export default function Anamnesis() {
     try {
       const flagResult = await processAnamnesisFlags(targetUserId, anamData.id);
       console.log(`[ClinicalFlags] ${flagResult.flags_generated} flags geradas`);
+
+      // Generate behavioral tasks and messages from flags
+      const { data: taskResult } = await supabase.functions.invoke("generate-behavioral-tasks", {
+        body: { patient_id: targetUserId },
+      });
+      if (taskResult) {
+        console.log(`[BehavioralTasks] ${taskResult.tasks_generated} tarefas, ${taskResult.messages_generated} mensagens geradas`);
+      }
     } catch (e: any) {
-      console.error("Flag processing error:", e);
+      console.error("Flag/task processing error:", e);
     }
 
     // Trigger AI analysis
