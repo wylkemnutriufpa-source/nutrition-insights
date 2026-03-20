@@ -1,0 +1,225 @@
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Rocket, Loader2, Lock, CheckCircle2 } from "lucide-react";
+
+interface Props {
+  patientId: string;
+  patientName: string;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onReleased: () => void;
+}
+
+export default function OnboardingReleaseDialog({ patientId, patientName, open, onOpenChange, onReleased }: Props) {
+  const { user } = useAuth();
+  const [releasing, setReleasing] = useState(false);
+  const [form, setForm] = useState({
+    contracted_plan: "",
+    primary_goal: "",
+    nutrition_strategy: "",
+    followup_intensity: "moderate",
+    estimated_duration: "90",
+    notes: "",
+  });
+
+  const handleRelease = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !patientId) return;
+    setReleasing(true);
+
+    try {
+      // Find active pipeline for this patient
+      const { data: pipeline } = await supabase
+        .from("onboarding_pipelines")
+        .select("id, release_status")
+        .eq("patient_id", patientId)
+        .not("status", "in", '("completed","superseded_by_active_plan","superseded_by_published_plan","rejected")')
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!pipeline) {
+        // Create a new pipeline if none exists
+        const { data: newPipeline, error: createErr } = await supabase
+          .from("onboarding_pipelines")
+          .insert({
+            patient_id: patientId,
+            nutritionist_id: user.id,
+            status: "pending_anamnesis",
+            release_status: "released",
+            released_by: user.id,
+            released_at: new Date().toISOString(),
+            release_config: {
+              contracted_plan: form.contracted_plan,
+              primary_goal: form.primary_goal,
+              nutrition_strategy: form.nutrition_strategy,
+              followup_intensity: form.followup_intensity,
+              estimated_duration_days: parseInt(form.estimated_duration),
+              notes: form.notes,
+            },
+          } as any)
+          .select("id")
+          .single();
+
+        if (createErr) throw createErr;
+      } else {
+        // Update existing pipeline
+        const { error } = await supabase
+          .from("onboarding_pipelines")
+          .update({
+            release_status: "released",
+            released_by: user.id,
+            released_at: new Date().toISOString(),
+            release_config: {
+              contracted_plan: form.contracted_plan,
+              primary_goal: form.primary_goal,
+              nutrition_strategy: form.nutrition_strategy,
+              followup_intensity: form.followup_intensity,
+              estimated_duration_days: parseInt(form.estimated_duration),
+              notes: form.notes,
+            },
+          } as any)
+          .eq("id", pipeline.id);
+
+        if (error) throw error;
+      }
+
+      // Log in timeline
+      await supabase.from("patient_timeline").insert({
+        patient_id: patientId,
+        event_type: "onboarding_released",
+        title: "Onboarding liberado pelo profissional",
+        description: `Objetivo: ${form.primary_goal || "Não definido"} | Estratégia: ${form.nutrition_strategy || "Não definida"} | Duração estimada: ${form.estimated_duration} dias`,
+        created_by: user.id,
+      });
+
+      // Create notification for patient
+      await supabase.from("notifications").insert({
+        user_id: patientId,
+        title: "🚀 Seu onboarding foi liberado!",
+        message: `Seu nutricionista liberou o início da sua jornada. Complete as etapas para receber seu plano alimentar personalizado.`,
+        type: "onboarding",
+        entity_type: "onboarding",
+        entity_id: patientId,
+        target_route: "/anamnesis",
+      } as any);
+
+      toast.success("Onboarding liberado com sucesso!");
+      onOpenChange(false);
+      onReleased();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao liberar onboarding");
+    }
+    setReleasing(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 font-display">
+            <Rocket className="w-5 h-5 text-primary" />
+            Liberar Onboarding — {patientName}
+          </DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={handleRelease} className="space-y-4">
+          <div className="p-3 rounded-lg bg-warning/10 border border-warning/20 text-sm text-warning-foreground">
+            <Lock className="w-4 h-4 inline mr-1.5" />
+            O paciente só poderá iniciar o onboarding após esta liberação.
+          </div>
+
+          <div>
+            <Label>Plano Contratado</Label>
+            <Input
+              value={form.contracted_plan}
+              onChange={(e) => setForm({ ...form, contracted_plan: e.target.value })}
+              placeholder="Ex: Premium Trimestral, Consulta Avulsa..."
+            />
+          </div>
+
+          <div>
+            <Label>Objetivo Principal</Label>
+            <Select value={form.primary_goal} onValueChange={(v) => setForm({ ...form, primary_goal: v })}>
+              <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="lose_weight">Emagrecimento</SelectItem>
+                <SelectItem value="gain_muscle">Ganho de massa</SelectItem>
+                <SelectItem value="maintain">Manutenção</SelectItem>
+                <SelectItem value="health">Saúde geral</SelectItem>
+                <SelectItem value="clinical">Tratamento clínico</SelectItem>
+                <SelectItem value="performance">Performance</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Estratégia Nutricional Inicial</Label>
+            <Select value={form.nutrition_strategy} onValueChange={(v) => setForm({ ...form, nutrition_strategy: v })}>
+              <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="flexible">Dieta Flexível</SelectItem>
+                <SelectItem value="low_carb">Low Carb</SelectItem>
+                <SelectItem value="ketogenic">Cetogênica</SelectItem>
+                <SelectItem value="mediterranean">Mediterrânea</SelectItem>
+                <SelectItem value="vegetarian">Vegetariana</SelectItem>
+                <SelectItem value="vegan">Vegana</SelectItem>
+                <SelectItem value="custom">Personalizada</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Intensidade de Acompanhamento</Label>
+              <Select value={form.followup_intensity} onValueChange={(v) => setForm({ ...form, followup_intensity: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="light">Leve (mensal)</SelectItem>
+                  <SelectItem value="moderate">Moderado (quinzenal)</SelectItem>
+                  <SelectItem value="intensive">Intensivo (semanal)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Duração Estimada (dias)</Label>
+              <Input
+                type="number"
+                value={form.estimated_duration}
+                onChange={(e) => setForm({ ...form, estimated_duration: e.target.value })}
+                min={7}
+                max={365}
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label>Observações Clínicas (opcional)</Label>
+            <Textarea
+              value={form.notes}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              placeholder="Notas sobre o paciente, contexto da consulta..."
+              rows={3}
+            />
+          </div>
+
+          <Button type="submit" className="w-full gap-2" disabled={releasing || !form.primary_goal}>
+            {releasing ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> Liberando...</>
+            ) : (
+              <><CheckCircle2 className="w-4 h-4" /> Liberar Onboarding</>
+            )}
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
