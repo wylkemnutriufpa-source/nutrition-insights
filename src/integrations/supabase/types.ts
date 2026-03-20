@@ -4879,6 +4879,54 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_behavioral_tasks: {
+        Row: {
+          created_at: string
+          description: string | null
+          due_date: string | null
+          frequency: string
+          generated_by: string
+          id: string
+          patient_id: string
+          priority: number
+          source_flag: string | null
+          status: string
+          template_code: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          frequency?: string
+          generated_by?: string
+          id?: string
+          patient_id: string
+          priority?: number
+          source_flag?: string | null
+          status?: string
+          template_code?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          frequency?: string
+          generated_by?: string
+          id?: string
+          patient_id?: string
+          priority?: number
+          source_flag?: string | null
+          status?: string
+          template_code?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       patient_body_projection_states: {
         Row: {
           created_at: string
@@ -5023,6 +5071,51 @@ export type Database = {
             referencedColumns: ["flag_key"]
           },
         ]
+      }
+      patient_clinical_messages: {
+        Row: {
+          body: string
+          channel: string
+          created_at: string
+          generated_by: string
+          id: string
+          message_code: string | null
+          patient_id: string
+          priority: number
+          source_flag: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          channel?: string
+          created_at?: string
+          generated_by?: string
+          id?: string
+          message_code?: string | null
+          patient_id: string
+          priority?: number
+          source_flag?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          channel?: string
+          created_at?: string
+          generated_by?: string
+          id?: string
+          message_code?: string | null
+          patient_id?: string
+          priority?: number
+          source_flag?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       patient_clinical_milestones: {
         Row: {

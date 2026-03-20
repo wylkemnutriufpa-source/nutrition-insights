@@ -52,6 +52,7 @@ import { EditorVersionPicker } from "@/components/common/EditorVersionPicker";
 import MealAdherenceWidget from "@/components/patient/MealAdherenceWidget";
 import OnboardingReleaseDialog from "@/components/patient/OnboardingReleaseDialog";
 import ClinicalFlagsSummary from "@/components/patient/ClinicalFlagsSummary";
+import PatientBehavioralManager from "@/components/patient/PatientBehavioralManager";
 
 export default function PatientDetail() {
   const { patientId } = useParams<{ patientId: string }>();
@@ -1131,6 +1132,9 @@ export default function PatientDetail() {
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Flags Clínicas do Paciente</DialogTitle></DialogHeader>
                   <ClinicalFlagsSummary patientId={patientId!} />
+                  <div className="mt-6 pt-6 border-t border-border">
+                    <PatientBehavioralManager patientId={patientId!} />
+                  </div>
                 </DialogContent>
               </Dialog>
 
