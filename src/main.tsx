@@ -3,41 +3,50 @@ import "./i18n";
 import App from "./App.tsx";
 import "./index.css";
 
-const APP_SHELL_VERSION = "2026-03-19-sync-1";
+/**
+ * Cache-busting: uses build timestamp so every deploy invalidates old SW caches.
+ * This prevents the app from "reverting" to a stale cached version.
+ */
+const APP_SHELL_VERSION = `build-${typeof __BUILD_TIMESTAMP__ !== "undefined" ? __BUILD_TIMESTAMP__ : Date.now().toString(36)}`;
 
 function isPreviewHost() {
   return window.location.hostname.includes("id-preview--");
 }
 
-async function disablePreviewServiceWorker() {
-  if (!("serviceWorker" in navigator)) return;
-
-  const registrations = await navigator.serviceWorker.getRegistrations();
-  await Promise.all(registrations.map((registration) => registration.unregister()));
-
+async function nukeAllCachesAndWorkers() {
+  if ("serviceWorker" in navigator) {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map((r) => r.unregister()));
+  }
   if ("caches" in window) {
-    const cacheKeys = await window.caches.keys();
-    await Promise.all(cacheKeys.map((key) => window.caches.delete(key)));
+    const keys = await window.caches.keys();
+    await Promise.all(keys.map((k) => window.caches.delete(k)));
   }
 }
 
 async function syncApplicationShell() {
   if (!("serviceWorker" in navigator)) return;
 
+  // Preview environments: NEVER use service workers — always nuke them
   if (isPreviewHost()) {
-    await disablePreviewServiceWorker();
+    await nukeAllCachesAndWorkers();
     return;
   }
 
-  const cachedVersion = window.localStorage.getItem("fj_app_shell_version");
-  if (cachedVersion !== APP_SHELL_VERSION && "caches" in window) {
-    const cacheKeys = await window.caches.keys();
-    await Promise.all(cacheKeys.map((key) => window.caches.delete(key)));
-    window.localStorage.setItem("fj_app_shell_version", APP_SHELL_VERSION);
+  // Production: invalidate caches when build version changes
+  const cachedVersion = localStorage.getItem("fj_app_shell_version");
+  if (cachedVersion !== APP_SHELL_VERSION) {
+    await nukeAllCachesAndWorkers();
+    localStorage.setItem("fj_app_shell_version", APP_SHELL_VERSION);
+    // Force a clean reload after purging stale caches
+    if (cachedVersion !== null) {
+      window.location.reload();
+      return;
+    }
   }
 
   const registrations = await navigator.serviceWorker.getRegistrations();
-  await Promise.all(registrations.map((registration) => registration.update()));
+  await Promise.all(registrations.map((r) => r.update()));
 }
 
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
