@@ -102,11 +102,6 @@ export default function ClientDashboard() {
   const { user, profile } = useAuth();
   const lifecycle = usePatientLifecycleState();
   const { status: journeyStatus, loading: journeyLoading, canAccessOnboarding } = usePatientJourneyStatus();
-
-  // Gate: if patient is in a pre-onboarding state, show blocking screen
-  if (!journeyLoading && journeyStatus && !canAccessOnboarding) {
-    return <OnboardingGateScreen status={journeyStatus} />;
-  }
   const [programs, setPrograms] = useState<ProgramInfo[]>([]);
   const [appointments, setAppointments] = useState<AppointmentInfo[]>([]);
   const [notifications, setNotifications] = useState<NotificationInfo[]>([]);
