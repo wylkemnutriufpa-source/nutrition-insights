@@ -417,6 +417,7 @@ export default function TherapeuticSuggestionsPanel() {
                       updateMutation.mutate({
                         id: selectedIntervention.id,
                         status: confirmAction === "apply" ? "applied" : "ignored",
+                        intervention: confirmAction === "apply" ? selectedIntervention : undefined,
                       });
                     }
                   }}
