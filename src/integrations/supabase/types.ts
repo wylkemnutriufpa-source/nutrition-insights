@@ -731,6 +731,39 @@ export type Database = {
         }
         Relationships: []
       }
+      body_assessment_extraction_logs: {
+        Row: {
+          created_at: string | null
+          extraction_status: string | null
+          fields_detected_json: Json | null
+          file_name: string | null
+          id: string
+          parser_version: string | null
+          patient_id: string
+          warnings_json: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          extraction_status?: string | null
+          fields_detected_json?: Json | null
+          file_name?: string | null
+          id?: string
+          parser_version?: string | null
+          patient_id: string
+          warnings_json?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          extraction_status?: string | null
+          fields_detected_json?: Json | null
+          file_name?: string | null
+          id?: string
+          parser_version?: string | null
+          patient_id?: string
+          warnings_json?: Json | null
+        }
+        Relationships: []
+      }
       body_assessment_photos: {
         Row: {
           assessment_date: string
@@ -2905,6 +2938,57 @@ export type Database = {
         }
         Relationships: []
       }
+      lab_marker_rules: {
+        Row: {
+          category: string
+          clinical_note: string | null
+          created_at: string | null
+          gender_filter: string | null
+          generated_flag: string
+          id: string
+          is_active: boolean | null
+          marker_key: string
+          marker_name: string
+          operator: string
+          severity: string
+          suggested_strategy: string | null
+          threshold_max: number | null
+          threshold_value: number | null
+        }
+        Insert: {
+          category?: string
+          clinical_note?: string | null
+          created_at?: string | null
+          gender_filter?: string | null
+          generated_flag: string
+          id?: string
+          is_active?: boolean | null
+          marker_key: string
+          marker_name: string
+          operator?: string
+          severity?: string
+          suggested_strategy?: string | null
+          threshold_max?: number | null
+          threshold_value?: number | null
+        }
+        Update: {
+          category?: string
+          clinical_note?: string | null
+          created_at?: string | null
+          gender_filter?: string | null
+          generated_flag?: string
+          id?: string
+          is_active?: boolean | null
+          marker_key?: string
+          marker_name?: string
+          operator?: string
+          severity?: string
+          suggested_strategy?: string | null
+          threshold_max?: number | null
+          threshold_value?: number | null
+        }
+        Relationships: []
+      }
       lead_requests: {
         Row: {
           created_at: string
@@ -3753,6 +3837,48 @@ export type Database = {
           scientific_rationale?: string | null
           updated_at?: string | null
           version?: number | null
+        }
+        Relationships: []
+      }
+      nutrition_search_index: {
+        Row: {
+          clinical_tags: string | null
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          extra_data: Json | null
+          goal_tags: string | null
+          id: string
+          keywords: string | null
+          strategy_tags: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          clinical_tags?: string | null
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          extra_data?: Json | null
+          goal_tags?: string | null
+          id?: string
+          keywords?: string | null
+          strategy_tags?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          clinical_tags?: string | null
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          extra_data?: Json | null
+          goal_tags?: string | null
+          id?: string
+          keywords?: string | null
+          strategy_tags?: string | null
+          title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -4882,6 +5008,42 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_behavior_memory: {
+        Row: {
+          adherence_score: number | null
+          behavior_key: string
+          clinical_relevance_score: number | null
+          created_at: string | null
+          frequency_score: number | null
+          id: string
+          last_occurrence: string | null
+          patient_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          adherence_score?: number | null
+          behavior_key: string
+          clinical_relevance_score?: number | null
+          created_at?: string | null
+          frequency_score?: number | null
+          id?: string
+          last_occurrence?: string | null
+          patient_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          adherence_score?: number | null
+          behavior_key?: string
+          clinical_relevance_score?: number | null
+          created_at?: string | null
+          frequency_score?: number | null
+          id?: string
+          last_occurrence?: string | null
+          patient_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       patient_behavioral_tasks: {
         Row: {
           created_at: string
@@ -4939,6 +5101,102 @@ export type Database = {
           template_code?: string | null
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      patient_body_assessments: {
+        Row: {
+          abdomen_cm: number | null
+          arm_cm: number | null
+          assessment_date: string
+          bmi: number | null
+          body_fat_percent: number | null
+          bone_mass_kg: number | null
+          calf_cm: number | null
+          chest_cm: number | null
+          created_at: string | null
+          extraction_status: string | null
+          fat_mass_kg: number | null
+          height_m: number | null
+          hip_cm: number | null
+          hydration_percent: number | null
+          id: string
+          lean_mass_kg: number | null
+          metabolic_age: number | null
+          notes: string | null
+          parser_version: string | null
+          patient_id: string
+          raw_text: string | null
+          source_file_name: string | null
+          source_file_url: string | null
+          thigh_cm: number | null
+          updated_at: string | null
+          visceral_fat_level: number | null
+          waist_cm: number | null
+          waist_hip_ratio: number | null
+          weight_kg: number | null
+        }
+        Insert: {
+          abdomen_cm?: number | null
+          arm_cm?: number | null
+          assessment_date?: string
+          bmi?: number | null
+          body_fat_percent?: number | null
+          bone_mass_kg?: number | null
+          calf_cm?: number | null
+          chest_cm?: number | null
+          created_at?: string | null
+          extraction_status?: string | null
+          fat_mass_kg?: number | null
+          height_m?: number | null
+          hip_cm?: number | null
+          hydration_percent?: number | null
+          id?: string
+          lean_mass_kg?: number | null
+          metabolic_age?: number | null
+          notes?: string | null
+          parser_version?: string | null
+          patient_id: string
+          raw_text?: string | null
+          source_file_name?: string | null
+          source_file_url?: string | null
+          thigh_cm?: number | null
+          updated_at?: string | null
+          visceral_fat_level?: number | null
+          waist_cm?: number | null
+          waist_hip_ratio?: number | null
+          weight_kg?: number | null
+        }
+        Update: {
+          abdomen_cm?: number | null
+          arm_cm?: number | null
+          assessment_date?: string
+          bmi?: number | null
+          body_fat_percent?: number | null
+          bone_mass_kg?: number | null
+          calf_cm?: number | null
+          chest_cm?: number | null
+          created_at?: string | null
+          extraction_status?: string | null
+          fat_mass_kg?: number | null
+          height_m?: number | null
+          hip_cm?: number | null
+          hydration_percent?: number | null
+          id?: string
+          lean_mass_kg?: number | null
+          metabolic_age?: number | null
+          notes?: string | null
+          parser_version?: string | null
+          patient_id?: string
+          raw_text?: string | null
+          source_file_name?: string | null
+          source_file_url?: string | null
+          thigh_cm?: number | null
+          updated_at?: string | null
+          visceral_fat_level?: number | null
+          waist_cm?: number | null
+          waist_hip_ratio?: number | null
+          weight_kg?: number | null
         }
         Relationships: []
       }
@@ -5473,6 +5731,57 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_daily_focus: {
+        Row: {
+          completed_at: string | null
+          focus_action_label: string | null
+          focus_action_route: string | null
+          focus_color: string | null
+          focus_description: string | null
+          focus_priority: number | null
+          focus_reference_id: string | null
+          focus_title: string
+          focus_type: string
+          generated_at: string | null
+          id: string
+          is_completed: boolean | null
+          patient_id: string
+          valid_until: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          focus_action_label?: string | null
+          focus_action_route?: string | null
+          focus_color?: string | null
+          focus_description?: string | null
+          focus_priority?: number | null
+          focus_reference_id?: string | null
+          focus_title: string
+          focus_type: string
+          generated_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          patient_id: string
+          valid_until?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          focus_action_label?: string | null
+          focus_action_route?: string | null
+          focus_color?: string | null
+          focus_description?: string | null
+          focus_priority?: number | null
+          focus_reference_id?: string | null
+          focus_title?: string
+          focus_type?: string
+          generated_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          patient_id?: string
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
       patient_documents: {
         Row: {
           assessment_id: string | null
@@ -5706,6 +6015,54 @@ export type Database = {
           story_data?: Json
           updated_at?: string
           weight_trend?: string | null
+        }
+        Relationships: []
+      }
+      patient_lab_results: {
+        Row: {
+          created_at: string | null
+          exam_date: string
+          id: string
+          interpreted_flags_json: Json | null
+          patient_id: string
+          raw_text: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_file_name: string | null
+          source_file_url: string | null
+          status: string | null
+          structured_json: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          exam_date?: string
+          id?: string
+          interpreted_flags_json?: Json | null
+          patient_id: string
+          raw_text?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_file_name?: string | null
+          source_file_url?: string | null
+          status?: string | null
+          structured_json?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          exam_date?: string
+          id?: string
+          interpreted_flags_json?: Json | null
+          patient_id?: string
+          raw_text?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_file_name?: string | null
+          source_file_url?: string | null
+          status?: string | null
+          structured_json?: Json | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -6770,6 +7127,65 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clinical_signals_catalog"
             referencedColumns: ["signal_key"]
+          },
+        ]
+      }
+      patient_skinfold_assessments: {
+        Row: {
+          abdominal_mm: number | null
+          axillary_mm: number | null
+          biceps_mm: number | null
+          body_assessment_id: string | null
+          calculated_body_fat_percent: number | null
+          chest_mm: number | null
+          created_at: string | null
+          id: string
+          patient_id: string
+          protocol_used: string | null
+          subscapular_mm: number | null
+          suprailiac_mm: number | null
+          thigh_mm: number | null
+          triceps_mm: number | null
+        }
+        Insert: {
+          abdominal_mm?: number | null
+          axillary_mm?: number | null
+          biceps_mm?: number | null
+          body_assessment_id?: string | null
+          calculated_body_fat_percent?: number | null
+          chest_mm?: number | null
+          created_at?: string | null
+          id?: string
+          patient_id: string
+          protocol_used?: string | null
+          subscapular_mm?: number | null
+          suprailiac_mm?: number | null
+          thigh_mm?: number | null
+          triceps_mm?: number | null
+        }
+        Update: {
+          abdominal_mm?: number | null
+          axillary_mm?: number | null
+          biceps_mm?: number | null
+          body_assessment_id?: string | null
+          calculated_body_fat_percent?: number | null
+          chest_mm?: number | null
+          created_at?: string | null
+          id?: string
+          patient_id?: string
+          protocol_used?: string | null
+          subscapular_mm?: number | null
+          suprailiac_mm?: number | null
+          thigh_mm?: number | null
+          triceps_mm?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_skinfold_assessments_body_assessment_id_fkey"
+            columns: ["body_assessment_id"]
+            isOneToOne: false
+            referencedRelation: "patient_body_assessments"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -11194,6 +11610,8 @@ export type Database = {
         Args: { _new_state: string; _patient_id: string; _reason?: string }
         Returns: Json
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       sync_program_prestige: {
         Args: { _assigned_by: string; _program_id: string }
         Returns: Json
