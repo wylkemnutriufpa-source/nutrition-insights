@@ -233,6 +233,11 @@ export default function ClientDashboard() {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
+  // Gate: if patient is in a pre-onboarding state, show blocking screen
+  if (!journeyLoading && journeyStatus && !canAccessOnboarding) {
+    return <OnboardingGateScreen status={journeyStatus} />;
+  }
+
   if (loading) {
     return (
       <DashboardLayout>
