@@ -15,6 +15,7 @@ import AccordionSidebar from "@/components/layout/AccordionSidebar";
 import PendingApprovalsModal, { usePendingApprovals } from "@/components/patient/PendingApprovalsModal";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import SmartResumeModal from "@/components/common/SmartResumeModal";
+import IntelligenceModal from "@/components/common/IntelligenceModal";
 
 function SidebarFooter({
   collapsed,
@@ -111,7 +112,7 @@ function DynamicSidebar({
   const { isNutritionist, isPersonal, isAdmin } = useAuth();
   const pendingCount = usePendingApprovals();
   const [approvalsOpen, setApprovalsOpen] = useState(false);
-  const [smartResumeOpen, setSmartResumeOpen] = useState(false);
+  const [intelligenceOpen, setIntelligenceOpen] = useState(false);
 
   const isProRole = useMemo(() => isNutritionist || isPersonal || isAdmin, [isNutritionist, isPersonal, isAdmin]);
   const showPending = isProRole && pendingCount > 0;
@@ -124,7 +125,7 @@ function DynamicSidebar({
 
       <div className="px-3 mb-1">
         <button
-          onClick={() => setSmartResumeOpen(true)}
+          onClick={() => setIntelligenceOpen(true)}
           className={`flex items-center gap-2 w-full rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
         >
           <div className="relative flex-shrink-0">
@@ -159,7 +160,8 @@ function DynamicSidebar({
         </button>
       </div>
 
-      <SmartResumeModal externalOpen={smartResumeOpen} onExternalOpenChange={setSmartResumeOpen} />
+      <IntelligenceModal open={intelligenceOpen} onOpenChange={setIntelligenceOpen} />
+      <SmartResumeModal />
 
       <AnimatePresence>
         {showPending && (
