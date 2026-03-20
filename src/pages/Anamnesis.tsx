@@ -534,6 +534,24 @@ export default function Anamnesis() {
     }
   }, [isNutritionistMode, forPatientId]);
 
+  // Check if onboarding is released for patient (non-nutritionist mode)
+  useEffect(() => {
+    if (isNutritionistMode || !targetUserId) return;
+    supabase
+      .from("onboarding_pipelines")
+      .select("release_status")
+      .eq("patient_id", targetUserId)
+      .not("status", "in", '("completed","superseded_by_active_plan","superseded_by_published_plan")')
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data && (data as any).release_status !== "released") {
+          setOnboardingBlocked(true);
+        }
+      });
+  }, [targetUserId, isNutritionistMode]);
+
   // Load existing draft on mount
   useEffect(() => {
     if (!targetUserId) return;
