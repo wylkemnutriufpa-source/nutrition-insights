@@ -688,6 +688,9 @@ export default function Anamnesis() {
     const carbs = Math.round((kcalTarget * 0.45) / 4);
     const fat = Math.round((kcalTarget * 0.25) / 9);
 
+    // Extract clinical flags from adaptive blocks
+    const clinicalFlags = extractClinicalFlags(answers);
+
     const payload = {
       user_id: targetUserId,
       answers,
@@ -696,6 +699,7 @@ export default function Anamnesis() {
       computed_protein: protein,
       computed_carbs: carbs,
       computed_fat: fat,
+      clinical_flags: clinicalFlags,
       status: "completed",
     };
 
