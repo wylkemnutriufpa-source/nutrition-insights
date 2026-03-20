@@ -324,6 +324,11 @@ export default function ClientDashboard() {
           </motion.div>
         )}
 
+        {/* Daily Focus Hero — Top Priority */}
+        <motion.div variants={item}>
+          <PatientDailyFocusHero />
+        </motion.div>
+
         {/* Momentum Indicator */}
         <motion.div variants={item}>
           <MomentumIndicator variant="card" />
