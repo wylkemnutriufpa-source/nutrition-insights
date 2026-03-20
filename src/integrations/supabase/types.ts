@@ -398,6 +398,44 @@ export type Database = {
         }
         Relationships: []
       }
+      anamnese_trigger_map: {
+        Row: {
+          answer_condition: Json
+          created_at: string
+          generated_flag: string
+          id: string
+          is_active: boolean
+          priority: number
+          question_key: string
+        }
+        Insert: {
+          answer_condition?: Json
+          created_at?: string
+          generated_flag: string
+          id?: string
+          is_active?: boolean
+          priority?: number
+          question_key: string
+        }
+        Update: {
+          answer_condition?: Json
+          created_at?: string
+          generated_flag?: string
+          id?: string
+          is_active?: boolean
+          priority?: number
+          question_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anamnese_trigger_map_generated_flag_fkey"
+            columns: ["generated_flag"]
+            isOneToOne: false
+            referencedRelation: "clinical_flags_catalog"
+            referencedColumns: ["flag_key"]
+          },
+        ]
+      }
       anamnesis_ai_insights: {
         Row: {
           ai_summary: string | null
@@ -1311,6 +1349,115 @@ export type Database = {
         }
         Relationships: []
       }
+      clinical_behavior_rules: {
+        Row: {
+          checklist_template_code: string | null
+          created_at: string
+          frequency: string
+          id: string
+          is_active: boolean
+          message_template_code: string | null
+          objective_context: string | null
+          priority: number
+          severity_level: string
+          strategy_context: string | null
+          trigger_flag: string
+          updated_at: string
+        }
+        Insert: {
+          checklist_template_code?: string | null
+          created_at?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          message_template_code?: string | null
+          objective_context?: string | null
+          priority?: number
+          severity_level?: string
+          strategy_context?: string | null
+          trigger_flag: string
+          updated_at?: string
+        }
+        Update: {
+          checklist_template_code?: string | null
+          created_at?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          message_template_code?: string | null
+          objective_context?: string | null
+          priority?: number
+          severity_level?: string
+          strategy_context?: string | null
+          trigger_flag?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_behavior_rules_checklist_template_code_fkey"
+            columns: ["checklist_template_code"]
+            isOneToOne: false
+            referencedRelation: "clinical_checklist_templates"
+            referencedColumns: ["template_code"]
+          },
+          {
+            foreignKeyName: "clinical_behavior_rules_message_template_code_fkey"
+            columns: ["message_template_code"]
+            isOneToOne: false
+            referencedRelation: "clinical_message_templates"
+            referencedColumns: ["message_code"]
+          },
+          {
+            foreignKeyName: "clinical_behavior_rules_trigger_flag_fkey"
+            columns: ["trigger_flag"]
+            isOneToOne: false
+            referencedRelation: "clinical_flags_catalog"
+            referencedColumns: ["flag_key"]
+          },
+        ]
+      }
+      clinical_checklist_templates: {
+        Row: {
+          action_type: string
+          category: string
+          created_at: string
+          description: string | null
+          frequency: string
+          icon: string
+          id: string
+          is_active: boolean
+          template_code: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          action_type?: string
+          category?: string
+          created_at?: string
+          description?: string | null
+          frequency?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          template_code: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          action_type?: string
+          category?: string
+          created_at?: string
+          description?: string | null
+          frequency?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          template_code?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       clinical_daily_snapshots: {
         Row: {
           active_alerts_count: number | null
@@ -1652,6 +1799,39 @@ export type Database = {
         }
         Relationships: []
       }
+      clinical_flags_catalog: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          display_name: string
+          flag_key: string
+          id: string
+          is_active: boolean
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          display_name: string
+          flag_key: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          display_name?: string
+          flag_key?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       clinical_intervention_simulations: {
         Row: {
           baseline_state: Json
@@ -1703,6 +1883,45 @@ export type Database = {
           simulated_intervention?: Json
           simulation_confidence_score?: number
           simulation_type?: string
+        }
+        Relationships: []
+      }
+      clinical_message_templates: {
+        Row: {
+          body: string
+          category: string
+          channel: string
+          created_at: string
+          id: string
+          is_active: boolean
+          message_code: string
+          title: string
+          tone: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          category?: string
+          channel?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          message_code: string
+          title: string
+          tone?: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          category?: string
+          channel?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          message_code?: string
+          title?: string
+          tone?: string
+          updated_at?: string
         }
         Relationships: []
       }
