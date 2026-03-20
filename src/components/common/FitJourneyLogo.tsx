@@ -99,9 +99,10 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
           <span
             style={{
               background:
-                "linear-gradient(180deg, hsl(220 25% 20%) 0%, hsl(220 20% 35%) 40%, hsl(220 15% 55%) 60%, hsl(220 25% 25%) 100%)",
+                "linear-gradient(180deg, #C9A030 0%, #F5D55A 30%, #FFFBE6 52%, #F5D55A 72%, #B8920A 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
+              filter: "drop-shadow(0 1px 2px rgba(180,140,20,0.3))",
             }}
           >
             Fit
