@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
-import { Plus, Archive, Pencil, ListChecks, MessageCircle, Sparkles, Shield } from "lucide-react";
+import { Plus, Archive, ListChecks, MessageCircle, Sparkles, Shield, Info } from "lucide-react";
 import { DOMAIN_CONFIG } from "@/lib/clinicalFlags";
 
 interface Task {
@@ -21,6 +22,10 @@ interface Task {
   source_flag: string | null;
   generated_by: string;
   created_at: string;
+  objective_context: string | null;
+  strategy_context: string | null;
+  phase_context: string | null;
+  priority_reason: string | null;
 }
 
 interface Message {
@@ -33,11 +38,37 @@ interface Message {
   source_flag: string | null;
   generated_by: string;
   created_at: string;
+  objective_context: string | null;
+  strategy_context: string | null;
+  phase_context: string | null;
+  priority_reason: string | null;
 }
 
 interface Props {
   patientId: string;
 }
+
+const CONTEXT_LABELS: Record<string, string> = {
+  emagrecimento: "🎯 Emagrecimento",
+  hipertrofia: "💪 Hipertrofia",
+  recomposicao: "🔄 Recomposição",
+  clinico_digestivo: "🫁 Clínico Digestivo",
+  clinico_metabolico: "⚡ Clínico Metabólico",
+  manutencao: "🛡 Manutenção",
+  geral: "📋 Geral",
+  low_carb: "🥑 Low Carb",
+  cetogenica: "🧈 Cetogênica",
+  alta_proteina: "🥩 Alta Proteína",
+  anti_inflamatoria: "🌿 Anti-inflamatória",
+  reeducacao_alimentar: "📖 Reeducação Alimentar",
+  plant_based: "🌱 Plant-Based",
+  mediterranea: "🫒 Mediterrânea",
+  onboarding: "🚀 Onboarding",
+  adaptacao_inicial: "🌱 Adaptação Inicial",
+  aderencia: "📈 Aderência",
+  ajuste_terapeutico: "🔬 Ajuste Terapêutico",
+  recuperacao: "🔄 Recuperação",
+};
 
 export default function PatientBehavioralManager({ patientId }: Props) {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -78,6 +109,9 @@ export default function PatientBehavioralManager({ patientId }: Props) {
       });
       if (error) throw error;
       toast.success(`${data.tasks_generated} tarefas e ${data.messages_generated} mensagens geradas!`);
+      if (data.context) {
+        toast.info(`Contexto: ${CONTEXT_LABELS[data.context.objective] || data.context.objective} • ${CONTEXT_LABELS[data.context.phase] || data.context.phase}`);
+      }
       fetchData();
     } catch (e: any) {
       toast.error("Erro ao gerar: " + (e.message || "Falha"));
@@ -122,6 +156,38 @@ export default function PatientBehavioralManager({ patientId }: Props) {
       if (flag.includes(key.slice(0, 4))) return config.icon;
     }
     return "📋";
+  };
+
+  const ReasoningBadge = ({ item }: { item: { objective_context: string | null; strategy_context: string | null; phase_context: string | null; priority_reason: string | null; source_flag: string | null } }) => {
+    if (!item.priority_reason && !item.objective_context) return null;
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button className="p-0.5 rounded hover:bg-muted transition-colors">
+              <Info className="w-3.5 h-3.5 text-muted-foreground" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="left" className="max-w-[280px] space-y-1 text-xs">
+            {item.source_flag && (
+              <p><span className="font-semibold">Flag:</span> {item.source_flag}</p>
+            )}
+            {item.objective_context && (
+              <p><span className="font-semibold">Objetivo:</span> {CONTEXT_LABELS[item.objective_context] || item.objective_context}</p>
+            )}
+            {item.strategy_context && (
+              <p><span className="font-semibold">Estratégia:</span> {CONTEXT_LABELS[item.strategy_context] || item.strategy_context}</p>
+            )}
+            {item.phase_context && (
+              <p><span className="font-semibold">Fase:</span> {CONTEXT_LABELS[item.phase_context] || item.phase_context}</p>
+            )}
+            {item.priority_reason && (
+              <p><span className="font-semibold">Motivo:</span> {item.priority_reason}</p>
+            )}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
   };
 
   if (loading) {
@@ -198,21 +264,29 @@ export default function PatientBehavioralManager({ patientId }: Props) {
               <span className="text-base shrink-0">{flagIcon(task.source_flag)}</span>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{task.title}</p>
-                <div className="flex items-center gap-1.5 mt-0.5">
+                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                   <Badge variant={task.status === "completed" ? "default" : "outline"} className="text-[10px] py-0">
                     {task.status === "pending" ? "Pendente" : task.status === "completed" ? "Concluída" : "Pulada"}
                   </Badge>
                   <Badge variant="secondary" className="text-[10px] py-0">
                     {task.generated_by === "rule_engine" ? "✨ Auto" : "👤 Manual"}
                   </Badge>
+                  {task.phase_context && (
+                    <Badge variant="outline" className="text-[10px] py-0 text-muted-foreground">
+                      {CONTEXT_LABELS[task.phase_context] || task.phase_context}
+                    </Badge>
+                  )}
                   {task.source_flag && (
                     <span className="text-[10px] text-muted-foreground">{task.source_flag}</span>
                   )}
                 </div>
               </div>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => archiveTask(task.id)} title="Arquivar">
-                <Archive className="w-3.5 h-3.5" />
-              </Button>
+              <div className="flex items-center gap-1 shrink-0">
+                <ReasoningBadge item={task} />
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => archiveTask(task.id)} title="Arquivar">
+                  <Archive className="w-3.5 h-3.5" />
+                </Button>
+              </div>
             </motion.div>
           ))
         )}
@@ -236,13 +310,21 @@ export default function PatientBehavioralManager({ patientId }: Props) {
             >
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium">{msg.title}</p>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => archiveMessage(msg.id)} title="Arquivar">
-                  <Archive className="w-3.5 h-3.5" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  <ReasoningBadge item={msg} />
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => archiveMessage(msg.id)} title="Arquivar">
+                    <Archive className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
               </div>
               <p className="text-xs text-muted-foreground line-clamp-2">{msg.body}</p>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <Badge variant="outline" className="text-[10px] py-0">{msg.channel}</Badge>
+                {msg.phase_context && (
+                  <Badge variant="outline" className="text-[10px] py-0 text-muted-foreground">
+                    {CONTEXT_LABELS[msg.phase_context] || msg.phase_context}
+                  </Badge>
+                )}
                 {msg.source_flag && <span className="text-[10px] text-muted-foreground">{msg.source_flag}</span>}
               </div>
             </motion.div>
