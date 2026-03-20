@@ -1208,6 +1208,15 @@ export default function PatientDetail() {
             </>
           );
         })()}
+
+        {/* Onboarding Release Dialog */}
+        <OnboardingReleaseDialog
+          patientId={patientId!}
+          patientName={profile?.full_name || "Paciente"}
+          open={releaseOnboardingOpen}
+          onOpenChange={setReleaseOnboardingOpen}
+          onReleased={invalidate}
+        />
       </div>
     </DashboardLayout>
   );
