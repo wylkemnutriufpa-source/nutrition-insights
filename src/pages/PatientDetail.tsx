@@ -1132,6 +1132,9 @@ export default function PatientDetail() {
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Flags Clínicas do Paciente</DialogTitle></DialogHeader>
                   <ClinicalFlagsSummary patientId={patientId!} />
+                  <div className="mt-6 pt-6 border-t border-border">
+                    <PatientBehavioralManager patientId={patientId!} />
+                  </div>
                 </DialogContent>
               </Dialog>
 
