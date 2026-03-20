@@ -1126,7 +1126,14 @@ export default function PatientDetail() {
                 </DialogContent>
               </Dialog>
 
-              {/* Missions Modal */}
+              {/* Clinical Flags Modal */}
+              <Dialog open={openSection === "clinical-flags"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display">Flags Clínicas do Paciente</DialogTitle></DialogHeader>
+                  <ClinicalFlagsSummary patientId={patientId!} />
+                </DialogContent>
+              </Dialog>
+
               <Dialog open={openSection === "missions"} onOpenChange={(v) => !v && setOpenSection(null)}>
                 <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Missões do Paciente</DialogTitle></DialogHeader>
