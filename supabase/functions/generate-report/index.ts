@@ -10,11 +10,58 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    // ── JWT Authentication ──
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    const anonClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const userId = claimsData.claims.sub as string;
+
+    const { patient_id, report_type, nutritionist_id } = await req.json();
+    if (!patient_id || !nutritionist_id) throw new Error("patient_id and nutritionist_id required");
+
+    // ── Ownership: caller must match nutritionist_id ──
+    if (userId !== nutritionist_id) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // ── Verify nutritionist-patient linkage ──
+    const { data: linkage, error: linkError } = await supabase
+      .from("nutritionist_patients")
+      .select("id")
+      .eq("nutritionist_id", nutritionist_id)
+      .eq("patient_id", patient_id)
+      .eq("status", "active")
+      .maybeSingle();
+
+    if (linkError || !linkage) {
+      return new Response(JSON.stringify({ error: "Forbidden: patient not linked" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
 
     // Database-backed rate limiting (3 req/60s per IP)
     const { data: allowed } = await supabase.rpc("check_rate_limit", {
@@ -29,9 +76,6 @@ serve(async (req) => {
         { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60" } }
       );
     }
-
-    const { patient_id, report_type, nutritionist_id } = await req.json();
-    if (!patient_id || !nutritionist_id) throw new Error("patient_id and nutritionist_id required");
 
     // Fetch patient data
     const [profileRes, anamnesisRes, assessmentsRes, mealsRes, mealPlansRes, bodyRes] = await Promise.all([
