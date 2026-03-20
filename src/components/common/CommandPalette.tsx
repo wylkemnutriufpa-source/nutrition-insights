@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback, createContext, useContext } from "react";
+import { useEffect, useState, useMemo, useCallback, createContext, useContext, ReactNode, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -111,8 +111,10 @@ function normalize(text: string): string {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
-// Context to allow opening from external button
-const CommandPaletteContext = createContext<{ open: () => void }>({ open: () => {} });
+// ── Stable context: never changes identity after mount ──
+const CommandPaletteContext = createContext<{ open: () => void }>({
+  open: () => window.dispatchEvent(new CustomEvent("open-command-palette")),
+});
 export const useCommandPalette = () => useContext(CommandPaletteContext);
 
 // Global event-based open (for components outside the context tree)
@@ -146,7 +148,24 @@ const roleLabels: Record<string, string> = {
 };
 
 
-export default function CommandPalette() {
+// ── Provider wrapper: renders children without re-mounting on dialog state ──
+export function CommandPaletteProvider({ children }: { children: ReactNode }) {
+  const openPalette = useCallback(() => {
+    window.dispatchEvent(new CustomEvent("open-command-palette"));
+  }, []);
+
+  const ctxValue = useMemo(() => ({ open: openPalette }), [openPalette]);
+
+  return (
+    <CommandPaletteContext.Provider value={ctxValue}>
+      {children}
+      <CommandPaletteDialog />
+    </CommandPaletteContext.Provider>
+  );
+}
+
+// ── Dialog: isolated state, never causes parent/sibling re-renders ──
+const CommandPaletteDialog = memo(function CommandPaletteDialog() {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
@@ -370,13 +389,7 @@ export default function CommandPalette() {
     navigate(to);
   };
 
-  const openPalette = useCallback(() => setIsOpen(true), []);
-
-  // We use a custom filter to bypass cmdk's built-in filter (which doesn't handle accents)
-  const customFilter = useCallback(() => 1, []);
-
   return (
-    <CommandPaletteContext.Provider value={{ open: openPalette }}>
       <CommandDialog open={isOpen} onOpenChange={setIsOpen} shouldFilter={false}>
         <CommandInput
           placeholder="Buscar qualquer coisa: página, paciente, plano, protocolo..."
@@ -517,6 +530,8 @@ export default function CommandPalette() {
           )}
         </CommandList>
       </CommandDialog>
-    </CommandPaletteContext.Provider>
   );
-}
+});
+
+// Keep default export for backwards compat (renders just the dialog)
+export default CommandPaletteDialog;
