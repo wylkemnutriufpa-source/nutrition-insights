@@ -18,7 +18,7 @@ import {
   Palette, Bell, BarChart3, Shield, Bot, Scale, Droplets, Heart,
   BookOpen, DollarSign, Pill, Compass, Search, TrendingUp, Zap, Star, Crown,
   User, Dumbbell, CalendarDays, CreditCard, Globe, UserCheck, GraduationCap,
-  Share2, Award, Megaphone, Calculator, FileCheck, Sparkles
+  Share2, Award, Megaphone, Calculator, FileCheck, Sparkles, Brain
 } from "lucide-react";
 
 // Each route has keywords (accent-free) for fuzzy matching
