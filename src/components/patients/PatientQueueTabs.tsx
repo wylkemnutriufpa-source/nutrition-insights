@@ -213,8 +213,10 @@ export default function PatientQueueTabs() {
       {releasePatientId && (
         <OnboardingReleaseDialog
           patientId={releasePatientId}
+          patientName={patients.find(p => p.patient_id === releasePatientId)?.profile?.full_name || "Paciente"}
           open={!!releasePatientId}
           onOpenChange={(open) => !open && setReleasePatientId(null)}
+          onReleased={() => { setReleasePatientId(null); fetchCounts(); fetchPatients(tab); }}
         />
       )}
     </div>
