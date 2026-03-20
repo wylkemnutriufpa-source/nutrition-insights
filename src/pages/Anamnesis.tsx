@@ -10,6 +10,7 @@ import { ChevronLeft, ChevronRight, Sparkles, Check, Heart, Brain, Loader2, User
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
 import { getActiveAdaptiveBlocks, extractClinicalFlags, type AdaptiveBlock } from "@/lib/adaptiveAnamnesisBlocks";
+import { processAnamnesisFlags } from "@/lib/clinicalFlags";
 
 // ──── Question definitions ────
 interface Option {
