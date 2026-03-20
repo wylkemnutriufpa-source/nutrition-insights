@@ -37,7 +37,7 @@ export async function resolvePatientDailyFocus(patientId: string): Promise<Daily
     .limit(5);
 
   if (existing && existing.length > 0) {
-    return existing as DailyFocus[];
+    return existing as unknown as DailyFocus[];
   }
 
   // Generate new focus items
