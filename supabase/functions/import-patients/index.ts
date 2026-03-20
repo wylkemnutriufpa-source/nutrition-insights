@@ -40,10 +40,10 @@ async function importOnePatient(
       if (foundId) {
         finalId = foundId;
       } else {
-        // 3. Create via admin API
+        // 3. Create via admin API with random password
         const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
           email,
-          password: "123456",
+          password: randomPassword,
           email_confirm: true,
           user_metadata: { full_name: fullName },
         });
