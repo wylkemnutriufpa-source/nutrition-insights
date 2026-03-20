@@ -3,18 +3,22 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Bell, Check } from "lucide-react";
+import { Bell, Check, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-interface QuickNotification {
+interface SmartNotification {
   id: string;
   title: string;
   message: string;
   type: string;
   is_read: boolean;
   created_at: string;
+  entity_type: string | null;
+  entity_id: string | null;
+  target_route: string | null;
+  action_url: string | null;
 }
 
 export default function NotificationBell() {
@@ -23,20 +27,19 @@ export default function NotificationBell() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
 
-  // React Query for notifications — auto-invalidated by useRealtimeEventBus
-  const { data: notifications = [] } = useQuery<QuickNotification[]>({
+  const { data: notifications = [] } = useQuery<SmartNotification[]>({
     queryKey: ["notifications", "bell", user?.id ?? ""],
     enabled: !!user,
     staleTime: 30_000,
-    refetchInterval: 60_000, // lightweight fallback poll every 60s
+    refetchInterval: 60_000,
     queryFn: async () => {
       const { data } = await supabase
         .from("notifications")
-        .select("id, title, message, type, is_read, created_at")
+        .select("id, title, message, type, is_read, created_at, entity_type, entity_id, target_route, action_url")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
-        .limit(8);
-      return (data || []) as QuickNotification[];
+        .limit(10);
+      return (data || []) as SmartNotification[];
     },
   });
 
@@ -56,10 +59,8 @@ export default function NotificationBell() {
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          const n = payload.new as QuickNotification;
-          // Invalidate query to pick up the new notification
+          const n = payload.new as SmartNotification;
           queryClient.invalidateQueries({ queryKey: ["notifications"] });
-          // Show toast for critical types
           if (n.type === "alert") {
             toast.error(n.title, { description: n.message, duration: 8000 });
           } else if (n.type === "progress") {
@@ -75,13 +76,48 @@ export default function NotificationBell() {
     };
   }, [user, queryClient]);
 
+  const handleNotificationClick = useCallback(
+    async (n: SmartNotification) => {
+      // Mark as read
+      if (!n.is_read) {
+        await supabase.from("notifications").update({ is_read: true }).eq("id", n.id);
+        queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      }
+
+      // Navigate to target
+      const route = n.target_route || n.action_url;
+      if (route) {
+        setOpen(false);
+        // Internal route
+        if (route.startsWith("/")) {
+          navigate(route);
+        } else {
+          window.open(route, "_blank");
+        }
+      }
+    },
+    [navigate, queryClient],
+  );
+
   const markRead = useCallback(
-    async (id: string) => {
+    async (e: React.MouseEvent, id: string) => {
+      e.stopPropagation();
       await supabase.from("notifications").update({ is_read: true }).eq("id", id);
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
     [queryClient],
   );
+
+  const formatTime = (dateStr: string) => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "agora";
+    if (mins < 60) return `${mins}min`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h`;
+    const days = Math.floor(hrs / 24);
+    return `${days}d`;
+  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -102,33 +138,46 @@ export default function NotificationBell() {
             <span className="text-[10px] text-primary font-medium">{unread} novas</span>
           )}
         </div>
-        <div className="max-h-64 overflow-y-auto">
+        <div className="max-h-72 overflow-y-auto">
           {notifications.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-6">Sem notificações</p>
           ) : (
-            notifications.map((n) => (
-              <div
-                key={n.id}
-                className={`px-3 py-2.5 border-b border-border/50 flex items-start gap-2 text-xs ${!n.is_read ? "bg-primary/5" : ""}`}
-              >
-                <div className="flex-1 min-w-0">
-                  <p className={`font-medium truncate ${!n.is_read ? "" : "text-muted-foreground"}`}>
-                    {n.title}
-                  </p>
-                  <p className="text-muted-foreground line-clamp-1 mt-0.5">{n.message}</p>
+            notifications.map((n) => {
+              const hasRoute = !!(n.target_route || n.action_url);
+              return (
+                <div
+                  key={n.id}
+                  onClick={() => handleNotificationClick(n)}
+                  className={`px-3 py-2.5 border-b border-border/50 flex items-start gap-2 text-xs transition-colors ${
+                    hasRoute ? "cursor-pointer hover:bg-muted/50" : ""
+                  } ${!n.is_read ? "bg-primary/5" : ""}`}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1">
+                      <p className={`font-medium truncate ${!n.is_read ? "" : "text-muted-foreground"}`}>
+                        {n.title}
+                      </p>
+                      {hasRoute && <ExternalLink className="w-3 h-3 text-muted-foreground shrink-0" />}
+                    </div>
+                    <p className="text-muted-foreground line-clamp-1 mt-0.5">{n.message}</p>
+                    <span className="text-[10px] text-muted-foreground/60 mt-0.5 block">
+                      {formatTime(n.created_at)}
+                      {n.entity_type && ` · ${n.entity_type}`}
+                    </span>
+                  </div>
+                  {!n.is_read && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-6 w-6 flex-shrink-0"
+                      onClick={(e) => markRead(e, n.id)}
+                    >
+                      <Check className="w-3 h-3" />
+                    </Button>
+                  )}
                 </div>
-                {!n.is_read && (
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-6 w-6 flex-shrink-0"
-                    onClick={() => markRead(n.id)}
-                  >
-                    <Check className="w-3 h-3" />
-                  </Button>
-                )}
-              </div>
-            ))
+              );
+            })
           )}
         </div>
         <div className="p-2 border-t border-border">

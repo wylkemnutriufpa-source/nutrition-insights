@@ -105,7 +105,8 @@ export default function TherapeuticSuggestionsPanel() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+    mutationFn: async ({ id, status, intervention }: { id: string; status: string; intervention?: Intervention }) => {
+      // 1. Update the suggestion status
       const { error } = await supabase
         .from("nutritional_intervention_suggestions")
         .update({
@@ -115,14 +116,56 @@ export default function TherapeuticSuggestionsPanel() {
         })
         .eq("id", id);
       if (error) throw error;
+
+      // 2. If applied, log in clinical_auto_adjustment_logs for audit trail
+      if (status === "applied" && intervention) {
+        await supabase.from("clinical_auto_adjustment_logs").insert({
+          patient_id: intervention.patient_id,
+          adjustment_type: intervention.intervention_type,
+          triggering_driver: "therapeutic_suggestion",
+          adjustment_parameters: {
+            caloric_adjustment_percent: intervention.caloric_adjustment_percent,
+            suggested_calories: intervention.metadata?.suggested_calories,
+            current_calories: intervention.metadata?.current_calories,
+            efficacy_score: intervention.efficacy_score,
+            cluster_origin: intervention.cluster_origin,
+          },
+          expected_clinical_effect: intervention.clinical_reason,
+          approved_by_guardrail: true,
+          automation_confidence: (intervention.efficacy_score ?? 0) / 100,
+        });
+
+        // 3. Update the plan therapeutic fields
+        if (intervention.plan_id) {
+          await supabase.from("meal_plans").update({
+            therapeutic_effectiveness_status: intervention.intervention_type,
+            therapeutic_efficacy_score: intervention.efficacy_score,
+          }).eq("id", intervention.plan_id);
+        }
+
+        // 4. Create notification for the nutritionist
+        await supabase.from("notifications").insert({
+          user_id: user!.id,
+          title: `Intervenção aplicada: ${intervention.patient_name}`,
+          message: `${interventionTypeConfig[intervention.intervention_type]?.label || intervention.intervention_type} — ${intervention.clinical_reason?.slice(0, 80)}`,
+          type: "progress",
+          entity_type: "intervention",
+          entity_id: id,
+          target_route: `/patients/${intervention.patient_id}`,
+        });
+      }
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["therapeutic-interventions"] });
-      toast.success(variables.status === "applied" ? "Intervenção aplicada!" : "Intervenção ignorada");
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      toast.success(variables.status === "applied" ? "Intervenção aplicada e registrada!" : "Intervenção ignorada");
       setSelectedIntervention(null);
       setConfirmAction(null);
     },
-    onError: () => toast.error("Erro ao atualizar intervenção"),
+    onError: (err) => {
+      console.error("Intervention update error:", err);
+      toast.error("Erro ao atualizar intervenção");
+    },
   });
 
   if (isLoading) {
@@ -374,6 +417,7 @@ export default function TherapeuticSuggestionsPanel() {
                       updateMutation.mutate({
                         id: selectedIntervention.id,
                         status: confirmAction === "apply" ? "applied" : "ignored",
+                        intervention: confirmAction === "apply" ? selectedIntervention : undefined,
                       });
                     }
                   }}

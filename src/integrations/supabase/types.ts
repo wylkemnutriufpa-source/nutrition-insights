@@ -3320,11 +3320,14 @@ export type Database = {
         Row: {
           action_url: string | null
           created_at: string
+          entity_id: string | null
+          entity_type: string | null
           id: string
           is_read: boolean
           message: string
           metadata: Json | null
           priority: string | null
+          target_route: string | null
           title: string
           type: string
           user_id: string
@@ -3332,11 +3335,14 @@ export type Database = {
         Insert: {
           action_url?: string | null
           created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
           id?: string
           is_read?: boolean
           message: string
           metadata?: Json | null
           priority?: string | null
+          target_route?: string | null
           title: string
           type?: string
           user_id: string
@@ -3344,11 +3350,14 @@ export type Database = {
         Update: {
           action_url?: string | null
           created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
           id?: string
           is_read?: boolean
           message?: string
           metadata?: Json | null
           priority?: string | null
+          target_route?: string | null
           title?: string
           type?: string
           user_id?: string
