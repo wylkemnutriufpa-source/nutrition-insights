@@ -9,9 +9,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Loader2, Sparkles, AlertTriangle, CheckCircle2, Flame, Beef, Wheat, Droplets,
   Info, ArrowRight, Eye, ChevronLeft, Shield, Target, Zap, Heart, Activity,
+  RefreshCw, ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useMealPlanEditorV2Store, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
@@ -25,6 +27,7 @@ import {
   type PatientContext,
   type AssistedGenerationResult,
   type GeneratedPlanOption,
+  type GeneratedSlotWithSubs,
   type ComplexityTier,
   type PlanFocus,
   type ProteinLevel,
@@ -35,7 +38,7 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
-type Step = "params" | "context" | "generating" | "options" | "preview";
+type Step = "params" | "generating" | "options" | "preview";
 
 const GOAL_LABELS: Record<string, string> = {
   weight_loss: "Emagrecimento",
@@ -87,22 +90,19 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
     if (open && plan?.patient_id && !context) {
       setLoadingCtx(true);
       loadPatientContext(plan.patient_id).then(ctx => {
-        if (ctx) {
-          setContext(ctx);
-          if (ctx.computedKcal) setTargetKcal(ctx.computedKcal);
-          // Auto-detect goal
-          const goalMap: Record<string, string> = {
-            emagrecimento: "weight_loss",
-            hipertrofia: "hypertrophy",
-            manutencao: "maintenance",
-            funcional: "functional",
-            performance: "hypertrophy",
-          };
-          const detectedGoal = goalMap[ctx.objective] || "maintenance";
-          setGoal(detectedGoal);
-        }
+        setContext(ctx);
+        if (ctx.computedKcal) setTargetKcal(ctx.computedKcal);
+        const goalMap: Record<string, string> = {
+          emagrecimento: "weight_loss",
+          hipertrofia: "hypertrophy",
+          manutencao: "maintenance",
+          funcional: "functional",
+          performance: "hypertrophy",
+        };
+        const detectedGoal = goalMap[ctx.objective] || "maintenance";
+        setGoal(detectedGoal);
         setLoadingCtx(false);
-      });
+      }).catch(() => setLoadingCtx(false));
     }
   }, [open, plan?.patient_id]);
 
@@ -133,28 +133,30 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
     }
   }, [context, targetKcal, mealCount, subsPerMeal, complexity, focus, proteinLevel, rejectedFoods, goal]);
 
+  // ── SAFE APPLICATION: Insert first, delete after ──
   const handleApply = useCallback(async () => {
     if (!selectedOption || !planId) return;
     setApplying(true);
 
     try {
-      // 1. Create version snapshot before replacing
-      await supabase.rpc("recalculate_meal_plan_totals", { plan_id: planId });
-
-      // 2. Delete existing items
-      const existingIds = currentItems.filter(i => !i.id.startsWith("temp-")).map(i => i.id);
-      if (existingIds.length > 0) {
-        await supabase.from("meal_plan_items").delete().in("id", existingIds);
-      }
-
-      // 3. Insert new items
+      // 1. Prepare new items
       const inserts = slotsToInserts(selectedOption.slots, planId);
+
+      // 2. Insert new items FIRST (safe: if this fails, old plan remains)
       const { data: savedItems, error: insertError } = await supabase
         .from("meal_plan_items")
         .insert(inserts)
         .select();
 
       if (insertError) throw insertError;
+
+      // 3. Only NOW delete old items (plan is never empty)
+      const existingIds = currentItems
+        .filter(i => !i.id.startsWith("temp-"))
+        .map(i => i.id);
+      if (existingIds.length > 0) {
+        await supabase.from("meal_plan_items").delete().in("id", existingIds);
+      }
 
       // 4. Update store
       useMealPlanEditorV2Store.setState({
@@ -216,6 +218,8 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
     setShowKcalSuggestion(false);
   };
 
+  const hasAnamnesis = !!(context?.computedKcal || context?.objective !== "não definido");
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 gap-0">
@@ -225,7 +229,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
             Gerador Assistido de Plano
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Motor clínico v2.0 — gera 3 opções personalizadas com base no contexto do paciente
+            Motor clínico v2.1 — gera 3 opções com substituições reais e ajuste proteico inteligente
           </DialogDescription>
         </DialogHeader>
 
@@ -233,13 +237,27 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
           {/* ── STEP: Params ────────────────────────────────── */}
           {step === "params" && (
             <div className="space-y-5">
-              {/* Patient Context Summary */}
+              {/* Loading */}
               {loadingCtx && (
                 <div className="flex items-center gap-2 text-xs text-muted-foreground p-3 bg-muted/50 rounded-lg">
                   <Loader2 className="w-3.5 h-3.5 animate-spin" /> Carregando contexto clínico…
                 </div>
               )}
 
+              {/* No-anamnesis warning */}
+              {context && !hasAnamnesis && (
+                <div className="p-3 rounded-lg border border-amber-500/30 bg-amber-500/5 space-y-1">
+                  <p className="text-xs font-semibold flex items-center gap-1.5 text-amber-700">
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    Paciente sem anamnese concluída
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    O sistema usará valores padrão. Defina manualmente kcal, objetivo e restrições para melhor resultado.
+                  </p>
+                </div>
+              )}
+
+              {/* Patient Context Summary */}
               {context && (
                 <div className="p-3 rounded-lg border border-primary/20 bg-primary/5 space-y-2">
                   <p className="text-xs font-semibold flex items-center gap-1.5">
@@ -279,7 +297,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
                 </div>
               )}
 
-              {/* Section 1: Nutritionist Params */}
+              {/* Section: Nutritionist Params */}
               <div className="space-y-3">
                 <p className="text-xs font-semibold text-foreground">Parâmetros do Plano</p>
 
@@ -392,7 +410,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
               <p className="text-sm font-medium">Gerando 3 opções de plano…</p>
               <p className="text-xs text-muted-foreground">
-                Analisando contexto • Pontuando refeições • Aplicando diversidade
+                Analisando contexto • Pontuando refeições • Gerando substituições
               </p>
             </div>
           )}
@@ -419,7 +437,6 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
                         setTargetKcal(result.kcalSuggestion.suggestedKcal);
                         setShowKcalSuggestion(false);
                         toast.success(`Meta ajustada para ${result.kcalSuggestion.suggestedKcal} kcal`);
-                        // Re-generate with new kcal
                         setStep("params");
                       }}
                     >
@@ -453,6 +470,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
                 {result.options.map(option => {
                   const tierStyle = TIER_ICONS[option.tier];
                   const isSelected = selectedOption?.tier === option.tier;
+                  const totalSubs = option.slots.reduce((acc, s) => acc + s.substitutions.length, 0);
                   return (
                     <button
                       key={option.tier}
@@ -505,6 +523,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
                       <div className="flex items-center justify-between mt-2 text-[10px]">
                         <span className="text-muted-foreground">
                           {option.mealCount} refeições • {option.slots.length} itens/semana
+                          {totalSubs > 0 && ` • ${totalSubs} substituições`}
                         </span>
                         <span className={`font-semibold ${
                           option.adherenceScore >= 75 ? "text-green-600" : 
@@ -540,7 +559,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
                 </span>
               </div>
 
-              {/* Day breakdown */}
+              {/* Day breakdown with substitutions */}
               <Tabs defaultValue="1" className="w-full">
                 <TabsList className="w-full flex overflow-x-auto">
                   {[1, 2, 3, 4, 5, 6, 7].map(d => (
@@ -550,26 +569,74 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
                   ))}
                 </TabsList>
                 {[1, 2, 3, 4, 5, 6, 7].map(day => {
-                  const daySlots = selectedOption.slots.filter(s => s.day === day);
+                  const daySlots = selectedOption.slots.filter(s => s.day === day) as GeneratedSlotWithSubs[];
                   return (
                     <TabsContent key={day} value={String(day)} className="space-y-2 mt-2">
                       {daySlots.map((slot, i) => (
-                        <div key={i} className="flex items-center justify-between p-2 rounded-lg border border-border bg-muted/30 text-[11px]">
-                          <div className="flex-1">
-                            <p className="font-medium">{slot.libraryItem.title}</p>
-                            <p className="text-muted-foreground text-[10px]">{slot.mealType}</p>
+                        <div key={i} className="space-y-1">
+                          {/* Primary meal */}
+                          <div className="flex items-center justify-between p-2 rounded-lg border border-border bg-muted/30 text-[11px]">
+                            <div className="flex-1">
+                              <p className="font-medium">{slot.libraryItem.title}</p>
+                              <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                                <span>{slot.mealType}</span>
+                                {slot.proteinAdjustment?.applied && (
+                                  <Badge variant="outline" className="text-[8px] h-3.5 text-green-600 border-green-500/30">
+                                    {slot.proteinAdjustment.note}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                              <span className="flex items-center gap-0.5">
+                                <Flame className="w-2.5 h-2.5 text-orange-400" /> {slot.targetKcal}
+                              </span>
+                              <span className="flex items-center gap-0.5">
+                                <Beef className="w-2.5 h-2.5 text-red-400" />
+                                {slot.proteinAdjustment?.applied
+                                  ? `${slot.proteinAdjustment.adjustedProtein}g`
+                                  : `${Math.round(slot.libraryItem.protein * slot.scaleFactor)}g`
+                                }
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
-                            <span className="flex items-center gap-0.5">
-                              <Flame className="w-2.5 h-2.5 text-orange-400" /> {slot.targetKcal}
-                            </span>
-                            <span className="flex items-center gap-0.5">
-                              <Beef className="w-2.5 h-2.5 text-red-400" /> {Math.round(slot.libraryItem.protein * slot.scaleFactor)}g
-                            </span>
-                            <Badge variant="outline" className="text-[8px] h-4">
-                              ×{slot.scaleFactor.toFixed(1)}
-                            </Badge>
-                          </div>
+
+                          {/* Substitutions */}
+                          {slot.substitutions.length > 0 && (
+                            <Collapsible>
+                              <CollapsibleTrigger asChild>
+                                <button className="flex items-center gap-1 text-[9px] text-primary hover:underline ml-2">
+                                  <RefreshCw className="w-2.5 h-2.5" />
+                                  {slot.substitutions.length} substituição(ões)
+                                  <ChevronDown className="w-2.5 h-2.5" />
+                                </button>
+                              </CollapsibleTrigger>
+                              <CollapsibleContent className="space-y-1 ml-3 mt-1">
+                                {slot.substitutions.map((sub, si) => (
+                                  <div
+                                    key={si}
+                                    className="flex items-center justify-between p-1.5 rounded border border-dashed border-border/60 bg-muted/20 text-[10px]"
+                                  >
+                                    <div className="flex-1">
+                                      <p className="font-medium text-muted-foreground">
+                                        ↳ {sub.libraryItem.title}
+                                      </p>
+                                      <p className="text-[8px] text-primary/70 italic">
+                                        {sub.compatibilityNote}
+                                      </p>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-[9px] text-muted-foreground">
+                                      <span>{sub.targetKcal} kcal</span>
+                                      <span>{Math.round(sub.libraryItem.protein * sub.scaleFactor)}g P</span>
+                                      <Badge variant="outline" className="text-[7px] h-3">
+                                        ±{sub.macroDeviation.kcalPct}%
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                ))}
+                              </CollapsibleContent>
+                            </Collapsible>
+                          )}
                         </div>
                       ))}
                       {daySlots.length === 0 && (
@@ -584,7 +651,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
               <div className="p-2 rounded-lg bg-muted/20 border border-border text-[9px] text-muted-foreground space-y-0.5">
                 <p>Engine: v{selectedOption.metadata.engine_version} • {selectedOption.metadata.algorithm}</p>
                 <p>Foco: {focus} • Proteína: {proteinLevel} • {selectedOption.mealCount} refeições/dia</p>
-                <p>Flags consideradas: {selectedOption.metadata.flags_considered} • Itens únicos: {selectedOption.metadata.library_items_used}</p>
+                <p>Flags: {selectedOption.metadata.flags_considered} • Itens únicos: {selectedOption.metadata.library_items_used} • Subs/refeição: {selectedOption.metadata.substitutions_per_meal}</p>
               </div>
             </div>
           )}
