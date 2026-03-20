@@ -482,6 +482,26 @@ export default function ClientDashboard() {
           )}
         </motion.div>
 
+        {/* Clinical Messages — personalized */}
+        <motion.div variants={item}>
+          <ClinicalMessagesWidget channel="dashboard_highlight" />
+        </motion.div>
+
+        {/* Behavioral Checklist — smart tasks */}
+        <motion.div variants={item}>
+          <div className="glass-premium rounded-xl overflow-hidden shimmer-sweep">
+            <div className="p-5 pb-3 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center">
+                <Target className="w-4.5 h-4.5 text-primary" />
+              </div>
+              <h3 className="font-display font-semibold text-base">Meu Checklist Inteligente</h3>
+            </div>
+            <div className="px-5 pb-5">
+              <BehavioralTasksWidget compact />
+            </div>
+          </div>
+        </motion.div>
+
         {/* Daily Missions & Adherence Score */}
         <motion.div variants={item}>
           <DailyMissionsWidget />
