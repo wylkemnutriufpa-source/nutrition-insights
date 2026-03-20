@@ -10,8 +10,46 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // ── Auth check ──
+    const authHeader = req.headers.get("Authorization");
+    const anonClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader || "" } } }
+    );
+    const { data: { user }, error: authErr } = await anonClient.auth.getUser();
+    if (authErr || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { analysis_id, front_image_url, side_image_url, back_image_url, previous_analysis } = await req.json();
     if (!analysis_id) throw new Error("analysis_id required");
+
+    // Verify caller owns the analysis record
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { data: analysisRecord, error: fetchErr } = await supabase
+      .from("body_analyses")
+      .select("assessor_id, patient_id")
+      .eq("id", analysis_id)
+      .single();
+
+    if (fetchErr || !analysisRecord) {
+      return new Response(JSON.stringify({ error: "Analysis not found" }), {
+        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Only the assessor (nutritionist) who created the analysis can trigger AI
+    if (analysisRecord.assessor_id !== user.id) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
@@ -98,10 +136,7 @@ Responda em português brasileiro.`;
 
     const analysis = JSON.parse(toolCall.function.arguments);
 
-    // Update DB record
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Update DB record (reuse supabase client from auth check above)
 
     const { error } = await supabase.from("body_analyses").update({
       body_fat_estimate: analysis.body_fat_estimate,
