@@ -737,6 +737,14 @@ export default function Anamnesis() {
     setSubmitting(false);
     setAnalyzing(true);
 
+    // Process clinical flags from anamnesis answers (deterministic)
+    try {
+      const flagResult = await processAnamnesisFlags(targetUserId, anamData.id);
+      console.log(`[ClinicalFlags] ${flagResult.flags_generated} flags geradas`);
+    } catch (e: any) {
+      console.error("Flag processing error:", e);
+    }
+
     // Trigger AI analysis
     try {
       const { data: aiData, error: aiError } = await supabase.functions.invoke("analyze-anamnesis", {
