@@ -248,6 +248,15 @@ export default function MealPlanEditorV2() {
             </Button>
 
             <Button
+              variant="default"
+              size="sm"
+              onClick={() => setAssistedOpen(true)}
+              className="gap-1.5 shadow-sm"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span className="hidden sm:inline">Plano Assistido</span>
+            </Button>
+            <Button
               variant="outline"
               size="sm"
               onClick={() => setAutoGenOpen(true)}
