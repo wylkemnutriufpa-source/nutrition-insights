@@ -401,7 +401,7 @@ const CommandPaletteDialog = memo(function CommandPaletteDialog() {
             <div className="flex flex-col items-center gap-1 py-4">
               <Search className="h-8 w-8 text-muted-foreground/50" />
               <p className="text-sm text-muted-foreground">Nenhum resultado para "{searchQuery}"</p>
-              <p className="text-xs text-muted-foreground/70">Tente buscar por nome, função ou palavra-chave</p>
+              <p className="text-xs text-muted-foreground/70">Tente buscar por objetivo clínico, alimento ou estratégia nutricional</p>
             </div>
           </CommandEmpty>
 

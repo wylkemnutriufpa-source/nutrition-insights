@@ -33,7 +33,7 @@ import { MomentumIndicator } from "@/components/gamification/MomentumIndicator";
 import { usePatientLifecycleState } from "@/hooks/usePatientLifecycleState";
 import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
 import OnboardingGateScreen from "@/components/patient/OnboardingGateScreen";
-
+import PatientDailyFocusHero from "@/components/patient/PatientDailyFocusHero";
 interface ProgramInfo {
   id: string;
   title: string;
@@ -323,6 +323,11 @@ export default function ClientDashboard() {
             </Card>
           </motion.div>
         )}
+
+        {/* Daily Focus Hero — Top Priority */}
+        <motion.div variants={item}>
+          <PatientDailyFocusHero />
+        </motion.div>
 
         {/* Momentum Indicator */}
         <motion.div variants={item}>
