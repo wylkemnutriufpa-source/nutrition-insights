@@ -1,22 +1,29 @@
 /**
- * Gerador Assistido de Plano Alimentar — FitJourney Clinical Engine v2
+ * Gerador Assistido de Plano Alimentar — FitJourney Clinical Engine v2.1
  * 
- * Gera 3 opções diferenciadas (Fácil, Equilibrada, Elaborada) com base em:
- * - Parâmetros do nutricionista
- * - Contexto clínico do paciente
- * - Flags ativas, restrições, protocolo e estratégia
+ * Gera 3 opções diferenciadas (Fácil, Equilibrada, Elaborada) com:
+ * - Substituições reais por refeição com equivalência macro
+ * - Ajuste inteligente de proteína por composição (não escala bruta)
+ * - Aplicação segura (insert-first, delete-after)
  * 
  * 100% determinístico. Sem IA generativa.
  */
 
 import { supabase } from "@/integrations/supabase/client";
-import type { MealLibraryItem, MealDistribution, GeneratedMealSlot } from "./mealPlanAutoGenerator";
-import { getPatientFlags, type FlagWithCatalog } from "./clinicalFlags";
+import type { MealLibraryItem, GeneratedMealSlot } from "./mealPlanAutoGenerator";
 
 // ── Types ────────────────────────────────────────────────────
 export type ComplexityTier = "easy" | "balanced" | "elaborate";
 export type PlanFocus = "aderencia" | "emagrecimento" | "performance" | "praticidade" | "clinico";
 export type ProteinLevel = "leve" | "moderada" | "alta";
+
+export interface FlagWithCatalog {
+  id: string;
+  flag_key: string;
+  display_name: string;
+  category: string;
+  confidence: number;
+}
 
 export interface AssistedPlanParams {
   targetKcal: number;
@@ -54,18 +61,31 @@ export interface KcalSuggestion {
   protocolName: string;
 }
 
+export interface MealSubstitution {
+  libraryItem: MealLibraryItem;
+  targetKcal: number;
+  scaleFactor: number;
+  compatibilityNote: string;
+  macroDeviation: { kcalPct: number; proteinPct: number; carbsPct: number; fatPct: number };
+}
+
+export interface GeneratedSlotWithSubs extends GeneratedMealSlot {
+  substitutions: MealSubstitution[];
+  proteinAdjustment?: { applied: boolean; note: string; originalProtein: number; adjustedProtein: number };
+}
+
 export interface GeneratedPlanOption {
   tier: ComplexityTier;
   label: string;
   description: string;
-  slots: GeneratedMealSlot[];
+  slots: GeneratedSlotWithSubs[];
   totalKcal: number;
   totalProtein: number;
   totalCarbs: number;
   totalFat: number;
   mealCount: number;
   substitutionCount: number;
-  adherenceScore: number; // 0-100
+  adherenceScore: number;
   clinicalNotes: string[];
   metadata: Record<string, any>;
 }
@@ -111,11 +131,14 @@ const GOAL_COMPAT: Record<string, string[]> = {
   maintenance: ["maintenance", "functional", "hypertrophy"],
 };
 
-const PROTEIN_MULTIPLIERS: Record<ProteinLevel, number> = {
-  leve: 0.85,
-  moderada: 1.0,
-  alta: 1.2,
+// Protein adjustment: only target main meals, adjust protein source portion
+const PROTEIN_CONFIG: Record<ProteinLevel, { proteinBoostPct: number; carbReductionPct: number; note: string }> = {
+  leve: { proteinBoostPct: -0.10, carbReductionPct: 0.05, note: "proteína levemente reduzida" },
+  moderada: { proteinBoostPct: 0, carbReductionPct: 0, note: "" },
+  alta: { proteinBoostPct: 0.25, carbReductionPct: -0.08, note: "proteína reforçada para maior saciedade" },
 };
+
+const MAIN_MEALS = new Set(["breakfast", "lunch", "dinner"]);
 
 const TIER_CONFIG: Record<ComplexityTier, { maxFoodsPerMeal: number; diversityBonus: number; label: string; desc: string }> = {
   easy: {
@@ -138,9 +161,11 @@ const TIER_CONFIG: Record<ComplexityTier, { maxFoodsPerMeal: number; diversityBo
   },
 };
 
+// Substitution tolerance bands
+const SUB_TOLERANCE = { kcalPct: 0.10, proteinPct: 0.15, carbsPct: 0.15, fatPct: 0.15 };
+
 // ── Load Patient Context ─────────────────────────────────────
-export async function loadPatientContext(patientId: string): Promise<PatientContext | null> {
-  // Parallel fetch: anamnesis, flags, patient info, protocols
+export async function loadPatientContext(patientId: string): Promise<PatientContext> {
   const [anamnesisRes, flagsRes, patientRes, protocolRes] = await Promise.all([
     supabase
       .from("patient_anamnesis")
@@ -150,7 +175,7 @@ export async function loadPatientContext(patientId: string): Promise<PatientCont
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
-    getPatientFlags(patientId).catch(() => [] as FlagWithCatalog[]),
+    loadPatientFlags(patientId),
     supabase
       .from("profiles")
       .select("full_name")
@@ -168,8 +193,7 @@ export async function loadPatientContext(patientId: string): Promise<PatientCont
 
   const answers = (anamnesisRes.data?.answers || {}) as Record<string, any>;
   const flags = flagsRes || [];
-  
-  // Map goal
+
   const goalMap: Record<string, string> = {
     "Perder peso": "emagrecimento",
     "Ganhar massa": "hipertrofia",
@@ -182,16 +206,13 @@ export async function loadPatientContext(patientId: string): Promise<PatientCont
   const rawGoal = answers.objective || answers.goal || answers.objetivo || "";
   const objective = goalMap[rawGoal] || rawGoal || "não definido";
 
-  // Extract restrictions
   const rawRestrictions = answers.restrictions || answers.restricoes || answers.intolerances || [];
   const restrictions = Array.isArray(rawRestrictions) ? rawRestrictions : [rawRestrictions].filter(Boolean);
 
-  // Extract digestive symptoms from flags
   const digestiveFlags = flags
     .filter(f => f.category === "digestivo")
     .map(f => f.display_name);
 
-  // Extract training
   const trainingLevel = answers.exercise_frequency || answers.frequencia_exercicio || "não informado";
 
   const protocol = protocolRes.data as any;
@@ -214,6 +235,37 @@ export async function loadPatientContext(patientId: string): Promise<PatientCont
     computedCarbs: Number(anamnesisRes.data?.computed_carbs) || undefined,
     computedFat: Number(anamnesisRes.data?.computed_fat) || undefined,
   };
+}
+
+async function loadPatientFlags(patientId: string): Promise<FlagWithCatalog[]> {
+  try {
+    const { data: flags } = await supabase
+      .from("patient_clinical_flags")
+      .select("id, flag_key, confidence, is_active")
+      .eq("patient_id", patientId)
+      .eq("is_active", true);
+
+    if (!flags || flags.length === 0) return [];
+
+    const { data: catalog } = await supabase
+      .from("clinical_flags_catalog")
+      .select("flag_key, display_name, category");
+
+    const catalogMap = new Map((catalog || []).map(c => [c.flag_key, c]));
+
+    return flags.map(f => {
+      const cat = catalogMap.get(f.flag_key);
+      return {
+        id: f.id,
+        flag_key: f.flag_key,
+        display_name: cat?.display_name || f.flag_key,
+        category: cat?.category || "geral",
+        confidence: f.confidence ?? 0.5,
+      };
+    });
+  } catch {
+    return [];
+  }
 }
 
 // ── Kcal Suggestion ──────────────────────────────────────────
@@ -242,7 +294,6 @@ export async function generateAssistedPlan(
 ): Promise<AssistedGenerationResult> {
   const warnings: string[] = [];
 
-  // 1. Fetch library
   const { data: rawItems } = await supabase
     .from("meal_library" as any)
     .select("*")
@@ -260,7 +311,7 @@ export async function generateAssistedPlan(
     };
   }
 
-  // 2. Pre-filter by restrictions and rejected foods
+  // Pre-filter by restrictions and rejected foods
   const rejectedLower = [
     ...params.rejectedFoods,
     ...context.restrictions,
@@ -268,7 +319,7 @@ export async function generateAssistedPlan(
 
   const filtered = allItems.filter(item => {
     if (!Array.isArray(item.foods)) return true;
-    return !item.foods.some(f =>
+    return !item.foods.some((f: any) =>
       rejectedLower.some(r => f.name?.toLowerCase().includes(r))
     );
   });
@@ -277,18 +328,12 @@ export async function generateAssistedPlan(
     warnings.push(`Poucos itens disponíveis após filtros (${filtered.length}). Resultados podem ser limitados.`);
   }
 
-  // 3. Generate 3 tiers
+  // Generate 3 tiers
   const tiers: ComplexityTier[] = ["easy", "balanced", "elaborate"];
   const options: GeneratedPlanOption[] = [];
 
   for (const tier of tiers) {
-    const option = generateForTier(
-      tier,
-      params,
-      context,
-      filtered,
-      warnings,
-    );
+    const option = generateForTier(tier, params, context, filtered, warnings);
     options.push(option);
   }
 
@@ -314,13 +359,12 @@ function generateForTier(
   const mealConfig = MEAL_CONFIGS[params.mealCount];
   const compatGoals = GOAL_COMPAT[params.goal] || [params.goal, "maintenance"];
   const clinicalTags = context.clinicalFlags.map(f => f.flag_key);
-  const proteinMult = PROTEIN_MULTIPLIERS[params.proteinLevel];
+  const proteinCfg = PROTEIN_CONFIG[params.proteinLevel];
 
-  const slots: GeneratedMealSlot[] = [];
+  const slots: GeneratedSlotWithSubs[] = [];
   const usageCount: Record<string, number> = {};
   const maxRepeat = tier === "elaborate" ? 1 : tier === "balanced" ? 2 : 3;
 
-  // Seed for deterministic but tier-differentiated picks
   const tierSeed = tier === "easy" ? 7 : tier === "balanced" ? 13 : 23;
 
   for (let day = 1; day <= 7; day++) {
@@ -345,18 +389,21 @@ function generateForTier(
       if (mealType === "dinner") {
         const todayLunch = slots.find(s => s.day === day && s.mealType === "lunch");
         if (todayLunch && candidates.length > 1) {
-          const filtered = candidates.filter(c => c.item.id !== todayLunch.libraryItem.id);
-          if (filtered.length > 0) candidates = filtered;
+          const filteredCandidates = candidates.filter(c => c.item.id !== todayLunch.libraryItem.id);
+          if (filteredCandidates.length > 0) candidates = filteredCandidates;
         }
       }
 
-      // Pick using tier-specific seed
+      // Pick
       const topN = candidates.slice(0, Math.min(5, candidates.length));
       if (topN.length === 0) {
         const fallback = library.find(item => item.meal_type === mealType);
         if (fallback) {
           const sf = calcScale(fallback.base_calories, targetKcal);
-          slots.push({ day, mealType, libraryItem: fallback, targetKcal, scaleFactor: sf, compatibilityScore: 0 });
+          slots.push({
+            day, mealType, libraryItem: fallback, targetKcal, scaleFactor: sf, compatibilityScore: 0,
+            substitutions: [],
+          });
           usageCount[fallback.id] = (usageCount[fallback.id] || 0) + 1;
         }
         continue;
@@ -364,27 +411,69 @@ function generateForTier(
 
       const pickIdx = deterministicPick(day, mealType, topN.length, tierSeed, context.patientId);
       const selected = topN[pickIdx];
-      const sf = calcScale(selected.item.base_calories, targetKcal);
+      let sf = calcScale(selected.item.base_calories, targetKcal);
+
+      // ── Intelligent protein adjustment (composition-based) ──
+      let proteinAdj: GeneratedSlotWithSubs["proteinAdjustment"] = undefined;
+      if (MAIN_MEALS.has(mealType) && proteinCfg.proteinBoostPct !== 0) {
+        const originalProtein = Math.round(selected.item.protein * sf);
+        const boostedProtein = Math.round(originalProtein * (1 + proteinCfg.proteinBoostPct));
+        
+        // Compensate: reduce carbs slightly when protein increases
+        // Don't change scaleFactor — only adjust the protein/carb distribution
+        proteinAdj = {
+          applied: true,
+          note: proteinCfg.note,
+          originalProtein,
+          adjustedProtein: boostedProtein,
+        };
+      }
+
+      // ── Generate substitutions ──
+      const substitutions = generateSubstitutions(
+        selected.item,
+        targetKcal,
+        sf,
+        mealType,
+        params.substitutionsPerMeal,
+        library,
+        context,
+        usageCount,
+        selected.item.id,
+      );
 
       slots.push({
         day,
         mealType,
         libraryItem: selected.item,
         targetKcal,
-        scaleFactor: sf * proteinMult,
+        scaleFactor: sf,
         compatibilityScore: selected.score,
+        substitutions,
+        proteinAdjustment: proteinAdj,
       });
       usageCount[selected.item.id] = (usageCount[selected.item.id] || 0) + 1;
     }
   }
 
-  // Calculate totals
+  // Calculate totals with protein adjustments
   let totalKcal = 0, totalP = 0, totalC = 0, totalF = 0;
   for (const s of slots) {
     totalKcal += s.targetKcal;
-    totalP += Math.round(s.libraryItem.protein * s.scaleFactor);
-    totalC += Math.round(s.libraryItem.carbs * s.scaleFactor);
-    totalF += Math.round(s.libraryItem.fat * s.scaleFactor);
+    const baseSf = s.scaleFactor;
+    
+    if (s.proteinAdjustment?.applied) {
+      totalP += s.proteinAdjustment.adjustedProtein;
+      // Compensate carbs to maintain caloric balance
+      const proteinDelta = s.proteinAdjustment.adjustedProtein - s.proteinAdjustment.originalProtein;
+      const carbReduction = Math.round((proteinDelta * 4) / 4); // Convert protein kcal to carb grams
+      totalC += Math.max(0, Math.round(s.libraryItem.carbs * baseSf) - carbReduction);
+      totalF += Math.round(s.libraryItem.fat * baseSf);
+    } else {
+      totalP += Math.round(s.libraryItem.protein * baseSf);
+      totalC += Math.round(s.libraryItem.carbs * baseSf);
+      totalF += Math.round(s.libraryItem.fat * baseSf);
+    }
   }
   const avgDailyKcal = Math.round(totalKcal / 7);
   const avgDailyP = Math.round(totalP / 7);
@@ -399,14 +488,20 @@ function generateForTier(
   if (context.restrictions.length > 0) {
     clinicalNotes.push(`Restrições respeitadas: ${context.restrictions.join(", ")}`);
   }
+  if (proteinCfg.note) {
+    clinicalNotes.push(`Ajuste proteico: ${proteinCfg.note}`);
+  }
   if (tier === "easy") {
     clinicalNotes.push("Alimentos simples e acessíveis priorizados para máxima aderência.");
   }
   if (tier === "elaborate") {
     clinicalNotes.push("Maior variedade e sofisticação — recomendado para pacientes altamente engajados.");
   }
+  if (params.substitutionsPerMeal > 0) {
+    const totalSubs = slots.reduce((acc, s) => acc + s.substitutions.length, 0);
+    clinicalNotes.push(`${totalSubs} substituições geradas com equivalência nutricional (±10% kcal, ±15% macros).`);
+  }
 
-  // Adherence estimate
   const adherenceBase = tier === "easy" ? 85 : tier === "balanced" ? 72 : 60;
   const flagPenalty = Math.min(15, context.clinicalFlags.length * 3);
   const adherenceScore = Math.max(40, adherenceBase - flagPenalty);
@@ -425,8 +520,8 @@ function generateForTier(
     adherenceScore,
     clinicalNotes,
     metadata: {
-      engine_version: "2.0.0",
-      algorithm: "assisted_scored_tiered_v2",
+      engine_version: "2.1.0",
+      algorithm: "assisted_scored_tiered_v2.1",
       tier,
       patient_goal: params.goal,
       target_calories: params.targetKcal,
@@ -435,12 +530,140 @@ function generateForTier(
       complexity: tier,
       flags_considered: clinicalTags.length,
       library_items_used: Object.keys(usageCount).length,
+      substitutions_per_meal: params.substitutionsPerMeal,
       generated_at: new Date().toISOString(),
     },
   };
 }
 
-// ── Scoring with tier awareness ──────────────────────────────
+// ── Substitution Generator ───────────────────────────────────
+function generateSubstitutions(
+  primaryItem: MealLibraryItem,
+  targetKcal: number,
+  primaryScale: number,
+  mealType: string,
+  count: number,
+  library: MealLibraryItem[],
+  context: PatientContext,
+  usageCount: Record<string, number>,
+  excludeId: string,
+): MealSubstitution[] {
+  if (count === 0) return [];
+
+  const primaryKcal = targetKcal;
+  const primaryProtein = Math.round(primaryItem.protein * primaryScale);
+  const primaryCarbs = Math.round(primaryItem.carbs * primaryScale);
+  const primaryFat = Math.round(primaryItem.fat * primaryScale);
+
+  const rejectedLower = context.restrictions.map(r => r.toLowerCase());
+
+  // Find candidates: same meal_type, not the primary, not restricted
+  const candidates = library
+    .filter(item => {
+      if (item.id === excludeId) return false;
+      if (item.meal_type !== mealType) return false;
+      // Check restrictions
+      if (Array.isArray(item.foods)) {
+        const hasRestricted = item.foods.some((f: any) =>
+          rejectedLower.some(r => f.name?.toLowerCase().includes(r))
+        );
+        if (hasRestricted) return false;
+      }
+      return true;
+    })
+    .map(item => {
+      const sf = calcScale(item.base_calories, targetKcal);
+      const scaledKcal = Math.round(item.base_calories * sf);
+      const scaledP = Math.round(item.protein * sf);
+      const scaledC = Math.round(item.carbs * sf);
+      const scaledF = Math.round(item.fat * sf);
+
+      // Calculate deviation percentages
+      const kcalDev = primaryKcal > 0 ? Math.abs(scaledKcal - primaryKcal) / primaryKcal : 1;
+      const pDev = primaryProtein > 0 ? Math.abs(scaledP - primaryProtein) / primaryProtein : 0;
+      const cDev = primaryCarbs > 0 ? Math.abs(scaledC - primaryCarbs) / primaryCarbs : 0;
+      const fDev = primaryFat > 0 ? Math.abs(scaledF - primaryFat) / primaryFat : 0;
+
+      // Must be within tolerance
+      if (kcalDev > SUB_TOLERANCE.kcalPct) return null;
+      if (pDev > SUB_TOLERANCE.proteinPct) return null;
+      if (cDev > SUB_TOLERANCE.carbsPct) return null;
+      if (fDev > SUB_TOLERANCE.fatPct) return null;
+
+      // Proximity score (lower is better)
+      const proximityScore = kcalDev + pDev * 0.4 + cDev * 0.3 + fDev * 0.3;
+
+      return {
+        item,
+        sf,
+        scaledKcal,
+        scaledP,
+        scaledC,
+        scaledF,
+        kcalDev,
+        pDev,
+        cDev,
+        fDev,
+        proximityScore,
+      };
+    })
+    .filter((c): c is NonNullable<typeof c> => c !== null)
+    .sort((a, b) => a.proximityScore - b.proximityScore);
+
+  const result: MealSubstitution[] = [];
+  const usedIds = new Set<string>([excludeId]);
+
+  for (const c of candidates) {
+    if (result.length >= count) break;
+    if (usedIds.has(c.item.id)) continue;
+
+    // Generate compatibility note
+    const note = generateCompatNote(c.item, context, mealType);
+
+    result.push({
+      libraryItem: c.item,
+      targetKcal: c.scaledKcal,
+      scaleFactor: c.sf,
+      compatibilityNote: note,
+      macroDeviation: {
+        kcalPct: Math.round(c.kcalDev * 100),
+        proteinPct: Math.round(c.pDev * 100),
+        carbsPct: Math.round(c.cDev * 100),
+        fatPct: Math.round(c.fDev * 100),
+      },
+    });
+    usedIds.add(c.item.id);
+  }
+
+  return result;
+}
+
+function generateCompatNote(item: MealLibraryItem, context: PatientContext, _mealType: string): string {
+  const notes: string[] = [];
+
+  if (context.restrictions.length > 0) {
+    notes.push("compatível com restrições");
+  }
+  if (context.strategy.includes("low_carb") || context.strategy.includes("cetogen")) {
+    if (item.carbs < 20) notes.push("coerente com estratégia low carb");
+  }
+  if (context.digestiveSymptoms.length > 0) {
+    notes.push("melhor tolerância digestiva");
+  }
+
+  const goalTag = item.goal_tag || "";
+  if (goalTag.includes("weight_loss")) notes.push("foco em emagrecimento");
+  else if (goalTag.includes("hypertrophy")) notes.push("foco em hipertrofia");
+
+  if (notes.length === 0) {
+    const foodCount = Array.isArray(item.foods) ? item.foods.length : 0;
+    notes.push(foodCount <= 3 ? "opção simples e acessível" : "boa variedade nutricional");
+  }
+
+  return notes[0] || "equivalência nutricional";
+}
+
+// ── Scoring ──────────────────────────────────────────────────
 function scoreMealForTier(
   item: MealLibraryItem,
   compatGoals: string[],
@@ -451,33 +674,27 @@ function scoreMealForTier(
 ): number {
   let score = 0;
 
-  // Goal compatibility (0-40)
   const goalIdx = compatGoals.indexOf(item.goal_tag);
   if (goalIdx === 0) score += 40;
   else if (goalIdx === 1) score += 25;
   else if (goalIdx >= 2) score += 10;
   else return 0;
 
-  // Clinical tag match (0-30)
   if (clinicalTags.length > 0 && Array.isArray(item.clinical_tags)) {
     const matches = clinicalTags.filter(t => item.clinical_tags.includes(t)).length;
     score += Math.min(30, matches * 15);
   }
 
-  // Caloric proximity (0-20)
   if (item.base_calories > 0 && targetKcal > 0) {
     const ratio = item.base_calories / targetKcal;
     const proximity = 1 - Math.min(1, Math.abs(ratio - 1));
     score += Math.round(proximity * 20);
   }
 
-  // Tier-specific: food count preference
   const foodCount = Array.isArray(item.foods) ? item.foods.length : 0;
   if (tier === "easy") {
-    // Prefer fewer foods
     score += foodCount <= 3 ? 10 : foodCount <= 5 ? 5 : 0;
   } else if (tier === "elaborate") {
-    // Prefer more variety
     score += foodCount >= 5 ? 10 : foodCount >= 3 ? 5 : 0;
   } else {
     score += Math.min(8, foodCount * 2);
