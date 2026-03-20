@@ -46,6 +46,29 @@ serve(async (req) => {
     }
 
     const { description, image_url } = await req.json();
+
+    // ── Input validation ──
+    if (!description || typeof description !== "string" || description.trim().length === 0) {
+      return new Response(JSON.stringify({ error: "Descrição é obrigatória." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (description.length > 2000) {
+      return new Response(JSON.stringify({ error: "Descrição muito longa (máx 2000 caracteres)." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (image_url) {
+      if (typeof image_url !== "string" || image_url.length > 1000 || !/^https:\/\//.test(image_url)) {
+        return new Response(JSON.stringify({ error: "URL de imagem inválida. Use HTTPS." }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // Strip control characters
+    const sanitizedDescription = description.trim().replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, "");
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -63,8 +86,8 @@ Critérios de avaliação (score 0-100):
 Seja preciso nas estimativas calóricas e de macros. O feedback deve ser em português brasileiro, motivacional e com dicas práticas de melhoria.`;
 
     const userMessage = image_url 
-      ? `Analise esta refeição: "${description}". Imagem da refeição: ${image_url}`
-      : `Analise esta refeição: "${description}"`;
+      ? `Analise esta refeição: <user_input>${sanitizedDescription}</user_input>. Imagem da refeição: ${image_url}`
+      : `Analise esta refeição: <user_input>${sanitizedDescription}</user_input>`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
