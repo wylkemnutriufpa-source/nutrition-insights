@@ -38,6 +38,7 @@ export default function MealPlanEditorV2() {
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [mealLibModalOpen, setMealLibModalOpen] = useState(false);
   const [autoGenOpen, setAutoGenOpen] = useState(false);
+  const [assistedOpen, setAssistedOpen] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const saved = localStorage.getItem(VIEW_MODE_KEY);
     return saved === "list" ? "list" : "grid";
