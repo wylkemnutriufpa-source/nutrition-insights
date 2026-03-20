@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck } from "lucide-react";
+import { Search } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
+import { openCommandPalette } from "@/components/common/CommandPalette";
 import { useIsMobile, useIsTablet } from "@/hooks/use-mobile";
 import { useSmartMenu } from "@/hooks/useSmartMenu";
 import AccordionSidebar from "@/components/layout/AccordionSidebar";
@@ -269,7 +271,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </Sheet>
             <FitJourneyLogo collapsed={false} size="sm" />
           </div>
-          <NotificationBell />
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={openCommandPalette}>
+              <Search className="w-4 h-4" />
+            </Button>
+            <NotificationBell />
+          </div>
         </div>
         <main className="pt-14 pb-safe">
           <div className="p-3 sm:p-4 max-w-7xl mx-auto">{children}</div>
@@ -292,6 +299,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <main className="flex-1 transition-all duration-200" style={{ marginLeft: collapsed ? 72 : 260 }}>
         <div className="fixed top-0 right-0 z-40 p-3 transition-[left] duration-200" style={{ left: collapsed ? 72 : 260 }}>
           <div className="flex justify-end">
+            <Button variant="ghost" size="icon" className="h-9 w-9 mr-1" onClick={openCommandPalette} title="Buscar (Ctrl+K)">
+              <Search className="w-4 h-4" />
+            </Button>
             <NotificationBell />
           </div>
         </div>
