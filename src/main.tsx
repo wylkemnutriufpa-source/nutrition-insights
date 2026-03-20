@@ -7,7 +7,7 @@ import "./index.css";
  * Cache-busting: uses build timestamp so every deploy invalidates old SW caches.
  * This prevents the app from "reverting" to a stale cached version.
  */
-const APP_SHELL_VERSION = `build-${__BUILD_TIMESTAMP__}`;
+const APP_SHELL_VERSION = `build-${typeof __BUILD_TIMESTAMP__ !== "undefined" ? __BUILD_TIMESTAMP__ : Date.now().toString(36)}`;
 
 function isPreviewHost() {
   return window.location.hostname.includes("id-preview--");
