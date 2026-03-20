@@ -51,6 +51,7 @@ import { JourneyTimelineFeed } from "@/components/gamification/JourneyTimelineFe
 import { EditorVersionPicker } from "@/components/common/EditorVersionPicker";
 import MealAdherenceWidget from "@/components/patient/MealAdherenceWidget";
 import OnboardingReleaseDialog from "@/components/patient/OnboardingReleaseDialog";
+import ClinicalFlagsSummary from "@/components/patient/ClinicalFlagsSummary";
 
 export default function PatientDetail() {
   const { patientId } = useParams<{ patientId: string }>();
