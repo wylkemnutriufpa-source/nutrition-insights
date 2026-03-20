@@ -29,6 +29,8 @@ import { AdherenceEvolutionChart } from "@/components/gamification/AdherenceEvol
 import { JourneyTimelineFeed } from "@/components/gamification/JourneyTimelineFeed";
 import { MomentumIndicator } from "@/components/gamification/MomentumIndicator";
 import { usePatientLifecycleState } from "@/hooks/usePatientLifecycleState";
+import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
+import OnboardingGateScreen from "@/components/patient/OnboardingGateScreen";
 
 interface ProgramInfo {
   id: string;
@@ -99,6 +101,7 @@ interface BiquiniEnrollment {
 export default function ClientDashboard() {
   const { user, profile } = useAuth();
   const lifecycle = usePatientLifecycleState();
+  const { status: journeyStatus, loading: journeyLoading, canAccessOnboarding } = usePatientJourneyStatus();
   const [programs, setPrograms] = useState<ProgramInfo[]>([]);
   const [appointments, setAppointments] = useState<AppointmentInfo[]>([]);
   const [notifications, setNotifications] = useState<NotificationInfo[]>([]);
@@ -229,6 +232,11 @@ export default function ClientDashboard() {
     : 0;
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
+
+  // Gate: if patient is in a pre-onboarding state, show blocking screen
+  if (!journeyLoading && journeyStatus && !canAccessOnboarding) {
+    return <OnboardingGateScreen status={journeyStatus} />;
+  }
 
   if (loading) {
     return (

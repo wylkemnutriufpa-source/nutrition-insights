@@ -3662,6 +3662,7 @@ export type Database = {
           created_at: string
           expires_at: string | null
           id: string
+          journey_status: string
           last_checkin_reminder: string | null
           notes: string | null
           nutritionist_id: string
@@ -3673,6 +3674,7 @@ export type Database = {
           created_at?: string
           expires_at?: string | null
           id?: string
+          journey_status?: string
           last_checkin_reminder?: string | null
           notes?: string | null
           nutritionist_id: string
@@ -3684,6 +3686,7 @@ export type Database = {
           created_at?: string
           expires_at?: string | null
           id?: string
+          journey_status?: string
           last_checkin_reminder?: string | null
           notes?: string | null
           nutritionist_id?: string
@@ -10779,6 +10782,16 @@ export type Database = {
           full_name: string
           phone: string
           relevance: number
+          user_id: string
+        }[]
+      }
+      search_professionals: {
+        Args: { _limit?: number; _query: string }
+        Returns: {
+          avatar_url: string
+          clinic_name: string
+          full_name: string
+          phone: string
           user_id: string
         }[]
       }

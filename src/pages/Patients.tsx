@@ -30,6 +30,7 @@ import {
 import type { PatientInfo, ProgramInfo, PatientsListParams } from "@/hooks/queries/usePatientsList";
 import type { PrestigePlan } from "@/hooks/usePrestige";
 import PaginationControls from "@/components/patients/PaginationControls";
+import PatientQueueTabs from "@/components/patients/PatientQueueTabs";
 
 // ─── Score helpers ───
 function getScoreTier(score: number): { label: string; color: string; bg: string; ring: string; icon: React.ReactNode; description: string } {
@@ -676,6 +677,8 @@ export default function Patients() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {/* Patient Queue */}
+        <PatientQueueTabs />
         {/* Premium Header */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
