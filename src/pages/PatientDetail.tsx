@@ -33,7 +33,7 @@ import OnboardingApprovalQueue from "@/components/patient/OnboardingApprovalQueu
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
-  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope, Crown, UserCog, Pencil, Sparkles, Rocket
+  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope, Crown, UserCog, Pencil, Sparkles, Rocket, Shield
 } from "lucide-react";
 import BodyProjectionProCard from "@/components/patient/BodyProjectionProCard";
 import ActiveProtocolBadge from "@/components/patient/ActiveProtocolBadge";
@@ -51,6 +51,7 @@ import { JourneyTimelineFeed } from "@/components/gamification/JourneyTimelineFe
 import { EditorVersionPicker } from "@/components/common/EditorVersionPicker";
 import MealAdherenceWidget from "@/components/patient/MealAdherenceWidget";
 import OnboardingReleaseDialog from "@/components/patient/OnboardingReleaseDialog";
+import ClinicalFlagsSummary from "@/components/patient/ClinicalFlagsSummary";
 
 export default function PatientDetail() {
   const { patientId } = useParams<{ patientId: string }>();
@@ -566,6 +567,7 @@ export default function PatientDetail() {
             { key: "clinical-decision", label: "Decisão Clínica", icon: Stethoscope, color: "from-destructive/20 to-primary/5", iconColor: "text-destructive" },
             { key: "body-projection", label: "Projeção Corporal", icon: Sparkles, color: "from-purple-500/20 to-violet-500/5", iconColor: "text-purple-500" },
             { key: "onboarding", label: "Onboarding", icon: Zap, color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
+            { key: "clinical-flags", label: "Flags Clínicas", icon: Shield, color: "from-emerald-500/20 to-emerald-500/5", iconColor: "text-emerald-500" },
             { key: "edit-profile", label: "Editar Cadastro", icon: Pencil, color: "from-info/20 to-info/5", iconColor: "text-info" },
             { key: "projects", label: "Projetos", icon: Rocket, color: "from-pink-500/20 to-pink-500/5", iconColor: "text-pink-500" },
           ];
@@ -642,6 +644,10 @@ export default function PatientDetail() {
                       ) : (
                         <p className="text-sm text-muted-foreground">Anamnese não preenchida.</p>
                       )}
+                    </div>
+                    {/* Clinical Flags in Overview */}
+                    <div className="glass rounded-xl p-5">
+                      <ClinicalFlagsSummary patientId={patientId!} compact />
                     </div>
                     {/* Meal Adherence Widget */}
                     <div className="md:col-span-3">
@@ -1120,7 +1126,14 @@ export default function PatientDetail() {
                 </DialogContent>
               </Dialog>
 
-              {/* Missions Modal */}
+              {/* Clinical Flags Modal */}
+              <Dialog open={openSection === "clinical-flags"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display">Flags Clínicas do Paciente</DialogTitle></DialogHeader>
+                  <ClinicalFlagsSummary patientId={patientId!} />
+                </DialogContent>
+              </Dialog>
+
               <Dialog open={openSection === "missions"} onOpenChange={(v) => !v && setOpenSection(null)}>
                 <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Missões do Paciente</DialogTitle></DialogHeader>

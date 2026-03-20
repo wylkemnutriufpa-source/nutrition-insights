@@ -10,6 +10,7 @@ import { ChevronLeft, ChevronRight, Sparkles, Check, Heart, Brain, Loader2, User
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
 import { getActiveAdaptiveBlocks, extractClinicalFlags, type AdaptiveBlock } from "@/lib/adaptiveAnamnesisBlocks";
+import { processAnamnesisFlags } from "@/lib/clinicalFlags";
 
 // ──── Question definitions ────
 interface Option {
@@ -735,6 +736,14 @@ export default function Anamnesis() {
     toast.success("Anamnese salva! Gerando análise inteligente... 🧠");
     setSubmitting(false);
     setAnalyzing(true);
+
+    // Process clinical flags from anamnesis answers (deterministic)
+    try {
+      const flagResult = await processAnamnesisFlags(targetUserId, anamData.id);
+      console.log(`[ClinicalFlags] ${flagResult.flags_generated} flags geradas`);
+    } catch (e: any) {
+      console.error("Flag processing error:", e);
+    }
 
     // Trigger AI analysis
     try {
