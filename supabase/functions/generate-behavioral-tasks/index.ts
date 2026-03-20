@@ -33,12 +33,14 @@ function resolvePhase(lifecycleState: string | null): string {
 function normalizeObjective(goal: string | null): string {
   if (!goal) return "geral";
   const g = goal.toLowerCase();
-  if (g.includes("emagrec") || g.includes("perda") || g.includes("peso")) return "emagrecimento";
-  if (g.includes("hipertrofia") || g.includes("massa") || g.includes("muscul")) return "hipertrofia";
-  if (g.includes("recompos")) return "recomposicao";
+  if (g.includes("emagrec") || g.includes("perda") || g.includes("peso") || g === "lose_weight" || g === "weight_loss") return "emagrecimento";
+  if (g.includes("hipertrofia") || g.includes("massa") || g.includes("muscul") || g === "gain_muscle" || g === "muscle_gain") return "hipertrofia";
+  if (g.includes("recompos") || g === "body_recomposition") return "recomposicao";
   if (g.includes("digest") || g.includes("gastri") || g.includes("intestin")) return "clinico_digestivo";
   if (g.includes("metabol") || g.includes("insulin") || g.includes("diabetes")) return "clinico_metabolico";
-  if (g.includes("mantene") || g.includes("manut")) return "manutencao";
+  if (g.includes("mantene") || g.includes("manut") || g === "maintain" || g === "maintenance") return "manutencao";
+  if (g.includes("health") || g === "health" || g === "saude") return "emagrecimento";
+  if (g.includes("self_esteem") || g.includes("autoestima")) return "emagrecimento";
   return "geral";
 }
 
