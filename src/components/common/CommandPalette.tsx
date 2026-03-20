@@ -100,7 +100,7 @@ const allRoutes = [
   { to: "/admin/resources", icon: BookOpen, label: "Central de Recursos", keywords: "recursos centro materiais uploads documentos arquivos", roles: ["admin"], desc: "Central de materiais" },
   { to: "/admin/site-editor", icon: Palette, label: "Editor do Site", keywords: "editor site personalizar pagina visual layout", roles: ["admin"], desc: "Personalizar site" },
   { to: "/admin/menu-config", icon: Settings, label: "Config Menu", keywords: "configurar menu itens sidebar lateral navegacao ordem", roles: ["admin"], desc: "Configurar menu lateral" },
-  { to: "/audit-logs", icon: Shield, label: "Auditoria", keywords: "auditoria logs registro acoes seguranca historico audit trail", roles: ["admin"], desc: "Logs de auditoria" },
+  { to: "/admin/audit-logs", icon: Shield, label: "Auditoria", keywords: "auditoria logs registro acoes seguranca historico audit trail", roles: ["admin"], desc: "Logs de auditoria" },
 ];
 
 // Normalize text: remove accents, lowercase
