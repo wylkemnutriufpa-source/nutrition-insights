@@ -645,6 +645,10 @@ export default function PatientDetail() {
                         <p className="text-sm text-muted-foreground">Anamnese não preenchida.</p>
                       )}
                     </div>
+                    {/* Clinical Flags in Overview */}
+                    <div className="glass rounded-xl p-5">
+                      <ClinicalFlagsSummary patientId={patientId!} compact />
+                    </div>
                     {/* Meal Adherence Widget */}
                     <div className="md:col-span-3">
                       <MealAdherenceWidget patientId={patientId!} />
