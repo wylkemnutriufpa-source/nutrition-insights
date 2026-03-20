@@ -1072,6 +1072,18 @@ export default function Anamnesis() {
             >
               Próxima <ChevronRight className="w-4 h-4" />
             </Button>
+          ) : !showAdaptiveBlocks && activeAdaptiveBlocks.length > 0 ? (
+            <Button
+              onClick={() => {
+                setShowAdaptiveBlocks(true);
+                setAdaptiveStep(0);
+              }}
+              disabled={!canNext()}
+              className="gradient-primary gap-2 shadow-glow"
+            >
+              <Brain className="w-4 h-4" />
+              Avaliação Personalizada →
+            </Button>
           ) : (
             <Button
               onClick={handleSubmit}
@@ -1083,6 +1095,111 @@ export default function Anamnesis() {
             </Button>
           )}
         </div>
+
+        {/* Adaptive Blocks Phase */}
+        {showAdaptiveBlocks && activeAdaptiveBlocks.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-8 space-y-6"
+          >
+            <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
+              <h3 className="font-display font-bold text-lg flex items-center gap-2 mb-2">
+                <Brain className="w-5 h-5 text-primary" />
+                Avaliação Adaptativa Personalizada
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Com base nas suas respostas, identificamos áreas que merecem atenção especial.
+                Responda os blocos abaixo para uma análise mais precisa.
+              </p>
+            </div>
+
+            {activeAdaptiveBlocks.map((block, bIdx) => (
+              <motion.div
+                key={block.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: bIdx * 0.1 }}
+                className="space-y-4 p-5 rounded-xl border border-border bg-card/50"
+              >
+                <h4 className="font-display font-semibold text-base">{block.label}</h4>
+                {block.questions.map((aq) => (
+                  <div key={aq.id} className="space-y-2">
+                    <p className="text-sm font-medium">{aq.title}</p>
+                    <p className="text-xs text-muted-foreground">{aq.subtitle}</p>
+
+                    {aq.type === "single" && aq.options && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {aq.options.map((opt) => (
+                          <OptionCard
+                            key={opt.value}
+                            opt={opt}
+                            selected={answers[aq.id] === opt.value}
+                            onClick={() => setAnswers((prev) => ({ ...prev, [aq.id]: opt.value }))}
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    {aq.type === "multi" && aq.options && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {aq.options.map((opt) => {
+                          const current: string[] = answers[aq.id] || [];
+                          const selected = current.includes(opt.value);
+                          return (
+                            <OptionCard
+                              key={opt.value}
+                              opt={opt}
+                              selected={selected}
+                              onClick={() => {
+                                if (opt.value === "none") {
+                                  setAnswers((prev) => ({ ...prev, [aq.id]: ["none"] }));
+                                } else {
+                                  const filtered = current.filter((v) => v !== "none");
+                                  setAnswers((prev) => ({
+                                    ...prev,
+                                    [aq.id]: selected ? filtered.filter((v) => v !== opt.value) : [...filtered, opt.value],
+                                  }));
+                                }
+                              }}
+                            />
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {aq.type === "slider" && (
+                      <SliderInput
+                        value={answers[aq.id] ?? aq.min ?? 1}
+                        onChange={(v) => setAnswers((prev) => ({ ...prev, [aq.id]: v }))}
+                        min={aq.min || 0} max={aq.max || 100} step={aq.step || 1} unit={aq.unit || ""}
+                      />
+                    )}
+
+                    {aq.type === "text" && (
+                      <textarea
+                        value={answers[aq.id] || ""} onChange={(e) => setAnswers((prev) => ({ ...prev, [aq.id]: e.target.value }))}
+                        placeholder={aq.placeholder} rows={2}
+                        className="w-full bg-card border-2 border-border rounded-xl px-3 py-2 focus:border-primary focus:outline-none transition-colors resize-none text-sm"
+                      />
+                    )}
+                  </div>
+                ))}
+              </motion.div>
+            ))}
+
+            <div className="flex justify-end">
+              <Button
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="gradient-primary gap-2 shadow-glow"
+              >
+                <Sparkles className="w-4 h-4" />
+                {submitting ? "Salvando..." : "Concluir Anamnese Completa ✨"}
+              </Button>
+            </div>
+          </motion.div>
+        )}
       </div>
     </DashboardLayout>
   );
