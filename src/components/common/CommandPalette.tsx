@@ -145,8 +145,6 @@ const roleLabels: Record<string, string> = {
   patient: "Paciente",
 };
 
-// Lucide icon not imported at top level — use inline
-const Brain = Activity; // reuse Activity for therapeutic routes
 
 export default function CommandPalette() {
   const [isOpen, setIsOpen] = useState(false);
