@@ -677,6 +677,8 @@ export default function Patients() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {/* Patient Queue */}
+        <PatientQueueTabs />
         {/* Premium Header */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
