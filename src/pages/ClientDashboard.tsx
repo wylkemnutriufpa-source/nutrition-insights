@@ -29,6 +29,8 @@ import { AdherenceEvolutionChart } from "@/components/gamification/AdherenceEvol
 import { JourneyTimelineFeed } from "@/components/gamification/JourneyTimelineFeed";
 import { MomentumIndicator } from "@/components/gamification/MomentumIndicator";
 import { usePatientLifecycleState } from "@/hooks/usePatientLifecycleState";
+import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
+import OnboardingGateScreen from "@/components/patient/OnboardingGateScreen";
 
 interface ProgramInfo {
   id: string;
