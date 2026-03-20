@@ -67,7 +67,7 @@ export async function interpretLabResults(
   for (const [marker, value] of Object.entries(structuredJson)) {
     if (typeof value !== 'number' || isNaN(value)) continue;
 
-    const applicableRules = (rules as LabMarkerRule[]).filter(r => {
+    const applicableRules = (rules as unknown as LabMarkerRule[]).filter(r => {
       if (r.marker_key !== marker) return false;
       if (r.gender_filter && gender && r.gender_filter !== gender) return false;
       if (r.gender_filter && !gender) return true; // apply if gender unknown

@@ -155,7 +155,7 @@ export async function resolvePatientDailyFocus(patientId: string): Promise<Daily
       .insert(toInsert)
       .select();
 
-    if (inserted) return inserted as DailyFocus[];
+    if (inserted) return inserted as unknown as DailyFocus[];
   }
 
   return [];
