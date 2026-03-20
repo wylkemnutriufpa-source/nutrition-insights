@@ -136,10 +136,7 @@ Responda em português brasileiro.`;
 
     const analysis = JSON.parse(toolCall.function.arguments);
 
-    // Update DB record
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Update DB record (reuse supabase client from auth check above)
 
     const { error } = await supabase.from("body_analyses").update({
       body_fat_estimate: analysis.body_fat_estimate,
