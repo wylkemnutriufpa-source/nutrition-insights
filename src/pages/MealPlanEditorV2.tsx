@@ -383,6 +383,10 @@ export default function MealPlanEditorV2() {
         open={autoGenOpen}
         onOpenChange={setAutoGenOpen}
       />
+      <AssistedPlanModal
+        open={assistedOpen}
+        onOpenChange={setAssistedOpen}
+      />
     </>
   );
 
