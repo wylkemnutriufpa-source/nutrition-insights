@@ -514,6 +514,9 @@ export default function Anamnesis() {
   const [patientName, setPatientName] = useState<string>("");
   const [draftId, setDraftId] = useState<string | null>(null);
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [showAdaptiveBlocks, setShowAdaptiveBlocks] = useState(false);
+  const [adaptiveStep, setAdaptiveStep] = useState(0);
+  const [onboardingBlocked, setOnboardingBlocked] = useState(false);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // The target user: either the patient themselves or the patient being filled by nutritionist

@@ -59,6 +59,10 @@ export default function OnboardingProgressModal() {
 
       if (!pipeline) return;
 
+      // Block onboarding if not released by professional
+      const releaseStatus = (pipeline as any).release_status;
+      if (releaseStatus !== "released") return;
+
       setPipelineId(pipeline.id);
 
       const allPatientStepsDone = !!pipeline.anamnesis_completed && !!pipeline.body_data_completed && !!pipeline.preferences_completed;
