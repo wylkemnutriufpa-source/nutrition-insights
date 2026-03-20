@@ -16,6 +16,7 @@ import { EditorSyncBadge } from "@/components/meal-editor-v2/EditorSyncBadge";
 import { MealLibrarySidebar } from "@/components/meal-editor-v2/MealLibrarySidebar";
 import { MealLibraryModal } from "@/components/meal-editor-v2/MealLibraryModal";
 import { AutoGenerateModal } from "@/components/meal-editor-v2/AutoGenerateModal";
+import { AssistedPlanModal } from "@/components/meal-editor-v2/AssistedPlanModal";
 import { ValidationCorrectionPanel, type ValidationResult } from "@/components/meal-editor-v2/ValidationCorrectionPanel";
 import PlanAuditPanel from "@/components/plans/PlanAuditPanel";
 import { toast } from "sonner";
@@ -37,6 +38,7 @@ export default function MealPlanEditorV2() {
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [mealLibModalOpen, setMealLibModalOpen] = useState(false);
   const [autoGenOpen, setAutoGenOpen] = useState(false);
+  const [assistedOpen, setAssistedOpen] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const saved = localStorage.getItem(VIEW_MODE_KEY);
     return saved === "list" ? "list" : "grid";
@@ -246,6 +248,15 @@ export default function MealPlanEditorV2() {
             </Button>
 
             <Button
+              variant="default"
+              size="sm"
+              onClick={() => setAssistedOpen(true)}
+              className="gap-1.5 shadow-sm"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span className="hidden sm:inline">Plano Assistido</span>
+            </Button>
+            <Button
               variant="outline"
               size="sm"
               onClick={() => setAutoGenOpen(true)}
@@ -371,6 +382,10 @@ export default function MealPlanEditorV2() {
       <AutoGenerateModal
         open={autoGenOpen}
         onOpenChange={setAutoGenOpen}
+      />
+      <AssistedPlanModal
+        open={assistedOpen}
+        onOpenChange={setAssistedOpen}
       />
     </>
   );
