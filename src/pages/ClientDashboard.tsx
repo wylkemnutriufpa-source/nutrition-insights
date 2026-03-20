@@ -6,6 +6,8 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import SmartTips from "@/components/patient/SmartTips";
+import BehavioralTasksWidget from "@/components/patient/BehavioralTasksWidget";
+import ClinicalMessagesWidget from "@/components/patient/ClinicalMessagesWidget";
 import {
   Rocket, CalendarDays, Bell, TrendingUp, CheckCircle2,
   UtensilsCrossed, Trophy, Target, Dumbbell, Flame, ArrowRight, Clock
