@@ -4977,6 +4977,53 @@ export type Database = {
           },
         ]
       }
+      patient_clinical_flags: {
+        Row: {
+          confidence: number
+          created_at: string
+          flag_key: string
+          id: string
+          is_active: boolean
+          patient_id: string
+          source: string
+          source_answer_key: string | null
+          source_answer_value: Json | null
+          updated_at: string
+        }
+        Insert: {
+          confidence?: number
+          created_at?: string
+          flag_key: string
+          id?: string
+          is_active?: boolean
+          patient_id: string
+          source?: string
+          source_answer_key?: string | null
+          source_answer_value?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          flag_key?: string
+          id?: string
+          is_active?: boolean
+          patient_id?: string
+          source?: string
+          source_answer_key?: string | null
+          source_answer_value?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_clinical_flags_flag_key_fkey"
+            columns: ["flag_key"]
+            isOneToOne: false
+            referencedRelation: "clinical_flags_catalog"
+            referencedColumns: ["flag_key"]
+          },
+        ]
+      }
       patient_clinical_milestones: {
         Row: {
           actions_executed: Json | null
