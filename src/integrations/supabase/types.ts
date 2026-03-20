@@ -2939,10 +2939,52 @@ export type Database = {
           },
         ]
       }
+      meal_plan_versions: {
+        Row: {
+          change_reason: string | null
+          changed_at: string
+          changed_by: string
+          changed_fields: string[] | null
+          id: string
+          items_snapshot: Json
+          meal_plan_id: string
+          snapshot_json: Json
+        }
+        Insert: {
+          change_reason?: string | null
+          changed_at?: string
+          changed_by: string
+          changed_fields?: string[] | null
+          id?: string
+          items_snapshot?: Json
+          meal_plan_id: string
+          snapshot_json?: Json
+        }
+        Update: {
+          change_reason?: string | null
+          changed_at?: string
+          changed_by?: string
+          changed_fields?: string[] | null
+          id?: string
+          items_snapshot?: Json
+          meal_plan_id?: string
+          snapshot_json?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_plan_versions_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meal_plans: {
         Row: {
           created_at: string
           description: string | null
+          editor_version: string | null
           end_date: string | null
           generated_by: string | null
           generation_metadata: Json | null
@@ -2953,6 +2995,7 @@ export type Database = {
           patient_id: string
           plan_status: string
           previous_plan_id: string | null
+          requires_regeneration: boolean | null
           start_date: string
           template_id: string | null
           template_slug: string | null
@@ -2960,12 +3003,17 @@ export type Database = {
           therapeutic_effectiveness_status: string | null
           therapeutic_efficacy_score: number | null
           title: string
+          total_target_calories: number | null
+          total_target_carbs: number | null
+          total_target_fat: number | null
+          total_target_protein: number | null
           transition_origin_id: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           description?: string | null
+          editor_version?: string | null
           end_date?: string | null
           generated_by?: string | null
           generation_metadata?: Json | null
@@ -2976,6 +3024,7 @@ export type Database = {
           patient_id: string
           plan_status?: string
           previous_plan_id?: string | null
+          requires_regeneration?: boolean | null
           start_date: string
           template_id?: string | null
           template_slug?: string | null
@@ -2983,12 +3032,17 @@ export type Database = {
           therapeutic_effectiveness_status?: string | null
           therapeutic_efficacy_score?: number | null
           title: string
+          total_target_calories?: number | null
+          total_target_carbs?: number | null
+          total_target_fat?: number | null
+          total_target_protein?: number | null
           transition_origin_id?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           description?: string | null
+          editor_version?: string | null
           end_date?: string | null
           generated_by?: string | null
           generation_metadata?: Json | null
@@ -2999,6 +3053,7 @@ export type Database = {
           patient_id?: string
           plan_status?: string
           previous_plan_id?: string | null
+          requires_regeneration?: boolean | null
           start_date?: string
           template_id?: string | null
           template_slug?: string | null
@@ -3006,6 +3061,10 @@ export type Database = {
           therapeutic_effectiveness_status?: string | null
           therapeutic_efficacy_score?: number | null
           title?: string
+          total_target_calories?: number | null
+          total_target_carbs?: number | null
+          total_target_fat?: number | null
+          total_target_protein?: number | null
           transition_origin_id?: string | null
           updated_at?: string
         }
