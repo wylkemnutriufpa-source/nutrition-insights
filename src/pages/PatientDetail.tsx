@@ -114,6 +114,7 @@ export default function PatientDetail() {
     phone: profile?.phone || "",
   });
   const [savingProfile, setSavingProfile] = useState(false);
+  const [releaseOnboardingOpen, setReleaseOnboardingOpen] = useState(false);
 
   // Invalidation helper
   const invalidate = () => {
