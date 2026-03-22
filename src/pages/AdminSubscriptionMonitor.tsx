@@ -158,7 +158,8 @@ export default function AdminSubscriptionMonitor() {
                 filtered.map((prof) => (
                   <div
                     key={prof.user_id}
-                    className="flex items-center justify-between p-4 rounded-xl bg-muted/50 hover:bg-muted/80 transition-colors"
+                    onClick={() => navigate("/admin/pricing")}
+                    className="flex items-center justify-between p-4 rounded-xl bg-muted/50 hover:bg-muted/80 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
