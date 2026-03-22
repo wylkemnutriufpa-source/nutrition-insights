@@ -11524,10 +11524,12 @@ export type Database = {
       }
       whatsapp_integrations: {
         Row: {
+          connection_validated_at: string | null
           created_at: string
           id: string
           instance_id: string
           is_active: boolean
+          last_error: string | null
           phone_number: string | null
           professional_id: string
           provider: string
@@ -11535,10 +11537,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          connection_validated_at?: string | null
           created_at?: string
           id?: string
           instance_id: string
           is_active?: boolean
+          last_error?: string | null
           phone_number?: string | null
           professional_id: string
           provider?: string
@@ -11546,10 +11550,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          connection_validated_at?: string | null
           created_at?: string
           id?: string
           instance_id?: string
           is_active?: boolean
+          last_error?: string | null
           phone_number?: string | null
           professional_id?: string
           provider?: string
@@ -11972,6 +11978,39 @@ export type Database = {
           is_anonymous?: boolean | null
           nutritionist_id?: string | null
           rating?: number | null
+        }
+        Relationships: []
+      }
+      whatsapp_integrations_safe: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          instance_id: string | null
+          is_active: boolean | null
+          phone_number: string | null
+          professional_id: string | null
+          provider: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          instance_id?: string | null
+          is_active?: boolean | null
+          phone_number?: string | null
+          professional_id?: string | null
+          provider?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          instance_id?: string | null
+          is_active?: boolean | null
+          phone_number?: string | null
+          professional_id?: string | null
+          provider?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
