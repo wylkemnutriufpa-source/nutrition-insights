@@ -119,7 +119,7 @@ async function detectPatterns(userId: string): Promise<BehaviorPattern[]> {
   // Find best and worst days
   let bestDay = -1, bestRate = 0, worstDay = -1, worstRate = 100;
   for (const [day, s] of Object.entries(dayStats)) {
-    if (s.total < 3) continue;
+    if (s.total < 5) continue;
     const rate = (s.done / s.total) * 100;
     if (rate > bestRate) { bestRate = rate; bestDay = Number(day); }
     if (rate < worstRate) { worstRate = rate; worstDay = Number(day); }

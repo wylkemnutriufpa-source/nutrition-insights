@@ -74,8 +74,8 @@ function AnimatedBrain({ size, glowSize }: { size: number; glowSize: number }) {
       {/* Brain icon with Y-axis rotation */}
       <motion.div
         className="absolute inset-0 flex items-center justify-center"
-        animate={{ rotateY: [0, 360] }}
-        transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+        animate={shouldReduceMotion ? {} : { rotateY: [0, 360] }}
+        transition={shouldReduceMotion ? {} : { duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
         style={{ perspective: 600 }}
       >
         <Brain
