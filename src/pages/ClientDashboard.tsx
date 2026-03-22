@@ -40,6 +40,7 @@ import TherapeuticMomentumBar from "@/components/patient/TherapeuticMomentumBar"
 import ClinicalInsightsCard from "@/components/patient/ClinicalInsightsCard";
 import PatientMetabolicInsightPanel from "@/components/patient/PatientMetabolicInsightPanel";
 import PatientBehaviorLearningCard from "@/components/patient/PatientBehaviorLearningCard";
+import NextMealWidget from "@/components/patient/NextMealWidget";
 interface ProgramInfo {
   id: string;
   title: string;
