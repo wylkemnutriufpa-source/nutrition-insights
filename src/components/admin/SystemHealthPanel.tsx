@@ -92,7 +92,8 @@ function PerfOverview() {
   });
 
   // Aggregate by flow_name
-  const flowStats = (perf ?? []).reduce((acc: Record<string, { total: number; count: number; failures: number }>, entry: any) => {
+  type FlowStat = { total: number; count: number; failures: number };
+  const flowStats = (perf ?? []).reduce((acc: Record<string, FlowStat>, entry: any) => {
     if (!acc[entry.flow_name]) acc[entry.flow_name] = { total: 0, count: 0, failures: 0 };
     acc[entry.flow_name].total += entry.execution_time_ms;
     acc[entry.flow_name].count++;
