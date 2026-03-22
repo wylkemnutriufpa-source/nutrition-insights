@@ -160,12 +160,12 @@ export async function persistLearningPatterns(
  * Get learned patterns for a patient
  */
 export async function getLearnedPatterns(patientId: string) {
-  const { data } = await supabase
-    .from("patient_clinical_learning_memory")
+  const { data } = await (supabase
+    .from("patient_clinical_learning_memory" as any)
     .select("*")
     .eq("patient_id", patientId)
     .eq("active", true)
-    .order("confidence_score", { ascending: false });
+    .order("confidence_score", { ascending: false }) as any);
 
   return data || [];
 }
