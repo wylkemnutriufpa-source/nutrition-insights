@@ -53,6 +53,7 @@ import MealAdherenceWidget from "@/components/patient/MealAdherenceWidget";
 import OnboardingReleaseDialog from "@/components/patient/OnboardingReleaseDialog";
 import ClinicalFlagsSummary from "@/components/patient/ClinicalFlagsSummary";
 import PatientBehavioralManager from "@/components/patient/PatientBehavioralManager";
+import PatientEvolutionPDF from "@/components/patient/PatientEvolutionPDF";
 
 export default function PatientDetail() {
   const { patientId } = useParams<{ patientId: string }>();
