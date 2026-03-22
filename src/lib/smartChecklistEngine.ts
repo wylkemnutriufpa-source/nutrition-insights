@@ -208,9 +208,9 @@ export async function generateSmartChecklist(patientId: string): Promise<number>
   if (tasksToInsert.length === 0) return 0;
 
   // 4. Insert tasks
-  const { error } = await supabase
-    .from("patient_smart_checklist_tasks")
-    .insert(tasksToInsert);
+  const { error } = await (supabase
+    .from("patient_smart_checklist_tasks" as any)
+    .insert(tasksToInsert) as any);
 
   if (error) {
     console.error("[smartChecklist] Insert error:", error);
