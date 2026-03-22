@@ -132,15 +132,15 @@ export async function persistLearningPatterns(
 
     if (existing) {
       // Reinforce
-      await supabase
-        .from("patient_clinical_learning_memory")
+      await (supabase
+        .from("patient_clinical_learning_memory" as any)
         .update({
           reinforcement_count: ((existing as any).reinforcement_count || 1) + 1,
           confidence_score: Math.min(99, ((existing as any).confidence_score || 50) + 2),
           last_reinforced_at: new Date().toISOString(),
           outcome_impact_score: p.outcome_impact_score,
         })
-        .eq("id", (existing as any).id);
+        .eq("id", (existing as any).id) as any);
     } else {
       // Insert new
       await supabase
