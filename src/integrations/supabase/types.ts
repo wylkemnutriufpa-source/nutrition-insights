@@ -6551,6 +6551,77 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_phytotherapy_protocols: {
+        Row: {
+          clinical_notes: string | null
+          contraindications: string | null
+          created_at: string
+          dosage: string
+          duration: string
+          ended_at: string | null
+          id: string
+          is_active: boolean
+          name: string
+          nutritionist_id: string
+          objective: string
+          patient_id: string
+          patient_instructions: string | null
+          phytotherapics: Json
+          schedule: string
+          started_at: string
+          template_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          clinical_notes?: string | null
+          contraindications?: string | null
+          created_at?: string
+          dosage?: string
+          duration?: string
+          ended_at?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          nutritionist_id: string
+          objective?: string
+          patient_id: string
+          patient_instructions?: string | null
+          phytotherapics?: Json
+          schedule?: string
+          started_at?: string
+          template_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          clinical_notes?: string | null
+          contraindications?: string | null
+          created_at?: string
+          dosage?: string
+          duration?: string
+          ended_at?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          nutritionist_id?: string
+          objective?: string
+          patient_id?: string
+          patient_instructions?: string | null
+          phytotherapics?: Json
+          schedule?: string
+          started_at?: string
+          template_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_phytotherapy_protocols_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "phytotherapy_protocol_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_plan_features: {
         Row: {
           created_at: string
@@ -7887,6 +7958,57 @@ export type Database = {
           updated_at?: string
           waist?: number | null
           weight?: number | null
+        }
+        Relationships: []
+      }
+      phytotherapy_protocol_templates: {
+        Row: {
+          clinical_notes: string | null
+          contraindications: string | null
+          created_at: string
+          created_by: string | null
+          dosage: string
+          duration: string
+          id: string
+          is_global: boolean
+          name: string
+          objective: string
+          patient_instructions: string | null
+          phytotherapics: Json
+          schedule: string
+          updated_at: string
+        }
+        Insert: {
+          clinical_notes?: string | null
+          contraindications?: string | null
+          created_at?: string
+          created_by?: string | null
+          dosage?: string
+          duration?: string
+          id?: string
+          is_global?: boolean
+          name: string
+          objective?: string
+          patient_instructions?: string | null
+          phytotherapics?: Json
+          schedule?: string
+          updated_at?: string
+        }
+        Update: {
+          clinical_notes?: string | null
+          contraindications?: string | null
+          created_at?: string
+          created_by?: string | null
+          dosage?: string
+          duration?: string
+          id?: string
+          is_global?: boolean
+          name?: string
+          objective?: string
+          patient_instructions?: string | null
+          phytotherapics?: Json
+          schedule?: string
+          updated_at?: string
         }
         Relationships: []
       }
