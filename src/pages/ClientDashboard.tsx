@@ -248,9 +248,7 @@ export default function ClientDashboard() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
-        </div>
+        <BrainLoaderCard text="Carregando seu painel clínico…" />
       </DashboardLayout>
     );
   }
