@@ -53,7 +53,7 @@ export default function PortfolioIntelligencePanel() {
     try {
       const [patientsRes, plansRes, plansActiveRes] = await Promise.all([
         supabase.from("nutritionist_patients").select("patient_id").eq("nutritionist_id", nutId).eq("status", "active"),
-        supabase.from("meal_plans").select("id, status").eq("nutritionist_id", nutId),
+        supabase.from("meal_plans").select("id, plan_status").eq("nutritionist_id", nutId),
         supabase.from("meal_plans").select("id", { count: "exact", head: true }).eq("nutritionist_id", nutId).eq("is_active", true),
       ]);
 
