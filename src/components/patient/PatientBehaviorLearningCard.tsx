@@ -103,7 +103,7 @@ async function detectPatterns(userId: string): Promise<BehaviorPattern[]> {
     .gte("date", dateStr)
     .order("date");
 
-  if (!tasks || tasks.length < 7) return [];
+  if (!tasks || tasks.length < 14) return [];
 
   const patterns: BehaviorPattern[] = [];
 
