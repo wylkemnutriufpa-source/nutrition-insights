@@ -221,7 +221,7 @@ function RootRoute() {
     ? readActiveEditorRoute()
     : null;
 
-  if (loading) return <PageLoader />;
+  if (loading) return <BrainLoaderScreen text="Preparando sua experiência…" />;
   if (!user) return <GatewayPage />;
   if (activeEditorRoute?.shouldRestore) {
     return <Navigate to={activeEditorRoute.route} replace />;
