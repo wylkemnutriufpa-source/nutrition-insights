@@ -19,6 +19,7 @@ interface BrainLoaderProps {
 
 // ─── Shared brain animation ───
 function AnimatedBrain({ size, glowSize }: { size: number; glowSize: number }) {
+  const shouldReduceMotion = useReducedMotion();
   return (
     <div className="relative" style={{ width: size, height: size }}>
       {/* Aura glow */}
