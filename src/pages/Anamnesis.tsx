@@ -663,17 +663,46 @@ export default function Anamnesis() {
     if (!user || !targetUserId) return;
     setSubmitting(true);
 
-    // Compute TMB (Harris-Benedict)
+    // ── Robust input parsing with unit normalization ──
     const sex = answers.sex;
-    const age = answers.age || 25;
-    const weight = Number(answers.weight) || 70;
-    const height = Number(answers.height) || 170;
-    let tmb: number;
+    const age = Math.max(1, Math.round(Number(answers.age) || 25));
+    let weight = Number(answers.weight) || 0;
+    let height = Number(answers.height) || 0;
 
+    // Normalize height: if < 3, user entered meters (e.g. 1.62) → convert to cm
+    if (height > 0 && height < 3) height = height * 100;
+    // Normalize weight: if > 300, user may have entered grams → convert to kg
+    if (weight > 300) weight = weight / 1000;
+
+    // Sanity validation — block absurd values
+    const MIN_WEIGHT = 20; const MAX_WEIGHT = 300;
+    const MIN_HEIGHT = 80; const MAX_HEIGHT = 250;
+    const MIN_AGE = 1; const MAX_AGE = 120;
+
+    if (weight < MIN_WEIGHT || weight > MAX_WEIGHT) {
+      toast.error(`Peso inválido (${weight} kg). Informe entre ${MIN_WEIGHT} e ${MAX_WEIGHT} kg.`);
+      setSubmitting(false); return;
+    }
+    if (height < MIN_HEIGHT || height > MAX_HEIGHT) {
+      toast.error(`Altura inválida (${height} cm). Informe entre ${MIN_HEIGHT} e ${MAX_HEIGHT} cm.`);
+      setSubmitting(false); return;
+    }
+    if (age < MIN_AGE || age > MAX_AGE) {
+      toast.error(`Idade inválida (${age}). Informe entre ${MIN_AGE} e ${MAX_AGE} anos.`);
+      setSubmitting(false); return;
+    }
+
+    // Compute TMB (Harris-Benedict Revised)
+    let tmb: number;
     if (sex === "male") {
       tmb = 88.362 + 13.397 * weight + 4.799 * height - 5.677 * age;
     } else {
       tmb = 447.593 + 9.247 * weight + 3.098 * height - 4.33 * age;
+    }
+
+    // TMB sanity check (realistic adult range: 800–3500 kcal)
+    if (tmb < 800 || tmb > 3500) {
+      console.warn(`[FJ:Anamnesis] TMB fora de faixa: ${Math.round(tmb)} kcal (peso=${weight}, altura=${height}, idade=${age}, sexo=${sex})`);
     }
 
     const activityMultipliers: Record<string, number> = {
@@ -685,9 +714,18 @@ export default function Anamnesis() {
     if (answers.goal === "lose_weight") kcalTarget = Math.round(kcalTarget * 0.8);
     else if (answers.goal === "gain_muscle") kcalTarget = Math.round(kcalTarget * 1.15);
 
+    // Enforce clinical calorie floors
+    const kcalFloor = sex === "male" ? 1500 : 1200;
+    if (kcalTarget < kcalFloor) {
+      console.warn(`[FJ:Anamnesis] Meta calórica ${kcalTarget} abaixo do piso clínico ${kcalFloor}. Ajustando.`);
+      kcalTarget = kcalFloor;
+    }
+
     const protein = Math.round((kcalTarget * 0.3) / 4);
     const carbs = Math.round((kcalTarget * 0.45) / 4);
     const fat = Math.round((kcalTarget * 0.25) / 9);
+
+    console.info(`[FJ:Anamnesis] Cálculo: peso=${weight}kg, altura=${height}cm, idade=${age}, sexo=${sex}, TMB=${Math.round(tmb)}, TDEE=${Math.round(tmb * multiplier)}, meta=${kcalTarget}, P=${protein}g C=${carbs}g G=${fat}g`);
 
     // Extract clinical flags from adaptive blocks
     const clinicalFlags = extractClinicalFlags(answers);
@@ -696,6 +734,7 @@ export default function Anamnesis() {
       user_id: targetUserId,
       answers: { ...answers, _extracted_clinical_flags: clinicalFlags },
       computed_tmb: Math.round(tmb),
+      computed_tdee: Math.round(tmb * multiplier),
       computed_kcal_target: kcalTarget,
       computed_protein: protein,
       computed_carbs: carbs,

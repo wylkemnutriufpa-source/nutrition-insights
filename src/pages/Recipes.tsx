@@ -39,9 +39,31 @@ interface Recipe {
   created_at: string;
 }
 
+function formatIngredient(item: any): string {
+  if (!item) return "";
+  if (typeof item === "string") return item;
+  if (typeof item === "object") {
+    const name = item.item || item.name || item.ingredient || "";
+    const amount = item.amount || item.quantity || item.qty || "";
+    const unit = item.unit || "";
+    if (!name) return JSON.stringify(item);
+    const parts = [name];
+    if (amount || unit) parts.push("—");
+    if (amount) parts.push(String(amount));
+    if (unit) parts.push(String(unit));
+    return parts.join(" ").trim();
+  }
+  return String(item);
+}
+
 function toStringArray(val: any): string[] {
   if (!val) return [];
-  if (Array.isArray(val)) return val.map(String);
+  if (Array.isArray(val)) return val.map((v) => {
+    if (!v) return "";
+    if (typeof v === "string") return v;
+    if (typeof v === "object") return v.step || v.text || v.description || formatIngredient(v);
+    return String(v);
+  }).filter(Boolean);
   if (typeof val === "string") return val.split("\n").filter(Boolean);
   return [];
 }

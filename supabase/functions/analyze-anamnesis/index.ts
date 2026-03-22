@@ -98,7 +98,10 @@ serve(async (req) => {
     const { data: anamnesis, error: fetchErr } = await serviceClient.from("patient_anamnesis").select("*").eq("id", anamnesis_id).single();
     if (fetchErr || !anamnesis) return new Response(JSON.stringify({ error: "Anamnese não encontrada" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     const answers = anamnesis.answers as Record<string, any>;
-    const weight = parseFloat(answers.weight ?? "70"); const height = parseFloat(answers.height ?? "170"); const age = parseInt(answers.age ?? "30");
+    let weight = parseFloat(answers.weight ?? "70"); let height = parseFloat(answers.height ?? "170"); const age = parseInt(answers.age ?? "30");
+    // Normalize: height in meters → cm, weight in grams → kg
+    if (height > 0 && height < 3) height = height * 100;
+    if (weight > 300) weight = weight / 1000;
     const sex: "M" | "F" = (answers.sex?.toLowerCase() === "feminino" || answers.sex === "F" || answers.sex === "female") ? "F" : "M";
     const bmr = calcBMR(weight, height, age, sex);
     const tdee = calcTDEE(bmr, answers.activity_level ?? "moderate");
