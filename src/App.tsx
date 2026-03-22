@@ -10,6 +10,7 @@ import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import PageLoader from "@/components/common/PageLoader";
 import { CommandPaletteProvider } from "@/components/common/CommandPalette";
 import { readActiveEditorRoute } from "@/lib/mealPlanEditorStore";
+import { installGlobalErrorHandlers } from "@/lib/monitoring";
 
 // ── Eager-loaded (critical path) ────────────────────────────
 import GatewayPage from "./pages/GatewayPage";
@@ -142,12 +143,18 @@ const AdminOperationalCosts = lazy(() => import("./pages/AdminOperationalCosts")
 const TeamManagement = lazy(() => import("./pages/TeamManagement"));
 const PhytotherapyProtocols = lazy(() => import("./pages/PhytotherapyProtocols"));
 
+// Install global error handlers once at module load
+installGlobalErrorHandlers();
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000,
       retry: 1,
       refetchOnWindowFocus: false,
+    },
+    mutations: {
+      retry: 0,
     },
   },
 });
@@ -266,7 +273,7 @@ const App = () => (
           <title>FitJourney — Plataforma para Nutricionistas</title>
           <meta name="description" content="Plataforma completa para nutricionistas: planos alimentares, IA, gamificação, avaliações físicas e gestão de pacientes." />
           <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
-          <link rel="canonical" href="https://fitjourney.app" />
+          <link rel="canonical" href="https://www.fitjourney.com.br" />
         </Helmet>
         <Toaster />
         <Sonner />

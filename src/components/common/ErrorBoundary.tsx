@@ -1,6 +1,7 @@
 import { Component, ErrorInfo, ReactNode } from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { logError } from "@/lib/monitoring";
 
 interface Props {
   children: ReactNode;
@@ -24,7 +25,11 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error(`[ErrorBoundary:${this.props.section || "unknown"}]`, error, errorInfo);
+    const section = this.props.section || "unknown";
+    logError(`ErrorBoundary:${section}`, error.message, {
+      stack: error.stack?.slice(0, 500),
+      componentStack: errorInfo.componentStack?.slice(0, 500),
+    });
   }
 
   handleRetry = () => {
