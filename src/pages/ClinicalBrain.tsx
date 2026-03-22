@@ -68,12 +68,12 @@ export default function ClinicalBrain() {
     queryKey: ["clinical-brain-patients"],
     queryFn: async () => {
       if (!user) return [];
-      const { data } = await supabase.from("patients").select("id, name, status").eq("nutritionist_id", user.id).eq("status", "active");
-      return data || [];
+      const { data } = await (supabase as any).from("patients").select("id, name, status").eq("nutritionist_id", user.id).eq("status", "active");
+      return (data || []) as { id: string; name: string; status: string }[];
     },
   });
 
-  const getPatientName = (id: string) => patients.find((p: any) => p.id === id)?.name || "Paciente";
+  const getPatientName = (id: string) => patients.find(p => p.id === id)?.name || "Paciente";
 
   const zoneDistribution = useMemo(() => {
     const zones: Record<string, number> = {};

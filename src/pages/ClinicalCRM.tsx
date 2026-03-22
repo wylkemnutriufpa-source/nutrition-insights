@@ -44,7 +44,7 @@ export default function ClinicalCRM() {
     queryKey: ["crm-patients"],
     queryFn: async () => {
       if (!user) return [];
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("patients")
         .select("id, name, email, phone, status, created_at, nutritionist_id")
         .eq("nutritionist_id", user.id)
