@@ -336,6 +336,7 @@ const App = () => (
               <Route path="/clinical-predictions" element={<NutritionistRoute><LP section="Previsão Clínica"><ClinicalPredictions /></LP></NutritionistRoute>} />
               <Route path="/clinical-simulation" element={<NutritionistRoute><LP section="Simulador Clínico"><ClinicalSimulation /></LP></NutritionistRoute>} />
               <Route path="/clinical-lab" element={<NutritionistRoute><LP section="Laboratório Clínico"><ClinicalLab /></LP></NutritionistRoute>} />
+              <Route path="/clinical-analytics" element={<NutritionistRoute><LP section="Analytics Clínico"><ProfessionalClinicalAnalytics /></LP></NutritionistRoute>} />
               <Route path="/weekly-report" element={<NutritionistRoute><LP section="Relatórios"><WeeklyReport /></LP></NutritionistRoute>} />
               <Route path="/financial" element={<NutritionistRoute><LP section="Financeiro"><Financial /></LP></NutritionistRoute>} />
               <Route path="/global-tips" element={<ProtectedRoute><LP section="Dicas"><GlobalTips /></LP></ProtectedRoute>} />
