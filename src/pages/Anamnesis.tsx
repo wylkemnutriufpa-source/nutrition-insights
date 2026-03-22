@@ -734,6 +734,7 @@ export default function Anamnesis() {
       user_id: targetUserId,
       answers: { ...answers, _extracted_clinical_flags: clinicalFlags },
       computed_tmb: Math.round(tmb),
+      computed_tdee: Math.round(tmb * multiplier),
       computed_kcal_target: kcalTarget,
       computed_protein: protein,
       computed_carbs: carbs,
