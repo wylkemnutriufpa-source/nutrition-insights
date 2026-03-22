@@ -86,20 +86,34 @@ export default function ProfessionalClinicalAnalytics() {
       ? Math.round((completedAnamnesis.size / patientIds.length) * 100)
       : 0;
 
-    // Per-patient analysis (limit to 50 for performance)
+    // Batch queries for all patients instead of N+1
+    const analysisIds = patientIds.slice(0, 50);
+    const [allCheckRes, allWeightRes] = await Promise.all([
+      supabase.from("checklist_tasks").select("patient_id, completed").in("patient_id", analysisIds).gte("date", weekStr),
+      supabase.from("physical_assessments").select("patient_id, weight, assessment_date").in("patient_id", analysisIds).order("assessment_date", { ascending: false }),
+    ]);
+
+    const allTasks = allCheckRes.data || [];
+    const allWeights = allWeightRes.data || [];
+
+    // Group by patient
+    const tasksByPatient: Record<string, typeof allTasks> = {};
+    for (const t of allTasks) {
+      (tasksByPatient[t.patient_id] ??= []).push(t);
+    }
+    const weightsByPatient: Record<string, typeof allWeights> = {};
+    for (const w of allWeights) {
+      (weightsByPatient[w.patient_id] ??= []).push(w);
+    }
+
     const riskList: PortfolioMetrics["patientRiskList"] = [];
     let totalAdherence = 0;
     let adherenceCount = 0;
     let noProgressCount = 0;
     const adherenceBuckets = { "0-25%": 0, "26-50%": 0, "51-75%": 0, "76-100%": 0 };
 
-    for (const pid of patientIds.slice(0, 50)) {
-      const [checkRes, weightRes] = await Promise.all([
-        supabase.from("checklist_tasks").select("completed").eq("patient_id", pid).gte("date", weekStr),
-        supabase.from("physical_assessments").select("weight, assessment_date").eq("patient_id", pid).order("assessment_date", { ascending: false }).limit(3),
-      ]);
-
-      const tasks = checkRes.data || [];
+    for (const pid of analysisIds) {
+      const tasks = tasksByPatient[pid] || [];
       const done = tasks.filter(t => t.completed).length;
       const adherence = tasks.length > 0 ? Math.round((done / tasks.length) * 100) : 0;
 
@@ -112,7 +126,7 @@ export default function ProfessionalClinicalAnalytics() {
       else adherenceBuckets["76-100%"]++;
 
       // Weight progress check
-      const weights = (weightRes.data || []).map(w => w.weight).filter(Boolean) as number[];
+      const weights = (weightsByPatient[pid] || []).slice(0, 3).map(w => w.weight).filter(Boolean) as number[];
       const hasProgress = weights.length >= 2 && Math.abs(weights[0] - weights[weights.length - 1]) > 0.3;
       if (!hasProgress && weights.length >= 2) noProgressCount++;
 
