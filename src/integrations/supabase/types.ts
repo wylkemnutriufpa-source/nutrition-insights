@@ -2552,6 +2552,39 @@ export type Database = {
           },
         ]
       }
+      feature_flags: {
+        Row: {
+          created_at: string
+          description: string | null
+          enabled: boolean
+          graceful_degradation: boolean
+          id: string
+          key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          graceful_degradation?: boolean
+          id?: string
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          graceful_degradation?: boolean
+          id?: string
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       feature_marketing_assets: {
         Row: {
           caption: string | null
@@ -10488,6 +10521,39 @@ export type Database = {
           tags?: string[] | null
           target_audience?: string
           title?: string
+        }
+        Relationships: []
+      }
+      regression_guard_logs: {
+        Row: {
+          affected_flow: string
+          auto_fallback_applied: boolean
+          created_at: string
+          detected_issue: string
+          id: string
+          metadata: Json | null
+          severity: string
+          source_layer: string
+        }
+        Insert: {
+          affected_flow: string
+          auto_fallback_applied?: boolean
+          created_at?: string
+          detected_issue: string
+          id?: string
+          metadata?: Json | null
+          severity?: string
+          source_layer?: string
+        }
+        Update: {
+          affected_flow?: string
+          auto_fallback_applied?: boolean
+          created_at?: string
+          detected_issue?: string
+          id?: string
+          metadata?: Json | null
+          severity?: string
+          source_layer?: string
         }
         Relationships: []
       }
