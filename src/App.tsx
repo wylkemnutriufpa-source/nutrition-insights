@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "@/lib/auth";
 import { lazy, Suspense, useEffect } from "react";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import SafePage from "@/components/common/SafePage";
 import PageLoader from "@/components/common/PageLoader";
 import { BrainLoaderScreen } from "@/components/common/BrainLoader";
 import { CommandPaletteProvider } from "@/components/common/CommandPalette";
@@ -257,14 +258,12 @@ function DarkModeInit() {
   return null;
 }
 
-/** Wraps a lazy page in Suspense + ErrorBoundary */
+/** Wraps a lazy page in SafePage (ErrorBoundary + Suspense + auto-recovery) */
 function LP({ children, section }: { children: React.ReactNode; section?: string }) {
   return (
-    <ErrorBoundary section={section}>
-      <Suspense fallback={<PageLoader />}>
-        {children}
-      </Suspense>
-    </ErrorBoundary>
+    <SafePage pageName={section || "Página"}>
+      {children}
+    </SafePage>
   );
 }
 
