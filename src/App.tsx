@@ -258,14 +258,12 @@ function DarkModeInit() {
   return null;
 }
 
-/** Wraps a lazy page in Suspense + ErrorBoundary */
+/** Wraps a lazy page in SafePage (ErrorBoundary + Suspense + auto-recovery) */
 function LP({ children, section }: { children: React.ReactNode; section?: string }) {
   return (
-    <ErrorBoundary section={section}>
-      <Suspense fallback={<PageLoader />}>
-        {children}
-      </Suspense>
-    </ErrorBoundary>
+    <SafePage pageName={section || "Página"}>
+      {children}
+    </SafePage>
   );
 }
 
