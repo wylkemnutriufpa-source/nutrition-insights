@@ -143,6 +143,7 @@ const MagicJourneyStory = lazy(() => import("./pages/MagicJourneyStory"));
 const BodyProjectionExperience = lazy(() => import("./pages/BodyProjectionExperience"));
 const AdminOperationalCosts = lazy(() => import("./pages/AdminOperationalCosts"));
 const TeamManagement = lazy(() => import("./pages/TeamManagement"));
+const WhatsAppSettings = lazy(() => import("./pages/WhatsAppSettings"));
 const PhytotherapyProtocols = lazy(() => import("./pages/PhytotherapyProtocols"));
 
 // Install global error handlers once at module load
@@ -354,6 +355,7 @@ const App = () => (
               <Route path="/clinical-pipeline" element={<AdminRoute><LP section="Pipeline Clínico"><ClinicalPipeline /></LP></AdminRoute>} />
               <Route path="/integrations" element={<ProfessionalRoute><LP section="Integrações"><Integrations /></LP></ProfessionalRoute>} />
               <Route path="/team" element={<ProfessionalRoute><LP section="Equipe Clínica"><TeamManagement /></LP></ProfessionalRoute>} />
+              <Route path="/settings/whatsapp" element={<ProfessionalRoute><LP section="WhatsApp"><WhatsAppSettings /></LP></ProfessionalRoute>} />
 
               {/* Personal Trainer routes */}
               <Route path="/personal/dashboard" element={<PersonalRoute><LP section="Personal"><PersonalDashboard /></LP></PersonalRoute>} />
