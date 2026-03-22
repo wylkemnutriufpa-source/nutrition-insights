@@ -183,12 +183,12 @@ export async function generateSmartChecklist(patientId: string): Promise<number>
   if (!flags || flags.length === 0) return 0;
 
   // 2. Get existing active tasks to avoid duplicates
-  const { data: existing } = await supabase
-    .from("patient_smart_checklist_tasks")
+  const { data: existing } = await (supabase
+    .from("patient_smart_checklist_tasks" as any)
     .select("task_code")
     .eq("patient_id", patientId)
     .eq("is_active", true)
-    .eq("valid_from", new Date().toISOString().split("T")[0]);
+    .eq("valid_from", new Date().toISOString().split("T")[0]) as any);
 
   const existingCodes = new Set(existing?.map(e => (e as any).task_code) || []);
 

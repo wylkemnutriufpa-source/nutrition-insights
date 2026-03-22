@@ -169,12 +169,12 @@ export async function getTherapeuticMomentum(patientId: string): Promise<{
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  const { count: meals } = await supabase
-    .from("meal_item_completions")
+  const { count: meals } = await (supabase
+    .from("meal_item_completions" as any)
     .select("id", { count: "exact", head: true })
     .eq("patient_id", patientId)
     .eq("status", "followed")
-    .gte("logged_at", sevenDaysAgo.toISOString());
+    .gte("logged_at", sevenDaysAgo.toISOString()) as any);
 
   const { count: tasks } = await (supabase
     .from("patient_smart_checklist_tasks" as any)
