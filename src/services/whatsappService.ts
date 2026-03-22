@@ -39,7 +39,7 @@ const MESSAGE_TEMPLATES: Record<string, string> = {
 export function buildMessage(templateCode: string, variables: Record<string, string>): string {
   let template = MESSAGE_TEMPLATES[templateCode] || templateCode;
   for (const [key, value] of Object.entries(variables)) {
-    template = template.replaceAll(`{{${key}}}`, value);
+    template = template.split(`{{${key}}}`).join(value);
   }
   return template;
 }

@@ -146,7 +146,7 @@ export default function WhatsAppSettings() {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
-          <BrainLoaderInline message="Carregando configurações..." />
+          <BrainLoaderInline text="Carregando configurações..." />
         </div>
       </DashboardLayout>
     );
