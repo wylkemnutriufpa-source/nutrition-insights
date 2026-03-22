@@ -37,6 +37,8 @@ import PatientDailyFocusHero from "@/components/patient/PatientDailyFocusHero";
 import SmartChecklistWidget from "@/components/patient/SmartChecklistWidget";
 import TherapeuticMomentumBar from "@/components/patient/TherapeuticMomentumBar";
 import ClinicalInsightsCard from "@/components/patient/ClinicalInsightsCard";
+import PatientMetabolicInsightPanel from "@/components/patient/PatientMetabolicInsightPanel";
+import PatientBehaviorLearningCard from "@/components/patient/PatientBehaviorLearningCard";
 interface ProgramInfo {
   id: string;
   title: string;
