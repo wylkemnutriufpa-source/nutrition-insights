@@ -531,6 +531,11 @@ export default function ClientDashboard() {
           <AdherenceEvolutionChart />
         </motion.div>
 
+        {/* Clinical Insights from Learning Engine */}
+        <motion.div variants={item}>
+          <ClinicalInsightsCard />
+        </motion.div>
+
         {/* Journey Timeline Feed */}
         <motion.div variants={item}>
           <JourneyTimelineFeed compact />
