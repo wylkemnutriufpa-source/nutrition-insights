@@ -283,6 +283,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
+            <CelebrationProvider>
             <DarkModeInit />
             <CommandPaletteProvider>
              <Routes>
