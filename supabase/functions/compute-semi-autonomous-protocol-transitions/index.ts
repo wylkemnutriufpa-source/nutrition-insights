@@ -350,21 +350,27 @@ Deno.serve(async (req) => {
       }
       stagnationDays = Math.min(stagnationDays * 0.25, planAgeDays); // rough days estimate
 
+      const toNum = (v: unknown, fallback: number): number => {
+        if (v == null) return fallback;
+        const n = Number(v);
+        return isNaN(n) ? fallback : n;
+      };
+
       const ctx: PatientContext = {
         patient_id: pid,
         nutritionist_id: nutritionistMap[pid],
         current_plan_id: plan.id,
         current_protocol_id: meta?.protocol_id || null,
         plan_age_days: planAgeDays,
-        adherence: latest.adherence_momentum ?? 65,
+        adherence: toNum(latest.adherence_momentum, 65),
         weight_trend: latest.weight_trend_status ?? "unknown",
-        weight_velocity: latest.weight_velocity_per_week ?? 0,
+        weight_velocity: toNum(latest.weight_velocity_per_week, 0),
         cluster_type: cluster?.cluster_type ?? "unknown",
-        cluster_stability: cluster?.cluster_confidence ?? 0.5,
-        risk_score: latest.clinical_risk_score ?? 50,
+        cluster_stability: toNum(cluster?.cluster_confidence, 0.5),
+        risk_score: toNum(latest.clinical_risk_score, 50),
         stagnation_days: stagnationDays,
         active_critical_alerts: criticalAlertsByPatient[pid] || 0,
-        plan_efficacy_score: latest.plan_efficacy_score ?? 50,
+        plan_efficacy_score: toNum(latest.plan_efficacy_score, 50),
         plan_complexity: complexity,
         previous_interventions: 0, // counted below
         data_points: snapshots.length,
