@@ -32,9 +32,43 @@ const difficultyMap: Record<string, string> = { easy: "Fácil", medium: "Média"
 const categoryMap: Record<string, string> = { main: "Prato Principal", snack: "Lanche", dessert: "Sobremesa", breakfast: "Café da Manhã", salad: "Salada", soup: "Sopa", drink: "Bebida" };
 const difficultyColor: Record<string, string> = { easy: "bg-green-500/10 text-green-600", medium: "bg-orange-500/10 text-orange-600", hard: "bg-red-500/10 text-red-600" };
 
+function formatIngredient(item: any): string {
+  if (!item) return "";
+  if (typeof item === "string") return item;
+  if (typeof item === "object") {
+    const name = item.item || item.name || item.ingredient || "";
+    const amount = item.amount || item.quantity || item.qty || "";
+    const unit = item.unit || "";
+    const obs = item.observation || item.obs || "";
+    if (!name) return JSON.stringify(item);
+    const parts = [name];
+    if (amount || unit) parts.push("—");
+    if (amount) parts.push(String(amount));
+    if (unit) parts.push(String(unit));
+    if (obs) parts.push(`(${obs})`);
+    return parts.join(" ").trim();
+  }
+  return String(item);
+}
+
+function toSafeArray(val: any): string[] {
+  if (!val) return [];
+  if (Array.isArray(val)) return val.map(formatIngredient).filter(Boolean);
+  if (typeof val === "string") return val.split("\n").filter(Boolean);
+  return [];
+}
+
 function toStringArray(val: any): string[] {
   if (!val) return [];
-  if (Array.isArray(val)) return val.map(String);
+  if (Array.isArray(val)) return val.map((v) => {
+    if (!v) return "";
+    if (typeof v === "string") return v;
+    if (typeof v === "object") {
+      // For instructions: look for step/text/description
+      return v.step || v.text || v.description || v.instruction || formatIngredient(v);
+    }
+    return String(v);
+  }).filter(Boolean);
   if (typeof val === "string") return val.split("\n").filter(Boolean);
   return [];
 }
