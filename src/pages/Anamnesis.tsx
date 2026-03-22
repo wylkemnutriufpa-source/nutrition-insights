@@ -694,13 +694,12 @@ export default function Anamnesis() {
 
     const payload = {
       user_id: targetUserId,
-      answers,
+      answers: { ...answers, _extracted_clinical_flags: clinicalFlags },
       computed_tmb: Math.round(tmb),
       computed_kcal_target: kcalTarget,
       computed_protein: protein,
       computed_carbs: carbs,
       computed_fat: fat,
-      clinical_flags: clinicalFlags,
       status: "completed",
     };
 
