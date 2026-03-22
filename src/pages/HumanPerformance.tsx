@@ -106,9 +106,20 @@ export default function HumanPerformance() {
   }
 
   async function loadAllStates() {
+    // First get my patient IDs for data isolation
+    const { data: myPats } = await supabase
+      .from("nutritionist_patients")
+      .select("patient_id")
+      .eq("nutritionist_id", user!.id)
+      .eq("status", "active");
+
+    const ids = myPats?.map((p) => p.patient_id) ?? [];
+    if (ids.length === 0) { setAllStates([]); return; }
+
     const { data } = await supabase
       .from("patient_human_performance_state")
       .select("*")
+      .in("patient_id", ids)
       .order("overall_performance_score", { ascending: false });
 
     if (data) setAllStates(data as PerformanceState[]);

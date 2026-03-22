@@ -90,9 +90,19 @@ export default function PhysiologicalIntelligence() {
   async function loadData() {
     setLoading(true);
     try {
+      // Get my patient IDs for data isolation
+      const { data: myPats } = await supabase
+        .from("nutritionist_patients")
+        .select("patient_id")
+        .eq("nutritionist_id", user!.id)
+        .eq("status", "active");
+
+      const ids = myPats?.map((p) => p.patient_id) ?? [];
+      if (ids.length === 0) { setSnapshots([]); setSignals([]); setLoading(false); return; }
+
       const [snapRes, sigRes] = await Promise.all([
-        supabase.from("patient_physiology_snapshots").select("*").order("snapshot_date", { ascending: false }).limit(50),
-        supabase.from("patient_physiological_signals").select("*").order("signal_date", { ascending: false }).limit(100),
+        supabase.from("patient_physiology_snapshots").select("*").in("patient_id", ids).order("snapshot_date", { ascending: false }).limit(50),
+        supabase.from("patient_physiological_signals").select("*").in("patient_id", ids).order("signal_date", { ascending: false }).limit(100),
       ]);
       if (snapRes.data) setSnapshots(snapRes.data as unknown as PhysioSnapshot[]);
       if (sigRes.data) setSignals(sigRes.data as unknown as PhysioSignal[]);

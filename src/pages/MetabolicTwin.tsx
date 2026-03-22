@@ -79,16 +79,18 @@ export default function MetabolicTwin() {
   });
 
   const { data: plateauData } = useQuery({
-    queryKey: ["plateau-predictions", user?.id],
+    queryKey: ["plateau-predictions", user?.id, myPatientIds],
     queryFn: async () => {
+      if (!myPatientIds || myPatientIds.length === 0) return [];
       const { data } = await supabase
         .from("patient_plateau_predictions")
         .select("*")
+        .in("patient_id", myPatientIds)
         .order("created_at", { ascending: false })
         .limit(20);
       return data ?? [];
     },
-    enabled: !!user,
+    enabled: !!user && !!myPatientIds,
   });
 
   const computeMutation = useMutation({
