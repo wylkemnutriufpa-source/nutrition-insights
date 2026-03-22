@@ -82,7 +82,7 @@ export default function PremiumRecipeModal({ recipe, open, onOpenChange }: Props
   const servings = recipe.servings ?? 1;
   const difficulty = recipe.difficulty ?? "medium";
   const category = recipe.category ?? "main";
-  const ingredients = toStringArray(recipe.ingredients);
+  const ingredients = toSafeArray(recipe.ingredients);
   const instructions = toStringArray(recipe.instructions);
 
   const macros = [
