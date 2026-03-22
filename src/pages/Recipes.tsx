@@ -16,6 +16,7 @@ import { motion } from "framer-motion";
 import { ChefHat, Plus, Pencil, Trash2, Clock, Users, Heart, Sparkles, Search, Share2 } from "lucide-react";
 import { useAIUsage } from "@/hooks/useAIUsage";
 import AIUsageBadge from "@/components/common/AIUsageBadge";
+import PremiumRecipeModal from "@/components/recipe/PremiumRecipeModal";
 
 interface Recipe {
   id: string;
