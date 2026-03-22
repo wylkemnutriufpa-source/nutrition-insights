@@ -59,7 +59,7 @@ export default function PortfolioIntelligencePanel() {
 
       const patientIds = (patientsRes.data || []).map((p) => p.patient_id);
       const totalPatients = patientIds.length;
-      const pendingPlans = (plansRes.data || []).filter((p) => p.status === "draft").length;
+      const pendingPlans = (plansRes.data || []).filter((p) => p.plan_status === "draft").length;
       const plansPublished = plansActiveRes.count || 0;
 
       // Get adherence and risk data from snapshots if available
