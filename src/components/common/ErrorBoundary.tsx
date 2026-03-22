@@ -2,6 +2,7 @@ import { Component, ErrorInfo, ReactNode } from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logError } from "@/lib/monitoring";
+import { captureError } from "@/lib/observability/errorLogger";
 
 interface Props {
   children: ReactNode;
@@ -30,6 +31,7 @@ export class ErrorBoundary extends Component<Props, State> {
       stack: error.stack?.slice(0, 500),
       componentStack: errorInfo.componentStack?.slice(0, 500),
     });
+    captureError(`ErrorBoundary:${section}`, error, { severity: "high", recovered: false });
   }
 
   handleRetry = () => {

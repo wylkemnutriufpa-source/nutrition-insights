@@ -2077,6 +2077,48 @@ export type Database = {
         }
         Relationships: []
       }
+      clinical_pipeline_runs: {
+        Row: {
+          created_at: string
+          error_details: Json | null
+          errors_detected: number | null
+          execution_time_ms: number | null
+          flags_generated: number | null
+          id: string
+          messages_generated: number | null
+          nutritionist_id: string | null
+          patients_processed: number | null
+          run_mode: string | null
+          tasks_generated: number | null
+        }
+        Insert: {
+          created_at?: string
+          error_details?: Json | null
+          errors_detected?: number | null
+          execution_time_ms?: number | null
+          flags_generated?: number | null
+          id?: string
+          messages_generated?: number | null
+          nutritionist_id?: string | null
+          patients_processed?: number | null
+          run_mode?: string | null
+          tasks_generated?: number | null
+        }
+        Update: {
+          created_at?: string
+          error_details?: Json | null
+          errors_detected?: number | null
+          execution_time_ms?: number | null
+          flags_generated?: number | null
+          id?: string
+          messages_generated?: number | null
+          nutritionist_id?: string | null
+          patients_processed?: number | null
+          run_mode?: string | null
+          tasks_generated?: number | null
+        }
+        Relationships: []
+      }
       clinical_population_patterns: {
         Row: {
           avg_response_score: number | null
@@ -10675,6 +10717,42 @@ export type Database = {
           },
         ]
       }
+      silent_failures_monitor: {
+        Row: {
+          created_at: string
+          days_since_expected: number | null
+          entity_id: string | null
+          entity_type: string
+          expected_action: string
+          failure_reason: string | null
+          id: string
+          resolved: boolean | null
+          severity: string | null
+        }
+        Insert: {
+          created_at?: string
+          days_since_expected?: number | null
+          entity_id?: string | null
+          entity_type: string
+          expected_action: string
+          failure_reason?: string | null
+          id?: string
+          resolved?: boolean | null
+          severity?: string | null
+        }
+        Update: {
+          created_at?: string
+          days_since_expected?: number | null
+          entity_id?: string | null
+          entity_type?: string
+          expected_action?: string
+          failure_reason?: string | null
+          id?: string
+          resolved?: boolean | null
+          severity?: string | null
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           category: string
@@ -10892,6 +10970,81 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      system_error_logs: {
+        Row: {
+          action_attempted: string | null
+          auto_recovered: boolean | null
+          created_at: string
+          error_message: string
+          id: string
+          module: string
+          page_route: string | null
+          role: string | null
+          severity: string
+          stack_trace: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action_attempted?: string | null
+          auto_recovered?: boolean | null
+          created_at?: string
+          error_message: string
+          id?: string
+          module: string
+          page_route?: string | null
+          role?: string | null
+          severity?: string
+          stack_trace?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action_attempted?: string | null
+          auto_recovered?: boolean | null
+          created_at?: string
+          error_message?: string
+          id?: string
+          module?: string
+          page_route?: string | null
+          role?: string | null
+          severity?: string
+          stack_trace?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      system_performance_logs: {
+        Row: {
+          api_calls_count: number | null
+          created_at: string
+          execution_time_ms: number
+          flow_name: string
+          id: string
+          queries_count: number | null
+          success: boolean | null
+          user_role: string | null
+        }
+        Insert: {
+          api_calls_count?: number | null
+          created_at?: string
+          execution_time_ms: number
+          flow_name: string
+          id?: string
+          queries_count?: number | null
+          success?: boolean | null
+          user_role?: string | null
+        }
+        Update: {
+          api_calls_count?: number | null
+          created_at?: string
+          execution_time_ms?: number
+          flow_name?: string
+          id?: string
+          queries_count?: number | null
+          success?: boolean | null
+          user_role?: string | null
+        }
+        Relationships: []
       }
       team_member_activity_logs: {
         Row: {
@@ -11290,6 +11443,36 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_behavior_events: {
+        Row: {
+          context: Json | null
+          created_at: string
+          event_name: string
+          id: string
+          page: string | null
+          role: string | null
+          user_id: string | null
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string
+          event_name: string
+          id?: string
+          page?: string | null
+          role?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string
+          event_name?: string
+          id?: string
+          page?: string | null
+          role?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -12131,6 +12314,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      cleanup_observability_logs: {
+        Args: { retention_days?: number }
+        Returns: Json
+      }
       create_nutritionist_account: {
         Args: { _email: string; _full_name: string; _password: string }
         Returns: string
@@ -12216,6 +12403,7 @@ export type Database = {
           total_points: number
         }[]
       }
+      get_system_health_score: { Args: never; Returns: Json }
       get_team_head_id: { Args: { _user_id: string }; Returns: string }
       get_team_permissions: { Args: { _user_id: string }; Returns: Json }
       get_user_email_by_id: { Args: { _user_id: string }; Returns: string }

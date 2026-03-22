@@ -13,6 +13,7 @@ import { Component, ErrorInfo, ReactNode, Suspense } from "react";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logError } from "@/lib/monitoring";
+import { captureError } from "@/lib/observability/errorLogger";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // ========== Loading Fallback ==========
@@ -101,6 +102,7 @@ export class SafePage extends Component<SafePageProps, SafePageState> {
       componentStack: errorInfo.componentStack?.slice(0, 500),
       retryCount: this.state.retryCount,
     });
+    captureError(`SafePage:${this.props.pageName}`, error, { severity: "critical", recovered: true });
   }
 
   handleRetry = () => {
