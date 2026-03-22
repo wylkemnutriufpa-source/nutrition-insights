@@ -34,6 +34,9 @@ import { usePatientLifecycleState } from "@/hooks/usePatientLifecycleState";
 import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
 import OnboardingGateScreen from "@/components/patient/OnboardingGateScreen";
 import PatientDailyFocusHero from "@/components/patient/PatientDailyFocusHero";
+import SmartChecklistWidget from "@/components/patient/SmartChecklistWidget";
+import TherapeuticMomentumBar from "@/components/patient/TherapeuticMomentumBar";
+import ClinicalInsightsCard from "@/components/patient/ClinicalInsightsCard";
 interface ProgramInfo {
   id: string;
   title: string;
@@ -329,6 +332,16 @@ export default function ClientDashboard() {
           <PatientDailyFocusHero />
         </motion.div>
 
+        {/* Therapeutic Momentum */}
+        <motion.div variants={item}>
+          <TherapeuticMomentumBar />
+        </motion.div>
+
+        {/* Smart Checklist */}
+        <motion.div variants={item}>
+          <SmartChecklistWidget />
+        </motion.div>
+
         {/* Momentum Indicator */}
         <motion.div variants={item}>
           <MomentumIndicator variant="card" />
@@ -516,6 +529,11 @@ export default function ClientDashboard() {
         {/* Adherence Evolution Chart */}
         <motion.div variants={item}>
           <AdherenceEvolutionChart />
+        </motion.div>
+
+        {/* Clinical Insights from Learning Engine */}
+        <motion.div variants={item}>
+          <ClinicalInsightsCard />
         </motion.div>
 
         {/* Journey Timeline Feed */}

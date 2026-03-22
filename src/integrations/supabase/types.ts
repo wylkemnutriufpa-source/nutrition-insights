@@ -2038,6 +2038,45 @@ export type Database = {
         }
         Relationships: []
       }
+      clinical_population_patterns: {
+        Row: {
+          avg_response_score: number | null
+          computed_at: string
+          confidence_level: string | null
+          id: string
+          metadata: Json | null
+          pattern_description: string | null
+          pattern_key: string
+          pattern_type: string
+          sample_size: number
+          success_rate: number | null
+        }
+        Insert: {
+          avg_response_score?: number | null
+          computed_at?: string
+          confidence_level?: string | null
+          id?: string
+          metadata?: Json | null
+          pattern_description?: string | null
+          pattern_key: string
+          pattern_type: string
+          sample_size?: number
+          success_rate?: number | null
+        }
+        Update: {
+          avg_response_score?: number | null
+          computed_at?: string
+          confidence_level?: string | null
+          id?: string
+          metadata?: Json | null
+          pattern_description?: string | null
+          pattern_key?: string
+          pattern_type?: string
+          sample_size?: number
+          success_rate?: number | null
+        }
+        Relationships: []
+      }
       clinical_rule_conditions: {
         Row: {
           created_at: string
@@ -5345,6 +5384,51 @@ export type Database = {
           },
         ]
       }
+      patient_clinical_learning_memory: {
+        Row: {
+          active: boolean
+          confidence_score: number
+          created_at: string
+          first_detected_at: string
+          id: string
+          last_reinforced_at: string
+          learned_pattern_code: string
+          learned_pattern_description: string | null
+          learning_type: string
+          outcome_impact_score: number | null
+          patient_id: string
+          reinforcement_count: number
+        }
+        Insert: {
+          active?: boolean
+          confidence_score?: number
+          created_at?: string
+          first_detected_at?: string
+          id?: string
+          last_reinforced_at?: string
+          learned_pattern_code: string
+          learned_pattern_description?: string | null
+          learning_type: string
+          outcome_impact_score?: number | null
+          patient_id: string
+          reinforcement_count?: number
+        }
+        Update: {
+          active?: boolean
+          confidence_score?: number
+          created_at?: string
+          first_detected_at?: string
+          id?: string
+          last_reinforced_at?: string
+          learned_pattern_code?: string
+          learned_pattern_description?: string | null
+          learning_type?: string
+          outcome_impact_score?: number | null
+          patient_id?: string
+          reinforcement_count?: number
+        }
+        Relationships: []
+      }
       patient_clinical_messages: {
         Row: {
           body: string
@@ -7188,6 +7272,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      patient_smart_checklist_tasks: {
+        Row: {
+          adherence_score: number | null
+          clinical_domain: string | null
+          completion_timestamp: string | null
+          created_at: string
+          emotional_feedback: string | null
+          generated_from: string
+          id: string
+          is_active: boolean
+          is_completed: boolean
+          patient_id: string
+          priority_score: number
+          recurrence_type: string
+          task_category: string
+          task_code: string
+          task_description: string | null
+          task_title: string
+          updated_at: string
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          adherence_score?: number | null
+          clinical_domain?: string | null
+          completion_timestamp?: string | null
+          created_at?: string
+          emotional_feedback?: string | null
+          generated_from?: string
+          id?: string
+          is_active?: boolean
+          is_completed?: boolean
+          patient_id: string
+          priority_score?: number
+          recurrence_type?: string
+          task_category?: string
+          task_code: string
+          task_description?: string | null
+          task_title: string
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          adherence_score?: number | null
+          clinical_domain?: string | null
+          completion_timestamp?: string | null
+          created_at?: string
+          emotional_feedback?: string | null
+          generated_from?: string
+          id?: string
+          is_active?: boolean
+          is_completed?: boolean
+          patient_id?: string
+          priority_score?: number
+          recurrence_type?: string
+          task_category?: string
+          task_code?: string
+          task_description?: string | null
+          task_title?: string
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Relationships: []
       }
       patient_supplements: {
         Row: {
@@ -10645,6 +10795,51 @@ export type Database = {
           reviewed_by?: string | null
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      therapeutic_adjustment_history: {
+        Row: {
+          adjustment_description: string | null
+          adjustment_type: string
+          after_snapshot: Json | null
+          applied_at: string
+          applied_by: string | null
+          before_snapshot: Json | null
+          clinical_response_7d: Json | null
+          created_at: string
+          flag_origin: string | null
+          id: string
+          patient_id: string
+          response_score: number | null
+        }
+        Insert: {
+          adjustment_description?: string | null
+          adjustment_type: string
+          after_snapshot?: Json | null
+          applied_at?: string
+          applied_by?: string | null
+          before_snapshot?: Json | null
+          clinical_response_7d?: Json | null
+          created_at?: string
+          flag_origin?: string | null
+          id?: string
+          patient_id: string
+          response_score?: number | null
+        }
+        Update: {
+          adjustment_description?: string | null
+          adjustment_type?: string
+          after_snapshot?: Json | null
+          applied_at?: string
+          applied_by?: string | null
+          before_snapshot?: Json | null
+          clinical_response_7d?: Json | null
+          created_at?: string
+          flag_origin?: string | null
+          id?: string
+          patient_id?: string
+          response_score?: number | null
         }
         Relationships: []
       }
