@@ -211,6 +211,7 @@ const MealItemCard = memo(function MealItemCard({
               </button>
             ))}
           </div>
+          <MealFeedbackButton mealPlanId={item.id} mealPlanItemId={item.id} mealType={item.meal_type} />
         </div>
         {completedAt && status && (
           <span className={`text-[10px] font-medium ${
