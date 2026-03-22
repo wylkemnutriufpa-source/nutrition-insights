@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,18 +7,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { MessageCircle, Wifi, WifiOff, Send, Loader2, CheckCircle2, XCircle, Clock, Phone, Shield, Zap } from "lucide-react";
+import { MessageCircle, Wifi, WifiOff, Send, Loader2, CheckCircle2, XCircle, Clock, Phone, Shield, Zap, AlertTriangle } from "lucide-react";
 import { BrainLoaderInline } from "@/components/common/BrainLoader";
 import {
   getIntegration,
-  saveIntegration,
+  validateAndSaveIntegration,
+  validateZApiCredentials,
   disconnectIntegration,
   sendWhatsAppMessage,
   getWhatsAppLogs,
+  normalizePhone,
   type WhatsAppIntegration,
   type WhatsAppLog,
 } from "@/services/whatsappService";
@@ -37,6 +38,8 @@ export default function WhatsAppSettings() {
   const [token, setToken] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [saving, setSaving] = useState(false);
+  const [validating, setValidating] = useState(false);
+  const [validationResult, setValidationResult] = useState<{ valid: boolean; error?: string } | null>(null);
 
   // Test form
   const [testPhone, setTestPhone] = useState("");
@@ -63,7 +66,6 @@ export default function WhatsAppSettings() {
       setIntegration(integ);
       setLogs(logData);
 
-      // Load patients
       const { data: pats } = await (supabase as any)
         .from("nutritionist_patients")
         .select("patient:profiles!nutritionist_patients_patient_id_fkey(id, full_name, phone)")
@@ -80,6 +82,33 @@ export default function WhatsAppSettings() {
     }
   }
 
+  async function handleValidate() {
+    if (!instanceId.trim() || !token.trim()) {
+      toast.error("Instance ID e Token são obrigatórios");
+      return;
+    }
+    setValidating(true);
+    setValidationResult(null);
+    try {
+      const result = await validateZApiCredentials({
+        instanceId: instanceId.trim(),
+        token: token.trim(),
+      });
+      setValidationResult({ valid: result.valid && result.connected, error: result.error });
+      if (result.valid && result.connected) {
+        if (result.phone) setPhoneNumber(result.phone);
+        toast.success("Credenciais válidas! Instância conectada.");
+      } else {
+        toast.error(result.error || "Instância não está conectada na Z-API");
+      }
+    } catch (err: any) {
+      setValidationResult({ valid: false, error: err.message });
+      toast.error("Erro ao validar credenciais");
+    } finally {
+      setValidating(false);
+    }
+  }
+
   async function handleConnect() {
     if (!instanceId.trim() || !token.trim()) {
       toast.error("Instance ID e Token são obrigatórios");
@@ -87,17 +116,21 @@ export default function WhatsAppSettings() {
     }
     setSaving(true);
     try {
-      await saveIntegration({
-        professionalId: professionalId!,
+      const result = await validateAndSaveIntegration({
         instanceId: instanceId.trim(),
         token: token.trim(),
         phoneNumber: phoneNumber.trim() || undefined,
       });
-      toast.success("WhatsApp conectado com sucesso!");
+      if (result.validated) {
+        toast.success("WhatsApp conectado e validado com sucesso!");
+      } else {
+        toast.warning("Credenciais salvas, mas instância não respondeu. Verifique na Z-API.");
+      }
       setShowConnect(false);
       setInstanceId("");
       setToken("");
       setPhoneNumber("");
+      setValidationResult(null);
       await loadData();
     } catch (err: any) {
       toast.error(err.message || "Erro ao conectar");
@@ -121,10 +154,15 @@ export default function WhatsAppSettings() {
       toast.error("Informe o número do paciente");
       return;
     }
+    const normalized = normalizePhone(testPhone);
+    if (!normalized) {
+      toast.error("Número inválido. Use formato: (11) 99999-9999");
+      return;
+    }
     setSending(true);
     try {
       const result = await sendWhatsAppMessage({
-        patientPhone: testPhone,
+        patientPhone: normalized,
         message: testMessage,
         eventType: "TEST",
       });
@@ -153,6 +191,8 @@ export default function WhatsAppSettings() {
   }
 
   const isConnected = integration?.is_active;
+  const isValidated = !!integration?.connection_validated_at;
+  const lastLog = logs[0];
 
   return (
     <DashboardLayout>
@@ -172,7 +212,7 @@ export default function WhatsAppSettings() {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <Card className={`border-2 ${isConnected ? "border-green-500/30 bg-green-500/5" : "border-muted"}`}>
             <CardContent className="p-6">
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <div className={`p-3 rounded-xl ${isConnected ? "bg-green-500/10" : "bg-muted"}`}>
                     {isConnected ? (
@@ -188,12 +228,36 @@ export default function WhatsAppSettings() {
                     <p className="text-sm text-muted-foreground">
                       {isConnected
                         ? `Número: ${integration?.phone_number || "Não informado"} • Provider: Z-API`
-                        : "Conecte seu número para enviar lembretes automáticos e acompanhar pacientes em tempo real."}
+                        : "Conecte seu número para enviar lembretes automáticos."}
                     </p>
                     {isConnected && (
-                      <Badge variant="outline" className="mt-2 border-green-500/30 text-green-600">
-                        <CheckCircle2 className="h-3 w-3 mr-1" /> Ativo
-                      </Badge>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Badge variant="outline" className="border-green-500/30 text-green-600">
+                          <CheckCircle2 className="h-3 w-3 mr-1" /> Ativo
+                        </Badge>
+                        {isValidated ? (
+                          <Badge variant="outline" className="border-blue-500/30 text-blue-600 text-xs">
+                            <Shield className="h-3 w-3 mr-1" /> Validado
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="border-amber-500/30 text-amber-600 text-xs">
+                            <AlertTriangle className="h-3 w-3 mr-1" /> Não validado
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+                    {isConnected && integration?.connection_validated_at && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Validado em: {new Date(integration.connection_validated_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      </p>
+                    )}
+                    {integration?.last_error && (
+                      <p className="text-xs text-destructive mt-1">Último erro: {integration.last_error}</p>
+                    )}
+                    {lastLog && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Último envio: {new Date(lastLog.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })} ({lastLog.delivery_status})
+                      </p>
                     )}
                   </div>
                 </div>
@@ -294,14 +358,19 @@ export default function WhatsAppSettings() {
                                 ? "border-green-500/30 text-green-600 text-xs"
                                 : log.delivery_status === "error"
                                 ? "border-red-500/30 text-red-600 text-xs"
+                                : log.delivery_status === "received"
+                                ? "border-blue-500/30 text-blue-600 text-xs"
                                 : "border-amber-500/30 text-amber-600 text-xs"
                             }
                           >
-                            {log.delivery_status === "sent" ? "✓ Enviado" : log.delivery_status === "error" ? "✗ Erro" : "⏳ Pendente"}
+                            {log.delivery_status === "sent" ? "✓ Enviado" : log.delivery_status === "error" ? "✗ Erro" : log.delivery_status === "received" ? "↓ Recebido" : "⏳ Pendente"}
                           </Badge>
                           <span className="text-xs text-muted-foreground">{log.event_type}</span>
                         </div>
                         <p className="text-sm truncate mt-1">{log.message_body}</p>
+                        {log.error_message && (
+                          <p className="text-xs text-destructive truncate mt-1">{log.error_message}</p>
+                        )}
                       </div>
                       <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
                         {new Date(log.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
@@ -314,7 +383,7 @@ export default function WhatsAppSettings() {
           </Card>
         </motion.div>
 
-        {/* How to connect info */}
+        {/* How to connect */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Como conectar</CardTitle>
@@ -324,14 +393,35 @@ export default function WhatsAppSettings() {
               <li>Acesse <a href="https://www.z-api.io" target="_blank" rel="noopener noreferrer" className="text-primary underline">z-api.io</a> e crie sua conta</li>
               <li>Crie uma instância e escaneie o QR Code com seu WhatsApp profissional</li>
               <li>Copie o <strong>Instance ID</strong> e o <strong>Token</strong> da sua instância</li>
-              <li>Cole aqui na plataforma e clique em Conectar</li>
+              <li>Cole aqui na plataforma e clique em <strong>Validar</strong> antes de conectar</li>
               <li>Pronto! O sistema enviará automações clínicas pelo seu número</li>
             </ol>
           </CardContent>
         </Card>
 
+        {/* Webhook Info Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Shield className="h-4 w-4 text-blue-500" />
+              Webhook de Respostas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-2">
+              Para receber respostas dos pacientes, configure na Z-API o webhook abaixo:
+            </p>
+            <div className="p-3 rounded-lg bg-muted font-mono text-xs break-all select-all">
+              {`https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/whatsapp-inbound`}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Cole esta URL no campo "Webhook de recebimento" da sua instância Z-API.
+            </p>
+          </CardContent>
+        </Card>
+
         {/* Connect Modal */}
-        <Dialog open={showConnect} onOpenChange={setShowConnect}>
+        <Dialog open={showConnect} onOpenChange={(open) => { setShowConnect(open); if (!open) setValidationResult(null); }}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
@@ -339,7 +429,7 @@ export default function WhatsAppSettings() {
                 Conectar WhatsApp (Z-API)
               </DialogTitle>
               <DialogDescription>
-                Informe os dados da sua instância Z-API para conectar seu número profissional
+                Informe os dados da sua instância Z-API. O sistema validará antes de salvar.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
@@ -348,7 +438,7 @@ export default function WhatsAppSettings() {
                 <Input
                   id="instanceId"
                   value={instanceId}
-                  onChange={(e) => setInstanceId(e.target.value)}
+                  onChange={(e) => { setInstanceId(e.target.value); setValidationResult(null); }}
                   placeholder="Ex: 3C9E2A1B4D5F..."
                 />
               </div>
@@ -358,9 +448,14 @@ export default function WhatsAppSettings() {
                   id="token"
                   type="password"
                   value={token}
-                  onChange={(e) => setToken(e.target.value)}
+                  onChange={(e) => { setToken(e.target.value); setValidationResult(null); }}
                   placeholder="Seu token Z-API"
+                  autoComplete="off"
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  <Shield className="h-3 w-3 inline mr-1" />
+                  Token protegido — não será exibido após salvar
+                </p>
               </div>
               <div>
                 <Label htmlFor="phoneNumber">Número conectado</Label>
@@ -371,10 +466,36 @@ export default function WhatsAppSettings() {
                   placeholder="(11) 99999-9999"
                 />
               </div>
-              <Button onClick={handleConnect} disabled={saving} className="w-full bg-green-600 hover:bg-green-700">
-                {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
-                Conectar
-              </Button>
+
+              {validationResult && (
+                <div className={`p-3 rounded-lg text-sm ${validationResult.valid ? "bg-green-500/10 text-green-700 border border-green-500/20" : "bg-red-500/10 text-red-700 border border-red-500/20"}`}>
+                  {validationResult.valid ? (
+                    <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> Instância válida e conectada</span>
+                  ) : (
+                    <span className="flex items-center gap-2"><XCircle className="h-4 w-4" /> {validationResult.error || "Instância inválida ou desconectada"}</span>
+                  )}
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleValidate}
+                  disabled={validating || !instanceId.trim() || !token.trim()}
+                  className="flex-1"
+                >
+                  {validating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Shield className="h-4 w-4 mr-2" />}
+                  Validar
+                </Button>
+                <Button
+                  onClick={handleConnect}
+                  disabled={saving || !instanceId.trim() || !token.trim()}
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                >
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
+                  Conectar
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
@@ -426,7 +547,7 @@ export default function WhatsAppSettings() {
               </div>
               <Button onClick={handleTestSend} disabled={sending} className="w-full">
                 {sending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
-                Enviar Teste
+                Enviar teste
               </Button>
             </div>
           </DialogContent>

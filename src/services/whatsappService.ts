@@ -5,9 +5,10 @@ export interface WhatsAppIntegration {
   professional_id: string;
   provider: string;
   instance_id: string;
-  token: string;
   phone_number: string | null;
   is_active: boolean;
+  connection_validated_at: string | null;
+  last_error: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -44,10 +45,13 @@ export function buildMessage(templateCode: string, variables: Record<string, str
   return template;
 }
 
+/**
+ * Get integration using the SAFE view (no token exposed)
+ */
 export async function getIntegration(professionalId: string): Promise<WhatsAppIntegration | null> {
   const { data, error } = await (supabase as any)
     .from("whatsapp_integrations")
-    .select("*")
+    .select("id, professional_id, provider, instance_id, phone_number, is_active, connection_validated_at, last_error, created_at, updated_at")
     .eq("professional_id", professionalId)
     .eq("is_active", true)
     .maybeSingle();
@@ -55,41 +59,42 @@ export async function getIntegration(professionalId: string): Promise<WhatsAppIn
   return data as WhatsAppIntegration;
 }
 
-export async function saveIntegration(params: {
-  professionalId: string;
+/**
+ * Validate and save integration via secure edge function (token never touches frontend state)
+ */
+export async function validateAndSaveIntegration(params: {
   instanceId: string;
   token: string;
   phoneNumber?: string;
-}) {
-  const { data: existing } = await (supabase as any)
-    .from("whatsapp_integrations")
-    .select("id")
-    .eq("professional_id", params.professionalId)
-    .maybeSingle();
+}): Promise<{ success: boolean; validated: boolean; error?: string }> {
+  const { data, error } = await supabase.functions.invoke("whatsapp-validate", {
+    body: {
+      action: "save",
+      instance_id: params.instanceId,
+      api_token: params.token,
+      phone_number: params.phoneNumber || null,
+    },
+  });
+  if (error) throw error;
+  return data;
+}
 
-  if (existing) {
-    const { error } = await (supabase as any)
-      .from("whatsapp_integrations")
-      .update({
-        instance_id: params.instanceId,
-        token: params.token,
-        phone_number: params.phoneNumber || null,
-        is_active: true,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("professional_id", params.professionalId);
-    if (error) throw error;
-  } else {
-    const { error } = await (supabase as any)
-      .from("whatsapp_integrations")
-      .insert({
-        professional_id: params.professionalId,
-        instance_id: params.instanceId,
-        token: params.token,
-        phone_number: params.phoneNumber || null,
-      });
-    if (error) throw error;
-  }
+/**
+ * Validate Z-API credentials without saving
+ */
+export async function validateZApiCredentials(params: {
+  instanceId: string;
+  token: string;
+}): Promise<{ valid: boolean; connected: boolean; phone?: string; error?: string }> {
+  const { data, error } = await supabase.functions.invoke("whatsapp-validate", {
+    body: {
+      action: "validate",
+      instance_id: params.instanceId,
+      api_token: params.token,
+    },
+  });
+  if (error) throw error;
+  return data;
 }
 
 export async function disconnectIntegration(professionalId: string) {
@@ -127,4 +132,15 @@ export async function getWhatsAppLogs(professionalId: string, limit = 50): Promi
     .limit(limit);
   if (error) throw error;
   return (data || []) as WhatsAppLog[];
+}
+
+/**
+ * Normalize Brazilian phone number: ensures DDI 55, removes masks
+ */
+export function normalizePhone(phone: string): string | null {
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length < 10) return null;
+  const withDdi = digits.startsWith("55") ? digits : `55${digits}`;
+  if (withDdi.length < 12 || withDdi.length > 13) return null;
+  return withDdi;
 }
