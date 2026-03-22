@@ -227,15 +227,15 @@ export async function completeSmartTask(
   taskId: string,
   feedback?: string
 ): Promise<boolean> {
-  const { error } = await supabase
-    .from("patient_smart_checklist_tasks")
+  const { error } = await (supabase
+    .from("patient_smart_checklist_tasks" as any)
     .update({
       is_completed: true,
       completion_timestamp: new Date().toISOString(),
       emotional_feedback: feedback || null,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", taskId);
+    .eq("id", taskId) as any);
 
   return !error;
 }
