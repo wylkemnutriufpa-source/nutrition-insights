@@ -281,7 +281,10 @@ const App = () => (
               <Route path="/landing-afiliado" element={<LP section="Landing"><AffiliateLanding /></LP>} />
               <Route path="/biquini-branco" element={<LP section="Landing"><BiquiniBrancoLanding /></LP>} />
               <Route path="/cadastro" element={<LP section="Cadastro"><PatientRegister /></LP>} />
-              <Route path="/auth" element={<Auth />} />
+               <Route path="/auth" element={<Auth />} />
+               <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />
+               <Route path="/termos-de-uso" element={<TermsOfUse />} />
+               <Route path="/exclusao-de-conta" element={<AccountDeletion />} />
               <Route path="/reset-password" element={<LP section="Auth"><ResetPassword /></LP>} />
               <Route path="/" element={<RootRoute />} />
 
