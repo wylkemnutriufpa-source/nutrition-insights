@@ -62,18 +62,30 @@ export default defineConfig(({ mode }) => ({
       manifest: {
         name: "FitJourney — Nutrição Inteligente",
         short_name: "FitJourney",
-        description: "Plataforma de nutrição com gamificação e IA",
+        description: "Plataforma de nutrição com gamificação, IA clínica e acompanhamento personalizado. Acompanhe seu progresso metabólico, planos alimentares e evolução corporal.",
         theme_color: "#10b981",
         background_color: "#0d0d1a",
         display: "standalone",
         orientation: "portrait",
         scope: "/",
         start_url: "/",
+        categories: ["health", "fitness", "medical"],
+        lang: "pt-BR",
+        dir: "ltr",
         icons: [
           { src: "/pwa-192x192.png", sizes: "192x192", type: "image/png" },
           { src: "/pwa-512x512.png", sizes: "512x512", type: "image/png" },
           { src: "/pwa-512x512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
         ],
+        screenshots: [
+          {
+            src: "/pwa-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+            form_factor: "narrow",
+            label: "FitJourney - Home do Paciente"
+          }
+        ] as any,
       },
     }),
   ].filter(Boolean),

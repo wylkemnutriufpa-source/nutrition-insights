@@ -40,6 +40,7 @@ import TherapeuticMomentumBar from "@/components/patient/TherapeuticMomentumBar"
 import ClinicalInsightsCard from "@/components/patient/ClinicalInsightsCard";
 import PatientMetabolicInsightPanel from "@/components/patient/PatientMetabolicInsightPanel";
 import PatientBehaviorLearningCard from "@/components/patient/PatientBehaviorLearningCard";
+import NextMealWidget from "@/components/patient/NextMealWidget";
 interface ProgramInfo {
   id: string;
   title: string;
@@ -328,19 +329,29 @@ export default function ClientDashboard() {
           </motion.div>
         )}
 
-        {/* Daily Focus Hero — Top Priority */}
+        {/* 1️⃣ Daily Focus Hero — Top Priority */}
         <motion.div variants={item}>
           <PatientDailyFocusHero />
         </motion.div>
 
-        {/* Therapeutic Momentum */}
+        {/* 2️⃣ Próxima Refeição */}
         <motion.div variants={item}>
-          <TherapeuticMomentumBar />
+          <NextMealWidget />
         </motion.div>
 
-        {/* Smart Checklist */}
+        {/* 3️⃣ Smart Checklist */}
         <motion.div variants={item}>
           <SmartChecklistWidget />
+        </motion.div>
+
+        {/* 4️⃣ Metabolic Insight Panel */}
+        <motion.div variants={item}>
+          <PatientMetabolicInsightPanel />
+        </motion.div>
+
+        {/* 5️⃣ Therapeutic Momentum */}
+        <motion.div variants={item}>
+          <TherapeuticMomentumBar />
         </motion.div>
 
         {/* Momentum Indicator */}
@@ -393,19 +404,13 @@ export default function ClientDashboard() {
           </motion.div>
         )}
 
-        {/* Action Buttons — only show PlanRequestButton if no sovereign plan */}
+        {/* Action Buttons */}
         <motion.div variants={item} className="flex flex-wrap gap-2">
           <SubscriptionCard />
           <PlanRequestButton />
         </motion.div>
-
         <ProgramJoinRequest open={programJoinOpen} onOpenChange={setProgramJoinOpen} />
         <PhaseTransitionModal />
-
-        {/* Metabolic Insight Panel */}
-        <motion.div variants={item}>
-          <PatientMetabolicInsightPanel />
-        </motion.div>
 
         {/* Quick Stats */}
         <motion.div variants={item} className="grid grid-cols-2 md:grid-cols-5 gap-3">

@@ -26,6 +26,7 @@ import ClinicalRiskDashboardContent from "@/components/dashboard/ClinicalRiskDas
 import PendingApprovalsModal, { usePendingApprovals } from "@/components/patient/PendingApprovalsModal";
 
 import PatientProgressSimulation from "@/components/dashboard/PatientProgressSimulation";
+import PortfolioIntelligencePanel from "@/components/dashboard/PortfolioIntelligencePanel";
 import PatientRevenueSimulator from "@/components/dashboard/PatientRevenueSimulator";
 import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
 import ChatDashboardWidget from "@/components/chat/ChatDashboardWidget";
@@ -401,6 +402,11 @@ function NutritionistDashboardContent() {
             </Button>
           </Link>
         ))}
+      </motion.div>
+
+      {/* ── Portfolio Intelligence ── */}
+      <motion.div variants={item}>
+        <PortfolioIntelligencePanel />
       </motion.div>
 
       {/* ── 1️⃣ Daily Overview Cards ── */}
