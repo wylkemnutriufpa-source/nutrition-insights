@@ -98,6 +98,9 @@ const PatientLanding = lazy(() => import("./pages/PatientLanding"));
 const PatientRegister = lazy(() => import("./pages/PatientRegister"));
 const AffiliateLanding = lazy(() => import("./pages/AffiliateLanding"));
 const AdminLandingPages = lazy(() => import("./pages/AdminLandingPages"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfUse = lazy(() => import("./pages/TermsOfUse"));
+const AccountDeletion = lazy(() => import("./pages/AccountDeletion"));
 const AdminMenuConfig = lazy(() => import("./pages/AdminMenuConfig"));
 const PersonalDashboard = lazy(() => import("./pages/PersonalDashboard"));
 const PersonalStudents = lazy(() => import("./pages/PersonalStudents"));
@@ -278,7 +281,10 @@ const App = () => (
               <Route path="/landing-afiliado" element={<LP section="Landing"><AffiliateLanding /></LP>} />
               <Route path="/biquini-branco" element={<LP section="Landing"><BiquiniBrancoLanding /></LP>} />
               <Route path="/cadastro" element={<LP section="Cadastro"><PatientRegister /></LP>} />
-              <Route path="/auth" element={<Auth />} />
+               <Route path="/auth" element={<Auth />} />
+               <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />
+               <Route path="/termos-de-uso" element={<TermsOfUse />} />
+               <Route path="/exclusao-de-conta" element={<AccountDeletion />} />
               <Route path="/reset-password" element={<LP section="Auth"><ResetPassword /></LP>} />
               <Route path="/" element={<RootRoute />} />
 
