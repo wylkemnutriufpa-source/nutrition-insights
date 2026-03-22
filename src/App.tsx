@@ -294,9 +294,9 @@ const App = () => (
               <Route path="/biquini-branco" element={<LP section="Landing"><BiquiniBrancoLanding /></LP>} />
               <Route path="/cadastro" element={<LP section="Cadastro"><PatientRegister /></LP>} />
                <Route path="/auth" element={<LP section="Auth"><Auth /></LP>} />
-               <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />
-               <Route path="/termos-de-uso" element={<TermsOfUse />} />
-               <Route path="/exclusao-de-conta" element={<AccountDeletion />} />
+               <Route path="/politica-de-privacidade" element={<Suspense fallback={<PageLoader />}><PrivacyPolicy /></Suspense>} />
+               <Route path="/termos-de-uso" element={<Suspense fallback={<PageLoader />}><TermsOfUse /></Suspense>} />
+               <Route path="/exclusao-de-conta" element={<Suspense fallback={<PageLoader />}><AccountDeletion /></Suspense>} />
               <Route path="/reset-password" element={<LP section="Auth"><ResetPassword /></LP>} />
                <Route path="/" element={<LP section="Home"><RootRoute /></LP>} />
 
