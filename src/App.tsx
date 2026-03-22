@@ -444,6 +444,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
             </CommandPaletteProvider>
+            </CelebrationProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
