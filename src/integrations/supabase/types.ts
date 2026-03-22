@@ -11522,6 +11522,42 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_integrations: {
+        Row: {
+          created_at: string
+          id: string
+          instance_id: string
+          is_active: boolean
+          phone_number: string | null
+          professional_id: string
+          provider: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          instance_id: string
+          is_active?: boolean
+          phone_number?: string | null
+          professional_id: string
+          provider?: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          instance_id?: string
+          is_active?: boolean
+          phone_number?: string | null
+          professional_id?: string
+          provider?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       whatsapp_intent_learning_log: {
         Row: {
           action_generated: string | null
@@ -11562,6 +11598,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      whatsapp_logs: {
+        Row: {
+          created_at: string
+          delivery_status: string
+          error_message: string | null
+          event_type: string
+          id: string
+          message_body: string
+          patient_id: string | null
+          professional_id: string
+          sent_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          delivery_status?: string
+          error_message?: string | null
+          event_type: string
+          id?: string
+          message_body: string
+          patient_id?: string | null
+          professional_id: string
+          sent_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          delivery_status?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          message_body?: string
+          patient_id?: string | null
+          professional_id?: string
+          sent_at?: string | null
+        }
+        Relationships: []
       }
       whatsapp_message_logs: {
         Row: {
