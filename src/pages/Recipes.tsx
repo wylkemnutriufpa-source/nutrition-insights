@@ -326,24 +326,7 @@ function PatientRecipes() {
         ))}
       </div>
 
-      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-          <DialogHeader><DialogTitle className="font-display">{selected?.title}</DialogTitle></DialogHeader>
-          {selected && (
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">{selected.description}</p>
-              <div>
-                <h4 className="font-medium text-sm mb-2">🥕 Ingredientes</h4>
-                <ul className="space-y-1">{(selected.ingredients || []).map((ing: string, i: number) => <li key={i} className="text-sm flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-primary" />{ing}</li>)}</ul>
-              </div>
-              <div>
-                <h4 className="font-medium text-sm mb-2">📝 Modo de Preparo</h4>
-                <ol className="space-y-2">{(selected.instructions || []).map((s: string, i: number) => <li key={i} className="text-sm flex gap-2"><span className="font-bold text-primary">{i + 1}.</span>{s}</li>)}</ol>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <PremiumRecipeModal recipe={selected} open={detailOpen} onOpenChange={setDetailOpen} />
     </div>
   );
 }
