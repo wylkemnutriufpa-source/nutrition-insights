@@ -989,6 +989,107 @@ export type Database = {
         }
         Relationships: []
       }
+      campaign_deliveries: {
+        Row: {
+          campaign_id: string
+          channel: string
+          created_at: string | null
+          delivery_status: string | null
+          error_message: string | null
+          id: string
+          recipient_id: string
+          recipient_type: string
+          sent_at: string | null
+        }
+        Insert: {
+          campaign_id: string
+          channel: string
+          created_at?: string | null
+          delivery_status?: string | null
+          error_message?: string | null
+          id?: string
+          recipient_id: string
+          recipient_type: string
+          sent_at?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          channel?: string
+          created_at?: string | null
+          delivery_status?: string | null
+          error_message?: string | null
+          id?: string
+          recipient_id?: string
+          recipient_type?: string
+          sent_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_deliveries_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          audience_type: string | null
+          call_to_action_label: string | null
+          call_to_action_url: string | null
+          campaign_name: string
+          campaign_type: string | null
+          created_at: string | null
+          created_by: string | null
+          delivery_channels_json: Json | null
+          filters_json: Json | null
+          id: string
+          message_body: string
+          scheduled_at: string | null
+          scheduling_type: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          audience_type?: string | null
+          call_to_action_label?: string | null
+          call_to_action_url?: string | null
+          campaign_name: string
+          campaign_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          delivery_channels_json?: Json | null
+          filters_json?: Json | null
+          id?: string
+          message_body: string
+          scheduled_at?: string | null
+          scheduling_type?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          audience_type?: string | null
+          call_to_action_label?: string | null
+          call_to_action_url?: string | null
+          campaign_name?: string
+          campaign_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          delivery_channels_json?: Json | null
+          filters_json?: Json | null
+          id?: string
+          message_body?: string
+          scheduled_at?: string | null
+          scheduling_type?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       challenges: {
         Row: {
           created_at: string
@@ -1638,6 +1739,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      clinical_decisions: {
+        Row: {
+          acted_at: string | null
+          confidence: number | null
+          created_at: string | null
+          decision_type: string
+          expected_impact: string | null
+          id: string
+          nutritionist_id: string
+          patient_id: string
+          reason: string
+          status: string | null
+          title: string
+          urgency: string | null
+        }
+        Insert: {
+          acted_at?: string | null
+          confidence?: number | null
+          created_at?: string | null
+          decision_type: string
+          expected_impact?: string | null
+          id?: string
+          nutritionist_id: string
+          patient_id: string
+          reason: string
+          status?: string | null
+          title: string
+          urgency?: string | null
+        }
+        Update: {
+          acted_at?: string | null
+          confidence?: number | null
+          created_at?: string | null
+          decision_type?: string
+          expected_impact?: string | null
+          id?: string
+          nutritionist_id?: string
+          patient_id?: string
+          reason?: string
+          status?: string | null
+          title?: string
+          urgency?: string | null
+        }
+        Relationships: []
       }
       clinical_experiment_assignments: {
         Row: {
@@ -3015,6 +3161,93 @@ export type Database = {
           },
         ]
       }
+      global_action_catalog: {
+        Row: {
+          action_code: string
+          action_description: string | null
+          action_name: string
+          category: string | null
+          created_at: string | null
+          entity_type: string
+          id: string
+          is_active: boolean | null
+          risk_level: string | null
+          supports_preview: boolean | null
+          supports_rollback: boolean | null
+        }
+        Insert: {
+          action_code: string
+          action_description?: string | null
+          action_name: string
+          category?: string | null
+          created_at?: string | null
+          entity_type: string
+          id?: string
+          is_active?: boolean | null
+          risk_level?: string | null
+          supports_preview?: boolean | null
+          supports_rollback?: boolean | null
+        }
+        Update: {
+          action_code?: string
+          action_description?: string | null
+          action_name?: string
+          category?: string | null
+          created_at?: string | null
+          entity_type?: string
+          id?: string
+          is_active?: boolean | null
+          risk_level?: string | null
+          supports_preview?: boolean | null
+          supports_rollback?: boolean | null
+        }
+        Relationships: []
+      }
+      global_action_logs: {
+        Row: {
+          action_code: string
+          affected_count: number | null
+          error_count: number | null
+          executed_by: string
+          execution_status: string | null
+          execution_summary: string | null
+          filters_json: Json | null
+          finished_at: string | null
+          id: string
+          payload_json: Json | null
+          started_at: string | null
+          success_count: number | null
+        }
+        Insert: {
+          action_code: string
+          affected_count?: number | null
+          error_count?: number | null
+          executed_by: string
+          execution_status?: string | null
+          execution_summary?: string | null
+          filters_json?: Json | null
+          finished_at?: string | null
+          id?: string
+          payload_json?: Json | null
+          started_at?: string | null
+          success_count?: number | null
+        }
+        Update: {
+          action_code?: string
+          affected_count?: number | null
+          error_count?: number | null
+          executed_by?: string
+          execution_status?: string | null
+          execution_summary?: string | null
+          filters_json?: Json | null
+          finished_at?: string | null
+          id?: string
+          payload_json?: Json | null
+          started_at?: string | null
+          success_count?: number | null
+        }
+        Relationships: []
+      }
       global_clinical_learning_state: {
         Row: {
           adjustment_reason: string | null
@@ -3087,6 +3320,51 @@ export type Database = {
           signal_name?: string
           signal_trend?: string | null
           signal_value?: number
+        }
+        Relationships: []
+      }
+      global_rules_engine: {
+        Row: {
+          actions_json: Json | null
+          conditions_json: Json | null
+          created_at: string | null
+          created_by: string | null
+          ends_at: string | null
+          id: string
+          is_active: boolean | null
+          rule_code: string
+          rule_description: string | null
+          rule_name: string
+          starts_at: string | null
+          target_scope: string | null
+        }
+        Insert: {
+          actions_json?: Json | null
+          conditions_json?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          rule_code: string
+          rule_description?: string | null
+          rule_name: string
+          starts_at?: string | null
+          target_scope?: string | null
+        }
+        Update: {
+          actions_json?: Json | null
+          conditions_json?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          rule_code?: string
+          rule_description?: string | null
+          rule_name?: string
+          starts_at?: string | null
+          target_scope?: string | null
         }
         Relationships: []
       }
@@ -5619,6 +5897,51 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_clinical_learning_profile: {
+        Row: {
+          best_adherence_days: Json | null
+          created_at: string | null
+          effective_strategies: Json | null
+          emotional_patterns: Json | null
+          failed_strategies: Json | null
+          id: string
+          last_updated_at: string | null
+          learning_version: number | null
+          metabolic_response_type: string | null
+          optimal_meal_times: Json | null
+          patient_id: string
+          worst_adherence_days: Json | null
+        }
+        Insert: {
+          best_adherence_days?: Json | null
+          created_at?: string | null
+          effective_strategies?: Json | null
+          emotional_patterns?: Json | null
+          failed_strategies?: Json | null
+          id?: string
+          last_updated_at?: string | null
+          learning_version?: number | null
+          metabolic_response_type?: string | null
+          optimal_meal_times?: Json | null
+          patient_id: string
+          worst_adherence_days?: Json | null
+        }
+        Update: {
+          best_adherence_days?: Json | null
+          created_at?: string | null
+          effective_strategies?: Json | null
+          emotional_patterns?: Json | null
+          failed_strategies?: Json | null
+          id?: string
+          last_updated_at?: string | null
+          learning_version?: number | null
+          metabolic_response_type?: string | null
+          optimal_meal_times?: Json | null
+          patient_id?: string
+          worst_adherence_days?: Json | null
+        }
+        Relationships: []
+      }
       patient_clinical_messages: {
         Row: {
           body: string
@@ -7427,6 +7750,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      patient_relationship_scores: {
+        Row: {
+          churn_risk_score: number | null
+          created_at: string | null
+          engagement_level: string | null
+          factors: Json | null
+          id: string
+          last_computed_at: string | null
+          patient_id: string
+          relationship_score: number | null
+          upgrade_moment_score: number | null
+        }
+        Insert: {
+          churn_risk_score?: number | null
+          created_at?: string | null
+          engagement_level?: string | null
+          factors?: Json | null
+          id?: string
+          last_computed_at?: string | null
+          patient_id: string
+          relationship_score?: number | null
+          upgrade_moment_score?: number | null
+        }
+        Update: {
+          churn_risk_score?: number | null
+          created_at?: string | null
+          engagement_level?: string | null
+          factors?: Json | null
+          id?: string
+          last_computed_at?: string | null
+          patient_id?: string
+          relationship_score?: number | null
+          upgrade_moment_score?: number | null
+        }
+        Relationships: []
       }
       patient_signals: {
         Row: {
@@ -10699,6 +11058,33 @@ export type Database = {
           metadata?: Json | null
           severity?: string
           source_layer?: string
+        }
+        Relationships: []
+      }
+      relationship_notes: {
+        Row: {
+          created_at: string | null
+          id: string
+          note: string
+          note_type: string | null
+          patient_id: string
+          professional_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          note: string
+          note_type?: string | null
+          patient_id: string
+          professional_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          note?: string
+          note_type?: string | null
+          patient_id?: string
+          professional_id?: string
         }
         Relationships: []
       }
