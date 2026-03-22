@@ -15,22 +15,22 @@ interface MealSlot {
   fat_g: number;
 }
 
-const MEAL_ORDER = ["cafe_da_manha", "lanche_manha", "almoco", "lanche_tarde", "jantar", "ceia"];
+const MEAL_ORDER = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "supper"];
 const MEAL_LABELS: Record<string, string> = {
-  cafe_da_manha: "Café da Manhã",
-  lanche_manha: "Lanche da Manhã",
-  almoco: "Almoço",
-  lanche_tarde: "Lanche da Tarde",
-  jantar: "Jantar",
-  ceia: "Ceia",
+  breakfast: "Café da Manhã",
+  morning_snack: "Lanche da Manhã",
+  lunch: "Almoço",
+  afternoon_snack: "Lanche da Tarde",
+  dinner: "Jantar",
+  supper: "Ceia",
 };
 const MEAL_TIMES: Record<string, string> = {
-  cafe_da_manha: "07:00",
-  lanche_manha: "10:00",
-  almoco: "12:30",
-  lanche_tarde: "15:30",
-  jantar: "19:00",
-  ceia: "21:00",
+  breakfast: "07:00",
+  morning_snack: "10:00",
+  lunch: "12:30",
+  afternoon_snack: "15:30",
+  dinner: "19:00",
+  supper: "21:00",
 };
 
 export default function NextMealWidget() {
@@ -45,7 +45,6 @@ export default function NextMealWidget() {
 
   const loadNextMeal = async (userId: string) => {
     try {
-      // Get active meal plan
       const { data: plan } = await supabase
         .from("meal_plans")
         .select("id")
@@ -55,24 +54,17 @@ export default function NextMealWidget() {
         .limit(1)
         .maybeSingle();
 
-      if (!plan) {
-        setLoading(false);
-        return;
-      }
+      if (!plan) { setLoading(false); return; }
 
-      // Get today's day index (0 = Monday)
-      const dayIndex = (new Date().getDay() + 6) % 7; // JS Sunday=0 → Monday=0
+      const dayOfWeek = (new Date().getDay() + 6) % 7;
 
       const { data: items } = await supabase
         .from("meal_plan_items")
-        .select("meal_type, food_name, quantity_g, calories, protein_g, carbs_g, fat_g")
+        .select("meal_type, title, description, calories_target, protein_target, carbs_target, fat_target")
         .eq("meal_plan_id", plan.id)
-        .eq("day_index", dayIndex);
+        .eq("day_of_week", dayOfWeek);
 
-      if (!items || items.length === 0) {
-        setLoading(false);
-        return;
-      }
+      if (!items || items.length === 0) { setLoading(false); return; }
 
       // Group by meal_type
       const grouped: Record<string, typeof items> = {};
@@ -91,32 +83,20 @@ export default function NextMealWidget() {
         if (!grouped[mealType]) continue;
         const timeStr = MEAL_TIMES[mealType] || "12:00";
         const [h, m] = timeStr.split(":").map(Number);
-        const mealMinutes = h * 60 + m;
-        if (mealMinutes >= currentMinutes - 30) {
+        if (h * 60 + m >= currentMinutes - 30) {
           selectedMeal = mealType;
           break;
         }
       }
-
-      // If no future meal, show first meal of day
-      if (!selectedMeal) {
-        selectedMeal = MEAL_ORDER.find((mt) => grouped[mt]) || null;
-      }
-
-      if (!selectedMeal || !grouped[selectedMeal]) {
-        setLoading(false);
-        return;
-      }
+      if (!selectedMeal) selectedMeal = MEAL_ORDER.find((mt) => grouped[mt]) || null;
+      if (!selectedMeal || !grouped[selectedMeal]) { setLoading(false); return; }
 
       const mealItems = grouped[selectedMeal];
-      const totalKcal = mealItems.reduce((s, i) => s + (i.calories || 0), 0);
-      const totalProtein = mealItems.reduce((s, i) => s + (i.protein_g || 0), 0);
-      const totalCarbs = mealItems.reduce((s, i) => s + (i.carbs_g || 0), 0);
-      const totalFat = mealItems.reduce((s, i) => s + (i.fat_g || 0), 0);
-      const summary = mealItems
-        .slice(0, 3)
-        .map((i) => i.food_name)
-        .join(", ");
+      const totalKcal = mealItems.reduce((s, i) => s + (i.calories_target || 0), 0);
+      const totalProtein = mealItems.reduce((s, i) => s + (i.protein_target || 0), 0);
+      const totalCarbs = mealItems.reduce((s, i) => s + (i.carbs_target || 0), 0);
+      const totalFat = mealItems.reduce((s, i) => s + (i.fat_target || 0), 0);
+      const summary = mealItems.slice(0, 3).map((i) => i.title).join(", ");
 
       setNextMeal({
         meal_type: selectedMeal,
@@ -176,13 +156,13 @@ export default function NextMealWidget() {
           <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold">
             {nextMeal.total_kcal} kcal
           </span>
-          <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 text-[10px] font-semibold">
+          <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-[10px] font-semibold">
             P {nextMeal.protein_g}g
           </span>
-          <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[10px] font-semibold">
+          <span className="px-2 py-0.5 rounded-full bg-warning/10 text-warning text-[10px] font-semibold">
             C {nextMeal.carbs_g}g
           </span>
-          <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 text-[10px] font-semibold">
+          <span className="px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-[10px] font-semibold">
             G {nextMeal.fat_g}g
           </span>
         </div>
