@@ -203,31 +203,8 @@ function NutritionistRecipes() {
         ))}
       </div>
 
-      {/* Recipe detail dialog */}
-      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-          <DialogHeader><DialogTitle className="font-display">{selected?.title}</DialogTitle></DialogHeader>
-          {selected && (
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">{selected.description}</p>
-              <div className="grid grid-cols-4 gap-2 text-center">
-                {selected.calories_per_serving && <div className="p-2 rounded bg-muted text-xs"><span className="font-bold block">{selected.calories_per_serving}</span>kcal</div>}
-                {selected.protein_per_serving && <div className="p-2 rounded bg-muted text-xs"><span className="font-bold block">{selected.protein_per_serving}g</span>Prot</div>}
-                {selected.carbs_per_serving && <div className="p-2 rounded bg-muted text-xs"><span className="font-bold block">{selected.carbs_per_serving}g</span>Carb</div>}
-                {selected.fat_per_serving && <div className="p-2 rounded bg-muted text-xs"><span className="font-bold block">{selected.fat_per_serving}g</span>Gord</div>}
-              </div>
-              <div>
-                <h4 className="font-medium text-sm mb-2">🥕 Ingredientes</h4>
-                <ul className="space-y-1">{(selected.ingredients || []).map((ing: string, i: number) => <li key={i} className="text-sm text-muted-foreground flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />{ing}</li>)}</ul>
-              </div>
-              <div>
-                <h4 className="font-medium text-sm mb-2">📝 Modo de Preparo</h4>
-                <ol className="space-y-2">{(selected.instructions || []).map((step: string, i: number) => <li key={i} className="text-sm text-muted-foreground flex gap-2"><span className="font-bold text-primary">{i + 1}.</span>{step}</li>)}</ol>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Recipe detail — Premium modal */}
+      <PremiumRecipeModal recipe={selected} open={detailOpen} onOpenChange={setDetailOpen} />
 
       {/* Create/edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
