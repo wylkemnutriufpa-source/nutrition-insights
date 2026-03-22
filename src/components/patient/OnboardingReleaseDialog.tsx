@@ -139,11 +139,25 @@ export default function OnboardingReleaseDialog({ patientId, patientName, open, 
 
           <div>
             <Label>Plano Contratado</Label>
-            <Input
-              value={form.contracted_plan}
-              onChange={(e) => setForm({ ...form, contracted_plan: e.target.value })}
-              placeholder="Ex: Premium Trimestral, Consulta Avulsa..."
-            />
+            <div className="grid grid-cols-2 gap-2 mt-1.5">
+              {[
+                { value: "mensal", label: "Mensal", icon: "📅" },
+                { value: "trimestral", label: "Trimestral", icon: "📆" },
+                { value: "semestral", label: "Semestral", icon: "🗓️" },
+                { value: "anual", label: "Anual", icon: "📋" },
+              ].map((plan) => (
+                <Button
+                  key={plan.value}
+                  type="button"
+                  variant={form.contracted_plan === plan.value ? "default" : "outline"}
+                  className={`h-14 flex flex-col gap-0.5 ${form.contracted_plan === plan.value ? "ring-2 ring-primary" : ""}`}
+                  onClick={() => setForm({ ...form, contracted_plan: plan.value })}
+                >
+                  <span className="text-lg">{plan.icon}</span>
+                  <span className="text-xs">{plan.label}</span>
+                </Button>
+              ))}
+            </div>
           </div>
 
           <div>
