@@ -8,6 +8,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import PageLoader from "@/components/common/PageLoader";
+import { BrainLoaderScreen } from "@/components/common/BrainLoader";
 import { CommandPaletteProvider } from "@/components/common/CommandPalette";
 import { readActiveEditorRoute } from "@/lib/mealPlanEditorStore";
 import { installGlobalErrorHandlers } from "@/lib/monitoring";
@@ -127,6 +128,7 @@ const ClinicalSimulation = lazy(() => import("./pages/ClinicalSimulation"));
 const ClinicalLab = lazy(() => import("./pages/ClinicalLab"));
 const ClinicalAutomation = lazy(() => import("./pages/ClinicalAutomation"));
 const GlobalAdaptiveIntelligence = lazy(() => import("./pages/GlobalAdaptiveIntelligence"));
+const ProfessionalClinicalAnalytics = lazy(() => import("./pages/ProfessionalClinicalAnalytics"));
 const WeightTrajectory = lazy(() => import("./pages/WeightTrajectory"));
 const MetabolicTwin = lazy(() => import("./pages/MetabolicTwin"));
 const PopulationNutritionIntelligence = lazy(() => import("./pages/PopulationNutritionIntelligence"));
@@ -219,7 +221,7 @@ function RootRoute() {
     ? readActiveEditorRoute()
     : null;
 
-  if (loading) return <PageLoader />;
+  if (loading) return <BrainLoaderScreen text="Preparando sua experiência…" />;
   if (!user) return <GatewayPage />;
   if (activeEditorRoute?.shouldRestore) {
     return <Navigate to={activeEditorRoute.route} replace />;
@@ -335,6 +337,7 @@ const App = () => (
               <Route path="/clinical-predictions" element={<NutritionistRoute><LP section="Previsão Clínica"><ClinicalPredictions /></LP></NutritionistRoute>} />
               <Route path="/clinical-simulation" element={<NutritionistRoute><LP section="Simulador Clínico"><ClinicalSimulation /></LP></NutritionistRoute>} />
               <Route path="/clinical-lab" element={<NutritionistRoute><LP section="Laboratório Clínico"><ClinicalLab /></LP></NutritionistRoute>} />
+              <Route path="/clinical-analytics" element={<NutritionistRoute><LP section="Analytics Clínico"><ProfessionalClinicalAnalytics /></LP></NutritionistRoute>} />
               <Route path="/weekly-report" element={<NutritionistRoute><LP section="Relatórios"><WeeklyReport /></LP></NutritionistRoute>} />
               <Route path="/financial" element={<NutritionistRoute><LP section="Financeiro"><Financial /></LP></NutritionistRoute>} />
               <Route path="/global-tips" element={<ProtectedRoute><LP section="Dicas"><GlobalTips /></LP></ProtectedRoute>} />

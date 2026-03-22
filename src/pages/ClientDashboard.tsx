@@ -37,6 +37,8 @@ import PatientDailyFocusHero from "@/components/patient/PatientDailyFocusHero";
 import SmartChecklistWidget from "@/components/patient/SmartChecklistWidget";
 import TherapeuticMomentumBar from "@/components/patient/TherapeuticMomentumBar";
 import ClinicalInsightsCard from "@/components/patient/ClinicalInsightsCard";
+import PatientMetabolicInsightPanel from "@/components/patient/PatientMetabolicInsightPanel";
+import PatientBehaviorLearningCard from "@/components/patient/PatientBehaviorLearningCard";
 interface ProgramInfo {
   id: string;
   title: string;
@@ -401,6 +403,11 @@ export default function ClientDashboard() {
         <ProgramJoinRequest open={programJoinOpen} onOpenChange={setProgramJoinOpen} />
         <PhaseTransitionModal />
 
+        {/* Metabolic Insight Panel */}
+        <motion.div variants={item}>
+          <PatientMetabolicInsightPanel />
+        </motion.div>
+
         {/* Quick Stats */}
         <motion.div variants={item} className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {/* Ranking Widget */}
@@ -534,6 +541,11 @@ export default function ClientDashboard() {
         {/* Clinical Insights from Learning Engine */}
         <motion.div variants={item}>
           <ClinicalInsightsCard />
+        </motion.div>
+
+        {/* Behavior Learning */}
+        <motion.div variants={item}>
+          <PatientBehaviorLearningCard />
         </motion.div>
 
         {/* Journey Timeline Feed */}
