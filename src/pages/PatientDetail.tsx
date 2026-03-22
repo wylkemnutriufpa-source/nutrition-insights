@@ -53,6 +53,7 @@ import MealAdherenceWidget from "@/components/patient/MealAdherenceWidget";
 import OnboardingReleaseDialog from "@/components/patient/OnboardingReleaseDialog";
 import ClinicalFlagsSummary from "@/components/patient/ClinicalFlagsSummary";
 import PatientBehavioralManager from "@/components/patient/PatientBehavioralManager";
+import PatientEvolutionPDF from "@/components/patient/PatientEvolutionPDF";
 
 export default function PatientDetail() {
   const { patientId } = useParams<{ patientId: string }>();
@@ -408,6 +409,7 @@ export default function PatientDetail() {
             size="md"
           />
           <div className="flex gap-2 flex-wrap">
+            {patientId && <PatientEvolutionPDF patientId={patientId} patientName={profile?.full_name || "Paciente"} />}
             <Button
               variant={patientStatus === "active" ? "outline" : "default"}
               className="gap-2"

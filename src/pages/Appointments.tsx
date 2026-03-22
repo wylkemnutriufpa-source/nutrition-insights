@@ -54,6 +54,7 @@ export default function Appointments() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [notesDialog, setNotesDialog] = useState<{ id: string; notes: string } | null>(null);
   const [form, setForm] = useState({
     title: "", description: "", patient_id: "", appointment_type: "consultation",
     date: "", time: "09:00", duration_minutes: "60", color: "#10b981",
@@ -102,7 +103,7 @@ export default function Appointments() {
     mutationFn: async () => {
       if (!user) throw new Error("No user");
       const dateTime = new Date(`${form.date}T${form.time}`).toISOString();
-      const { error } = await supabase.from("patient_appointments").insert({
+      const { data: apt, error } = await supabase.from("patient_appointments").insert({
         nutritionist_id: user.id,
         patient_id: form.patient_id,
         title: form.title || `Consulta - ${patients.find(p => p.user_id === form.patient_id)?.full_name || ""}`,
@@ -111,11 +112,30 @@ export default function Appointments() {
         duration_minutes: Number(form.duration_minutes) || 60,
         appointment_type: form.appointment_type,
         color: form.color,
-      });
+      }).select("id").single();
       if (error) throw error;
+
+      // Auto-create reminders (24h and 1h before)
+      if (apt?.id) {
+        await (supabase as any).from("appointment_reminders").insert([
+          { appointment_id: apt.id, reminder_type: "before_24h" },
+          { appointment_id: apt.id, reminder_type: "before_1h" },
+        ]);
+      }
+
+      // Create notification for patient
+      await supabase.from("notifications").insert({
+        user_id: form.patient_id,
+        title: "Nova consulta agendada",
+        message: `Consulta agendada para ${new Date(dateTime).toLocaleDateString("pt-BR")} às ${form.time}`,
+        type: "appointment",
+        entity_type: "appointment",
+        entity_id: apt?.id,
+        target_route: "/appointments",
+      });
     },
     onSuccess: () => {
-      toast.success("Consulta agendada!");
+      toast.success("Consulta agendada com notificação enviada!");
       setDialogOpen(false);
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
     },
@@ -126,6 +146,17 @@ export default function Appointments() {
     await supabase.from("patient_appointments").update({ status }).eq("id", id);
     queryClient.invalidateQueries({ queryKey: ["appointments"] });
     toast.success("Status atualizado!");
+    if (status === "completed") {
+      setNotesDialog({ id, notes: "" });
+    }
+  };
+
+  const saveNotes = async () => {
+    if (!notesDialog) return;
+    await supabase.from("patient_appointments").update({ description: notesDialog.notes }).eq("id", notesDialog.id);
+    queryClient.invalidateQueries({ queryKey: ["appointments"] });
+    setNotesDialog(null);
+    toast.success("Notas da consulta salvas!");
   };
 
   const days = eachDayOfInterval({ start: startOfMonth(currentMonth), end: endOfMonth(currentMonth) });
@@ -307,6 +338,26 @@ export default function Appointments() {
               <Button onClick={() => createMutation.mutate()} className="w-full gradient-primary" disabled={!form.patient_id || !form.date || createMutation.isPending}>
                 {createMutation.isPending ? "Agendando..." : "Agendar Consulta"}
               </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Post-consultation notes dialog */}
+        <Dialog open={!!notesDialog} onOpenChange={(o) => !o && setNotesDialog(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader><DialogTitle className="font-display">Notas Pós-Consulta</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">Registre suas observações sobre a consulta concluída.</p>
+              <Textarea
+                value={notesDialog?.notes || ""}
+                onChange={(e) => setNotesDialog(prev => prev ? { ...prev, notes: e.target.value } : null)}
+                rows={4}
+                placeholder="Ex: Paciente relatou melhora na disposição. Ajustar macros na próxima semana..."
+              />
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1" onClick={() => setNotesDialog(null)}>Pular</Button>
+                <Button className="flex-1 gradient-primary" onClick={saveNotes}>Salvar Notas</Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>

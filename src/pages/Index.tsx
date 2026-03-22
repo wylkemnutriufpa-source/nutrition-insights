@@ -27,6 +27,7 @@ import PendingApprovalsModal, { usePendingApprovals } from "@/components/patient
 
 import PatientProgressSimulation from "@/components/dashboard/PatientProgressSimulation";
 import PortfolioIntelligencePanel from "@/components/dashboard/PortfolioIntelligencePanel";
+import SetupWizard from "@/components/professional/SetupWizard";
 import PatientRevenueSimulator from "@/components/dashboard/PatientRevenueSimulator";
 import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
 import ChatDashboardWidget from "@/components/chat/ChatDashboardWidget";
@@ -402,6 +403,11 @@ function NutritionistDashboardContent() {
             </Button>
           </Link>
         ))}
+      </motion.div>
+
+      {/* ── Setup Wizard ── */}
+      <motion.div variants={item}>
+        <SetupWizard />
       </motion.div>
 
       {/* ── Portfolio Intelligence ── */}
