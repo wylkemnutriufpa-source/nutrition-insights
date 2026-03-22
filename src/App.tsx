@@ -150,6 +150,7 @@ const PhytotherapyProtocols = lazy(() => import("./pages/PhytotherapyProtocols")
 
 // Install global error handlers once at module load
 installGlobalErrorHandlers();
+initFeatureFlags();
 
 const queryClient = new QueryClient({
   defaultOptions: {
