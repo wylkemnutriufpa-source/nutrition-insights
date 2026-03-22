@@ -13,6 +13,7 @@ import { BrainLoaderScreen } from "@/components/common/BrainLoader";
 import { CommandPaletteProvider } from "@/components/common/CommandPalette";
 import { readActiveEditorRoute } from "@/lib/mealPlanEditorStore";
 import { installGlobalErrorHandlers } from "@/lib/monitoring";
+import { initFeatureFlags } from "@/lib/featureFlags";
 
 // ── Eager-loaded (critical path) ────────────────────────────
 import GatewayPage from "./pages/GatewayPage";
@@ -149,6 +150,7 @@ const PhytotherapyProtocols = lazy(() => import("./pages/PhytotherapyProtocols")
 
 // Install global error handlers once at module load
 installGlobalErrorHandlers();
+initFeatureFlags();
 
 const queryClient = new QueryClient({
   defaultOptions: {
