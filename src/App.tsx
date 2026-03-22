@@ -8,6 +8,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import SafePage from "@/components/common/SafePage";
+import { CelebrationProvider } from "@/components/common/SuccessCelebration";
 import PageLoader from "@/components/common/PageLoader";
 import { BrainLoaderScreen } from "@/components/common/BrainLoader";
 import { CommandPaletteProvider } from "@/components/common/CommandPalette";
