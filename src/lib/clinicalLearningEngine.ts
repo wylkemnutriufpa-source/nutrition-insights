@@ -20,12 +20,12 @@ export async function detectAdherencePatterns(patientId: string): Promise<Learni
   const patterns: LearningPattern[] = [];
 
   // Check meal completions by meal type
-  const { data: completions } = await supabase
-    .from("meal_item_completions")
+  const { data: completions } = await (supabase
+    .from("meal_item_completions" as any)
     .select("meal_type, status, logged_at")
     .eq("patient_id", patientId)
     .order("logged_at", { ascending: false })
-    .limit(100);
+    .limit(100) as any);
 
   if (!completions || completions.length < 7) return patterns;
 
