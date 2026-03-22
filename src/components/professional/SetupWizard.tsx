@@ -27,11 +27,16 @@ export default function SetupWizard() {
     if (dismissed === "true") { setLoading(false); return; }
 
     setLoading(true);
+    const countQuery = (table: string, filters: Record<string, any>) => {
+      let q = (supabase as any).from(table).select("id", { count: "exact", head: true });
+      for (const [k, v] of Object.entries(filters)) q = q.eq(k, v);
+      return q as Promise<{ count: number | null }>;
+    };
     const [patientsRes, protocolsRes, plansRes, waRes] = await Promise.all([
-      supabase.from("nutritionist_patients").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id),
-      supabase.from("nutrition_protocols").select("id", { count: "exact", head: true }).eq("created_by", user.id),
-      supabase.from("meal_plans").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id).eq("plan_status", "published"),
-      supabase.from("whatsapp_integrations").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id).eq("is_active", true),
+      countQuery("nutritionist_patients", { nutritionist_id: user.id }),
+      countQuery("nutrition_protocols", { created_by: user.id }),
+      countQuery("meal_plans", { nutritionist_id: user.id, plan_status: "published" }),
+      countQuery("whatsapp_integrations", { nutritionist_id: user.id, is_active: true }),
     ]);
 
     const results: Record<string, boolean> = {
