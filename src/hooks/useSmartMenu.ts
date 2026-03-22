@@ -35,6 +35,40 @@ export interface MenuCategory {
   items: SmartMenuItem[];
 }
 
+const DEFAULT_ROLE_VISIBILITY = ["admin", "nutritionist", "personal", "patient"];
+
+function normalizeRoleVisibility(value: unknown): string[] {
+  if (!Array.isArray(value)) return DEFAULT_ROLE_VISIBILITY;
+  const roles = value.filter((role): role is string => typeof role === "string" && role.length > 0);
+  return roles.length ? roles : DEFAULT_ROLE_VISIBILITY;
+}
+
+function normalizeMenuItem(raw: any): MenuItem | null {
+  if (!raw || typeof raw !== "object") return null;
+
+  const id = typeof raw.id === "string" && raw.id ? raw.id : null;
+  const label = typeof raw.label === "string" && raw.label ? raw.label : null;
+  const route = typeof raw.route === "string" && raw.route ? raw.route : null;
+
+  if (!id || !label || !route) return null;
+
+  return {
+    id,
+    label,
+    label_key: typeof raw.label_key === "string" && raw.label_key ? raw.label_key : label,
+    route,
+    icon: typeof raw.icon === "string" && raw.icon ? raw.icon : "LayoutDashboard",
+    category: typeof raw.category === "string" && raw.category ? raw.category : "PRINCIPAL",
+    order_default: typeof raw.order_default === "number" ? raw.order_default : 999,
+    role_visibility: normalizeRoleVisibility(raw.role_visibility),
+    premium_only: Boolean(raw.premium_only),
+    is_active: raw.is_active !== false,
+    icon_color: typeof raw.icon_color === "string" ? raw.icon_color : null,
+    color: typeof raw.color === "string" ? raw.color : null,
+    premium_priority_boost: Boolean(raw.premium_priority_boost),
+  };
+}
+
 const CACHE_KEY = "fitjourney_menu_cache";
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
@@ -140,7 +174,9 @@ export function useSmartMenu() {
           supabase.from("user_menu_usage").select("menu_item_id,clicks_count,last_access_at,usage_score").eq("user_id", user.id),
         ]);
 
-        const items = (itemsRes.data || []) as unknown as MenuItem[];
+        const items = ((itemsRes.data || []) as unknown[])
+          .map((item) => normalizeMenuItem(item))
+          .filter((item): item is MenuItem => item !== null);
         const usageData = (usageRes.data || []) as unknown as MenuUsage[];
 
         setMenuItems(items);
@@ -148,6 +184,8 @@ export function useSmartMenu() {
         setCachedMenu(items, usageData);
       } catch (e) {
         console.error("Error fetching smart menu:", e);
+        setMenuItems([]);
+        setUsage([]);
       } finally {
         setLoading(false);
       }
@@ -162,7 +200,7 @@ export function useSmartMenu() {
 
     // Filter items visible to this role
     const visible = menuItems.filter((item) =>
-      item.role_visibility.includes(userRole)
+      Array.isArray(item.role_visibility) && item.role_visibility.includes(userRole)
     );
 
     // Build usage map
