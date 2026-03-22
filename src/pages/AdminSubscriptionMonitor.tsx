@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +29,7 @@ interface ProfessionalSub {
 
 export default function AdminSubscriptionMonitor() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [professionals, setProfessionals] = useState<ProfessionalSub[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -156,7 +158,8 @@ export default function AdminSubscriptionMonitor() {
                 filtered.map((prof) => (
                   <div
                     key={prof.user_id}
-                    className="flex items-center justify-between p-4 rounded-xl bg-muted/50 hover:bg-muted/80 transition-colors"
+                    onClick={() => navigate("/admin/pricing")}
+                    className="flex items-center justify-between p-4 rounded-xl bg-muted/50 hover:bg-muted/80 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
