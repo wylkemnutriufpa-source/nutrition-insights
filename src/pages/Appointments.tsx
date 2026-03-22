@@ -341,6 +341,26 @@ export default function Appointments() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Post-consultation notes dialog */}
+        <Dialog open={!!notesDialog} onOpenChange={(o) => !o && setNotesDialog(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader><DialogTitle className="font-display">Notas Pós-Consulta</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">Registre suas observações sobre a consulta concluída.</p>
+              <Textarea
+                value={notesDialog?.notes || ""}
+                onChange={(e) => setNotesDialog(prev => prev ? { ...prev, notes: e.target.value } : null)}
+                rows={4}
+                placeholder="Ex: Paciente relatou melhora na disposição. Ajustar macros na próxima semana..."
+              />
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1" onClick={() => setNotesDialog(null)}>Pular</Button>
+                <Button className="flex-1 gradient-primary" onClick={saveNotes}>Salvar Notas</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
