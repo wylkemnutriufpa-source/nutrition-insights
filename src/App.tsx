@@ -140,6 +140,7 @@ const MagicJourneyStory = lazy(() => import("./pages/MagicJourneyStory"));
 const BodyProjectionExperience = lazy(() => import("./pages/BodyProjectionExperience"));
 const AdminOperationalCosts = lazy(() => import("./pages/AdminOperationalCosts"));
 const TeamManagement = lazy(() => import("./pages/TeamManagement"));
+const PhytotherapyProtocols = lazy(() => import("./pages/PhytotherapyProtocols"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -304,6 +305,7 @@ const App = () => (
               <Route path="/patients" element={<NutritionistRoute><LP section="Pacientes"><Patients /></LP></NutritionistRoute>} />
               <Route path="/patients/:patientId" element={<NutritionistRoute><LP section="Pacientes"><PatientDetail /></LP></NutritionistRoute>} />
               <Route path="/protocols" element={<NutritionistRoute><LP section="Protocolos"><Protocols /></LP></NutritionistRoute>} />
+              <Route path="/protocolos-fitoterapicos" element={<NutritionistRoute><LP section="Protocolos Fitoterápicos"><PhytotherapyProtocols /></LP></NutritionistRoute>} />
               <Route path="/programs" element={<NutritionistRoute><LP section="Projetos"><Programs /></LP></NutritionistRoute>} />
               <Route path="/programs/:programId" element={<NutritionistRoute><LP section="Projetos"><ProgramDetail /></LP></NutritionistRoute>} />
               <Route path="/programs/:programId/biquini-branco" element={<NutritionistRoute><LP section="Projetos"><BiquiniBrancoDetail /></LP></NutritionistRoute>} />
