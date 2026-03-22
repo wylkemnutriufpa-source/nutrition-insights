@@ -148,6 +148,10 @@ const AdminOperationalCosts = lazy(() => import("./pages/AdminOperationalCosts")
 const TeamManagement = lazy(() => import("./pages/TeamManagement"));
 const WhatsAppSettings = lazy(() => import("./pages/WhatsAppSettings"));
 const PhytotherapyProtocols = lazy(() => import("./pages/PhytotherapyProtocols"));
+const MissionControl = lazy(() => import("./pages/MissionControl"));
+const CampaignCenter = lazy(() => import("./pages/CampaignCenter"));
+const ClinicalCRM = lazy(() => import("./pages/ClinicalCRM"));
+const ClinicalBrain = lazy(() => import("./pages/ClinicalBrain"));
 
 // Install global error handlers once at module load
 installGlobalErrorHandlers();
