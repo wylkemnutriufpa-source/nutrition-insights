@@ -409,6 +409,7 @@ export default function PatientDetail() {
             size="md"
           />
           <div className="flex gap-2 flex-wrap">
+            {patientId && <PatientEvolutionPDF patientId={patientId} patientName={profile?.full_name || "Paciente"} />}
             <Button
               variant={patientStatus === "active" ? "outline" : "default"}
               className="gap-2"
