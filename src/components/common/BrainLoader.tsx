@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Brain } from "lucide-react";
 
@@ -19,6 +19,7 @@ interface BrainLoaderProps {
 
 // ─── Shared brain animation ───
 function AnimatedBrain({ size, glowSize }: { size: number; glowSize: number }) {
+  const shouldReduceMotion = useReducedMotion();
   return (
     <div className="relative" style={{ width: size, height: size }}>
       {/* Aura glow */}
@@ -31,8 +32,8 @@ function AnimatedBrain({ size, glowSize }: { size: number; glowSize: number }) {
           top: -(glowSize - size) / 2,
           left: -(glowSize - size) / 2,
         }}
-        animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }}
-        transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+        animate={shouldReduceMotion ? {} : { scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }}
+        transition={shouldReduceMotion ? {} : { duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
       />
 
       {/* Orbiting particles */}
@@ -73,8 +74,8 @@ function AnimatedBrain({ size, glowSize }: { size: number; glowSize: number }) {
       {/* Brain icon with Y-axis rotation */}
       <motion.div
         className="absolute inset-0 flex items-center justify-center"
-        animate={{ rotateY: [0, 360] }}
-        transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+        animate={shouldReduceMotion ? {} : { rotateY: [0, 360] }}
+        transition={shouldReduceMotion ? {} : { duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
         style={{ perspective: 600 }}
       >
         <Brain

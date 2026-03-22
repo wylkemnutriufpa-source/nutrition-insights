@@ -6,6 +6,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import SmartTips from "@/components/patient/SmartTips";
+import { BrainLoaderCard } from "@/components/common/BrainLoader";
 import BehavioralTasksWidget from "@/components/patient/BehavioralTasksWidget";
 import ClinicalMessagesWidget from "@/components/patient/ClinicalMessagesWidget";
 import {
@@ -248,9 +249,7 @@ export default function ClientDashboard() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
-        </div>
+        <BrainLoaderCard text="Carregando seu painel clínico…" />
       </DashboardLayout>
     );
   }

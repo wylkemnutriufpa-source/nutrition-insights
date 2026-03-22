@@ -47,9 +47,9 @@ export default function PatientMetabolicInsightPanel() {
   const offset = circumference - (data.score / 100) * circumference;
 
   const categories = [
-    { label: "Hidratação", value: data.hydration, icon: Droplets, color: "text-blue-400" },
-    { label: "Nutrição", value: data.nutrition, icon: Apple, color: "text-emerald-400" },
-    { label: "Sono", value: data.sleep, icon: Moon, color: "text-indigo-400" },
+    { label: "Hidratação", value: data.hydration, icon: Droplets, color: "text-info" },
+    { label: "Nutrição", value: data.nutrition, icon: Apple, color: "text-success" },
+    { label: "Sono", value: data.sleep, icon: Moon, color: "text-accent" },
     { label: "Consistência", value: data.consistency, icon: TrendingUp, color: "text-primary" },
   ];
 
