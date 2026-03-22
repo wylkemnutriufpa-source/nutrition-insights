@@ -29,6 +29,7 @@ interface ProfessionalSub {
 
 export default function AdminSubscriptionMonitor() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [professionals, setProfessionals] = useState<ProfessionalSub[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
