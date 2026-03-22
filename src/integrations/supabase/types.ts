@@ -1491,6 +1491,45 @@ export type Database = {
         }
         Relationships: []
       }
+      clinical_communication_events: {
+        Row: {
+          created_at: string
+          event_context: Json | null
+          event_type: string
+          id: string
+          message_template_code: string
+          patient_id: string
+          priority_score: number
+          professional_id: string
+          scheduled_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          event_context?: Json | null
+          event_type: string
+          id?: string
+          message_template_code: string
+          patient_id: string
+          priority_score?: number
+          professional_id: string
+          scheduled_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          event_context?: Json | null
+          event_type?: string
+          id?: string
+          message_template_code?: string
+          patient_id?: string
+          priority_score?: number
+          professional_id?: string
+          scheduled_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       clinical_daily_snapshots: {
         Row: {
           active_alerts_count: number | null
@@ -8855,6 +8894,108 @@ export type Database = {
           },
         ]
       }
+      professional_whatsapp_automation_settings: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          max_messages_per_day: number
+          professional_id: string
+          send_checklist_reminders: boolean
+          send_daily_focus: boolean
+          send_low_adherence_alerts: boolean
+          send_new_patient_alert: boolean
+          send_onboarding_release: boolean
+          send_plan_published: boolean
+          send_weekly_summary: boolean
+          sending_end_hour: number
+          sending_start_hour: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          max_messages_per_day?: number
+          professional_id: string
+          send_checklist_reminders?: boolean
+          send_daily_focus?: boolean
+          send_low_adherence_alerts?: boolean
+          send_new_patient_alert?: boolean
+          send_onboarding_release?: boolean
+          send_plan_published?: boolean
+          send_weekly_summary?: boolean
+          sending_end_hour?: number
+          sending_start_hour?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          max_messages_per_day?: number
+          professional_id?: string
+          send_checklist_reminders?: boolean
+          send_daily_focus?: boolean
+          send_low_adherence_alerts?: boolean
+          send_new_patient_alert?: boolean
+          send_onboarding_release?: boolean
+          send_plan_published?: boolean
+          send_weekly_summary?: boolean
+          sending_end_hour?: number
+          sending_start_hour?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      professional_whatsapp_connections: {
+        Row: {
+          api_base_url: string | null
+          connection_status: string
+          created_at: string
+          display_name: string | null
+          id: string
+          is_active: boolean
+          last_sync_at: string | null
+          phone_number: string | null
+          professional_id: string
+          provider_instance_name: string | null
+          provider_name: string
+          qr_code_payload: string | null
+          updated_at: string
+        }
+        Insert: {
+          api_base_url?: string | null
+          connection_status?: string
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          is_active?: boolean
+          last_sync_at?: string | null
+          phone_number?: string | null
+          professional_id: string
+          provider_instance_name?: string | null
+          provider_name?: string
+          qr_code_payload?: string | null
+          updated_at?: string
+        }
+        Update: {
+          api_base_url?: string | null
+          connection_status?: string
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          is_active?: boolean
+          last_sync_at?: string | null
+          phone_number?: string | null
+          professional_id?: string
+          provider_instance_name?: string | null
+          provider_name?: string
+          qr_code_payload?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           adherence_momentum: string | null
@@ -11342,6 +11483,125 @@ export type Database = {
           unit?: string
           updated_at?: string
           week_start?: string
+        }
+        Relationships: []
+      }
+      whatsapp_inbound_messages: {
+        Row: {
+          confidence_score: number | null
+          created_at: string
+          id: string
+          interpreted_intent: string | null
+          message_text: string
+          patient_id: string | null
+          phone_number: string
+          processed: boolean
+          professional_id: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          interpreted_intent?: string | null
+          message_text: string
+          patient_id?: string | null
+          phone_number: string
+          processed?: boolean
+          professional_id: string
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          interpreted_intent?: string | null
+          message_text?: string
+          patient_id?: string | null
+          phone_number?: string
+          processed?: boolean
+          professional_id?: string
+        }
+        Relationships: []
+      }
+      whatsapp_intent_learning_log: {
+        Row: {
+          action_generated: string | null
+          clinical_result: string | null
+          created_at: string
+          detected_intent: string
+          id: string
+          inbound_message_id: string | null
+          original_message: string
+          was_correct: boolean | null
+        }
+        Insert: {
+          action_generated?: string | null
+          clinical_result?: string | null
+          created_at?: string
+          detected_intent: string
+          id?: string
+          inbound_message_id?: string | null
+          original_message: string
+          was_correct?: boolean | null
+        }
+        Update: {
+          action_generated?: string | null
+          clinical_result?: string | null
+          created_at?: string
+          detected_intent?: string
+          id?: string
+          inbound_message_id?: string | null
+          original_message?: string
+          was_correct?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_intent_learning_log_inbound_message_id_fkey"
+            columns: ["inbound_message_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_inbound_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_message_logs: {
+        Row: {
+          created_at: string
+          delivery_status: string
+          error_message: string | null
+          event_type: string
+          external_message_id: string | null
+          id: string
+          message_body: string
+          message_template_code: string | null
+          patient_id: string | null
+          professional_id: string
+          sent_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          delivery_status?: string
+          error_message?: string | null
+          event_type: string
+          external_message_id?: string | null
+          id?: string
+          message_body: string
+          message_template_code?: string | null
+          patient_id?: string | null
+          professional_id: string
+          sent_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          delivery_status?: string
+          error_message?: string | null
+          event_type?: string
+          external_message_id?: string | null
+          id?: string
+          message_body?: string
+          message_template_code?: string | null
+          patient_id?: string | null
+          professional_id?: string
+          sent_at?: string | null
         }
         Relationships: []
       }
