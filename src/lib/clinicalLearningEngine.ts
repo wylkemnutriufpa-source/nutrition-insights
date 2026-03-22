@@ -143,12 +143,12 @@ export async function persistLearningPatterns(
         .eq("id", (existing as any).id) as any);
     } else {
       // Insert new
-      await supabase
-        .from("patient_clinical_learning_memory")
+      await (supabase
+        .from("patient_clinical_learning_memory" as any)
         .insert({
           patient_id: patientId,
           ...p,
-        });
+        }) as any);
     }
     persisted++;
   }
