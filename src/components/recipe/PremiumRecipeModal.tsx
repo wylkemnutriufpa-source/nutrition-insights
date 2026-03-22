@@ -1,25 +1,25 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { X, Clock, Users, Flame, Beef, Wheat, Droplets, ChefHat } from "lucide-react";
+import { X, Clock, Users, Flame, Beef, Wheat, Droplets } from "lucide-react";
 
 interface Recipe {
   id: string;
   title: string;
   description: string | null;
-  ingredients: string[];
-  instructions: string[];
-  prep_time_minutes: number;
-  cook_time_minutes: number;
-  servings: number;
-  difficulty: string;
-  category: string;
+  ingredients: any;
+  instructions: any;
+  prep_time_minutes: number | null;
+  cook_time_minutes: number | null;
+  servings: number | null;
+  difficulty: string | null;
+  category: string | null;
   calories_per_serving: number | null;
   protein_per_serving: number | null;
   carbs_per_serving: number | null;
   fat_per_serving: number | null;
   image_url?: string | null;
-  tags?: string[];
+  tags?: string[] | null;
 }
 
 interface Props {
@@ -32,10 +32,25 @@ const difficultyMap: Record<string, string> = { easy: "Fácil", medium: "Média"
 const categoryMap: Record<string, string> = { main: "Prato Principal", snack: "Lanche", dessert: "Sobremesa", breakfast: "Café da Manhã", salad: "Salada", soup: "Sopa", drink: "Bebida" };
 const difficultyColor: Record<string, string> = { easy: "bg-green-500/10 text-green-600", medium: "bg-orange-500/10 text-orange-600", hard: "bg-red-500/10 text-red-600" };
 
+function toStringArray(val: any): string[] {
+  if (!val) return [];
+  if (Array.isArray(val)) return val.map(String);
+  if (typeof val === "string") return val.split("\n").filter(Boolean);
+  return [];
+}
+
 export default function PremiumRecipeModal({ recipe, open, onOpenChange }: Props) {
   if (!recipe) return null;
 
-  const totalTime = recipe.prep_time_minutes + recipe.cook_time_minutes;
+  const prepTime = recipe.prep_time_minutes ?? 0;
+  const cookTime = recipe.cook_time_minutes ?? 0;
+  const totalTime = prepTime + cookTime;
+  const servings = recipe.servings ?? 1;
+  const difficulty = recipe.difficulty ?? "medium";
+  const category = recipe.category ?? "main";
+  const ingredients = toStringArray(recipe.ingredients);
+  const instructions = toStringArray(recipe.instructions);
+
   const macros = [
     { label: "Kcal", value: recipe.calories_per_serving, icon: Flame, color: "text-orange-500" },
     { label: "Proteína", value: recipe.protein_per_serving ? `${recipe.protein_per_serving}g` : null, icon: Beef, color: "text-red-500" },
@@ -56,11 +71,11 @@ export default function PremiumRecipeModal({ recipe, open, onOpenChange }: Props
           </button>
 
           <div className="flex items-center gap-2 mb-3">
-            <Badge className={`text-xs ${difficultyColor[recipe.difficulty] || ""}`}>
-              {difficultyMap[recipe.difficulty] || recipe.difficulty}
+            <Badge className={`text-xs ${difficultyColor[difficulty] || ""}`}>
+              {difficultyMap[difficulty] || difficulty}
             </Badge>
             <Badge variant="outline" className="text-xs">
-              {categoryMap[recipe.category] || recipe.category}
+              {categoryMap[category] || category}
             </Badge>
           </div>
 
@@ -70,11 +85,13 @@ export default function PremiumRecipeModal({ recipe, open, onOpenChange }: Props
           )}
 
           <div className="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
+            {totalTime > 0 && (
+              <span className="flex items-center gap-1.5">
+                <Clock className="w-4 h-4" /> {totalTime} min
+              </span>
+            )}
             <span className="flex items-center gap-1.5">
-              <Clock className="w-4 h-4" /> {totalTime} min
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Users className="w-4 h-4" /> {recipe.servings} porções
+              <Users className="w-4 h-4" /> {servings} porções
             </span>
           </div>
         </div>
@@ -98,14 +115,14 @@ export default function PremiumRecipeModal({ recipe, open, onOpenChange }: Props
         {/* Scrollable content */}
         <div className="overflow-y-auto max-h-[50vh] p-5 space-y-6">
           {/* Ingredients */}
-          {recipe.ingredients?.length > 0 && (
+          {ingredients.length > 0 && (
             <section>
               <h3 className="font-display font-semibold text-sm flex items-center gap-2 mb-3">
                 <span className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs">🥕</span>
                 Ingredientes
               </h3>
               <ul className="space-y-2">
-                {recipe.ingredients.map((ing, i) => (
+                {ingredients.map((ing, i) => (
                   <li key={i} className="flex items-start gap-3 text-sm">
                     <span className="w-2 h-2 rounded-full bg-primary/60 mt-1.5 shrink-0" />
                     <span className="text-muted-foreground">{ing}</span>
@@ -116,14 +133,14 @@ export default function PremiumRecipeModal({ recipe, open, onOpenChange }: Props
           )}
 
           {/* Instructions */}
-          {recipe.instructions?.length > 0 && (
+          {instructions.length > 0 && (
             <section>
               <h3 className="font-display font-semibold text-sm flex items-center gap-2 mb-3">
                 <span className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs">📝</span>
                 Modo de Preparo
               </h3>
               <ol className="space-y-3">
-                {recipe.instructions.map((step, i) => (
+                {instructions.map((step, i) => (
                   <li key={i} className="flex gap-3 text-sm">
                     <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center shrink-0">
                       {i + 1}
@@ -133,6 +150,13 @@ export default function PremiumRecipeModal({ recipe, open, onOpenChange }: Props
                 ))}
               </ol>
             </section>
+          )}
+
+          {/* Empty fallback */}
+          {ingredients.length === 0 && instructions.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Detalhes da receita ainda não disponíveis.
+            </p>
           )}
         </div>
 

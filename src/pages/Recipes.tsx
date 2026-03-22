@@ -2,13 +2,12 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -17,6 +16,7 @@ import { ChefHat, Plus, Pencil, Trash2, Clock, Users, Heart, Sparkles, Search, S
 import { useAIUsage } from "@/hooks/useAIUsage";
 import AIUsageBadge from "@/components/common/AIUsageBadge";
 import PremiumRecipeModal from "@/components/recipe/PremiumRecipeModal";
+import EmptyState from "@/components/common/EmptyState";
 
 interface Recipe {
   id: string;
@@ -24,20 +24,26 @@ interface Recipe {
   description: string | null;
   ingredients: any;
   instructions: any;
-  prep_time_minutes: number;
-  cook_time_minutes: number;
-  servings: number;
-  difficulty: string;
-  category: string;
+  prep_time_minutes: number | null;
+  cook_time_minutes: number | null;
+  servings: number | null;
+  difficulty: string | null;
+  category: string | null;
   calories_per_serving: number | null;
   protein_per_serving: number | null;
   carbs_per_serving: number | null;
   fat_per_serving: number | null;
-  tags: string[];
-  is_ai_generated: boolean;
-  is_shared: boolean;
+  tags: string[] | null;
+  is_ai_generated: boolean | null;
+  is_shared: boolean | null;
   created_at: string;
-  is_favorited?: boolean;
+}
+
+function toStringArray(val: any): string[] {
+  if (!val) return [];
+  if (Array.isArray(val)) return val.map(String);
+  if (typeof val === "string") return val.split("\n").filter(Boolean);
+  return [];
 }
 
 const difficultyMap: Record<string, string> = { easy: "Fácil", medium: "Média", hard: "Difícil" };
@@ -67,8 +73,11 @@ function NutritionistRecipes() {
 
   const fetchRecipes = async () => {
     if (!user) return;
-    const { data } = await supabase.from("recipes").select("*").eq("nutritionist_id", user.id).order("created_at", { ascending: false });
-    setRecipes(data || []);
+    try {
+      const { data, error } = await supabase.from("recipes").select("*").eq("nutritionist_id", user.id).order("created_at", { ascending: false });
+      if (error) { console.error("[Recipes] fetch error:", error); }
+      setRecipes(data || []);
+    } catch (e) { console.error("[Recipes] unexpected error:", e); }
   };
 
   useEffect(() => { fetchRecipes(); }, [user]);
@@ -78,14 +87,14 @@ function NutritionistRecipes() {
     setEditing(r);
     setForm({
       title: r.title, description: r.description || "",
-      ingredients_text: (r.ingredients || []).join("\n"),
-      instructions_text: (r.instructions || []).join("\n"),
-      prep_time_minutes: String(r.prep_time_minutes), cook_time_minutes: String(r.cook_time_minutes),
-      servings: String(r.servings), difficulty: r.difficulty, category: r.category,
-      calories_per_serving: String(r.calories_per_serving || ""),
-      protein_per_serving: String(r.protein_per_serving || ""),
-      carbs_per_serving: String(r.carbs_per_serving || ""),
-      fat_per_serving: String(r.fat_per_serving || ""),
+      ingredients_text: toStringArray(r.ingredients).join("\n"),
+      instructions_text: toStringArray(r.instructions).join("\n"),
+      prep_time_minutes: String(r.prep_time_minutes ?? 15), cook_time_minutes: String(r.cook_time_minutes ?? 30),
+      servings: String(r.servings ?? 2), difficulty: r.difficulty ?? "medium", category: r.category ?? "main",
+      calories_per_serving: String(r.calories_per_serving ?? ""),
+      protein_per_serving: String(r.protein_per_serving ?? ""),
+      carbs_per_serving: String(r.carbs_per_serving ?? ""),
+      fat_per_serving: String(r.fat_per_serving ?? ""),
     });
     setDialogOpen(true);
   };
@@ -117,8 +126,8 @@ function NutritionistRecipes() {
     setDialogOpen(false); fetchRecipes();
   };
 
-  const toggleShare = async (id: string, current: boolean) => {
-    await supabase.from("recipes").update({ is_shared: !current }).eq("id", id);
+  const toggleShare = async (id: string, current: boolean | null) => {
+    await supabase.from("recipes").update({ is_shared: !(current ?? false) }).eq("id", id);
     fetchRecipes();
   };
 
@@ -150,7 +159,7 @@ function NutritionistRecipes() {
   };
 
   const filtered = search
-    ? recipes.filter(r => r.title.toLowerCase().includes(search.toLowerCase()) || r.category.includes(search.toLowerCase()))
+    ? recipes.filter(r => r.title.toLowerCase().includes(search.toLowerCase()) || (r.category ?? "").includes(search.toLowerCase()))
     : recipes;
 
   return (
@@ -169,41 +178,44 @@ function NutritionistRecipes() {
         <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar receitas..." className="pl-9" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.map(r => (
-          <motion.div key={r.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <Card className="glass border-border h-full hover:border-primary/30 transition-colors cursor-pointer" onClick={() => { setSelected(r); setDetailOpen(true); }}>
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <h3 className="font-medium text-sm">{r.title}</h3>
-                    <div className="flex gap-1 mt-1 flex-wrap">
-                      <Badge variant="outline" className="text-[10px]">{categoryMap[r.category] || r.category}</Badge>
-                      <Badge variant="outline" className="text-[10px]">{difficultyMap[r.difficulty]}</Badge>
-                      {r.is_ai_generated && <Badge className="text-[10px] bg-primary/10 text-primary">IA</Badge>}
+      {filtered.length === 0 ? (
+        <EmptyState icon={ChefHat} title="Nenhuma receita" description="Crie sua primeira receita ou gere com IA." actionLabel="Nova Receita" onAction={openNew} />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map(r => (
+            <motion.div key={r.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+              <Card className="glass border-border h-full hover:border-primary/30 transition-colors cursor-pointer" onClick={() => { setSelected(r); setDetailOpen(true); }}>
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h3 className="font-medium text-sm">{r.title}</h3>
+                      <div className="flex gap-1 mt-1 flex-wrap">
+                        <Badge variant="outline" className="text-[10px]">{categoryMap[r.category ?? "main"] || r.category}</Badge>
+                        <Badge variant="outline" className="text-[10px]">{difficultyMap[r.difficulty ?? "medium"] || r.difficulty}</Badge>
+                        {r.is_ai_generated && <Badge className="text-[10px] bg-primary/10 text-primary">IA</Badge>}
+                      </div>
+                    </div>
+                    <div className="flex gap-1" onClick={e => e.stopPropagation()}>
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => toggleShare(r.id, r.is_shared)}>
+                        <Share2 className={`w-3.5 h-3.5 ${r.is_shared ? "text-primary" : ""}`} />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(r)}><Pencil className="w-3.5 h-3.5" /></Button>
+                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => handleDelete(r.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
                     </div>
                   </div>
-                  <div className="flex gap-1" onClick={e => e.stopPropagation()}>
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => toggleShare(r.id, r.is_shared)}>
-                      <Share2 className={`w-3.5 h-3.5 ${r.is_shared ? "text-primary" : ""}`} />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(r)}><Pencil className="w-3.5 h-3.5" /></Button>
-                    <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => handleDelete(r.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+                  <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{r.description}</p>
+                  <div className="flex gap-3 mt-3 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{(r.prep_time_minutes ?? 0) + (r.cook_time_minutes ?? 0)}min</span>
+                    <span className="flex items-center gap-1"><Users className="w-3 h-3" />{r.servings ?? 1} porções</span>
+                    {r.calories_per_serving && <span>{r.calories_per_serving} kcal</span>}
                   </div>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{r.description}</p>
-                <div className="flex gap-3 mt-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{r.prep_time_minutes + r.cook_time_minutes}min</span>
-                  <span className="flex items-center gap-1"><Users className="w-3 h-3" />{r.servings} porções</span>
-                  {r.calories_per_serving && <span>{r.calories_per_serving} kcal</span>}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
-      </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      )}
 
-      {/* Recipe detail — Premium modal */}
       <PremiumRecipeModal recipe={selected} open={detailOpen} onOpenChange={setDetailOpen} />
 
       {/* Create/edit dialog */}
@@ -271,28 +283,65 @@ function PatientRecipes() {
   const [selected, setSelected] = useState<Recipe | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchData = async () => {
     if (!user) return;
-    const { data: recs } = await supabase.from("recipes").select("*").eq("is_shared", true).order("created_at", { ascending: false });
-    setRecipes(recs || []);
-    const { data: favs } = await supabase.from("patient_favorite_recipes").select("recipe_id").eq("patient_id", user.id);
-    setFavorites(new Set(favs?.map(f => f.recipe_id) || []));
+    setLoading(true);
+    setError(null);
+    try {
+      const { data: recs, error: recErr } = await supabase.from("recipes").select("*").eq("is_shared", true).order("created_at", { ascending: false });
+      if (recErr) throw recErr;
+      setRecipes(recs || []);
+
+      const { data: favs } = await supabase.from("patient_favorite_recipes").select("recipe_id").eq("patient_id", user.id);
+      setFavorites(new Set(favs?.map(f => f.recipe_id) || []));
+    } catch (e: any) {
+      console.error("[PatientRecipes] error:", e);
+      setError(e.message || "Erro ao carregar receitas");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchData(); }, [user]);
 
   const toggleFavorite = async (recipeId: string) => {
     if (!user) return;
-    if (favorites.has(recipeId)) {
-      await supabase.from("patient_favorite_recipes").delete().eq("patient_id", user.id).eq("recipe_id", recipeId);
-    } else {
-      await supabase.from("patient_favorite_recipes").insert({ patient_id: user.id, recipe_id: recipeId });
-    }
-    fetchData();
+    try {
+      if (favorites.has(recipeId)) {
+        await supabase.from("patient_favorite_recipes").delete().eq("patient_id", user.id).eq("recipe_id", recipeId);
+      } else {
+        await supabase.from("patient_favorite_recipes").insert({ patient_id: user.id, recipe_id: recipeId });
+      }
+      fetchData();
+    } catch (e) { console.error("[PatientRecipes] toggle favorite error:", e); }
   };
 
   const filtered = search ? recipes.filter(r => r.title.toLowerCase().includes(search.toLowerCase())) : recipes;
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <h1 className="font-display text-2xl font-bold flex items-center gap-2"><ChefHat className="w-6 h-6 text-primary" /> Receitas</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[1, 2, 3, 4].map(i => (
+            <Card key={i} className="glass border-border"><CardContent className="p-4 h-32 animate-pulse bg-muted/30 rounded-lg" /></Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <h1 className="font-display text-2xl font-bold flex items-center gap-2"><ChefHat className="w-6 h-6 text-primary" /> Receitas</h1>
+        <EmptyState icon={ChefHat} title="Erro ao carregar" description={error} actionLabel="Tentar novamente" onAction={fetchData} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -303,28 +352,32 @@ function PatientRecipes() {
         <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar receitas..." className="pl-9" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filtered.map(r => (
-          <Card key={r.id} className="glass border-border hover:border-primary/30 transition-colors cursor-pointer" onClick={() => { setSelected(r); setDetailOpen(true); }}>
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-medium">{r.title}</h3>
-                  <div className="flex gap-1 mt-1"><Badge variant="outline" className="text-[10px]">{categoryMap[r.category] || r.category}</Badge></div>
+      {filtered.length === 0 ? (
+        <EmptyState icon={ChefHat} title="Nenhuma receita disponível" description="Seu nutricionista ainda não compartilhou receitas." />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filtered.map(r => (
+            <Card key={r.id} className="glass border-border hover:border-primary/30 transition-colors cursor-pointer" onClick={() => { setSelected(r); setDetailOpen(true); }}>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="font-medium">{r.title}</h3>
+                    <div className="flex gap-1 mt-1"><Badge variant="outline" className="text-[10px]">{categoryMap[r.category ?? "main"] || r.category}</Badge></div>
+                  </div>
+                  <Button size="icon" variant="ghost" onClick={e => { e.stopPropagation(); toggleFavorite(r.id); }}>
+                    <Heart className={`w-4 h-4 ${favorites.has(r.id) ? "fill-destructive text-destructive" : ""}`} />
+                  </Button>
                 </div>
-                <Button size="icon" variant="ghost" onClick={e => { e.stopPropagation(); toggleFavorite(r.id); }}>
-                  <Heart className={`w-4 h-4 ${favorites.has(r.id) ? "fill-destructive text-destructive" : ""}`} />
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{r.description}</p>
-              <div className="flex gap-3 mt-2 text-xs text-muted-foreground">
-                <span><Clock className="w-3 h-3 inline mr-1" />{r.prep_time_minutes + r.cook_time_minutes}min</span>
-                {r.calories_per_serving && <span>{r.calories_per_serving} kcal</span>}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{r.description}</p>
+                <div className="flex gap-3 mt-2 text-xs text-muted-foreground">
+                  <span><Clock className="w-3 h-3 inline mr-1" />{(r.prep_time_minutes ?? 0) + (r.cook_time_minutes ?? 0)}min</span>
+                  {r.calories_per_serving && <span>{r.calories_per_serving} kcal</span>}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       <PremiumRecipeModal recipe={selected} open={detailOpen} onOpenChange={setDetailOpen} />
     </div>
