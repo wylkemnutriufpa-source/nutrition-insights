@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useMemo } from "react";
+import { forwardRef, useMemo } from "react";
 import logoPng from "@/assets/logo.png";
 
 interface FitJourneyLogoProps {
@@ -13,9 +13,23 @@ const sizes = {
   lg: { icon: 112, text: "text-2xl", particles: 10 },
 };
 
-function FloatingParticle({ delay, x, y, size }: { delay: number; x: number; y: number; size: number }) {
+interface FloatingParticleProps {
+  delay: number;
+  x: number;
+  y: number;
+  size: number;
+  driftX: number;
+  driftY: number;
+  duration: number;
+}
+
+const FloatingParticle = forwardRef<HTMLDivElement, FloatingParticleProps>(function FloatingParticle(
+  { delay, x, y, size, driftX, driftY, duration },
+  ref,
+) {
   return (
     <motion.div
+      ref={ref}
       className="absolute rounded-full pointer-events-none"
       style={{
         width: size,
@@ -28,15 +42,18 @@ function FloatingParticle({ delay, x, y, size }: { delay: number; x: number; y: 
       animate={{
         opacity: [0, 0.9, 0],
         scale: [0.4, 1.3, 0.4],
-        x: [0, (Math.random() - 0.5) * 12, 0],
-        y: [0, (Math.random() - 0.5) * 12, 0],
+        x: [0, driftX, 0],
+        y: [0, driftY, 0],
       }}
-      transition={{ duration: 2.5 + Math.random() * 1.5, repeat: Infinity, delay, ease: "easeInOut" }}
+      transition={{ duration, repeat: Infinity, delay, ease: "easeInOut" }}
     />
   );
-}
+});
 
-export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJourneyLogoProps) {
+const FitJourneyLogo = forwardRef<HTMLDivElement, FitJourneyLogoProps>(function FitJourneyLogo(
+  { collapsed = false, size = "md" },
+  ref,
+) {
   const s = sizes[size];
 
   const particles = useMemo(() =>
@@ -46,10 +63,13 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
       x: 15 + Math.random() * 70,
       y: 15 + Math.random() * 70,
       size: 2 + Math.random() * 2.5,
+      driftX: (Math.random() - 0.5) * 12,
+      driftY: (Math.random() - 0.5) * 12,
+      duration: 2.5 + Math.random() * 1.5,
     })), [s.particles]);
 
   return (
-    <div className="flex items-center gap-0">
+    <div ref={ref} className="flex items-center gap-0">
       <div
         className="relative flex-shrink-0 flex items-center justify-center"
         style={{ width: s.icon, height: s.icon }}
@@ -86,7 +106,16 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
 
         {/* Floating neural particles */}
         {particles.map((p) => (
-          <FloatingParticle key={p.id} delay={p.delay} x={p.x} y={p.y} size={p.size} />
+          <FloatingParticle
+            key={p.id}
+            delay={p.delay}
+            x={p.x}
+            y={p.y}
+            size={p.size}
+            driftX={p.driftX}
+            driftY={p.driftY}
+            duration={p.duration}
+          />
         ))}
       </div>
 
@@ -121,4 +150,6 @@ export default function FitJourneyLogo({ collapsed = false, size = "md" }: FitJo
       )}
     </div>
   );
-}
+});
+
+export default FitJourneyLogo;

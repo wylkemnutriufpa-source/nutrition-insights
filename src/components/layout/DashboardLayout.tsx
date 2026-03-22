@@ -16,6 +16,58 @@ import PendingApprovalsModal, { usePendingApprovals } from "@/components/patient
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import SmartResumeModal from "@/components/common/SmartResumeModal";
 import IntelligenceModal from "@/components/common/IntelligenceModal";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+
+function LayoutFallbackCard({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+      <div className="space-y-2">
+        <h2 className="text-base font-semibold text-foreground">{title}</h2>
+        <p className="text-sm text-muted-foreground">{description}</p>
+        <Link to="/" className="inline-flex">
+          <Button variant="outline" size="sm">Ir para o início</Button>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function SidebarFallback({ onLinkClick }: { onLinkClick?: () => void }) {
+  const fallbackLinks = [
+    { to: "/", label: "Início" },
+    { to: "/patients", label: "Pacientes" },
+    { to: "/meal-plans", label: "Planos" },
+    { to: "/recipes", label: "Receitas" },
+    { to: "/automation", label: "Automação" },
+    { to: "/settings", label: "Configurações" },
+  ];
+
+  return (
+    <div className="flex h-full flex-col bg-card">
+      <div className="border-b border-border px-4 py-5">
+        <span className="font-display text-lg font-bold text-foreground">FitJourney</span>
+      </div>
+      <nav className="flex-1 space-y-2 p-3">
+        {fallbackLinks.map((item) => (
+          <Link
+            key={item.to}
+            to={item.to}
+            onClick={onLinkClick}
+            className="flex items-center rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            {item.label}
+          </Link>
+        ))}
+      </nav>
+    </div>
+  );
+}
 
 function SidebarFooter({
   collapsed,
@@ -160,8 +212,12 @@ function DynamicSidebar({
         </button>
       </div>
 
-      <IntelligenceModal open={intelligenceOpen} onOpenChange={setIntelligenceOpen} />
-      <SmartResumeModal />
+      <ErrorBoundary section="Layout:IntelligenceModal" fallback={null}>
+        <IntelligenceModal open={intelligenceOpen} onOpenChange={setIntelligenceOpen} />
+      </ErrorBoundary>
+      <ErrorBoundary section="Layout:SmartResumeModal" fallback={null}>
+        <SmartResumeModal />
+      </ErrorBoundary>
 
       <AnimatePresence>
         {showPending && (
@@ -191,17 +247,21 @@ function DynamicSidebar({
         )}
       </AnimatePresence>
 
-      <PendingApprovalsModal open={approvalsOpen} onOpenChange={setApprovalsOpen} />
+      <ErrorBoundary section="Layout:PendingApprovalsModal" fallback={null}>
+        <PendingApprovalsModal open={approvalsOpen} onOpenChange={setApprovalsOpen} />
+      </ErrorBoundary>
 
       <nav className="flex-1 px-3 overflow-y-auto">
-        <AccordionSidebar
-          categories={categories}
-          flatItems={flatItems}
-          collapsed={collapsed}
-          isProRole={isProRole}
-          onLinkClick={onLinkClick}
-          trackClick={trackClick}
-        />
+        <ErrorBoundary section="Layout:SidebarNav" fallback={<SidebarFallback onLinkClick={onLinkClick} />}>
+          <AccordionSidebar
+            categories={categories}
+            flatItems={flatItems}
+            collapsed={collapsed}
+            isProRole={isProRole}
+            onLinkClick={onLinkClick}
+            trackClick={trackClick}
+          />
+        </ErrorBoundary>
       </nav>
 
       <SidebarFooter
@@ -255,6 +315,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   const profileName = profile?.full_name || "Usuário";
   const sidebarProps = { dark, toggleDark, initials, profileName, signOut };
+  const contentFallback = (
+    <LayoutFallbackCard
+      title="Esta página encontrou um erro"
+      description="O restante do sistema continua estável. Você pode navegar para outra área enquanto este módulo é isolado."
+    />
+  );
 
   if (isMobile) {
     return (
@@ -268,7 +334,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="p-0 w-[min(280px,85vw)] flex flex-col">
-                <DynamicSidebar {...sidebarProps} collapsed={false} onLinkClick={() => setMobileOpen(false)} />
+                <ErrorBoundary section="Layout:MobileSidebar" fallback={<SidebarFallback onLinkClick={() => setMobileOpen(false)} />}>
+                  <DynamicSidebar {...sidebarProps} collapsed={false} onLinkClick={() => setMobileOpen(false)} />
+                </ErrorBoundary>
               </SheetContent>
             </Sheet>
             <FitJourneyLogo collapsed={false} size="sm" />
@@ -277,11 +345,17 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <Button variant="ghost" size="icon" className="h-9 w-9" onClick={openCommandPalette}>
               <Search className="w-4 h-4" />
             </Button>
-            <NotificationBell />
+            <ErrorBoundary section="Layout:NotificationBell" fallback={null}>
+              <NotificationBell />
+            </ErrorBoundary>
           </div>
         </div>
         <main className="pt-14 pb-safe">
-          <div className="p-3 sm:p-4 max-w-7xl mx-auto">{children}</div>
+          <div className="p-3 sm:p-4 max-w-7xl mx-auto">
+            <ErrorBoundary section={`PageContent:${location.pathname}`} fallback={contentFallback}>
+              {children}
+            </ErrorBoundary>
+          </div>
         </main>
       </div>
     );
@@ -295,7 +369,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         transition={{ duration: 0.2 }}
         className="fixed left-0 top-0 h-screen border-r border-border bg-card flex flex-col z-50"
       >
-        <DynamicSidebar {...sidebarProps} collapsed={collapsed} setCollapsed={setCollapsed} />
+        <ErrorBoundary section="Layout:DesktopSidebar" fallback={<SidebarFallback />}>
+          <DynamicSidebar {...sidebarProps} collapsed={collapsed} setCollapsed={setCollapsed} />
+        </ErrorBoundary>
       </motion.aside>
 
       <main className="flex-1 transition-all duration-200" style={{ marginLeft: collapsed ? 72 : 260 }}>
@@ -304,10 +380,16 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <Button variant="ghost" size="icon" className="h-9 w-9 mr-1" onClick={openCommandPalette} title="Buscar (Ctrl+K)">
               <Search className="w-4 h-4" />
             </Button>
-            <NotificationBell />
+            <ErrorBoundary section="Layout:NotificationBell" fallback={null}>
+              <NotificationBell />
+            </ErrorBoundary>
           </div>
         </div>
-        <div className="p-6 pt-14 max-w-7xl mx-auto">{children}</div>
+        <div className="p-6 pt-14 max-w-7xl mx-auto">
+          <ErrorBoundary section={`PageContent:${location.pathname}`} fallback={contentFallback}>
+            {children}
+          </ErrorBoundary>
+        </div>
       </main>
     </div>
   );
