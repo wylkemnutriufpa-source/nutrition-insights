@@ -122,13 +122,13 @@ export async function persistLearningPatterns(
 
   for (const p of patterns) {
     // Check if pattern already exists
-    const { data: existing } = await supabase
-      .from("patient_clinical_learning_memory")
+    const { data: existing } = await (supabase
+      .from("patient_clinical_learning_memory" as any)
       .select("id, reinforcement_count, confidence_score")
       .eq("patient_id", patientId)
       .eq("learned_pattern_code", p.learned_pattern_code)
       .eq("active", true)
-      .maybeSingle();
+      .maybeSingle() as any);
 
     if (existing) {
       // Reinforce
