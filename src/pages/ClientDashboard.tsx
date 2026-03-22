@@ -403,6 +403,11 @@ export default function ClientDashboard() {
         <ProgramJoinRequest open={programJoinOpen} onOpenChange={setProgramJoinOpen} />
         <PhaseTransitionModal />
 
+        {/* Metabolic Insight Panel */}
+        <motion.div variants={item}>
+          <PatientMetabolicInsightPanel />
+        </motion.div>
+
         {/* Quick Stats */}
         <motion.div variants={item} className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {/* Ranking Widget */}
