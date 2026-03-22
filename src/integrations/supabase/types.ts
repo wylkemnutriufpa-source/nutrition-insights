@@ -498,6 +498,41 @@ export type Database = {
           },
         ]
       }
+      appointment_reminders: {
+        Row: {
+          appointment_id: string
+          created_at: string
+          id: string
+          reminder_type: string
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          appointment_id: string
+          created_at?: string
+          id?: string
+          reminder_type?: string
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          appointment_id?: string
+          created_at?: string
+          id?: string
+          reminder_type?: string
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_reminders_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "patient_appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -3188,6 +3223,47 @@ export type Database = {
             columns: ["program_id"]
             isOneToOne: false
             referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meal_feedback: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          meal_plan_id: string | null
+          meal_plan_item_id: string | null
+          meal_type: string
+          patient_id: string
+          rating: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          meal_plan_id?: string | null
+          meal_plan_item_id?: string | null
+          meal_type: string
+          patient_id: string
+          rating: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          meal_plan_id?: string | null
+          meal_plan_item_id?: string | null
+          meal_type?: string
+          patient_id?: string
+          rating?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_feedback_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plans"
             referencedColumns: ["id"]
           },
         ]
@@ -8968,6 +9044,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      professional_setup_progress: {
+        Row: {
+          created_at: string
+          id: string
+          is_complete: boolean
+          steps_completed: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_complete?: boolean
+          steps_completed?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_complete?: boolean
+          steps_completed?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       professional_whatsapp_automation_settings: {
         Row: {
