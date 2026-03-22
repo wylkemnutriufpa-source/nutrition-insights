@@ -43,7 +43,6 @@ export const PATIENT_FEATURE_REGISTRY: PatientFeatureDefinition[] = [
   { key: "gamification_xp", label: "Sistema de XP", description: "Ganhar XP por ações e subir de nível", icon: Zap, category: "Engajamento" },
 
   // Comunicação
-  { key: "chat", label: "Chat com Nutricionista", description: "Chat direto com o nutricionista", icon: MessageSquare, category: "Comunicação" },
   { key: "checkin", label: "Check-in Semanal", description: "Enviar check-in com peso, fotos e feedback", icon: ClipboardCheck, category: "Comunicação" },
   { key: "feedback", label: "Feedbacks", description: "Enviar feedbacks ao nutricionista", icon: MessageSquare, category: "Comunicação" },
   { key: "notifications", label: "Notificações", description: "Receber notificações e alertas", icon: Bell, category: "Comunicação" },
