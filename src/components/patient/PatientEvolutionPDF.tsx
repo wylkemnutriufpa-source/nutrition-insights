@@ -18,11 +18,10 @@ export default function PatientEvolutionPDF({ patientId, patientName }: Props) {
     if (!user) return;
     setLoading(true);
     try {
-      // Fetch data in parallel
       const [assessmentsRes, checklistRes, planRes, profileRes] = await Promise.all([
         supabase
           .from("physical_assessments")
-          .select("weight, height, body_fat, bmi, lean_mass, fat_mass, assessment_date")
+          .select("weight, height, body_fat_percentage, bmi, lean_mass, fat_mass, assessment_date")
           .eq("patient_id", patientId)
           .order("assessment_date", { ascending: true })
           .limit(20),
@@ -33,9 +32,9 @@ export default function PatientEvolutionPDF({ patientId, patientName }: Props) {
           .gte("date", new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0]),
         supabase
           .from("meal_plans")
-          .select("title, status, calories_target, protein_target, carbs_target, fat_target")
+          .select("title, plan_status, total_target_calories, total_target_protein, total_target_carbs, total_target_fat")
           .eq("patient_id", patientId)
-          .eq("status", "published")
+          .eq("plan_status", "published")
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle(),
@@ -47,12 +46,10 @@ export default function PatientEvolutionPDF({ patientId, patientName }: Props) {
       const plan = planRes.data;
       const profName = profileRes.data?.full_name || "Profissional";
 
-      // Calculate adherence
       const totalTasks = tasks.length;
       const completedTasks = tasks.filter((t) => t.completed).length;
       const adherence = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-      // Weight evolution
       const weightData = assessments.filter((a) => a.weight);
       const firstWeight = weightData[0]?.weight;
       const lastWeight = weightData[weightData.length - 1]?.weight;
@@ -128,7 +125,7 @@ export default function PatientEvolutionPDF({ patientId, patientName }: Props) {
           <td>${new Date(a.assessment_date).toLocaleDateString("pt-BR")}</td>
           <td>${a.weight ? `${a.weight}kg` : "—"}</td>
           <td>${a.bmi ? a.bmi.toFixed(1) : "—"}</td>
-          <td>${a.body_fat ? `${a.body_fat}%` : "—"}</td>
+          <td>${a.body_fat_percentage ? `${a.body_fat_percentage}%` : "—"}</td>
           <td>${a.lean_mass ? `${a.lean_mass}kg` : "—"}</td>
           <td>${a.fat_mass ? `${a.fat_mass}kg` : "—"}</td>
         </tr>
@@ -139,10 +136,10 @@ export default function PatientEvolutionPDF({ patientId, patientName }: Props) {
   ${plan ? `
     <h2>Plano Alimentar Atual</h2>
     <div class="grid">
-      <div class="metric"><div class="value">${plan.calories_target || "—"}</div><div class="label">Kcal/dia</div></div>
-      <div class="metric"><div class="value">${plan.protein_target ? `${plan.protein_target}g` : "—"}</div><div class="label">Proteínas</div></div>
-      <div class="metric"><div class="value">${plan.carbs_target ? `${plan.carbs_target}g` : "—"}</div><div class="label">Carboidratos</div></div>
-      <div class="metric"><div class="value">${plan.fat_target ? `${plan.fat_target}g` : "—"}</div><div class="label">Gorduras</div></div>
+      <div class="metric"><div class="value">${plan.total_target_calories || "—"}</div><div class="label">Kcal/dia</div></div>
+      <div class="metric"><div class="value">${plan.total_target_protein ? `${plan.total_target_protein}g` : "—"}</div><div class="label">Proteínas</div></div>
+      <div class="metric"><div class="value">${plan.total_target_carbs ? `${plan.total_target_carbs}g` : "—"}</div><div class="label">Carboidratos</div></div>
+      <div class="metric"><div class="value">${plan.total_target_fat ? `${plan.total_target_fat}g` : "—"}</div><div class="label">Gorduras</div></div>
     </div>
   ` : ""}
 
@@ -167,7 +164,7 @@ export default function PatientEvolutionPDF({ patientId, patientName }: Props) {
       }
 
       toast.success("Relatório gerado!");
-    } catch (err) {
+    } catch {
       toast.error("Erro ao gerar relatório");
     } finally {
       setLoading(false);
