@@ -18,7 +18,7 @@ const ICON_MAP: Record<string, any> = {
   LayoutDashboard, Users, UtensilsCrossed, Trophy, Target, Brain,
   ClipboardCheck, FileText, Activity, BarChart3, Sparkles, ChefHat,
   BookOpen, Calendar, DollarSign, Palette, Settings, Globe, Star,
-  Shield, Zap, TrendingUp, Heart, MessageSquare, Award, Crown,
+  Shield, Zap, TrendingUp, Heart, MessageSquare, MessageCircle, Award, Crown,
   Compass, Megaphone, UserCheck, Scale, Lightbulb, Bot, Camera,
   Pill, GraduationCap, Dumbbell, Flame, ShoppingCart, AlertTriangle,
   Moon, Sun, LogOut, ChevronRight, Search,
