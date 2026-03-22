@@ -2,6 +2,7 @@ import { Component, ErrorInfo, ReactNode } from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logError } from "@/lib/monitoring";
+import { captureError } from "@/lib/observability/errorLogger";
 
 interface Props {
   children: ReactNode;
