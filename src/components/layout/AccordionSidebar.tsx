@@ -7,7 +7,7 @@ import {
   ClipboardCheck, Dumbbell, Brain, FileText, Target, Activity,
   BarChart3, Sparkles, ChefHat, BookOpen, Calendar, DollarSign,
   Palette, Settings, Globe, Moon, Sun, Star, Shield, Zap,
-  TrendingUp, Heart, MessageSquare, Award, Crown, Compass,
+  TrendingUp, Heart, MessageSquare, MessageCircle, Award, Crown, Compass,
   Megaphone, UserCheck, Scale, Lightbulb, Bot, Camera, Pill,
   GraduationCap, LogOut, ChevronRight, Search, AlertTriangle,
   Flame, ShoppingCart,
