@@ -113,11 +113,11 @@ export async function calculateTherapeuticPriorityScore(patientId: string): Prom
   const threeDaysAgo = new Date();
   threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
-  const { count: mealCount } = await supabase
-    .from("meal_item_completions")
+  const { count: mealCount } = await (supabase
+    .from("meal_item_completions" as any)
     .select("id", { count: "exact", head: true })
     .eq("patient_id", patientId)
-    .gte("logged_at", threeDaysAgo.toISOString());
+    .gte("logged_at", threeDaysAgo.toISOString()) as any);
 
   if ((mealCount || 0) < 3) {
     priorities.push({

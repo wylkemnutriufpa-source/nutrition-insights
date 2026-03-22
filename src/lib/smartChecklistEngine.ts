@@ -246,13 +246,13 @@ export async function completeSmartTask(
 export async function getSmartChecklist(patientId: string) {
   const today = new Date().toISOString().split("T")[0];
 
-  const { data } = await supabase
-    .from("patient_smart_checklist_tasks")
+  const { data } = await (supabase
+    .from("patient_smart_checklist_tasks" as any)
     .select("*")
     .eq("patient_id", patientId)
     .eq("is_active", true)
     .lte("valid_from", today)
-    .order("priority_score", { ascending: false });
+    .order("priority_score", { ascending: false }) as any);
 
   return (data || []) as any[];
 }
