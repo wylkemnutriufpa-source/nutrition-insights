@@ -54,6 +54,7 @@ export default function Appointments() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [notesDialog, setNotesDialog] = useState<{ id: string; notes: string } | null>(null);
   const [form, setForm] = useState({
     title: "", description: "", patient_id: "", appointment_type: "consultation",
     date: "", time: "09:00", duration_minutes: "60", color: "#10b981",
