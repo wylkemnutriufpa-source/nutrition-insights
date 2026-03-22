@@ -102,6 +102,7 @@ export class SafePage extends Component<SafePageProps, SafePageState> {
       componentStack: errorInfo.componentStack?.slice(0, 500),
       retryCount: this.state.retryCount,
     });
+    captureError(`SafePage:${this.props.pageName}`, error, { severity: "critical", recovered: true });
   }
 
   handleRetry = () => {

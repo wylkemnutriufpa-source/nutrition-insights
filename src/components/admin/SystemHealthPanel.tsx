@@ -106,7 +106,7 @@ function PerfOverview() {
       {Object.keys(flowStats).length === 0 && (
         <p className="text-sm text-muted-foreground py-4 text-center">Sem dados de performance ainda</p>
       )}
-      {Object.entries(flowStats).map(([flow, stats]) => {
+      {Object.entries(flowStats).map(([flow, stats]: [string, FlowStat]) => {
         const avg = Math.round(stats.total / stats.count);
         const isSlowQuery = avg > 2000;
         return (

@@ -31,6 +31,7 @@ export class ErrorBoundary extends Component<Props, State> {
       stack: error.stack?.slice(0, 500),
       componentStack: errorInfo.componentStack?.slice(0, 500),
     });
+    captureError(`ErrorBoundary:${section}`, error, { severity: "high", recovered: false });
   }
 
   handleRetry = () => {
