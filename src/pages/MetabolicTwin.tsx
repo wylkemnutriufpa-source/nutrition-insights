@@ -50,29 +50,47 @@ export default function MetabolicTwin() {
   const [simulationResult, setSimulationResult] = useState<any>(null);
 
   // Load twin for current patient context (nutritionist picks patient elsewhere)
-  const { data: twinData, isLoading } = useQuery({
-    queryKey: ["metabolic-twin", user?.id],
+  // Get patient IDs owned by this nutritionist for data isolation
+  const { data: myPatientIds } = useQuery({
+    queryKey: ["my-patient-ids", user?.id],
     queryFn: async () => {
       const { data } = await supabase
-        .from("patient_metabolic_twin")
-        .select("*")
-        .limit(10);
-      return data ?? [];
+        .from("nutritionist_patients")
+        .select("patient_id")
+        .eq("nutritionist_id", user!.id)
+        .eq("status", "active");
+      return data?.map((d) => d.patient_id) ?? [];
     },
     enabled: !!user,
   });
 
-  const { data: plateauData } = useQuery({
-    queryKey: ["plateau-predictions", user?.id],
+  const { data: twinData, isLoading } = useQuery({
+    queryKey: ["metabolic-twin", user?.id, myPatientIds],
     queryFn: async () => {
+      if (!myPatientIds || myPatientIds.length === 0) return [];
+      const { data } = await supabase
+        .from("patient_metabolic_twin")
+        .select("*")
+        .in("patient_id", myPatientIds)
+        .limit(10);
+      return data ?? [];
+    },
+    enabled: !!user && !!myPatientIds,
+  });
+
+  const { data: plateauData } = useQuery({
+    queryKey: ["plateau-predictions", user?.id, myPatientIds],
+    queryFn: async () => {
+      if (!myPatientIds || myPatientIds.length === 0) return [];
       const { data } = await supabase
         .from("patient_plateau_predictions")
         .select("*")
+        .in("patient_id", myPatientIds)
         .order("created_at", { ascending: false })
         .limit(20);
       return data ?? [];
     },
-    enabled: !!user,
+    enabled: !!user && !!myPatientIds,
   });
 
   const computeMutation = useMutation({
