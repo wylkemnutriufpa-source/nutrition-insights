@@ -69,7 +69,7 @@ export default function ProfessionalClinicalAnalytics() {
     const weekStr = weekAgo.toISOString().split("T")[0];
 
     const [plansRes, anamRes, profilesRes] = await Promise.all([
-      supabase.from("meal_plans").select("id, is_active, status").eq("nutritionist_id", user.id),
+      supabase.from("meal_plans").select("id, is_active").eq("nutritionist_id", user.id),
       supabase.from("patient_anamnesis").select("user_id, status").in("user_id", patientIds),
       supabase.from("profiles").select("user_id, full_name").in("user_id", patientIds),
     ]);
