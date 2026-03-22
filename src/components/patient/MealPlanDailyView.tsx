@@ -1,4 +1,5 @@
 import React, { memo, useMemo } from "react";
+import MealFeedbackButton from "@/components/patient/MealFeedbackButton";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -210,6 +211,7 @@ const MealItemCard = memo(function MealItemCard({
               </button>
             ))}
           </div>
+          <MealFeedbackButton mealPlanId={item.id} mealPlanItemId={item.id} mealType={item.meal_type} />
         </div>
         {completedAt && status && (
           <span className={`text-[10px] font-medium ${

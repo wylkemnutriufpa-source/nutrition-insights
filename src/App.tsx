@@ -148,6 +148,10 @@ const AdminOperationalCosts = lazy(() => import("./pages/AdminOperationalCosts")
 const TeamManagement = lazy(() => import("./pages/TeamManagement"));
 const WhatsAppSettings = lazy(() => import("./pages/WhatsAppSettings"));
 const PhytotherapyProtocols = lazy(() => import("./pages/PhytotherapyProtocols"));
+const MissionControl = lazy(() => import("./pages/MissionControl"));
+const CampaignCenter = lazy(() => import("./pages/CampaignCenter"));
+const ClinicalCRM = lazy(() => import("./pages/ClinicalCRM"));
+const ClinicalBrain = lazy(() => import("./pages/ClinicalBrain"));
 
 // Install global error handlers once at module load
 installGlobalErrorHandlers();
@@ -422,6 +426,10 @@ const App = () => (
               <Route path="/admin/marketing-content" element={<AdminRoute><LP section="Admin"><AdminMarketingContent /></LP></AdminRoute>} />
               <Route path="/admin/adaptive-intelligence" element={<AdminRoute><LP section="Admin"><GlobalAdaptiveIntelligence /></LP></AdminRoute>} />
               <Route path="/admin-operational-costs" element={<AdminRoute><LP section="Admin"><AdminOperationalCosts /></LP></AdminRoute>} />
+              <Route path="/admin/mission-control" element={<AdminRoute><LP section="Mission Control"><MissionControl /></LP></AdminRoute>} />
+              <Route path="/admin/campaigns" element={<AdminRoute><LP section="Campanhas"><CampaignCenter /></LP></AdminRoute>} />
+              <Route path="/professional/crm" element={<NutritionistRoute><LP section="CRM"><ClinicalCRM /></LP></NutritionistRoute>} />
+              <Route path="/clinical-brain" element={<NutritionistRoute><LP section="Clinical Brain"><ClinicalBrain /></LP></NutritionistRoute>} />
 
               {/* Public pricing */}
               <Route path="/pricing" element={<LP section="Pricing"><Pricing /></LP>} />
