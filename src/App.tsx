@@ -143,6 +143,7 @@ const MagicJourneyStory = lazy(() => import("./pages/MagicJourneyStory"));
 const BodyProjectionExperience = lazy(() => import("./pages/BodyProjectionExperience"));
 const AdminOperationalCosts = lazy(() => import("./pages/AdminOperationalCosts"));
 const TeamManagement = lazy(() => import("./pages/TeamManagement"));
+const WhatsAppSettings = lazy(() => import("./pages/WhatsAppSettings"));
 const PhytotherapyProtocols = lazy(() => import("./pages/PhytotherapyProtocols"));
 
 // Install global error handlers once at module load
