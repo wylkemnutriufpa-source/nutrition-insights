@@ -143,12 +143,18 @@ const AdminOperationalCosts = lazy(() => import("./pages/AdminOperationalCosts")
 const TeamManagement = lazy(() => import("./pages/TeamManagement"));
 const PhytotherapyProtocols = lazy(() => import("./pages/PhytotherapyProtocols"));
 
+// Install global error handlers once at module load
+installGlobalErrorHandlers();
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000,
       retry: 1,
       refetchOnWindowFocus: false,
+    },
+    mutations: {
+      retry: 0,
     },
   },
 });
