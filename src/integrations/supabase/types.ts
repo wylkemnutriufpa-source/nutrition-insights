@@ -11524,10 +11524,12 @@ export type Database = {
     }
     Functions: {
       activate_meal_plan: { Args: { _plan_id: string }; Returns: undefined }
-      activate_meal_plan_ai_guarded: {
-        Args: { p_meal_plan_id: string }
-        Returns: undefined
-      }
+      activate_meal_plan_ai_guarded:
+        | { Args: { p_meal_plan_id: string }; Returns: undefined }
+        | {
+            Args: { p_patient_id: string; p_plan_id: string }
+            Returns: undefined
+          }
       activate_protocol_atomic: {
         Args: {
           p_end_date?: string
@@ -11805,8 +11807,6 @@ export type Database = {
         Args: { _new_state: string; _patient_id: string; _reason?: string }
         Returns: Json
       }
-      show_limit: { Args: never; Returns: number }
-      show_trgm: { Args: { "": string }; Returns: string[] }
       sync_program_prestige: {
         Args: { _assigned_by: string; _program_id: string }
         Returns: Json
