@@ -146,6 +146,17 @@ export default function Appointments() {
     await supabase.from("patient_appointments").update({ status }).eq("id", id);
     queryClient.invalidateQueries({ queryKey: ["appointments"] });
     toast.success("Status atualizado!");
+    if (status === "completed") {
+      setNotesDialog({ id, notes: "" });
+    }
+  };
+
+  const saveNotes = async () => {
+    if (!notesDialog) return;
+    await supabase.from("patient_appointments").update({ description: notesDialog.notes }).eq("id", notesDialog.id);
+    queryClient.invalidateQueries({ queryKey: ["appointments"] });
+    setNotesDialog(null);
+    toast.success("Notas da consulta salvas!");
   };
 
   const days = eachDayOfInterval({ start: startOfMonth(currentMonth), end: endOfMonth(currentMonth) });
