@@ -127,6 +127,7 @@ const ClinicalSimulation = lazy(() => import("./pages/ClinicalSimulation"));
 const ClinicalLab = lazy(() => import("./pages/ClinicalLab"));
 const ClinicalAutomation = lazy(() => import("./pages/ClinicalAutomation"));
 const GlobalAdaptiveIntelligence = lazy(() => import("./pages/GlobalAdaptiveIntelligence"));
+const ProfessionalClinicalAnalytics = lazy(() => import("./pages/ProfessionalClinicalAnalytics"));
 const WeightTrajectory = lazy(() => import("./pages/WeightTrajectory"));
 const MetabolicTwin = lazy(() => import("./pages/MetabolicTwin"));
 const PopulationNutritionIntelligence = lazy(() => import("./pages/PopulationNutritionIntelligence"));
