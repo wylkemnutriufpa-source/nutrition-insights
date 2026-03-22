@@ -32,8 +32,8 @@ function AnimatedBrain({ size, glowSize }: { size: number; glowSize: number }) {
           top: -(glowSize - size) / 2,
           left: -(glowSize - size) / 2,
         }}
-        animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }}
-        transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+        animate={shouldReduceMotion ? {} : { scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }}
+        transition={shouldReduceMotion ? {} : { duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
       />
 
       {/* Orbiting particles */}
