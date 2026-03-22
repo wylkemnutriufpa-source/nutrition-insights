@@ -102,7 +102,7 @@ export default function Appointments() {
     mutationFn: async () => {
       if (!user) throw new Error("No user");
       const dateTime = new Date(`${form.date}T${form.time}`).toISOString();
-      const { error } = await supabase.from("patient_appointments").insert({
+      const { data: apt, error } = await supabase.from("patient_appointments").insert({
         nutritionist_id: user.id,
         patient_id: form.patient_id,
         title: form.title || `Consulta - ${patients.find(p => p.user_id === form.patient_id)?.full_name || ""}`,
@@ -111,11 +111,30 @@ export default function Appointments() {
         duration_minutes: Number(form.duration_minutes) || 60,
         appointment_type: form.appointment_type,
         color: form.color,
-      });
+      }).select("id").single();
       if (error) throw error;
+
+      // Auto-create reminders (24h and 1h before)
+      if (apt?.id) {
+        await (supabase as any).from("appointment_reminders").insert([
+          { appointment_id: apt.id, reminder_type: "before_24h" },
+          { appointment_id: apt.id, reminder_type: "before_1h" },
+        ]);
+      }
+
+      // Create notification for patient
+      await supabase.from("notifications").insert({
+        user_id: form.patient_id,
+        title: "Nova consulta agendada",
+        message: `Consulta agendada para ${new Date(dateTime).toLocaleDateString("pt-BR")} às ${form.time}`,
+        type: "appointment",
+        entity_type: "appointment",
+        entity_id: apt?.id,
+        target_route: "/appointments",
+      });
     },
     onSuccess: () => {
-      toast.success("Consulta agendada!");
+      toast.success("Consulta agendada com notificação enviada!");
       setDialogOpen(false);
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
     },
