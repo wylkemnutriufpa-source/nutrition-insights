@@ -10,6 +10,7 @@ import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import PageLoader from "@/components/common/PageLoader";
 import { CommandPaletteProvider } from "@/components/common/CommandPalette";
 import { readActiveEditorRoute } from "@/lib/mealPlanEditorStore";
+import { installGlobalErrorHandlers } from "@/lib/monitoring";
 
 // ── Eager-loaded (critical path) ────────────────────────────
 import GatewayPage from "./pages/GatewayPage";
