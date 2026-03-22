@@ -332,6 +332,16 @@ export default function ClientDashboard() {
           <PatientDailyFocusHero />
         </motion.div>
 
+        {/* Therapeutic Momentum */}
+        <motion.div variants={item}>
+          <TherapeuticMomentumBar />
+        </motion.div>
+
+        {/* Smart Checklist */}
+        <motion.div variants={item}>
+          <SmartChecklistWidget />
+        </motion.div>
+
         {/* Momentum Indicator */}
         <motion.div variants={item}>
           <MomentumIndicator variant="card" />
