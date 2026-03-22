@@ -543,6 +543,11 @@ export default function ClientDashboard() {
           <ClinicalInsightsCard />
         </motion.div>
 
+        {/* Behavior Learning */}
+        <motion.div variants={item}>
+          <PatientBehaviorLearningCard />
+        </motion.div>
+
         {/* Journey Timeline Feed */}
         <motion.div variants={item}>
           <JourneyTimelineFeed compact />
