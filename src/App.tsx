@@ -227,11 +227,31 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 
 function RootRoute() {
   const { user, loading, isPersonal, isNutritionist, isAdmin } = useAuth();
+  const [bootDone, setBootDone] = useState(false);
   const activeEditorRoute = !loading && user && (isNutritionist || isAdmin)
     ? readActiveEditorRoute()
     : null;
 
-  if (loading) return <BrainLoaderScreen text="Preparando sua experiência…" />;
+  // Show cinematic boot while loading (only for auth'd sessions or initial load)
+  if (loading && !bootDone) {
+    return (
+      <AppBootExperience
+        dataReady={false}
+        onComplete={() => setBootDone(true)}
+      />
+    );
+  }
+
+  // If loading just finished but boot animation hasn't completed yet
+  if (!loading && !bootDone) {
+    return (
+      <AppBootExperience
+        dataReady={true}
+        onComplete={() => setBootDone(true)}
+      />
+    );
+  }
+
   if (!user) return <GatewayPage />;
   if (activeEditorRoute?.shouldRestore) {
     return <Navigate to={activeEditorRoute.route} replace />;
