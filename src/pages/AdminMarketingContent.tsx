@@ -113,9 +113,16 @@ export default function AdminMarketingContent() {
   const statusColor = (s: string) =>
     s === "published" ? "bg-emerald-500/20 text-emerald-400" : "bg-amber-500/20 text-amber-400";
 
+  const navigate = useNavigate();
+
   return (
+    <DashboardLayout>
     <div className="space-y-6">
-      {/* Header */}
+      {/* Back + Header */}
+      <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-2 text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="h-4 w-4" />
+        Voltar
+      </Button>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
