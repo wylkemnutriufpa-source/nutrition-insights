@@ -301,7 +301,7 @@ export default function CampaignCenter() {
                 {form.scheduling_type === "scheduled" && (
                   <Input type="datetime-local" value={form.scheduled_at} onChange={e => setForm(f => ({ ...f, scheduled_at: e.target.value }))} />
                 )}
-                <Button className="w-full" onClick={simulatePreview}><Eye className="w-4 h-4 mr-2" /> Preview</Button>
+                <Button className="w-full" onClick={runPreview} disabled={previewLoading}>{previewLoading ? "Calculando..." : <><Eye className="w-4 h-4 mr-2" /> Preview</>}</Button>
               </div>
             )}
 

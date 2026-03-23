@@ -279,7 +279,7 @@ export default function MissionControl() {
                       <Textarea placeholder="Mensagem da campanha..." onChange={e => setPayload(p => ({ ...p, message: e.target.value }))} />
                     </div>
                   )}
-                  <Button className="w-full" onClick={simulatePreview}><Eye className="w-4 h-4 mr-2" /> Simular Impacto</Button>
+                  <Button className="w-full" onClick={runPreview}><Eye className="w-4 h-4 mr-2" /> Simular Impacto</Button>
                 </div>
               )}
 
