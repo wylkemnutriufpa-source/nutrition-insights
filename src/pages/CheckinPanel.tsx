@@ -41,8 +41,8 @@ interface CheckinData {
 
 interface Protocol {
   id: string;
-  title: string;
-  category: string;
+  protocol_name: string;
+  protocol_category: string;
 }
 
 export default function CheckinPanel() {
@@ -99,9 +99,9 @@ export default function CheckinPanel() {
 
       // Fetch protocols
       const { data: protocolsData } = await supabase
-        .from("protocols")
-        .select("id, title, category")
-        .eq("created_by", user.id);
+        .from("nutrition_protocols")
+        .select("id, protocol_name, protocol_category")
+        .eq("is_active", true);
       setProtocols(protocolsData || []);
     } catch (err) {
       console.error("CheckinPanel fetchData error:", err);
@@ -131,7 +131,7 @@ export default function CheckinPanel() {
 
       // If protocol selected, activate it for the patient
       if (selectedProtocol) {
-        const protocol = protocols.find(p => p.id === selectedProtocol);
+        const protocol = protocols.find((p: Protocol) => p.id === selectedProtocol);
         await supabase.from("patient_protocols").insert({
           patient_id: selectedCheckin.patient_id,
           nutritionist_id: user.id,
@@ -139,7 +139,7 @@ export default function CheckinPanel() {
           start_date: new Date().toISOString().split("T")[0],
           status: "active",
         });
-        toast.success(`Protocolo "${protocol?.title}" ativado!`);
+        toast.success(`Protocolo "${protocol?.protocol_name}" ativado!`);
       }
 
       toast.success("Check-in revisado!");
@@ -382,15 +382,15 @@ export default function CheckinPanel() {
                               <Label className="flex items-center gap-2">
                                 <Zap className="w-4 h-4 text-primary" /> Ativar Protocolo (opcional)
                               </Label>
-                              <Select value={selectedProtocol} onValueChange={setSelectedProtocol}>
+                              <Select value={selectedProtocol || "none"} onValueChange={(v) => setSelectedProtocol(v === "none" ? "" : v)}>
                                 <SelectTrigger className="mt-1">
                                   <SelectValue placeholder="Selecione um protocolo..." />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="">Nenhum</SelectItem>
+                                  <SelectItem value="none">Nenhum</SelectItem>
                                   {protocols.map((p) => (
                                     <SelectItem key={p.id} value={p.id}>
-                                      {p.title} ({p.category})
+                                      {p.protocol_name} ({p.protocol_category})
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
