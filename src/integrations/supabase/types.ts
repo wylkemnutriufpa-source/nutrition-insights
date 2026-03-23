@@ -13349,6 +13349,10 @@ export type Database = {
         Returns: Json
       }
       run_security_audit: { Args: never; Returns: Json }
+      save_plan_as_approved: {
+        Args: { _nutritionist_id: string; _plan_id: string }
+        Returns: Json
+      }
       search_patients: {
         Args: { _limit?: number; _nutritionist_id: string; _query: string }
         Returns: {
@@ -13392,6 +13396,10 @@ export type Database = {
           _nutritionist_id: string
           _patient_id: string
         }
+        Returns: Json
+      }
+      transition_plan_to_review: {
+        Args: { _nutritionist_id: string; _plan_id: string }
         Returns: Json
       }
     }

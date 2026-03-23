@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
-import { rejectMealPlan } from "@/lib/serverTransitions";
+import { rejectMealPlan, transitionPlanToReview } from "@/lib/serverTransitions";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -221,10 +221,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
       toast.info("Gerando plano completo com itens... Aguarde.");
       const { planId, data } = await generateOrRegeneratePlan();
 
-      await supabase
-        .from("meal_plans")
-        .update({ plan_status: "under_professional_review" } as any)
-        .eq("id", planId);
+      await transitionPlanToReview(planId, user.id);
 
       onOpenChange(false);
       navigate(`/meal-plans/${planId}`);
@@ -254,10 +251,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
         resolvedPlanId = regenerated.planId;
       }
 
-      await supabase
-        .from("meal_plans")
-        .update({ plan_status: "under_professional_review" } as any)
-        .eq("id", resolvedPlanId);
+      await transitionPlanToReview(resolvedPlanId, user.id);
 
       onOpenChange(false);
       navigate(`/meal-plans/${resolvedPlanId}`);

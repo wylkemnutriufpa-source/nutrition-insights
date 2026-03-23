@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
-import { approveAndPublishPlan, rejectMealPlan } from "@/lib/serverTransitions";
+import { approveAndPublishPlan, rejectMealPlan, transitionPlanToReview } from "@/lib/serverTransitions";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -328,10 +328,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
           } as any)
           .eq("id", pipeline.id);
 
-        await supabase
-          .from("meal_plans")
-          .update({ plan_status: "under_professional_review" } as any)
-          .eq("id", newPlanId);
+        await transitionPlanToReview(newPlanId, user.id);
 
         toast.success(`Plano gerado com ${data.items_count} itens! Revise e aprove.`);
         navigate(`/meal-plans/${newPlanId}`);
@@ -386,10 +383,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
           .eq("id", pipeline.id);
       }
 
-      await supabase
-        .from("meal_plans")
-        .update({ plan_status: "under_professional_review" } as any)
-        .eq("id", resolvedPlanId);
+      await transitionPlanToReview(resolvedPlanId, user.id);
 
       if (!pipeline.generated_plan_id || pipeline.generated_plan_id !== resolvedPlanId) {
         await supabase

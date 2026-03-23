@@ -74,6 +74,7 @@ Deno.serve(async (req) => {
     });
   }
 
+  let execLogId: string | null = null;
   try {
     const body = await req.json().catch(() => ({}));
     const runType = body.run_type || "daily";
@@ -82,7 +83,7 @@ Deno.serve(async (req) => {
     const dryRun = body.dry_run || false;
 
     // Log to pipeline_execution_logs
-    const execLogId = await logExecStart("clinical-pipeline-orchestrator", { run_type: runType, triggered_by: triggeredBy, include_weekly: includeWeekly, dry_run: dryRun });
+    execLogId = await logExecStart("clinical-pipeline-orchestrator", { run_type: runType, triggered_by: triggeredBy, include_weekly: includeWeekly, dry_run: dryRun });
 
     // Prevent concurrent runs
     const { data: activeRuns } = await supabase
@@ -92,6 +93,9 @@ Deno.serve(async (req) => {
       .gte("started_at", new Date(Date.now() - 3600000).toISOString());
 
     if (activeRuns && activeRuns.length > 0) {
+      if (execLogId) {
+        await logExecFinish(execLogId, "skipped", 0, 0, { reason: "concurrent_run", active_run_id: activeRuns[0].id });
+      }
       return new Response(
         JSON.stringify({ error: "Pipeline already running", active_run_id: activeRuns[0].id }),
         { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -295,7 +299,7 @@ Deno.serve(async (req) => {
     );
   } catch (err: any) {
     // Log failure to pipeline_execution_logs
-    if (typeof execLogId !== "undefined" && execLogId) {
+    if (execLogId) {
       await logExecFinish(execLogId, "failed", 0, 1, { error: err.message });
     }
     return new Response(
