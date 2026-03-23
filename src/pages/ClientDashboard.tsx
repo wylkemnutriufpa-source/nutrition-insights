@@ -423,7 +423,7 @@ export default function ClientDashboard() {
         <PhaseTransitionModal />
 
         {/* Quick Stats */}
-        <motion.div variants={item} className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <motion.div variants={item} className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 overflow-hidden">
           {/* Ranking Widget */}
           <RankingWidget />
 
