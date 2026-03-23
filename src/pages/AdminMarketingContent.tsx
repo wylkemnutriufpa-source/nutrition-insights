@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
   Sparkles, Instagram, Copy, Download, RefreshCw, Eye,
-  Wand2, CheckCircle, Clock, FileText,
+  Wand2, CheckCircle, Clock, FileText, ArrowLeft,
 } from "lucide-react";
 import { MagicSlideButton } from "@/components/common/MagicSlideGenerator";
 import {
@@ -111,9 +113,16 @@ export default function AdminMarketingContent() {
   const statusColor = (s: string) =>
     s === "published" ? "bg-emerald-500/20 text-emerald-400" : "bg-amber-500/20 text-amber-400";
 
+  const navigate = useNavigate();
+
   return (
+    <DashboardLayout>
     <div className="space-y-6">
-      {/* Header */}
+      {/* Back + Header */}
+      <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-2 text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="h-4 w-4" />
+        Voltar
+      </Button>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -369,5 +378,6 @@ export default function AdminMarketingContent() {
         </DialogContent>
       </Dialog>
     </div>
+    </DashboardLayout>
   );
 }
