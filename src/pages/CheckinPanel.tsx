@@ -382,7 +382,7 @@ export default function CheckinPanel() {
                               <Label className="flex items-center gap-2">
                                 <Zap className="w-4 h-4 text-primary" /> Ativar Protocolo (opcional)
                               </Label>
-                              <Select value={selectedProtocol} onValueChange={setSelectedProtocol}>
+                              <Select value={selectedProtocol || "none"} onValueChange={(v) => setSelectedProtocol(v === "none" ? "" : v)}>
                                 <SelectTrigger className="mt-1">
                                   <SelectValue placeholder="Selecione um protocolo..." />
                                 </SelectTrigger>
