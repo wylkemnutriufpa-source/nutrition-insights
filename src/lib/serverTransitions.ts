@@ -111,7 +111,31 @@ export async function activateMealPlan(planId: string): Promise<TransitionResult
 }
 
 /**
+ * Preview orphan onboarding pipelines before archival (safe preview).
+ */
+export async function previewOrphanPipelines(): Promise<TransitionResult & { pipelines?: OrphanPipelinePreview[] }> {
+  const { data, error } = await supabase.rpc("preview_orphan_onboarding_pipelines" as any);
+
+  if (error) {
+    console.error("[ServerTransition] previewOrphanPipelines failed:", error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, pipelines: (data as OrphanPipelinePreview[]) || [] };
+}
+
+export interface OrphanPipelinePreview {
+  pipeline_id: string;
+  patient_id: string;
+  nutritionist_id: string;
+  pipeline_status: string;
+  created_at: string;
+  archival_reason: string;
+}
+
+/**
  * Archive orphan onboarding pipelines (admin/maintenance).
+ * Should be called AFTER previewOrphanPipelines to confirm.
  */
 export async function archiveOrphanPipelines(): Promise<TransitionResult> {
   const { data, error } = await supabase.rpc("archive_orphan_onboarding_pipelines" as any);
@@ -122,6 +146,43 @@ export async function archiveOrphanPipelines(): Promise<TransitionResult> {
   }
 
   return { success: true, data: data as Record<string, unknown> };
+}
+
+/**
+ * Pipeline observability — log start/finish/failure of background jobs.
+ */
+export async function logPipelineStart(pipelineName: string, metadata?: Record<string, unknown>): Promise<string | null> {
+  const { data, error } = await supabase.rpc("log_pipeline_execution" as any, {
+    _pipeline_name: pipelineName,
+    _status: "started",
+    _metadata: metadata || {},
+  });
+
+  if (error) {
+    console.error("[Pipeline] Failed to log start:", error);
+    return null;
+  }
+  return data as string;
+}
+
+export async function logPipelineFinish(
+  runId: string,
+  status: "completed" | "failed" | "partial",
+  patientsProcessed = 0,
+  errorsCount = 0,
+  errorDetails?: Record<string, unknown>
+): Promise<void> {
+  const { error } = await supabase.rpc("finalize_pipeline_execution" as any, {
+    _id: runId,
+    _status: status,
+    _patients_processed: patientsProcessed,
+    _errors_count: errorsCount,
+    _error_details: errorDetails || null,
+  });
+
+  if (error) {
+    console.error("[Pipeline] Failed to log finish:", error);
+  }
 }
 
 /**

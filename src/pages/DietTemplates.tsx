@@ -354,17 +354,11 @@ export default function DietTemplates() {
         }
       }
 
-      await supabase
-        .from("meal_plans")
-        .update({ is_active: false })
-        .eq("nutritionist_id", user.id)
-        .eq("patient_id", patientId)
-        .neq("id", targetPlanId);
-
-      await supabase
-        .from("meal_plans")
-        .update({ is_active: true })
-        .eq("id", targetPlanId);
+      // Use server-authoritative RPC for plan activation (ensures single active plan atomically)
+      const activateResult = await activateMealPlan(targetPlanId);
+      if (!activateResult.success) {
+        console.warn("[DietTemplates] activateMealPlan fallback:", activateResult.error);
+      }
 
       const { error: deleteError } = await supabase
         .from("meal_plan_items")

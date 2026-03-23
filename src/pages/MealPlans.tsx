@@ -78,9 +78,11 @@ export default function MealPlans() {
 
   const toggleActive = async (id: string, current: boolean) => {
     if (current) {
+      // Deactivation is safe as a direct update (no side effects needed)
       await supabase.from("meal_plans").update({ is_active: false }).eq("id", id);
       toast.success("Plano desativado.");
     } else {
+      // Activation uses server-authoritative RPC (ensures single active plan)
       const result = await activateMealPlan(id);
       if (!result.success) { toast.error(result.error || "Erro ao ativar plano"); }
       else { toast.success("Plano ativado com segurança pelo Cérebro!"); }
