@@ -40,7 +40,7 @@ const CRITICAL_QUERIES: { table: string; columns: string[]; label: string }[] = 
   { table: "notifications", columns: ["id", "user_id", "title", "message", "is_read", "type"], label: "Notifications" },
   { table: "chat_messages", columns: ["id", "sender_id", "receiver_id", "message"], label: "Chat Messages" },
   { table: "nutrition_protocols", columns: ["id", "protocol_name", "protocol_category", "is_active"], label: "Nutrition Protocols" },
-  { table: "patient_anamnesis", columns: ["id", "patient_id", "created_at"], label: "Patient Anamnesis" },
+  { table: "patient_anamnesis", columns: ["id", "user_id", "created_at"], label: "Patient Anamnesis" },
   { table: "achievements", columns: ["id", "name", "type", "xp_reward"], label: "Achievements" },
   { table: "challenges", columns: ["id", "title", "target_type"], label: "Challenges" },
   { table: "clinical_alerts", columns: ["id", "patient_id", "nutritionist_id", "alert_type", "severity"], label: "Clinical Alerts" },
