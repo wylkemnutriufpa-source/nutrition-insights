@@ -238,6 +238,31 @@ function DynamicSidebar({
         </div>
       )}
 
+      {!isProRole && (
+        <div className="px-3 mb-1">
+          <Link
+            to="/patient-overview"
+            onClick={onLinkClick}
+            className={`flex items-center gap-2 w-full rounded-xl border border-violet-500/30 bg-violet-500/10 hover:bg-violet-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
+          >
+            <div className="relative flex-shrink-0">
+              <motion.div
+                className="absolute -inset-1 rounded-full"
+                style={{ background: "radial-gradient(circle, hsl(270 80% 60% / 0.3), transparent 70%)" }}
+                animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <Activity className="w-4 h-4 text-violet-500 relative z-10" />
+            </div>
+            {!collapsed && (
+              <span className="text-xs font-semibold text-violet-500 truncate group-hover:text-violet-400 transition-colors">
+                Meu Painel
+              </span>
+            )}
+          </Link>
+        </div>
+      )}
+
       <ErrorBoundary section="Layout:IntelligenceModal" fallback={null}>
         <IntelligenceModal open={intelligenceOpen} onOpenChange={setIntelligenceOpen} />
       </ErrorBoundary>
