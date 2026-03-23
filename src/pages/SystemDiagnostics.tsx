@@ -429,6 +429,19 @@ export default function SystemDiagnostics() {
       }
     }
 
+    // Finalize pipeline observability log
+    if (pipelineRunId) {
+      try {
+        await supabase.rpc("finalize_pipeline_execution" as any, {
+          _id: pipelineRunId,
+          _status: totalCrit > 0 ? "partial" : "completed",
+          _patients_processed: 0,
+          _errors_count: totalCrit,
+          _error_details: totalCrit > 0 ? { critical_count: totalCrit, warning_count: totalWarn } : null,
+        });
+      } catch { /* non-critical */ }
+    }
+
     setTestStatus("done");
     void refetchHistory();
     toast.success(`Diagnóstico completo: Score ${score}/100`);
