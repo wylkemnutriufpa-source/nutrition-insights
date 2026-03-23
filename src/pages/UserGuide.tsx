@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,39 @@ const CATEGORY_META: Record<string, { gradient: string; emoji: string }> = {
   "Engajamento": { gradient: "from-warning/20 to-warning/5", emoji: "🏆" },
   "Comunicação": { gradient: "from-accent/20 to-accent/5", emoji: "💬" },
   "Saúde & Ferramentas": { gradient: "from-info/20 to-info/5", emoji: "❤️" },
+};
+
+// Map feature keys to real routes
+const featureRouteMap: Record<string, string> = {
+  meal_logging: "/meals",
+  meal_plan_view: "/my-diet",
+  meal_adherence: "/my-diet",
+  shopping_list: "/shopping-list",
+  favorite_recipes: "/recipes",
+  ai_meal_analysis: "/analyze-meal",
+  ai_recipe_generator: "/recipes",
+  ai_body_analysis: "/body-analysis",
+  chat: "/chat",
+  ai_anamnesis_insights: "/anamnesis",
+  checklist: "/checklist",
+  achievements: "/achievements",
+  challenges: "/challenges",
+  ranking: "/ranking",
+  weekly_goals: "/weekly-goals",
+  journey: "/journey",
+  gamification_xp: "/achievements",
+  checkin: "/checkin",
+  feedback: "/feedbacks",
+  notifications: "/notifications",
+  planner: "/planner",
+  anamnesis: "/anamnesis",
+  physical_assessment_view: "/body-projection",
+  supplements_view: "/supplements",
+  health_quiz: "/health-quiz",
+  weight_calculator: "/weight-calculator",
+  water_calculator: "/water-calculator",
+  weekly_report: "/weekly-report",
+  onboarding_pipeline: "/onboarding",
 };
 
 export default function UserGuide() {
