@@ -61,6 +61,7 @@ const AUDIENCE_LABELS: Record<string, string> = {
 
 export default function AdminGuideEngine() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [previewSlide, setPreviewSlide] = useState<any | null>(null);
   const [tab, setTab] = useState("all");
