@@ -8,6 +8,7 @@ import JourneyPhases from "@/components/gamification/JourneyPhases";
 import BeforeAfterReport from "@/components/social/BeforeAfterReport";
 import { JourneyTimelineFeed } from "@/components/gamification/JourneyTimelineFeed";
 import { MomentumIndicator } from "@/components/gamification/MomentumIndicator";
+import { PremiumBadge, PremiumAccentLine, PremiumMessage, PremiumCardWrapper } from "@/components/premium";
 
 export default function Journey() {
   const { user } = useAuth();
