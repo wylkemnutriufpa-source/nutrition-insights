@@ -280,7 +280,20 @@ export default function AdminGuideEngine() {
             </DialogHeader>
             {previewSlide && (
               <div className="py-4">
-                <CinematicGuideSlide slide={previewSlide} index={0} total={1} />
+                <CinematicGuideSlide
+                  slide={previewSlide}
+                  index={0}
+                  total={1}
+                  onCtaClick={(featureKey) => {
+                    const route = resolveFeatureRoute(featureKey);
+                    if (route) {
+                      setPreviewSlide(null);
+                      navigate(route);
+                    } else {
+                      toast.info("Rota não mapeada para esta feature");
+                    }
+                  }}
+                />
               </div>
             )}
           </DialogContent>
