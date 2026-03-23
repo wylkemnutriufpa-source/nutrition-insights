@@ -38,18 +38,17 @@ export default function PatientOverview() {
     if (!user) return;
     const today = format(new Date(), "yyyy-MM-dd");
 
-    Promise.all([
-      supabase.from("checklist_tasks").select("id, completed").eq("patient_id", user.id).eq("date", today),
-      supabase.from("patient_appointments").select("title, appointment_date").eq("patient_id", user.id).gte("appointment_date", new Date().toISOString()).order("appointment_date", { ascending: true }).limit(1),
-      supabase.from("meal_plans").select("id").eq("patient_id", user.id).eq("status", "active").limit(1),
-      supabase.from("patient_checkins").select("id").eq("patient_id", user.id).gte("created_at", new Date(Date.now() - 7 * 86400000).toISOString()),
-      supabase.from("notifications").select("id").eq("user_id", user.id).eq("is_read", false),
-      supabase.from("user_achievements").select("id").eq("user_id", user.id),
-      supabase.from("nutritionist_patients").select("created_at").eq("patient_id", user.id).eq("status", "active").limit(1),
-    ]).then(([checklistRes, aptRes, mealRes, checkinRes, notifRes, achieveRes, npRes]) => {
-      const checklist = checklistRes.data || [];
-      const apt = aptRes.data?.[0];
-      const startDate = npRes.data?.[0]?.created_at;
+    const fetchData = async () => {
+      const today = format(new Date(), "yyyy-MM-dd");
+      const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+
+      const checklistRes = await supabase.from("checklist_tasks").select("id, completed").eq("patient_id", user.id).eq("date", today);
+      const aptRes = await supabase.from("patient_appointments").select("title, appointment_date").eq("patient_id", user.id).gte("appointment_date", new Date().toISOString()).order("appointment_date", { ascending: true }).limit(1);
+      const mealRes = await supabase.from("meal_plans").select("id").eq("patient_id", user.id).eq("status", "active").limit(1);
+      const checkinRes = await supabase.from("patient_checkins").select("id").eq("patient_id", user.id).gte("created_at", weekAgo);
+      const notifRes = await supabase.from("notifications").select("id").eq("user_id", user.id).eq("is_read", false);
+      const achieveRes = await supabase.from("user_achievements").select("id").eq("user_id", user.id);
+      const npRes = await supabase.from("nutritionist_patients").select("created_at").eq("patient_id", user.id).eq("status", "active").limit(1);
 
       setData({
         checklistToday: {
