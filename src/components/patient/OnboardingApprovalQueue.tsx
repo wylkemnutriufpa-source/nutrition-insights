@@ -328,10 +328,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
           } as any)
           .eq("id", pipeline.id);
 
-        await supabase
-          .from("meal_plans")
-          .update({ plan_status: "under_professional_review" } as any)
-          .eq("id", newPlanId);
+        await transitionPlanToReview(newPlanId, user.id);
 
         toast.success(`Plano gerado com ${data.items_count} itens! Revise e aprove.`);
         navigate(`/meal-plans/${newPlanId}`);
