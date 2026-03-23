@@ -107,17 +107,16 @@ export default function PatientCheckinsTab({ patientId }: PatientCheckinsTabProp
     if (!selectedCheckin || !user) return;
     setReviewing(true);
 
+    const selectedProtocolRecord = protocols.find((protocol) => protocol.id === selectedProtocol) ?? null;
+    const validProtocolId = selectedProtocolRecord?.id ?? null;
+
     const updatePayload: Record<string, any> = {
       status: "reviewed",
       nutri_notes: notes || null,
       nutri_action: action || null,
       reviewed_at: new Date().toISOString(),
+      protocol_activated_id: validProtocolId,
     };
-    if (selectedProtocol && selectedProtocol.length > 10) {
-      updatePayload.protocol_activated_id = selectedProtocol;
-    } else {
-      updatePayload.protocol_activated_id = null;
-    }
 
     const { error } = await supabase
       .from("patient_checkins")
@@ -127,18 +126,29 @@ export default function PatientCheckinsTab({ patientId }: PatientCheckinsTabProp
     if (error) {
       toast.error(error.message);
     } else {
-      // Activate protocol if selected
-      if (selectedProtocol) {
-        await supabase.from("patient_protocols").insert({
+      if (validProtocolId) {
+        const { error: protocolActivationError } = await supabase.from("patient_protocols").insert({
           patient_id: patientId,
           nutritionist_id: user.id,
-          protocol_id: selectedProtocol,
+          protocol_id: validProtocolId,
           start_date: new Date().toISOString().split("T")[0],
           status: "active",
         });
-        toast.success("Protocolo ativado!");
+
+        if (protocolActivationError) {
+          toast.error(protocolActivationError.message);
+          setReviewing(false);
+          return;
+        }
+
+        toast.success(`Protocolo "${selectedProtocolRecord?.title}" ativado!`);
+      } else if (selectedProtocol) {
+        toast.success("Check-in revisado sem ativar protocolo porque o protocolo selecionado não é mais válido.");
       }
-      toast.success("Check-in revisado!");
+
+      if (!selectedProtocol || validProtocolId) {
+        toast.success("Check-in revisado!");
+      }
       setSelectedCheckin(null);
       setNotes("");
       setAction("");
@@ -263,7 +273,11 @@ export default function PatientCheckinsTab({ patientId }: PatientCheckinsTabProp
                           setSelectedCheckin(checkin);
                           setNotes(checkin.nutri_notes || "");
                           setAction(checkin.nutri_action || "");
-                          setSelectedProtocol(checkin.protocol_activated_id || "");
+                          setSelectedProtocol(
+                            protocols.some((protocol) => protocol.id === checkin.protocol_activated_id)
+                              ? checkin.protocol_activated_id || ""
+                              : "",
+                          );
                         }}
                       >
                         <Eye className="w-4 h-4 mr-1" />

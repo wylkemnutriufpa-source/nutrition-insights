@@ -41,8 +41,8 @@ interface CheckinData {
 
 interface Protocol {
   id: string;
-  protocol_name: string;
-  protocol_category: string;
+  title: string;
+  category: string;
 }
 
 export default function CheckinPanel() {
@@ -99,9 +99,9 @@ export default function CheckinPanel() {
 
       // Fetch protocols
       const { data: protocolsData } = await supabase
-        .from("nutrition_protocols")
-        .select("id, protocol_name, protocol_category")
-        .eq("is_active", true);
+        .from("protocols")
+        .select("id, title, category")
+        .eq("created_by", user.id);
       setProtocols(protocolsData || []);
     } catch (err) {
       console.error("CheckinPanel fetchData error:", err);
@@ -115,20 +115,16 @@ export default function CheckinPanel() {
     setReviewing(true);
 
     try {
-      // Update check-in
-      // Build update payload — only include protocol_activated_id if a valid UUID is selected
+      const selectedProtocolRecord = protocols.find((protocol) => protocol.id === selectedProtocol) ?? null;
+      const validProtocolId = selectedProtocolRecord?.id ?? null;
+
       const updatePayload: Record<string, any> = {
         status: "reviewed",
         nutri_notes: notes || null,
         nutri_action: action || null,
         reviewed_at: new Date().toISOString(),
+        protocol_activated_id: validProtocolId,
       };
-      // Only set protocol_activated_id when a real protocol is selected, otherwise explicitly null
-      if (selectedProtocol && selectedProtocol.length > 10) {
-        updatePayload.protocol_activated_id = selectedProtocol;
-      } else {
-        updatePayload.protocol_activated_id = null;
-      }
 
       const { error } = await supabase
         .from("patient_checkins")
@@ -138,19 +134,27 @@ export default function CheckinPanel() {
       if (error) throw error;
 
       // If protocol selected, activate it for the patient
-      if (selectedProtocol) {
-        const protocol = protocols.find((p: Protocol) => p.id === selectedProtocol);
-        await supabase.from("patient_protocols").insert({
+      if (validProtocolId) {
+        const { error: protocolActivationError } = await supabase.from("patient_protocols").insert({
           patient_id: selectedCheckin.patient_id,
           nutritionist_id: user.id,
-          protocol_id: selectedProtocol,
+          protocol_id: validProtocolId,
           start_date: new Date().toISOString().split("T")[0],
           status: "active",
         });
-        toast.success(`Protocolo "${protocol?.protocol_name}" ativado!`);
+
+        if (protocolActivationError) {
+          throw protocolActivationError;
+        }
+
+        toast.success(`Protocolo "${selectedProtocolRecord?.title}" ativado!`);
+      } else if (selectedProtocol) {
+        toast.success("Check-in revisado sem ativar protocolo porque o protocolo selecionado não é mais válido.");
       }
 
-      toast.success("Check-in revisado!");
+      if (!selectedProtocol || validProtocolId) {
+        toast.success("Check-in revisado!");
+      }
       setSelectedCheckin(null);
       setNotes("");
       setAction("");
@@ -283,7 +287,11 @@ export default function CheckinPanel() {
                             setSelectedCheckin(checkin);
                             setNotes(checkin.nutri_notes || "");
                             setAction(checkin.nutri_action || "");
-                            setSelectedProtocol(checkin.protocol_activated_id || "");
+                             setSelectedProtocol(
+                               protocols.some((protocol) => protocol.id === checkin.protocol_activated_id)
+                                 ? checkin.protocol_activated_id || ""
+                                 : "",
+                             );
                           }}
                         >
                           <Eye className="w-4 h-4 mr-1" />
@@ -398,7 +406,7 @@ export default function CheckinPanel() {
                                   <SelectItem value="none">Nenhum</SelectItem>
                                   {protocols.map((p) => (
                                     <SelectItem key={p.id} value={p.id}>
-                                      {p.protocol_name} ({p.protocol_category})
+                                      {p.title} ({p.category})
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
