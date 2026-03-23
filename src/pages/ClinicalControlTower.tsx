@@ -120,5 +120,7 @@ export default function ClinicalControlTower() {
         </motion.div>
       </div>
     </div>
+    </SubscriptionGuard>
+    </DashboardLayout>
   );
 }
