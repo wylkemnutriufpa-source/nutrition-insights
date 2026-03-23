@@ -276,6 +276,11 @@ Deno.serve(async (req) => {
       try { await supabase.rpc("refresh_ranking_cache" as any); } catch (_) {}
     }
 
+    // Finalize pipeline_execution_logs
+    if (execLogId) {
+      await logExecFinish(execLogId, finalStatus, totalPatientsProcessed, stepsFailed.length, stepsFailed.length > 0 ? { failed_steps: stepsFailed } : null);
+    }
+
     return new Response(
       JSON.stringify({
         run_id: runId,
@@ -289,6 +294,10 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err: any) {
+    // Log failure to pipeline_execution_logs
+    if (typeof execLogId !== "undefined" && execLogId) {
+      await logExecFinish(execLogId, "failed", 0, 1, { error: err.message });
+    }
     return new Response(
       JSON.stringify({ error: err.message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

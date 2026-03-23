@@ -102,8 +102,9 @@ export default function MealPlanEditorV2() {
   const plan = store.plan;
   if (!plan) return null;
 
-  const isPublished = plan.plan_status === "published_to_patient";
-  const isApproved = plan.plan_status === "approved";
+  const planState = resolvePlanState(plan);
+  const isPublished = planState.isEffective;
+  const isApproved = planState.isApproved;
 
   const handleSave = async () => {
     setSaving(true);
