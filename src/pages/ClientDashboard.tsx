@@ -263,26 +263,33 @@ export default function ClientDashboard() {
       <OnboardingProgressModal />
       <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
         {/* Premium Header */}
-        <motion.div variants={item} className="relative overflow-hidden rounded-2xl gradient-border particles-bg">
-          <div className="glass-premium rounded-2xl p-6 shimmer-sweep">
-            <div className="flex items-center justify-between">
-              <div>
-                <motion.p
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="text-sm text-muted-foreground mb-1"
-                >
-                  {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
-                </motion.p>
-                <h1 className="font-display text-2xl md:text-3xl font-bold">
-                  Olá, {profile?.full_name?.split(" ")[0] || "Paciente"} 👋
-                </h1>
-                <p className="text-muted-foreground text-sm mt-1">
-                  Acompanhe seu progresso e mantenha seus hábitos em dia.
-                </p>
+        <motion.div variants={item}>
+          <PremiumCardWrapper className="relative overflow-hidden rounded-2xl gradient-border particles-bg" enableShimmer>
+            <div className="glass-premium rounded-2xl p-6 shimmer-sweep">
+              <div className="flex items-center justify-between">
+                <div>
+                  <motion.p
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="text-sm text-muted-foreground mb-1"
+                  >
+                    {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                  </motion.p>
+                  <div className="flex items-center gap-2">
+                    <h1 className="font-display text-2xl md:text-3xl font-bold">
+                      Olá, {profile?.full_name?.split(" ")[0] || "Paciente"} 👋
+                    </h1>
+                    <PremiumBadge />
+                  </div>
+                  <PremiumAccentLine />
+                  <p className="text-muted-foreground text-sm mt-1">
+                    Acompanhe seu progresso e mantenha seus hábitos em dia.
+                  </p>
+                  <PremiumMessage className="mt-1" />
+                </div>
               </div>
             </div>
-          </div>
+          </PremiumCardWrapper>
         </motion.div>
 
         {/* Biquíni Branco Enrollment */}

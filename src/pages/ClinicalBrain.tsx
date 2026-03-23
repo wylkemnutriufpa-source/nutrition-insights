@@ -113,7 +113,7 @@ export default function ClinicalBrain() {
       <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
         {/* Hero Header */}
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/10 via-accent/10 to-purple-500/10 p-6 border border-primary/20">
+          <PremiumCardWrapper className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/10 via-accent/10 to-purple-500/10 p-6 border border-primary/20" enableShimmer>
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl" />
             <div className="relative flex items-center gap-4">
               <motion.div animate={{ rotate: [0, 5, -5, 0] }} transition={{ repeat: Infinity, duration: 4 }}
@@ -121,8 +121,13 @@ export default function ClinicalBrain() {
                 <Brain className="w-8 h-8 text-white" />
               </motion.div>
               <div className="flex-1">
-                <h1 className="font-display text-2xl font-bold">AI Clinical Brain</h1>
+                <div className="flex items-center gap-2">
+                  <h1 className="font-display text-2xl font-bold">AI Clinical Brain</h1>
+                  <PremiumBadge />
+                </div>
+                <PremiumAccentLine />
                 <p className="text-sm text-muted-foreground mt-1">Copiloto clínico inteligente — conectando todos os motores do FitJourney</p>
+                <PremiumMessage className="mt-1" />
               </div>
               <div className="hidden md:flex items-center gap-4">
                 <div className="text-center">
@@ -139,7 +144,7 @@ export default function ClinicalBrain() {
                 </div>
               </div>
             </div>
-          </div>
+          </PremiumCardWrapper>
         </motion.div>
 
         <Tabs value={tab} onValueChange={setTab}>

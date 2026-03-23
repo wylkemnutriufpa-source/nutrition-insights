@@ -19,12 +19,17 @@ export default function Journey() {
       <div className="space-y-6" ref={shareRef}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
+            <PremiumCardWrapper className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
               <TrendingUp className="w-5 h-5 text-primary-foreground" />
-            </div>
+            </PremiumCardWrapper>
             <div>
-              <h1 className="font-display text-2xl font-bold">Minha Jornada</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="font-display text-2xl font-bold">Minha Jornada</h1>
+                <PremiumBadge />
+              </div>
+              <PremiumAccentLine />
               <p className="text-sm text-muted-foreground">Seu progresso ao longo do tempo</p>
+              <PremiumMessage className="mt-0.5" />
             </div>
           </div>
           <ShareProgressButton captureRef={shareRef} context="journey" />
