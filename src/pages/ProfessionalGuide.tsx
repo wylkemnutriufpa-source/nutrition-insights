@@ -79,6 +79,7 @@ function getLevel(progress: number) {
 
 export default function ProfessionalGuide() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [exploredKeys, setExploredKeys] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -107,9 +108,15 @@ export default function ProfessionalGuide() {
       .upsert({ nutritionist_id: user.id, feature_name: featureName, status: "explored" }, { onConflict: "nutritionist_id,feature_name" });
     if (!error) {
       setExploredKeys((prev) => [...prev, featureName]);
+    }
+    // Navigate to route
+    const route = featureRouteMap[featureName];
+    if (route) {
+      navigate(route);
+    } else {
       toast.success(`"${featureName}" marcada como explorada! ✓`, { duration: 2000 });
     }
-  }, [user, exploredKeys]);
+  }, [user, exploredKeys, navigate]);
 
   const categories = getFeaturesByCategory();
   const categoryNames = Object.keys(categories);
