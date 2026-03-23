@@ -74,6 +74,7 @@ Deno.serve(async (req) => {
     });
   }
 
+  let execLogId: string | null = null;
   try {
     const body = await req.json().catch(() => ({}));
     const runType = body.run_type || "daily";
@@ -82,7 +83,7 @@ Deno.serve(async (req) => {
     const dryRun = body.dry_run || false;
 
     // Log to pipeline_execution_logs
-    const execLogId = await logExecStart("clinical-pipeline-orchestrator", { run_type: runType, triggered_by: triggeredBy, include_weekly: includeWeekly, dry_run: dryRun });
+    execLogId = await logExecStart("clinical-pipeline-orchestrator", { run_type: runType, triggered_by: triggeredBy, include_weekly: includeWeekly, dry_run: dryRun });
 
     // Prevent concurrent runs
     const { data: activeRuns } = await supabase
