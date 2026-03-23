@@ -133,13 +133,9 @@ export default function PatientRegister() {
 
         // If professional selected, update journey_status via server-authoritative RPC
         if (nutriId) {
-          await transitionJourneyStatus(data.user.id, nutriId, "lead_created").catch(() => {
-            // Fallback: direct update for fresh registrations where status may not exist yet
-            supabase
-              .from("nutritionist_patients")
-              .update({ journey_status: "lead_created" } as any)
-              .eq("patient_id", data.user.id)
-              .eq("nutritionist_id", nutriId);
+          // Server-authoritative: RPC handles validation; no direct .update() fallback
+          await transitionJourneyStatus(data.user.id, nutriId, "lead_created").catch((err) => {
+            console.warn("[PatientRegister] transitionJourneyStatus failed for lead_created, link may not exist yet:", err);
           });
 
           // Notify the professional
