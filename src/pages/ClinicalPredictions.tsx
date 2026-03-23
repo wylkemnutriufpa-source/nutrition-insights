@@ -76,6 +76,7 @@ function PredictionGauge({ value, label, icon: Icon, classification }: { value: 
 
 export default function ClinicalPredictions() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [predictions, setPredictions] = useState<PredictionRow[]>([]);
   const [profiles, setProfiles] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
