@@ -378,5 +378,6 @@ export default function AdminMarketingContent() {
         </DialogContent>
       </Dialog>
     </div>
+    </DashboardLayout>
   );
 }
