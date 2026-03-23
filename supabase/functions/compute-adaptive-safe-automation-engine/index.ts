@@ -182,6 +182,17 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const sb = createClient(supabaseUrl, serviceKey);
 
+    // Log pipeline start
+    let execLogId: string | null = null;
+    try {
+      const { data } = await sb.rpc("log_pipeline_execution", {
+        _pipeline_name: "compute-adaptive-safe-automation-engine",
+        _status: "started",
+        _metadata: {},
+      });
+      execLogId = data as string | null;
+    } catch (_) {}
+
     const body = await req.json().catch(() => ({}));
     const targetPatientId = body.patient_id || null;
 
