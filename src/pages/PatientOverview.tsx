@@ -38,8 +38,6 @@ export default function PatientOverview() {
     if (!user) return;
 
     const fetchData = async () => {
-
-    const fetchData = async () => {
       const today = format(new Date(), "yyyy-MM-dd");
       const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
 
