@@ -387,10 +387,10 @@ export default function CheckinPanel() {
                                   <SelectValue placeholder="Selecione um protocolo..." />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="">Nenhum</SelectItem>
+                                  <SelectItem value="none">Nenhum</SelectItem>
                                   {protocols.map((p) => (
                                     <SelectItem key={p.id} value={p.id}>
-                                      {p.title} ({p.category})
+                                      {p.protocol_name} ({p.protocol_category})
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
