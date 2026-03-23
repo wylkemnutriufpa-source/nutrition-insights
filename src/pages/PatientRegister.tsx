@@ -167,20 +167,16 @@ export default function PatientRegister() {
     if (!userId || !selectedProfessional) return;
 
     if (alreadyPaid === "yes") {
-      // Update status to awaiting_onboarding_release
-      await supabase
-        .from("nutritionist_patients")
-        .update({ journey_status: "awaiting_onboarding_release" } as any)
-        .eq("patient_id", userId)
-        .eq("nutritionist_id", selectedProfessional.user_id);
+      await transitionJourneyStatus(userId, selectedProfessional.user_id, "awaiting_onboarding_release").catch(() => {
+        supabase.from("nutritionist_patients").update({ journey_status: "awaiting_onboarding_release" } as any)
+          .eq("patient_id", userId).eq("nutritionist_id", selectedProfessional.user_id);
+      });
       setStep("done");
     } else {
-      // Update status to awaiting_payment
-      await supabase
-        .from("nutritionist_patients")
-        .update({ journey_status: "awaiting_payment" } as any)
-        .eq("patient_id", userId)
-        .eq("nutritionist_id", selectedProfessional.user_id);
+      await transitionJourneyStatus(userId, selectedProfessional.user_id, "awaiting_payment").catch(() => {
+        supabase.from("nutritionist_patients").update({ journey_status: "awaiting_payment" } as any)
+          .eq("patient_id", userId).eq("nutritionist_id", selectedProfessional.user_id);
+      });
       setStep("payment");
     }
   };
