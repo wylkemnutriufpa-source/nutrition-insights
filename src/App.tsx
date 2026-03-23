@@ -160,7 +160,6 @@ const ClinicalControlTower = lazy(() => import("./pages/ClinicalControlTower"));
 const ConsentRequired = lazy(() => import("./pages/ConsentRequired"));
 const PaymentRequired = lazy(() => import("./pages/PaymentRequired"));
 const SystemHealthLive = lazy(() => import("./pages/SystemHealthLive"));
-const SystemHealthLive = lazy(() => import("./pages/SystemHealthLive"));
 const PatientOverview = lazy(() => import("./pages/PatientOverview"));
 
 // Install global error handlers once at module load
