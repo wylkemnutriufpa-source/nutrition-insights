@@ -226,27 +226,20 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 }
 
 function RootRoute() {
-  const { user, loading, isPersonal, isNutritionist, isAdmin } = useAuth();
+  const { user, loading, isPersonal, isPatient, isNutritionist, isAdmin } = useAuth();
   const [bootDone, setBootDone] = useState(false);
   const activeEditorRoute = !loading && user && (isNutritionist || isAdmin)
     ? readActiveEditorRoute()
     : null;
 
-  // Show cinematic boot while loading (only for auth'd sessions or initial load)
-  if (loading && !bootDone) {
-    return (
-      <AppBootExperience
-        dataReady={false}
-        onComplete={() => setBootDone(true)}
-      />
-    );
-  }
+  const userRole = isPatient ? "patient" : isAdmin ? "admin" : "professional";
 
-  // If loading just finished but boot animation hasn't completed yet
-  if (!loading && !bootDone) {
+  // Show neuro entry while loading or boot not done
+  if (!bootDone) {
     return (
-      <AppBootExperience
-        dataReady={true}
+      <NeuroEntryExperience
+        dataReady={!loading}
+        userRole={userRole}
         onComplete={() => setBootDone(true)}
       />
     );
