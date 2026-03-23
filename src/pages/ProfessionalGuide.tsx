@@ -237,7 +237,7 @@ export default function ProfessionalGuide() {
                   const isExplored = exploredKeys.includes(feature.name);
                   const Icon = feature.icon;
                   const tier = TIER_LABELS[feature.defaultTier || "basic"];
-                  const hasRoute = !!featureRouteMap[feature.name];
+                  const hasRoute = !!PROFESSIONAL_ROUTE_MAP[feature.name];
                   return (
                     <motion.div
                       key={feature.name}

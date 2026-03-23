@@ -174,7 +174,7 @@ export default function UserGuide() {
                 {features.map((feature, idx) => {
                   const isExplored = exploredKeys.includes(feature.key);
                   const Icon = feature.icon;
-                  const hasRoute = !!featureRouteMap[feature.key];
+                  const hasRoute = !!PATIENT_ROUTE_MAP[feature.key];
                   return (
                     <motion.div
                       key={feature.key}
