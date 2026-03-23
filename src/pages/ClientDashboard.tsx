@@ -43,6 +43,7 @@ import ClinicalInsightsCard from "@/components/patient/ClinicalInsightsCard";
 import PatientMetabolicInsightPanel from "@/components/patient/PatientMetabolicInsightPanel";
 import PatientBehaviorLearningCard from "@/components/patient/PatientBehaviorLearningCard";
 import NextMealWidget from "@/components/patient/NextMealWidget";
+import PatientAIInsightsWidget from "@/components/patient/PatientAIInsightsWidget";
 interface ProgramInfo {
   id: string;
   title: string;
@@ -550,6 +551,11 @@ export default function ClientDashboard() {
         {/* Adherence Evolution Chart */}
         <motion.div variants={item}>
           <AdherenceEvolutionChart />
+        </motion.div>
+
+        {/* AI Insights Widget */}
+        <motion.div variants={item}>
+          <PatientAIInsightsWidget />
         </motion.div>
 
         {/* Clinical Insights from Learning Engine */}
