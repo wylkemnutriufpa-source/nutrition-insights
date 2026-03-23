@@ -408,6 +408,7 @@ const App = () => (
 
               {/* Consent required page */}
               <Route path="/consent-required" element={<PatientRoute><LP section="Consentimento"><ConsentRequired /></LP></PatientRoute>} />
+              <Route path="/payment-required" element={<PatientRoute><LP section="Pagamento"><PaymentRequired /></LP></PatientRoute>} />
 
               {/* Patient portal — consent guarded */}
               <Route path="/client/dashboard" element={<ConsentGuardedPatientRoute><LP section="Dashboard"><ClientDashboard /></LP></ConsentGuardedPatientRoute>} />
