@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FEATURE_REGISTRY, getFeaturesByCategory } from "@/lib/featureRegistry";
-import { Compass, CheckCircle2, Sparkles, Search, Trophy, Zap, Crown } from "lucide-react";
+import { Compass, CheckCircle2, Sparkles, Search, Zap, Crown, ExternalLink } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -101,20 +101,27 @@ export default function ProfessionalGuide() {
       });
   }, [user]);
 
-  const markExplored = useCallback(async (featureName: string) => {
-    if (!user || exploredKeys.includes(featureName)) return;
-    const { error } = await supabase
-      .from("professional_feature_usage")
-      .upsert({ nutritionist_id: user.id, feature_name: featureName, status: "explored" }, { onConflict: "nutritionist_id,feature_name" });
-    if (!error) {
-      setExploredKeys((prev) => [...prev, featureName]);
+  const handleNavigate = useCallback(async (featureName: string) => {
+    if (!user) return;
+
+    // Mark as explored in background
+    if (!exploredKeys.includes(featureName)) {
+      supabase
+        .from("professional_feature_usage")
+        .upsert({ nutritionist_id: user.id, feature_name: featureName, status: "explored" }, { onConflict: "nutritionist_id,feature_name" })
+        .then(({ error }) => {
+          if (!error) {
+            setExploredKeys((prev) => [...prev, featureName]);
+          }
+        });
     }
-    // Navigate to route
+
+    // Navigate to the real route
     const route = featureRouteMap[featureName];
     if (route) {
       navigate(route);
     } else {
-      toast.success(`"${featureName}" marcada como explorada! ✓`, { duration: 2000 });
+      toast.info("Funcionalidade em desenvolvimento");
     }
   }, [user, exploredKeys, navigate]);
 
@@ -199,7 +206,7 @@ export default function ProfessionalGuide() {
 
             <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1">
               <Crown className="w-3 h-3 text-warning" />
-              Explore funcionalidades para subir de nível e dominar a plataforma!
+              Clique em "Ir para" para navegar diretamente à funcionalidade!
             </p>
           </div>
         </motion.div>
@@ -261,6 +268,7 @@ export default function ProfessionalGuide() {
                   const isExplored = exploredKeys.includes(feature.name);
                   const Icon = feature.icon;
                   const tier = TIER_LABELS[feature.defaultTier || "basic"];
+                  const hasRoute = !!featureRouteMap[feature.name];
                   return (
                     <motion.div
                       key={feature.name}
@@ -269,9 +277,10 @@ export default function ProfessionalGuide() {
                       transition={{ delay: idx * 0.03 }}
                     >
                       <Card
-                        className={`group relative overflow-hidden transition-all hover:shadow-md ${
+                        className={`group relative overflow-hidden transition-all hover:shadow-md cursor-pointer ${
                           isExplored ? "border-primary/30 bg-primary/5" : "hover:border-primary/20"
                         }`}
+                        onClick={() => handleNavigate(feature.name)}
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
                         <CardContent className="p-4 relative z-10">
@@ -303,19 +312,22 @@ export default function ProfessionalGuide() {
                           </div>
                           <Button
                             size="sm"
-                            variant={isExplored ? "ghost" : "default"}
-                            className="w-full mt-3 text-xs h-8"
-                            onClick={() => markExplored(feature.name)}
+                            variant={isExplored ? "outline" : "default"}
+                            className="w-full mt-3 text-xs h-8 gap-1.5"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleNavigate(feature.name);
+                            }}
                           >
-                            {isExplored ? (
+                            {hasRoute ? (
                               <>
-                                <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-                                Explorada ✓
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                Ir para {feature.label}
                               </>
                             ) : (
                               <>
-                                <Sparkles className="w-3.5 h-3.5 mr-1" />
-                                Marcar como explorada
+                                <Sparkles className="w-3.5 h-3.5" />
+                                Em breve
                               </>
                             )}
                           </Button>
