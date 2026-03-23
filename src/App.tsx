@@ -154,6 +154,7 @@ const CampaignCenter = lazy(() => import("./pages/CampaignCenter"));
 const ClinicalCRM = lazy(() => import("./pages/ClinicalCRM"));
 const ClinicalBrain = lazy(() => import("./pages/ClinicalBrain"));
 const SystemDiagnostics = lazy(() => import("./pages/SystemDiagnostics"));
+const ClinicalControlTower = lazy(() => import("./pages/ClinicalControlTower"));
 
 // Install global error handlers once at module load
 installGlobalErrorHandlers();
