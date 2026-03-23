@@ -16,6 +16,7 @@ import { CommandPaletteProvider } from "@/components/common/CommandPalette";
 import { readActiveEditorRoute } from "@/lib/mealPlanEditorStore";
 import { installGlobalErrorHandlers } from "@/lib/monitoring";
 import { initFeatureFlags } from "@/lib/featureFlags";
+import { useConsentGuard } from "@/hooks/useConsentGuard";
 
 // ── Eager-loaded (critical path) ────────────────────────────
 import GatewayPage from "./pages/GatewayPage";
