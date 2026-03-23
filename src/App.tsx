@@ -419,19 +419,19 @@ const App = () => (
               <Route path="/analyze" element={<ConsentGuardedPatientRoute><LP section="Análise"><AnalyzeMeal /></LP></ConsentGuardedPatientRoute>} />
               <Route path="/shopping-list" element={<ConsentGuardedPatientRoute><LP section="Compras"><ShoppingList /></LP></ConsentGuardedPatientRoute>} />
               <Route path="/my-diet" element={<ConsentGuardedPatientRoute><LP section="Dieta"><PatientMealPlan /></LP></ConsentGuardedPatientRoute>} />
-              <Route path="/journey" element={<ProtectedRoute><LP section="Jornada"><Journey /></LP></ProtectedRoute>} />
-              <Route path="/library" element={<ProtectedRoute><LP section="Biblioteca"><Library /></LP></ProtectedRoute>} />
-              <Route path="/weight-calculator" element={<ProtectedRoute><LP section="Calculadora"><WeightCalculator /></LP></ProtectedRoute>} />
-              <Route path="/water-calculator" element={<ProtectedRoute><LP section="Calculadora"><WaterCalculator /></LP></ProtectedRoute>} />
-              <Route path="/health-quiz" element={<ProtectedRoute><LP section="Quiz"><HealthCheckQuiz /></LP></ProtectedRoute>} />
-              <Route path="/checkin" element={<ProtectedRoute><LP section="Check-in"><Checkin /></LP></ProtectedRoute>} />
+              <Route path="/journey" element={<ConsentGuardedPatientRoute><LP section="Jornada"><Journey /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/library" element={<ConsentGuardedPatientRoute><LP section="Biblioteca"><Library /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/weight-calculator" element={<ConsentGuardedPatientRoute><LP section="Calculadora"><WeightCalculator /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/water-calculator" element={<ConsentGuardedPatientRoute><LP section="Calculadora"><WaterCalculator /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/health-quiz" element={<ConsentGuardedPatientRoute><LP section="Quiz"><HealthCheckQuiz /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/checkin" element={<ConsentGuardedPatientRoute><LP section="Check-in"><Checkin /></LP></ConsentGuardedPatientRoute>} />
               <Route path="/user-guide" element={<ProtectedRoute><LP section="Guia"><UserGuide /></LP></ProtectedRoute>} />
               <Route path="/curiosidades" element={<ProtectedRoute><LP section="Curiosidades"><Curiosidades /></LP></ProtectedRoute>} />
               <Route path="/apresentacao" element={<ProtectedRoute><LP section="Apresentação"><SystemPresentation /></LP></ProtectedRoute>} />
               <Route path="/onboarding-profissional" element={<ProtectedRoute><LP section="Onboarding"><OnboardingProfissional /></LP></ProtectedRoute>} />
               <Route path="/onboarding-paciente" element={<ProtectedRoute><LP section="Onboarding Paciente"><OnboardingPaciente /></LP></ProtectedRoute>} />
-              <Route path="/my-story" element={<ProtectedRoute><LP section="Minha História"><MagicJourneyStory /></LP></ProtectedRoute>} />
-              <Route path="/body-projection" element={<ProtectedRoute><LP section="Projeção Corporal"><BodyProjectionExperience /></LP></ProtectedRoute>} />
+              <Route path="/my-story" element={<ConsentGuardedPatientRoute><LP section="Minha História"><MagicJourneyStory /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/body-projection" element={<ConsentGuardedPatientRoute><LP section="Projeção Corporal"><BodyProjectionExperience /></LP></ConsentGuardedPatientRoute>} />
 
               {/* Admin routes */}
               <Route path="/admin" element={<AdminRoute><LP section="Admin"><AdminDashboard /></LP></AdminRoute>} />
