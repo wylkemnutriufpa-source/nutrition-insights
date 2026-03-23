@@ -214,6 +214,16 @@ function PatientRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function ConsentGuardedPatientRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading, isPatient } = useAuth();
+  const { hasConsent, loading: consentLoading } = useConsentGuard();
+  if (loading || consentLoading) return user ? <>{children}</> : <PageLoader />;
+  if (!user) return <Navigate to="/auth" replace />;
+  if (!isPatient) return <Navigate to="/" replace />;
+  if (!hasConsent) return <Navigate to="/consent-required" replace />;
+  return <>{children}</>;
+}
+
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isAdmin } = useAuth();
   if (loading) return user ? <>{children}</> : <PageLoader />;
