@@ -8,6 +8,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import { supabase } from "@/integrations/supabase/client";
+import { publishMealPlan } from "@/lib/serverTransitions";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { WeeklyGrid } from "@/components/meal-editor-v2/WeeklyGrid";
@@ -107,7 +108,6 @@ export default function MealPlanEditorV2() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Clear stale temp-id ops before flushing
       const pendingOps = useMealPlanEditorV2Store.getState().pendingOps;
       const hasStaleOps = pendingOps.some(op => op.itemIds.some(id => id.startsWith("temp-")));
       if (hasStaleOps) {
@@ -117,6 +117,7 @@ export default function MealPlanEditorV2() {
       }
       await store._flushQueue();
 
+      // Save uses a simple status update (non-critical: draft→approved is safe from frontend)
       const { error } = await supabase
         .from("meal_plans")
         .update({ plan_status: "approved", updated_at: new Date().toISOString() })
@@ -133,24 +134,21 @@ export default function MealPlanEditorV2() {
   };
 
   const handlePublish = async () => {
+    if (!user) return;
     setPublishing(true);
     try {
-      // Flush any real pending ops, but clear stale temp-id ops first
       const pendingOps = useMealPlanEditorV2Store.getState().pendingOps;
       const hasStaleOps = pendingOps.some(op => op.itemIds.some(id => id.startsWith("temp-")));
       if (hasStaleOps) {
-        // Clear stale ops that reference temp IDs no longer valid
         useMealPlanEditorV2Store.setState(s => ({
           pendingOps: s.pendingOps.filter(op => !op.itemIds.some(id => id.startsWith("temp-"))),
         }));
       }
       await store._flushQueue();
 
-      const { error } = await supabase
-        .from("meal_plans")
-        .update({ plan_status: "published_to_patient", is_active: true, updated_at: new Date().toISOString() })
-        .eq("id", plan.id);
-      if (error) throw error;
+      // Use server-authoritative RPC for publishing (critical transition)
+      const result = await publishMealPlan(plan.id, user.id);
+      if (!result.success) throw new Error(result.error || "Erro ao publicar");
       store.updatePlan({ plan_status: "published_to_patient", is_active: true, updated_at: new Date().toISOString() } as any);
       toast.success("Plano publicado para o paciente!");
     } catch (err: any) {

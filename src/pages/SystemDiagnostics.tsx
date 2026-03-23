@@ -291,28 +291,85 @@ export default function SystemDiagnostics() {
     const { count: stalePlans } = await supabase.from("meal_plans" as any).select("id", { count: "exact", head: true }).is("plan_status" as any, null);
     if ((stalePlans ?? 0) > 0) { warn++; addLog("warning", "Consistency", `${stalePlans} meal plan(s) with NULL status`); }
     else { ok++; addLog("ok", "Consistency", "All meal plans have valid status"); }
+
+    // Plan state dual-truth check
+    const { count: inconsistentPlans } = await (supabase as any).from("meal_plans")
+      .select("id", { count: "exact", head: true })
+      .eq("is_active", true)
+      .not("plan_status", "in", '("published_to_patient","published")');
+    if ((inconsistentPlans ?? 0) > 0) {
+      crit++;
+      addLog("error", "Consistency", `${inconsistentPlans} plan(s) are is_active=true but NOT published (dual-state inconsistency)`);
+    } else {
+      ok++;
+      addLog("ok", "Consistency", "Plan state consistency: all active plans are published");
+    }
+
+    // Orphan pipeline check
+    try {
+      const { data: orphans } = await supabase.rpc("preview_orphan_onboarding_pipelines" as any);
+      const orphanCount = Array.isArray(orphans) ? orphans.length : 0;
+      if (orphanCount > 0) {
+        warn++;
+        addLog("warning", "Consistency", `${orphanCount} orphan onboarding pipeline(s) detected (preview available)`);
+      } else {
+        ok++;
+        addLog("ok", "Consistency", "No orphan onboarding pipelines");
+      }
+    } catch {
+      warn++;
+      addLog("warning", "Consistency", "Could not check orphan pipelines (RPC may not exist)");
+    }
+
+    // Pipeline execution observability check
+    try {
+      const { count: recentRuns } = await (supabase as any).from("pipeline_execution_logs")
+        .select("id", { count: "exact", head: true })
+        .gte("started_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+      if ((recentRuns ?? 0) === 0) {
+        warn++;
+        addLog("warning", "Consistency", "No pipeline executions logged in the last 24h");
+      } else {
+        ok++;
+        addLog("ok", "Consistency", `${recentRuns} pipeline execution(s) logged in last 24h`);
+      }
+    } catch {
+      addLog("info", "Consistency", "Pipeline execution logs table not accessible");
+    }
+
     return { ok, warn, crit };
   }, [addLog]);
 
   // ─── Full Diagnostic Runner ────────────────────────────────────
   const runFullDiagnostic = useCallback(async () => {
+    // Log this diagnostic run as a pipeline execution for observability
+    let pipelineRunId: string | null = null;
+    try {
+      const { data } = await supabase.rpc("log_pipeline_execution" as any, {
+        _pipeline_name: "system_diagnostics",
+        _status: "started",
+        _metadata: { triggered_by: user?.id },
+      });
+      pipelineRunId = data as string;
+    } catch { /* non-critical */ }
+
     setTestStatus("running");
     setLogs([]);
     logsBufferRef.current = [];
     setProgress(0);
     setStats({ critical: 0, warning: 0, ok: 0 });
 
-    addLog("info", "System", "═══ FITJOURNEY SYSTEM DIAGNOSTIC ENGINE v2.0 ═══");
+    addLog("info", "System", "═══ FITJOURNEY SYSTEM DIAGNOSTIC ENGINE v3.0 ═══");
     addLog("info", "System", `Started at ${new Date().toLocaleString("pt-BR")}`);
 
     const startTime = Date.now();
     const tests = [
       { name: "Auth & Session", fn: runAuthTest, weight: 10 },
-      { name: "Database Integrity", fn: runDatabaseTest, weight: 35 },
-      { name: "Route Health", fn: runRouteTest, weight: 15 },
+      { name: "Database Integrity", fn: runDatabaseTest, weight: 30 },
+      { name: "Route Health", fn: runRouteTest, weight: 10 },
       { name: "Notification Triggers", fn: runNotificationTest, weight: 15 },
       { name: "Realtime Channels", fn: runRealtimeTest, weight: 15 },
-      { name: "Data Consistency", fn: runConsistencyTest, weight: 10 },
+      { name: "Data Consistency", fn: runConsistencyTest, weight: 20 },
     ];
 
     let totalOk = 0, totalWarn = 0, totalCrit = 0;
@@ -370,6 +427,19 @@ export default function SystemDiagnostics() {
       } catch {
         addLog("warning", "System", "Could not persist individual log entries");
       }
+    }
+
+    // Finalize pipeline observability log
+    if (pipelineRunId) {
+      try {
+        await supabase.rpc("finalize_pipeline_execution" as any, {
+          _id: pipelineRunId,
+          _status: totalCrit > 0 ? "partial" : "completed",
+          _patients_processed: 0,
+          _errors_count: totalCrit,
+          _error_details: totalCrit > 0 ? { critical_count: totalCrit, warning_count: totalWarn } : null,
+        });
+      } catch { /* non-critical */ }
     }
 
     setTestStatus("done");

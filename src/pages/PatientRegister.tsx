@@ -133,13 +133,9 @@ export default function PatientRegister() {
 
         // If professional selected, update journey_status via server-authoritative RPC
         if (nutriId) {
-          await transitionJourneyStatus(data.user.id, nutriId, "lead_created").catch(() => {
-            // Fallback: direct update for fresh registrations where status may not exist yet
-            supabase
-              .from("nutritionist_patients")
-              .update({ journey_status: "lead_created" } as any)
-              .eq("patient_id", data.user.id)
-              .eq("nutritionist_id", nutriId);
+          // Server-authoritative: RPC handles validation; no direct .update() fallback
+          await transitionJourneyStatus(data.user.id, nutriId, "lead_created").catch((err) => {
+            console.warn("[PatientRegister] transitionJourneyStatus failed for lead_created, link may not exist yet:", err);
           });
 
           // Notify the professional
@@ -167,15 +163,14 @@ export default function PatientRegister() {
     if (!userId || !selectedProfessional) return;
 
     if (alreadyPaid === "yes") {
-      await transitionJourneyStatus(userId, selectedProfessional.user_id, "awaiting_onboarding_release").catch(() => {
-        supabase.from("nutritionist_patients").update({ journey_status: "awaiting_onboarding_release" } as any)
-          .eq("patient_id", userId).eq("nutritionist_id", selectedProfessional.user_id);
+      // Server-authoritative: no direct .update() fallback
+      await transitionJourneyStatus(userId, selectedProfessional.user_id, "awaiting_onboarding_release").catch((err) => {
+        console.warn("[PatientRegister] transition failed:", err);
       });
       setStep("done");
     } else {
-      await transitionJourneyStatus(userId, selectedProfessional.user_id, "awaiting_payment").catch(() => {
-        supabase.from("nutritionist_patients").update({ journey_status: "awaiting_payment" } as any)
-          .eq("patient_id", userId).eq("nutritionist_id", selectedProfessional.user_id);
+      await transitionJourneyStatus(userId, selectedProfessional.user_id, "awaiting_payment").catch((err) => {
+        console.warn("[PatientRegister] transition failed:", err);
       });
       setStep("payment");
     }
