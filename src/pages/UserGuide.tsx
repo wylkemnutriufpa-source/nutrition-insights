@@ -11,6 +11,14 @@ import { Compass, CheckCircle2, Search, Trophy, Zap, ExternalLink } from "lucide
 import { toast } from "sonner";
 import { PATIENT_ROUTE_MAP } from "@/lib/featureRouteMap";
 
+const CATEGORY_META: Record<string, { gradient: string; emoji: string }> = {
+  "Alimentação": { gradient: "from-success/20 to-success/5", emoji: "🥗" },
+  "IA & Análises": { gradient: "from-primary/20 to-primary/5", emoji: "🤖" },
+  "Engajamento": { gradient: "from-warning/20 to-warning/5", emoji: "🏆" },
+  "Comunicação": { gradient: "from-accent/20 to-accent/5", emoji: "💬" },
+  "Saúde & Ferramentas": { gradient: "from-info/20 to-info/5", emoji: "❤️" },
+};
+
 export default function UserGuide() {
   const { exploredKeys, progress, level, exploredCount, totalFeatures, markExplored, loading } = useFeatureExplorer();
   const navigate = useNavigate();
