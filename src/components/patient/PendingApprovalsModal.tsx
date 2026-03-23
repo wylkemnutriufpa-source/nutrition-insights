@@ -111,22 +111,17 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
     const activeLinkMap = new Map((activeLinks || []).map((l: any) => [l.patient_id, l]));
 
     // BUSINESS RULE: Only show pipelines where patient has an active link
-    // AND onboarding_status indicates valid commercial activation
-    const validOnboardingStatuses = [
-      "onboarding_active",
-      "onboarding_completed", 
-      "awaiting_onboarding_release",
-    ];
-
+    // with a valid commercial journey status (not legacy/orphan)
     const eligibleItems = items.filter((pipeline: any) => {
       const link = activeLinkMap.get(pipeline.patient_id);
       if (!link) return false; // No active link = legacy/orphan
 
-      // If link has onboarding_status, enforce it
-      if (link.onboarding_status) {
-        return validOnboardingStatuses.includes(link.onboarding_status);
+      // Reject legacy statuses that indicate pre-commercial patients
+      const legacyStatuses = ["lead_created", "awaiting_payment"];
+      if (link.onboarding_status && legacyStatuses.includes(link.onboarding_status)) {
+        return false;
       }
-      // If no onboarding_status field, allow (backwards compat for existing active patients)
+
       return true;
     });
 
