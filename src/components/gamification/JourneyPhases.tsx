@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Lock, Check, ChevronRight, Star, Zap, Trophy, Flame } from "lucide-react";
@@ -13,10 +14,12 @@ interface Phase {
   unlocked: boolean;
   completed: boolean;
   progress: number;
+  route: string;
 }
 
 export default function JourneyPhases() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [phases, setPhases] = useState<Phase[]>([]);
 
   useEffect(() => {
@@ -54,6 +57,7 @@ export default function JourneyPhases() {
           unlocked: true,
           completed: meals >= 3,
           progress: Math.min(100, Math.round((meals / 3) * 100)),
+          route: meals >= 3 ? "/meals" : "/anamnesis",
         },
         {
           id: 2,
@@ -64,6 +68,7 @@ export default function JourneyPhases() {
           unlocked: meals >= 3,
           completed: streak >= 7 && adherence >= 50,
           progress: Math.min(100, Math.round(((Math.min(streak, 7) / 7) * 50 + (Math.min(adherence, 50) / 50) * 50))),
+          route: "/checklist",
         },
         {
           id: 3,
@@ -78,6 +83,7 @@ export default function JourneyPhases() {
             (Math.min(adherence, 70) / 70) * 33 +
             (Math.min(checkins, 1)) * 34)
           )),
+          route: checkins < 1 ? "/checkin" : "/checklist",
         },
         {
           id: 4,
@@ -92,6 +98,7 @@ export default function JourneyPhases() {
             (Math.min(adherence, 80) / 80) * 33 +
             (Math.min(achievements, 3) / 3) * 34)
           )),
+          route: achievements < 3 ? "/achievements" : "/checklist",
         },
         {
           id: 5,
@@ -106,6 +113,7 @@ export default function JourneyPhases() {
             (Math.min(adherence, 90) / 90) * 33 +
             (Math.min(level, 10) / 10) * 34)
           )),
+          route: "/journey",
         },
         {
           id: 6,
@@ -120,6 +128,7 @@ export default function JourneyPhases() {
             (Math.min(xp, 5000) / 5000) * 33 +
             (Math.min(achievements, 10) / 10) * 34)
           )),
+          route: "/achievements",
         },
       ];
 
@@ -128,6 +137,11 @@ export default function JourneyPhases() {
   }, [user]);
 
   const currentPhase = phases.findIndex((p) => !p.completed);
+
+  const handlePhaseClick = (phase: Phase) => {
+    if (!phase.unlocked) return;
+    navigate(phase.route);
+  };
 
   return (
     <div className="glass rounded-xl p-4 shadow-card">
@@ -152,7 +166,10 @@ export default function JourneyPhases() {
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.06 }}
+              onClick={() => handlePhaseClick(phase)}
               className={`relative flex items-center gap-3 p-3 rounded-xl transition-all ${
+                phase.unlocked ? "cursor-pointer hover:ring-1 hover:ring-primary/30" : "cursor-not-allowed"
+              } ${
                 phase.completed
                   ? "bg-success/5 border border-success/20"
                   : isCurrent
@@ -194,6 +211,11 @@ export default function JourneyPhases() {
                   </div>
                 )}
               </div>
+
+              {/* Arrow for clickable phases */}
+              {phase.unlocked && (
+                <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              )}
 
               {/* Connector line */}
               {i < phases.length - 1 && (

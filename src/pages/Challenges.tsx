@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Target, Clock, CheckCircle2, Zap, Users, Trophy, Swords, Crown } from "lucide-react";
+import { Target, Clock, CheckCircle2, Zap, Users, Trophy, Swords, Crown, HelpCircle, Star, TrendingUp, Award } from "lucide-react";
 import CommunityGroups from "@/components/community/CommunityGroups";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -41,6 +42,7 @@ export default function Challenges() {
   const [userChallenges, setUserChallenges] = useState<Map<string, UserChallenge>>(new Map());
   const [totalPoints, setTotalPoints] = useState(0);
   const [monthlyRank, setMonthlyRank] = useState<any[]>([]);
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
 
   const fetchData = async () => {
     const { data: ch } = await supabase.from("challenges").select("*").eq("is_global", true);
@@ -84,12 +86,71 @@ export default function Challenges() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-            <Swords className="w-7 h-7 text-primary" /> Desafios & Ligas
-          </h1>
-          <p className="text-muted-foreground text-sm">Compete, evolua e suba de liga!</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-display text-2xl font-bold flex items-center gap-2">
+              <Swords className="w-7 h-7 text-primary" /> Desafios & Ligas
+            </h1>
+            <p className="text-muted-foreground text-sm">Compete, evolua e suba de liga!</p>
+          </div>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowHowItWorks(true)}>
+            <HelpCircle className="w-4 h-4" /> Como funciona?
+          </Button>
         </div>
+
+        {/* How It Works Modal */}
+        <Dialog open={showHowItWorks} onOpenChange={setShowHowItWorks}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-xl">
+                <Swords className="w-6 h-6 text-primary" /> Como funcionam Desafios & Ligas
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-5 py-2">
+              <div className="flex gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Target className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-sm">Desafios</h4>
+                  <p className="text-xs text-muted-foreground">Aceite desafios para cumprir metas específicas (hidratação, treinos, checklist). Cada desafio tem duração e recompensa em XP.</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center flex-shrink-0">
+                  <Star className="w-5 h-5 text-warning" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-sm">Pontuação</h4>
+                  <p className="text-xs text-muted-foreground">Ganhe pontos completando tarefas do checklist, check-ins, refeições e desafios. Pontos acumulam para subir de liga.</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
+                  <TrendingUp className="w-5 h-5 text-accent" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-sm">Ligas</h4>
+                  <p className="text-xs text-muted-foreground">Existem 5 ligas: Bronze → Prata → Ouro → Diamante → Lenda. Suba acumulando pontos ao longo do tempo.</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center flex-shrink-0">
+                  <Award className="w-5 h-5 text-success" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-sm">Ranking Mensal</h4>
+                  <p className="text-xs text-muted-foreground">Compete com outros pacientes no ranking mensal. Os Top 5 aparecem em destaque. Seu progresso é reiniciado a cada mês.</p>
+                </div>
+              </div>
+              <div className="rounded-xl bg-primary/5 border border-primary/20 p-3">
+                <p className="text-xs text-muted-foreground">
+                  <strong className="text-foreground">Dica:</strong> A consistência vale mais que intensidade! Manter streak e adesão diária rende mais pontos do que ações isoladas.
+                </p>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* League Card */}
         <motion.div
@@ -228,7 +289,7 @@ export default function Challenges() {
             {challenges.length === 0 && (
               <div className="col-span-full text-center py-8">
                 <Target className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">Nenhum desafio disponível no momento</p>
+                <p className="text-muted-foreground text-sm">Nenhum desafio disponível no momento.</p>
               </div>
             )}
           </div>
