@@ -1,5 +1,5 @@
 import React from "react";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import {
   Flame, Beef, Wheat, Droplets, Clock, ChefHat, Target,
   Shuffle, Leaf, UtensilsCrossed, ScrollText, X,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface FoodItem {
   name: string;
@@ -94,71 +95,64 @@ export function MealDetailModal({ open, onOpenChange, meal }: MealDetailModalPro
   const hasMacros = meal.calories_target || meal.protein_target || meal.carbs_target || meal.fat_target;
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[95vh] flex flex-col">
-        {/* Sticky Header */}
-        <div className="sticky top-0 z-10 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-b border-border">
-          <DrawerHeader className="pb-3">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[90vh] p-0 overflow-hidden rounded-2xl border-border/50 shadow-2xl backdrop-blur-sm">
+        {/* Header */}
+        <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-6 pt-6 pb-4">
+          <DialogHeader className="space-y-2">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
                   <UtensilsCrossed className="w-6 h-6 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <DrawerTitle className="text-lg font-bold leading-tight">{meal.title}</DrawerTitle>
-                  {mealTypeInfo && (
-                    <DrawerDescription className="text-xs mt-0.5">
-                      {mealTypeInfo.emoji} {mealTypeInfo.label}
-                    </DrawerDescription>
-                  )}
-                  {!mealTypeInfo && meal.description && (
-                    <DrawerDescription className="text-xs mt-0.5 line-clamp-1">{meal.description}</DrawerDescription>
-                  )}
+                  <DialogTitle className="text-lg font-bold leading-tight">{meal.title}</DialogTitle>
+                  <DialogDescription className="text-xs mt-0.5">
+                    {mealTypeInfo
+                      ? `${mealTypeInfo.emoji} ${mealTypeInfo.label}`
+                      : meal.description
+                        ? meal.description
+                        : "Detalhes da refeição"}
+                  </DialogDescription>
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onOpenChange(false)}
-                className="shrink-0 -mt-1 -mr-2"
-              >
-                <X className="w-5 h-5" />
-              </Button>
             </div>
 
             {/* Tags */}
-            <div className="flex flex-wrap gap-1.5 mt-3">
-              {goalTag && GOAL_LABELS[goalTag] && (
-                <Badge variant="outline" className={`text-[10px] ${GOAL_LABELS[goalTag].color}`}>
-                  <Target className="w-2.5 h-2.5 mr-1" />
-                  {GOAL_LABELS[goalTag].label}
-                </Badge>
-              )}
-              {clinicalTags.map(tag => (
-                <Badge key={tag} variant="outline" className="text-[10px] bg-accent/50 border-accent">
-                  <Leaf className="w-2.5 h-2.5 mr-1" />
-                  {CLINICAL_LABELS[tag] || tag.replace(/_/g, " ")}
-                </Badge>
-              ))}
-              {prepTime && (
-                <Badge variant="outline" className="text-[10px]">
-                  <Clock className="w-2.5 h-2.5 mr-1" /> {prepTime} min
-                </Badge>
-              )}
-              {source === "library" && (
-                <Badge variant="outline" className="text-[10px] bg-primary/10 border-primary/30 text-primary">
-                  Banco FitJourney
-                </Badge>
-              )}
-            </div>
-          </DrawerHeader>
+            {(goalTag || clinicalTags.length > 0 || prepTime || source === "library") && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {goalTag && GOAL_LABELS[goalTag] && (
+                  <Badge variant="outline" className={`text-[10px] ${GOAL_LABELS[goalTag].color}`}>
+                    <Target className="w-2.5 h-2.5 mr-1" />
+                    {GOAL_LABELS[goalTag].label}
+                  </Badge>
+                )}
+                {clinicalTags.map(tag => (
+                  <Badge key={tag} variant="outline" className="text-[10px] bg-accent/50 border-accent">
+                    <Leaf className="w-2.5 h-2.5 mr-1" />
+                    {CLINICAL_LABELS[tag] || tag.replace(/_/g, " ")}
+                  </Badge>
+                ))}
+                {prepTime && (
+                  <Badge variant="outline" className="text-[10px]">
+                    <Clock className="w-2.5 h-2.5 mr-1" /> {prepTime} min
+                  </Badge>
+                )}
+                {source === "library" && (
+                  <Badge variant="outline" className="text-[10px] bg-primary/10 border-primary/30 text-primary">
+                    Banco FitJourney
+                  </Badge>
+                )}
+              </div>
+            )}
+          </DialogHeader>
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-8 space-y-6">
+        <div className="flex-1 overflow-y-auto overscroll-contain px-6 pb-8 space-y-6 max-h-[calc(90vh-160px)]">
           {/* Macros */}
           {hasMacros && (
-            <div className="grid grid-cols-4 gap-2 pt-4">
+            <div className="grid grid-cols-4 gap-2">
               {[
                 { label: "Calorias", value: meal.calories_target, unit: "", icon: <Flame className="w-5 h-5 text-orange-500" /> },
                 { label: "Proteína", value: meal.protein_target, unit: "g", icon: <Beef className="w-5 h-5 text-red-500" /> },
@@ -250,7 +244,7 @@ export function MealDetailModal({ open, onOpenChange, meal }: MealDetailModalPro
             </div>
           )}
         </div>
-      </DrawerContent>
-    </Drawer>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -107,15 +107,21 @@ export default function PatientCheckinsTab({ patientId }: PatientCheckinsTabProp
     if (!selectedCheckin || !user) return;
     setReviewing(true);
 
+    const updatePayload: Record<string, any> = {
+      status: "reviewed",
+      nutri_notes: notes || null,
+      nutri_action: action || null,
+      reviewed_at: new Date().toISOString(),
+    };
+    if (selectedProtocol && selectedProtocol.length > 10) {
+      updatePayload.protocol_activated_id = selectedProtocol;
+    } else {
+      updatePayload.protocol_activated_id = null;
+    }
+
     const { error } = await supabase
       .from("patient_checkins")
-      .update({
-        status: "reviewed",
-        nutri_notes: notes || null,
-        nutri_action: action || null,
-        protocol_activated_id: selectedProtocol || null,
-        reviewed_at: new Date().toISOString(),
-      })
+      .update(updatePayload)
       .eq("id", selectedCheckin.id);
 
     if (error) {

@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import {
   Activity, Play, AlertTriangle, CheckCircle2, XCircle,
   Database, Route, Bell, Radio, Cpu, Shield, RefreshCw,

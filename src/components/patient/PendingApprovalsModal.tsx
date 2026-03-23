@@ -93,28 +93,43 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
     }
 
     const patientIds = items.map((p: any) => p.patient_id);
-    const [{ data: profiles }, resolvedStatuses] = await Promise.all([
+
+    // Fetch profiles + check which patients have active/valid nutritionist links
+    const [{ data: profiles }, { data: activeLinks }] = await Promise.all([
       supabase
         .from("profiles")
         .select("user_id, full_name, avatar_url")
         .in("user_id", patientIds),
-      Promise.all(
-        items.map(async (pipeline: any) => {
-          const { data: statusData } = await supabase.rpc("resolve_patient_lifecycle_state" as any, {
-            _patient_id: pipeline.patient_id,
-          });
-          return {
-            pipelineId: pipeline.id,
-            lifecycleState: (statusData as any)?.lifecycle_state,
-          };
-        })
-      ),
+      supabase
+        .from("nutritionist_patients")
+        .select("patient_id, status, onboarding_status")
+        .eq("nutritionist_id", user.id)
+        .in("patient_id", patientIds)
+        .eq("status", "active"),
     ]);
 
-    const canonicalMap = new Map(resolvedStatuses.map((entry) => [entry.pipelineId, entry.lifecycleState]));
-    // Exclude patients with sovereign plan states
-    const sovereignStates = ['plan_delivered', 'active_followup', 'maintenance_mode'];
-    const eligibleItems = items.filter((pipeline: any) => !sovereignStates.includes(canonicalMap.get(pipeline.id) || ''));
+    const activeLinkMap = new Map((activeLinks || []).map((l: any) => [l.patient_id, l]));
+
+    // BUSINESS RULE: Only show pipelines where patient has an active link
+    // AND onboarding_status indicates valid commercial activation
+    const validOnboardingStatuses = [
+      "onboarding_active",
+      "onboarding_completed", 
+      "awaiting_onboarding_release",
+    ];
+
+    const eligibleItems = items.filter((pipeline: any) => {
+      const link = activeLinkMap.get(pipeline.patient_id);
+      if (!link) return false; // No active link = legacy/orphan
+
+      // If link has onboarding_status, enforce it
+      if (link.onboarding_status) {
+        return validOnboardingStatuses.includes(link.onboarding_status);
+      }
+      // If no onboarding_status field, allow (backwards compat for existing active patients)
+      return true;
+    });
+
     const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
 
     const enriched = eligibleItems.map((p: any) => ({
@@ -554,7 +569,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
   );
 }
 
-/** Hook to check for pending approvals count — lightweight, no N+1 RPC calls */
+/** Hook to check for pending approvals count — lightweight, only counts eligible patients */
 export function usePendingApprovals() {
   const { user } = useAuth();
   const [count, setCount] = useState(0);
@@ -562,15 +577,30 @@ export function usePendingApprovals() {
   useEffect(() => {
     if (!user) return;
     const check = async () => {
-      const { count: total, error } = await supabase
+      // Get pipeline IDs
+      const { data: pipelines } = await supabase
         .from("onboarding_pipelines" as any)
-        .select("id", { count: "exact", head: true })
+        .select("id, patient_id")
         .eq("nutritionist_id", user.id)
         .in("status", ["pending_approval", "pending_plan_generation"]);
 
-      if (!error) {
-        setCount(total ?? 0);
+      if (!pipelines || pipelines.length === 0) {
+        setCount(0);
+        return;
       }
+
+      // Cross-check with active links only
+      const patientIds = (pipelines as any[]).map((p: any) => p.patient_id);
+      const { data: activeLinks } = await supabase
+        .from("nutritionist_patients")
+        .select("patient_id")
+        .eq("nutritionist_id", user.id)
+        .in("patient_id", patientIds)
+        .eq("status", "active");
+
+      const activeSet = new Set((activeLinks || []).map((l: any) => l.patient_id));
+      const eligible = (pipelines as any[]).filter((p: any) => activeSet.has(p.patient_id));
+      setCount(eligible.length);
     };
 
     check();
@@ -578,7 +608,6 @@ export function usePendingApprovals() {
     const ch = supabase
       .channel("pending-count")
       .on("postgres_changes", { event: "*", schema: "public", table: "onboarding_pipelines" }, () => check())
-      .on("postgres_changes", { event: "*", schema: "public", table: "meal_plans" }, () => check())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [user]);
