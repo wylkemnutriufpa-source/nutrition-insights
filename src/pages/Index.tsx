@@ -415,6 +415,11 @@ function NutritionistDashboardContent() {
         <SetupWizard />
       </motion.div>
 
+      {/* ── FitJourney Intelligence ── */}
+      <motion.div variants={item}>
+        <FitJourneyIntelligencePanel />
+      </motion.div>
+
       {/* ── Portfolio Intelligence ── */}
       <motion.div variants={item}>
         <PortfolioIntelligencePanel />
