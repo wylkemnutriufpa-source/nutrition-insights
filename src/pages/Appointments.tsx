@@ -287,12 +287,12 @@ export default function Appointments() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-7 gap-1 mb-2">
-                {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map(d => (
-                  <div key={d} className="text-center text-xs font-medium text-muted-foreground py-1">{d}</div>
+              <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-2">
+                {["D", "S", "T", "Q", "Q", "S", "S"].map((d, i) => (
+                  <div key={i} className="text-center text-[10px] sm:text-xs font-medium text-muted-foreground py-1">{d}</div>
                 ))}
               </div>
-              <div className="grid grid-cols-7 gap-1">
+              <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
                 {Array.from({ length: days[0].getDay() }).map((_, i) => <div key={`pad-${i}`} />)}
                 {days.map(day => {
                   const apps = dayAppointments(day);
