@@ -131,7 +131,7 @@ export default function CheckinPanel() {
 
       // If protocol selected, activate it for the patient
       if (selectedProtocol) {
-        const protocol = protocols.find(p => p.id === selectedProtocol);
+        const protocol = protocols.find((p: Protocol) => p.id === selectedProtocol);
         await supabase.from("patient_protocols").insert({
           patient_id: selectedCheckin.patient_id,
           nutritionist_id: user.id,
