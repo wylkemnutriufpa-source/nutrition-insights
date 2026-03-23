@@ -569,7 +569,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
   );
 }
 
-/** Hook to check for pending approvals count — lightweight, no N+1 RPC calls */
+/** Hook to check for pending approvals count — lightweight, only counts eligible patients */
 export function usePendingApprovals() {
   const { user } = useAuth();
   const [count, setCount] = useState(0);
@@ -577,15 +577,30 @@ export function usePendingApprovals() {
   useEffect(() => {
     if (!user) return;
     const check = async () => {
-      const { count: total, error } = await supabase
+      // Get pipeline IDs
+      const { data: pipelines } = await supabase
         .from("onboarding_pipelines" as any)
-        .select("id", { count: "exact", head: true })
+        .select("id, patient_id")
         .eq("nutritionist_id", user.id)
         .in("status", ["pending_approval", "pending_plan_generation"]);
 
-      if (!error) {
-        setCount(total ?? 0);
+      if (!pipelines || pipelines.length === 0) {
+        setCount(0);
+        return;
       }
+
+      // Cross-check with active links only
+      const patientIds = (pipelines as any[]).map((p: any) => p.patient_id);
+      const { data: activeLinks } = await supabase
+        .from("nutritionist_patients")
+        .select("patient_id")
+        .eq("nutritionist_id", user.id)
+        .in("patient_id", patientIds)
+        .eq("status", "active");
+
+      const activeSet = new Set((activeLinks || []).map((l: any) => l.patient_id));
+      const eligible = (pipelines as any[]).filter((p: any) => activeSet.has(p.patient_id));
+      setCount(eligible.length);
     };
 
     check();
@@ -593,7 +608,6 @@ export function usePendingApprovals() {
     const ch = supabase
       .channel("pending-count")
       .on("postgres_changes", { event: "*", schema: "public", table: "onboarding_pipelines" }, () => check())
-      .on("postgres_changes", { event: "*", schema: "public", table: "meal_plans" }, () => check())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [user]);
