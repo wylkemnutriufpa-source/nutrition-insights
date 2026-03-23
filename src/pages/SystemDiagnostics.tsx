@@ -403,15 +403,15 @@ export default function SystemDiagnostics() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 max-w-6xl mx-auto">
+      <div className="space-y-4 md:space-y-6 max-w-6xl mx-auto px-1 md:px-0 overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-              <Cpu className="w-6 h-6 text-primary" />
+            <h1 className="font-display text-xl sm:text-2xl font-bold flex items-center gap-2">
+              <Cpu className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
               System Test Center
             </h1>
-            <p className="text-sm text-muted-foreground">Auto-diagnostic engine for production stability</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Auto-diagnostic engine for production stability</p>
           </div>
           <Button
             onClick={runFullDiagnostic}
