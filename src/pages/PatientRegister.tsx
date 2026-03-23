@@ -130,13 +130,16 @@ export default function PatientRegister() {
           phone: phone || null,
         }, { onConflict: "user_id" });
 
-        // If professional selected, update journey_status
+        // If professional selected, update journey_status via server-authoritative RPC
         if (nutriId) {
-          await supabase
-            .from("nutritionist_patients")
-            .update({ journey_status: "lead_created" } as any)
-            .eq("patient_id", data.user.id)
-            .eq("nutritionist_id", nutriId);
+          await transitionJourneyStatus(data.user.id, nutriId, "lead_created").catch(() => {
+            // Fallback: direct update for fresh registrations where status may not exist yet
+            supabase
+              .from("nutritionist_patients")
+              .update({ journey_status: "lead_created" } as any)
+              .eq("patient_id", data.user.id)
+              .eq("nutritionist_id", nutriId);
+          });
 
           // Notify the professional
           await supabase.from("notifications").insert({
