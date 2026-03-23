@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useFeatureExplorer } from "@/hooks/useFeatureExplorer";
 import { PATIENT_FEATURE_REGISTRY, getPatientFeaturesByCategory } from "@/lib/patientFeatureRegistry";
-import { Compass, CheckCircle2, Sparkles, Search, Trophy, Zap } from "lucide-react";
+import { Compass, CheckCircle2, Search, Trophy, Zap, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 const CATEGORY_META: Record<string, { gradient: string; emoji: string }> = {
@@ -60,18 +60,20 @@ export default function UserGuide() {
   const categories = getPatientFeaturesByCategory();
   const categoryNames = Object.keys(categories);
 
-  const handleExplore = async (key: string, label: string) => {
-    // Mark as explored
+  const handleNavigate = async (key: string, label: string) => {
+    // Mark as explored in background
     if (!exploredKeys.includes(key)) {
-      await markExplored(key);
-      toast.success(`🎉 "${label}" explorada!`, { duration: 2500 });
+      markExplored(key);
     }
     // Navigate to the feature's real route
     const route = featureRouteMap[key];
     if (route) {
       navigate(route);
+    } else {
+      toast.info("Funcionalidade em desenvolvimento");
     }
   };
+
   const filteredCategories = Object.entries(categories)
     .filter(([cat]) => !activeCategory || cat === activeCategory)
     .map(([cat, features]) => ({
@@ -142,8 +144,8 @@ export default function UserGuide() {
             </div>
 
             <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1">
-              <Sparkles className="w-3 h-3" />
-              Cada funcionalidade explorada contribui para seu progresso!
+              <ExternalLink className="w-3 h-3" />
+              Clique em qualquer funcionalidade para navegar diretamente até ela!
             </p>
           </div>
         </motion.div>
@@ -204,6 +206,7 @@ export default function UserGuide() {
                 {features.map((feature, idx) => {
                   const isExplored = exploredKeys.includes(feature.key);
                   const Icon = feature.icon;
+                  const hasRoute = !!featureRouteMap[feature.key];
                   return (
                     <motion.div
                       key={feature.key}
@@ -211,9 +214,12 @@ export default function UserGuide() {
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: idx * 0.03 }}
                     >
-                      <Card className={`group relative overflow-hidden transition-all hover:shadow-md ${
-                        isExplored ? "border-primary/30 bg-primary/5" : "hover:border-primary/20"
-                      }`}>
+                      <Card
+                        className={`group relative overflow-hidden transition-all hover:shadow-md cursor-pointer ${
+                          isExplored ? "border-primary/30 bg-primary/5" : "hover:border-primary/20"
+                        }`}
+                        onClick={() => handleNavigate(feature.key, feature.label)}
+                      >
                         {/* Shimmer on hover */}
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
                         
@@ -241,20 +247,20 @@ export default function UserGuide() {
                           
                           <Button
                             size="sm"
-                            variant={isExplored ? "ghost" : "default"}
-                            className="w-full mt-3 text-xs h-8"
-                            onClick={() => handleExplore(feature.key, feature.label)}
+                            variant={isExplored ? "outline" : "default"}
+                            className="w-full mt-3 text-xs h-8 gap-1.5"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleNavigate(feature.key, feature.label);
+                            }}
                           >
-                            {isExplored ? (
+                            {hasRoute ? (
                               <>
-                                <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-                                Explorada ✓
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                Ir para {feature.label}
                               </>
                             ) : (
-                              <>
-                                <Sparkles className="w-3.5 h-3.5 mr-1" />
-                                Explorar
-                              </>
+                              "Em breve"
                             )}
                           </Button>
                         </CardContent>

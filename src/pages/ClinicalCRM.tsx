@@ -16,7 +16,7 @@ import {
   MessageSquare, Star, Target, ArrowRight, Clock, Zap,
   BarChart3, Shield, Rocket, Eye, ChevronRight
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const PIPELINE_STAGES = [
   { key: "lead_created", label: "Lead", icon: Users, color: "border-blue-500/30 bg-blue-500/5" },
@@ -33,70 +33,117 @@ const ENGAGEMENT_COLORS: Record<string, string> = {
   high_risk: "bg-red-500/10 text-red-600",
 };
 
+interface CRMPatient {
+  id: string;
+  patient_id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  status: string;
+  created_at: string;
+}
+
 export default function ClinicalCRM() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [tab, setTab] = useState("pipeline");
   const [noteDialog, setNoteDialog] = useState<{ patientId: string; name: string } | null>(null);
   const [noteText, setNoteText] = useState("");
 
+  // Fetch real patients via nutritionist_patients + profiles
   const { data: patients = [] } = useQuery({
-    queryKey: ["crm-patients"],
-    queryFn: async () => {
+    queryKey: ["crm-patients", user?.id],
+    queryFn: async (): Promise<CRMPatient[]> => {
       if (!user) return [];
-      const { data } = await (supabase as any)
-        .from("patients")
-        .select("id, name, email, phone, status, created_at, nutritionist_id")
+      const { data: npData } = await supabase
+        .from("nutritionist_patients")
+        .select("id, patient_id, status, created_at, notes")
         .eq("nutritionist_id", user.id)
         .order("created_at", { ascending: false });
-      return data || [];
+
+      if (!npData || npData.length === 0) return [];
+
+      const patientIds = npData.map(np => np.patient_id);
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, phone")
+        .in("user_id", patientIds);
+
+      const profileMap = new Map((profilesData || []).map(p => [p.user_id, p]));
+
+      return npData.map(np => {
+        const profile = profileMap.get(np.patient_id);
+        return {
+          id: np.id,
+          patient_id: np.patient_id,
+          name: profile?.full_name || "Paciente",
+          email: null,
+          phone: profile?.phone || null,
+          status: np.status || "lead_created",
+          created_at: np.created_at,
+        };
+      });
     },
+    enabled: !!user,
   });
 
   const { data: scores = [] } = useQuery({
-    queryKey: ["crm-scores"],
+    queryKey: ["crm-scores", user?.id],
     queryFn: async () => {
-      const { data } = await (supabase as any).from("patient_relationship_scores").select("*");
+      if (!user) return [];
+      const patientIds = patients.map(p => p.patient_id);
+      if (patientIds.length === 0) return [];
+      const { data } = await supabase
+        .from("patient_relationship_scores")
+        .select("*")
+        .in("patient_id", patientIds);
       return data || [];
     },
+    enabled: !!user && patients.length > 0,
   });
 
   const { data: notes = [] } = useQuery({
-    queryKey: ["crm-notes"],
+    queryKey: ["crm-notes", user?.id],
     queryFn: async () => {
       if (!user) return [];
-      const { data } = await (supabase as any).from("relationship_notes").select("*").eq("professional_id", user.id).order("created_at", { ascending: false }).limit(20);
+      const { data } = await supabase
+        .from("relationship_notes")
+        .select("*")
+        .eq("professional_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
       return data || [];
     },
+    enabled: !!user,
   });
 
   const getScore = (patientId: string) => scores.find((s: any) => s.patient_id === patientId);
 
   const pipelineData = useMemo(() => {
-    const stages: Record<string, any[]> = {};
+    const stages: Record<string, CRMPatient[]> = {};
     PIPELINE_STAGES.forEach(s => { stages[s.key] = []; });
-    patients.forEach((p: any) => {
-      const status = p.status || "lead_created";
-      const stageKey = PIPELINE_STAGES.find(s => s.key === status)?.key || "lead_created";
+    patients.forEach((p) => {
+      const stageKey = PIPELINE_STAGES.find(s => s.key === p.status)?.key || "lead_created";
       stages[stageKey]?.push(p);
     });
     return stages;
   }, [patients]);
 
   const smartLists = useMemo(() => ({
-    atRisk: patients.filter((p: any) => {
-      const sc = getScore(p.id);
+    atRisk: patients.filter((p) => {
+      const sc = getScore(p.patient_id);
       return sc && (sc.engagement_level === "high_risk" || sc.engagement_level === "attention");
     }),
-    highPerformers: patients.filter((p: any) => {
-      const sc = getScore(p.id);
-      return sc && sc.relationship_score >= 80;
+    highPerformers: patients.filter((p) => {
+      const sc = getScore(p.patient_id);
+      return sc && (sc.relationship_score ?? 0) >= 80;
     }),
-    upgradeReady: patients.filter((p: any) => {
-      const sc = getScore(p.id);
-      return sc && sc.upgrade_moment_score >= 70;
+    upgradeReady: patients.filter((p) => {
+      const sc = getScore(p.patient_id);
+      return sc && (sc.upgrade_moment_score ?? 0) >= 70;
     }),
-    newPatients: patients.filter((p: any) => {
+    newPatients: patients.filter((p) => {
       const created = new Date(p.created_at);
       return (Date.now() - created.getTime()) < 14 * 24 * 60 * 60 * 1000;
     }),
@@ -104,15 +151,23 @@ export default function ClinicalCRM() {
 
   const saveNote = async () => {
     if (!noteDialog || !noteText || !user) return;
-    await (supabase as any).from("relationship_notes").insert({
+    const { error } = await supabase.from("relationship_notes").insert({
       patient_id: noteDialog.patientId,
       professional_id: user.id,
       note: noteText,
     });
+    if (error) {
+      toast.error("Erro ao salvar nota");
+      return;
+    }
     toast.success("Nota salva!");
     queryClient.invalidateQueries({ queryKey: ["crm-notes"] });
     setNoteDialog(null);
     setNoteText("");
+  };
+
+  const goToPatient = (patientId: string) => {
+    navigate(`/patients/${patientId}`);
   };
 
   return (
@@ -173,22 +228,24 @@ export default function ClinicalCRM() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    {(pipelineData[stage.key] || []).slice(0, 5).map((p: any) => {
-                      const sc = getScore(p.id);
+                    {(pipelineData[stage.key] || []).slice(0, 5).map((p) => {
+                      const sc = getScore(p.patient_id);
                       return (
-                        <Link key={p.id} to={`/patients/${p.id}`}>
-                          <div className="p-2 rounded-lg bg-background/80 hover:bg-background transition-colors cursor-pointer">
-                            <p className="text-xs font-medium truncate">{p.name}</p>
-                            {sc && (
-                              <div className="flex items-center gap-1 mt-1">
-                                <div className="w-12 h-1 bg-muted rounded-full overflow-hidden">
-                                  <div className="h-full bg-primary rounded-full" style={{ width: `${sc.relationship_score}%` }} />
-                                </div>
-                                <span className="text-[9px] text-muted-foreground">{Math.round(sc.relationship_score)}</span>
+                        <div
+                          key={p.id}
+                          onClick={() => goToPatient(p.patient_id)}
+                          className="p-2 rounded-lg bg-background/80 hover:bg-background transition-colors cursor-pointer"
+                        >
+                          <p className="text-xs font-medium truncate">{p.name}</p>
+                          {sc && (
+                            <div className="flex items-center gap-1 mt-1">
+                              <div className="w-12 h-1 bg-muted rounded-full overflow-hidden">
+                                <div className="h-full bg-primary rounded-full" style={{ width: `${sc.relationship_score ?? 0}%` }} />
                               </div>
-                            )}
-                          </div>
-                        </Link>
+                              <span className="text-[9px] text-muted-foreground">{Math.round(sc.relationship_score ?? 0)}</span>
+                            </div>
+                          )}
+                        </div>
                       );
                     })}
                     {(pipelineData[stage.key]?.length || 0) > 5 && (
@@ -220,19 +277,30 @@ export default function ClinicalCRM() {
                     <p className="text-sm text-muted-foreground">Nenhum paciente nesta lista</p>
                   ) : (
                     <div className="space-y-2">
-                      {section.list.slice(0, 5).map((p: any) => (
-                        <div key={p.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
+                      {section.list.slice(0, 10).map((p) => (
+                        <div
+                          key={p.id}
+                          onClick={() => goToPatient(p.patient_id)}
+                          className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 cursor-pointer transition-colors"
+                        >
                           <div>
                             <p className="text-sm font-medium">{p.name}</p>
-                            <p className="text-xs text-muted-foreground">{p.email}</p>
+                            {p.phone && <p className="text-xs text-muted-foreground">{p.phone}</p>}
                           </div>
                           <div className="flex gap-2">
-                            <Button size="sm" variant="outline" onClick={() => setNoteDialog({ patientId: p.id, name: p.name })}>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setNoteDialog({ patientId: p.patient_id, name: p.name });
+                              }}
+                            >
                               <MessageSquare className="w-3 h-3" />
                             </Button>
-                            <Link to={`/patients/${p.id}`}>
-                              <Button size="sm" variant="ghost"><ChevronRight className="w-4 h-4" /></Button>
-                            </Link>
+                            <Button size="sm" variant="ghost">
+                              <ChevronRight className="w-4 h-4" />
+                            </Button>
                           </div>
                         </div>
                       ))}
