@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
   Sparkles, Instagram, Copy, Download, RefreshCw, Eye,
-  Wand2, CheckCircle, Clock, FileText,
+  Wand2, CheckCircle, Clock, FileText, ArrowLeft,
 } from "lucide-react";
 import { MagicSlideButton } from "@/components/common/MagicSlideGenerator";
 import {
