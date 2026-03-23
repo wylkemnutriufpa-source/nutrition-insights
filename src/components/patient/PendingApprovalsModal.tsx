@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
+import { rejectMealPlan } from "@/lib/serverTransitions";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -286,11 +287,8 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
       .eq("id", selectedPipeline.id);
 
     // Archive the generated plan instead of deleting (protect approved plans)
-    if (selectedPipeline.generated_plan_id) {
-      await supabase.from("meal_plans")
-        .update({ plan_status: "rejected", is_active: false } as any)
-        .eq("id", selectedPipeline.generated_plan_id)
-        .in("plan_status", ["draft", "draft_auto_generated", "under_professional_review"]);
+    if (selectedPipeline.generated_plan_id && user) {
+      await rejectMealPlan(selectedPipeline.generated_plan_id, user.id, rejectReason);
     }
 
     await supabase.from("notifications").insert({

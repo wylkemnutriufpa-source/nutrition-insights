@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
+import { approveAndPublishPlan, rejectMealPlan } from "@/lib/serverTransitions";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -178,30 +179,28 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
       } as any)
       .eq("id", pipeline.id);
 
-      // First approve, then publish (respects trigger validation)
-      if (pipeline.generated_plan_id) {
-        const startDate = new Date();
-        const endDate = new Date();
-        endDate.setDate(endDate.getDate() + 30);
+      // Use server-authoritative RPC to approve + publish atomically
+      if (planId) {
+        const result = await approveAndPublishPlan(planId, user.id);
+        if (!result.success) {
+          toast.error("Erro ao aprovar plano: " + (result.error || ""));
+          setProcessing(false);
+          return;
+        }
 
-        // Step 1: Move to approved
+      // Schedule criteria if enabled
+      if (useScheduling) {
+        const activateDate = new Date();
+        activateDate.setDate(activateDate.getDate() + (criteria.checklist_days || 14));
         await supabase
-          .from("meal_plans")
-          .update({
-            plan_status: "approved",
-          } as any)
-          .eq("id", pipeline.generated_plan_id);
-
-        // Step 2: Move to published_to_patient
-        await supabase
-          .from("meal_plans")
-          .update({
-            is_active: true,
-            plan_status: "published_to_patient",
-            start_date: startDate.toISOString().split("T")[0],
-            end_date: endDate.toISOString().split("T")[0],
-          } as any)
-          .eq("id", pipeline.generated_plan_id);
+          .from("plan_schedules" as any)
+          .insert({
+            meal_plan_id: planId,
+            activate_at: activateDate.toISOString().split("T")[0],
+            criteria: criteria,
+            status: "scheduled",
+          } as any);
+      }
 
       // Schedule criteria if enabled
       if (useScheduling) {
@@ -233,9 +232,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
         .filter((p: any) => p.mealPlanId !== planId)
         .map((p: any) => p.mealPlanId);
       for (const otherId of otherPlanIds) {
-        await supabase.from("meal_plans")
-          .update({ plan_status: "rejected", is_active: false } as any)
-          .eq("id", otherId);
+        await rejectMealPlan(otherId, user.id, "Opção não selecionada");
       }
     }
 
@@ -261,12 +258,9 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
       } as any)
       .eq("id", pipeline.id);
 
-    // Archive the generated plan instead of deleting (protect approved plans)
+    // Archive the generated plan via server-authoritative RPC
     if (pipeline.generated_plan_id) {
-      await supabase.from("meal_plans")
-        .update({ plan_status: "rejected", is_active: false } as any)
-        .eq("id", pipeline.generated_plan_id)
-        .in("plan_status", ["draft", "draft_auto_generated", "under_professional_review"]);
+      await rejectMealPlan(pipeline.generated_plan_id, user.id, rejectReason);
     }
 
     // Notify patient

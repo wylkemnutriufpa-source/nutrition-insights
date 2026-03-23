@@ -13044,6 +13044,15 @@ export type Database = {
         }
         Returns: string
       }
+      approve_and_publish_plan: {
+        Args: {
+          _duration_days?: number
+          _nutritionist_id: string
+          _plan_id: string
+          _start_date?: string
+        }
+        Returns: Json
+      }
       archive_orphan_onboarding_pipelines: { Args: never; Returns: Json }
       auto_activate_onboarding_for_paid_patients: { Args: never; Returns: Json }
       award_points:
@@ -13096,6 +13105,10 @@ export type Database = {
           _role?: string
         }
         Returns: string
+      }
+      deactivate_meal_plan: {
+        Args: { _nutritionist_id: string; _plan_id: string }
+        Returns: Json
       }
       end_patient_project: {
         Args: { _patient_id: string; _program_id: string; _reason?: string }
@@ -13303,6 +13316,10 @@ export type Database = {
       refresh_ranking_snapshots: {
         Args: { _period_type?: string }
         Returns: undefined
+      }
+      reject_meal_plan: {
+        Args: { _nutritionist_id: string; _plan_id: string; _reason?: string }
+        Returns: Json
       }
       release_patient_onboarding: {
         Args: {

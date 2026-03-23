@@ -55,12 +55,34 @@ Deno.serve(async (req) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, serviceKey);
 
+  // Helper: log to pipeline_execution_logs
+  async function logExecStart(name: string, meta: Record<string, unknown> = {}) {
+    const { data } = await supabase.rpc("log_pipeline_execution", {
+      _pipeline_name: name,
+      _status: "started",
+      _metadata: meta,
+    });
+    return data as string | null;
+  }
+  async function logExecFinish(execId: string, status: string, processed: number, errs: number, details: Record<string, unknown> | null) {
+    await supabase.rpc("finalize_pipeline_execution", {
+      _id: execId,
+      _status: status,
+      _patients_processed: processed,
+      _errors_count: errs,
+      _error_details: details,
+    });
+  }
+
   try {
     const body = await req.json().catch(() => ({}));
     const runType = body.run_type || "daily";
     const triggeredBy = body.triggered_by || "scheduled";
     const includeWeekly = body.include_weekly || false;
     const dryRun = body.dry_run || false;
+
+    // Log to pipeline_execution_logs
+    const execLogId = await logExecStart("clinical-pipeline-orchestrator", { run_type: runType, triggered_by: triggeredBy, include_weekly: includeWeekly, dry_run: dryRun });
 
     // Prevent concurrent runs
     const { data: activeRuns } = await supabase
@@ -254,6 +276,11 @@ Deno.serve(async (req) => {
       try { await supabase.rpc("refresh_ranking_cache" as any); } catch (_) {}
     }
 
+    // Finalize pipeline_execution_logs
+    if (execLogId) {
+      await logExecFinish(execLogId, finalStatus, totalPatientsProcessed, stepsFailed.length, stepsFailed.length > 0 ? { failed_steps: stepsFailed } : null);
+    }
+
     return new Response(
       JSON.stringify({
         run_id: runId,
@@ -267,6 +294,10 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err: any) {
+    // Log failure to pipeline_execution_logs
+    if (typeof execLogId !== "undefined" && execLogId) {
+      await logExecFinish(execLogId, "failed", 0, 1, { error: err.message });
+    }
     return new Response(
       JSON.stringify({ error: err.message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

@@ -8,7 +8,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import { supabase } from "@/integrations/supabase/client";
-import { publishMealPlan } from "@/lib/serverTransitions";
+import { publishMealPlan, resolvePlanState } from "@/lib/serverTransitions";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { WeeklyGrid } from "@/components/meal-editor-v2/WeeklyGrid";
@@ -102,8 +102,9 @@ export default function MealPlanEditorV2() {
   const plan = store.plan;
   if (!plan) return null;
 
-  const isPublished = plan.plan_status === "published_to_patient";
-  const isApproved = plan.plan_status === "approved";
+  const planState = resolvePlanState(plan);
+  const isPublished = planState.isEffective;
+  const isApproved = planState.isApproved;
 
   const handleSave = async () => {
     setSaving(true);
