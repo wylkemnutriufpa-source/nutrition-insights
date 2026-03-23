@@ -108,6 +108,17 @@ Deno.serve(async (req) => {
   const supabase = createClient(supabaseUrl, serviceKey);
 
   try {
+    // Log to pipeline_execution_logs
+    let execLogId: string | null = null;
+    try {
+      const { data } = await supabase.rpc("log_pipeline_execution", {
+        _pipeline_name: "evaluate-clinical-milestones",
+        _status: "started",
+        _metadata: {},
+      });
+      execLogId = data as string | null;
+    } catch (_) {}
+
     const now = new Date();
 
     // 1. Find all pending milestones that are due
