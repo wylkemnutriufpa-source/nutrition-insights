@@ -11,7 +11,7 @@ import SafePage from "@/components/common/SafePage";
 import { CelebrationProvider } from "@/components/common/SuccessCelebration";
 import PageLoader from "@/components/common/PageLoader";
 import { BrainLoaderScreen } from "@/components/common/BrainLoader";
-import AppBootExperience from "@/components/common/AppBootExperience";
+import { NeuroEntryExperience } from "@/components/system-entry";
 import { CommandPaletteProvider } from "@/components/common/CommandPalette";
 import { readActiveEditorRoute } from "@/lib/mealPlanEditorStore";
 import { installGlobalErrorHandlers } from "@/lib/monitoring";
