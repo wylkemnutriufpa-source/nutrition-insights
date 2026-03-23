@@ -17,6 +17,7 @@ import { readActiveEditorRoute } from "@/lib/mealPlanEditorStore";
 import { installGlobalErrorHandlers } from "@/lib/monitoring";
 import { initFeatureFlags } from "@/lib/featureFlags";
 import { useConsentGuard } from "@/hooks/useConsentGuard";
+import { usePaymentGuard } from "@/hooks/usePaymentGuard";
 
 // ── Eager-loaded (critical path) ────────────────────────────
 import GatewayPage from "./pages/GatewayPage";
@@ -157,6 +158,7 @@ const ClinicalBrain = lazy(() => import("./pages/ClinicalBrain"));
 const SystemDiagnostics = lazy(() => import("./pages/SystemDiagnostics"));
 const ClinicalControlTower = lazy(() => import("./pages/ClinicalControlTower"));
 const ConsentRequired = lazy(() => import("./pages/ConsentRequired"));
+const PaymentRequired = lazy(() => import("./pages/PaymentRequired"));
 const SystemHealthLive = lazy(() => import("./pages/SystemHealthLive"));
 const PatientOverview = lazy(() => import("./pages/PatientOverview"));
 
@@ -219,8 +221,10 @@ function PatientRoute({ children }: { children: React.ReactNode }) {
 function ConsentGuardedPatientRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isPatient } = useAuth();
   const { hasConsent, loading: consentLoading } = useConsentGuard();
-  if (loading || consentLoading) return <PageLoader />;
+  const { hasPaid, loading: paymentLoading } = usePaymentGuard();
+  if (loading || consentLoading || paymentLoading) return <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
+  if (isPatient && !hasPaid) return <Navigate to="/payment-required" replace />;
   if (isPatient && !hasConsent) return <Navigate to="/consent-required" replace />;
   return <>{children}</>;
 }
@@ -403,6 +407,7 @@ const App = () => (
 
               {/* Consent required page */}
               <Route path="/consent-required" element={<PatientRoute><LP section="Consentimento"><ConsentRequired /></LP></PatientRoute>} />
+              <Route path="/payment-required" element={<PatientRoute><LP section="Pagamento"><PaymentRequired /></LP></PatientRoute>} />
 
               {/* Patient portal — consent guarded */}
               <Route path="/client/dashboard" element={<ConsentGuardedPatientRoute><LP section="Dashboard"><ClientDashboard /></LP></ConsentGuardedPatientRoute>} />
