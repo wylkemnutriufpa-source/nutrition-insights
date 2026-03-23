@@ -3505,6 +3505,39 @@ export type Database = {
           },
         ]
       }
+      lifecycle_repair_logs: {
+        Row: {
+          entity_id: string
+          entity_table: string
+          id: string
+          new_state: Json
+          previous_state: Json
+          repair_reason: string | null
+          repair_type: string
+          repaired_at: string
+        }
+        Insert: {
+          entity_id: string
+          entity_table: string
+          id?: string
+          new_state?: Json
+          previous_state?: Json
+          repair_reason?: string | null
+          repair_type: string
+          repaired_at?: string
+        }
+        Update: {
+          entity_id?: string
+          entity_table?: string
+          id?: string
+          new_state?: Json
+          previous_state?: Json
+          repair_reason?: string | null
+          repair_type?: string
+          repaired_at?: string
+        }
+        Relationships: []
+      }
       meal_feedback: {
         Row: {
           comment: string | null
