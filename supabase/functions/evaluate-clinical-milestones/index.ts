@@ -352,11 +352,38 @@ Deno.serve(async (req) => {
 
     console.log("Milestone evaluation complete:", JSON.stringify(summary));
 
+    // Finalize pipeline log
+    if (execLogId) {
+      try {
+        await supabase.rpc("finalize_pipeline_execution", {
+          _id: execLogId,
+          _status: "completed",
+          _patients_processed: patientIds.length,
+          _errors_count: 0,
+          _error_details: null,
+        });
+      } catch (_) {}
+    }
+
     return new Response(JSON.stringify(summary), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: any) {
     console.error("Milestone evaluation error:", error);
+
+    // Log failure
+    if (typeof execLogId !== "undefined" && execLogId) {
+      try {
+        await supabase.rpc("finalize_pipeline_execution", {
+          _id: execLogId,
+          _status: "failed",
+          _patients_processed: 0,
+          _errors_count: 1,
+          _error_details: { error: error.message },
+        });
+      } catch (_) {}
+    }
+
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

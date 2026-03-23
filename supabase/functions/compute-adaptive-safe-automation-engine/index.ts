@@ -414,6 +414,19 @@ Deno.serve(async (req) => {
         .eq("id", r.id);
     }
 
+    // Finalize pipeline log
+    if (execLogId) {
+      try {
+        await sb.rpc("finalize_pipeline_execution", {
+          _id: execLogId,
+          _status: "completed",
+          _patients_processed: latestByPatient.size,
+          _errors_count: 0,
+          _error_details: null,
+        });
+      } catch (_) {}
+    }
+
     return new Response(
       JSON.stringify({
         engine_version: ENGINE_VERSION,
@@ -430,6 +443,21 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err: any) {
+    // Log failure
+    if (typeof execLogId !== "undefined" && execLogId) {
+      try {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const sb2 = createClient(supabaseUrl, serviceKey);
+        await sb2.rpc("finalize_pipeline_execution", {
+          _id: execLogId,
+          _status: "failed",
+          _patients_processed: 0,
+          _errors_count: 1,
+          _error_details: { error: err.message },
+        });
+      } catch (_) {}
+    }
     return new Response(
       JSON.stringify({ error: err.message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
