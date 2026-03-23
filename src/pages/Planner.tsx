@@ -557,10 +557,10 @@ export default function Planner() {
             {isProfessional && patients.length > 0 && (
               <div>
                 <Label>Paciente (opcional)</Label>
-                <Select value={form.patient_id} onValueChange={(v) => setForm({ ...form, patient_id: v })}>
+                <Select value={form.patient_id || "none"} onValueChange={(v) => setForm({ ...form, patient_id: v === "none" ? "" : v })}>
                   <SelectTrigger><SelectValue placeholder="Selecione um paciente..." /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhum (pessoal)</SelectItem>
+                    <SelectItem value="none">Nenhum (pessoal)</SelectItem>
                     {patients.map((p) => (
                       <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                     ))}

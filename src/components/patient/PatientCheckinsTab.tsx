@@ -361,12 +361,12 @@ export default function PatientCheckinsTab({ patientId }: PatientCheckinsTabProp
                             <Label className="flex items-center gap-2">
                               <Zap className="w-4 h-4 text-primary" /> Ativar Protocolo
                             </Label>
-                            <Select value={selectedProtocol} onValueChange={setSelectedProtocol}>
+                            <Select value={selectedProtocol || "none"} onValueChange={(v) => setSelectedProtocol(v === "none" ? "" : v)}>
                               <SelectTrigger className="mt-1">
                                 <SelectValue placeholder="Nenhum" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="">Nenhum</SelectItem>
+                                <SelectItem value="none">Nenhum</SelectItem>
                                 {protocols.map((p) => (
                                   <SelectItem key={p.id} value={p.id}>
                                     {p.title}

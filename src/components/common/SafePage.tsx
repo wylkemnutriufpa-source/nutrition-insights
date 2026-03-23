@@ -61,7 +61,7 @@ function PageErrorRecovery({ error, pageName, onRetry }: RecoveryProps) {
         </Button>
         <Button
           variant="ghost"
-          onClick={() => window.location.assign("/dashboard")}
+          onClick={() => window.location.assign("/")}
           className="gap-2"
         >
           <Home className="h-4 w-4" />
