@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { FlaskRound, Play, Pause, CheckCircle, AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { FlaskRound, Play, Pause, CheckCircle, AlertTriangle, TrendingUp, TrendingDown, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 const statusLabels: Record<string, string> = {
