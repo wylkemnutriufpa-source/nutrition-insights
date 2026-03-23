@@ -234,7 +234,7 @@ export default function SystemDiagnostics() {
     // Verify profile exists
     const { data: profile, error: profileErr } = await supabase
       .from("profiles")
-      .select("user_id, full_name, role")
+      .select("user_id, full_name")
       .eq("user_id", session.session.user.id)
       .maybeSingle();
 
@@ -243,7 +243,7 @@ export default function SystemDiagnostics() {
       addLog("error", "Auth", `Profile not found for current user: ${profileErr?.message || "no row"}`);
     } else {
       ok++;
-      addLog("ok", "Auth", `Profile verified: ${profile.full_name} (${profile.role})`);
+      addLog("ok", "Auth", `Profile verified: ${profile.full_name}`);
     }
 
     return { ok, warn, crit };
