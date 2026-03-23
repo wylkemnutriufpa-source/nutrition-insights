@@ -16,6 +16,7 @@ import { CommandPaletteProvider } from "@/components/common/CommandPalette";
 import { readActiveEditorRoute } from "@/lib/mealPlanEditorStore";
 import { installGlobalErrorHandlers } from "@/lib/monitoring";
 import { initFeatureFlags } from "@/lib/featureFlags";
+import { useConsentGuard } from "@/hooks/useConsentGuard";
 
 // ── Eager-loaded (critical path) ────────────────────────────
 import GatewayPage from "./pages/GatewayPage";
@@ -155,6 +156,8 @@ const ClinicalCRM = lazy(() => import("./pages/ClinicalCRM"));
 const ClinicalBrain = lazy(() => import("./pages/ClinicalBrain"));
 const SystemDiagnostics = lazy(() => import("./pages/SystemDiagnostics"));
 const ClinicalControlTower = lazy(() => import("./pages/ClinicalControlTower"));
+const ConsentRequired = lazy(() => import("./pages/ConsentRequired"));
+const SystemHealthLive = lazy(() => import("./pages/SystemHealthLive"));
 
 // Install global error handlers once at module load
 installGlobalErrorHandlers();
@@ -209,6 +212,16 @@ function PatientRoute({ children }: { children: React.ReactNode }) {
   if (loading) return user ? <>{children}</> : <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
   if (!isPatient) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
+function ConsentGuardedPatientRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading, isPatient } = useAuth();
+  const { hasConsent, loading: consentLoading } = useConsentGuard();
+  if (loading || consentLoading) return user ? <>{children}</> : <PageLoader />;
+  if (!user) return <Navigate to="/auth" replace />;
+  if (!isPatient) return <Navigate to="/" replace />;
+  if (!hasConsent) return <Navigate to="/consent-required" replace />;
   return <>{children}</>;
 }
 
@@ -388,34 +401,37 @@ const App = () => (
               <Route path="/personal/workouts/new" element={<PersonalRoute><LP section="Treinos"><PersonalWorkouts /></LP></PersonalRoute>} />
               <Route path="/fitness-anamnesis" element={<ProtectedRoute><LP section="Anamnese Fitness"><FitnessAnamnesis /></LP></ProtectedRoute>} />
 
-              {/* Patient portal */}
-              <Route path="/client/dashboard" element={<PatientRoute><LP section="Dashboard"><ClientDashboard /></LP></PatientRoute>} />
-              <Route path="/my-workouts" element={<ProtectedRoute><LP section="Treinos"><PatientWorkouts /></LP></ProtectedRoute>} />
+              {/* Consent required page */}
+              <Route path="/consent-required" element={<PatientRoute><LP section="Consentimento"><ConsentRequired /></LP></PatientRoute>} />
 
-              {/* Patient-only routes */}
-              <Route path="/meals" element={<ProtectedRoute><LP section="Refeições"><Meals /></LP></ProtectedRoute>} />
-              <Route path="/achievements" element={<ProtectedRoute><LP section="Conquistas"><Achievements /></LP></ProtectedRoute>} />
-              <Route path="/challenges" element={<ProtectedRoute><LP section="Desafios"><Challenges /></LP></ProtectedRoute>} />
-              <Route path="/checklist" element={<ProtectedRoute><LP section="Checklist"><Checklist /></LP></ProtectedRoute>} />
-              <Route path="/anamnesis" element={<ProtectedRoute><LP section="Anamnese"><Anamnesis /></LP></ProtectedRoute>} />
-              <Route path="/onboarding" element={<ProtectedRoute><LP section="Onboarding"><OnboardingPipeline /></LP></ProtectedRoute>} />
-              <Route path="/onboarding-pipeline" element={<ProtectedRoute><LP section="Onboarding"><OnboardingPipeline /></LP></ProtectedRoute>} />
-              <Route path="/analyze" element={<ProtectedRoute><LP section="Análise"><AnalyzeMeal /></LP></ProtectedRoute>} />
-              <Route path="/shopping-list" element={<ProtectedRoute><LP section="Compras"><ShoppingList /></LP></ProtectedRoute>} />
-              <Route path="/my-diet" element={<ProtectedRoute><LP section="Dieta"><PatientMealPlan /></LP></ProtectedRoute>} />
-              <Route path="/journey" element={<ProtectedRoute><LP section="Jornada"><Journey /></LP></ProtectedRoute>} />
-              <Route path="/library" element={<ProtectedRoute><LP section="Biblioteca"><Library /></LP></ProtectedRoute>} />
-              <Route path="/weight-calculator" element={<ProtectedRoute><LP section="Calculadora"><WeightCalculator /></LP></ProtectedRoute>} />
-              <Route path="/water-calculator" element={<ProtectedRoute><LP section="Calculadora"><WaterCalculator /></LP></ProtectedRoute>} />
-              <Route path="/health-quiz" element={<ProtectedRoute><LP section="Quiz"><HealthCheckQuiz /></LP></ProtectedRoute>} />
-              <Route path="/checkin" element={<ProtectedRoute><LP section="Check-in"><Checkin /></LP></ProtectedRoute>} />
+              {/* Patient portal — consent guarded */}
+              <Route path="/client/dashboard" element={<ConsentGuardedPatientRoute><LP section="Dashboard"><ClientDashboard /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/my-workouts" element={<ConsentGuardedPatientRoute><LP section="Treinos"><PatientWorkouts /></LP></ConsentGuardedPatientRoute>} />
+
+              {/* Patient-only routes — consent guarded */}
+              <Route path="/meals" element={<ConsentGuardedPatientRoute><LP section="Refeições"><Meals /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/achievements" element={<ConsentGuardedPatientRoute><LP section="Conquistas"><Achievements /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/challenges" element={<ConsentGuardedPatientRoute><LP section="Desafios"><Challenges /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/checklist" element={<ConsentGuardedPatientRoute><LP section="Checklist"><Checklist /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/anamnesis" element={<ConsentGuardedPatientRoute><LP section="Anamnese"><Anamnesis /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/onboarding" element={<ConsentGuardedPatientRoute><LP section="Onboarding"><OnboardingPipeline /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/onboarding-pipeline" element={<ConsentGuardedPatientRoute><LP section="Onboarding"><OnboardingPipeline /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/analyze" element={<ConsentGuardedPatientRoute><LP section="Análise"><AnalyzeMeal /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/shopping-list" element={<ConsentGuardedPatientRoute><LP section="Compras"><ShoppingList /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/my-diet" element={<ConsentGuardedPatientRoute><LP section="Dieta"><PatientMealPlan /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/journey" element={<ConsentGuardedPatientRoute><LP section="Jornada"><Journey /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/library" element={<ConsentGuardedPatientRoute><LP section="Biblioteca"><Library /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/weight-calculator" element={<ConsentGuardedPatientRoute><LP section="Calculadora"><WeightCalculator /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/water-calculator" element={<ConsentGuardedPatientRoute><LP section="Calculadora"><WaterCalculator /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/health-quiz" element={<ConsentGuardedPatientRoute><LP section="Quiz"><HealthCheckQuiz /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/checkin" element={<ConsentGuardedPatientRoute><LP section="Check-in"><Checkin /></LP></ConsentGuardedPatientRoute>} />
               <Route path="/user-guide" element={<ProtectedRoute><LP section="Guia"><UserGuide /></LP></ProtectedRoute>} />
               <Route path="/curiosidades" element={<ProtectedRoute><LP section="Curiosidades"><Curiosidades /></LP></ProtectedRoute>} />
               <Route path="/apresentacao" element={<ProtectedRoute><LP section="Apresentação"><SystemPresentation /></LP></ProtectedRoute>} />
               <Route path="/onboarding-profissional" element={<ProtectedRoute><LP section="Onboarding"><OnboardingProfissional /></LP></ProtectedRoute>} />
               <Route path="/onboarding-paciente" element={<ProtectedRoute><LP section="Onboarding Paciente"><OnboardingPaciente /></LP></ProtectedRoute>} />
-              <Route path="/my-story" element={<ProtectedRoute><LP section="Minha História"><MagicJourneyStory /></LP></ProtectedRoute>} />
-              <Route path="/body-projection" element={<ProtectedRoute><LP section="Projeção Corporal"><BodyProjectionExperience /></LP></ProtectedRoute>} />
+              <Route path="/my-story" element={<ConsentGuardedPatientRoute><LP section="Minha História"><MagicJourneyStory /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/body-projection" element={<ConsentGuardedPatientRoute><LP section="Projeção Corporal"><BodyProjectionExperience /></LP></ConsentGuardedPatientRoute>} />
 
               {/* Admin routes */}
               <Route path="/admin" element={<AdminRoute><LP section="Admin"><AdminDashboard /></LP></AdminRoute>} />
@@ -446,6 +462,7 @@ const App = () => (
               <Route path="/admin/mission-control" element={<AdminRoute><LP section="Mission Control"><MissionControl /></LP></AdminRoute>} />
               <Route path="/admin/campaigns" element={<AdminRoute><LP section="Campanhas"><CampaignCenter /></LP></AdminRoute>} />
               <Route path="/system-diagnostics" element={<AdminRoute><LP section="System Diagnostics"><SystemDiagnostics /></LP></AdminRoute>} />
+              <Route path="/system-health-live" element={<AdminRoute><LP section="System Health"><SystemHealthLive /></LP></AdminRoute>} />
               <Route path="/professional/crm" element={<NutritionistRoute><LP section="CRM"><ClinicalCRM /></LP></NutritionistRoute>} />
               <Route path="/clinical-brain" element={<NutritionistRoute><LP section="Clinical Brain"><ClinicalBrain /></LP></NutritionistRoute>} />
 

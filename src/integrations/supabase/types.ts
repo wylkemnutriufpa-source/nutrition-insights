@@ -1666,6 +1666,39 @@ export type Database = {
         }
         Relationships: []
       }
+      clinical_consents: {
+        Row: {
+          accepted_at: string
+          accepted_terms_version: string
+          created_at: string
+          device_info: string | null
+          id: string
+          ip_address: string | null
+          patient_id: string
+          revoked_at: string | null
+        }
+        Insert: {
+          accepted_at?: string
+          accepted_terms_version?: string
+          created_at?: string
+          device_info?: string | null
+          id?: string
+          ip_address?: string | null
+          patient_id: string
+          revoked_at?: string | null
+        }
+        Update: {
+          accepted_at?: string
+          accepted_terms_version?: string
+          created_at?: string
+          device_info?: string | null
+          id?: string
+          ip_address?: string | null
+          patient_id?: string
+          revoked_at?: string | null
+        }
+        Relationships: []
+      }
       clinical_daily_snapshots: {
         Row: {
           active_alerts_count: number | null
