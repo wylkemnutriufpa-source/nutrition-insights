@@ -11481,6 +11481,47 @@ export type Database = {
           },
         ]
       }
+      system_diagnostic_entries: {
+        Row: {
+          context_json: Json | null
+          detail: string | null
+          detected_at: string
+          id: string
+          message: string
+          module: string
+          run_id: string | null
+          severity: string
+        }
+        Insert: {
+          context_json?: Json | null
+          detail?: string | null
+          detected_at?: string
+          id?: string
+          message: string
+          module: string
+          run_id?: string | null
+          severity?: string
+        }
+        Update: {
+          context_json?: Json | null
+          detail?: string | null
+          detected_at?: string
+          id?: string
+          message?: string
+          module?: string
+          run_id?: string | null
+          severity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_diagnostic_entries_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "system_diagnostic_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_diagnostic_logs: {
         Row: {
           created_at: string
