@@ -366,7 +366,7 @@ export default function PatientCheckinsTab({ patientId }: PatientCheckinsTabProp
                                 <SelectValue placeholder="Nenhum" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="">Nenhum</SelectItem>
+                                <SelectItem value="none">Nenhum</SelectItem>
                                 {protocols.map((p) => (
                                   <SelectItem key={p.id} value={p.id}>
                                     {p.title}
