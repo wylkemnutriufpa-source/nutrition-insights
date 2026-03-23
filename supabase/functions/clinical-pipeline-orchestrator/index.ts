@@ -93,6 +93,9 @@ Deno.serve(async (req) => {
       .gte("started_at", new Date(Date.now() - 3600000).toISOString());
 
     if (activeRuns && activeRuns.length > 0) {
+      if (execLogId) {
+        await logExecFinish(execLogId, "skipped", 0, 0, { reason: "concurrent_run", active_run_id: activeRuns[0].id });
+      }
       return new Response(
         JSON.stringify({ error: "Pipeline already running", active_run_id: activeRuns[0].id }),
         { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
