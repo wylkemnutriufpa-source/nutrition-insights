@@ -92,6 +92,6 @@ export function usePaymentGuard(): PaymentGuardState {
   return {
     hasPaid: data?.paid ?? false,
     loading: isLoading,
-    reason: data?.reason ?? null,
+    reason: (data?.reason as PaymentGuardState["reason"]) ?? null,
   };
 }
