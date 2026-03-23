@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -57,23 +57,24 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
     if (open && user) fetchPending();
   }, [open, user]);
 
-  // Realtime for new pending approvals
+  // Realtime — only refetch when modal is actually open to prevent background noise
   useEffect(() => {
-    if (!user) return;
+    if (!user || !open) return;
     const ch = supabase
-      .channel("pending-approvals-global")
+      .channel("pending-approvals-modal")
       .on("postgres_changes", {
         event: "UPDATE",
         schema: "public",
         table: "onboarding_pipelines",
+        filter: `nutritionist_id=eq.${user.id}`,
       }, (payload: any) => {
-        if (payload.new?.status === "pending_approval" && payload.new?.nutritionist_id === user.id) {
+        if (payload.new?.status === "pending_approval") {
           fetchPending();
         }
       })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [user]);
+  }, [user, open]);
 
   async function fetchPending() {
     if (!user) return;
@@ -111,22 +112,17 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
     const activeLinkMap = new Map((activeLinks || []).map((l: any) => [l.patient_id, l]));
 
     // BUSINESS RULE: Only show pipelines where patient has an active link
-    // AND onboarding_status indicates valid commercial activation
-    const validOnboardingStatuses = [
-      "onboarding_active",
-      "onboarding_completed", 
-      "awaiting_onboarding_release",
-    ];
-
+    // with a valid commercial journey status (not legacy/orphan)
     const eligibleItems = items.filter((pipeline: any) => {
       const link = activeLinkMap.get(pipeline.patient_id);
       if (!link) return false; // No active link = legacy/orphan
 
-      // If link has onboarding_status, enforce it
-      if (link.onboarding_status) {
-        return validOnboardingStatuses.includes(link.onboarding_status);
+      // Reject legacy statuses that indicate pre-commercial patients
+      const legacyStatuses = ["lead_created", "awaiting_payment"];
+      if (link.onboarding_status && legacyStatuses.includes(link.onboarding_status)) {
+        return false;
       }
-      // If no onboarding_status field, allow (backwards compat for existing active patients)
+
       return true;
     });
 
@@ -573,11 +569,11 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
 export function usePendingApprovals() {
   const { user } = useAuth();
   const [count, setCount] = useState(0);
+  const checkedRef = useRef(false);
 
   useEffect(() => {
     if (!user) return;
     const check = async () => {
-      // Get pipeline IDs
       const { data: pipelines } = await supabase
         .from("onboarding_pipelines" as any)
         .select("id, patient_id")
@@ -589,27 +585,50 @@ export function usePendingApprovals() {
         return;
       }
 
-      // Cross-check with active links only
       const patientIds = (pipelines as any[]).map((p: any) => p.patient_id);
       const { data: activeLinks } = await supabase
         .from("nutritionist_patients")
-        .select("patient_id")
+        .select("patient_id, onboarding_status")
         .eq("nutritionist_id", user.id)
         .in("patient_id", patientIds)
         .eq("status", "active");
 
-      const activeSet = new Set((activeLinks || []).map((l: any) => l.patient_id));
-      const eligible = (pipelines as any[]).filter((p: any) => activeSet.has(p.patient_id));
-      setCount(eligible.length);
+      // Same business rule: exclude legacy statuses
+      const legacyStatuses = ["lead_created", "awaiting_payment"];
+      const eligible = (activeLinks || []).filter((l: any) => {
+        if (l.onboarding_status && legacyStatuses.includes(l.onboarding_status)) return false;
+        return true;
+      });
+      const activeSet = new Set(eligible.map((l: any) => l.patient_id));
+      const validPipelines = (pipelines as any[]).filter((p: any) => activeSet.has(p.patient_id));
+      setCount(validPipelines.length);
     };
 
-    check();
+    // Only check once on mount, then on explicit realtime events
+    if (!checkedRef.current) {
+      check();
+      checkedRef.current = true;
+    }
 
+    // Realtime: only listen for relevant updates, throttle re-checks
+    let timeout: ReturnType<typeof setTimeout>;
     const ch = supabase
-      .channel("pending-count")
-      .on("postgres_changes", { event: "*", schema: "public", table: "onboarding_pipelines" }, () => check())
+      .channel("pending-count-v2")
+      .on("postgres_changes", {
+        event: "UPDATE",
+        schema: "public",
+        table: "onboarding_pipelines",
+        filter: `nutritionist_id=eq.${user.id}`,
+      }, () => {
+        // Debounce to avoid rapid-fire recalculations
+        clearTimeout(timeout);
+        timeout = setTimeout(check, 2000);
+      })
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => {
+      clearTimeout(timeout);
+      supabase.removeChannel(ch);
+    };
   }, [user]);
 
   return count;

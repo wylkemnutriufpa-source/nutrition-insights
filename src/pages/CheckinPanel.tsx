@@ -115,15 +115,19 @@ export default function CheckinPanel() {
     setReviewing(true);
 
     try {
-      const selectedProtocolRecord = protocols.find((protocol) => protocol.id === selectedProtocol) ?? null;
-      const validProtocolId = selectedProtocolRecord?.id ?? null;
+      // CRITICAL: Only use protocol ID if it exists in our loaded protocols list
+      // This prevents FK violations when protocol_activated_id references a deleted/invalid protocol
+      const validProtocol = selectedProtocol
+        ? protocols.find((p) => p.id === selectedProtocol) ?? null
+        : null;
 
+      // Build update — protocol_activated_id is either a valid UUID or explicitly null
       const updatePayload: Record<string, any> = {
         status: "reviewed",
         nutri_notes: notes || null,
         nutri_action: action || null,
         reviewed_at: new Date().toISOString(),
-        protocol_activated_id: validProtocolId,
+        protocol_activated_id: validProtocol?.id ?? null,
       };
 
       const { error } = await supabase
@@ -133,28 +137,26 @@ export default function CheckinPanel() {
 
       if (error) throw error;
 
-      // If protocol selected, activate it for the patient
-      if (validProtocolId) {
+      // If valid protocol selected, activate it for the patient
+      if (validProtocol) {
         const { error: protocolActivationError } = await supabase.from("patient_protocols").insert({
           patient_id: selectedCheckin.patient_id,
           nutritionist_id: user.id,
-          protocol_id: validProtocolId,
+          protocol_id: validProtocol.id,
           start_date: new Date().toISOString().split("T")[0],
           status: "active",
         });
 
         if (protocolActivationError) {
-          throw protocolActivationError;
+          console.warn("Protocol activation warning:", protocolActivationError.message);
+          // Don't throw — check-in review succeeded, protocol activation is secondary
+          toast.warning(`Check-in revisado, mas o protocolo não pôde ser ativado: ${protocolActivationError.message}`);
+        } else {
+          toast.success(`Protocolo "${validProtocol.title}" ativado!`);
         }
-
-        toast.success(`Protocolo "${selectedProtocolRecord?.title}" ativado!`);
-      } else if (selectedProtocol) {
-        toast.success("Check-in revisado sem ativar protocolo porque o protocolo selecionado não é mais válido.");
       }
 
-      if (!selectedProtocol || validProtocolId) {
-        toast.success("Check-in revisado!");
-      }
+      toast.success("Check-in revisado com sucesso!");
       setSelectedCheckin(null);
       setNotes("");
       setAction("");
