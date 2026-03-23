@@ -108,28 +108,46 @@ export default function CampaignCenter() {
 
   const saveCampaign = async (status: string) => {
     if (!user) return;
+    setLaunching(true);
     try {
-      await (supabase as any).from("campaigns").insert({
-        campaign_name: form.campaign_name,
-        campaign_type: form.campaign_type,
-        audience_type: form.audience_type,
-        title: form.title,
-        message_body: form.message_body,
-        call_to_action_label: form.call_to_action_label || null,
-        call_to_action_url: form.call_to_action_url || null,
-        delivery_channels_json: form.channels,
-        filters_json: filters,
-        scheduling_type: form.scheduling_type,
-        scheduled_at: form.scheduled_at || null,
-        status,
-        created_by: user.id,
-      });
-      toast.success(status === "running" ? "🚀 Campanha enviada!" : "💾 Campanha salva como rascunho");
+      const campaignId = preview?.campaignId;
+      if (status === "running" && campaignId) {
+        // Launch real campaign via edge function
+        const { data, error } = await supabase.functions.invoke("execute-campaign", {
+          body: { campaign_id: campaignId, mode: "execute" },
+        });
+        if (error) throw error;
+        toast.success(`🚀 Campanha enviada para ${data.delivered || 0} destinatários!`);
+      } else if (campaignId) {
+        // Already saved as draft during preview
+        toast.success("💾 Campanha salva como rascunho");
+      } else {
+        // No preview was done, save directly
+        await (supabase as any).from("campaigns").insert({
+          campaign_name: form.campaign_name,
+          campaign_type: form.campaign_type,
+          audience_type: form.audience_type,
+          title: form.title,
+          message_body: form.message_body,
+          call_to_action_label: form.call_to_action_label || null,
+          call_to_action_url: form.call_to_action_url || null,
+          delivery_channels_json: form.channels,
+          filters_json: filters,
+          scheduling_type: form.scheduling_type,
+          scheduled_at: form.scheduled_at || null,
+          status,
+          created_by: user.id,
+        });
+        toast.success(status === "running" ? "🚀 Campanha enviada!" : "💾 Rascunho salvo");
+      }
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
       setShowCreate(false);
       setStep(1);
-    } catch {
-      toast.error("Erro ao salvar campanha");
+      setPreview(null);
+    } catch (err: any) {
+      toast.error("Erro: " + (err.message || "Erro ao salvar campanha"));
+    } finally {
+      setLaunching(false);
     }
   };
 
