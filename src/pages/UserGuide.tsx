@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,14 +18,60 @@ const CATEGORY_META: Record<string, { gradient: string; emoji: string }> = {
   "Saúde & Ferramentas": { gradient: "from-info/20 to-info/5", emoji: "❤️" },
 };
 
+// Map feature keys to real routes
+const featureRouteMap: Record<string, string> = {
+  meal_logging: "/meals",
+  meal_plan_view: "/my-diet",
+  meal_adherence: "/my-diet",
+  shopping_list: "/shopping-list",
+  favorite_recipes: "/recipes",
+  ai_meal_analysis: "/analyze-meal",
+  ai_recipe_generator: "/recipes",
+  ai_body_analysis: "/body-analysis",
+  chat: "/chat",
+  ai_anamnesis_insights: "/anamnesis",
+  checklist: "/checklist",
+  achievements: "/achievements",
+  challenges: "/challenges",
+  ranking: "/ranking",
+  weekly_goals: "/weekly-goals",
+  journey: "/journey",
+  gamification_xp: "/achievements",
+  checkin: "/checkin",
+  feedback: "/feedbacks",
+  notifications: "/notifications",
+  planner: "/planner",
+  anamnesis: "/anamnesis",
+  physical_assessment_view: "/body-projection",
+  supplements_view: "/supplements",
+  health_quiz: "/health-quiz",
+  weight_calculator: "/weight-calculator",
+  water_calculator: "/water-calculator",
+  weekly_report: "/weekly-report",
+  onboarding_pipeline: "/onboarding",
+};
+
 export default function UserGuide() {
   const { exploredKeys, progress, level, exploredCount, totalFeatures, markExplored, loading } = useFeatureExplorer();
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const categories = getPatientFeaturesByCategory();
   const categoryNames = Object.keys(categories);
 
+  const handleExplore = async (key: string, label: string) => {
+    // Mark as explored
+    if (!exploredKeys.includes(key)) {
+      await markExplored(key);
+      toast.success(`🎉 "${label}" explorada!`, { duration: 2500 });
+    }
+    // Navigate to the feature's real route
+    const route = featureRouteMap[key];
+    if (route) {
+      navigate(route);
+    }
+  };
   const filteredCategories = Object.entries(categories)
     .filter(([cat]) => !activeCategory || cat === activeCategory)
     .map(([cat, features]) => ({
@@ -35,15 +82,6 @@ export default function UserGuide() {
       ),
     }))
     .filter(({ features }) => features.length > 0);
-
-  const handleExplore = async (key: string, label: string) => {
-    if (exploredKeys.includes(key)) {
-      toast.info(`Você já explorou "${label}" ✓`);
-      return;
-    }
-    await markExplored(key);
-    toast.success(`🎉 "${label}" explorada!`, { duration: 2500 });
-  };
 
   if (loading) {
     return (

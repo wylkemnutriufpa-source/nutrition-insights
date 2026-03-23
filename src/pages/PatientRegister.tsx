@@ -91,6 +91,7 @@ export default function PatientRegister() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (password.length < 6) {
       toast.error("A senha deve ter pelo menos 6 caracteres");
       return;

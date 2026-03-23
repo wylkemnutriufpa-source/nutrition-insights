@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Check, CheckCheck, Trash2, MessageSquare, Calendar, TrendingUp, AlertCircle, Info } from "lucide-react";
+import { Bell, Check, CheckCheck, Trash2, MessageSquare, Calendar, TrendingUp, AlertCircle, Info, ExternalLink, Users, ClipboardCheck, Target, Utensils, Compass } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 
 interface Notification {
   id: string;
@@ -17,6 +18,9 @@ interface Notification {
   type: string;
   is_read: boolean;
   action_url: string | null;
+  target_route: string | null;
+  entity_type: string | null;
+  entity_id: string | null;
   created_at: string;
 }
 
@@ -26,6 +30,13 @@ const typeIcons: Record<string, any> = {
   appointment: Calendar,
   progress: TrendingUp,
   alert: AlertCircle,
+  patient_registered: Users,
+  onboarding_released: ClipboardCheck,
+  plan_published: Utensils,
+  push: Bell,
+  clinical: AlertCircle,
+  challenge: Target,
+  guide: Compass,
 };
 
 const typeColors: Record<string, string> = {
@@ -34,11 +45,33 @@ const typeColors: Record<string, string> = {
   appointment: "text-amber-500",
   progress: "text-emerald-500",
   alert: "text-destructive",
+  patient_registered: "text-primary",
+  onboarding_released: "text-emerald-500",
+  plan_published: "text-accent",
+  push: "text-primary",
+  clinical: "text-destructive",
+  challenge: "text-amber-500",
+  guide: "text-blue-500",
+};
+
+// Fallback routes for notification types when no target_route is set
+const typeFallbackRoutes: Record<string, string> = {
+  appointment: "/appointments",
+  message: "/chat",
+  patient_registered: "/patients",
+  onboarding_released: "/anamnesis",
+  plan_published: "/my-diet",
+  challenge: "/challenges",
+  guide: "/user-guide",
+  clinical: "/clinical-brain",
+  progress: "/journey",
+  alert: "/notifications",
 };
 
 export default function Notifications() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<"all" | "unread">("all");
 
   const { data: notifications = [] } = useQuery<Notification[]>({
@@ -49,7 +82,7 @@ export default function Notifications() {
     queryFn: async () => {
       const { data } = await supabase
         .from("notifications")
-        .select("*")
+        .select("id, title, message, type, is_read, action_url, target_route, entity_type, entity_id, created_at")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
         .limit(100);
@@ -57,10 +90,22 @@ export default function Notifications() {
     },
   });
 
-  const markRead = useCallback(async (id: string) => {
-    await supabase.from("notifications").update({ is_read: true }).eq("id", id);
-    queryClient.invalidateQueries({ queryKey: ["notifications"] });
-  }, [queryClient]);
+  const handleNotificationClick = useCallback(async (n: Notification) => {
+    // Mark as read
+    if (!n.is_read) {
+      await supabase.from("notifications").update({ is_read: true }).eq("id", n.id);
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    }
+    // Navigate to deep link
+    const route = n.target_route || n.action_url || typeFallbackRoutes[n.type];
+    if (route) {
+      if (route.startsWith("/")) {
+        navigate(route);
+      } else {
+        window.open(route, "_blank");
+      }
+    }
+  }, [navigate, queryClient]);
 
   const markAllRead = useCallback(async () => {
     if (!user) return;
@@ -113,9 +158,13 @@ export default function Notifications() {
           <AnimatePresence>
             {filtered.map(n => {
               const Icon = typeIcons[n.type] || Info;
+              const hasRoute = !!(n.target_route || n.action_url || typeFallbackRoutes[n.type]);
               return (
                 <motion.div key={n.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
-                  <Card className={`glass border-border transition-colors ${!n.is_read ? "border-l-4 border-l-primary bg-primary/5" : ""}`}>
+                  <Card
+                    className={`glass border-border transition-colors ${!n.is_read ? "border-l-4 border-l-primary bg-primary/5" : ""} ${hasRoute ? "cursor-pointer hover:bg-muted/50" : ""}`}
+                    onClick={() => hasRoute && handleNotificationClick(n)}
+                  >
                     <CardContent className="py-3 px-4 flex items-start gap-3">
                       <div className={`mt-0.5 ${typeColors[n.type] || "text-muted-foreground"}`}>
                         <Icon className="w-5 h-5" />
@@ -123,13 +172,21 @@ export default function Notifications() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <h3 className={`text-sm font-medium truncate ${!n.is_read ? "" : "text-muted-foreground"}`}>{n.title}</h3>
+                          {hasRoute && <ExternalLink className="w-3 h-3 text-muted-foreground flex-shrink-0" />}
                           <span className="text-[10px] text-muted-foreground flex-shrink-0">{timeAgo(n.created_at)}</span>
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.message}</p>
+                        {n.entity_type && (
+                          <span className="text-[10px] text-muted-foreground/60 mt-0.5 block">{n.entity_type}</span>
+                        )}
                       </div>
-                      <div className="flex gap-1 flex-shrink-0">
+                      <div className="flex gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
                         {!n.is_read && (
-                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => markRead(n.id)}>
+                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => {
+                            supabase.from("notifications").update({ is_read: true }).eq("id", n.id).then(() => {
+                              queryClient.invalidateQueries({ queryKey: ["notifications"] });
+                            });
+                          }}>
                             <Check className="w-3.5 h-3.5" />
                           </Button>
                         )}
