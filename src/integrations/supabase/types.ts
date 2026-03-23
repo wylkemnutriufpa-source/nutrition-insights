@@ -13101,6 +13101,16 @@ export type Database = {
         Args: { _patient_id: string; _program_id: string; _reason?: string }
         Returns: Json
       }
+      finalize_pipeline_execution: {
+        Args: {
+          _error_details?: Json
+          _errors_count?: number
+          _id: string
+          _patients_processed?: number
+          _status: string
+        }
+        Returns: undefined
+      }
       find_existing_patient_emails: {
         Args: { _emails: string[]; _nutritionist_id: string }
         Returns: {
@@ -13207,6 +13217,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      log_pipeline_execution: {
+        Args: {
+          _error_details?: Json
+          _errors_count?: number
+          _metadata?: Json
+          _patients_processed?: number
+          _pipeline_name: string
+          _status?: string
+        }
+        Returns: string
+      }
       log_team_activity: {
         Args: {
           _action: string
@@ -13247,6 +13268,17 @@ export type Database = {
       mark_patient_contacted: {
         Args: { _contact_method?: string; _patient_id: string }
         Returns: Json
+      }
+      preview_orphan_onboarding_pipelines: {
+        Args: never
+        Returns: {
+          archival_reason: string
+          created_at: string
+          nutritionist_id: string
+          patient_id: string
+          pipeline_id: string
+          pipeline_status: string
+        }[]
       }
       promote_patient_to_professional: {
         Args: { _patient_email: string; _target_role?: string }
