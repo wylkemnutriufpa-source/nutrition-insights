@@ -158,6 +158,7 @@ const SystemDiagnostics = lazy(() => import("./pages/SystemDiagnostics"));
 const ClinicalControlTower = lazy(() => import("./pages/ClinicalControlTower"));
 const ConsentRequired = lazy(() => import("./pages/ConsentRequired"));
 const SystemHealthLive = lazy(() => import("./pages/SystemHealthLive"));
+const PatientOverview = lazy(() => import("./pages/PatientOverview"));
 
 // Install global error handlers once at module load
 installGlobalErrorHandlers();
@@ -406,6 +407,7 @@ const App = () => (
 
               {/* Patient portal — consent guarded */}
               <Route path="/client/dashboard" element={<ConsentGuardedPatientRoute><LP section="Dashboard"><ClientDashboard /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/patient-overview" element={<ConsentGuardedPatientRoute><LP section="Meu Painel"><PatientOverview /></LP></ConsentGuardedPatientRoute>} />
               <Route path="/my-workouts" element={<ConsentGuardedPatientRoute><LP section="Treinos"><PatientWorkouts /></LP></ConsentGuardedPatientRoute>} />
 
               {/* Patient-only routes — consent guarded */}
