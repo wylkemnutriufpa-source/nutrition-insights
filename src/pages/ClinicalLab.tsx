@@ -227,5 +227,7 @@ export default function ClinicalLab() {
         </div>
       )}
     </div>
+    </div>
+    </DashboardLayout>
   );
 }
