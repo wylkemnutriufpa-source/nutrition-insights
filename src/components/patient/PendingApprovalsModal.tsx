@@ -221,10 +221,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
       toast.info("Gerando plano completo com itens... Aguarde.");
       const { planId, data } = await generateOrRegeneratePlan();
 
-      await supabase
-        .from("meal_plans")
-        .update({ plan_status: "under_professional_review" } as any)
-        .eq("id", planId);
+      await transitionPlanToReview(planId, user.id);
 
       onOpenChange(false);
       navigate(`/meal-plans/${planId}`);
