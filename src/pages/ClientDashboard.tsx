@@ -261,7 +261,7 @@ export default function ClientDashboard() {
    return (
     <DashboardLayout>
       <OnboardingProgressModal />
-      <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+      <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 md:space-y-6 px-1 md:px-0 overflow-hidden">
         {/* Premium Header */}
         <motion.div variants={item}>
           <PremiumCardWrapper className="relative overflow-hidden rounded-2xl gradient-border particles-bg" enableShimmer>
