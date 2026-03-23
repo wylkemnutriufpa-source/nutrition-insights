@@ -72,6 +72,7 @@ export default function UserGuide() {
       navigate(route);
     }
   };
+  const filteredCategories = Object.entries(categories)
     .filter(([cat]) => !activeCategory || cat === activeCategory)
     .map(([cat, features]) => ({
       cat,
@@ -81,15 +82,6 @@ export default function UserGuide() {
       ),
     }))
     .filter(({ features }) => features.length > 0);
-
-  const handleExplore = async (key: string, label: string) => {
-    if (exploredKeys.includes(key)) {
-      toast.info(`Você já explorou "${label}" ✓`);
-      return;
-    }
-    await markExplored(key);
-    toast.success(`🎉 "${label}" explorada!`, { duration: 2500 });
-  };
 
   if (loading) {
     return (
