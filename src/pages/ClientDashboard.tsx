@@ -44,6 +44,7 @@ import PatientMetabolicInsightPanel from "@/components/patient/PatientMetabolicI
 import PatientBehaviorLearningCard from "@/components/patient/PatientBehaviorLearningCard";
 import NextMealWidget from "@/components/patient/NextMealWidget";
 import PatientAIInsightsWidget from "@/components/patient/PatientAIInsightsWidget";
+import { PatientIntelligenceBanner } from "@/components/premium/PremiumBanners";
 interface ProgramInfo {
   id: string;
   title: string;
@@ -556,6 +557,11 @@ export default function ClientDashboard() {
         {/* AI Insights Widget */}
         <motion.div variants={item}>
           <PatientAIInsightsWidget />
+        </motion.div>
+
+        {/* Patient Intelligence Banner */}
+        <motion.div variants={item}>
+          <PatientIntelligenceBanner />
         </motion.div>
 
         {/* Clinical Insights from Learning Engine */}

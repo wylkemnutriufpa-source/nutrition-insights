@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
 import { Brain, Activity, Radar, Target, BarChart3, Shield, Zap } from "lucide-react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import SubscriptionGuard from "@/components/common/SubscriptionGuard";
 import GlobalClinicalStatusBar from "@/components/control-tower/GlobalClinicalStatusBar";
 import PatientPriorityRadar from "@/components/control-tower/PatientPriorityRadar";
 import AICommandFeed from "@/components/control-tower/AICommandFeed";
@@ -23,7 +25,9 @@ function SectionHeader({ icon: Icon, title, subtitle, color }: { icon: React.Ele
 
 export default function ClinicalControlTower() {
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
+    <DashboardLayout>
+    <SubscriptionGuard requiredTier="premium" featureName="Clinical Control Tower">
+    <div className="min-h-screen bg-zinc-950 text-white -m-6 -mt-14 p-6 pt-6">
       {/* Ambient background effects */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-emerald-500/[0.03] rounded-full blur-[120px]" />
@@ -116,5 +120,7 @@ export default function ClinicalControlTower() {
         </motion.div>
       </div>
     </div>
+    </SubscriptionGuard>
+    </DashboardLayout>
   );
 }
