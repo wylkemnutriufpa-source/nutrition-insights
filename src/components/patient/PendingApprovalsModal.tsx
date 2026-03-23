@@ -251,10 +251,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
         resolvedPlanId = regenerated.planId;
       }
 
-      await supabase
-        .from("meal_plans")
-        .update({ plan_status: "under_professional_review" } as any)
-        .eq("id", resolvedPlanId);
+      await transitionPlanToReview(resolvedPlanId, user.id);
 
       onOpenChange(false);
       navigate(`/meal-plans/${resolvedPlanId}`);

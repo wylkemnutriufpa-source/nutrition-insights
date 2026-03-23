@@ -118,12 +118,9 @@ export default function MealPlanEditorV2() {
       }
       await store._flushQueue();
 
-      // Save uses a simple status update (non-critical: draft→approved is safe from frontend)
-      const { error } = await supabase
-        .from("meal_plans")
-        .update({ plan_status: "approved", updated_at: new Date().toISOString() })
-        .eq("id", plan.id);
-      if (error) throw error;
+      // Use server-authoritative RPC for approval (validated transition)
+      const approveResult = await savePlanAsApproved(plan.id, user!.id);
+      if (!approveResult.success) throw new Error(approveResult.error || "Erro ao aprovar");
       store.updatePlan({ plan_status: "approved", updated_at: new Date().toISOString() } as any);
       toast.success("Plano salvo com sucesso!");
     } catch (err: any) {

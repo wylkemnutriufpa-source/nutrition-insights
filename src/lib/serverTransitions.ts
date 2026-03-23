@@ -261,6 +261,52 @@ export async function logPipelineFinish(
 }
 
 /**
+ * Transition a plan to "under_professional_review" (server-authoritative).
+ */
+export async function transitionPlanToReview(
+  planId: string,
+  nutritionistId: string
+): Promise<TransitionResult> {
+  const { data, error } = await supabase.rpc(
+    "transition_plan_to_review" as any,
+    {
+      _plan_id: planId,
+      _nutritionist_id: nutritionistId,
+    }
+  );
+
+  if (error) {
+    console.error("[ServerTransition] transitionPlanToReview failed:", error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, data: data as Record<string, unknown> };
+}
+
+/**
+ * Save a plan as approved (server-authoritative).
+ */
+export async function savePlanAsApproved(
+  planId: string,
+  nutritionistId: string
+): Promise<TransitionResult> {
+  const { data, error } = await supabase.rpc(
+    "save_plan_as_approved" as any,
+    {
+      _plan_id: planId,
+      _nutritionist_id: nutritionistId,
+    }
+  );
+
+  if (error) {
+    console.error("[ServerTransition] savePlanAsApproved failed:", error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, data: data as Record<string, unknown> };
+}
+
+/**
  * Protocol domain resolution helper.
  */
 export const PROTOCOL_DOMAIN = {

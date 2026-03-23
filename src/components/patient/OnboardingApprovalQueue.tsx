@@ -383,10 +383,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
           .eq("id", pipeline.id);
       }
 
-      await supabase
-        .from("meal_plans")
-        .update({ plan_status: "under_professional_review" } as any)
-        .eq("id", resolvedPlanId);
+      await transitionPlanToReview(resolvedPlanId, user.id);
 
       if (!pipeline.generated_plan_id || pipeline.generated_plan_id !== resolvedPlanId) {
         await supabase
