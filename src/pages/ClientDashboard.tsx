@@ -553,6 +553,11 @@ export default function ClientDashboard() {
           <AdherenceEvolutionChart />
         </motion.div>
 
+        {/* AI Insights Widget */}
+        <motion.div variants={item}>
+          <PatientAIInsightsWidget />
+        </motion.div>
+
         {/* Clinical Insights from Learning Engine */}
         <motion.div variants={item}>
           <ClinicalInsightsCard />
