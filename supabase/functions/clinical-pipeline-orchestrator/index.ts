@@ -55,12 +55,34 @@ Deno.serve(async (req) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, serviceKey);
 
+  // Helper: log to pipeline_execution_logs
+  async function logExecStart(name: string, meta: Record<string, unknown> = {}) {
+    const { data } = await supabase.rpc("log_pipeline_execution", {
+      _pipeline_name: name,
+      _status: "started",
+      _metadata: meta,
+    });
+    return data as string | null;
+  }
+  async function logExecFinish(execId: string, status: string, processed: number, errs: number, details: Record<string, unknown> | null) {
+    await supabase.rpc("finalize_pipeline_execution", {
+      _id: execId,
+      _status: status,
+      _patients_processed: processed,
+      _errors_count: errs,
+      _error_details: details,
+    });
+  }
+
   try {
     const body = await req.json().catch(() => ({}));
     const runType = body.run_type || "daily";
     const triggeredBy = body.triggered_by || "scheduled";
     const includeWeekly = body.include_weekly || false;
     const dryRun = body.dry_run || false;
+
+    // Log to pipeline_execution_logs
+    const execLogId = await logExecStart("clinical-pipeline-orchestrator", { run_type: runType, triggered_by: triggeredBy, include_weekly: includeWeekly, dry_run: dryRun });
 
     // Prevent concurrent runs
     const { data: activeRuns } = await supabase
