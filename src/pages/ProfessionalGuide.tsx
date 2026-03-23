@@ -11,38 +11,7 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect, useCallback } from "react";
-
-// Map feature names to real routes
-const featureRouteMap: Record<string, string> = {
-  ai_meal_analysis: "/analyze-meal",
-  ai_recipe_generator: "/recipes",
-  ai_anamnesis: "/anamnesis",
-  clinical_intelligence: "/clinical-intelligence",
-  clinical_brain: "/clinical-intelligence",
-  automation_center: "/automation",
-  patients_management: "/patients",
-  meal_plan_editor: "/meal-plans",
-  meal_plan_editor_v2: "/editor-v2",
-  protocols: "/protocols",
-  programs: "/programs",
-  onboarding_pipeline: "/patients",
-  patient_import: "/admin/import-patients",
-  chat: "/chat",
-  whatsapp_integration: "/settings/whatsapp",
-  notifications: "/notifications",
-  appointments: "/appointments",
-  food_database: "/food-database",
-  recipes: "/recipes",
-  shopping_list: "/shopping-list",
-  body_analysis: "/body-analysis",
-  branding: "/branding",
-  supplements: "/supplements",
-  reports: "/reports",
-  financial: "/financial",
-  crm: "/professional/crm",
-  clinical_risk: "/clinical-risk",
-  growth_dashboard: "/reports",
-};
+import { PROFESSIONAL_ROUTE_MAP } from "@/lib/featureRouteMap";
 
 const CATEGORY_META: Record<string, { gradient: string; emoji: string }> = {
   "IA & Automação": { gradient: "from-primary/20 to-primary/5", emoji: "🤖" },
