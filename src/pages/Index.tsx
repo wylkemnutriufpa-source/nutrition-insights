@@ -421,6 +421,11 @@ function NutritionistDashboardContent() {
         <FitJourneyIntelligencePanel />
       </motion.div>
 
+      {/* ── Premium Control Tower Banner ── */}
+      <motion.div variants={item}>
+        <PremiumControlTowerBanner />
+      </motion.div>
+
       {/* ── Portfolio Intelligence ── */}
       <motion.div variants={item}>
         <PortfolioIntelligencePanel />
