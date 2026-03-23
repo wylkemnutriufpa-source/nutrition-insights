@@ -559,6 +559,11 @@ export default function ClientDashboard() {
           <PatientAIInsightsWidget />
         </motion.div>
 
+        {/* Patient Intelligence Banner */}
+        <motion.div variants={item}>
+          <PatientIntelligenceBanner />
+        </motion.div>
+
         {/* Clinical Insights from Learning Engine */}
         <motion.div variants={item}>
           <ClinicalInsightsCard />
