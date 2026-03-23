@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { Target, TrendingDown, UserX, AlertTriangle, Clock, Brain, Shield } from "lucide-react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Target, TrendingDown, UserX, AlertTriangle, Clock, Brain, Shield, ArrowLeft } from "lucide-react";
 
 interface PredictionRow {
   patient_id: string;
@@ -73,6 +76,7 @@ function PredictionGauge({ value, label, icon: Icon, classification }: { value: 
 
 export default function ClinicalPredictions() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [predictions, setPredictions] = useState<PredictionRow[]>([]);
   const [profiles, setProfiles] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -108,7 +112,12 @@ export default function ClinicalPredictions() {
   const avgDropout = predictions.length ? Math.round(predictions.reduce((s, p) => s + p.predicted_dropout_probability, 0) / predictions.length) : 0;
 
   return (
+    <DashboardLayout>
     <div className="space-y-6">
+      <div className="flex items-center gap-3 mb-2">
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="shrink-0">
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
       <div>
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <Brain className="h-7 w-7 text-primary" /> Previsão Clínica
@@ -193,5 +202,7 @@ export default function ClinicalPredictions() {
         </div>
       )}
     </div>
+    </div>
+    </DashboardLayout>
   );
 }

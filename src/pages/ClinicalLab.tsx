@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { FlaskRound, Play, Pause, CheckCircle, AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { FlaskRound, Play, Pause, CheckCircle, AlertTriangle, TrendingUp, TrendingDown, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 const statusLabels: Record<string, string> = {
@@ -40,6 +42,7 @@ function Delta({ value }: { value: number }) {
 
 export default function ClinicalLab() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [experiments, setExperiments] = useState<any[]>([]);
   const [selectedExp, setSelectedExp] = useState<string | null>(null);
   const [groups, setGroups] = useState<any[]>([]);
@@ -82,7 +85,12 @@ export default function ClinicalLab() {
   const selectedExperiment = experiments.find((e) => e.id === selectedExp);
 
   return (
+    <DashboardLayout>
     <div className="space-y-6">
+      <div className="flex items-center gap-3 mb-2">
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="shrink-0">
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
       <div>
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <FlaskRound className="h-7 w-7 text-primary" /> Laboratório Clínico
@@ -222,5 +230,7 @@ export default function ClinicalLab() {
         </div>
       )}
     </div>
+    </div>
+    </DashboardLayout>
   );
 }

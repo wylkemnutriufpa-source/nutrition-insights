@@ -72,22 +72,28 @@ function NutritionistDashboardContent() {
   const pendingApprovalsCount = usePendingApprovals();
   const [approvalsModalOpen, setApprovalsModalOpen] = useState(false);
 
-  // Auto-open modal once per session — persists dismissal via sessionStorage
+  // Auto-open modal ONCE per session — persists via sessionStorage keyed by count snapshot
   const APPROVALS_DISMISSED_KEY = "fj_approvals_dismissed";
-  const [approvalsAutoShown, setApprovalsAutoShown] = useState(false);
+  const APPROVALS_SNAPSHOT_KEY = "fj_approvals_snapshot";
   useEffect(() => {
-    if (approvalsAutoShown) return;
+    if (pendingApprovalsCount <= 0) return;
     const dismissed = sessionStorage.getItem(APPROVALS_DISMISSED_KEY) === "true";
-    if (pendingApprovalsCount > 0 && !dismissed) {
+    const lastSnapshot = parseInt(sessionStorage.getItem(APPROVALS_SNAPSHOT_KEY) || "0", 10);
+    // Only auto-open if NOT dismissed, or if new pending items appeared since last dismiss
+    if (!dismissed || pendingApprovalsCount > lastSnapshot) {
       setApprovalsModalOpen(true);
-      setApprovalsAutoShown(true);
+      // Reset dismissed if new items appeared
+      if (pendingApprovalsCount > lastSnapshot) {
+        sessionStorage.removeItem(APPROVALS_DISMISSED_KEY);
+      }
     }
-  }, [pendingApprovalsCount, approvalsAutoShown]);
+  }, [pendingApprovalsCount]);
 
   const handleApprovalsModalChange = (open: boolean) => {
     setApprovalsModalOpen(open);
     if (!open) {
       sessionStorage.setItem(APPROVALS_DISMISSED_KEY, "true");
+      sessionStorage.setItem(APPROVALS_SNAPSHOT_KEY, String(pendingApprovalsCount));
     }
   };
 
