@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { Target, TrendingDown, UserX, AlertTriangle, Clock, Brain, Shield } from "lucide-react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Target, TrendingDown, UserX, AlertTriangle, Clock, Brain, Shield, ArrowLeft } from "lucide-react";
 
 interface PredictionRow {
   patient_id: string;
