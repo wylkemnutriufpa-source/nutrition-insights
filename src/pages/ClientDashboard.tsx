@@ -735,7 +735,7 @@ export default function ClientDashboard() {
                 {notifications.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Nenhuma notificação.</p>
                 ) : (
-                  <div className="grid sm:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {notifications.slice(0, 6).map((n, i) => (
                       <motion.div
                         key={n.id}

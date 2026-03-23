@@ -527,7 +527,7 @@ export default function Appointments() {
 
         {/* === PATIENT: Request Appointment Dialog === */}
         <Dialog open={requestDialog} onOpenChange={setRequestDialog}>
-          <DialogContent className="max-w-md">
+            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-display flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-primary" /> Solicitar Consulta

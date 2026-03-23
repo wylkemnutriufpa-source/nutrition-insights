@@ -529,10 +529,10 @@ export default function SystemDiagnostics() {
                         }`}
                       >
                         {levelIcon(log.level)}
-                        <span className="text-muted-foreground whitespace-nowrap">
+                        <span className="text-muted-foreground whitespace-nowrap hidden sm:inline">
                           [{log.module}]
                         </span>
-                        <span className={
+                        <span className={cn("break-all sm:break-normal",
                           log.level === "error" ? "text-red-400" :
                           log.level === "warning" ? "text-amber-400" :
                           log.level === "ok" ? "text-emerald-400" :
