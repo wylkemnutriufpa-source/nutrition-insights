@@ -21,6 +21,8 @@ import {
 import CinematicGuideSlide from "@/components/common/CinematicGuideSlide";
 import { MagicSlideButton } from "@/components/common/MagicSlideGenerator";
 import { cn } from "@/lib/utils";
+import { resolveFeatureRoute } from "@/lib/featureRouteMap";
+import { useNavigate } from "react-router-dom";
 import type { EnrichedSlide } from "@/hooks/useFeatureGuide";
 
 const ICON_MAP: Record<string, any> = {
