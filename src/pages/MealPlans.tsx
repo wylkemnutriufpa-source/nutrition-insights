@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { activateMealPlan } from "@/lib/serverTransitions";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -80,8 +81,8 @@ export default function MealPlans() {
       await supabase.from("meal_plans").update({ is_active: false }).eq("id", id);
       toast.success("Plano desativado.");
     } else {
-      const { error } = await supabase.rpc("activate_meal_plan" as any, { p_meal_plan_id: id });
-      if (error) { toast.error(error.message.replace("AI_VALIDATION_REQUIRED: ", "")); }
+      const result = await activateMealPlan(id);
+      if (!result.success) { toast.error(result.error || "Erro ao ativar plano"); }
       else { toast.success("Plano ativado com segurança pelo Cérebro!"); }
     }
     fetchPlans();

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { releaseOnboarding } from "@/lib/serverTransitions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -97,29 +98,11 @@ export default function PatientQueueTabs() {
 
   const handleQuickRelease = async (patientId: string) => {
     if (!user) return;
-    await supabase
-      .from("nutritionist_patients")
-      .update({ journey_status: "onboarding_active" } as any)
-      .eq("patient_id", patientId)
-      .eq("nutritionist_id", user.id);
-
-    // Also update onboarding pipeline if exists
-    await supabase
-      .from("onboarding_pipelines")
-      .update({ release_status: "released", released_at: new Date().toISOString(), released_by: user.id } as any)
-      .eq("patient_id", patientId)
-      .eq("nutritionist_id", user.id);
-
-    // Notify patient
-    await supabase.from("notifications").insert({
-      user_id: patientId,
-      title: "Onboarding liberado!",
-      message: "Seu profissional liberou seu acesso ao onboarding. Comece agora!",
-      type: "onboarding_released",
-      entity_type: "onboarding",
-      target_route: "/onboarding",
-    } as any);
-
+    const result = await releaseOnboarding(patientId, user.id);
+    if (!result.success) {
+      toast.error(result.error || "Erro ao liberar onboarding");
+      return;
+    }
     toast.success("Onboarding liberado com sucesso!");
     fetchCounts();
     fetchPatients(tab);

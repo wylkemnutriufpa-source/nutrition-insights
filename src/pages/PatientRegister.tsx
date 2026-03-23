@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { transitionJourneyStatus } from "@/lib/serverTransitions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -130,13 +131,16 @@ export default function PatientRegister() {
           phone: phone || null,
         }, { onConflict: "user_id" });
 
-        // If professional selected, update journey_status
+        // If professional selected, update journey_status via server-authoritative RPC
         if (nutriId) {
-          await supabase
-            .from("nutritionist_patients")
-            .update({ journey_status: "lead_created" } as any)
-            .eq("patient_id", data.user.id)
-            .eq("nutritionist_id", nutriId);
+          await transitionJourneyStatus(data.user.id, nutriId, "lead_created").catch(() => {
+            // Fallback: direct update for fresh registrations where status may not exist yet
+            supabase
+              .from("nutritionist_patients")
+              .update({ journey_status: "lead_created" } as any)
+              .eq("patient_id", data.user.id)
+              .eq("nutritionist_id", nutriId);
+          });
 
           // Notify the professional
           await supabase.from("notifications").insert({
@@ -163,20 +167,16 @@ export default function PatientRegister() {
     if (!userId || !selectedProfessional) return;
 
     if (alreadyPaid === "yes") {
-      // Update status to awaiting_onboarding_release
-      await supabase
-        .from("nutritionist_patients")
-        .update({ journey_status: "awaiting_onboarding_release" } as any)
-        .eq("patient_id", userId)
-        .eq("nutritionist_id", selectedProfessional.user_id);
+      await transitionJourneyStatus(userId, selectedProfessional.user_id, "awaiting_onboarding_release").catch(() => {
+        supabase.from("nutritionist_patients").update({ journey_status: "awaiting_onboarding_release" } as any)
+          .eq("patient_id", userId).eq("nutritionist_id", selectedProfessional.user_id);
+      });
       setStep("done");
     } else {
-      // Update status to awaiting_payment
-      await supabase
-        .from("nutritionist_patients")
-        .update({ journey_status: "awaiting_payment" } as any)
-        .eq("patient_id", userId)
-        .eq("nutritionist_id", selectedProfessional.user_id);
+      await transitionJourneyStatus(userId, selectedProfessional.user_id, "awaiting_payment").catch(() => {
+        supabase.from("nutritionist_patients").update({ journey_status: "awaiting_payment" } as any)
+          .eq("patient_id", userId).eq("nutritionist_id", selectedProfessional.user_id);
+      });
       setStep("payment");
     }
   };

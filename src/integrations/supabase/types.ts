@@ -3541,6 +3541,13 @@ export type Database = {
             foreignKeyName: "meal_feedback_meal_plan_id_fkey"
             columns: ["meal_plan_id"]
             isOneToOne: false
+            referencedRelation: "meal_plan_resolved_state"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_feedback_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
             referencedRelation: "meal_plans"
             referencedColumns: ["id"]
           },
@@ -3581,6 +3588,13 @@ export type Database = {
           patient_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "meal_item_completions_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_resolved_state"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "meal_item_completions_meal_plan_id_fkey"
             columns: ["meal_plan_id"]
@@ -3744,6 +3758,13 @@ export type Database = {
             foreignKeyName: "meal_plan_items_meal_plan_id_fkey"
             columns: ["meal_plan_id"]
             isOneToOne: false
+            referencedRelation: "meal_plan_resolved_state"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_plan_items_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
             referencedRelation: "meal_plans"
             referencedColumns: ["id"]
           },
@@ -3781,6 +3802,13 @@ export type Database = {
           snapshot_json?: Json
         }
         Relationships: [
+          {
+            foreignKeyName: "meal_plan_versions_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_resolved_state"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "meal_plan_versions_meal_plan_id_fkey"
             columns: ["meal_plan_id"]
@@ -3879,6 +3907,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "meal_plans_previous_plan_id_fkey"
+            columns: ["previous_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_resolved_state"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "meal_plans_previous_plan_id_fkey"
             columns: ["previous_plan_id"]
@@ -4446,6 +4481,13 @@ export type Database = {
             foreignKeyName: "nutritional_intervention_suggestions_plan_id_fkey"
             columns: ["plan_id"]
             isOneToOne: false
+            referencedRelation: "meal_plan_resolved_state"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nutritional_intervention_suggestions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
             referencedRelation: "meal_plans"
             referencedColumns: ["id"]
           },
@@ -4657,6 +4699,13 @@ export type Database = {
           weight?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "onboarding_pipelines_generated_plan_id_fkey"
+            columns: ["generated_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_resolved_state"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "onboarding_pipelines_generated_plan_id_fkey"
             columns: ["generated_plan_id"]
@@ -6449,6 +6498,13 @@ export type Database = {
             columns: ["assessment_id"]
             isOneToOne: false
             referencedRelation: "physical_assessments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_documents_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_resolved_state"
             referencedColumns: ["id"]
           },
           {
@@ -8582,6 +8638,54 @@ export type Database = {
         }
         Relationships: []
       }
+      pipeline_execution_logs: {
+        Row: {
+          completed_at: string | null
+          duration_ms: number | null
+          engine_version: string | null
+          error_details: Json | null
+          errors_count: number | null
+          execution_status: string
+          id: string
+          metadata: Json | null
+          patients_processed: number | null
+          pipeline_name: string
+          started_at: string
+          triggered_by: string | null
+          warnings_count: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          duration_ms?: number | null
+          engine_version?: string | null
+          error_details?: Json | null
+          errors_count?: number | null
+          execution_status?: string
+          id?: string
+          metadata?: Json | null
+          patients_processed?: number | null
+          pipeline_name: string
+          started_at?: string
+          triggered_by?: string | null
+          warnings_count?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          duration_ms?: number | null
+          engine_version?: string | null
+          error_details?: Json | null
+          errors_count?: number | null
+          execution_status?: string
+          id?: string
+          metadata?: Json | null
+          patients_processed?: number | null
+          pipeline_name?: string
+          started_at?: string
+          triggered_by?: string | null
+          warnings_count?: number | null
+        }
+        Relationships: []
+      }
       pipeline_runs: {
         Row: {
           completed_at: string | null
@@ -8745,6 +8849,13 @@ export type Database = {
           status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "plan_schedules_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_resolved_state"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "plan_schedules_meal_plan_id_fkey"
             columns: ["meal_plan_id"]
@@ -10618,6 +10729,13 @@ export type Database = {
             foreignKeyName: "protocol_transition_suggestions_current_plan_id_fkey"
             columns: ["current_plan_id"]
             isOneToOne: false
+            referencedRelation: "meal_plan_resolved_state"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "protocol_transition_suggestions_current_plan_id_fkey"
+            columns: ["current_plan_id"]
+            isOneToOne: false
             referencedRelation: "meal_plans"
             referencedColumns: ["id"]
           },
@@ -11181,6 +11299,13 @@ export type Database = {
             foreignKeyName: "saved_plan_templates_source_plan_id_fkey"
             columns: ["source_plan_id"]
             isOneToOne: false
+            referencedRelation: "meal_plan_resolved_state"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_plan_templates_source_plan_id_fkey"
+            columns: ["source_plan_id"]
+            isOneToOne: false
             referencedRelation: "meal_plans"
             referencedColumns: ["id"]
           },
@@ -11218,6 +11343,13 @@ export type Database = {
           quantity?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "shopping_list_items_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_resolved_state"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "shopping_list_items_meal_plan_id_fkey"
             columns: ["meal_plan_id"]
@@ -12774,6 +12906,45 @@ export type Database = {
       }
     }
     Views: {
+      meal_plan_resolved_state: {
+        Row: {
+          created_at: string | null
+          has_state_inconsistency: boolean | null
+          id: string | null
+          is_active: boolean | null
+          nutritionist_id: string | null
+          patient_id: string | null
+          plan_status: string | null
+          resolved_state: string | null
+          start_date: string | null
+          title: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          has_state_inconsistency?: never
+          id?: string | null
+          is_active?: boolean | null
+          nutritionist_id?: string | null
+          patient_id?: string | null
+          plan_status?: string | null
+          resolved_state?: never
+          start_date?: string | null
+          title?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          has_state_inconsistency?: never
+          id?: string | null
+          is_active?: boolean | null
+          nutritionist_id?: string | null
+          patient_id?: string | null
+          plan_status?: string | null
+          resolved_state?: never
+          start_date?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
       mv_nutritionist_dashboard: {
         Row: {
           checklist_completion_rate: number | null
@@ -12873,6 +13044,7 @@ export type Database = {
         }
         Returns: string
       }
+      archive_orphan_onboarding_pipelines: { Args: never; Returns: Json }
       auto_activate_onboarding_for_paid_patients: { Args: never; Returns: Json }
       award_points:
         | {
@@ -13081,6 +13253,10 @@ export type Database = {
         Returns: Json
       }
       promote_to_admin: { Args: { _user_email: string }; Returns: string }
+      publish_meal_plan: {
+        Args: { _nutritionist_id: string; _plan_id: string }
+        Returns: Json
+      }
       recalculate_meal_plan_totals: {
         Args: { plan_id: string }
         Returns: undefined
@@ -13095,6 +13271,14 @@ export type Database = {
       refresh_ranking_snapshots: {
         Args: { _period_type?: string }
         Returns: undefined
+      }
+      release_patient_onboarding: {
+        Args: {
+          _nutritionist_id: string
+          _patient_id: string
+          _release_config?: Json
+        }
+        Returns: Json
       }
       reset_all_ranking_points: { Args: never; Returns: Json }
       reset_professional_password: {
@@ -13153,6 +13337,14 @@ export type Database = {
         Returns: number
       }
       track_menu_click: { Args: { _menu_item_id: string }; Returns: undefined }
+      transition_journey_status: {
+        Args: {
+          _new_status: string
+          _nutritionist_id: string
+          _patient_id: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       achievement_type:

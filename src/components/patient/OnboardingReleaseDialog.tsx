@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { releaseOnboarding } from "@/lib/serverTransitions";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -36,63 +37,20 @@ export default function OnboardingReleaseDialog({ patientId, patientName, open, 
     setReleasing(true);
 
     try {
-      // Find active pipeline for this patient
-      const { data: pipeline } = await supabase
-        .from("onboarding_pipelines")
-        .select("id, release_status")
-        .eq("patient_id", patientId)
-        .not("status", "in", '("completed","superseded_by_active_plan","superseded_by_published_plan","rejected")')
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const releaseConfig = {
+        contracted_plan: form.contracted_plan,
+        primary_goal: form.primary_goal,
+        nutrition_strategy: form.nutrition_strategy,
+        followup_intensity: form.followup_intensity,
+        estimated_duration_days: parseInt(form.estimated_duration),
+        notes: form.notes,
+      };
 
-      if (!pipeline) {
-        // Create a new pipeline if none exists
-        const { data: newPipeline, error: createErr } = await supabase
-          .from("onboarding_pipelines")
-          .insert({
-            patient_id: patientId,
-            nutritionist_id: user.id,
-            status: "pending_anamnesis",
-            release_status: "released",
-            released_by: user.id,
-            released_at: new Date().toISOString(),
-            release_config: {
-              contracted_plan: form.contracted_plan,
-              primary_goal: form.primary_goal,
-              nutrition_strategy: form.nutrition_strategy,
-              followup_intensity: form.followup_intensity,
-              estimated_duration_days: parseInt(form.estimated_duration),
-              notes: form.notes,
-            },
-          } as any)
-          .select("id")
-          .single();
+      // Use server-authoritative RPC for the core transition
+      const result = await releaseOnboarding(patientId, user.id, releaseConfig);
+      if (!result.success) throw new Error(result.error || "Erro ao liberar onboarding");
 
-        if (createErr) throw createErr;
-      } else {
-        // Update existing pipeline
-        const { error } = await supabase
-          .from("onboarding_pipelines")
-          .update({
-            release_status: "released",
-            released_by: user.id,
-            released_at: new Date().toISOString(),
-            release_config: {
-              contracted_plan: form.contracted_plan,
-              primary_goal: form.primary_goal,
-              nutrition_strategy: form.nutrition_strategy,
-              followup_intensity: form.followup_intensity,
-              estimated_duration_days: parseInt(form.estimated_duration),
-              notes: form.notes,
-            },
-          } as any)
-          .eq("id", pipeline.id);
-
-        if (error) throw error;
-      }
-
-      // Log in timeline
+      // Log in timeline (supplementary, non-critical)
       await supabase.from("patient_timeline").insert({
         patient_id: patientId,
         event_type: "onboarding_released",
@@ -100,17 +58,6 @@ export default function OnboardingReleaseDialog({ patientId, patientName, open, 
         description: `Objetivo: ${form.primary_goal || "Não definido"} | Estratégia: ${form.nutrition_strategy || "Não definida"} | Duração estimada: ${form.estimated_duration} dias`,
         created_by: user.id,
       });
-
-      // Create notification for patient
-      await supabase.from("notifications").insert({
-        user_id: patientId,
-        title: "🚀 Seu onboarding foi liberado!",
-        message: `Seu nutricionista liberou o início da sua jornada. Complete as etapas para receber seu plano alimentar personalizado.`,
-        type: "onboarding",
-        entity_type: "onboarding",
-        entity_id: patientId,
-        target_route: "/anamnesis",
-      } as any);
 
       toast.success("Onboarding liberado com sucesso!");
       onOpenChange(false);
