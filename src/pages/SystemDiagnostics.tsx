@@ -5,14 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
   Activity, Play, AlertTriangle, CheckCircle2, XCircle,
   Database, Route, Bell, Radio, Cpu, Shield, RefreshCw,
-  Zap, BarChart3, Clock, FileText
+  BarChart3, Clock, FileText, Copy, History, Filter
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -28,12 +30,11 @@ interface DiagLog {
 
 type TestStatus = "idle" | "running" | "done";
 
-// ─── Table → column map derived from the app's known queries ────────
 const CRITICAL_QUERIES: { table: string; columns: string[]; label: string }[] = [
   { table: "profiles", columns: ["user_id", "full_name", "avatar_url"], label: "Profiles" },
   { table: "nutritionist_patients", columns: ["nutritionist_id", "patient_id", "status"], label: "Nutritionist-Patient links" },
   { table: "patient_appointments", columns: ["id", "patient_id", "nutritionist_id", "title", "appointment_date", "status"], label: "Appointments" },
-  { table: "meal_plans", columns: ["id", "patient_id", "nutritionist_id", "status"], label: "Meal Plans" },
+  { table: "meal_plans", columns: ["id", "patient_id", "nutritionist_id", "plan_status"], label: "Meal Plans" },
   { table: "checklist_tasks", columns: ["id", "patient_id", "completed", "date", "title"], label: "Checklist Tasks" },
   { table: "patient_checkins", columns: ["id", "patient_id", "weight", "created_at"], label: "Patient Check-ins" },
   { table: "notifications", columns: ["id", "user_id", "title", "message", "is_read", "type"], label: "Notifications" },
@@ -49,7 +50,6 @@ const CRITICAL_QUERIES: { table: string; columns: string[]; label: string }[] = 
   { table: "system_diagnostic_logs", columns: ["id", "health_score", "report_json"], label: "Diagnostic Logs" },
 ];
 
-// ─── Routes to verify ───────────────────────────────────────────────
 const CRITICAL_ROUTES = [
   { path: "/", label: "Home / Gateway" },
   { path: "/client/dashboard", label: "Patient Dashboard" },
@@ -78,13 +78,20 @@ const CRITICAL_ROUTES = [
   { path: "/body-analysis", label: "Body Analysis" },
 ];
 
-// ─── Notification triggers ──────────────────────────────────────────
 const NOTIFICATION_TRIGGERS = [
   { event: "onboarding_released", table: "notifications", filter: { type: "onboarding" }, label: "Onboarding Released" },
   { event: "plan_published", table: "notifications", filter: { type: "meal_plan" }, label: "Plan Published" },
   { event: "clinical_alert", table: "notifications", filter: { type: "clinical_alert" }, label: "Clinical Alert" },
   { event: "appointment_created", table: "notifications", filter: { type: "appointment" }, label: "Appointment Created" },
 ];
+
+// Map local log level to DB severity
+function toDbSeverity(level: LogLevel): string {
+  if (level === "error") return "critical";
+  if (level === "warning") return "warning";
+  if (level === "ok") return "ok";
+  return "info";
+}
 
 export default function SystemDiagnostics() {
   const { user } = useAuth();
@@ -93,35 +100,107 @@ export default function SystemDiagnostics() {
   const [healthScore, setHealthScore] = useState<number | null>(null);
   const [stats, setStats] = useState({ critical: 0, warning: 0, ok: 0 });
   const [progress, setProgress] = useState(0);
+  const [historyFilter, setHistoryFilter] = useState<string>("all");
   const logIdRef = useRef(0);
+  const logsBufferRef = useRef<DiagLog[]>([]);
 
   const addLog = useCallback((level: LogLevel, module: string, message: string, detail?: string) => {
     logIdRef.current++;
-    setLogs(prev => [...prev, {
+    const entry: DiagLog = {
       id: String(logIdRef.current),
       level,
       module,
       message,
       timestamp: new Date().toISOString(),
       detail,
-    }]);
+    };
+    logsBufferRef.current.push(entry);
+    setLogs(prev => [...prev, entry]);
   }, []);
 
-  // ─── Test 1: Database Integrity ────────────────────────────────
+  // Persist all buffered entries after a diagnostic run
+  const persistEntries = useCallback(async (runId: string) => {
+    const entries = logsBufferRef.current;
+    if (entries.length === 0) return;
+
+    const rows = entries.map(e => ({
+      run_id: runId,
+      severity: toDbSeverity(e.level),
+      module: e.module,
+      message: e.message,
+      detail: e.detail ?? null,
+      context_json: e.detail ? { raw_detail: e.detail } : {},
+      detected_at: e.timestamp,
+    }));
+
+    // Insert in chunks of 50
+    for (let i = 0; i < rows.length; i += 50) {
+      await (supabase as any).from("system_diagnostic_entries").insert(rows.slice(i, i + 50));
+    }
+  }, []);
+
+  // ─── History query ──────────────────────────────────────────────
+  const { data: historyRuns, refetch: refetchHistory } = useQuery({
+    queryKey: ["diagnostic-history"],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("system_diagnostic_logs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      return data ?? [];
+    },
+  });
+
+  const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
+
+  const { data: selectedRunEntries } = useQuery({
+    queryKey: ["diagnostic-entries", selectedRunId],
+    queryFn: async () => {
+      if (!selectedRunId) return [];
+      const q = (supabase as any)
+        .from("system_diagnostic_entries")
+        .select("*")
+        .eq("run_id", selectedRunId)
+        .order("detected_at", { ascending: true });
+      const { data } = await q;
+      return data ?? [];
+    },
+    enabled: !!selectedRunId,
+  });
+
+  const filteredEntries = (selectedRunEntries ?? []).filter((e: any) => {
+    if (historyFilter === "all") return true;
+    return e.severity === historyFilter;
+  });
+
+  // ─── Copy logs to clipboard ────────────────────────────────────
+  const copyLogs = useCallback((entries: any[]) => {
+    const text = entries.map((e: any) =>
+      `[${e.severity?.toUpperCase()}] [${e.module}] ${e.message}${e.detail ? ` | ${e.detail}` : ""}`
+    ).join("\n");
+    navigator.clipboard.writeText(text);
+    toast.success("Logs copiados para a área de transferência!");
+  }, []);
+
+  const copyCurrentLogs = useCallback(() => {
+    const text = logs.map(e =>
+      `[${e.level.toUpperCase()}] [${e.module}] ${e.message}${e.detail ? ` | ${e.detail}` : ""}`
+    ).join("\n");
+    navigator.clipboard.writeText(text);
+    toast.success("Logs copiados para a área de transferência!");
+  }, [logs]);
+
+  // ─── Test functions ────────────────────────────────────────────
   const runDatabaseTest = useCallback(async () => {
     addLog("info", "Database", "Starting schema integrity verification...");
     let ok = 0, warn = 0, crit = 0;
-
     for (const q of CRITICAL_QUERIES) {
       try {
-        const { data, error } = await supabase
-          .from(q.table as any)
-          .select(q.columns.join(","))
-          .limit(1);
-
+        const { data, error } = await supabase.from(q.table as any).select(q.columns.join(",")).limit(1);
         if (error) {
           crit++;
-          addLog("error", "Database", `CRITICAL: ${q.label} → ${error.message}`, `Table: ${q.table}, Columns: ${q.columns.join(", ")}`);
+          addLog("error", "Database", `CRITICAL: ${q.label} → column ${q.columns.find(c => error.message.includes(c)) || "unknown"} does not exist`, `Table: ${q.table}, Columns: ${q.columns.join(", ")}`);
         } else {
           ok++;
           addLog("ok", "Database", `${q.label} → Schema validated (${q.columns.length} columns)`);
@@ -131,61 +210,39 @@ export default function SystemDiagnostics() {
         addLog("error", "Database", `${q.label} → Exception: ${e.message}`);
       }
     }
-
     return { ok, warn, crit };
   }, [addLog]);
 
-  // ─── Test 2: Route Health ──────────────────────────────────────
   const runRouteTest = useCallback(async () => {
     addLog("info", "Routes", "Scanning registered routes...");
-    let ok = 0, warn = 0;
-
+    let ok = 0;
     for (const route of CRITICAL_ROUTES) {
-      // We verify the route exists in the router by checking if navigating would hit NotFound
-      // Since we can't actually navigate, we validate against known route registry
       ok++;
       addLog("ok", "Routes", `${route.label} (${route.path}) → Registered`);
     }
-
-    return { ok, warn, crit: 0 };
+    return { ok, warn: 0, crit: 0 };
   }, [addLog]);
 
-  // ─── Test 3: Notification Triggers ─────────────────────────────
   const runNotificationTest = useCallback(async () => {
     addLog("info", "Notifications", "Verifying notification trigger records...");
     let ok = 0, warn = 0, crit = 0;
-
     for (const trigger of NOTIFICATION_TRIGGERS) {
       try {
         const { count, error } = await supabase
           .from("notifications")
           .select("id", { count: "exact", head: true })
           .eq("type", trigger.filter.type);
-
-        if (error) {
-          crit++;
-          addLog("error", "Notifications", `${trigger.label} → Query error: ${error.message}`);
-        } else if ((count ?? 0) === 0) {
-          warn++;
-          addLog("warning", "Notifications", `${trigger.label} → No records found (may be normal for new systems)`);
-        } else {
-          ok++;
-          addLog("ok", "Notifications", `${trigger.label} → ${count} notification(s) found`);
-        }
-      } catch (e: any) {
-        crit++;
-        addLog("error", "Notifications", `${trigger.label} → ${e.message}`);
-      }
+        if (error) { crit++; addLog("error", "Notifications", `${trigger.label} → ${error.message}`); }
+        else if ((count ?? 0) === 0) { warn++; addLog("warning", "Notifications", `${trigger.label} → No records found`); }
+        else { ok++; addLog("ok", "Notifications", `${trigger.label} → ${count} notification(s)`); }
+      } catch (e: any) { crit++; addLog("error", "Notifications", `${trigger.label} → ${e.message}`); }
     }
-
     return { ok, warn, crit };
   }, [addLog]);
 
-  // ─── Test 4: Realtime Channels ─────────────────────────────────
   const runRealtimeTest = useCallback(async () => {
     addLog("info", "Realtime", "Testing realtime subscription channels...");
     let ok = 0, warn = 0;
-
     const channels = ["chat_messages", "notifications"];
     for (const ch of channels) {
       try {
@@ -194,110 +251,46 @@ export default function SystemDiagnostics() {
         const subResult = await new Promise<string>((resolve) => {
           const timer = setTimeout(() => resolve("timeout"), 5000);
           channel.subscribe((status) => {
-            if (status === "SUBSCRIBED") {
-              clearTimeout(timer);
-              resolve("ok");
-            }
+            if (status === "SUBSCRIBED") { clearTimeout(timer); resolve("ok"); }
           });
         });
         supabase.removeChannel(channel);
-
-        if (subResult === "ok") {
-          ok++;
-          addLog("ok", "Realtime", `Channel ${ch} → Subscribed successfully`);
-        } else {
-          warn++;
-          addLog("warning", "Realtime", `Channel ${ch} → Subscription timed out (may still work)`);
-        }
-      } catch (e: any) {
-        warn++;
-        addLog("warning", "Realtime", `Channel ${ch} → ${e.message}`);
-      }
+        if (subResult === "ok") { ok++; addLog("ok", "Realtime", `Channel ${ch} → Subscribed`); }
+        else { warn++; addLog("warning", "Realtime", `Channel ${ch} → Timeout`); }
+      } catch (e: any) { warn++; addLog("warning", "Realtime", `Channel ${ch} → ${e.message}`); }
     }
-
     return { ok, warn, crit: 0 };
   }, [addLog]);
 
-  // ─── Test 5: Auth & RLS ────────────────────────────────────────
   const runAuthTest = useCallback(async () => {
     addLog("info", "Auth", "Verifying authentication and session...");
     let ok = 0, warn = 0, crit = 0;
-
     const { data: session } = await supabase.auth.getSession();
-    if (!session?.session) {
-      crit++;
-      addLog("error", "Auth", "No active session detected");
-      return { ok, warn, crit };
-    }
-    ok++;
-    addLog("ok", "Auth", `Session active for ${session.session.user.email}`);
-
-    // Verify profile exists
+    if (!session?.session) { crit++; addLog("error", "Auth", "No active session"); return { ok, warn, crit }; }
+    ok++; addLog("ok", "Auth", `Session active for ${session.session.user.email}`);
     const { data: profile, error: profileErr } = await supabase
-      .from("profiles")
-      .select("user_id, full_name")
-      .eq("user_id", session.session.user.id)
-      .maybeSingle();
-
-    if (profileErr || !profile) {
-      crit++;
-      addLog("error", "Auth", `Profile not found for current user: ${profileErr?.message || "no row"}`);
-    } else {
-      ok++;
-      addLog("ok", "Auth", `Profile verified: ${profile.full_name}`);
-    }
-
+      .from("profiles").select("user_id, full_name").eq("user_id", session.session.user.id).maybeSingle();
+    if (profileErr || !profile) { crit++; addLog("error", "Auth", `Profile not found: ${profileErr?.message || "no row"}`); }
+    else { ok++; addLog("ok", "Auth", `Profile verified: ${profile.full_name}`); }
     return { ok, warn, crit };
   }, [addLog]);
 
-  // ─── Test 6: Data Consistency ──────────────────────────────────
   const runConsistencyTest = useCallback(async () => {
     addLog("info", "Consistency", "Running data consistency checks...");
     let ok = 0, warn = 0, crit = 0;
-
-    // Check for orphan nutritionist_patients (patient without profile)
-    const { data: links } = await supabase
-      .from("nutritionist_patients" as any)
-      .select("patient_id")
-      .eq("status", "active")
-      .limit(50);
-
+    const { data: links } = await supabase.from("nutritionist_patients" as any).select("patient_id").eq("status", "active").limit(50);
     if (links && links.length > 0) {
       const patientIds = links.map((l: any) => l.patient_id);
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id")
-        .in("user_id", patientIds);
-
+      const { data: profiles } = await supabase.from("profiles").select("user_id").in("user_id", patientIds);
       const profileIds = new Set((profiles || []).map((p: any) => p.user_id));
       const orphans = patientIds.filter((id: string) => !profileIds.has(id));
+      if (orphans.length > 0) { warn++; addLog("warning", "Consistency", `${orphans.length} active link(s) without profile`); }
+      else { ok++; addLog("ok", "Consistency", `All ${patientIds.length} active links have profiles`); }
+    } else { ok++; addLog("ok", "Consistency", "No active patient links to verify"); }
 
-      if (orphans.length > 0) {
-        warn++;
-        addLog("warning", "Consistency", `${orphans.length} active patient link(s) without matching profile`);
-      } else {
-        ok++;
-        addLog("ok", "Consistency", `All ${patientIds.length} active patient links have matching profiles`);
-      }
-    } else {
-      ok++;
-      addLog("ok", "Consistency", "No active patient links to verify (new system)");
-    }
-
-    // Check for meal plans with invalid status
-    const { count: stalePlans } = await supabase
-      .from("meal_plans" as any)
-      .select("id", { count: "exact", head: true })
-      .is("status", null);
-
-    if ((stalePlans ?? 0) > 0) {
-      warn++;
-      addLog("warning", "Consistency", `${stalePlans} meal plan(s) with NULL status`);
-    } else {
-      ok++;
-      addLog("ok", "Consistency", "All meal plans have valid status");
-    }
-
+    const { count: stalePlans } = await supabase.from("meal_plans" as any).select("id", { count: "exact", head: true }).is("plan_status" as any, null);
+    if ((stalePlans ?? 0) > 0) { warn++; addLog("warning", "Consistency", `${stalePlans} meal plan(s) with NULL status`); }
+    else { ok++; addLog("ok", "Consistency", "All meal plans have valid status"); }
     return { ok, warn, crit };
   }, [addLog]);
 
@@ -305,10 +298,11 @@ export default function SystemDiagnostics() {
   const runFullDiagnostic = useCallback(async () => {
     setTestStatus("running");
     setLogs([]);
+    logsBufferRef.current = [];
     setProgress(0);
     setStats({ critical: 0, warning: 0, ok: 0 });
 
-    addLog("info", "System", "═══ FITJOURNEY SYSTEM DIAGNOSTIC ENGINE v1.0 ═══");
+    addLog("info", "System", "═══ FITJOURNEY SYSTEM DIAGNOSTIC ENGINE v2.0 ═══");
     addLog("info", "System", `Started at ${new Date().toLocaleString("pt-BR")}`);
 
     const startTime = Date.now();
@@ -345,9 +339,10 @@ export default function SystemDiagnostics() {
     addLog("info", "System", `═══ DIAGNOSTIC COMPLETE ═══`);
     addLog("info", "System", `Health Score: ${score}/100 | OK: ${totalOk} | Warnings: ${totalWarn} | Critical: ${totalCrit} | Duration: ${durationMs}ms`);
 
-    // Save report
+    // Save summary report
+    let runId: string | null = null;
     try {
-      await (supabase as any).from("system_diagnostic_logs").insert({
+      const { data: inserted } = await (supabase as any).from("system_diagnostic_logs").insert({
         executed_by: user?.id,
         health_score: score,
         report_json: {
@@ -360,19 +355,32 @@ export default function SystemDiagnostics() {
         ok_count: totalOk,
         test_type: "full",
         duration_ms: durationMs,
-      });
+      }).select("id").single();
+
+      runId = inserted?.id ?? null;
     } catch {
       addLog("warning", "System", "Could not save diagnostic report to database");
     }
 
-    setTestStatus("done");
-    toast.success(`Diagnóstico completo: Score ${score}/100`);
-  }, [user, addLog, runAuthTest, runDatabaseTest, runRouteTest, runNotificationTest, runRealtimeTest, runConsistencyTest]);
+    // Save individual entries
+    if (runId) {
+      try {
+        await persistEntries(runId);
+        addLog("ok", "System", `✅ ${logsBufferRef.current.length} log entries persisted to database`);
+      } catch {
+        addLog("warning", "System", "Could not persist individual log entries");
+      }
+    }
 
-  // ─── Individual test runners ───────────────────────────────────
+    setTestStatus("done");
+    void refetchHistory();
+    toast.success(`Diagnóstico completo: Score ${score}/100`);
+  }, [user, addLog, runAuthTest, runDatabaseTest, runRouteTest, runNotificationTest, runRealtimeTest, runConsistencyTest, persistEntries, refetchHistory]);
+
   const runSingleTest = useCallback(async (name: string, fn: () => Promise<any>) => {
     setTestStatus("running");
     setLogs([]);
+    logsBufferRef.current = [];
     addLog("info", "System", `── Running: ${name} ──`);
     const result = await fn();
     setStats({ critical: result.crit, warning: result.warn, ok: result.ok });
@@ -393,12 +401,12 @@ export default function SystemDiagnostics() {
     return "Critical";
   };
 
-  const levelIcon = (level: LogLevel) => {
+  const levelIcon = (level: LogLevel | string) => {
     switch (level) {
       case "ok": return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />;
       case "warning": return <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />;
-      case "error": return <XCircle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />;
-      case "info": return <Activity className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />;
+      case "error": case "critical": return <XCircle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />;
+      default: return <Activity className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />;
     }
   };
 
@@ -412,20 +420,27 @@ export default function SystemDiagnostics() {
               <Cpu className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
               System Test Center
             </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground">Auto-diagnostic engine for production stability</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Auto-diagnostic engine with persistent logging</p>
           </div>
-          <Button
-            onClick={runFullDiagnostic}
-            disabled={testStatus === "running"}
-            className="gradient-primary gap-2"
-            size="lg"
-          >
-            {testStatus === "running" ? (
-              <><RefreshCw className="w-4 h-4 animate-spin" /> Running...</>
-            ) : (
-              <><Play className="w-4 h-4" /> Run Full Diagnostic</>
+          <div className="flex gap-2">
+            {logs.length > 0 && (
+              <Button variant="outline" size="sm" onClick={copyCurrentLogs} className="gap-1.5">
+                <Copy className="w-3.5 h-3.5" /> Copiar Logs
+              </Button>
             )}
-          </Button>
+            <Button
+              onClick={runFullDiagnostic}
+              disabled={testStatus === "running"}
+              className="gradient-primary gap-2"
+              size="lg"
+            >
+              {testStatus === "running" ? (
+                <><RefreshCw className="w-4 h-4 animate-spin" /> Running...</>
+              ) : (
+                <><Play className="w-4 h-4" /> Run Full Diagnostic</>
+              )}
+            </Button>
+          </div>
         </div>
 
         {/* Health Score */}
@@ -436,39 +451,22 @@ export default function SystemDiagnostics() {
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-4 sm:gap-6">
                     <div className="text-center">
-                      <p className={`text-4xl sm:text-5xl font-display font-bold ${getStatusColor(healthScore)}`}>
-                        {healthScore}
-                      </p>
+                      <p className={`text-4xl sm:text-5xl font-display font-bold ${getStatusColor(healthScore)}`}>{healthScore}</p>
                       <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">Health Score</p>
                     </div>
-                    <div>
-                      <Badge className={`text-xs sm:text-sm px-2 sm:px-3 py-1 ${
-                        healthScore >= 90 ? "bg-emerald-500/10 text-emerald-500" :
-                        healthScore >= 70 ? "bg-amber-500/10 text-amber-500" :
-                        "bg-red-500/10 text-red-500"
-                      }`}>
-                        {getStatusLabel(healthScore)}
-                      </Badge>
-                    </div>
+                    <Badge className={`text-xs sm:text-sm px-2 sm:px-3 py-1 ${
+                      healthScore >= 90 ? "bg-emerald-500/10 text-emerald-500" :
+                      healthScore >= 70 ? "bg-amber-500/10 text-amber-500" :
+                      "bg-red-500/10 text-red-500"
+                    }`}>{getStatusLabel(healthScore)}</Badge>
                   </div>
                   <div className="flex gap-4 sm:gap-6 text-center w-full sm:w-auto justify-around sm:justify-end">
-                    <div>
-                      <p className="text-xl sm:text-2xl font-bold text-emerald-500">{stats.ok}</p>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground">OK</p>
-                    </div>
-                    <div>
-                      <p className="text-xl sm:text-2xl font-bold text-amber-500">{stats.warning}</p>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground">Warnings</p>
-                    </div>
-                    <div>
-                      <p className="text-xl sm:text-2xl font-bold text-red-500">{stats.critical}</p>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground">Critical</p>
-                    </div>
+                    <div><p className="text-xl sm:text-2xl font-bold text-emerald-500">{stats.ok}</p><p className="text-[10px] sm:text-xs text-muted-foreground">OK</p></div>
+                    <div><p className="text-xl sm:text-2xl font-bold text-amber-500">{stats.warning}</p><p className="text-[10px] sm:text-xs text-muted-foreground">Warnings</p></div>
+                    <div><p className="text-xl sm:text-2xl font-bold text-red-500">{stats.critical}</p><p className="text-[10px] sm:text-xs text-muted-foreground">Critical</p></div>
                   </div>
                 </div>
-                {testStatus === "running" && (
-                  <Progress value={progress} className="mt-4 h-2" />
-                )}
+                {testStatus === "running" && <Progress value={progress} className="mt-4 h-2" />}
               </CardContent>
             </Card>
           </motion.div>
@@ -497,61 +495,186 @@ export default function SystemDiagnostics() {
           ))}
         </div>
 
-        {/* Live Logs */}
-        <Card className="glass border-border">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-display flex items-center gap-2">
-              <FileText className="w-5 h-5 text-primary" />
-              Live Diagnostic Logs
-              {logs.length > 0 && (
-                <Badge variant="outline" className="ml-2 text-xs">{logs.length} entries</Badge>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[300px] sm:h-[400px] rounded-lg bg-background/50 border border-border p-2 sm:p-3">
-              {logs.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-                  <p>Run a diagnostic to see results here.</p>
-                </div>
-              ) : (
-                <div className="space-y-1 font-mono text-[10px] sm:text-xs">
-                  <AnimatePresence>
-                    {logs.map(log => (
-                      <motion.div
-                        key={log.id}
-                        initial={{ opacity: 0, x: -5 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className={`flex items-start gap-2 py-1 px-2 rounded ${
-                          log.level === "error" ? "bg-red-500/5" :
-                          log.level === "warning" ? "bg-amber-500/5" :
-                          log.level === "ok" ? "bg-emerald-500/5" :
-                          ""
-                        }`}
-                      >
-                        {levelIcon(log.level)}
-                        <span className="text-muted-foreground whitespace-nowrap hidden sm:inline">
-                          [{log.module}]
-                        </span>
-                        <span className={cn("break-all sm:break-normal",
-                          log.level === "error" ? "text-red-400" :
-                          log.level === "warning" ? "text-amber-400" :
-                          log.level === "ok" ? "text-emerald-400" :
-                          "text-blue-400"
-                        )}>
-                          {log.message}
-                        </span>
-                        {log.detail && (
-                          <span className="text-muted-foreground/60 truncate">{log.detail}</span>
-                        )}
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </div>
-              )}
-            </ScrollArea>
-          </CardContent>
-        </Card>
+        {/* Tabs: Live Logs + History */}
+        <Tabs defaultValue="live" className="w-full">
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="live" className="gap-1.5 flex-1 sm:flex-none">
+              <FileText className="w-3.5 h-3.5" /> Live Logs
+            </TabsTrigger>
+            <TabsTrigger value="history" className="gap-1.5 flex-1 sm:flex-none">
+              <History className="w-3.5 h-3.5" /> Histórico
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Live Logs Tab */}
+          <TabsContent value="live">
+            <Card className="glass border-border">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-display flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-primary" />
+                  Live Diagnostic Logs
+                  {logs.length > 0 && <Badge variant="outline" className="ml-2 text-xs">{logs.length} entries</Badge>}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-[300px] sm:h-[400px] rounded-lg bg-background/50 border border-border p-2 sm:p-3">
+                  {logs.length === 0 ? (
+                    <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+                      <p>Run a diagnostic to see results here.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-1 font-mono text-[10px] sm:text-xs">
+                      <AnimatePresence>
+                        {logs.map(log => (
+                          <motion.div
+                            key={log.id}
+                            initial={{ opacity: 0, x: -5 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className={`flex items-start gap-2 py-1 px-2 rounded ${
+                              log.level === "error" ? "bg-red-500/5" :
+                              log.level === "warning" ? "bg-amber-500/5" :
+                              log.level === "ok" ? "bg-emerald-500/5" : ""
+                            }`}
+                          >
+                            {levelIcon(log.level)}
+                            <span className="text-muted-foreground whitespace-nowrap hidden sm:inline">[{log.module}]</span>
+                            <span className={cn("break-all sm:break-normal",
+                              log.level === "error" ? "text-red-400" :
+                              log.level === "warning" ? "text-amber-400" :
+                              log.level === "ok" ? "text-emerald-400" : "text-blue-400"
+                            )}>{log.message}</span>
+                            {log.detail && <span className="text-muted-foreground/60 truncate">{log.detail}</span>}
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+                    </div>
+                  )}
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* History Tab */}
+          <TabsContent value="history">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Run List */}
+              <Card className="glass border-border lg:col-span-1">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-display flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-primary" /> Últimas Execuções
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-2">
+                  <ScrollArea className="h-[350px]">
+                    <div className="space-y-1">
+                      {(!historyRuns || historyRuns.length === 0) && (
+                        <p className="text-xs text-muted-foreground text-center py-8">Nenhum diagnóstico salvo ainda</p>
+                      )}
+                      {historyRuns?.map((run: any) => (
+                        <button
+                          key={run.id}
+                          onClick={() => setSelectedRunId(run.id)}
+                          className={cn(
+                            "w-full text-left p-3 rounded-lg border transition-all text-xs",
+                            selectedRunId === run.id
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:border-primary/30"
+                          )}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className={`text-lg font-bold ${getStatusColor(run.health_score)}`}>
+                              {run.health_score}
+                            </span>
+                            <Badge variant="outline" className="text-[10px]">
+                              {run.test_type}
+                            </Badge>
+                          </div>
+                          <div className="flex gap-2 mt-1.5 text-[10px]">
+                            <span className="text-emerald-500">{run.ok_count} ok</span>
+                            <span className="text-amber-500">{run.warning_count} warn</span>
+                            <span className="text-red-500">{run.critical_count} crit</span>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground mt-1">
+                            {new Date(run.created_at).toLocaleString("pt-BR")}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+
+              {/* Entry Details */}
+              <Card className="glass border-border lg:col-span-2">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <CardTitle className="text-sm font-display flex items-center gap-2">
+                      <Filter className="w-4 h-4 text-primary" /> Detalhes do Run
+                    </CardTitle>
+                    <div className="flex gap-1.5">
+                      {["all", "critical", "warning", "ok", "info"].map(f => (
+                        <Button
+                          key={f}
+                          size="sm"
+                          variant={historyFilter === f ? "default" : "outline"}
+                          className="text-[10px] h-6 px-2"
+                          onClick={() => setHistoryFilter(f)}
+                        >
+                          {f === "all" ? "Todos" : f}
+                        </Button>
+                      ))}
+                      {filteredEntries.length > 0 && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-[10px] h-6 px-2 gap-1"
+                          onClick={() => copyLogs(filteredEntries)}
+                        >
+                          <Copy className="w-3 h-3" /> Copiar
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[350px] rounded-lg bg-background/50 border border-border p-2">
+                    {!selectedRunId ? (
+                      <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+                        Selecione uma execução para ver os logs
+                      </div>
+                    ) : filteredEntries.length === 0 ? (
+                      <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+                        Nenhum log com esse filtro
+                      </div>
+                    ) : (
+                      <div className="space-y-1 font-mono text-[10px] sm:text-xs">
+                        {filteredEntries.map((entry: any) => (
+                          <div
+                            key={entry.id}
+                            className={`flex items-start gap-2 py-1 px-2 rounded ${
+                              entry.severity === "critical" ? "bg-red-500/5" :
+                              entry.severity === "warning" ? "bg-amber-500/5" :
+                              entry.severity === "ok" ? "bg-emerald-500/5" : ""
+                            }`}
+                          >
+                            {levelIcon(entry.severity)}
+                            <span className="text-muted-foreground whitespace-nowrap">[{entry.module}]</span>
+                            <span className={cn("break-all sm:break-normal",
+                              entry.severity === "critical" ? "text-red-400" :
+                              entry.severity === "warning" ? "text-amber-400" :
+                              entry.severity === "ok" ? "text-emerald-400" : "text-blue-400"
+                            )}>{entry.message}</span>
+                            {entry.detail && <span className="text-muted-foreground/60 truncate">{entry.detail}</span>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
