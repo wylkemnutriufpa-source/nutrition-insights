@@ -6214,7 +6214,9 @@ export type Database = {
       patient_clinical_state: {
         Row: {
           adherence_avg_28d: number | null
+          adherence_score: number | null
           analysis_window_days: number | null
+          behavioral_score: number | null
           calculation_version: string | null
           caloric_response_status: string
           calorie_avg_real: number | null
@@ -6224,21 +6226,28 @@ export type Database = {
           cluster_engine_version: string | null
           cluster_min_days_met: boolean | null
           cluster_strategy: Json | null
+          composite_score: number | null
           data_points_used: number | null
           engagement_avg_28d: number | null
+          engagement_score: number | null
           id: string
           metabolic_cluster: string | null
           metabolic_cluster_confidence: string | null
           metabolic_feature_vector: Json | null
+          metabolic_score: number | null
           patient_id: string
           plan_active_days: number | null
+          risk_score: number | null
           stagnation_risk_level: string
           updated_at: string | null
           weight_velocity_pct: number | null
+          zone: string | null
         }
         Insert: {
           adherence_avg_28d?: number | null
+          adherence_score?: number | null
           analysis_window_days?: number | null
+          behavioral_score?: number | null
           calculation_version?: string | null
           caloric_response_status?: string
           calorie_avg_real?: number | null
@@ -6248,21 +6257,28 @@ export type Database = {
           cluster_engine_version?: string | null
           cluster_min_days_met?: boolean | null
           cluster_strategy?: Json | null
+          composite_score?: number | null
           data_points_used?: number | null
           engagement_avg_28d?: number | null
+          engagement_score?: number | null
           id?: string
           metabolic_cluster?: string | null
           metabolic_cluster_confidence?: string | null
           metabolic_feature_vector?: Json | null
+          metabolic_score?: number | null
           patient_id: string
           plan_active_days?: number | null
+          risk_score?: number | null
           stagnation_risk_level?: string
           updated_at?: string | null
           weight_velocity_pct?: number | null
+          zone?: string | null
         }
         Update: {
           adherence_avg_28d?: number | null
+          adherence_score?: number | null
           analysis_window_days?: number | null
+          behavioral_score?: number | null
           calculation_version?: string | null
           caloric_response_status?: string
           calorie_avg_real?: number | null
@@ -6272,17 +6288,22 @@ export type Database = {
           cluster_engine_version?: string | null
           cluster_min_days_met?: boolean | null
           cluster_strategy?: Json | null
+          composite_score?: number | null
           data_points_used?: number | null
           engagement_avg_28d?: number | null
+          engagement_score?: number | null
           id?: string
           metabolic_cluster?: string | null
           metabolic_cluster_confidence?: string | null
           metabolic_feature_vector?: Json | null
+          metabolic_score?: number | null
           patient_id?: string
           plan_active_days?: number | null
+          risk_score?: number | null
           stagnation_risk_level?: string
           updated_at?: string | null
           weight_velocity_pct?: number | null
+          zone?: string | null
         }
         Relationships: []
       }
