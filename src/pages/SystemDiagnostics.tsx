@@ -431,17 +431,17 @@ export default function SystemDiagnostics() {
         {healthScore !== null && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <Card className="glass border-border">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-6">
+              <CardContent className="p-4 md:p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-4 sm:gap-6">
                     <div className="text-center">
-                      <p className={`text-5xl font-display font-bold ${getStatusColor(healthScore)}`}>
+                      <p className={`text-4xl sm:text-5xl font-display font-bold ${getStatusColor(healthScore)}`}>
                         {healthScore}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">Health Score</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">Health Score</p>
                     </div>
                     <div>
-                      <Badge className={`text-sm px-3 py-1 ${
+                      <Badge className={`text-xs sm:text-sm px-2 sm:px-3 py-1 ${
                         healthScore >= 90 ? "bg-emerald-500/10 text-emerald-500" :
                         healthScore >= 70 ? "bg-amber-500/10 text-amber-500" :
                         "bg-red-500/10 text-red-500"
@@ -450,18 +450,18 @@ export default function SystemDiagnostics() {
                       </Badge>
                     </div>
                   </div>
-                  <div className="flex gap-6 text-center">
+                  <div className="flex gap-4 sm:gap-6 text-center w-full sm:w-auto justify-around sm:justify-end">
                     <div>
-                      <p className="text-2xl font-bold text-emerald-500">{stats.ok}</p>
-                      <p className="text-xs text-muted-foreground">OK</p>
+                      <p className="text-xl sm:text-2xl font-bold text-emerald-500">{stats.ok}</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">OK</p>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-amber-500">{stats.warning}</p>
-                      <p className="text-xs text-muted-foreground">Warnings</p>
+                      <p className="text-xl sm:text-2xl font-bold text-amber-500">{stats.warning}</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">Warnings</p>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-red-500">{stats.critical}</p>
-                      <p className="text-xs text-muted-foreground">Critical</p>
+                      <p className="text-xl sm:text-2xl font-bold text-red-500">{stats.critical}</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">Critical</p>
                     </div>
                   </div>
                 </div>
