@@ -569,11 +569,11 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
 export function usePendingApprovals() {
   const { user } = useAuth();
   const [count, setCount] = useState(0);
+  const checkedRef = useRef(false);
 
   useEffect(() => {
     if (!user) return;
     const check = async () => {
-      // Get pipeline IDs
       const { data: pipelines } = await supabase
         .from("onboarding_pipelines" as any)
         .select("id, patient_id")
@@ -585,27 +585,50 @@ export function usePendingApprovals() {
         return;
       }
 
-      // Cross-check with active links only
       const patientIds = (pipelines as any[]).map((p: any) => p.patient_id);
       const { data: activeLinks } = await supabase
         .from("nutritionist_patients")
-        .select("patient_id")
+        .select("patient_id, onboarding_status")
         .eq("nutritionist_id", user.id)
         .in("patient_id", patientIds)
         .eq("status", "active");
 
-      const activeSet = new Set((activeLinks || []).map((l: any) => l.patient_id));
-      const eligible = (pipelines as any[]).filter((p: any) => activeSet.has(p.patient_id));
-      setCount(eligible.length);
+      // Same business rule: exclude legacy statuses
+      const legacyStatuses = ["lead_created", "awaiting_payment"];
+      const eligible = (activeLinks || []).filter((l: any) => {
+        if (l.onboarding_status && legacyStatuses.includes(l.onboarding_status)) return false;
+        return true;
+      });
+      const activeSet = new Set(eligible.map((l: any) => l.patient_id));
+      const validPipelines = (pipelines as any[]).filter((p: any) => activeSet.has(p.patient_id));
+      setCount(validPipelines.length);
     };
 
-    check();
+    // Only check once on mount, then on explicit realtime events
+    if (!checkedRef.current) {
+      check();
+      checkedRef.current = true;
+    }
 
+    // Realtime: only listen for relevant updates, throttle re-checks
+    let timeout: ReturnType<typeof setTimeout>;
     const ch = supabase
-      .channel("pending-count")
-      .on("postgres_changes", { event: "*", schema: "public", table: "onboarding_pipelines" }, () => check())
+      .channel("pending-count-v2")
+      .on("postgres_changes", {
+        event: "UPDATE",
+        schema: "public",
+        table: "onboarding_pipelines",
+        filter: `nutritionist_id=eq.${user.id}`,
+      }, () => {
+        // Debounce to avoid rapid-fire recalculations
+        clearTimeout(timeout);
+        timeout = setTimeout(check, 2000);
+      })
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => {
+      clearTimeout(timeout);
+      supabase.removeChannel(ch);
+    };
   }, [user]);
 
   return count;
