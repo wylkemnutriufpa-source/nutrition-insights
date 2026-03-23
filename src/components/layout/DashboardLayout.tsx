@@ -17,6 +17,7 @@ import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import SmartResumeModal from "@/components/common/SmartResumeModal";
 import IntelligenceModal from "@/components/common/IntelligenceModal";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import ClinicalAIEntity from "@/components/ai-entity/ClinicalAIEntity";
 
 function LayoutFallbackCard({
   title,
