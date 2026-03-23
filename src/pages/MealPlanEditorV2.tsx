@@ -8,6 +8,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import { supabase } from "@/integrations/supabase/client";
+import { publishMealPlan } from "@/lib/serverTransitions";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { WeeklyGrid } from "@/components/meal-editor-v2/WeeklyGrid";
