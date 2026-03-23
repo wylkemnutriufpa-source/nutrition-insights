@@ -232,9 +232,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
         .filter((p: any) => p.mealPlanId !== planId)
         .map((p: any) => p.mealPlanId);
       for (const otherId of otherPlanIds) {
-        await supabase.from("meal_plans")
-          .update({ plan_status: "rejected", is_active: false } as any)
-          .eq("id", otherId);
+        await rejectMealPlan(otherId, user.id, "Opção não selecionada");
       }
     }
 
