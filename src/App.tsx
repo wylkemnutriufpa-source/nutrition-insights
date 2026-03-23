@@ -222,8 +222,10 @@ function PatientRoute({ children }: { children: React.ReactNode }) {
 function ConsentGuardedPatientRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isPatient } = useAuth();
   const { hasConsent, loading: consentLoading } = useConsentGuard();
-  if (loading || consentLoading) return <PageLoader />;
+  const { hasPaid, loading: paymentLoading } = usePaymentGuard();
+  if (loading || consentLoading || paymentLoading) return <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
+  if (isPatient && !hasPaid) return <Navigate to="/payment-required" replace />;
   if (isPatient && !hasConsent) return <Navigate to="/consent-required" replace />;
   return <>{children}</>;
 }
