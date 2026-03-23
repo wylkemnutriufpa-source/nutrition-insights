@@ -417,7 +417,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </ErrorBoundary>
         </div>
       </main>
-      {profile?.role && profile.role !== "patient" && (
+      {!isPatient && (
         <ErrorBoundary section="ClinicalAIEntity" fallback={null}>
           <ClinicalAIEntity />
         </ErrorBoundary>
