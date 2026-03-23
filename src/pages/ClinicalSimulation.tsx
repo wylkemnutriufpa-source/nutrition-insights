@@ -307,5 +307,7 @@ export default function ClinicalSimulation() {
         </>
       )}
     </div>
+    </div>
+    </DashboardLayout>
   );
 }

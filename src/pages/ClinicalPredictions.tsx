@@ -202,5 +202,7 @@ export default function ClinicalPredictions() {
         </div>
       )}
     </div>
+    </div>
+    </DashboardLayout>
   );
 }
