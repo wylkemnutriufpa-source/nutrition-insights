@@ -41,8 +41,8 @@ interface CheckinData {
 
 interface Protocol {
   id: string;
-  title: string;
-  category: string;
+  protocol_name: string;
+  protocol_category: string;
 }
 
 export default function CheckinPanel() {
