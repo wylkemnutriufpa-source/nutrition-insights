@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,38 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect, useCallback } from "react";
+
+// Map feature names to real routes
+const featureRouteMap: Record<string, string> = {
+  ai_meal_analysis: "/analyze-meal",
+  ai_recipe_generator: "/recipes",
+  ai_anamnesis: "/anamnesis",
+  clinical_intelligence: "/clinical-intelligence",
+  clinical_brain: "/clinical-brain",
+  automation_center: "/automation-center",
+  patients_management: "/patients",
+  meal_plan_editor: "/meal-plan-editor",
+  meal_plan_editor_v2: "/meal-plan-editor-v2",
+  protocols: "/protocols",
+  programs: "/programs",
+  onboarding_pipeline: "/onboarding-pipeline",
+  patient_import: "/import-patients",
+  chat: "/chat",
+  whatsapp_integration: "/whatsapp-settings",
+  notifications: "/notifications",
+  appointments: "/appointments",
+  food_database: "/food-database",
+  recipes: "/recipes",
+  shopping_list: "/shopping-list",
+  body_analysis: "/body-analysis",
+  branding: "/branding",
+  supplements: "/supplements",
+  reports: "/reports",
+  financial: "/financial",
+  crm: "/professional/crm",
+  clinical_risk: "/clinical-risk",
+  growth_dashboard: "/growth-dashboard",
+};
 
 const CATEGORY_META: Record<string, { gradient: string; emoji: string }> = {
   "IA & Automação": { gradient: "from-primary/20 to-primary/5", emoji: "🤖" },
