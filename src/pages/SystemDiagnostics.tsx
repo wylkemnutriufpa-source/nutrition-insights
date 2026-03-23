@@ -474,7 +474,7 @@ export default function SystemDiagnostics() {
         )}
 
         {/* Quick Tests */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
           {[
             { label: "Database", icon: Database, fn: runDatabaseTest },
             { label: "Routes", icon: Route, fn: runRouteTest },
