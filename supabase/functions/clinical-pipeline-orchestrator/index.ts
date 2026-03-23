@@ -41,6 +41,7 @@ const ENGINE_VERSIONS: Record<string, string> = {
   "compute-therapeutic-adjustments": "1.0.0",
   "compute-weight-trajectory-engine": "1.0.0",
   "compute-metabolic-twin-engine": "1.0.0",
+  "compute-clinical-brain": "1.0.0",
   "compute-population-nutrition-intelligence": "1.0.0",
   "compute-global-adaptive-clinical-intelligence": "1.0.0",
 };
