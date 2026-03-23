@@ -4,13 +4,14 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/lib/auth";
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import SafePage from "@/components/common/SafePage";
 import { CelebrationProvider } from "@/components/common/SuccessCelebration";
 import PageLoader from "@/components/common/PageLoader";
 import { BrainLoaderScreen } from "@/components/common/BrainLoader";
+import AppBootExperience from "@/components/common/AppBootExperience";
 import { CommandPaletteProvider } from "@/components/common/CommandPalette";
 import { readActiveEditorRoute } from "@/lib/mealPlanEditorStore";
 import { installGlobalErrorHandlers } from "@/lib/monitoring";
@@ -226,11 +227,31 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 
 function RootRoute() {
   const { user, loading, isPersonal, isNutritionist, isAdmin } = useAuth();
+  const [bootDone, setBootDone] = useState(false);
   const activeEditorRoute = !loading && user && (isNutritionist || isAdmin)
     ? readActiveEditorRoute()
     : null;
 
-  if (loading) return <BrainLoaderScreen text="Preparando sua experiência…" />;
+  // Show cinematic boot while loading (only for auth'd sessions or initial load)
+  if (loading && !bootDone) {
+    return (
+      <AppBootExperience
+        dataReady={false}
+        onComplete={() => setBootDone(true)}
+      />
+    );
+  }
+
+  // If loading just finished but boot animation hasn't completed yet
+  if (!loading && !bootDone) {
+    return (
+      <AppBootExperience
+        dataReady={true}
+        onComplete={() => setBootDone(true)}
+      />
+    );
+  }
+
   if (!user) return <GatewayPage />;
   if (activeEditorRoute?.shouldRestore) {
     return <Navigate to={activeEditorRoute.route} replace />;
