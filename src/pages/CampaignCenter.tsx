@@ -62,19 +62,15 @@ export default function CampaignCenter() {
     }));
   };
 
-  const simulatePreview = () => {
-    setPreview({
-      total: Math.floor(Math.random() * 300) + 20,
-      byChannel: form.channels.map(ch => ({ channel: ch, count: Math.floor(Math.random() * 200) + 10 })),
-      optInRate: Math.floor(Math.random() * 30) + 70,
-    });
-    setStep(5);
-  };
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [launching, setLaunching] = useState(false);
 
-  const saveCampaign = async (status: string) => {
+  const runPreview = async () => {
     if (!user) return;
+    setPreviewLoading(true);
     try {
-      await (supabase as any).from("campaigns").insert({
+      // First save as draft to get campaign_id
+      const { data: draft, error } = await (supabase as any).from("campaigns").insert({
         campaign_name: form.campaign_name,
         campaign_type: form.campaign_type,
         audience_type: form.audience_type,
@@ -86,15 +82,72 @@ export default function CampaignCenter() {
         filters_json: filters,
         scheduling_type: form.scheduling_type,
         scheduled_at: form.scheduled_at || null,
-        status,
+        status: "draft",
         created_by: user.id,
+      }).select().single();
+      if (error) throw error;
+
+      const { data: previewData, error: prevErr } = await supabase.functions.invoke("execute-campaign", {
+        body: { campaign_id: draft.id, mode: "preview" },
       });
-      toast.success(status === "running" ? "🚀 Campanha enviada!" : "💾 Campanha salva como rascunho");
+      if (prevErr) throw prevErr;
+
+      setPreview({
+        campaignId: draft.id,
+        total: previewData.total_recipients || 0,
+        byChannel: previewData.by_channel || [],
+      });
+      setStep(5);
+      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+    } catch (err: any) {
+      toast.error("Erro no preview: " + (err.message || ""));
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const saveCampaign = async (status: string) => {
+    if (!user) return;
+    setLaunching(true);
+    try {
+      const campaignId = preview?.campaignId;
+      if (status === "running" && campaignId) {
+        // Launch real campaign via edge function
+        const { data, error } = await supabase.functions.invoke("execute-campaign", {
+          body: { campaign_id: campaignId, mode: "execute" },
+        });
+        if (error) throw error;
+        toast.success(`🚀 Campanha enviada para ${data.delivered || 0} destinatários!`);
+      } else if (campaignId) {
+        // Already saved as draft during preview
+        toast.success("💾 Campanha salva como rascunho");
+      } else {
+        // No preview was done, save directly
+        await (supabase as any).from("campaigns").insert({
+          campaign_name: form.campaign_name,
+          campaign_type: form.campaign_type,
+          audience_type: form.audience_type,
+          title: form.title,
+          message_body: form.message_body,
+          call_to_action_label: form.call_to_action_label || null,
+          call_to_action_url: form.call_to_action_url || null,
+          delivery_channels_json: form.channels,
+          filters_json: filters,
+          scheduling_type: form.scheduling_type,
+          scheduled_at: form.scheduled_at || null,
+          status,
+          created_by: user.id,
+        });
+        toast.success(status === "running" ? "🚀 Campanha enviada!" : "💾 Rascunho salvo");
+      }
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
       setShowCreate(false);
       setStep(1);
-    } catch {
-      toast.error("Erro ao salvar campanha");
+      setPreview(null);
+    } catch (err: any) {
+      toast.error("Erro: " + (err.message || "Erro ao salvar campanha"));
+    } finally {
+      setLaunching(false);
     }
   };
 
@@ -266,7 +319,7 @@ export default function CampaignCenter() {
                 {form.scheduling_type === "scheduled" && (
                   <Input type="datetime-local" value={form.scheduled_at} onChange={e => setForm(f => ({ ...f, scheduled_at: e.target.value }))} />
                 )}
-                <Button className="w-full" onClick={simulatePreview}><Eye className="w-4 h-4 mr-2" /> Preview</Button>
+                <Button className="w-full" onClick={runPreview} disabled={previewLoading}>{previewLoading ? "Calculando..." : <><Eye className="w-4 h-4 mr-2" /> Preview</>}</Button>
               </div>
             )}
 
