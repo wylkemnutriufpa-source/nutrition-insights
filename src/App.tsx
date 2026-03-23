@@ -401,21 +401,24 @@ const App = () => (
               <Route path="/personal/workouts/new" element={<PersonalRoute><LP section="Treinos"><PersonalWorkouts /></LP></PersonalRoute>} />
               <Route path="/fitness-anamnesis" element={<ProtectedRoute><LP section="Anamnese Fitness"><FitnessAnamnesis /></LP></ProtectedRoute>} />
 
-              {/* Patient portal */}
-              <Route path="/client/dashboard" element={<PatientRoute><LP section="Dashboard"><ClientDashboard /></LP></PatientRoute>} />
-              <Route path="/my-workouts" element={<ProtectedRoute><LP section="Treinos"><PatientWorkouts /></LP></ProtectedRoute>} />
+              {/* Consent required page */}
+              <Route path="/consent-required" element={<PatientRoute><LP section="Consentimento"><ConsentRequired /></LP></PatientRoute>} />
 
-              {/* Patient-only routes */}
-              <Route path="/meals" element={<ProtectedRoute><LP section="Refeições"><Meals /></LP></ProtectedRoute>} />
-              <Route path="/achievements" element={<ProtectedRoute><LP section="Conquistas"><Achievements /></LP></ProtectedRoute>} />
-              <Route path="/challenges" element={<ProtectedRoute><LP section="Desafios"><Challenges /></LP></ProtectedRoute>} />
-              <Route path="/checklist" element={<ProtectedRoute><LP section="Checklist"><Checklist /></LP></ProtectedRoute>} />
-              <Route path="/anamnesis" element={<ProtectedRoute><LP section="Anamnese"><Anamnesis /></LP></ProtectedRoute>} />
-              <Route path="/onboarding" element={<ProtectedRoute><LP section="Onboarding"><OnboardingPipeline /></LP></ProtectedRoute>} />
-              <Route path="/onboarding-pipeline" element={<ProtectedRoute><LP section="Onboarding"><OnboardingPipeline /></LP></ProtectedRoute>} />
-              <Route path="/analyze" element={<ProtectedRoute><LP section="Análise"><AnalyzeMeal /></LP></ProtectedRoute>} />
-              <Route path="/shopping-list" element={<ProtectedRoute><LP section="Compras"><ShoppingList /></LP></ProtectedRoute>} />
-              <Route path="/my-diet" element={<ProtectedRoute><LP section="Dieta"><PatientMealPlan /></LP></ProtectedRoute>} />
+              {/* Patient portal — consent guarded */}
+              <Route path="/client/dashboard" element={<ConsentGuardedPatientRoute><LP section="Dashboard"><ClientDashboard /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/my-workouts" element={<ConsentGuardedPatientRoute><LP section="Treinos"><PatientWorkouts /></LP></ConsentGuardedPatientRoute>} />
+
+              {/* Patient-only routes — consent guarded */}
+              <Route path="/meals" element={<ConsentGuardedPatientRoute><LP section="Refeições"><Meals /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/achievements" element={<ConsentGuardedPatientRoute><LP section="Conquistas"><Achievements /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/challenges" element={<ConsentGuardedPatientRoute><LP section="Desafios"><Challenges /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/checklist" element={<ConsentGuardedPatientRoute><LP section="Checklist"><Checklist /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/anamnesis" element={<ConsentGuardedPatientRoute><LP section="Anamnese"><Anamnesis /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/onboarding" element={<ConsentGuardedPatientRoute><LP section="Onboarding"><OnboardingPipeline /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/onboarding-pipeline" element={<ConsentGuardedPatientRoute><LP section="Onboarding"><OnboardingPipeline /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/analyze" element={<ConsentGuardedPatientRoute><LP section="Análise"><AnalyzeMeal /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/shopping-list" element={<ConsentGuardedPatientRoute><LP section="Compras"><ShoppingList /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/my-diet" element={<ConsentGuardedPatientRoute><LP section="Dieta"><PatientMealPlan /></LP></ConsentGuardedPatientRoute>} />
               <Route path="/journey" element={<ProtectedRoute><LP section="Jornada"><Journey /></LP></ProtectedRoute>} />
               <Route path="/library" element={<ProtectedRoute><LP section="Biblioteca"><Library /></LP></ProtectedRoute>} />
               <Route path="/weight-calculator" element={<ProtectedRoute><LP section="Calculadora"><WeightCalculator /></LP></ProtectedRoute>} />
