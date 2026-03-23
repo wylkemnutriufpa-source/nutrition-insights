@@ -57,23 +57,24 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
     if (open && user) fetchPending();
   }, [open, user]);
 
-  // Realtime for new pending approvals
+  // Realtime — only refetch when modal is actually open to prevent background noise
   useEffect(() => {
-    if (!user) return;
+    if (!user || !open) return;
     const ch = supabase
-      .channel("pending-approvals-global")
+      .channel("pending-approvals-modal")
       .on("postgres_changes", {
         event: "UPDATE",
         schema: "public",
         table: "onboarding_pipelines",
+        filter: `nutritionist_id=eq.${user.id}`,
       }, (payload: any) => {
-        if (payload.new?.status === "pending_approval" && payload.new?.nutritionist_id === user.id) {
+        if (payload.new?.status === "pending_approval") {
           fetchPending();
         }
       })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [user]);
+  }, [user, open]);
 
   async function fetchPending() {
     if (!user) return;

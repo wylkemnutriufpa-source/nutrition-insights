@@ -72,16 +72,20 @@ function NutritionistDashboardContent() {
   const pendingApprovalsCount = usePendingApprovals();
   const [approvalsModalOpen, setApprovalsModalOpen] = useState(false);
 
-  // Auto-open modal ONCE per session — only on first load, never re-opens after dismiss
-  const APPROVALS_DISMISSED_KEY = "fj_approvals_dismissed_v2";
+  // Auto-open modal ONCE per session — stable, never re-opens after dismiss or first show
+  const APPROVALS_DISMISSED_KEY = "fj_approvals_dismissed_v3";
   const hasAutoOpened = useRef(false);
   useEffect(() => {
-    if (pendingApprovalsCount <= 0 || hasAutoOpened.current) return;
-    const dismissed = sessionStorage.getItem(APPROVALS_DISMISSED_KEY) === "true";
-    if (!dismissed) {
-      setApprovalsModalOpen(true);
+    // Only auto-open once, ever, during this component's lifetime
+    if (hasAutoOpened.current) return;
+    if (pendingApprovalsCount <= 0) return;
+    // Check sessionStorage — if dismissed this session, never reopen
+    if (sessionStorage.getItem(APPROVALS_DISMISSED_KEY) === "true") {
+      hasAutoOpened.current = true; // Mark so we don't keep checking
+      return;
     }
     hasAutoOpened.current = true;
+    setApprovalsModalOpen(true);
   }, [pendingApprovalsCount]);
 
   const handleApprovalsModalChange = (open: boolean) => {
