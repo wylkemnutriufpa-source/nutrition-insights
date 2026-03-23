@@ -41,7 +41,7 @@ const featureRouteMap: Record<string, string> = {
   financial: "/financial",
   crm: "/professional/crm",
   clinical_risk: "/clinical-risk",
-  growth_dashboard: "/growth-dashboard",
+  growth_dashboard: "/reports",
 };
 
 const CATEGORY_META: Record<string, { gradient: string; emoji: string }> = {
