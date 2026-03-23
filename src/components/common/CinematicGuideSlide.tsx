@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Crown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sparkles, Crown, ExternalLink } from "lucide-react";
 import type { PresentationSlide } from "@/lib/presentationSlides";
 import { cn } from "@/lib/utils";
 
@@ -10,9 +11,11 @@ interface Props {
     isPremium?: boolean;
     emotionalImpact?: string;
     ctaText?: string;
+    featureKey?: string;
   };
   index: number;
   total: number;
+  onCtaClick?: (featureKey: string) => void;
 }
 
 const impactGlow: Record<string, string> = {
@@ -22,9 +25,10 @@ const impactGlow: Record<string, string> = {
   transformador: "shadow-accent/60",
 };
 
-export default function CinematicGuideSlide({ slide, index, total }: Props) {
+export default function CinematicGuideSlide({ slide, index, total, onCtaClick }: Props) {
   const Icon = slide.icon;
   const glow = impactGlow[slide.emotionalImpact ?? "medium"];
+  const featureKey = (slide as any).featureKey ?? slide.id;
 
   return (
     <motion.div
@@ -121,7 +125,7 @@ export default function CinematicGuideSlide({ slide, index, total }: Props) {
         ))}
       </ul>
 
-      {/* CTA pulsing */}
+      {/* CTA — now a real clickable button */}
       {slide.ctaText && (
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -129,15 +133,18 @@ export default function CinematicGuideSlide({ slide, index, total }: Props) {
           transition={{ delay: 0.8 }}
           className="text-center mt-8"
         >
-          <span className={cn(
-            "inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium",
-            "bg-gradient-to-r text-primary-foreground shadow-lg",
-            slide.gradient,
-            slide.emotionalImpact === "transformador" && "animate-pulse"
-          )}>
-            <Sparkles className="w-4 h-4" />
+          <Button
+            onClick={() => onCtaClick?.(featureKey)}
+            className={cn(
+              "gap-2 px-6 py-2.5 rounded-full text-sm font-medium shadow-lg",
+              "bg-gradient-to-r text-primary-foreground hover:opacity-90 transition-opacity",
+              slide.gradient,
+              slide.emotionalImpact === "transformador" && "animate-pulse"
+            )}
+          >
+            <ExternalLink className="w-4 h-4" />
             {slide.ctaText}
-          </span>
+          </Button>
         </motion.div>
       )}
 

@@ -1,10 +1,13 @@
 import { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, X, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import CinematicGuideSlide from "@/components/common/CinematicGuideSlide";
 import type { PresentationSlide } from "@/lib/presentationSlides";
+import { resolveFeatureRoute } from "@/lib/featureRouteMap";
+import { toast } from "sonner";
 
 interface Props {
   slides: (PresentationSlide & {
@@ -12,6 +15,7 @@ interface Props {
     isPremium?: boolean;
     emotionalImpact?: string;
     ctaText?: string;
+    featureKey?: string;
   })[];
   title: string;
   onComplete: () => void;
@@ -20,6 +24,7 @@ interface Props {
 
 export default function GuidedPresentation({ slides, title, onComplete, onSkip }: Props) {
   const [idx, setIdx] = useState(0);
+  const navigate = useNavigate();
   const slide = slides[idx];
   const progress = ((idx + 1) / slides.length) * 100;
   const isLast = idx === slides.length - 1;
@@ -27,6 +32,16 @@ export default function GuidedPresentation({ slides, title, onComplete, onSkip }
   const go = useCallback((next: number) => {
     setIdx(next);
   }, []);
+
+  const handleCtaClick = useCallback((featureKey: string) => {
+    const route = resolveFeatureRoute(featureKey);
+    if (route) {
+      onSkip(); // Close presentation
+      navigate(route);
+    } else {
+      toast.info("Funcionalidade em desenvolvimento");
+    }
+  }, [navigate, onSkip]);
 
   return (
     <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-md flex flex-col">
@@ -56,6 +71,7 @@ export default function GuidedPresentation({ slides, title, onComplete, onSkip }
             slide={slide}
             index={idx}
             total={slides.length}
+            onCtaClick={handleCtaClick}
           />
         </AnimatePresence>
       </div>

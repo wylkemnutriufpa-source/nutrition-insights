@@ -9,6 +9,7 @@ import { useFeatureExplorer } from "@/hooks/useFeatureExplorer";
 import { PATIENT_FEATURE_REGISTRY, getPatientFeaturesByCategory } from "@/lib/patientFeatureRegistry";
 import { Compass, CheckCircle2, Search, Trophy, Zap, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import { PATIENT_ROUTE_MAP } from "@/lib/featureRouteMap";
 
 const CATEGORY_META: Record<string, { gradient: string; emoji: string }> = {
   "Alimentação": { gradient: "from-success/20 to-success/5", emoji: "🥗" },
@@ -16,39 +17,6 @@ const CATEGORY_META: Record<string, { gradient: string; emoji: string }> = {
   "Engajamento": { gradient: "from-warning/20 to-warning/5", emoji: "🏆" },
   "Comunicação": { gradient: "from-accent/20 to-accent/5", emoji: "💬" },
   "Saúde & Ferramentas": { gradient: "from-info/20 to-info/5", emoji: "❤️" },
-};
-
-// Map feature keys to real routes
-const featureRouteMap: Record<string, string> = {
-  meal_logging: "/meals",
-  meal_plan_view: "/my-diet",
-  meal_adherence: "/my-diet",
-  shopping_list: "/shopping-list",
-  favorite_recipes: "/recipes",
-  ai_meal_analysis: "/analyze-meal",
-  ai_recipe_generator: "/recipes",
-  ai_body_analysis: "/body-analysis",
-  chat: "/chat",
-  ai_anamnesis_insights: "/anamnesis",
-  checklist: "/checklist",
-  achievements: "/achievements",
-  challenges: "/challenges",
-  ranking: "/ranking",
-  weekly_goals: "/weekly-goals",
-  journey: "/journey",
-  gamification_xp: "/achievements",
-  checkin: "/checkin",
-  feedback: "/feedbacks",
-  notifications: "/notifications",
-  planner: "/planner",
-  anamnesis: "/anamnesis",
-  physical_assessment_view: "/body-projection",
-  supplements_view: "/supplements",
-  health_quiz: "/health-quiz",
-  weight_calculator: "/weight-calculator",
-  water_calculator: "/water-calculator",
-  weekly_report: "/weekly-report",
-  onboarding_pipeline: "/onboarding",
 };
 
 export default function UserGuide() {
@@ -66,7 +34,7 @@ export default function UserGuide() {
       markExplored(key);
     }
     // Navigate to the feature's real route
-    const route = featureRouteMap[key];
+    const route = PATIENT_ROUTE_MAP[key];
     if (route) {
       navigate(route);
     } else {
@@ -206,7 +174,7 @@ export default function UserGuide() {
                 {features.map((feature, idx) => {
                   const isExplored = exploredKeys.includes(feature.key);
                   const Icon = feature.icon;
-                  const hasRoute = !!featureRouteMap[feature.key];
+                  const hasRoute = !!PATIENT_ROUTE_MAP[feature.key];
                   return (
                     <motion.div
                       key={feature.key}

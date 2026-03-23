@@ -21,6 +21,8 @@ import {
 import CinematicGuideSlide from "@/components/common/CinematicGuideSlide";
 import { MagicSlideButton } from "@/components/common/MagicSlideGenerator";
 import { cn } from "@/lib/utils";
+import { resolveFeatureRoute } from "@/lib/featureRouteMap";
+import { useNavigate } from "react-router-dom";
 import type { EnrichedSlide } from "@/hooks/useFeatureGuide";
 
 const ICON_MAP: Record<string, any> = {
@@ -59,6 +61,7 @@ const AUDIENCE_LABELS: Record<string, string> = {
 
 export default function AdminGuideEngine() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [previewSlide, setPreviewSlide] = useState<any | null>(null);
   const [tab, setTab] = useState("all");
@@ -277,7 +280,20 @@ export default function AdminGuideEngine() {
             </DialogHeader>
             {previewSlide && (
               <div className="py-4">
-                <CinematicGuideSlide slide={previewSlide} index={0} total={1} />
+                <CinematicGuideSlide
+                  slide={previewSlide}
+                  index={0}
+                  total={1}
+                  onCtaClick={(featureKey) => {
+                    const route = resolveFeatureRoute(featureKey);
+                    if (route) {
+                      setPreviewSlide(null);
+                      navigate(route);
+                    } else {
+                      toast.info("Rota não mapeada para esta feature");
+                    }
+                  }}
+                />
               </div>
             )}
           </DialogContent>
