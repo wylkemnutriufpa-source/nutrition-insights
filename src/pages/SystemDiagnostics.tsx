@@ -508,7 +508,7 @@ export default function SystemDiagnostics() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[400px] rounded-lg bg-background/50 border border-border p-3">
+            <ScrollArea className="h-[300px] sm:h-[400px] rounded-lg bg-background/50 border border-border p-2 sm:p-3">
               {logs.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
                   <p>Run a diagnostic to see results here.</p>
