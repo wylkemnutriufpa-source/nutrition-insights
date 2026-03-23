@@ -23,11 +23,12 @@ const PIPELINE_STEPS = [
   { order: 7, name: "Compute Therapeutic Adjustments", function: "compute-therapeutic-adjustments", category: "adjustments" },
   { order: 8, name: "Compute Weight Trajectory", function: "compute-weight-trajectory-engine", category: "projection" },
   { order: 9, name: "Compute Metabolic Twin", function: "compute-metabolic-twin-engine", category: "twin" },
+  { order: 10, name: "AI Clinical Brain", function: "compute-clinical-brain", category: "brain" },
 ] as const;
 
 const WEEKLY_STEPS = [
-  { order: 10, name: "Population Nutrition Intelligence", function: "compute-population-nutrition-intelligence", category: "population" },
-  { order: 11, name: "Global Adaptive Intelligence", function: "compute-global-adaptive-clinical-intelligence", category: "calibration" },
+  { order: 11, name: "Population Nutrition Intelligence", function: "compute-population-nutrition-intelligence", category: "population" },
+  { order: 12, name: "Global Adaptive Intelligence", function: "compute-global-adaptive-clinical-intelligence", category: "calibration" },
 ] as const;
 
 const ENGINE_VERSIONS: Record<string, string> = {
