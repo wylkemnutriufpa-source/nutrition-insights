@@ -88,7 +88,6 @@ function NutritionistDashboardContent() {
     setApprovalsModalOpen(open);
     if (!open) {
       sessionStorage.setItem(APPROVALS_DISMISSED_KEY, "true");
-      sessionStorage.setItem(APPROVALS_SNAPSHOT_KEY, String(pendingApprovalsCount));
     }
   };
 
