@@ -296,7 +296,7 @@ Deno.serve(async (req) => {
     );
   } catch (err: any) {
     // Log failure to pipeline_execution_logs
-    if (typeof execLogId !== "undefined" && execLogId) {
+    if (execLogId) {
       await logExecFinish(execLogId, "failed", 0, 1, { error: err.message });
     }
     return new Response(
