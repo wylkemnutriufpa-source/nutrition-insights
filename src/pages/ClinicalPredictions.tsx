@@ -112,7 +112,12 @@ export default function ClinicalPredictions() {
   const avgDropout = predictions.length ? Math.round(predictions.reduce((s, p) => s + p.predicted_dropout_probability, 0) / predictions.length) : 0;
 
   return (
+    <DashboardLayout>
     <div className="space-y-6">
+      <div className="flex items-center gap-3 mb-2">
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="shrink-0">
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
       <div>
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <Brain className="h-7 w-7 text-primary" /> Previsão Clínica
