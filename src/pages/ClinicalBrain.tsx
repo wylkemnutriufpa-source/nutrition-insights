@@ -70,8 +70,11 @@ export default function ClinicalBrain() {
     queryKey: ["clinical-brain-patients"],
     queryFn: async () => {
       if (!user) return [];
-      const { data } = await (supabase as any).from("patients").select("id, name, status").eq("nutritionist_id", user.id).eq("status", "active");
-      return (data || []) as { id: string; name: string; status: string }[];
+      const { data: links } = await supabase.from("nutritionist_patients").select("patient_id").eq("nutritionist_id", user.id).eq("status", "active");
+      if (!links || links.length === 0) return [];
+      const ids = links.map((l) => l.patient_id);
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", ids);
+      return (profiles || []).map((p) => ({ id: p.user_id, name: p.full_name || "Paciente", status: "active" }));
     },
   });
 
