@@ -279,10 +279,14 @@ export default function Appointments() {
                           </div>
                         </div>
                       </div>
-                      {isNutritionist && a.status !== "completed" && a.status !== "cancelled" && (
+                      {a.status !== "completed" && a.status !== "cancelled" && (
                         <div className="flex gap-1 mt-2">
-                          {a.status === "scheduled" && <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => updateStatus(a.id, "confirmed")}>Confirmar</Button>}
-                          <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => updateStatus(a.id, "completed")}>Concluir</Button>
+                          {a.status === "scheduled" && (
+                            <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => updateStatus(a.id, "confirmed")}>
+                              {isNutritionist ? "Confirmar" : "Confirmar Presença"}
+                            </Button>
+                          )}
+                          {isNutritionist && <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => updateStatus(a.id, "completed")}>Concluir</Button>}
                           <Button size="sm" variant="outline" className="text-xs h-7 text-destructive" onClick={() => updateStatus(a.id, "cancelled")}>Cancelar</Button>
                         </div>
                       )}

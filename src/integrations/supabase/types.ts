@@ -11481,6 +11481,45 @@ export type Database = {
           },
         ]
       }
+      system_diagnostic_logs: {
+        Row: {
+          created_at: string
+          critical_count: number
+          duration_ms: number | null
+          executed_by: string | null
+          health_score: number
+          id: string
+          ok_count: number
+          report_json: Json
+          test_type: string
+          warning_count: number
+        }
+        Insert: {
+          created_at?: string
+          critical_count?: number
+          duration_ms?: number | null
+          executed_by?: string | null
+          health_score?: number
+          id?: string
+          ok_count?: number
+          report_json?: Json
+          test_type?: string
+          warning_count?: number
+        }
+        Update: {
+          created_at?: string
+          critical_count?: number
+          duration_ms?: number | null
+          executed_by?: string | null
+          health_score?: number
+          id?: string
+          ok_count?: number
+          report_json?: Json
+          test_type?: string
+          warning_count?: number
+        }
+        Relationships: []
+      }
       system_error_logs: {
         Row: {
           action_attempted: string | null
