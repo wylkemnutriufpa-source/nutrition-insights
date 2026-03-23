@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
 import { useAuth } from "@/lib/auth";
+import { PremiumCardWrapper, PremiumBadge, PremiumAccentLine, PremiumMessage } from "@/components/premium";
+import { usePremiumPresence } from "@/hooks/usePremiumPresence";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
