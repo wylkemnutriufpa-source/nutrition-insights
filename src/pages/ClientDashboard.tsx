@@ -265,7 +265,7 @@ export default function ClientDashboard() {
         {/* Premium Header */}
         <motion.div variants={item}>
           <PremiumCardWrapper className="relative overflow-hidden rounded-2xl gradient-border particles-bg" enableShimmer>
-            <div className="glass-premium rounded-2xl p-6 shimmer-sweep">
+            <div className="glass-premium rounded-2xl p-4 md:p-6 shimmer-sweep">
               <div className="flex items-center justify-between">
                 <div>
                   <motion.p
