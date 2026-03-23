@@ -42,6 +42,7 @@ function Delta({ value }: { value: number }) {
 
 export default function ClinicalLab() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [experiments, setExperiments] = useState<any[]>([]);
   const [selectedExp, setSelectedExp] = useState<string | null>(null);
   const [groups, setGroups] = useState<any[]>([]);
