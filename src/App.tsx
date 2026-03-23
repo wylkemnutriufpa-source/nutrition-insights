@@ -154,6 +154,7 @@ const CampaignCenter = lazy(() => import("./pages/CampaignCenter"));
 const ClinicalCRM = lazy(() => import("./pages/ClinicalCRM"));
 const ClinicalBrain = lazy(() => import("./pages/ClinicalBrain"));
 const SystemDiagnostics = lazy(() => import("./pages/SystemDiagnostics"));
+const ClinicalControlTower = lazy(() => import("./pages/ClinicalControlTower"));
 
 // Install global error handlers once at module load
 installGlobalErrorHandlers();
@@ -369,6 +370,7 @@ const App = () => (
               <Route path="/clinical-automation" element={<NutritionistRoute><LP section="Automação Clínica"><ClinicalAutomation /></LP></NutritionistRoute>} />
               <Route path="/checkin-panel" element={<NutritionistRoute><LP section="Check-ins"><CheckinPanel /></LP></NutritionistRoute>} />
               <Route path="/clinical-risk" element={<NutritionistRoute><LP section="Risco Clínico"><ClinicalRiskDashboard /></LP></NutritionistRoute>} />
+              <Route path="/control-tower" element={<NutritionistRoute><LP section="Control Tower"><ClinicalControlTower /></LP></NutritionistRoute>} />
               <Route path="/weight-trajectory" element={<NutritionistRoute><LP section="Trajetória de Peso"><WeightTrajectory /></LP></NutritionistRoute>} />
               <Route path="/metabolic-twin" element={<NutritionistRoute><LP section="Digital Twin"><MetabolicTwin /></LP></NutritionistRoute>} />
               <Route path="/population-nutrition" element={<NutritionistRoute><LP section="Nutrição Populacional"><PopulationNutritionIntelligence /></LP></NutritionistRoute>} />

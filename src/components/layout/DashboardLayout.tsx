@@ -17,6 +17,7 @@ import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import SmartResumeModal from "@/components/common/SmartResumeModal";
 import IntelligenceModal from "@/components/common/IntelligenceModal";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import ClinicalAIEntity from "@/components/ai-entity/ClinicalAIEntity";
 
 function LayoutFallbackCard({
   title,
@@ -304,7 +305,7 @@ function DynamicSidebar({
 }
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { profile, signOut } = useAuth();
+  const { profile, signOut, isPatient } = useAuth();
   const location = useLocation();
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
@@ -416,6 +417,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </ErrorBoundary>
         </div>
       </main>
+      {!isPatient && (
+        <ErrorBoundary section="ClinicalAIEntity" fallback={null}>
+          <ClinicalAIEntity />
+        </ErrorBoundary>
+      )}
     </div>
   );
 }
