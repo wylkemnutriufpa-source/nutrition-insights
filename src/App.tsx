@@ -313,7 +313,7 @@ const App = () => (
               <Route path="/weekly-goals" element={<ProtectedRoute><LP section="Metas"><WeeklyGoals /></LP></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><LP section="Configurações"><Settings /></LP></ProtectedRoute>} />
               <Route path="/notifications" element={<ProtectedRoute><LP section="Notificações"><Notifications /></LP></ProtectedRoute>} />
-              <Route path="/food-database" element={<ProtectedRoute><LP section="Alimentos"><FoodDatabase /></LP></ProtectedRoute>} />
+              <Route path="/food-database" element={<NutritionistRoute><LP section="Alimentos"><FoodDatabase /></LP></NutritionistRoute>} />
               <Route path="/recipes" element={<ProtectedRoute><LP section="Receitas"><Recipes /></LP></ProtectedRoute>} />
               <Route path="/feedbacks" element={<ProtectedRoute><LP section="Feedbacks"><Feedbacks /></LP></ProtectedRoute>} />
               <Route path="/supplements" element={<ProtectedRoute><LP section="Suplementos"><Supplements /></LP></ProtectedRoute>} />

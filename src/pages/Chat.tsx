@@ -152,9 +152,14 @@ export default function Chat() {
               </div>
             ))}
             {!contactsLoading && contacts.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-12 px-4">
+              <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                 <MessageSquare className="w-12 h-12 text-muted-foreground/30 mb-3" />
-                <p className="text-sm text-muted-foreground text-center">Nenhum contato disponível</p>
+                <p className="text-sm font-medium text-foreground mb-1">Nenhuma conversa ainda</p>
+                <p className="text-xs text-muted-foreground mb-4">
+                  {isPatient
+                    ? "Seu nutricionista aparecerá aqui assim que for vinculado."
+                    : "Seus pacientes aparecerão aqui quando se cadastrarem."}
+                </p>
               </div>
             )}
           </div>
