@@ -99,9 +99,9 @@ export default function CheckinPanel() {
 
       // Fetch protocols
       const { data: protocolsData } = await supabase
-        .from("protocols")
-        .select("id, title, category")
-        .eq("created_by", user.id);
+        .from("nutrition_protocols")
+        .select("id, protocol_name, protocol_category")
+        .eq("is_active", true);
       setProtocols(protocolsData || []);
     } catch (err) {
       console.error("CheckinPanel fetchData error:", err);
