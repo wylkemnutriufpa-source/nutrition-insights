@@ -34,7 +34,7 @@ export default function UserGuide() {
       markExplored(key);
     }
     // Navigate to the feature's real route
-    const route = featureRouteMap[key];
+    const route = PATIENT_ROUTE_MAP[key];
     if (route) {
       navigate(route);
     } else {
