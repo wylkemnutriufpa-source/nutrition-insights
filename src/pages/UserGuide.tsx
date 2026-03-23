@@ -53,13 +53,25 @@ const featureRouteMap: Record<string, string> = {
 
 export default function UserGuide() {
   const { exploredKeys, progress, level, exploredCount, totalFeatures, markExplored, loading } = useFeatureExplorer();
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const categories = getPatientFeaturesByCategory();
   const categoryNames = Object.keys(categories);
 
-  const filteredCategories = Object.entries(categories)
+  const handleExplore = async (key: string, label: string) => {
+    // Mark as explored
+    if (!exploredKeys.includes(key)) {
+      await markExplored(key);
+      toast.success(`🎉 "${label}" explorada!`, { duration: 2500 });
+    }
+    // Navigate to the feature's real route
+    const route = featureRouteMap[key];
+    if (route) {
+      navigate(route);
+    }
+  };
     .filter(([cat]) => !activeCategory || cat === activeCategory)
     .map(([cat, features]) => ({
       cat,
