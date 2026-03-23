@@ -211,12 +211,12 @@ export default function Appointments() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 max-w-7xl mx-auto">
+      <div className="space-y-4 md:space-y-6 max-w-7xl mx-auto px-1 md:px-0 overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-              <CalIcon className="w-6 h-6 text-primary" /> Agenda
+            <h1 className="font-display text-xl sm:text-2xl font-bold flex items-center gap-2">
+              <CalIcon className="w-5 h-5 sm:w-6 sm:h-6 text-primary" /> Agenda
             </h1>
             <p className="text-sm text-muted-foreground">
               {upcomingApps.length} consulta{upcomingApps.length !== 1 ? "s" : ""} pendente{upcomingApps.length !== 1 ? "s" : ""}
