@@ -312,7 +312,7 @@ export default function Appointments() {
                         !isSelected && !isToday(day) && "hover:bg-muted"
                       )}
                     >
-                      <span className={cn("text-xs font-medium", isToday(day) && "text-primary font-bold")}>
+                        <span className={cn("text-[11px] sm:text-xs font-medium", isToday(day) && "text-primary font-bold")}>
                         {format(day, "d")}
                       </span>
                       {apps.length > 0 && (
