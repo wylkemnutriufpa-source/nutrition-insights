@@ -139,7 +139,7 @@ export default function CheckinPanel() {
           start_date: new Date().toISOString().split("T")[0],
           status: "active",
         });
-        toast.success(`Protocolo "${protocol?.title}" ativado!`);
+        toast.success(`Protocolo "${protocol?.protocol_name}" ativado!`);
       }
 
       toast.success("Check-in revisado!");
