@@ -652,44 +652,49 @@ export default function ClientDashboard() {
 
           {/* Upcoming Appointments */}
           <motion.div variants={item}>
-            <div className="glass-premium rounded-xl overflow-hidden shimmer-sweep">
-              <div className="p-5 pb-3 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center">
-                  <CalendarDays className="w-4.5 h-4.5 text-accent" />
+            <Link to="/appointments" className="block">
+              <div className="glass-premium rounded-xl overflow-hidden shimmer-sweep hover:border-accent/30 transition-all cursor-pointer">
+                <div className="p-5 pb-3 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center">
+                      <CalendarDays className="w-4.5 h-4.5 text-accent" />
+                    </div>
+                    <h3 className="font-display font-semibold text-base">Próximas Consultas</h3>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-muted-foreground" />
                 </div>
-                <h3 className="font-display font-semibold text-base">Próximas Consultas</h3>
+                <div className="px-5 pb-5 space-y-3">
+                  {appointments.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Nenhuma consulta agendada. Toque para ver sua agenda.</p>
+                  ) : (
+                    appointments.slice(0, 4).map((a, i) => (
+                      <motion.div
+                        key={a.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/50 hover:border-accent/20 transition-all"
+                      >
+                        <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
+                          <CalendarDays className="w-4 h-4 text-accent" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{a.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {format(new Date(a.appointment_date), "dd MMM yyyy 'às' HH:mm", { locale: ptBR })}
+                          </p>
+                        </div>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                          a.status === "confirmed" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                        }`}>
+                          {a.status === "confirmed" ? "Confirmada" : a.status === "scheduled" ? "Agendada" : a.status}
+                        </span>
+                      </motion.div>
+                    ))
+                  )}
+                </div>
               </div>
-              <div className="px-5 pb-5 space-y-3">
-                {appointments.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Nenhuma consulta agendada.</p>
-                ) : (
-                  appointments.slice(0, 4).map((a, i) => (
-                    <motion.div
-                      key={a.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.05 }}
-                      className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/50 hover:border-accent/20 transition-all"
-                    >
-                      <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
-                        <CalendarDays className="w-4 h-4 text-accent" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{a.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {format(new Date(a.appointment_date), "dd MMM yyyy 'às' HH:mm", { locale: ptBR })}
-                        </p>
-                      </div>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                        a.status === "confirmed" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                      }`}>
-                        {a.status === "confirmed" ? "Confirmada" : a.status === "scheduled" ? "Agendada" : a.status}
-                      </span>
-                    </motion.div>
-                  ))
-                )}
-              </div>
-            </div>
+            </Link>
           </motion.div>
 
           {/* Explorer Progress */}
