@@ -537,7 +537,7 @@ export default function SystemDiagnostics() {
                           log.level === "warning" ? "text-amber-400" :
                           log.level === "ok" ? "text-emerald-400" :
                           "text-blue-400"
-                        }>
+                        )}>
                           {log.message}
                         </span>
                         {log.detail && (
