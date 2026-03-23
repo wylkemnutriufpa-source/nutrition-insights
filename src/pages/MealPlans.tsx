@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { activateMealPlan } from "@/lib/serverTransitions";
+import { activateMealPlan, deactivateMealPlan, resolvePlanState } from "@/lib/serverTransitions";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,15 +77,17 @@ export default function MealPlans() {
   };
 
   const toggleActive = async (id: string, current: boolean) => {
+    if (!user) return;
     if (current) {
-      // Deactivation is safe as a direct update (no side effects needed)
-      await supabase.from("meal_plans").update({ is_active: false }).eq("id", id);
-      toast.success("Plano desativado.");
+      // Server-authoritative deactivation
+      const result = await deactivateMealPlan(id, user.id);
+      if (!result.success) { toast.error(result.error || "Erro ao desativar"); }
+      else { toast.success("Plano desativado."); }
     } else {
-      // Activation uses server-authoritative RPC (ensures single active plan)
+      // Server-authoritative activation (ensures single active plan)
       const result = await activateMealPlan(id);
       if (!result.success) { toast.error(result.error || "Erro ao ativar plano"); }
-      else { toast.success("Plano ativado com segurança pelo Cérebro!"); }
+      else { toast.success("Plano ativado com segurança!"); }
     }
     fetchPlans();
   };
@@ -93,13 +95,15 @@ export default function MealPlans() {
   const handleDeletePlan = async (id: string) => {
     if (!confirm("Tem certeza que deseja excluir permanentemente este plano e todas as suas refeições?")) return;
     
-    // Deleta os items primeiro (se não houver cascade na FK do bd) e depois o plano
     await supabase.from("meal_plan_items").delete().eq("meal_plan_id", id);
     const { error } = await supabase.from("meal_plans").delete().eq("id", id);
     
     if (error) { toast.error("Erro ao deletar: " + error.message); }
     else { toast.success("Plano excluído definitivamente."); fetchPlans(); }
   };
+
+  // Count effective plans using normalized state
+  const effectivePlansCount = plans.filter(p => resolvePlanState(p).isEffective).length;
 
   return (
     <DashboardLayout>
@@ -109,7 +113,7 @@ export default function MealPlans() {
             <h1 className="font-display text-2xl font-bold flex items-center gap-2">
               <ClipboardList className="w-7 h-7 text-primary" /> Planos Alimentares
             </h1>
-            <p className="text-muted-foreground text-sm">{plans.filter(p => p.is_active).length} planos ativos</p>
+            <p className="text-muted-foreground text-sm">{effectivePlansCount} planos ativos</p>
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
@@ -162,44 +166,47 @@ export default function MealPlans() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {plans.map((p) => (
-              <motion.div key={p.id} whileHover={{ y: -2 }}
-                className="glass rounded-xl p-5 shadow-card cursor-pointer"
-                onClick={() => navigate(`/meal-plans/${p.id}`)}
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="font-display font-semibold">{p.title}</h3>
-                    <p className="text-sm text-muted-foreground mt-0.5">Paciente: {p.patient_name}</p>
-                    {p.description && <p className="text-xs text-muted-foreground mt-1">{p.description}</p>}
+            {plans.map((p) => {
+              const state = resolvePlanState(p);
+              return (
+                <motion.div key={p.id} whileHover={{ y: -2 }}
+                  className="glass rounded-xl p-5 shadow-card cursor-pointer"
+                  onClick={() => navigate(`/meal-plans/${p.id}`)}
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="font-display font-semibold">{p.title}</h3>
+                      <p className="text-sm text-muted-foreground mt-0.5">Paciente: {p.patient_name}</p>
+                      {p.description && <p className="text-xs text-muted-foreground mt-1">{p.description}</p>}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="icon" className="h-9 w-9"
+                        onClick={(e) => { e.stopPropagation(); navigate(`/meal-plans/${p.id}`); }}>
+                        <PencilLine className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={(e) => { e.stopPropagation(); handleDeletePlan(p.id); }}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                      <button onClick={(e) => { e.stopPropagation(); toggleActive(p.id, state.isEffective || p.is_active); }}
+                        className="p-2 rounded-lg hover:bg-muted transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center"
+                      >
+                        {state.isEffective ? <ToggleRight className="w-6 h-6 text-success" /> : <ToggleLeft className="w-6 h-6 text-muted-foreground" />}
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-9 w-9"
-                      onClick={(e) => { e.stopPropagation(); navigate(`/meal-plans/${p.id}`); }}>
-                      <PencilLine className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={(e) => { e.stopPropagation(); handleDeletePlan(p.id); }}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                    <button onClick={(e) => { e.stopPropagation(); toggleActive(p.id, p.is_active); }}
-                      className="p-2 rounded-lg hover:bg-muted transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center"
-                    >
-                      {p.is_active ? <ToggleRight className="w-6 h-6 text-success" /> : <ToggleLeft className="w-6 h-6 text-muted-foreground" />}
-                    </button>
+                  <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      {new Date(p.start_date).toLocaleDateString("pt-BR")}
+                    </span>
+                    <span className={`px-2 py-0.5 rounded-full ${state.badgeClass}`}>
+                      {state.label}
+                    </span>
                   </div>
-                </div>
-                <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    {new Date(p.start_date).toLocaleDateString("pt-BR")}
-                  </span>
-                  <span className={`px-2 py-0.5 rounded-full ${p.is_active ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>
-                    {p.is_active ? "Ativo" : "Inativo"}
-                  </span>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </div>

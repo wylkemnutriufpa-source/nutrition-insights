@@ -21,7 +21,6 @@ export interface TransitionResult {
 
 /**
  * Release onboarding for a patient (server-authoritative).
- * Replaces direct .update() on nutritionist_patients + onboarding_pipelines.
  */
 export async function releaseOnboarding(
   patientId: string,
@@ -47,7 +46,6 @@ export async function releaseOnboarding(
 
 /**
  * Transition journey status with validation (server-authoritative).
- * Replaces direct .update({ journey_status }) calls.
  */
 export async function transitionJourneyStatus(
   patientId: string,
@@ -73,8 +71,6 @@ export async function transitionJourneyStatus(
 
 /**
  * Publish a meal plan (server-authoritative).
- * Handles: deactivate old plans, activate new, set plan_status=published,
- * update journey_status if needed, notify patient.
  */
 export async function publishMealPlan(
   planId: string,
@@ -111,6 +107,86 @@ export async function activateMealPlan(planId: string): Promise<TransitionResult
 }
 
 /**
+ * Deactivate a meal plan (server-authoritative).
+ * Replaces direct .update({ is_active: false }) on meal_plans.
+ */
+export async function deactivateMealPlan(
+  planId: string,
+  nutritionistId: string
+): Promise<TransitionResult> {
+  const { data, error } = await supabase.rpc(
+    "deactivate_meal_plan" as any,
+    {
+      _plan_id: planId,
+      _nutritionist_id: nutritionistId,
+    }
+  );
+
+  if (error) {
+    console.error("[ServerTransition] deactivateMealPlan failed:", error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, data: data as Record<string, unknown> };
+}
+
+/**
+ * Approve and publish a plan atomically (server-authoritative).
+ * Used by onboarding approval queue.
+ */
+export async function approveAndPublishPlan(
+  planId: string,
+  nutritionistId: string,
+  startDate?: string,
+  durationDays?: number
+): Promise<TransitionResult> {
+  const params: Record<string, unknown> = {
+    _plan_id: planId,
+    _nutritionist_id: nutritionistId,
+  };
+  if (startDate) params._start_date = startDate;
+  if (durationDays) params._duration_days = durationDays;
+
+  const { data, error } = await supabase.rpc(
+    "approve_and_publish_plan" as any,
+    params
+  );
+
+  if (error) {
+    console.error("[ServerTransition] approveAndPublishPlan failed:", error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, data: data as Record<string, unknown> };
+}
+
+/**
+ * Reject a meal plan (server-authoritative).
+ * Replaces direct .update({ plan_status: 'rejected', is_active: false }).
+ */
+export async function rejectMealPlan(
+  planId: string,
+  nutritionistId: string,
+  reason?: string
+): Promise<TransitionResult> {
+  const { data, error } = await supabase.rpc(
+    "reject_meal_plan" as any,
+    {
+      _plan_id: planId,
+      _nutritionist_id: nutritionistId,
+      _reason: reason || "",
+    }
+  );
+
+  if (error) {
+    console.error("[ServerTransition] rejectMealPlan failed:", error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, data: data as Record<string, unknown> };
+}
+
+/**
  * Preview orphan onboarding pipelines before archival (safe preview).
  */
 export async function previewOrphanPipelines(): Promise<TransitionResult & { pipelines?: OrphanPipelinePreview[] }> {
@@ -135,7 +211,6 @@ export interface OrphanPipelinePreview {
 
 /**
  * Archive orphan onboarding pipelines (admin/maintenance).
- * Should be called AFTER previewOrphanPipelines to confirm.
  */
 export async function archiveOrphanPipelines(): Promise<TransitionResult> {
   const { data, error } = await supabase.rpc("archive_orphan_onboarding_pipelines" as any);
@@ -187,18 +262,9 @@ export async function logPipelineFinish(
 
 /**
  * Protocol domain resolution helper.
- * 
- * CANONICAL RULE:
- * - `protocols` table = runtime instances (activated for patients, referenced by checkins)
- * - `nutrition_protocols` table = library/templates (browsable catalog)
- * 
- * When activating a protocol for a patient → use `protocols`
- * When browsing available protocols → use `nutrition_protocols`
  */
 export const PROTOCOL_DOMAIN = {
-  /** Runtime instances — activated protocols, FK references */
   RUNTIME: "protocols" as const,
-  /** Library/catalog — browsable templates */
   LIBRARY: "nutrition_protocols" as const,
 } as const;
 
@@ -206,32 +272,48 @@ export const PROTOCOL_DOMAIN = {
  * Plan state interpretation helper.
  * 
  * AUTHORITATIVE MODEL:
- * - A plan is considered "active" if and only if: is_active = true AND plan_status = 'published'
- * - is_active = true with plan_status != 'published' is an INCONSISTENCY
- * - plan_status = 'published' with is_active = false means SUPERSEDED (valid)
+ * - A plan is considered "active" if and only if: is_active = true AND plan_status = 'published_to_patient'
+ * - is_active = true with plan_status != 'published_to_patient' is an INCONSISTENCY
+ * - plan_status = 'published_to_patient' with is_active = false means SUPERSEDED (valid)
  */
 export function resolvePlanState(plan: { plan_status?: string; is_active?: boolean }) {
   const isActive = plan.is_active === true;
-  const isPublished = plan.plan_status === "published";
+  const status = plan.plan_status || "draft";
+  const isPublished = status === "published_to_patient" || status === "published";
 
   return {
-    /** The plan is actively governing the patient */
     isEffective: isActive && isPublished,
-    /** Draft or auto-generated, not yet published */
-    isDraft: !isPublished && !isActive,
-    /** Was published but superseded by another plan */
+    isDraft: !isPublished && !isActive && !["approved", "rejected", "under_professional_review"].includes(status),
+    isApproved: status === "approved",
+    isUnderReview: status === "under_professional_review",
+    isRejected: status === "rejected",
     isSuperseded: isPublished && !isActive,
-    /** Data inconsistency: active but not published */
     hasInconsistency: isActive && !isPublished,
-    /** Human-readable label */
     label: isActive && isPublished
       ? "Ativo"
       : isPublished && !isActive
-        ? "Publicado (inativo)"
-        : isActive && !isPublished
-          ? "⚠️ Inconsistente"
-          : plan.plan_status === "draft_auto_generated"
-            ? "Rascunho (IA)"
-            : "Rascunho",
+        ? "Supersedido"
+        : status === "approved"
+          ? "Aprovado"
+          : status === "under_professional_review"
+            ? "Em revisão"
+            : status === "rejected"
+              ? "Rejeitado"
+              : isActive && !isPublished
+                ? "⚠️ Inconsistente"
+                : status === "draft_auto_generated"
+                  ? "Rascunho (IA)"
+                  : "Rascunho",
+    badgeClass: isActive && isPublished
+      ? "bg-success/10 text-success"
+      : status === "approved"
+        ? "bg-blue-500/10 text-blue-600"
+        : status === "under_professional_review"
+          ? "bg-amber-500/10 text-amber-600"
+          : status === "rejected"
+            ? "bg-destructive/10 text-destructive"
+            : isActive && !isPublished
+              ? "bg-destructive/10 text-destructive"
+              : "bg-muted text-muted-foreground",
   };
 }
