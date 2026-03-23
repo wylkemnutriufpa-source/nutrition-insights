@@ -43,6 +43,7 @@ import ClinicalInsightsCard from "@/components/patient/ClinicalInsightsCard";
 import PatientMetabolicInsightPanel from "@/components/patient/PatientMetabolicInsightPanel";
 import PatientBehaviorLearningCard from "@/components/patient/PatientBehaviorLearningCard";
 import NextMealWidget from "@/components/patient/NextMealWidget";
+import PatientAIInsightsWidget from "@/components/patient/PatientAIInsightsWidget";
 interface ProgramInfo {
   id: string;
   title: string;
