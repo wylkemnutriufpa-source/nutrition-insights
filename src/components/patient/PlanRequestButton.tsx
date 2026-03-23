@@ -28,6 +28,9 @@ export default function PlanRequestButton() {
     if (!user) return;
     setSending(true);
 
+    // Try nutritionist_patients first, fallback to onboarding_pipelines
+    let nutriId: string | null = null;
+
     const { data: rel } = await supabase
       .from("nutritionist_patients")
       .select("nutritionist_id")
@@ -36,9 +39,22 @@ export default function PlanRequestButton() {
       .limit(1)
       .maybeSingle();
 
+    nutriId = rel?.nutritionist_id || null;
+
+    if (!nutriId) {
+      const { data: pipeline } = await supabase
+        .from("onboarding_pipelines")
+        .select("nutritionist_id")
+        .eq("patient_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      nutriId = pipeline?.nutritionist_id || null;
+    }
+
     const { error } = await supabase.from("plan_requests").insert({
       patient_id: user.id,
-      nutritionist_id: rel?.nutritionist_id || null,
+      nutritionist_id: nutriId,
       message: "Paciente solicita ativação/ajuste de plano.",
     });
 
