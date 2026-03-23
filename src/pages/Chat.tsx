@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, Send, ArrowLeft, Check, CheckCheck, Clock } from "lucide-react";
+import { MessageSquare, Send, ArrowLeft, Check, CheckCheck, Clock, Stethoscope } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import NutritionistStatusIndicator from "@/components/chat/NutritionistStatusIndicator";
 import QuickReplySuggestions from "@/components/chat/QuickReplySuggestions";
@@ -32,6 +32,36 @@ export default function Chat() {
   const selectedContact = contacts.find(c => c.user_id === selectedId);
   const selectedName = selectedContact?.full_name || "";
 
+  // Auto-resolve nutritionist for patient with no contacts
+  const [resolvedNutritionist, setResolvedNutritionist] = useState<{ id: string; name: string } | null>(null);
+
+  useEffect(() => {
+    if (!user || !isPatient || contactsLoading || contacts.length > 0) {
+      setResolvedNutritionist(null);
+      return;
+    }
+    // Patient has no contacts - resolve their linked nutritionist
+    supabase
+      .from("nutritionist_patients")
+      .select("nutritionist_id")
+      .eq("patient_id", user.id)
+      .eq("status", "active")
+      .limit(1)
+      .maybeSingle()
+      .then(async ({ data }) => {
+        if (!data?.nutritionist_id) return;
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("user_id", data.nutritionist_id)
+          .maybeSingle();
+        setResolvedNutritionist({
+          id: data.nutritionist_id,
+          name: profile?.full_name || "Nutricionista",
+        });
+      });
+  }, [user, isPatient, contactsLoading, contacts.length]);
+
   // Realtime subscription
   useEffect(() => {
     if (!user) return;
@@ -42,14 +72,12 @@ export default function Chat() {
       }, (payload) => {
         const msg = payload.new as Message;
         if (msg.sender_id === selectedId) {
-          // Add to current messages cache
           queryClient.setQueryData<Message[]>(
             queryKeys.chat.messages(user.id, selectedId!),
             (old) => [...(old || []), msg]
           );
           supabase.from("chat_messages").update({ is_read: true }).eq("id", msg.id);
         }
-        // Refresh contacts for unread count
         queryClient.invalidateQueries({ queryKey: queryKeys.chat.contacts(user.id) });
       })
       .on("postgres_changes", {
@@ -79,14 +107,19 @@ export default function Chat() {
 
   const formatTime = (d: string) => {
     const date = new Date(d);
-    const now = new Date();
-    const isToday = date.toDateString() === now.toDateString();
-    return isToday
+    const today = new Date();
+    return date.toDateString() === today.toDateString()
       ? date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
       : date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) + " " + date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
   };
 
   const initials = (name: string) => name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
+
+  const startConversationWithNutritionist = () => {
+    if (resolvedNutritionist) {
+      setSearchParams({ with: resolvedNutritionist.id });
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -151,15 +184,47 @@ export default function Chat() {
                 )}
               </div>
             ))}
+
+            {/* Empty state with CTA for patients */}
             {!contactsLoading && contacts.length === 0 && (
               <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                 <MessageSquare className="w-12 h-12 text-muted-foreground/30 mb-3" />
                 <p className="text-sm font-medium text-foreground mb-1">Nenhuma conversa ainda</p>
                 <p className="text-xs text-muted-foreground mb-4">
                   {isPatient
-                    ? "Seu nutricionista aparecerá aqui assim que for vinculado."
+                    ? "Inicie uma conversa com seu nutricionista agora mesmo."
                     : "Seus pacientes aparecerão aqui quando se cadastrarem."}
                 </p>
+                {isPatient && resolvedNutritionist && (
+                  <Button
+                    onClick={startConversationWithNutritionist}
+                    className="gradient-primary shadow-glow gap-2"
+                  >
+                    <Stethoscope className="w-4 h-4" />
+                    Conversar com {resolvedNutritionist.name}
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* Pinned nutritionist at top for patients with existing contacts but no nutri in list */}
+            {isPatient && resolvedNutritionist && contacts.length > 0 && !contacts.find(c => c.user_id === resolvedNutritionist.id) && (
+              <div
+                onClick={startConversationWithNutritionist}
+                className="flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors border-b-2 border-primary/20 bg-primary/5 hover:bg-primary/10"
+              >
+                <div className="relative">
+                  <Avatar className="w-10 h-10">
+                    <AvatarFallback className="bg-primary/20 text-primary text-xs font-bold">
+                      {initials(resolvedNutritionist.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <Stethoscope className="absolute -bottom-0.5 -right-0.5 w-4 h-4 text-primary bg-background rounded-full p-0.5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="font-medium text-sm truncate block">{resolvedNutritionist.name}</span>
+                  <p className="text-xs text-primary">Seu nutricionista • Toque para conversar</p>
+                </div>
               </div>
             )}
           </div>
@@ -175,14 +240,14 @@ export default function Chat() {
               </Button>
               <div className="relative">
                 <Avatar className="w-8 h-8">
-                  <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">{initials(selectedName)}</AvatarFallback>
+                  <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">{initials(selectedName || resolvedNutritionist?.name || "?")}</AvatarFallback>
                 </Avatar>
                 {selectedContact?.is_online && (
                   <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-background animate-pulse" />
                 )}
               </div>
               <div className="flex-1">
-                <span className="font-medium text-sm">{selectedName}</span>
+                <span className="font-medium text-sm">{selectedName || resolvedNutritionist?.name || ""}</span>
                 {isPatient && (
                   <NutritionistStatusIndicator patientId={user?.id} compact />
                 )}
@@ -272,6 +337,11 @@ export default function Chat() {
               <MessageSquare className="w-16 h-16 mx-auto text-muted-foreground/20 mb-4" />
               <h3 className="font-display font-semibold text-lg mb-1">Central de Conversas</h3>
               <p className="text-muted-foreground text-sm">Selecione um contato para iniciar o acompanhamento</p>
+              {isPatient && resolvedNutritionist && (
+                <Button onClick={startConversationWithNutritionist} className="mt-4 gradient-primary shadow-glow gap-2">
+                  <Stethoscope className="w-4 h-4" /> Conversar com {resolvedNutritionist.name}
+                </Button>
+              )}
             </div>
           </div>
         )}
