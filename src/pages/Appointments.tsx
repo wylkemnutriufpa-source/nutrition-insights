@@ -238,13 +238,13 @@ export default function Appointments() {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <Card className="glass-premium border-primary/20 overflow-hidden">
               <CardContent className="p-5">
-                <div className="flex items-center gap-4 flex-wrap">
-                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <CalendarDays className="w-7 h-7 text-primary" />
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <CalendarDays className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-primary uppercase tracking-wide">Próxima Consulta</p>
-                    <h3 className="font-display font-bold text-lg truncate">{nextApp.title}</h3>
+                    <p className="text-[10px] sm:text-xs font-medium text-primary uppercase tracking-wide">Próxima Consulta</p>
+                    <h3 className="font-display font-bold text-base sm:text-lg truncate">{nextApp.title}</h3>
                     <p className="text-sm text-muted-foreground">
                       {format(new Date(nextApp.appointment_date), "EEEE, dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
                       {daysUntilNext !== null && daysUntilNext <= 7 && (
