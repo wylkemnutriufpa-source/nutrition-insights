@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
 import { Brain, Activity, Radar, Target, BarChart3, Shield, Zap } from "lucide-react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import SubscriptionGuard from "@/components/common/SubscriptionGuard";
 import GlobalClinicalStatusBar from "@/components/control-tower/GlobalClinicalStatusBar";
 import PatientPriorityRadar from "@/components/control-tower/PatientPriorityRadar";
 import AICommandFeed from "@/components/control-tower/AICommandFeed";
