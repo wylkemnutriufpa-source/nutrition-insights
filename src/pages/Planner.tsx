@@ -560,7 +560,7 @@ export default function Planner() {
                 <Select value={form.patient_id} onValueChange={(v) => setForm({ ...form, patient_id: v })}>
                   <SelectTrigger><SelectValue placeholder="Selecione um paciente..." /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhum (pessoal)</SelectItem>
+                    <SelectItem value="none">Nenhum (pessoal)</SelectItem>
                     {patients.map((p) => (
                       <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                     ))}
