@@ -276,7 +276,7 @@ export default function ClientDashboard() {
                     {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
                   </motion.p>
                   <div className="flex items-center gap-2">
-                    <h1 className="font-display text-2xl md:text-3xl font-bold">
+                    <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-bold truncate">
                       Olá, {profile?.full_name?.split(" ")[0] || "Paciente"} 👋
                     </h1>
                     <PremiumBadge />
