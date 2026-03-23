@@ -251,6 +251,31 @@ function DynamicSidebar({
         <PendingApprovalsModal open={approvalsOpen} onOpenChange={setApprovalsOpen} />
       </ErrorBoundary>
 
+      {isAdmin && (
+        <div className="px-3 mb-2">
+          <Link
+            to="/system-diagnostics"
+            onClick={onLinkClick}
+            className={`flex items-center gap-2 w-full rounded-xl border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 transition-all px-3 py-2.5 ${collapsed ? "justify-center" : ""}`}
+          >
+            <div className="relative flex-shrink-0">
+              <motion.div
+                className="absolute -inset-1 rounded-full"
+                style={{ background: "radial-gradient(circle, hsl(190 80% 50% / 0.25), transparent 70%)" }}
+                animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <Shield className="w-4 h-4 text-cyan-500 relative z-10" />
+            </div>
+            {!collapsed && (
+              <span className="text-xs font-semibold text-cyan-500 truncate">
+                System Diagnostics
+              </span>
+            )}
+          </Link>
+        </div>
+      )}
+
       <nav className="flex-1 px-3 overflow-y-auto">
         <ErrorBoundary section="Layout:SidebarNav" fallback={<SidebarFallback onLinkClick={onLinkClick} />}>
           <AccordionSidebar
