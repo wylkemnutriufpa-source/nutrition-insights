@@ -83,6 +83,7 @@ function RiskBadge({ level }: { level: string }) {
 
 export default function ClinicalSimulation() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [patients, setPatients] = useState<{ id: string; name: string }[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<string>("");
   const [simulations, setSimulations] = useState<SimulationRow[]>([]);
