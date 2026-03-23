@@ -403,15 +403,15 @@ export default function SystemDiagnostics() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 max-w-6xl mx-auto">
+      <div className="space-y-4 md:space-y-6 max-w-6xl mx-auto px-1 md:px-0 overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-              <Cpu className="w-6 h-6 text-primary" />
+            <h1 className="font-display text-xl sm:text-2xl font-bold flex items-center gap-2">
+              <Cpu className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
               System Test Center
             </h1>
-            <p className="text-sm text-muted-foreground">Auto-diagnostic engine for production stability</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Auto-diagnostic engine for production stability</p>
           </div>
           <Button
             onClick={runFullDiagnostic}
@@ -431,17 +431,17 @@ export default function SystemDiagnostics() {
         {healthScore !== null && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <Card className="glass border-border">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-6">
+              <CardContent className="p-4 md:p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-4 sm:gap-6">
                     <div className="text-center">
-                      <p className={`text-5xl font-display font-bold ${getStatusColor(healthScore)}`}>
+                      <p className={`text-4xl sm:text-5xl font-display font-bold ${getStatusColor(healthScore)}`}>
                         {healthScore}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">Health Score</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">Health Score</p>
                     </div>
                     <div>
-                      <Badge className={`text-sm px-3 py-1 ${
+                      <Badge className={`text-xs sm:text-sm px-2 sm:px-3 py-1 ${
                         healthScore >= 90 ? "bg-emerald-500/10 text-emerald-500" :
                         healthScore >= 70 ? "bg-amber-500/10 text-amber-500" :
                         "bg-red-500/10 text-red-500"
@@ -450,18 +450,18 @@ export default function SystemDiagnostics() {
                       </Badge>
                     </div>
                   </div>
-                  <div className="flex gap-6 text-center">
+                  <div className="flex gap-4 sm:gap-6 text-center w-full sm:w-auto justify-around sm:justify-end">
                     <div>
-                      <p className="text-2xl font-bold text-emerald-500">{stats.ok}</p>
-                      <p className="text-xs text-muted-foreground">OK</p>
+                      <p className="text-xl sm:text-2xl font-bold text-emerald-500">{stats.ok}</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">OK</p>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-amber-500">{stats.warning}</p>
-                      <p className="text-xs text-muted-foreground">Warnings</p>
+                      <p className="text-xl sm:text-2xl font-bold text-amber-500">{stats.warning}</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">Warnings</p>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-red-500">{stats.critical}</p>
-                      <p className="text-xs text-muted-foreground">Critical</p>
+                      <p className="text-xl sm:text-2xl font-bold text-red-500">{stats.critical}</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">Critical</p>
                     </div>
                   </div>
                 </div>
@@ -474,7 +474,7 @@ export default function SystemDiagnostics() {
         )}
 
         {/* Quick Tests */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
           {[
             { label: "Database", icon: Database, fn: runDatabaseTest },
             { label: "Routes", icon: Route, fn: runRouteTest },
@@ -508,13 +508,13 @@ export default function SystemDiagnostics() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[400px] rounded-lg bg-background/50 border border-border p-3">
+            <ScrollArea className="h-[300px] sm:h-[400px] rounded-lg bg-background/50 border border-border p-2 sm:p-3">
               {logs.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
                   <p>Run a diagnostic to see results here.</p>
                 </div>
               ) : (
-                <div className="space-y-1 font-mono text-xs">
+                <div className="space-y-1 font-mono text-[10px] sm:text-xs">
                   <AnimatePresence>
                     {logs.map(log => (
                       <motion.div
@@ -529,15 +529,15 @@ export default function SystemDiagnostics() {
                         }`}
                       >
                         {levelIcon(log.level)}
-                        <span className="text-muted-foreground whitespace-nowrap">
+                        <span className="text-muted-foreground whitespace-nowrap hidden sm:inline">
                           [{log.module}]
                         </span>
-                        <span className={
+                        <span className={cn("break-all sm:break-normal",
                           log.level === "error" ? "text-red-400" :
                           log.level === "warning" ? "text-amber-400" :
                           log.level === "ok" ? "text-emerald-400" :
                           "text-blue-400"
-                        }>
+                        )}>
                           {log.message}
                         </span>
                         {log.detail && (

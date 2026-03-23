@@ -261,11 +261,11 @@ export default function ClientDashboard() {
    return (
     <DashboardLayout>
       <OnboardingProgressModal />
-      <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+      <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 md:space-y-6 px-1 md:px-0 overflow-hidden">
         {/* Premium Header */}
         <motion.div variants={item}>
           <PremiumCardWrapper className="relative overflow-hidden rounded-2xl gradient-border particles-bg" enableShimmer>
-            <div className="glass-premium rounded-2xl p-6 shimmer-sweep">
+            <div className="glass-premium rounded-2xl p-4 md:p-6 shimmer-sweep">
               <div className="flex items-center justify-between">
                 <div>
                   <motion.p
@@ -276,7 +276,7 @@ export default function ClientDashboard() {
                     {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
                   </motion.p>
                   <div className="flex items-center gap-2">
-                    <h1 className="font-display text-2xl md:text-3xl font-bold">
+                    <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-bold truncate">
                       Olá, {profile?.full_name?.split(" ")[0] || "Paciente"} 👋
                     </h1>
                     <PremiumBadge />
@@ -423,7 +423,7 @@ export default function ClientDashboard() {
         <PhaseTransitionModal />
 
         {/* Quick Stats */}
-        <motion.div variants={item} className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <motion.div variants={item} className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 overflow-hidden">
           {/* Ranking Widget */}
           <RankingWidget />
 
@@ -735,7 +735,7 @@ export default function ClientDashboard() {
                 {notifications.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Nenhuma notificação.</p>
                 ) : (
-                  <div className="grid sm:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {notifications.slice(0, 6).map((n, i) => (
                       <motion.div
                         key={n.id}

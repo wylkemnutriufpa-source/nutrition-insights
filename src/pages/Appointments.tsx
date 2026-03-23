@@ -211,12 +211,12 @@ export default function Appointments() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 max-w-7xl mx-auto">
+      <div className="space-y-4 md:space-y-6 max-w-7xl mx-auto px-1 md:px-0 overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-              <CalIcon className="w-6 h-6 text-primary" /> Agenda
+            <h1 className="font-display text-xl sm:text-2xl font-bold flex items-center gap-2">
+              <CalIcon className="w-5 h-5 sm:w-6 sm:h-6 text-primary" /> Agenda
             </h1>
             <p className="text-sm text-muted-foreground">
               {upcomingApps.length} consulta{upcomingApps.length !== 1 ? "s" : ""} pendente{upcomingApps.length !== 1 ? "s" : ""}
@@ -238,13 +238,13 @@ export default function Appointments() {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <Card className="glass-premium border-primary/20 overflow-hidden">
               <CardContent className="p-5">
-                <div className="flex items-center gap-4 flex-wrap">
-                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <CalendarDays className="w-7 h-7 text-primary" />
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <CalendarDays className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-primary uppercase tracking-wide">Próxima Consulta</p>
-                    <h3 className="font-display font-bold text-lg truncate">{nextApp.title}</h3>
+                    <p className="text-[10px] sm:text-xs font-medium text-primary uppercase tracking-wide">Próxima Consulta</p>
+                    <h3 className="font-display font-bold text-base sm:text-lg truncate">{nextApp.title}</h3>
                     <p className="text-sm text-muted-foreground">
                       {format(new Date(nextApp.appointment_date), "EEEE, dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
                       {daysUntilNext !== null && daysUntilNext <= 7 && (
@@ -270,7 +270,7 @@ export default function Appointments() {
           </motion.div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
           {/* Calendar Grid */}
           <Card className="glass border-border lg:col-span-2">
             <CardHeader className="pb-2">
@@ -287,12 +287,12 @@ export default function Appointments() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-7 gap-1 mb-2">
-                {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map(d => (
-                  <div key={d} className="text-center text-xs font-medium text-muted-foreground py-1">{d}</div>
+              <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-2">
+                {["D", "S", "T", "Q", "Q", "S", "S"].map((d, i) => (
+                  <div key={i} className="text-center text-[10px] sm:text-xs font-medium text-muted-foreground py-1">{d}</div>
                 ))}
               </div>
-              <div className="grid grid-cols-7 gap-1">
+              <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
                 {Array.from({ length: days[0].getDay() }).map((_, i) => <div key={`pad-${i}`} />)}
                 {days.map(day => {
                   const apps = dayAppointments(day);
@@ -312,7 +312,7 @@ export default function Appointments() {
                         !isSelected && !isToday(day) && "hover:bg-muted"
                       )}
                     >
-                      <span className={cn("text-xs font-medium", isToday(day) && "text-primary font-bold")}>
+                        <span className={cn("text-[11px] sm:text-xs font-medium", isToday(day) && "text-primary font-bold")}>
                         {format(day, "d")}
                       </span>
                       {apps.length > 0 && (
@@ -408,7 +408,7 @@ export default function Appointments() {
 
                         {/* Actions */}
                         {a.status !== "completed" && a.status !== "cancelled" && (
-                          <div className="flex gap-2 mt-3 pt-3 border-t border-border">
+                          <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-border">
                             {a.status === "scheduled" && (
                               <Button
                                 size="sm"
@@ -474,7 +474,7 @@ export default function Appointments() {
 
         {/* === NUTRITIONIST: New Appointment Dialog === */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-md">
+            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-display">Nova Consulta</DialogTitle>
               <DialogDescription>Preencha os dados para agendar uma nova consulta.</DialogDescription>
@@ -527,7 +527,7 @@ export default function Appointments() {
 
         {/* === PATIENT: Request Appointment Dialog === */}
         <Dialog open={requestDialog} onOpenChange={setRequestDialog}>
-          <DialogContent className="max-w-md">
+            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-display flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-primary" /> Solicitar Consulta
