@@ -82,7 +82,12 @@ export default function ClinicalLab() {
   const selectedExperiment = experiments.find((e) => e.id === selectedExp);
 
   return (
+    <DashboardLayout>
     <div className="space-y-6">
+      <div className="flex items-center gap-3 mb-2">
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="shrink-0">
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
       <div>
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <FlaskRound className="h-7 w-7 text-primary" /> Laboratório Clínico
