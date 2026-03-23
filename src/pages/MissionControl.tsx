@@ -88,13 +88,27 @@ export default function MissionControl() {
     setConfirmText("");
   };
 
-  const simulatePreview = () => {
-    setPreviewData({
-      affected: Math.floor(Math.random() * 200) + 10,
-      risks: selectedAction?.risk_level === "critical" ? ["Ação irreversível"] : [],
-      sample: ["paciente-001", "paciente-002", "paciente-003"],
-    });
-    setWizardStep(3);
+  const runPreview = async () => {
+    if (!selectedAction) return;
+    try {
+      const { data, error } = await supabase.functions.invoke("execute-global-action", {
+        body: {
+          action_code: selectedAction.action_code,
+          filters: { scope: payload.scope || "all" },
+          payload,
+          mode: "preview",
+        },
+      });
+      if (error) throw error;
+      setPreviewData({
+        affected: data.affected || 0,
+        risks: data.risks || [],
+        details: data.details || {},
+      });
+      setWizardStep(3);
+    } catch (err: any) {
+      toast.error("Erro ao gerar preview: " + (err.message || ""));
+    }
   };
 
   const executeAction = async () => {
@@ -107,23 +121,22 @@ export default function MissionControl() {
     }
     setExecuting(true);
     try {
-      await (supabase as any).from("global_action_logs").insert({
-        action_code: selectedAction.action_code,
-        executed_by: user.id,
-        filters_json: payload.filters || {},
-        payload_json: payload,
-        affected_count: previewData?.affected || 0,
-        success_count: previewData?.affected || 0,
-        execution_status: "completed",
-        execution_summary: `Ação ${selectedAction.action_name} executada com sucesso`,
-        finished_at: new Date().toISOString(),
+      const { data, error } = await supabase.functions.invoke("execute-global-action", {
+        body: {
+          action_code: selectedAction.action_code,
+          filters: { scope: payload.scope || "all" },
+          payload,
+          executed_by: user.id,
+          mode: "execute",
+        },
       });
-      toast.success(`✅ ${selectedAction.action_name} executada com sucesso!`);
+      if (error) throw error;
+      toast.success(`✅ ${data.summary || selectedAction.action_name + " executada"}`);
       queryClient.invalidateQueries({ queryKey: ["mission-control-logs"] });
       setSelectedAction(null);
       setWizardStep(0);
-    } catch {
-      toast.error("Erro ao executar ação");
+    } catch (err: any) {
+      toast.error("Erro ao executar: " + (err.message || ""));
     } finally {
       setExecuting(false);
     }

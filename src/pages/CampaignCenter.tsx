@@ -62,13 +62,48 @@ export default function CampaignCenter() {
     }));
   };
 
-  const simulatePreview = () => {
-    setPreview({
-      total: Math.floor(Math.random() * 300) + 20,
-      byChannel: form.channels.map(ch => ({ channel: ch, count: Math.floor(Math.random() * 200) + 10 })),
-      optInRate: Math.floor(Math.random() * 30) + 70,
-    });
-    setStep(5);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [launching, setLaunching] = useState(false);
+
+  const runPreview = async () => {
+    if (!user) return;
+    setPreviewLoading(true);
+    try {
+      // First save as draft to get campaign_id
+      const { data: draft, error } = await (supabase as any).from("campaigns").insert({
+        campaign_name: form.campaign_name,
+        campaign_type: form.campaign_type,
+        audience_type: form.audience_type,
+        title: form.title,
+        message_body: form.message_body,
+        call_to_action_label: form.call_to_action_label || null,
+        call_to_action_url: form.call_to_action_url || null,
+        delivery_channels_json: form.channels,
+        filters_json: filters,
+        scheduling_type: form.scheduling_type,
+        scheduled_at: form.scheduled_at || null,
+        status: "draft",
+        created_by: user.id,
+      }).select().single();
+      if (error) throw error;
+
+      const { data: previewData, error: prevErr } = await supabase.functions.invoke("execute-campaign", {
+        body: { campaign_id: draft.id, mode: "preview" },
+      });
+      if (prevErr) throw prevErr;
+
+      setPreview({
+        campaignId: draft.id,
+        total: previewData.total_recipients || 0,
+        byChannel: previewData.by_channel || [],
+      });
+      setStep(5);
+      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+    } catch (err: any) {
+      toast.error("Erro no preview: " + (err.message || ""));
+    } finally {
+      setPreviewLoading(false);
+    }
   };
 
   const saveCampaign = async (status: string) => {
