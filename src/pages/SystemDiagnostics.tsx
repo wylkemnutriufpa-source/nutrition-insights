@@ -514,7 +514,7 @@ export default function SystemDiagnostics() {
                   <p>Run a diagnostic to see results here.</p>
                 </div>
               ) : (
-                <div className="space-y-1 font-mono text-xs">
+                <div className="space-y-1 font-mono text-[10px] sm:text-xs">
                   <AnimatePresence>
                     {logs.map(log => (
                       <motion.div
