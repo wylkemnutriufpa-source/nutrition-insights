@@ -258,12 +258,9 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
       } as any)
       .eq("id", pipeline.id);
 
-    // Archive the generated plan instead of deleting (protect approved plans)
+    // Archive the generated plan via server-authoritative RPC
     if (pipeline.generated_plan_id) {
-      await supabase.from("meal_plans")
-        .update({ plan_status: "rejected", is_active: false } as any)
-        .eq("id", pipeline.generated_plan_id)
-        .in("plan_status", ["draft", "draft_auto_generated", "under_professional_review"]);
+      await rejectMealPlan(pipeline.generated_plan_id, user.id, rejectReason);
     }
 
     // Notify patient
