@@ -17,6 +17,7 @@ import { readActiveEditorRoute } from "@/lib/mealPlanEditorStore";
 import { installGlobalErrorHandlers } from "@/lib/monitoring";
 import { initFeatureFlags } from "@/lib/featureFlags";
 import { useConsentGuard } from "@/hooks/useConsentGuard";
+import { usePaymentGuard } from "@/hooks/usePaymentGuard";
 
 // ── Eager-loaded (critical path) ────────────────────────────
 import GatewayPage from "./pages/GatewayPage";
