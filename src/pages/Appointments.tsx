@@ -408,7 +408,7 @@ export default function Appointments() {
 
                         {/* Actions */}
                         {a.status !== "completed" && a.status !== "cancelled" && (
-                          <div className="flex gap-2 mt-3 pt-3 border-t border-border">
+                          <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-border">
                             {a.status === "scheduled" && (
                               <Button
                                 size="sm"
