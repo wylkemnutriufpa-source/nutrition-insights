@@ -50,6 +50,9 @@ export default function PatientOverview() {
       const notifRes = await supabase.from("notifications").select("id").eq("user_id", user.id).eq("is_read", false);
       const achieveRes = await supabase.from("user_achievements").select("id").eq("user_id", user.id);
       const npRes = await supabase.from("nutritionist_patients").select("created_at").eq("patient_id", user.id).eq("status", "active").limit(1);
+      const checklist = checklistRes.data || [];
+      const apt = aptRes.data?.[0];
+      const startDate = npRes.data?.[0]?.created_at;
 
       setData({
         checklistToday: {
@@ -65,7 +68,9 @@ export default function PatientOverview() {
         streak: checkinRes.data?.length || 0,
       });
       setLoading(false);
-    }).catch(() => setLoading(false));
+    };
+
+    fetchData().catch(() => setLoading(false));
   }, [user]);
 
   const checklistPercent = data ? (data.checklistToday.total > 0 ? Math.round((data.checklistToday.completed / data.checklistToday.total) * 100) : 0) : 0;
