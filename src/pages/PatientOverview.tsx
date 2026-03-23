@@ -36,7 +36,8 @@ export default function PatientOverview() {
 
   useEffect(() => {
     if (!user) return;
-    const today = format(new Date(), "yyyy-MM-dd");
+
+    const fetchData = async () => {
 
     const fetchData = async () => {
       const today = format(new Date(), "yyyy-MM-dd");
