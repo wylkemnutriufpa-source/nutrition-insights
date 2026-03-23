@@ -86,7 +86,7 @@ export default function ProfessionalGuide() {
     }
 
     // Navigate to the real route
-    const route = featureRouteMap[featureName];
+    const route = PROFESSIONAL_ROUTE_MAP[featureName];
     if (route) {
       navigate(route);
     } else {
