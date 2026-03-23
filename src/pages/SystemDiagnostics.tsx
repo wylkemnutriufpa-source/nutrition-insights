@@ -29,7 +29,7 @@ type TestStatus = "idle" | "running" | "done";
 
 // ─── Table → column map derived from the app's known queries ────────
 const CRITICAL_QUERIES: { table: string; columns: string[]; label: string }[] = [
-  { table: "profiles", columns: ["user_id", "full_name", "role", "avatar_url"], label: "Profiles" },
+  { table: "profiles", columns: ["user_id", "full_name", "avatar_url"], label: "Profiles" },
   { table: "nutritionist_patients", columns: ["nutritionist_id", "patient_id", "status"], label: "Nutritionist-Patient links" },
   { table: "patient_appointments", columns: ["id", "patient_id", "nutritionist_id", "title", "appointment_date", "status"], label: "Appointments" },
   { table: "meal_plans", columns: ["id", "patient_id", "nutritionist_id", "status"], label: "Meal Plans" },
