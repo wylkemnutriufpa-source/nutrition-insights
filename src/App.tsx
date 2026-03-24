@@ -190,10 +190,14 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function NutritionistRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, isNutritionist, isAdmin } = useAuth();
+  const { user, loading, isNutritionist, isAdmin, subscription } = useAuth();
   if (loading) return user ? <>{children}</> : <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
   if (!isNutritionist && !isAdmin) return <Navigate to="/" replace />;
+  // Gate clinical features behind active subscription (admins bypass)
+  if (!isAdmin && !subscription.subscribed && !subscription.is_trial) {
+    return <Navigate to="/pricing" replace />;
+  }
   return <>{children}</>;
 }
 
