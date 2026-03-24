@@ -818,7 +818,6 @@ function CreateProfessionalDialog({
             <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Ex: Fit@2026!" />
             <p className="text-xs text-muted-foreground mt-1">Senha forte obrigatória. Padrão sugerido: Fit@2026!</p>
           </div>
-          </div>
           <Button onClick={handleCreate} disabled={creating} className="w-full gap-2">
             {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
             Criar Profissional
