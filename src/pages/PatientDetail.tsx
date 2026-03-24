@@ -1211,14 +1211,9 @@ export default function PatientDetail() {
                     </div>
                     <div>
                       <Label>Email</Label>
-                      <Input
-                        value={editProfileForm.email}
-                        onChange={(e) => setEditProfileForm({ ...editProfileForm, email: e.target.value })}
-                        placeholder="email@exemplo.com"
-                        type="email"
-                      />
+                      <Input value={patientEmail} disabled className="bg-muted" />
                       <p className="text-xs text-muted-foreground mt-1">
-                        Alterar o email envia confirmação ao paciente.
+                        Email vinculado à conta de autenticação (não editável).
                       </p>
                     </div>
                     <div>
