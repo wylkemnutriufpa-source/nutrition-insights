@@ -114,6 +114,15 @@ Deno.serve(async (req) => {
       role: "patient",
     }, { onConflict: "user_id,role" });
 
+    // 3) Create in-app notification for the patient about their invite
+    await adminClient.from("notifications").insert({
+      user_id: patientId,
+      title: "Bem-vindo ao FitJourney! 🎉",
+      message: `Seu acesso foi criado por ${name ? "seu nutricionista" : "um profissional"}. Aguarde a confirmação do pagamento para iniciar seu acompanhamento.`,
+      type: "info",
+      target_route: "/patient-dashboard",
+    });
+
     // Send magic link if requested
     if (method === "magic_link") {
       try {
