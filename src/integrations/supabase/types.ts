@@ -9744,6 +9744,7 @@ export type Database = {
           engagement_index: number | null
           engagement_level: string | null
           full_name: string
+          goal: string | null
           historical_loss_rate: number | null
           id: string
           metabolic_confidence_score: number | null
@@ -9751,6 +9752,7 @@ export type Database = {
           metabolic_phase: string | null
           metabolic_phase_last_updated_at: string | null
           metabolic_response_type: string | null
+          notes: string | null
           phone: string | null
           plateau_probability: number | null
           ranking_nickname: string | null
@@ -9775,6 +9777,7 @@ export type Database = {
           engagement_index?: number | null
           engagement_level?: string | null
           full_name?: string
+          goal?: string | null
           historical_loss_rate?: number | null
           id?: string
           metabolic_confidence_score?: number | null
@@ -9782,6 +9785,7 @@ export type Database = {
           metabolic_phase?: string | null
           metabolic_phase_last_updated_at?: string | null
           metabolic_response_type?: string | null
+          notes?: string | null
           phone?: string | null
           plateau_probability?: number | null
           ranking_nickname?: string | null
@@ -9806,6 +9810,7 @@ export type Database = {
           engagement_index?: number | null
           engagement_level?: string | null
           full_name?: string
+          goal?: string | null
           historical_loss_rate?: number | null
           id?: string
           metabolic_confidence_score?: number | null
@@ -9813,6 +9818,7 @@ export type Database = {
           metabolic_phase?: string | null
           metabolic_phase_last_updated_at?: string | null
           metabolic_response_type?: string | null
+          notes?: string | null
           phone?: string | null
           plateau_probability?: number | null
           ranking_nickname?: string | null

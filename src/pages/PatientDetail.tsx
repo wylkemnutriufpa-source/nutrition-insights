@@ -113,8 +113,11 @@ export default function PatientDetail() {
   const [upgradeRole, setUpgradeRole] = useState<string>("");
   const [upgrading, setUpgrading] = useState(false);
   const [editProfileForm, setEditProfileForm] = useState({
-    full_name: profile?.full_name || "",
-    phone: profile?.phone || "",
+    full_name: "",
+    phone: "",
+    email: "",
+    goal: "",
+    notes: "",
   });
   const [savingProfile, setSavingProfile] = useState(false);
   const [releaseOnboardingOpen, setReleaseOnboardingOpen] = useState(false);
@@ -157,7 +160,9 @@ export default function PatientDetail() {
         .update({
           full_name: editProfileForm.full_name.trim(),
           phone: editProfileForm.phone.trim() || null,
-        })
+          goal: editProfileForm.goal.trim() || null,
+          notes: editProfileForm.notes.trim() || null,
+        } as any)
         .eq("user_id", patientId);
       if (error) throw error;
       toast.success("Cadastro atualizado com sucesso!");
@@ -586,7 +591,18 @@ export default function PatientDetail() {
                       key={s.key}
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.97 }}
-                      onClick={() => setOpenSection(s.key)}
+                      onClick={() => {
+                        if (s.key === "edit-profile") {
+                          setEditProfileForm({
+                            full_name: profile?.full_name || "",
+                            phone: profile?.phone || "",
+                            email: patientEmail || "",
+                            goal: (profile as any)?.goal || "",
+                            notes: (profile as any)?.notes || "",
+                          });
+                        }
+                        setOpenSection(s.key);
+                      }}
                       className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border border-border bg-gradient-to-br ${s.color} hover:shadow-md transition-all group cursor-pointer text-center`}
                     >
                       <div className="w-10 h-10 rounded-xl bg-card shadow-sm flex items-center justify-center group-hover:shadow-md transition-shadow">
@@ -1170,13 +1186,16 @@ export default function PatientDetail() {
                   setEditProfileForm({
                     full_name: profile?.full_name || "",
                     phone: profile?.phone || "",
+                    email: patientEmail || "",
+                    goal: (profile as any)?.goal || "",
+                    notes: (profile as any)?.notes || "",
                   });
                 }
               }}>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="sm:max-w-lg">
                   <DialogHeader>
                     <DialogTitle className="font-display flex items-center gap-2">
-                      <Pencil className="w-5 h-5 text-info" /> Editar Cadastro
+                      <Pencil className="w-5 h-5 text-info" /> Editar Cadastro do Paciente
                     </DialogTitle>
                   </DialogHeader>
                   <form onSubmit={handleSaveProfile} className="space-y-4">
@@ -1191,7 +1210,14 @@ export default function PatientDetail() {
                       />
                     </div>
                     <div>
-                      <Label>Telefone</Label>
+                      <Label>Email</Label>
+                      <Input value={patientEmail} disabled className="bg-muted" />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Email vinculado à conta de autenticação (não editável).
+                      </p>
+                    </div>
+                    <div>
+                      <Label>Telefone / WhatsApp</Label>
                       <Input
                         value={editProfileForm.phone}
                         onChange={(e) => setEditProfileForm({ ...editProfileForm, phone: e.target.value })}
@@ -1200,9 +1226,23 @@ export default function PatientDetail() {
                       />
                     </div>
                     <div>
-                      <Label>Email</Label>
-                      <Input value={patientEmail} disabled className="bg-muted" />
-                      <p className="text-xs text-muted-foreground mt-1">O email não pode ser alterado por aqui.</p>
+                      <Label>Objetivo Principal</Label>
+                      <Input
+                        value={editProfileForm.goal}
+                        onChange={(e) => setEditProfileForm({ ...editProfileForm, goal: e.target.value })}
+                        placeholder="Ex: Emagrecimento, Hipertrofia..."
+                        maxLength={200}
+                      />
+                    </div>
+                    <div>
+                      <Label>Observações</Label>
+                      <Textarea
+                        value={editProfileForm.notes}
+                        onChange={(e) => setEditProfileForm({ ...editProfileForm, notes: e.target.value })}
+                        placeholder="Anotações sobre o paciente..."
+                        rows={3}
+                        maxLength={500}
+                      />
                     </div>
                     <Button type="submit" className="w-full" disabled={savingProfile || !editProfileForm.full_name.trim()}>
                       {savingProfile ? "Salvando..." : "Salvar Alterações"}
