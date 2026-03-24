@@ -192,7 +192,9 @@ function ProfessionalDialog({
                 </div>
                 <div>
                   <Label className="text-xs">Senha temporária *</Label>
-                  <Input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Mínimo 6 caracteres" />
+                  <Input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Ex: Fit@2026!" />
+                  <p className="text-xs text-muted-foreground mt-1">Senha forte obrigatória. Padrão: Fit@2026!</p>
+                </div>
                 </div>
               </>
             )}

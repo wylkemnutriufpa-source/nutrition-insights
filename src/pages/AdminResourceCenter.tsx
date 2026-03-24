@@ -707,7 +707,9 @@ function UsersTab() {
           <div className="grid sm:grid-cols-2 gap-3 items-end">
             <div>
               <Label htmlFor="nutPassword">Senha inicial</Label>
-              <Input id="nutPassword" type="password" placeholder="Mínimo 6 caracteres" value={nutPassword} onChange={(e) => setNutPassword(e.target.value)} />
+              <Input id="nutPassword" type="password" placeholder="Ex: Fit@2026!" value={nutPassword} onChange={(e) => setNutPassword(e.target.value)} />
+              <p className="text-xs text-muted-foreground mt-1">Senha forte obrigatória. Padrão: Fit@2026!</p>
+            </div>
             </div>
             <Button onClick={handleCreateNutritionist} disabled={creating} className="gap-1.5">
               <UserPlus className="w-4 h-4" />
