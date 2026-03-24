@@ -334,7 +334,8 @@ const App = () => (
               <Route path="/landing-personal" element={<LP section="Landing"><PersonalLanding /></LP>} />
               <Route path="/landing-afiliado" element={<LP section="Landing"><AffiliateLanding /></LP>} />
               <Route path="/biquini-branco" element={<LP section="Landing"><BiquiniBrancoLanding /></LP>} />
-              <Route path="/cadastro" element={<LP section="Cadastro"><PatientRegister /></LP>} />
+              {/* Patient self-registration disabled — access is invitation-based only */}
+              <Route path="/cadastro" element={<Navigate to="/auth" replace />} />
                <Route path="/auth" element={<LP section="Auth"><Auth /></LP>} />
                <Route path="/politica-de-privacidade" element={<Suspense fallback={<PageLoader />}><PrivacyPolicy /></Suspense>} />
                <Route path="/termos-de-uso" element={<Suspense fallback={<PageLoader />}><TermsOfUse /></Suspense>} />

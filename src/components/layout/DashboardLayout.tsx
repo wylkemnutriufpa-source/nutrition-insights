@@ -91,6 +91,16 @@ function SidebarFooter({
 }) {
   return (
     <div className="p-3 border-t border-border space-y-2">
+      {!collapsed && isProRole && (
+        <Link
+          to="/workspace-editor"
+          onClick={onLinkClick}
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted w-full transition-all"
+        >
+          <LayoutDashboard className="w-5 h-5" />
+          <span className="text-sm">Editor Workspace</span>
+        </Link>
+      )}
       <Link
         to="/settings"
         onClick={onLinkClick}
