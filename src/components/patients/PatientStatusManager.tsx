@@ -212,7 +212,7 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-7 text-[10px] gap-1 border-violet-500/30 text-violet-600 hover:bg-violet-500/10"
+                        className="h-7 text-[10px] gap-1 border-primary/30 text-primary hover:bg-primary/10"
                         onClick={() => nav(`/patients/${p.patient_id}`)}
                       >
                         <FileCheck className="w-3 h-3" /> Revisar Plano
