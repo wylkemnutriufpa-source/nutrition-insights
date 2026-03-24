@@ -252,13 +252,11 @@ export default function WorkspaceEditor() {
         {/* Sections */}
         <Reorder.Group
           axis="y"
-          values={sections.map(s => s.id)}
+          values={sortedSections.map(s => s.id)}
           onReorder={(ids) => reorderSections(ids)}
           className="space-y-3"
         >
-          {sections
-            .sort((a, b) => a.sort_order - b.sort_order)
-            .map(section => {
+          {sortedSections.map(section => {
               const SectionIcon = ALL_ICONS[section.section_icon] || LayoutDashboard;
               const sectionItems = getItemsForSection(section.id);
               const isExpanded = expandedSections.has(section.id);
