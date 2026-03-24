@@ -13,7 +13,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { toast } from "sonner";
 import {
   Search, CreditCard, Play, FileCheck, ArrowLeft,
-  Users, Loader2, Eye, ChevronRight, DollarSign, ShieldCheck
+  Users, Loader2, Eye, ChevronRight, DollarSign, ShieldCheck,
+  ClipboardList, KeyRound, Send, UserCog
 } from "lucide-react";
 import { releaseOnboarding } from "@/lib/serverTransitions";
 import type { PatientInfo } from "@/hooks/queries/usePatientsList";
@@ -158,9 +159,9 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
                 const completed = hasCompletedOnboarding(journey);
 
                 // Determine which actions to show
-                const showConfirmPayment = journey === "awaiting_payment" || journey === "invited";
-                const showReleaseOnboarding = (journey === "awaiting_consent") && !completed;
-                const showReviewPlan = journey === "draft_ready_for_review";
+                const showConfirmPayment = journey === "awaiting_payment" || journey === "invited" || journey === "active";
+                const showReleaseOnboarding = (journey === "awaiting_consent" || journey === "active") && !completed;
+                const showReviewPlan = journey === "draft_ready_for_review" || journey === "onboarding_completed";
 
                 return (
                   <motion.div
@@ -217,11 +218,11 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
                               disabled={isProcessing}
                             >
                               {isProcessing ? <Loader2 className="w-3 h-3 animate-spin" /> : <DollarSign className="w-3 h-3" />}
-                              Confirmar Pgto
+                              Pgto
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Confirmar pagamento e liberar acesso ao consentimento</p>
+                            <p>Confirmar pagamento e liberar acesso</p>
                           </TooltipContent>
                         </Tooltip>
                       )}
@@ -236,11 +237,11 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
                               disabled={isProcessing}
                             >
                               {isProcessing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
-                              Liberar Onboard.
+                              Onboard.
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Liberar onboarding para o paciente iniciar o preenchimento</p>
+                            <p>Liberar onboarding para o paciente</p>
                           </TooltipContent>
                         </Tooltip>
                       )}
@@ -253,11 +254,11 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
                               className="h-7 text-[10px] gap-1 border-violet-500/30 text-violet-600 hover:bg-violet-500/10"
                               onClick={() => nav(`/patients/${p.patient_id}`)}
                             >
-                              <FileCheck className="w-3 h-3" /> Revisar Plano
+                              <FileCheck className="w-3 h-3" /> Revisar
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Revisar e aprovar o plano gerado pelo onboarding</p>
+                            <p>Revisar e aprovar o plano do paciente</p>
                           </TooltipContent>
                         </Tooltip>
                       )}
@@ -283,7 +284,7 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Ver perfil completo do paciente</p>
+                          <p>Ver perfil completo</p>
                         </TooltipContent>
                       </Tooltip>
                     </div>
