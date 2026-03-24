@@ -19,6 +19,7 @@ import {
   Apple, Award, Bot, CalendarDays, CheckCircle2, ClipboardCheck, Crown,
   DollarSign, Dumbbell, FileText, GraduationCap, Instagram, Lightbulb,
   Megaphone, MessageSquare, Palette, Trophy, X, PlusCircle,
+  UtensilsCrossed, ChefHat, Rocket, Pill, ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import SubscriptionGuard from "@/components/common/SubscriptionGuard";
