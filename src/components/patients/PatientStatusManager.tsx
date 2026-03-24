@@ -57,7 +57,7 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
   const confirmPayment = async (patientId: string) => {
     setProcessingId(patientId);
     try {
-      const { error } = await supabase.rpc("confirm_patient_payment", { _patient_id: patientId });
+      const { error } = await supabase.rpc("confirm_patient_payment", { _patient_id: patientId, _nutritionist_id: user!.id });
       if (error) throw error;
       toast.success("Pagamento confirmado!");
     } catch { toast.error("Erro ao confirmar pagamento"); }
