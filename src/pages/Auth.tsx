@@ -157,7 +157,7 @@ export default function Auth() {
         <Card className="shadow-card border-border/50 bg-card/80 backdrop-blur-sm">
           <CardHeader className="pb-4">
             <h2 className="text-lg font-semibold text-center text-foreground">
-              {mode === "forgot" ? t("auth.forgotTitle") : t("auth.loginTitle")}
+              {mode === "forgot" ? t("auth.forgotTitle") : mode === "register" ? "Criar Conta Profissional" : t("auth.loginTitle")}
             </h2>
           </CardHeader>
 
