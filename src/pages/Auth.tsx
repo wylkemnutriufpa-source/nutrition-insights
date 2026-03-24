@@ -23,10 +23,12 @@ export default function Auth() {
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
+  const [registerSuccess, setRegisterSuccess] = useState(false);
 
   // Show error if redirected from no-role sign-out
   useEffect(() => {
