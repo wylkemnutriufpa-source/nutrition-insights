@@ -61,11 +61,15 @@ export default function ConsentRequired() {
 
       if (error) throw error;
 
+      // Advance lifecycle: awaiting_consent → onboarding_active
+      await supabase.rpc("accept_patient_consent" as any, { _patient_id: user.id });
+
       logAudit("consent_accepted", "clinical_consents", user.id, {
         version: TERMS_VERSION,
       });
 
       await queryClient.invalidateQueries({ queryKey: ["clinical-consent"] });
+      await queryClient.invalidateQueries({ queryKey: ["payment-guard"] });
       toast.success("Consentimento registrado com sucesso!");
       navigate("/client/dashboard", { replace: true });
     } catch (err) {

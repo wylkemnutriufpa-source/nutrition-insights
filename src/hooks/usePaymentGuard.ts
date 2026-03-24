@@ -71,9 +71,13 @@ export function usePaymentGuard(): PaymentGuardState {
         .maybeSingle();
 
       const releasedStatuses = [
+        "awaiting_consent",
         "awaiting_onboarding_release",
         "onboarding_active",
         "onboarding_completed",
+        "draft_ready_for_review",
+        "plan_published",
+        "active_followup",
         "clinical_followup_active",
       ];
       if (journey && releasedStatuses.includes(journey.journey_status)) {
