@@ -1440,6 +1440,39 @@ export default function PatientDetail() {
                     <Button type="submit" className="w-full" disabled={savingProfile || !editProfileForm.full_name.trim()}>
                       {savingProfile ? "Salvando..." : "Salvar Alterações"}
                     </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full gap-2 border-warning/30 text-warning hover:bg-warning/10"
+                      onClick={async () => {
+                        if (!patientId) return;
+                        if (!confirm("Redefinir senha do paciente para 123456?")) return;
+                        try {
+                          const { data: { session } } = await supabase.auth.getSession();
+                          const res = await fetch(
+                            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-reset-password`,
+                            {
+                              method: "POST",
+                              headers: {
+                                "Content-Type": "application/json",
+                                "Authorization": `Bearer ${session?.access_token}`,
+                              },
+                              body: JSON.stringify({ user_id: patientId, new_password: "123456" }),
+                            }
+                          );
+                          const result = await res.json();
+                          if (result.success) {
+                            toast.success("Senha redefinida para 123456");
+                          } else {
+                            toast.error(result.error || "Erro ao redefinir senha");
+                          }
+                        } catch {
+                          toast.error("Erro ao redefinir senha");
+                        }
+                      }}
+                    >
+                      🔑 Redefinir Senha (123456)
+                    </Button>
                   </form>
                 </DialogContent>
               </Dialog>

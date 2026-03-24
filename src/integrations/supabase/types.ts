@@ -989,6 +989,45 @@ export type Database = {
         }
         Relationships: []
       }
+      calendar_milestones: {
+        Row: {
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string | null
+          entity_id: string | null
+          id: string
+          milestone_date: string
+          milestone_label: string
+          milestone_type: string
+          patient_id: string
+          source: string | null
+        }
+        Insert: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          entity_id?: string | null
+          id?: string
+          milestone_date: string
+          milestone_label: string
+          milestone_type: string
+          patient_id: string
+          source?: string | null
+        }
+        Update: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          entity_id?: string | null
+          id?: string
+          milestone_date?: string
+          milestone_label?: string
+          milestone_type?: string
+          patient_id?: string
+          source?: string | null
+        }
+        Relationships: []
+      }
       campaign_deliveries: {
         Row: {
           campaign_id: string

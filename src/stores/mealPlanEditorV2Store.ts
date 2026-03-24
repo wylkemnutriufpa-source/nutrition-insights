@@ -238,6 +238,11 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       items: s.items.map((i) => (i.id === itemId ? { ...i, ...patch } as MealPlanItem : i)),
     }));
 
+    // For temp items (not yet persisted), only update local state — the pending insert will use the updated local data
+    if (itemId.startsWith("temp-")) {
+      return;
+    }
+
     get()._enqueue({
       key: `update:${itemId}`,
       itemIds: [itemId],
