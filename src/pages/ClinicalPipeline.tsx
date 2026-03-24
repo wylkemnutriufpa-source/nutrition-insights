@@ -63,7 +63,7 @@ export default function ClinicalPipeline() {
         .limit(20);
       return data || [];
     },
-    refetchInterval: 10000,
+    refetchInterval: 30000,
   });
 
   const { data: latestSteps } = useQuery({

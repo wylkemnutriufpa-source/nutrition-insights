@@ -19,8 +19,8 @@ const STATUS_CONFIG: Record<string, { icon: React.ElementType; title: string; de
   awaiting_payment: {
     icon: CreditCard,
     title: "Aguardando pagamento",
-    description: "Seu acesso será liberado assim que o pagamento for confirmado. Entre em contato com seu profissional se já realizou o pagamento.",
-    action: { label: "Ir para pagamento", route: "/cadastro" },
+    description: "Seu acesso será liberado assim que o pagamento for confirmado pelo seu profissional. Entre em contato caso já tenha efetuado o pagamento.",
+    action: { label: "Aguardando confirmação", route: "/payment-required" },
   },
   awaiting_onboarding_release: {
     icon: Stethoscope,

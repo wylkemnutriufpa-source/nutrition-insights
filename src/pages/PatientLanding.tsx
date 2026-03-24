@@ -62,9 +62,9 @@ export default function PatientLanding() {
             <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">{heroTitle}</span>
           </h1>
           <p className="text-white/50 text-lg md:text-xl max-w-2xl mx-auto mb-10">{heroSubtitle}</p>
-          <Link to="/cadastro">
+          <Link to="/auth">
             <Button size="lg" className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 text-lg hover:opacity-90 shadow-lg shadow-emerald-500/20">
-              Começar Agora <ArrowRight className="w-5 h-5 ml-2" />
+              Acessar Minha Conta <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </Link>
         </motion.div>
@@ -95,9 +95,9 @@ export default function PatientLanding() {
         <h2 className="text-3xl font-bold text-center mb-16">Como funciona?</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
-            { step: "01", title: "Cadastre-se", desc: "Seu nutricionista cria sua conta e você recebe acesso ao app." },
-            { step: "02", title: "Siga o Plano", desc: "Complete seu checklist diário, registre refeições e ganhe pontos." },
-            { step: "03", title: "Evolua", desc: "Acompanhe sua transformação com dados, rankings e conquistas." },
+            { step: "01", title: "Receba o Convite", desc: "Seu nutricionista cadastra você e envia seu acesso por e-mail." },
+            { step: "02", title: "Complete o Onboarding", desc: "Aceite os termos clínicos, preencha a anamnese e defina seus objetivos." },
+            { step: "03", title: "Evolua com Acompanhamento", desc: "Receba seu plano, acompanhe sua evolução e conquiste resultados." },
           ].map((s, i) => (
             <motion.div key={s.step} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }} className="text-center">
               <div className="text-5xl font-black bg-gradient-to-b from-emerald-400 to-emerald-600 bg-clip-text text-transparent mb-4">{s.step}</div>
@@ -131,9 +131,9 @@ export default function PatientLanding() {
         <div className="max-w-2xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold mb-4"><span className="text-emerald-400">{ctaTitle}</span></h2>
           <p className="text-white/40 mb-8">{ctaSubtitle}</p>
-          <Link to="/cadastro">
+          <Link to="/auth">
             <Button size="lg" className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-10 text-lg">
-              Criar Minha Conta <ArrowRight className="w-5 h-5 ml-2" />
+              Acessar Minha Conta <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </Link>
         </div>

@@ -13434,6 +13434,14 @@ export type Database = {
         Args: { retention_days?: number }
         Returns: Json
       }
+      cleanup_stale_onboarding_pipelines: {
+        Args: { _nutritionist_id: string; _stale_days?: number }
+        Returns: Json
+      }
+      confirm_patient_payment: {
+        Args: { _nutritionist_id: string; _patient_id: string }
+        Returns: Json
+      }
       create_nutritionist_account: {
         Args: { _email: string; _full_name: string; _password: string }
         Returns: string
@@ -13454,6 +13462,16 @@ export type Database = {
       deactivate_meal_plan: {
         Args: { _nutritionist_id: string; _plan_id: string }
         Returns: Json
+      }
+      detect_orphan_pipelines: {
+        Args: { _nutritionist_id: string }
+        Returns: {
+          patient_id: string
+          patient_name: string
+          pipeline_id: string
+          status: string
+          updated_at: string
+        }[]
       }
       end_patient_project: {
         Args: { _patient_id: string; _program_id: string; _reason?: string }
