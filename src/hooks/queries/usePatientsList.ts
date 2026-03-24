@@ -10,6 +10,7 @@ export interface PatientInfo {
   id: string;
   patient_id: string;
   status: string;
+  journey_status?: string;
   notes: string | null;
   created_at: string;
   expires_at?: string | null;

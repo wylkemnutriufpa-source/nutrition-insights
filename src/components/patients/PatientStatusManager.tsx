@@ -8,11 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import {
   Search, CreditCard, Play, FileCheck, ArrowLeft,
-  Users, Loader2, Eye, ChevronRight
+  Users, Loader2, Eye, ChevronRight, DollarSign, ShieldCheck
 } from "lucide-react";
 import { releaseOnboarding } from "@/lib/serverTransitions";
 import type { PatientInfo } from "@/hooks/queries/usePatientsList";
@@ -73,9 +74,14 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
     setProcessingId(null);
   };
 
-  const getJourneyStatus = (p: PatientInfo): string => {
-    // journey_status comes from the query - we check a few possible locations
-    return (p as any).journey_status || "active";
+  const getJourney = (p: PatientInfo): string => {
+    return p.journey_status || (p as any).journey_status || "active";
+  };
+
+  // Check if patient already completed onboarding (don't offer release again)
+  const hasCompletedOnboarding = (journey: string) => {
+    const completedStatuses = ["onboarding_completed", "draft_ready_for_review", "plan_published", "active_followup"];
+    return completedStatuses.includes(journey);
   };
 
   const counts = {
@@ -85,158 +91,215 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-4"
-    >
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={onClose} className="shrink-0">
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div className="flex-1">
-          <h2 className="text-lg font-display font-bold flex items-center gap-2">
-            <Users className="w-5 h-5 text-primary" /> Controle Rápido de Pacientes
-          </h2>
-          <p className="text-xs text-muted-foreground">
-            {counts.active} ativos · {counts.inactive} inativos · Alterne com um toque
-          </p>
+    <TooltipProvider delayDuration={200}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="space-y-4"
+      >
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={onClose} className="shrink-0">
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div className="flex-1">
+            <h2 className="text-lg font-display font-bold flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" /> Controle Rápido de Pacientes
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {counts.active} ativos · {counts.inactive} inativos · Alterne com um toque
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="Buscar paciente..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="pl-10"
-          autoFocus
-        />
-      </div>
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar paciente..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="pl-10"
+            autoFocus
+          />
+        </div>
 
-      {/* Tabs */}
-      <Tabs value={tab} onValueChange={v => setTab(v as any)}>
-        <TabsList className="w-full">
-          <TabsTrigger value="all" className="flex-1 text-xs">
-            Todos <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{counts.all}</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="active" className="flex-1 text-xs">
-            Ativos <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{counts.active}</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="inactive" className="flex-1 text-xs">
-            Inativos <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{counts.inactive}</Badge>
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+        {/* Tabs */}
+        <Tabs value={tab} onValueChange={v => setTab(v as any)}>
+          <TabsList className="w-full">
+            <TabsTrigger value="all" className="flex-1 text-xs">
+              Todos <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{counts.all}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="active" className="flex-1 text-xs">
+              Ativos <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{counts.active}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="inactive" className="flex-1 text-xs">
+              Inativos <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{counts.inactive}</Badge>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
 
-      {/* Patient List */}
-      <ScrollArea className="h-[calc(100vh-320px)] min-h-[300px]">
-        <div className="space-y-1">
-          {filtered.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground text-sm">
-              <Users className="w-10 h-10 mx-auto mb-2 opacity-30" />
-              Nenhum paciente encontrado
-            </div>
-          ) : (
-            filtered.map((p, idx) => {
-              const name = p.profile?.full_name || p.email || "Paciente";
-              const initials = name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
-              const isActive = p.status === "active";
-              const journey = getJourneyStatus(p);
-              const journeyInfo = JOURNEY_LABELS[journey] || JOURNEY_LABELS.active;
-              const isProcessing = processingId === p.patient_id;
+        {/* Patient List */}
+        <ScrollArea className="h-[calc(100vh-320px)] min-h-[300px]">
+          <div className="space-y-1">
+            {filtered.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground text-sm">
+                <Users className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                Nenhum paciente encontrado
+              </div>
+            ) : (
+              filtered.map((p, idx) => {
+                const name = p.profile?.full_name || p.email || "Paciente";
+                const initials = name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+                const isActive = p.status === "active";
+                const journey = getJourney(p);
+                const journeyInfo = JOURNEY_LABELS[journey] || JOURNEY_LABELS.active;
+                const isProcessing = processingId === p.patient_id;
+                const completed = hasCompletedOnboarding(journey);
 
-              return (
-                <motion.div
-                  key={p.id}
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: Math.min(idx * 0.02, 0.3) }}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all hover:bg-accent/5 group ${!isActive ? "opacity-70" : ""}`}
-                >
-                  {/* Toggle Switch */}
-                  <Switch
-                    checked={isActive}
-                    onCheckedChange={() => onToggleStatus(p.id, p.status)}
-                    className="shrink-0"
-                  />
+                // Determine which actions to show
+                const showConfirmPayment = journey === "awaiting_payment" || journey === "invited";
+                const showReleaseOnboarding = (journey === "awaiting_consent") && !completed;
+                const showReviewPlan = journey === "draft_ready_for_review";
 
-                  {/* Avatar */}
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${isActive ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
-                    {initials}
-                  </div>
+                return (
+                  <motion.div
+                    key={p.id}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: Math.min(idx * 0.02, 0.3) }}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all hover:bg-accent/5 ${!isActive ? "opacity-70" : ""}`}
+                  >
+                    {/* Toggle Switch */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div>
+                          <Switch
+                            checked={isActive}
+                            onCheckedChange={() => onToggleStatus(p.id, p.status)}
+                            className="shrink-0"
+                          />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        <p>{isActive ? "Desativar paciente" : "Ativar paciente"}</p>
+                      </TooltipContent>
+                    </Tooltip>
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{name}</p>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${journeyInfo.color}`}>
-                        {journeyInfo.label}
-                      </span>
-                      {p.email && (
-                        <span className="text-[10px] text-muted-foreground truncate max-w-[120px]">{p.email}</span>
-                      )}
+                    {/* Avatar */}
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${isActive ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+                      {initials}
                     </div>
-                  </div>
 
-                  {/* Quick Actions based on journey status */}
-                  <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {journey === "awaiting_payment" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-[10px] gap-1 border-warning/30 text-warning hover:bg-warning/10"
-                        onClick={() => confirmPayment(p.patient_id)}
-                        disabled={isProcessing}
-                      >
-                        {isProcessing ? <Loader2 className="w-3 h-3 animate-spin" /> : <CreditCard className="w-3 h-3" />}
-                        Confirmar Pgto
-                      </Button>
-                    )}
-                    {(journey === "awaiting_consent" || journey === "invited") && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-[10px] gap-1 border-primary/30 text-primary hover:bg-primary/10"
-                        onClick={() => doReleaseOnboarding(p.patient_id)}
-                        disabled={isProcessing}
-                      >
-                        {isProcessing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
-                        Liberar Onboard.
-                      </Button>
-                    )}
-                    {journey === "draft_ready_for_review" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-[10px] gap-1 border-primary/30 text-primary hover:bg-primary/10"
-                        onClick={() => nav(`/patients/${p.patient_id}`)}
-                      >
-                        <FileCheck className="w-3 h-3" /> Revisar Plano
-                      </Button>
-                    )}
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-7 w-7 p-0"
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{name}</p>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${journeyInfo.color}`}>
+                          {journeyInfo.label}
+                        </span>
+                        {p.email && (
+                          <span className="text-[10px] text-muted-foreground truncate max-w-[120px]">{p.email}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Quick Actions - ALWAYS VISIBLE */}
+                    <div className="flex items-center gap-1 shrink-0">
+                      {showConfirmPayment && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-[10px] gap-1 border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10"
+                              onClick={() => confirmPayment(p.patient_id)}
+                              disabled={isProcessing}
+                            >
+                              {isProcessing ? <Loader2 className="w-3 h-3 animate-spin" /> : <DollarSign className="w-3 h-3" />}
+                              Confirmar Pgto
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Confirmar pagamento e liberar acesso ao consentimento</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      {showReleaseOnboarding && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-[10px] gap-1 border-primary/30 text-primary hover:bg-primary/10"
+                              onClick={() => doReleaseOnboarding(p.patient_id)}
+                              disabled={isProcessing}
+                            >
+                              {isProcessing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
+                              Liberar Onboard.
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Liberar onboarding para o paciente iniciar o preenchimento</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      {showReviewPlan && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-[10px] gap-1 border-violet-500/30 text-violet-600 hover:bg-violet-500/10"
+                              onClick={() => nav(`/patients/${p.patient_id}`)}
+                            >
+                              <FileCheck className="w-3 h-3" /> Revisar Plano
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Revisar e aprovar o plano gerado pelo onboarding</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      {completed && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <ShieldCheck className="w-4 h-4 text-success shrink-0" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Onboarding já concluído</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0"
+                            onClick={() => nav(`/patients/${p.patient_id}`)}
+                          >
+                            <Eye className="w-3.5 h-3.5 text-muted-foreground" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Ver perfil completo do paciente</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+
+                    {/* Arrow */}
+                    <ChevronRight
+                      className="w-3.5 h-3.5 text-muted-foreground cursor-pointer shrink-0 hover:text-foreground transition-colors"
                       onClick={() => nav(`/patients/${p.patient_id}`)}
-                      title="Ver perfil"
-                    >
-                      <Eye className="w-3.5 h-3.5 text-muted-foreground" />
-                    </Button>
-                  </div>
-
-                  {/* Arrow */}
-                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shrink-0" onClick={() => nav(`/patients/${p.patient_id}`)} />
-                </motion.div>
-              );
-            })
-          )}
-        </div>
-      </ScrollArea>
-    </motion.div>
+                    />
+                  </motion.div>
+                );
+              })
+            )}
+          </div>
+        </ScrollArea>
+      </motion.div>
+    </TooltipProvider>
   );
 }
