@@ -1490,7 +1490,7 @@ export default function PatientDetail() {
                               {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
-                                body: JSON.stringify({ target_user_id: patientId, action: "reset_password", payload: { password: "123456" } }),
+                                body: JSON.stringify({ target_user_id: patientId, action: "reset_password", payload: { password: "Fit@2026!" } }),
                               }
                             );
                             const result = await res.json();
