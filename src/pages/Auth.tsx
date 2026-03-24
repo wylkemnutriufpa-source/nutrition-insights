@@ -313,6 +313,13 @@ export default function Auth() {
                       <span className="flex items-center gap-2">{t("auth.loginButton")} <ArrowRight className="w-4 h-4" /></span>
                     )}
                   </Button>
+
+                  <div className="pt-2 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">É nutricionista e ainda não tem conta?</p>
+                    <button type="button" onClick={() => setMode("register")} className="text-sm text-primary hover:underline font-medium">
+                      Criar conta profissional
+                    </button>
+                  </div>
                 </motion.form>
               )}
             </AnimatePresence>
