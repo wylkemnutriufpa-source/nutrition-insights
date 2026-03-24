@@ -155,14 +155,27 @@ export default function PatientDetail() {
     if (!patientId) return;
     setSavingProfile(true);
     try {
+      // Build update payload, only include fields that have values to prevent null overwrites
+      const updatePayload: Record<string, any> = {};
+      if (editProfileForm.full_name.trim()) updatePayload.full_name = editProfileForm.full_name.trim();
+      if (editProfileForm.phone.trim()) updatePayload.phone = editProfileForm.phone.trim();
+      else if (editProfileForm.phone === "") {
+        // Only set null if user explicitly cleared the field (not if it was never loaded)
+        const currentPhone = profile?.phone;
+        if (currentPhone) updatePayload.phone = null; // User intentionally cleared
+      }
+      if (editProfileForm.goal.trim()) updatePayload.goal = editProfileForm.goal.trim();
+      if (editProfileForm.notes.trim()) updatePayload.notes = editProfileForm.notes.trim();
+      
+      if (Object.keys(updatePayload).length === 0) {
+        toast.info("Nenhum dado alterado");
+        setSavingProfile(false);
+        return;
+      }
+      
       const { error } = await supabase
         .from("profiles")
-        .update({
-          full_name: editProfileForm.full_name.trim(),
-          phone: editProfileForm.phone.trim() || null,
-          goal: editProfileForm.goal.trim() || null,
-          notes: editProfileForm.notes.trim() || null,
-        } as any)
+        .update(updatePayload as any)
         .eq("user_id", patientId);
       if (error) throw error;
       toast.success("Cadastro atualizado com sucesso!");
