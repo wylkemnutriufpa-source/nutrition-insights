@@ -495,20 +495,48 @@ export default function PhysicalAssessment() {
           <div className="space-y-4">
             <div className="glass rounded-xl p-5">
               <h3 className="font-display font-semibold mb-2 flex items-center gap-2">
-                <TrendingDown className="w-5 h-5 text-primary" /> Dobras Cutâneas — Jackson-Pollock 7 Dobras
+                <TrendingDown className="w-5 h-5 text-primary" /> Dobras Cutâneas
               </h3>
-              <p className="text-xs text-muted-foreground mb-4">
-                Preencha todas as 7 dobras para cálculo automático do % de gordura corporal.
-              </p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <NumField label="Peitoral" value={form.chest_fold} onChange={(v) => set("chest_fold", v)} unit="mm" />
-                <NumField label="Abdominal" value={form.abdominal_fold} onChange={(v) => set("abdominal_fold", v)} unit="mm" />
-                <NumField label="Coxa" value={form.thigh_fold} onChange={(v) => set("thigh_fold", v)} unit="mm" />
-                <NumField label="Tríceps" value={form.triceps_fold} onChange={(v) => set("triceps_fold", v)} unit="mm" />
-                <NumField label="Subescapular" value={form.subscapular_fold} onChange={(v) => set("subscapular_fold", v)} unit="mm" />
-                <NumField label="Suprailíaca" value={form.suprailiac_fold} onChange={(v) => set("suprailiac_fold", v)} unit="mm" />
-                <NumField label="Axilar Média" value={form.midaxillary_fold} onChange={(v) => set("midaxillary_fold", v)} unit="mm" />
+              <div className="flex items-center gap-3 mb-4">
+                <Label className="text-xs text-muted-foreground">Protocolo:</Label>
+                <Select value={form.method} onValueChange={(v) => set("method", v)}>
+                  <SelectTrigger className="w-[250px] h-8 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="jackson_pollock_3">Jackson-Pollock 3 Dobras</SelectItem>
+                    <SelectItem value="jackson_pollock_7">Jackson-Pollock 7 Dobras</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+              
+              {form.method === "jackson_pollock_3" ? (
+                <>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Protocolo 3 dobras — Homens: Peitoral, Abdominal, Coxa | Mulheres: Tríceps, Suprailíaca, Coxa
+                  </p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <NumField label="Peitoral" value={form.chest_fold} onChange={(v) => set("chest_fold", v)} unit="mm" />
+                    <NumField label="Abdominal" value={form.abdominal_fold} onChange={(v) => set("abdominal_fold", v)} unit="mm" />
+                    <NumField label="Coxa" value={form.thigh_fold} onChange={(v) => set("thigh_fold", v)} unit="mm" />
+                    <NumField label="Tríceps" value={form.triceps_fold} onChange={(v) => set("triceps_fold", v)} unit="mm" />
+                    <NumField label="Suprailíaca" value={form.suprailiac_fold} onChange={(v) => set("suprailiac_fold", v)} unit="mm" />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Preencha todas as 7 dobras para cálculo automático do % de gordura corporal.
+                  </p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <NumField label="Peitoral" value={form.chest_fold} onChange={(v) => set("chest_fold", v)} unit="mm" />
+                    <NumField label="Abdominal" value={form.abdominal_fold} onChange={(v) => set("abdominal_fold", v)} unit="mm" />
+                    <NumField label="Coxa" value={form.thigh_fold} onChange={(v) => set("thigh_fold", v)} unit="mm" />
+                    <NumField label="Tríceps" value={form.triceps_fold} onChange={(v) => set("triceps_fold", v)} unit="mm" />
+                    <NumField label="Subescapular" value={form.subscapular_fold} onChange={(v) => set("subscapular_fold", v)} unit="mm" />
+                    <NumField label="Suprailíaca" value={form.suprailiac_fold} onChange={(v) => set("suprailiac_fold", v)} unit="mm" />
+                    <NumField label="Axilar Média" value={form.midaxillary_fold} onChange={(v) => set("midaxillary_fold", v)} unit="mm" />
+                  </div>
+                </>
+              )}
 
               {computed.bodyFat > 0 && (
                 <div className="mt-6 p-4 rounded-lg bg-primary/5 border border-primary/20">
