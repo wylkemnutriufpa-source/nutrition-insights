@@ -1495,9 +1495,20 @@ export default function PatientDetail() {
                               },
                             });
 
-                            if (error) throw error;
-                            if (data?.success) toast.success(`Senha redefinida para ${tempPassword}`);
-                            else toast.error(data?.error || "Erro ao redefinir senha");
+                            if (error || !data?.success) {
+                              const fallback = await supabase.functions.invoke("admin-reset-password", {
+                                body: {
+                                  user_id: patientId,
+                                  new_password: tempPassword,
+                                },
+                              });
+
+                              if (fallback.error || !fallback.data?.success) {
+                                throw new Error(fallback.error?.message || data?.error || "Erro ao redefinir senha");
+                              }
+                            }
+
+                            toast.success(`Senha redefinida para ${tempPassword}`);
                           } catch (e: any) {
                             toast.error(e?.message || "Erro ao redefinir senha");
                           }
