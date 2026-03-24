@@ -1403,10 +1403,43 @@ export default function PatientDetail() {
                       />
                     </div>
                     <div>
-                      <Label>Email</Label>
-                      <Input value={patientEmail} disabled className="bg-muted" />
+                      <Label>Email (autenticação)</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={editProfileForm.email}
+                          onChange={(e) => setEditProfileForm({ ...editProfileForm, email: e.target.value })}
+                          placeholder="email@exemplo.com"
+                          type="email"
+                        />
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={savingProfile || editProfileForm.email === patientEmail}
+                          onClick={async () => {
+                            if (!patientId || editProfileForm.email === patientEmail) return;
+                            if (!confirm(`Alterar email de autenticação para ${editProfileForm.email}?`)) return;
+                            try {
+                              const { data: { session } } = await supabase.auth.getSession();
+                              const res = await fetch(
+                                `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-update-user`,
+                                {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
+                                  body: JSON.stringify({ target_user_id: patientId, action: "update_email", payload: { email: editProfileForm.email } }),
+                                }
+                              );
+                              const result = await res.json();
+                              if (result.success) toast.success("Email atualizado com sucesso");
+                              else toast.error(result.error || "Erro ao atualizar email");
+                            } catch { toast.error("Erro ao atualizar email"); }
+                          }}
+                        >
+                          Salvar Email
+                        </Button>
+                      </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Email vinculado à conta de autenticação (não editável).
+                        Alterar o email atualiza o login do paciente. Use com cuidado.
                       </p>
                     </div>
                     <div>
@@ -1438,41 +1471,61 @@ export default function PatientDetail() {
                       />
                     </div>
                     <Button type="submit" className="w-full" disabled={savingProfile || !editProfileForm.full_name.trim()}>
-                      {savingProfile ? "Salvando..." : "Salvar Alterações"}
+                      {savingProfile ? "Salvando..." : "Salvar Nome, Telefone e Dados"}
                     </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full gap-2 border-warning/30 text-warning hover:bg-warning/10"
-                      onClick={async () => {
-                        if (!patientId) return;
-                        if (!confirm("Redefinir senha do paciente para 123456?")) return;
-                        try {
-                          const { data: { session } } = await supabase.auth.getSession();
-                          const res = await fetch(
-                            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-reset-password`,
-                            {
-                              method: "POST",
-                              headers: {
-                                "Content-Type": "application/json",
-                                "Authorization": `Bearer ${session?.access_token}`,
-                              },
-                              body: JSON.stringify({ user_id: patientId, new_password: "123456" }),
-                            }
-                          );
-                          const result = await res.json();
-                          if (result.success) {
-                            toast.success("Senha redefinida para 123456");
-                          } else {
-                            toast.error(result.error || "Erro ao redefinir senha");
-                          }
-                        } catch {
-                          toast.error("Erro ao redefinir senha");
-                        }
-                      }}
-                    >
-                      🔑 Redefinir Senha (123456)
-                    </Button>
+
+                    <div className="border-t pt-3 space-y-2">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ações de Identidade (Admin)</p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full gap-2 border-warning/30 text-warning hover:bg-warning/10"
+                        onClick={async () => {
+                          if (!patientId) return;
+                          if (!confirm("Redefinir senha do paciente para 123456?")) return;
+                          try {
+                            const { data: { session } } = await supabase.auth.getSession();
+                            const res = await fetch(
+                              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-update-user`,
+                              {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
+                                body: JSON.stringify({ target_user_id: patientId, action: "reset_password", payload: { password: "123456" } }),
+                              }
+                            );
+                            const result = await res.json();
+                            if (result.success) toast.success("Senha redefinida para 123456");
+                            else toast.error(result.error || "Erro ao redefinir senha");
+                          } catch { toast.error("Erro ao redefinir senha"); }
+                        }}
+                      >
+                        🔑 Redefinir Senha (123456)
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full gap-2 border-info/30 text-info hover:bg-info/10"
+                        onClick={async () => {
+                          if (!patientId) return;
+                          try {
+                            const { data: { session } } = await supabase.auth.getSession();
+                            const res = await fetch(
+                              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-update-user`,
+                              {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
+                                body: JSON.stringify({ target_user_id: patientId, action: "resend_invite", payload: {} }),
+                              }
+                            );
+                            const result = await res.json();
+                            if (result.success) toast.success("Convite reenviado com sucesso");
+                            else toast.error(result.error || "Erro ao reenviar convite");
+                          } catch { toast.error("Erro ao reenviar convite"); }
+                        }}
+                      >
+                        📩 Reenviar Convite / Acesso
+                      </Button>
+                    </div>
                   </form>
                 </DialogContent>
               </Dialog>
