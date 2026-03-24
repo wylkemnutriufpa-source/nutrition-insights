@@ -15,7 +15,7 @@ export default function WorkspaceProtocols({ search }: Props) {
     if (!user?.id) return;
     const fetch = async () => {
       const { data } = await supabase
-        .from("nutrition_protocols")
+        .from("nutrition_protocols" as any)
         .select("*")
         .eq("created_by", user.id)
         .order("created_at", { ascending: false })
