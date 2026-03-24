@@ -16,10 +16,14 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("Not authenticated");
 
+    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+    if (!token) throw new Error("Not authenticated");
+
     const callerClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
-      global: { headers: { Authorization: authHeader } },
+      auth: { autoRefreshToken: false, persistSession: false },
     });
-    const { data: { user: caller } } = await callerClient.auth.getUser();
+    const { data: { user: caller }, error: callerError } = await callerClient.auth.getUser(token);
+    if (callerError) throw new Error("Invalid session");
     if (!caller) throw new Error("Invalid session");
 
     // Verify caller is admin or nutritionist
@@ -50,12 +54,14 @@ Deno.serve(async (req) => {
 
       case "update_email": {
         if (!payload?.email) throw new Error("email required");
+        const normalizedEmail = String(payload.email).trim().toLowerCase();
+        if (!normalizedEmail) throw new Error("email required");
         const { error: emailErr } = await adminClient.auth.admin.updateUserById(target_user_id, {
-          email: payload.email,
+          email: normalizedEmail,
           email_confirm: true,
         });
         if (emailErr) throw new Error(`Email update failed: ${emailErr.message}`);
-        auditMeta.new_email = payload.email;
+        auditMeta.new_email = normalizedEmail;
         result = { updated: "email" };
         break;
       }

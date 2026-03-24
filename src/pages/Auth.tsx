@@ -52,7 +52,8 @@ export default function Auth() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const normalizedEmail = email.trim().toLowerCase();
+    const { error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
     setLoading(false);
     if (error) {
       toast.error(error.message === "Invalid login credentials"
@@ -80,8 +81,9 @@ export default function Auth() {
     e.preventDefault();
     if (!fullName.trim()) { toast.error("Informe seu nome completo"); return; }
     setLoading(true);
+    const normalizedEmail = email.trim().toLowerCase();
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: normalizedEmail,
       password,
       options: { data: { full_name: fullName, role: "nutritionist" } },
     });
@@ -109,7 +111,8 @@ export default function Auth() {
   const handleForgot = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const normalizedEmail = email.trim().toLowerCase();
+    const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     setLoading(false);
