@@ -67,7 +67,7 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
   const doReleaseOnboarding = async (patientId: string) => {
     setProcessingId(patientId);
     try {
-      await releaseOnboarding(patientId);
+      await releaseOnboarding(patientId, user!.id);
       toast.success("Onboarding liberado!");
     } catch { toast.error("Erro ao liberar onboarding"); }
     setProcessingId(null);
