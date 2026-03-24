@@ -49,7 +49,7 @@ export default function PatientQueueTabs() {
 
   const fetchCounts = async () => {
     if (!user) return;
-    const statuses = ["awaiting_payment", "awaiting_onboarding_release", "onboarding_active", "lead_created"];
+    const statuses = ["awaiting_payment", "awaiting_consent", "onboarding_active", "draft_ready_for_review", "lead_created"];
     const results: Record<string, number> = {};
     await Promise.all(
       statuses.map(async (s) => {
