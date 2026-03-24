@@ -227,6 +227,12 @@ export default function OnboardingPipeline() {
         action_url: `/patients/${user.id}?tab=onboarding`,
       });
 
+      // Transition lifecycle: onboarding_active → draft_ready_for_review
+      await supabase.rpc("complete_patient_onboarding_by_patient" as any, {
+        _patient_id: user.id,
+        _pipeline_id: pipeline.id,
+      });
+
       toast.success(data.multiPlan 
         ? `${data.plans.length} opções de plano geradas! Aguardando aprovação do profissional.`
         : "Pré-plano gerado! Aguardando aprovação do profissional."
