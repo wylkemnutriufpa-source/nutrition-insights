@@ -52,7 +52,8 @@ const ALL_ICONS: Record<string, any> = {
   Star, Shield, Target, Activity, Sparkles, LayoutDashboard,
   Apple, Award, Bot, CalendarDays, CheckCircle2, ClipboardCheck, Crown,
   DollarSign, Dumbbell, FileText, GraduationCap, Instagram, Lightbulb,
-  Megaphone, MessageSquare, Palette, Trophy,
+  Megaphone, MessageSquare, Palette, Trophy, UtensilsCrossed, ChefHat,
+  Rocket, Pill, ArrowRight,
 };
 
 interface MenuItem {
