@@ -11,23 +11,27 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-    // Verify caller is authenticated nutritionist
-    const authHeader = req.headers.get("Authorization") ?? "";
-    const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
-    const { data: { user: caller } } = await anonClient.auth.getUser(authHeader.replace("Bearer ", ""));
-    if (!caller) return new Response(JSON.stringify({ error: "Não autenticado" }), { status: 401, headers: corsHeaders });
-
-    // Check caller is nutritionist
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
-    const { data: callerRole } = await adminClient.from("user_roles").select("role").eq("user_id", caller.id).single();
-    if (!callerRole || (callerRole.role !== "nutritionist" && callerRole.role !== "admin")) {
-      return new Response(JSON.stringify({ error: "Sem permissão" }), { status: 403, headers: corsHeaders });
+
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const token = authHeader.replace("Bearer ", "");
+
+    // Allow service role calls directly
+    if (token !== serviceRoleKey) {
+      const anonClient = createClient(supabaseUrl, anonKey);
+      const { data: { user: caller } } = await anonClient.auth.getUser(token);
+      if (!caller) return new Response(JSON.stringify({ error: "Não autenticado" }), { status: 401, headers: corsHeaders });
+
+      const { data: callerRole } = await adminClient.from("user_roles").select("role").eq("user_id", caller.id).single();
+      if (!callerRole || (callerRole.role !== "nutritionist" && callerRole.role !== "admin")) {
+        return new Response(JSON.stringify({ error: "Sem permissão" }), { status: 403, headers: corsHeaders });
+      }
     }
 
     const { user_id, new_password } = await req.json();
     if (!user_id || !new_password) {
-      return new Response(JSON.stringify({ error: "user_id e new_password são obrigatórios" }), { status: 400, headers: corsHeaders });
+      return new Response(JSON.stringify({ error: "user_id e new_password obrigatórios" }), { status: 400, headers: corsHeaders });
     }
 
     const { error } = await adminClient.auth.admin.updateUserById(user_id, { password: new_password });
