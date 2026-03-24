@@ -565,7 +565,7 @@ export default function SystemDiagnostics() {
           ))}
         </div>
 
-        {/* Tabs: Live Logs + History */}
+        {/* Tabs: Live Logs + History + Cleanup */}
         <Tabs defaultValue="live" className="w-full">
           <TabsList className="w-full sm:w-auto">
             <TabsTrigger value="live" className="gap-1.5 flex-1 sm:flex-none">
@@ -573,6 +573,9 @@ export default function SystemDiagnostics() {
             </TabsTrigger>
             <TabsTrigger value="history" className="gap-1.5 flex-1 sm:flex-none">
               <History className="w-3.5 h-3.5" /> Histórico
+            </TabsTrigger>
+            <TabsTrigger value="cleanup" className="gap-1.5 flex-1 sm:flex-none">
+              <Database className="w-3.5 h-3.5" /> Limpeza
             </TabsTrigger>
           </TabsList>
 
@@ -743,6 +746,48 @@ export default function SystemDiagnostics() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+          {/* Cleanup Tab */}
+          <TabsContent value="cleanup">
+            <Card className="glass-card">
+              <CardHeader>
+                <CardTitle className="text-sm font-display flex items-center gap-2">
+                  <Database className="w-4 h-4 text-primary" /> Limpeza de Pipelines Órfãos
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Remove pipelines de onboarding sem nutricionista ativo, duplicados ou com mais de 90 dias sem atividade.
+                </p>
+                <div className="flex gap-3 flex-wrap">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      const { data, error } = await supabase.rpc("preview_orphan_onboarding_pipelines" as any);
+                      if (error) { toast.error("Erro ao verificar: " + error.message); return; }
+                      const list = Array.isArray(data) ? data : [];
+                      if (list.length === 0) { toast.success("Nenhum pipeline órfão encontrado ✓"); return; }
+                      toast.info(`${list.length} pipeline(s) órfão(s) encontrado(s)`);
+                    }}
+                  >
+                    <Activity className="w-3.5 h-3.5 mr-1.5" /> Verificar Órfãos
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={async () => {
+                      if (!confirm("Confirma arquivamento de todos os pipelines órfãos?")) return;
+                      const { data, error } = await supabase.rpc("archive_orphan_onboarding_pipelines" as any);
+                      if (error) { toast.error("Erro: " + error.message); return; }
+                      toast.success("Pipelines órfãos arquivados com sucesso ✓");
+                    }}
+                  >
+                    <XCircle className="w-3.5 h-3.5 mr-1.5" /> Arquivar Órfãos
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>

@@ -69,10 +69,17 @@ const features = [
 ];
 
 const howItWorks = [
-  { step: "01", title: "Crie sua conta", desc: "Teste grátis por 7 dias. Sem cartão de crédito.", icon: Sparkles },
-  { step: "02", title: "Cadastre pacientes", desc: "Adicione pacientes com 1 clique. Eles recebem acesso automaticamente.", icon: Users },
+  { step: "01", title: "Crie sua conta profissional", desc: "Cadastro exclusivo para nutricionistas. 7 dias grátis, sem cartão.", icon: Sparkles },
+  { step: "02", title: "Convide seus pacientes", desc: "Pacientes recebem acesso por convite — via link mágico ou senha temporária.", icon: Users },
   { step: "03", title: "Configure protocolos", desc: "Crie planos alimentares, protocolos e metas personalizadas.", icon: ClipboardCheck },
   { step: "04", title: "Acompanhe com IA", desc: "A IA analisa evolução, gera relatórios e sugere ajustes automaticamente.", icon: Brain },
+];
+
+const howItWorksPatient = [
+  { step: "01", title: "Receba o convite", desc: "Seu nutricionista cria sua conta e envia o acesso por e-mail.", icon: Lock },
+  { step: "02", title: "Complete seu onboarding", desc: "Preencha a anamnese e aceite os termos clínicos (LGPD).", icon: ClipboardCheck },
+  { step: "03", title: "Siga seu plano", desc: "Acesse dietas, checklists, receitas e acompanhe sua evolução.", icon: Target },
+  { step: "04", title: "Evolua com dados", desc: "Sua jornada é acompanhada por inteligência clínica em tempo real.", icon: Brain },
 ];
 
 const defaultTestimonials = [
@@ -398,34 +405,20 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ══════════ HOW IT WORKS ══════════ */}
+      {/* ══════════ HOW IT WORKS — PROFESSIONALS ══════════ */}
       <section id="how" className="py-28 px-4 relative noise-overlay">
         <div className="max-w-5xl mx-auto relative z-10">
           <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-20">
-            <span className="inline-block px-4 py-1.5 rounded-full glass-premium text-accent text-xs font-bold mb-5 gradient-border uppercase tracking-widest">Como Funciona</span>
-            <h2 className="font-display text-3xl md:text-5xl font-bold mb-4">Simples de começar.<br /><span className="text-gradient-animated">Poderoso de usar.</span></h2>
+            <span className="inline-block px-4 py-1.5 rounded-full glass-premium text-accent text-xs font-bold mb-5 gradient-border uppercase tracking-widest">Para Nutricionistas</span>
+            <h2 className="font-display text-3xl md:text-5xl font-bold mb-4">Comece em minutos.<br /><span className="text-gradient-animated">Escale com inteligência.</span></h2>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {howItWorks.map((step, i) => (
-              <motion.div
-                key={step.step}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.15, ease: [0.22, 1, 0.36, 1] }}
-                className="relative text-center group"
-              >
+              <motion.div key={step.step} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15, ease: [0.22, 1, 0.36, 1] }} className="relative text-center group">
                 {i < 3 && (
                   <div className="hidden md:block absolute top-10 left-[60%] w-[80%] h-[2px]">
                     <div className="w-full h-full bg-gradient-to-r from-primary/30 to-transparent" />
-                    <motion.div
-                      className="absolute top-0 left-0 h-full bg-primary/60"
-                      initial={{ width: "0%" }}
-                      whileInView={{ width: "100%" }}
-                      viewport={{ once: true }}
-                      transition={{ delay: 0.5 + i * 0.3, duration: 1, ease: "easeOut" }}
-                    />
                   </div>
                 )}
                 <div className="w-20 h-20 mx-auto rounded-2xl gradient-primary shadow-glow flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-500">
@@ -437,6 +430,40 @@ export default function Landing() {
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ══════════ HOW IT WORKS — PATIENTS ══════════ */}
+      <section className="py-28 px-4 bg-muted/20 border-y border-border/30">
+        <div className="max-w-5xl mx-auto">
+          <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-20">
+            <span className="inline-block px-4 py-1.5 rounded-full glass-premium text-primary text-xs font-bold mb-5 gradient-border uppercase tracking-widest">Para Pacientes</span>
+            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">Acesso seguro por <span className="text-gradient-animated">convite do profissional</span></h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">Pacientes não criam contas sozinhos. Seu nutricionista convida você, garantindo um ambiente clínico seguro e controlado.</p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {howItWorksPatient.map((step, i) => (
+              <motion.div key={step.step} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }} className="text-center">
+                <div className="w-16 h-16 mx-auto rounded-2xl bg-accent/10 flex items-center justify-center mb-4">
+                  <step.icon className="w-7 h-7 text-accent" />
+                </div>
+                <span className="font-display text-xs font-bold text-accent tracking-widest">{step.step}</span>
+                <h3 className="font-display font-semibold mt-1 mb-2">{step.title}</h3>
+                <p className="text-sm text-muted-foreground">{step.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="mt-16 text-center">
+            <div className="inline-flex items-center gap-3 px-6 py-3 rounded-xl glass-premium gradient-border">
+              <Shield className="w-5 h-5 text-primary" />
+              <div className="text-left">
+                <p className="text-sm font-semibold text-foreground">Conformidade LGPD</p>
+                <p className="text-xs text-muted-foreground">Consentimento clínico explícito, versionado e auditável. Seus dados estão protegidos.</p>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -771,11 +798,11 @@ export default function Landing() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/auth">
                 <Button size="lg" className="gradient-primary shadow-glow gap-2 text-base px-12 h-14 font-semibold hover:scale-105 active:scale-[0.98] transition-transform">
-                  <Sparkles className="w-4 h-4" /> Criar Conta Grátis
+                  <Sparkles className="w-4 h-4" /> Criar Conta Profissional
                 </Button>
               </Link>
             </div>
-            <p className="text-xs text-muted-foreground mt-5">Sem cartão de crédito · Setup em 30s · Cancele quando quiser</p>
+            <p className="text-xs text-muted-foreground mt-5">Sem cartão de crédito · 7 dias grátis · Pacientes acessam por convite</p>
           </div>
         </motion.div>
       </section>

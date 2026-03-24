@@ -14,7 +14,7 @@ import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import LanguageSelector from "@/components/common/LanguageSelector";
 import { useTranslation } from "react-i18next";
 
-type AuthMode = "login" | "forgot";
+type AuthMode = "login" | "forgot" | "register";
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -23,10 +23,12 @@ export default function Auth() {
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
+  const [registerSuccess, setRegisterSuccess] = useState(false);
 
   // Show error if redirected from no-role sign-out
   useEffect(() => {
@@ -71,6 +73,36 @@ export default function Auth() {
         });
       }
       navigate("/");
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fullName.trim()) { toast.error("Informe seu nome completo"); return; }
+    setLoading(true);
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: fullName, role: "nutritionist" } },
+    });
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      // Create profile + role for professional
+      if (data.user) {
+        await supabase.from("profiles").upsert({
+          id: data.user.id,
+          user_id: data.user.id,
+          full_name: fullName,
+        }, { onConflict: "user_id" });
+        await supabase.from("user_roles").upsert({
+          user_id: data.user.id,
+          role: "nutritionist" as any,
+        }, { onConflict: "user_id,role" });
+      }
+      setRegisterSuccess(true);
+      toast.success("Conta criada! Verifique seu e-mail para confirmar.");
     }
   };
 
@@ -125,7 +157,7 @@ export default function Auth() {
         <Card className="shadow-card border-border/50 bg-card/80 backdrop-blur-sm">
           <CardHeader className="pb-4">
             <h2 className="text-lg font-semibold text-center text-foreground">
-              {mode === "forgot" ? t("auth.forgotTitle") : t("auth.loginTitle")}
+              {mode === "forgot" ? t("auth.forgotTitle") : mode === "register" ? "Criar Conta Profissional" : t("auth.loginTitle")}
             </h2>
           </CardHeader>
 
@@ -172,7 +204,52 @@ export default function Auth() {
             )}
 
             <AnimatePresence mode="wait">
-              {mode === "forgot" ? (
+              {mode === "register" ? (
+                registerSuccess ? (
+                  <motion.div key="reg-success" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-6 space-y-3">
+                    <div className="w-14 h-14 mx-auto rounded-full bg-primary/20 flex items-center justify-center">
+                      <Stethoscope className="w-7 h-7 text-primary" />
+                    </div>
+                    <h3 className="font-semibold text-foreground">Conta criada com sucesso! 🎉</h3>
+                    <p className="text-sm text-muted-foreground">Verifique seu e-mail para confirmar a conta. Depois, faça login para acessar sua plataforma.</p>
+                    <Button variant="outline" onClick={() => { setMode("login"); setRegisterSuccess(false); }} className="mt-2">
+                      Ir para Login
+                    </Button>
+                  </motion.div>
+                ) : (
+                  <motion.form key="register" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+                    onSubmit={handleRegister} className="space-y-4">
+                    <div>
+                      <Label htmlFor="fullName">Nome completo</Label>
+                      <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Dr(a). seu nome" required />
+                    </div>
+                    <div>
+                      <Label htmlFor="email">{t("auth.email")}</Label>
+                      <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" required />
+                    </div>
+                    <div>
+                      <Label htmlFor="password">{t("auth.password")}</Label>
+                      <div className="relative">
+                        <Input id="password" type={showPassword ? "text" : "password"} value={password}
+                          onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required minLength={6} />
+                        <button type="button" onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <Stethoscope className="w-3.5 h-3.5" /> Conta exclusiva para nutricionistas e profissionais de saúde.
+                    </p>
+                    <Button type="submit" className="w-full" disabled={loading}>
+                      {loading ? "Criando..." : <span className="flex items-center gap-2">Criar Conta <ArrowRight className="w-4 h-4" /></span>}
+                    </Button>
+                    <button type="button" onClick={() => setMode("login")} className="text-sm text-primary hover:underline w-full text-center">
+                      Já tenho conta — fazer login
+                    </button>
+                  </motion.form>
+                )
+              ) : mode === "forgot" ? (
                 <motion.form key="forgot" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
                   onSubmit={handleForgot} className="space-y-4">
                   <div>
@@ -236,6 +313,13 @@ export default function Auth() {
                       <span className="flex items-center gap-2">{t("auth.loginButton")} <ArrowRight className="w-4 h-4" /></span>
                     )}
                   </Button>
+
+                  <div className="pt-2 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">É nutricionista e ainda não tem conta?</p>
+                    <button type="button" onClick={() => setMode("register")} className="text-sm text-primary hover:underline font-medium">
+                      Criar conta profissional
+                    </button>
+                  </div>
                 </motion.form>
               )}
             </AnimatePresence>
@@ -243,7 +327,9 @@ export default function Auth() {
         </Card>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
-          {t("auth.accessNote")}
+          {mode === "register"
+            ? "Pacientes não podem criar contas. O acesso é concedido por convite do profissional."
+            : t("auth.accessNote")}
         </p>
 
         {/* Biquíni Branco Banner */}
