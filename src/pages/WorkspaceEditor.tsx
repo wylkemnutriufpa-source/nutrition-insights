@@ -151,12 +151,19 @@ export default function WorkspaceEditor() {
   // Items already in workspace
   const usedMenuItemIds = new Set(items.map(i => i.menu_item_id));
 
-  // Filter available tools
+  // Sort sections consistently
+  const sortedSections = [...sections].sort((a, b) => a.sort_order - b.sort_order);
+
+  // Filter available tools - show ALL tools, mark already-added ones
   const getAvailableTools = () => {
-    return allMenuItems.filter(m =>
-      !usedMenuItemIds.has(m.id) &&
-      m.label.toLowerCase().includes(toolSearch.toLowerCase())
-    );
+    const search = toolSearch.toLowerCase();
+    return allMenuItems
+      .filter(m => m.label.toLowerCase().includes(search) || m.route.toLowerCase().includes(search))
+      .sort((a, b) => {
+        const aUsed = usedMenuItemIds.has(a.id) ? 1 : 0;
+        const bUsed = usedMenuItemIds.has(b.id) ? 1 : 0;
+        return aUsed - bUsed || a.label.localeCompare(b.label);
+      });
   };
 
   if (loading) {
