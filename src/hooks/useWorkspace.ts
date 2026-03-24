@@ -1,0 +1,226 @@
+import { useCallback, useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+
+export interface WorkspaceSection {
+  id: string;
+  workspace_id: string;
+  section_name: string;
+  section_icon: string;
+  section_color: string;
+  sort_order: number;
+  is_visible: boolean;
+  is_collapsed: boolean;
+}
+
+export interface WorkspaceItem {
+  id: string;
+  workspace_id: string;
+  section_id: string;
+  menu_item_id: string;
+  sort_order: number;
+  is_pinned: boolean;
+  is_visible: boolean;
+  custom_label: string | null;
+  // Joined from menu_items
+  label?: string;
+  label_key?: string;
+  route?: string;
+  icon?: string;
+  premium_only?: boolean;
+}
+
+export interface WorkspaceProfile {
+  id: string;
+  user_id: string;
+  workspace_name: string;
+  is_default: boolean;
+}
+
+export function useWorkspace() {
+  const { user, isNutritionist, isPersonal, isAdmin } = useAuth();
+  const [profile, setProfile] = useState<WorkspaceProfile | null>(null);
+  const [sections, setSections] = useState<WorkspaceSection[]>([]);
+  const [items, setItems] = useState<WorkspaceItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const isProRole = isNutritionist || isPersonal || isAdmin;
+
+  const initialize = useCallback(async () => {
+    if (!user?.id || !isProRole) { setLoading(false); return; }
+
+    try {
+      // Try to get existing workspace
+      const { data: existing } = await supabase
+        .from("workspace_profiles" as any)
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      let workspaceId: string;
+
+      if (existing) {
+        setProfile(existing as any);
+        workspaceId = (existing as any).id;
+      } else {
+        // Initialize default workspace via RPC
+        const { data: newId } = await supabase.rpc("initialize_default_workspace", {
+          _user_id: user.id,
+        } as any);
+        workspaceId = newId as string;
+
+        const { data: newProfile } = await supabase
+          .from("workspace_profiles" as any)
+          .select("*")
+          .eq("id", workspaceId)
+          .single();
+        setProfile(newProfile as any);
+      }
+
+      // Fetch sections
+      const { data: secs } = await supabase
+        .from("workspace_sections" as any)
+        .select("*")
+        .eq("workspace_id", workspaceId)
+        .order("sort_order");
+
+      setSections((secs || []) as any);
+
+      // Fetch items with menu_items join
+      const { data: rawItems } = await supabase
+        .from("workspace_items" as any)
+        .select("*")
+        .eq("workspace_id", workspaceId)
+        .order("sort_order");
+
+      // Now enrich with menu_items data
+      const menuItemIds = ((rawItems || []) as any[]).map((i: any) => i.menu_item_id);
+      let menuMap = new Map<string, any>();
+
+      if (menuItemIds.length > 0) {
+        const { data: menuData } = await supabase
+          .from("menu_items")
+          .select("id, label, label_key, route, icon, premium_only")
+          .in("id", menuItemIds);
+
+        (menuData || []).forEach((m: any) => menuMap.set(m.id, m));
+      }
+
+      const enriched = ((rawItems || []) as any[]).map((item: any) => {
+        const menu = menuMap.get(item.menu_item_id);
+        return {
+          ...item,
+          label: menu?.label || "Item",
+          label_key: menu?.label_key || "",
+          route: menu?.route || "/",
+          icon: menu?.icon || "LayoutDashboard",
+          premium_only: menu?.premium_only || false,
+        };
+      });
+
+      setItems(enriched);
+    } catch (e) {
+      console.error("Workspace init error:", e);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id, isProRole]);
+
+  useEffect(() => { initialize(); }, [initialize]);
+
+  // Section CRUD
+  const addSection = useCallback(async (name: string, icon: string, color: string) => {
+    if (!profile) return;
+    const maxOrder = sections.reduce((m, s) => Math.max(m, s.sort_order), -1);
+    const { data } = await supabase
+      .from("workspace_sections" as any)
+      .insert({ workspace_id: profile.id, section_name: name, section_icon: icon, section_color: color, sort_order: maxOrder + 1 })
+      .select()
+      .single();
+    if (data) setSections(prev => [...prev, data as any]);
+  }, [profile, sections]);
+
+  const updateSection = useCallback(async (id: string, updates: Partial<WorkspaceSection>) => {
+    await supabase.from("workspace_sections" as any).update(updates).eq("id", id);
+    setSections(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
+  }, []);
+
+  const deleteSection = useCallback(async (id: string) => {
+    await supabase.from("workspace_sections" as any).delete().eq("id", id);
+    setSections(prev => prev.filter(s => s.id !== id));
+    setItems(prev => prev.filter(i => i.section_id !== id));
+  }, []);
+
+  const reorderSections = useCallback(async (orderedIds: string[]) => {
+    const updates = orderedIds.map((id, i) => ({ id, sort_order: i }));
+    for (const u of updates) {
+      await supabase.from("workspace_sections" as any).update({ sort_order: u.sort_order }).eq("id", u.id);
+    }
+    setSections(prev => {
+      const map = new Map(prev.map(s => [s.id, s]));
+      return orderedIds.map((id, i) => ({ ...map.get(id)!, sort_order: i }));
+    });
+  }, []);
+
+  // Item CRUD
+  const moveItem = useCallback(async (itemId: string, toSectionId: string, newOrder: number) => {
+    await supabase.from("workspace_items" as any).update({ section_id: toSectionId, sort_order: newOrder }).eq("id", itemId);
+    setItems(prev => prev.map(i => i.id === itemId ? { ...i, section_id: toSectionId, sort_order: newOrder } : i));
+  }, []);
+
+  const toggleItemVisibility = useCallback(async (itemId: string) => {
+    const item = items.find(i => i.id === itemId);
+    if (!item) return;
+    const newVis = !item.is_visible;
+    await supabase.from("workspace_items" as any).update({ is_visible: newVis }).eq("id", itemId);
+    setItems(prev => prev.map(i => i.id === itemId ? { ...i, is_visible: newVis } : i));
+  }, [items]);
+
+  const togglePin = useCallback(async (itemId: string) => {
+    const item = items.find(i => i.id === itemId);
+    if (!item) return;
+    const newPin = !item.is_pinned;
+    await supabase.from("workspace_items" as any).update({ is_pinned: newPin }).eq("id", itemId);
+    setItems(prev => prev.map(i => i.id === itemId ? { ...i, is_pinned: newPin } : i));
+  }, [items]);
+
+  const reorderItems = useCallback(async (sectionId: string, orderedItemIds: string[]) => {
+    for (let i = 0; i < orderedItemIds.length; i++) {
+      await supabase.from("workspace_items" as any).update({ sort_order: i }).eq("id", orderedItemIds[i]);
+    }
+    setItems(prev => {
+      const updated = [...prev];
+      orderedItemIds.forEach((id, idx) => {
+        const item = updated.find(i => i.id === id);
+        if (item) item.sort_order = idx;
+      });
+      return updated;
+    });
+  }, []);
+
+  const resetToDefault = useCallback(async () => {
+    if (!profile || !user?.id) return;
+    // Delete everything and reinitialize
+    await supabase.from("workspace_items" as any).delete().eq("workspace_id", profile.id);
+    await supabase.from("workspace_sections" as any).delete().eq("workspace_id", profile.id);
+    await supabase.from("workspace_profiles" as any).delete().eq("id", profile.id);
+    setProfile(null);
+    setSections([]);
+    setItems([]);
+    setLoading(true);
+    await initialize();
+  }, [profile, user?.id, initialize]);
+
+  // Get items for a specific section, sorted
+  const getItemsForSection = useCallback((sectionId: string) => {
+    return items
+      .filter(i => i.section_id === sectionId)
+      .sort((a, b) => a.sort_order - b.sort_order);
+  }, [items]);
+
+  return {
+    profile, sections, items, loading,
+    addSection, updateSection, deleteSection, reorderSections,
+    moveItem, toggleItemVisibility, togglePin, reorderItems,
+    getItemsForSection, resetToDefault, refresh: initialize,
+  };
+}

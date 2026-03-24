@@ -12976,6 +12976,128 @@ export type Database = {
           },
         ]
       }
+      workspace_items: {
+        Row: {
+          created_at: string
+          custom_label: string | null
+          id: string
+          is_pinned: boolean
+          is_visible: boolean
+          menu_item_id: string
+          section_id: string
+          sort_order: number
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          custom_label?: string | null
+          id?: string
+          is_pinned?: boolean
+          is_visible?: boolean
+          menu_item_id: string
+          section_id: string
+          sort_order?: number
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          custom_label?: string | null
+          id?: string
+          is_pinned?: boolean
+          is_visible?: boolean
+          menu_item_id?: string
+          section_id?: string
+          sort_order?: number
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_items_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "workspace_sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_items_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspace_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_profiles: {
+        Row: {
+          created_at: string
+          id: string
+          is_default: boolean
+          updated_at: string
+          user_id: string
+          workspace_name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          updated_at?: string
+          user_id: string
+          workspace_name?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          updated_at?: string
+          user_id?: string
+          workspace_name?: string
+        }
+        Relationships: []
+      }
+      workspace_sections: {
+        Row: {
+          created_at: string
+          id: string
+          is_collapsed: boolean
+          is_visible: boolean
+          section_color: string
+          section_icon: string
+          section_name: string
+          sort_order: number
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_collapsed?: boolean
+          is_visible?: boolean
+          section_color?: string
+          section_icon?: string
+          section_name: string
+          sort_order?: number
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_collapsed?: boolean
+          is_visible?: boolean
+          section_color?: string
+          section_icon?: string
+          section_name?: string
+          sort_order?: number
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_sections_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspace_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       meal_plan_resolved_state: {
@@ -13272,6 +13394,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      initialize_default_workspace: {
+        Args: { _user_id: string }
+        Returns: string
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_org_member: {

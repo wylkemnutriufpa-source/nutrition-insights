@@ -161,6 +161,9 @@ const ConsentRequired = lazy(() => import("./pages/ConsentRequired"));
 const PaymentRequired = lazy(() => import("./pages/PaymentRequired"));
 const SystemHealthLive = lazy(() => import("./pages/SystemHealthLive"));
 const PatientOverview = lazy(() => import("./pages/PatientOverview"));
+const ClinicalWorkspace = lazy(() => import("./pages/ClinicalWorkspace"));
+const InvitePatient = lazy(() => import("./pages/InvitePatient"));
+const WorkspaceEditor = lazy(() => import("./pages/WorkspaceEditor"));
 
 // Install global error handlers once at module load
 installGlobalErrorHandlers();
@@ -331,7 +334,8 @@ const App = () => (
               <Route path="/landing-personal" element={<LP section="Landing"><PersonalLanding /></LP>} />
               <Route path="/landing-afiliado" element={<LP section="Landing"><AffiliateLanding /></LP>} />
               <Route path="/biquini-branco" element={<LP section="Landing"><BiquiniBrancoLanding /></LP>} />
-              <Route path="/cadastro" element={<LP section="Cadastro"><PatientRegister /></LP>} />
+              {/* Patient self-registration disabled — access is invitation-based only */}
+              <Route path="/cadastro" element={<Navigate to="/auth" replace />} />
                <Route path="/auth" element={<LP section="Auth"><Auth /></LP>} />
                <Route path="/politica-de-privacidade" element={<Suspense fallback={<PageLoader />}><PrivacyPolicy /></Suspense>} />
                <Route path="/termos-de-uso" element={<Suspense fallback={<PageLoader />}><TermsOfUse /></Suspense>} />
@@ -388,6 +392,9 @@ const App = () => (
               <Route path="/checkin-panel" element={<NutritionistRoute><LP section="Check-ins"><CheckinPanel /></LP></NutritionistRoute>} />
               <Route path="/clinical-risk" element={<NutritionistRoute><LP section="Risco Clínico"><ClinicalRiskDashboard /></LP></NutritionistRoute>} />
               <Route path="/control-tower" element={<NutritionistRoute><LP section="Control Tower"><ClinicalControlTower /></LP></NutritionistRoute>} />
+              <Route path="/clinical-workspace" element={<NutritionistRoute><LP section="Workspace"><ClinicalWorkspace /></LP></NutritionistRoute>} />
+              <Route path="/invite-patient" element={<NutritionistRoute><LP section="Convidar Paciente"><InvitePatient /></LP></NutritionistRoute>} />
+              <Route path="/workspace-editor" element={<ProfessionalRoute><LP section="Editor"><WorkspaceEditor /></LP></ProfessionalRoute>} />
               <Route path="/weight-trajectory" element={<NutritionistRoute><LP section="Trajetória de Peso"><WeightTrajectory /></LP></NutritionistRoute>} />
               <Route path="/metabolic-twin" element={<NutritionistRoute><LP section="Digital Twin"><MetabolicTwin /></LP></NutritionistRoute>} />
               <Route path="/population-nutrition" element={<NutritionistRoute><LP section="Nutrição Populacional"><PopulationNutritionIntelligence /></LP></NutritionistRoute>} />

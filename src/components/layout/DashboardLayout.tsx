@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck, Shield, Activity } from "lucide-react";
+import { LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck, Shield, Activity, LayoutDashboard } from "lucide-react";
 import { Search } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { openCommandPalette } from "@/components/common/CommandPalette";
@@ -79,6 +79,7 @@ function SidebarFooter({
   signOut,
   setCollapsed,
   onLinkClick,
+  isProRole,
 }: {
   collapsed: boolean;
   dark: boolean;
@@ -88,9 +89,20 @@ function SidebarFooter({
   signOut: () => void;
   setCollapsed?: (v: boolean) => void;
   onLinkClick?: () => void;
+  isProRole?: boolean;
 }) {
   return (
     <div className="p-3 border-t border-border space-y-2">
+      {!collapsed && isProRole && (
+        <Link
+          to="/workspace-editor"
+          onClick={onLinkClick}
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted w-full transition-all"
+        >
+          <LayoutDashboard className="w-5 h-5" />
+          <span className="text-sm">Editor Workspace</span>
+        </Link>
+      )}
       <Link
         to="/settings"
         onClick={onLinkClick}
@@ -214,7 +226,7 @@ function DynamicSidebar({
       </div>
 
       {isProRole && (
-        <div className="px-3 mb-1">
+        <div className="px-3 mb-1 space-y-1">
           <Link
             to="/control-tower"
             onClick={onLinkClick}
@@ -232,6 +244,18 @@ function DynamicSidebar({
             {!collapsed && (
               <span className="text-xs font-semibold text-violet-500 truncate group-hover:text-violet-400 transition-colors">
                 Control Tower
+              </span>
+            )}
+          </Link>
+          <Link
+            to="/clinical-workspace"
+            onClick={onLinkClick}
+            className={`flex items-center gap-2 w-full rounded-xl border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
+          >
+            <LayoutDashboard className="w-4 h-4 text-sky-500 flex-shrink-0" />
+            {!collapsed && (
+              <span className="text-xs font-semibold text-sky-500 truncate group-hover:text-sky-400 transition-colors">
+                Workspace Clínico
               </span>
             )}
           </Link>
@@ -349,6 +373,7 @@ function DynamicSidebar({
         signOut={signOut}
         setCollapsed={setCollapsed}
         onLinkClick={onLinkClick}
+        isProRole={isProRole}
       />
     </>
   );
