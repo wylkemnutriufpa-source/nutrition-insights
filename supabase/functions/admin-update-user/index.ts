@@ -20,9 +20,10 @@ Deno.serve(async (req) => {
     if (!token) throw new Error("Not authenticated");
 
     const callerClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
       auth: { autoRefreshToken: false, persistSession: false },
     });
-    const { data: { user: caller }, error: callerError } = await callerClient.auth.getUser(token);
+    const { data: { user: caller }, error: callerError } = await callerClient.auth.getUser();
     if (callerError) throw new Error("Invalid session");
     if (!caller) throw new Error("Invalid session");
 
@@ -31,7 +32,7 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
     const { data: callerRoles } = await adminClient.from("user_roles").select("role").eq("user_id", caller.id);
-    const isAuthorized = callerRoles?.some((r: any) => ["admin", "nutritionist", "personal_trainer"].includes(r.role));
+    const isAuthorized = callerRoles?.some((r: any) => ["admin", "nutritionist", "personal"].includes(r.role));
     if (!isAuthorized) throw new Error("Unauthorized: only professionals can update user identity");
 
     const { target_user_id, action, payload } = await req.json();
