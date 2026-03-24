@@ -13367,6 +13367,7 @@ export type Database = {
       }
     }
     Functions: {
+      accept_patient_consent: { Args: { _patient_id: string }; Returns: Json }
       activate_meal_plan: { Args: { _plan_id: string }; Returns: undefined }
       activate_meal_plan_ai_guarded:
         | { Args: { p_meal_plan_id: string }; Returns: undefined }
@@ -13436,6 +13437,14 @@ export type Database = {
       }
       cleanup_stale_onboarding_pipelines: {
         Args: { _nutritionist_id: string; _stale_days?: number }
+        Returns: Json
+      }
+      complete_patient_onboarding: {
+        Args: {
+          _nutritionist_id: string
+          _patient_id: string
+          _pipeline_id: string
+        }
         Returns: Json
       }
       confirm_patient_payment: {
