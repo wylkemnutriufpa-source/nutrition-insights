@@ -229,11 +229,14 @@ function PatientRoute({ children }: { children: React.ReactNode }) {
 }
 
 function ConsentGuardedPatientRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, isPatient } = useAuth();
+  const { user, loading, isPatient, isNutritionist, isPersonal, isAdmin } = useAuth();
   const { hasConsent, loading: consentLoading } = useConsentGuard();
   const { hasPaid, loading: paymentLoading } = usePaymentGuard();
   if (loading || consentLoading || paymentLoading) return <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
+  // Professionals and admins are NEVER blocked by patient guards
+  const isProfessional = isNutritionist || isPersonal || isAdmin;
+  if (isProfessional) return <>{children}</>;
   if (isPatient && !hasPaid) return <Navigate to="/payment-required" replace />;
   if (isPatient && !hasConsent) return <Navigate to="/consent-required" replace />;
   return <>{children}</>;
