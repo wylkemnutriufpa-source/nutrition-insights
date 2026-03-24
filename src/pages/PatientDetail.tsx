@@ -1385,7 +1385,7 @@ export default function PatientDetail() {
                   });
                 }
               }}>
-                <DialogContent className="sm:max-w-lg">
+                <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle className="font-display flex items-center gap-2">
                       <Pencil className="w-5 h-5 text-info" /> Editar Cadastro do Paciente
