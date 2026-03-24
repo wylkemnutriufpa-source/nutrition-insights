@@ -19,6 +19,7 @@ import {
   Apple, Award, Bot, CalendarDays, CheckCircle2, ClipboardCheck, Crown,
   DollarSign, Dumbbell, FileText, GraduationCap, Instagram, Lightbulb,
   Megaphone, MessageSquare, Palette, Trophy, X, PlusCircle,
+  UtensilsCrossed, ChefHat, Rocket, Pill, ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import SubscriptionGuard from "@/components/common/SubscriptionGuard";
@@ -51,7 +52,8 @@ const ALL_ICONS: Record<string, any> = {
   Star, Shield, Target, Activity, Sparkles, LayoutDashboard,
   Apple, Award, Bot, CalendarDays, CheckCircle2, ClipboardCheck, Crown,
   DollarSign, Dumbbell, FileText, GraduationCap, Instagram, Lightbulb,
-  Megaphone, MessageSquare, Palette, Trophy,
+  Megaphone, MessageSquare, Palette, Trophy, UtensilsCrossed, ChefHat,
+  Rocket, Pill, ArrowRight,
 };
 
 interface MenuItem {
@@ -151,12 +153,19 @@ export default function WorkspaceEditor() {
   // Items already in workspace
   const usedMenuItemIds = new Set(items.map(i => i.menu_item_id));
 
-  // Filter available tools
+  // Sort sections consistently
+  const sortedSections = [...sections].sort((a, b) => a.sort_order - b.sort_order);
+
+  // Filter available tools - show ALL tools, mark already-added ones
   const getAvailableTools = () => {
-    return allMenuItems.filter(m =>
-      !usedMenuItemIds.has(m.id) &&
-      m.label.toLowerCase().includes(toolSearch.toLowerCase())
-    );
+    const search = toolSearch.toLowerCase();
+    return allMenuItems
+      .filter(m => m.label.toLowerCase().includes(search) || m.route.toLowerCase().includes(search))
+      .sort((a, b) => {
+        const aUsed = usedMenuItemIds.has(a.id) ? 1 : 0;
+        const bUsed = usedMenuItemIds.has(b.id) ? 1 : 0;
+        return aUsed - bUsed || a.label.localeCompare(b.label);
+      });
   };
 
   if (loading) {
@@ -245,13 +254,11 @@ export default function WorkspaceEditor() {
         {/* Sections */}
         <Reorder.Group
           axis="y"
-          values={sections.map(s => s.id)}
+          values={sortedSections.map(s => s.id)}
           onReorder={(ids) => reorderSections(ids)}
           className="space-y-3"
         >
-          {sections
-            .sort((a, b) => a.sort_order - b.sort_order)
-            .map(section => {
+          {sortedSections.map(section => {
               const SectionIcon = ALL_ICONS[section.section_icon] || LayoutDashboard;
               const sectionItems = getItemsForSection(section.id);
               const isExpanded = expandedSections.has(section.id);
@@ -415,24 +422,34 @@ export default function WorkspaceEditor() {
                 <div className="space-y-1 pr-3">
                   {getAvailableTools().length === 0 ? (
                     <p className="text-xs text-muted-foreground text-center py-6">
-                      {toolSearch ? "Nenhuma ferramenta encontrada" : "Todas as ferramentas já foram adicionadas"}
+                      Nenhuma ferramenta encontrada
                     </p>
                   ) : (
                     getAvailableTools().map(tool => {
                       const ToolIcon = ALL_ICONS[tool.icon] || LayoutDashboard;
+                      const alreadyAdded = usedMenuItemIds.has(tool.id);
                       return (
                         <button
                           key={tool.id}
-                          onClick={() => addToolDialog && handleAddTool(addToolDialog, tool)}
-                          className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors text-left"
+                          onClick={() => {
+                            if (alreadyAdded) {
+                              toast.info(`"${tool.label}" já está no workspace`);
+                              return;
+                            }
+                            addToolDialog && handleAddTool(addToolDialog, tool);
+                          }}
+                          className={`w-full flex items-center gap-3 p-2.5 rounded-lg transition-colors text-left ${
+                            alreadyAdded ? "opacity-40 cursor-not-allowed" : "hover:bg-muted/50"
+                          }`}
                         >
                           <ToolIcon className="w-4 h-4 text-muted-foreground shrink-0" />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">{tool.label}</p>
                             <p className="text-[10px] text-muted-foreground truncate">{tool.route}</p>
                           </div>
+                          {alreadyAdded && <span className="text-[9px] text-muted-foreground">Adicionado</span>}
                           {tool.premium_only && <span className="text-[9px] text-amber-500 font-bold">PRO</span>}
-                          <PlusCircle className="w-4 h-4 text-primary shrink-0" />
+                          {!alreadyAdded && <PlusCircle className="w-4 h-4 text-primary shrink-0" />}
                         </button>
                       );
                     })
