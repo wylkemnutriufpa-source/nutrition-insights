@@ -102,7 +102,7 @@ export default function FitJourneyTimeline({ compact = false, maxHeight = "700px
         {/* Post creator */}
         {!compact && <div className="mb-5"><CreateTimelinePost userRole={userRole} /></div>}
 
-        <ScrollArea style={{ maxHeight }} className="pr-1">
+        <ScrollArea style={{ maxHeight: compact ? maxHeight : "none" }} className="pr-1">
           {isLoading && allEvents.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16">
               <Loader2 className="h-8 w-8 animate-spin text-primary/30 mb-3" />

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, forwardRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { MessageCircle, Trophy, AlertTriangle, Megaphone, Sparkles, User, Activity, ChevronDown, ChevronUp } from "lucide-react";
@@ -19,8 +19,6 @@ const TYPE_CONFIG: Record<string, { icon: React.ElementType; accent: string; lab
   poll: { icon: Sparkles, accent: "border-violet-500/20 bg-violet-500/[0.03]", label: "Enquete", leftAccent: "bg-violet-500" },
 };
 
-const DESC_TRUNCATE = 180;
-
 interface Props {
   event: any;
   index: number;
@@ -33,6 +31,9 @@ export default function TimelineEventCard({ event, index }: Props) {
   const config = TYPE_CONFIG[event.event_type] || TYPE_CONFIG.system_event;
   const Icon = config.icon;
   const hasPoll = event.poll_question && Array.isArray(event.poll_options) && event.poll_options.length > 0;
+
+  // Show full text by default for short posts, truncate only very long ones
+  const DESC_TRUNCATE = 300;
   const longDesc = event.description && event.description.length > DESC_TRUNCATE;
   const displayDesc = longDesc && !descExpanded ? event.description.slice(0, DESC_TRUNCATE) + "…" : event.description;
 
@@ -40,10 +41,10 @@ export default function TimelineEventCard({ event, index }: Props) {
     <motion.div
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.03, duration: 0.3, ease: "easeOut" }}
-      whileHover={{ y: -1 }}
+      transition={{ delay: Math.min(index * 0.03, 0.3), duration: 0.3, ease: "easeOut" }}
+      whileHover={{ y: -1, boxShadow: "0 4px 20px -4px rgba(0,0,0,0.08)" }}
       className={cn(
-        "relative rounded-2xl border p-0 transition-all hover:shadow-md overflow-hidden group",
+        "relative rounded-2xl border p-0 transition-all overflow-hidden group cursor-default",
         config.accent,
         config.glow
       )}
@@ -81,14 +82,16 @@ export default function TimelineEventCard({ event, index }: Props) {
           )}
         </div>
 
-        {/* Description with expand/collapse */}
+        {/* Description — always fully visible, expand only for very long */}
         {event.description && (
           <div className="ml-12 mb-3">
-            <p className="text-sm text-foreground/80 leading-relaxed">{displayDesc}</p>
+            <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap break-words">
+              {displayDesc}
+            </p>
             {longDesc && (
               <button
                 onClick={() => setDescExpanded(!descExpanded)}
-                className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 mt-1 font-medium transition-colors"
+                className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 mt-1.5 font-medium transition-colors"
               >
                 {descExpanded ? (
                   <><ChevronUp className="h-3 w-3" /> Ver menos</>
@@ -147,20 +150,12 @@ export default function TimelineEventCard({ event, index }: Props) {
           </button>
         </div>
 
-        {/* Comments section */}
-        <AnimatePresence>
-          {showComments && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-              className="ml-12"
-            >
-              <TimelineComments eventId={event.id} />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Comments section — no AnimatePresence wrapping issue */}
+        {showComments && (
+          <div className="ml-12 mt-2">
+            <TimelineComments eventId={event.id} />
+          </div>
+        )}
       </div>
     </motion.div>
   );
