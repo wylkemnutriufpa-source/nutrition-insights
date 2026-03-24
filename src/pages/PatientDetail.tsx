@@ -1417,21 +1417,23 @@ export default function PatientDetail() {
                           variant="outline"
                           disabled={savingProfile || editProfileForm.email === patientEmail}
                           onClick={async () => {
-                            if (!patientId || editProfileForm.email === patientEmail) return;
-                            if (!confirm(`Alterar email de autenticação para ${editProfileForm.email}?`)) return;
+                            const normalizedEmail = editProfileForm.email.trim().toLowerCase();
+                            if (!patientId || normalizedEmail === patientEmail) return;
+                            if (!confirm(`Alterar email de autenticação para ${normalizedEmail}?`)) return;
                             try {
-                              const { data: { session } } = await supabase.auth.getSession();
-                              const res = await fetch(
-                                `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-update-user`,
-                                {
-                                  method: "POST",
-                                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
-                                  body: JSON.stringify({ target_user_id: patientId, action: "update_email", payload: { email: editProfileForm.email } }),
-                                }
-                              );
-                              const result = await res.json();
-                              if (result.success) toast.success("Email atualizado com sucesso");
-                              else toast.error(result.error || "Erro ao atualizar email");
+                              const { data, error } = await supabase.functions.invoke("admin-update-user", {
+                                body: {
+                                  target_user_id: patientId,
+                                  action: "update_email",
+                                  payload: { email: normalizedEmail },
+                                },
+                              });
+                              if (error) throw error;
+                              if (data?.success) {
+                                setEditProfileForm((prev) => ({ ...prev, email: normalizedEmail }));
+                                toast.success("Email atualizado com sucesso");
+                                invalidate();
+                              } else toast.error(data?.error || "Erro ao atualizar email");
                             } catch { toast.error("Erro ao atualizar email"); }
                           }}
                         >
@@ -1493,9 +1495,20 @@ export default function PatientDetail() {
                               },
                             });
 
-                            if (error) throw error;
-                            if (data?.success) toast.success(`Senha redefinida para ${tempPassword}`);
-                            else toast.error(data?.error || "Erro ao redefinir senha");
+                            if (error || !data?.success) {
+                              const fallback = await supabase.functions.invoke("admin-reset-password", {
+                                body: {
+                                  user_id: patientId,
+                                  new_password: tempPassword,
+                                },
+                              });
+
+                              if (fallback.error || !fallback.data?.success) {
+                                throw new Error(fallback.error?.message || data?.error || "Erro ao redefinir senha");
+                              }
+                            }
+
+                            toast.success(`Senha redefinida para ${tempPassword}`);
                           } catch (e: any) {
                             toast.error(e?.message || "Erro ao redefinir senha");
                           }
