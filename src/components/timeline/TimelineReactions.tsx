@@ -14,46 +14,59 @@ export default function TimelineReactions({ eventId }: Props) {
   const [showPicker, setShowPicker] = useState(false);
 
   return (
-    <div className="flex items-center gap-1 flex-wrap">
+    <div className="flex items-center gap-1.5 flex-wrap">
       {Object.entries(grouped).map(([emoji, { count, userReacted }]) => (
-        <button
+        <motion.button
           key={emoji}
           onClick={() => toggleReaction(emoji)}
+          whileTap={{ scale: 0.85 }}
           className={cn(
-            "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border transition-all hover:scale-105",
+            "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs border transition-all",
             userReacted
-              ? "bg-primary/10 border-primary/30 text-primary"
-              : "bg-muted border-border text-muted-foreground hover:bg-muted/80"
+              ? "bg-primary/10 border-primary/30 text-primary shadow-sm"
+              : "bg-muted/60 border-border/50 text-muted-foreground hover:bg-muted hover:border-border"
           )}
         >
-          <span>{emoji}</span>
-          <span className="font-medium">{count}</span>
-        </button>
+          <motion.span
+            key={`${emoji}-${count}`}
+            initial={{ scale: 1.3 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.2 }}
+          >
+            {emoji}
+          </motion.span>
+          <span className="font-semibold">{count}</span>
+        </motion.button>
       ))}
 
       <div className="relative">
-        <button
+        <motion.button
           onClick={() => setShowPicker(!showPicker)}
-          className="w-7 h-7 rounded-full bg-muted border border-border flex items-center justify-center text-xs hover:bg-muted/80 transition-colors"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          className="w-7 h-7 rounded-full bg-muted/60 border border-border/50 flex items-center justify-center text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
         >
           +
-        </button>
+        </motion.button>
         <AnimatePresence>
           {showPicker && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: -4 }}
+              initial={{ opacity: 0, scale: 0.85, y: -4 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="absolute bottom-full left-0 mb-1 flex gap-1 bg-card border border-border rounded-lg p-1.5 shadow-lg z-20"
+              exit={{ opacity: 0, scale: 0.85 }}
+              transition={{ duration: 0.15 }}
+              className="absolute bottom-full left-0 mb-2 flex gap-1 bg-card border border-border rounded-xl p-2 shadow-xl z-20"
             >
               {EMOJI_OPTIONS.map((e) => (
-                <button
+                <motion.button
                   key={e}
                   onClick={() => { toggleReaction(e); setShowPicker(false); }}
-                  className="w-7 h-7 rounded hover:bg-muted flex items-center justify-center text-sm transition-colors"
+                  whileHover={{ scale: 1.2 }}
+                  whileTap={{ scale: 0.85 }}
+                  className="w-8 h-8 rounded-lg hover:bg-muted flex items-center justify-center text-base transition-colors"
                 >
                   {e}
-                </button>
+                </motion.button>
               ))}
             </motion.div>
           )}

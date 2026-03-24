@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from "react";
 import { useTimeline } from "@/hooks/useTimeline";
 import { useAuth } from "@/lib/auth";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, MessageSquare } from "lucide-react";
+import { motion } from "framer-motion";
 import TimelineEventCard from "./TimelineEventCard";
 import CreateTimelinePost from "./CreateTimelinePost";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,7 +33,6 @@ export default function FitJourneyTimeline({ compact = false, maxHeight = "700px
   const [allEvents, setAllEvents] = useState<any[]>([]);
   const { events, isLoading, isFetching } = useTimeline(page);
 
-  // Get user role
   const { data: userRole } = useQuery({
     queryKey: ["user-role-timeline", user?.id],
     enabled: !!user,
@@ -49,7 +48,6 @@ export default function FitJourneyTimeline({ compact = false, maxHeight = "700px
     },
   });
 
-  // Accumulate pages
   useEffect(() => {
     if (events.length > 0) {
       setAllEvents(prev => {
@@ -62,7 +60,6 @@ export default function FitJourneyTimeline({ compact = false, maxHeight = "700px
     }
   }, [events]);
 
-  // Realtime: prepend new events
   useEffect(() => {
     if (!user) return;
     const channel = supabase
@@ -77,7 +74,6 @@ export default function FitJourneyTimeline({ compact = false, maxHeight = "700px
     return () => { supabase.removeChannel(channel); };
   }, [user]);
 
-  // Group by date
   const grouped = allEvents.reduce<Record<string, any[]>>((acc, ev) => {
     const label = getDateLabel(ev.created_at);
     if (!acc[label]) acc[label] = [];
@@ -88,39 +84,55 @@ export default function FitJourneyTimeline({ compact = false, maxHeight = "700px
   const canLoadMore = events.length === 20;
 
   return (
-    <Card className="border-primary/10">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" />
-          Timeline FitJourney
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="rounded-2xl border border-border/60 bg-card/50 backdrop-blur-sm overflow-hidden">
+      {/* Header */}
+      <div className="px-5 pt-5 pb-3 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+            <Sparkles className="h-4 w-4 text-primary" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-foreground">Timeline FitJourney</h3>
+            <p className="text-[11px] text-muted-foreground">{allEvents.length} publicações</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-5 pb-5">
         {/* Post creator */}
-        {!compact && <div className="mb-4"><CreateTimelinePost userRole={userRole} /></div>}
+        {!compact && <div className="mb-5"><CreateTimelinePost userRole={userRole} /></div>}
 
         <ScrollArea style={{ maxHeight }} className="pr-1">
           {isLoading && allEvents.length === 0 ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-6 w-6 animate-spin text-primary/50" />
+            <div className="flex flex-col items-center justify-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin text-primary/30 mb-3" />
+              <p className="text-xs text-muted-foreground">Carregando timeline...</p>
             </div>
           ) : allEvents.length === 0 ? (
-            <div className="text-center py-12">
-              <Sparkles className="h-10 w-10 mx-auto mb-3 text-primary/20" />
-              <p className="text-sm text-muted-foreground">Nenhuma publicação ainda.</p>
-              <p className="text-xs text-muted-foreground mt-1">Crie a primeira publicação para iniciar a timeline!</p>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-16"
+            >
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
+                <MessageSquare className="h-7 w-7 text-primary/30" />
+              </div>
+              <h4 className="text-sm font-semibold text-foreground mb-1">Timeline vazia</h4>
+              <p className="text-xs text-muted-foreground max-w-[200px] mx-auto">
+                Crie a primeira publicação para engajar seus pacientes!
+              </p>
+            </motion.div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-5">
               {Object.entries(grouped).map(([dateLabel, dayEvents]) => (
                 <div key={dateLabel}>
                   {/* Date separator */}
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="h-px flex-1 bg-border" />
-                    <span className="text-xs font-semibold text-muted-foreground px-2 py-0.5 rounded-full bg-muted">
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent" />
+                    <span className="text-[11px] font-bold text-muted-foreground px-3 py-1 rounded-full bg-muted/60 tracking-wide uppercase">
                       {dateLabel}
                     </span>
-                    <div className="h-px flex-1 bg-border" />
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent" />
                   </div>
                   <div className="space-y-3">
                     {dayEvents.map((ev: any, i: number) => (
@@ -136,7 +148,7 @@ export default function FitJourneyTimeline({ compact = false, maxHeight = "700px
                   <button
                     onClick={() => setPage(p => p + 1)}
                     disabled={isFetching}
-                    className="px-4 py-2 rounded-lg bg-muted text-sm text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-all disabled:opacity-50"
+                    className="px-5 py-2.5 rounded-xl bg-muted/60 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all disabled:opacity-50"
                   >
                     {isFetching ? (
                       <Loader2 className="h-4 w-4 animate-spin inline mr-2" />
@@ -148,7 +160,7 @@ export default function FitJourneyTimeline({ compact = false, maxHeight = "700px
             </div>
           )}
         </ScrollArea>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
