@@ -1188,13 +1188,16 @@ export default function PatientDetail() {
                   setEditProfileForm({
                     full_name: profile?.full_name || "",
                     phone: profile?.phone || "",
+                    email: patientEmail || "",
+                    goal: (profile as any)?.goal || "",
+                    notes: (profile as any)?.notes || "",
                   });
                 }
               }}>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="sm:max-w-lg">
                   <DialogHeader>
                     <DialogTitle className="font-display flex items-center gap-2">
-                      <Pencil className="w-5 h-5 text-info" /> Editar Cadastro
+                      <Pencil className="w-5 h-5 text-info" /> Editar Cadastro do Paciente
                     </DialogTitle>
                   </DialogHeader>
                   <form onSubmit={handleSaveProfile} className="space-y-4">
@@ -1209,7 +1212,19 @@ export default function PatientDetail() {
                       />
                     </div>
                     <div>
-                      <Label>Telefone</Label>
+                      <Label>Email</Label>
+                      <Input
+                        value={editProfileForm.email}
+                        onChange={(e) => setEditProfileForm({ ...editProfileForm, email: e.target.value })}
+                        placeholder="email@exemplo.com"
+                        type="email"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Alterar o email envia confirmação ao paciente.
+                      </p>
+                    </div>
+                    <div>
+                      <Label>Telefone / WhatsApp</Label>
                       <Input
                         value={editProfileForm.phone}
                         onChange={(e) => setEditProfileForm({ ...editProfileForm, phone: e.target.value })}
@@ -1218,9 +1233,23 @@ export default function PatientDetail() {
                       />
                     </div>
                     <div>
-                      <Label>Email</Label>
-                      <Input value={patientEmail} disabled className="bg-muted" />
-                      <p className="text-xs text-muted-foreground mt-1">O email não pode ser alterado por aqui.</p>
+                      <Label>Objetivo Principal</Label>
+                      <Input
+                        value={editProfileForm.goal}
+                        onChange={(e) => setEditProfileForm({ ...editProfileForm, goal: e.target.value })}
+                        placeholder="Ex: Emagrecimento, Hipertrofia..."
+                        maxLength={200}
+                      />
+                    </div>
+                    <div>
+                      <Label>Observações</Label>
+                      <Textarea
+                        value={editProfileForm.notes}
+                        onChange={(e) => setEditProfileForm({ ...editProfileForm, notes: e.target.value })}
+                        placeholder="Anotações sobre o paciente..."
+                        rows={3}
+                        maxLength={500}
+                      />
                     </div>
                     <Button type="submit" className="w-full" disabled={savingProfile || !editProfileForm.full_name.trim()}>
                       {savingProfile ? "Salvando..." : "Salvar Alterações"}
