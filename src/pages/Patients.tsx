@@ -678,6 +678,13 @@ export default function Patients() {
 
   return (
     <DashboardLayout>
+      {statusManagerMode ? (
+        <PatientStatusManager
+          patients={patients}
+          onToggleStatus={toggleStatus}
+          onClose={() => setStatusManagerMode(false)}
+        />
+      ) : (
       <div className="space-y-6">
         {/* Patient Queue */}
         <PatientQueueTabs />
