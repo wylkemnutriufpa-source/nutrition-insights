@@ -214,7 +214,7 @@ function DynamicSidebar({
       </div>
 
       {isProRole && (
-        <div className="px-3 mb-1">
+        <div className="px-3 mb-1 space-y-1">
           <Link
             to="/control-tower"
             onClick={onLinkClick}
@@ -232,6 +232,18 @@ function DynamicSidebar({
             {!collapsed && (
               <span className="text-xs font-semibold text-violet-500 truncate group-hover:text-violet-400 transition-colors">
                 Control Tower
+              </span>
+            )}
+          </Link>
+          <Link
+            to="/clinical-workspace"
+            onClick={onLinkClick}
+            className={`flex items-center gap-2 w-full rounded-xl border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
+          >
+            <LayoutDashboard className="w-4 h-4 text-sky-500 flex-shrink-0" />
+            {!collapsed && (
+              <span className="text-xs font-semibold text-sky-500 truncate group-hover:text-sky-400 transition-colors">
+                Workspace Clínico
               </span>
             )}
           </Link>
