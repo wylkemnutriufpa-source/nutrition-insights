@@ -79,6 +79,7 @@ function SidebarFooter({
   signOut,
   setCollapsed,
   onLinkClick,
+  isProRole,
 }: {
   collapsed: boolean;
   dark: boolean;
@@ -88,6 +89,7 @@ function SidebarFooter({
   signOut: () => void;
   setCollapsed?: (v: boolean) => void;
   onLinkClick?: () => void;
+  isProRole?: boolean;
 }) {
   return (
     <div className="p-3 border-t border-border space-y-2">
