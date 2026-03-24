@@ -1482,24 +1482,26 @@ export default function PatientDetail() {
                         className="w-full gap-2 border-warning/30 text-warning hover:bg-warning/10"
                         onClick={async () => {
                           if (!patientId) return;
-                          if (!confirm("Redefinir senha do paciente para 123456?")) return;
+                          const tempPassword = "Fit@2026!";
+                          if (!confirm(`Redefinir senha do paciente para ${tempPassword}?`)) return;
                           try {
-                            const { data: { session } } = await supabase.auth.getSession();
-                            const res = await fetch(
-                              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-update-user`,
-                              {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
-                                body: JSON.stringify({ target_user_id: patientId, action: "reset_password", payload: { password: "Fit@2026!" } }),
-                              }
-                            );
-                            const result = await res.json();
-                            if (result.success) toast.success("Senha redefinida para 123456");
-                            else toast.error(result.error || "Erro ao redefinir senha");
-                          } catch { toast.error("Erro ao redefinir senha"); }
+                            const { data, error } = await supabase.functions.invoke("admin-update-user", {
+                              body: {
+                                target_user_id: patientId,
+                                action: "reset_password",
+                                payload: { password: tempPassword },
+                              },
+                            });
+
+                            if (error) throw error;
+                            if (data?.success) toast.success(`Senha redefinida para ${tempPassword}`);
+                            else toast.error(data?.error || "Erro ao redefinir senha");
+                          } catch (e: any) {
+                            toast.error(e?.message || "Erro ao redefinir senha");
+                          }
                         }}
                       >
-                        🔑 Redefinir Senha (123456)
+                        🔑 Redefinir Senha (Fit@2026!)
                       </Button>
                       <Button
                         type="button"
@@ -1508,19 +1510,20 @@ export default function PatientDetail() {
                         onClick={async () => {
                           if (!patientId) return;
                           try {
-                            const { data: { session } } = await supabase.auth.getSession();
-                            const res = await fetch(
-                              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-update-user`,
-                              {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
-                                body: JSON.stringify({ target_user_id: patientId, action: "resend_invite", payload: {} }),
-                              }
-                            );
-                            const result = await res.json();
-                            if (result.success) toast.success("Convite reenviado com sucesso");
-                            else toast.error(result.error || "Erro ao reenviar convite");
-                          } catch { toast.error("Erro ao reenviar convite"); }
+                            const { data, error } = await supabase.functions.invoke("admin-update-user", {
+                              body: {
+                                target_user_id: patientId,
+                                action: "resend_invite",
+                                payload: {},
+                              },
+                            });
+
+                            if (error) throw error;
+                            if (data?.success) toast.success("Convite reenviado com sucesso");
+                            else toast.error(data?.error || "Erro ao reenviar convite");
+                          } catch (e: any) {
+                            toast.error(e?.message || "Erro ao reenviar convite");
+                          }
                         }}
                       >
                         📩 Reenviar Convite / Acesso
