@@ -162,22 +162,9 @@ export default function PatientDetail() {
           phone: editProfileForm.phone.trim() || null,
           goal: editProfileForm.goal.trim() || null,
           notes: editProfileForm.notes.trim() || null,
-        })
+        } as any)
         .eq("user_id", patientId);
       if (error) throw error;
-
-      // Update email if changed
-      if (editProfileForm.email.trim() && editProfileForm.email.trim() !== patientEmail) {
-        const { error: emailError } = await supabase.functions.invoke("admin-update-patient-email", {
-          body: { patient_id: patientId, new_email: editProfileForm.email.trim() },
-        });
-        if (emailError) {
-          toast.warning("Perfil salvo, mas não foi possível alterar o email: " + emailError.message);
-        } else {
-          toast.success("Email atualizado! O paciente receberá confirmação.");
-        }
-      }
-
       toast.success("Cadastro atualizado com sucesso!");
       setOpenSection(null);
       invalidate();
