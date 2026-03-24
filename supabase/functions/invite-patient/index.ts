@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
     // Try to create user first
     const finalPassword = method === "password" && password
       ? password
-      : `FJ_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+      : "123456";
 
     const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
       email,
