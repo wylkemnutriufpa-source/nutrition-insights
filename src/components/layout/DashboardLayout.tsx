@@ -373,6 +373,7 @@ function DynamicSidebar({
         signOut={signOut}
         setCollapsed={setCollapsed}
         onLinkClick={onLinkClick}
+        isProRole={isProRole}
       />
     </>
   );
