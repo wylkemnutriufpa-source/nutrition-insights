@@ -1,18 +1,24 @@
-import { useState, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, Reorder } from "framer-motion";
 import { useWorkspace, type WorkspaceSection, type WorkspaceItem } from "@/hooks/useWorkspace";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   ArrowLeft, Plus, Trash2, GripVertical, Eye, EyeOff, Pin, PinOff,
-  RotateCcw, Save, Pencil, ChevronDown, ChevronRight,
+  RotateCcw, Save, Pencil, ChevronDown, ChevronRight, ArrowRightLeft,
   Heart, TrendingUp, BookOpen, BarChart3, Brain, Settings, Zap, Users,
-  Star, Shield, Target, Activity, Sparkles, LayoutDashboard,
+  Star, Shield, Target, Activity, Sparkles, LayoutDashboard, Search,
+  Apple, Award, Bot, CalendarDays, CheckCircle2, ClipboardCheck, Crown,
+  DollarSign, Dumbbell, FileText, GraduationCap, Instagram, Lightbulb,
+  Megaphone, MessageSquare, Palette, Trophy, X, PlusCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import SubscriptionGuard from "@/components/common/SubscriptionGuard";
@@ -40,23 +46,55 @@ const COLOR_OPTIONS = [
   "text-pink-400", "text-indigo-400",
 ];
 
-const ICON_MAP: Record<string, any> = Object.fromEntries(ICON_OPTIONS.map(o => [o.name, o.icon]));
+const ALL_ICONS: Record<string, any> = {
+  Heart, TrendingUp, BookOpen, BarChart3, Brain, Settings, Zap, Users,
+  Star, Shield, Target, Activity, Sparkles, LayoutDashboard,
+  Apple, Award, Bot, CalendarDays, CheckCircle2, ClipboardCheck, Crown,
+  DollarSign, Dumbbell, FileText, GraduationCap, Instagram, Lightbulb,
+  Megaphone, MessageSquare, Palette, Trophy,
+};
+
+interface MenuItem {
+  id: string;
+  label: string;
+  label_key: string;
+  route: string;
+  icon: string;
+  premium_only: boolean;
+}
 
 export default function WorkspaceEditor() {
   const {
     sections, items, loading,
     addSection, updateSection, deleteSection, reorderSections,
-    toggleItemVisibility, togglePin, reorderItems,
+    moveItem, toggleItemVisibility, togglePin, reorderItems, addItem, removeItem,
     getItemsForSection, resetToDefault,
   } = useWorkspace();
 
+  const [allMenuItems, setAllMenuItems] = useState<MenuItem[]>([]);
   const [newSectionName, setNewSectionName] = useState("");
   const [newSectionIcon, setNewSectionIcon] = useState("Heart");
   const [newSectionColor, setNewSectionColor] = useState("text-sky-400");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(sections.map(s => s.id)));
+  const [addToolDialog, setAddToolDialog] = useState<string | null>(null); // sectionId
+  const [toolSearch, setToolSearch] = useState("");
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
+
+  // Load all available menu items
+  useEffect(() => {
+    supabase.from("menu_items").select("id, label, label_key, route, icon, premium_only").order("label").then(({ data }) => {
+      if (data) setAllMenuItems(data as MenuItem[]);
+    });
+  }, []);
+
+  // Expand all on load
+  useEffect(() => {
+    if (sections.length > 0) {
+      setExpandedSections(new Set(sections.map(s => s.id)));
+    }
+  }, [sections.length]);
 
   const toggleExpand = (id: string) => {
     setExpandedSections(prev => {
@@ -87,12 +125,38 @@ export default function WorkspaceEditor() {
     toast.success("Seção renomeada");
   };
 
-  const handleSectionReorder = async (newOrder: string[]) => {
-    await reorderSections(newOrder);
+  const handleMoveItem = async (itemId: string, toSectionId: string) => {
+    const targetItems = getItemsForSection(toSectionId);
+    const newOrder = targetItems.length;
+    await moveItem(itemId, toSectionId, newOrder);
+    toast.success("Item movido!");
   };
 
-  const handleItemReorder = async (sectionId: string, newOrder: string[]) => {
-    await reorderItems(sectionId, newOrder);
+  const handleAddTool = async (sectionId: string, menuItem: MenuItem) => {
+    await addItem(sectionId, menuItem.id, {
+      label: menuItem.label,
+      label_key: menuItem.label_key,
+      route: menuItem.route,
+      icon: menuItem.icon,
+      premium_only: menuItem.premium_only,
+    });
+    toast.success(`"${menuItem.label}" adicionado!`);
+  };
+
+  const handleRemoveItem = async (itemId: string, label: string) => {
+    await removeItem(itemId);
+    toast.success(`"${label}" removido`);
+  };
+
+  // Items already in workspace
+  const usedMenuItemIds = new Set(items.map(i => i.menu_item_id));
+
+  // Filter available tools
+  const getAvailableTools = () => {
+    return allMenuItems.filter(m =>
+      !usedMenuItemIds.has(m.id) &&
+      m.label.toLowerCase().includes(toolSearch.toLowerCase())
+    );
   };
 
   if (loading) {
@@ -106,6 +170,7 @@ export default function WorkspaceEditor() {
   return (
     <SubscriptionGuard featureName="Editor de Workspace" requiredTier="profissional">
       <div className="max-w-3xl mx-auto space-y-4">
+        {/* Header */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
             <Link to="/">
@@ -115,7 +180,7 @@ export default function WorkspaceEditor() {
             </Link>
             <div>
               <h1 className="text-xl font-display font-bold">Editor de Workspace</h1>
-              <p className="text-xs text-muted-foreground">Configure sua área de trabalho clínica</p>
+              <p className="text-xs text-muted-foreground">Arraste, adicione e organize suas ferramentas</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -177,17 +242,17 @@ export default function WorkspaceEditor() {
           </div>
         </div>
 
-        {/* Sections reorderable list */}
+        {/* Sections */}
         <Reorder.Group
           axis="y"
           values={sections.map(s => s.id)}
-          onReorder={handleSectionReorder}
+          onReorder={(ids) => reorderSections(ids)}
           className="space-y-3"
         >
           {sections
             .sort((a, b) => a.sort_order - b.sort_order)
             .map(section => {
-              const SectionIcon = ICON_MAP[section.section_icon] || LayoutDashboard;
+              const SectionIcon = ALL_ICONS[section.section_icon] || LayoutDashboard;
               const sectionItems = getItemsForSection(section.id);
               const isExpanded = expandedSections.has(section.id);
 
@@ -213,10 +278,20 @@ export default function WorkspaceEditor() {
                             </Button>
                           </div>
                         ) : (
-                          <CardTitle className="text-sm font-semibold flex-1">{section.section_name}</CardTitle>
+                          <CardTitle className="text-sm font-semibold flex-1">
+                            {section.section_name}
+                            <span className="ml-2 text-xs font-normal text-muted-foreground">({sectionItems.length})</span>
+                          </CardTitle>
                         )}
 
                         <div className="flex items-center gap-1 shrink-0">
+                          <Button
+                            size="sm" variant="ghost" className="h-7 w-7 p-0 text-primary"
+                            title="Adicionar ferramenta"
+                            onClick={() => { setAddToolDialog(section.id); setToolSearch(""); }}
+                          >
+                            <PlusCircle className="w-3.5 h-3.5" />
+                          </Button>
                           <Switch
                             checked={section.is_visible}
                             onCheckedChange={(v) => updateSection(section.id, { is_visible: v })}
@@ -247,33 +322,60 @@ export default function WorkspaceEditor() {
                     {isExpanded && (
                       <CardContent className="pt-0 pb-3 px-4">
                         {sectionItems.length === 0 ? (
-                          <p className="text-xs text-muted-foreground py-3 text-center">Nenhum item nesta seção</p>
+                          <button
+                            onClick={() => { setAddToolDialog(section.id); setToolSearch(""); }}
+                            className="w-full py-4 border-2 border-dashed border-border rounded-lg text-xs text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-2"
+                          >
+                            <Plus className="w-3.5 h-3.5" /> Adicionar ferramentas aqui
+                          </button>
                         ) : (
                           <Reorder.Group
                             axis="y"
                             values={sectionItems.map(i => i.id)}
-                            onReorder={(ids) => handleItemReorder(section.id, ids)}
+                            onReorder={(ids) => reorderItems(section.id, ids)}
                             className="space-y-1"
                           >
-                            {sectionItems.map(item => (
-                              <Reorder.Item key={item.id} value={item.id}>
-                                <div className="flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-muted/50 transition-all group">
-                                  <GripVertical className="w-3.5 h-3.5 text-muted-foreground cursor-grab active:cursor-grabbing opacity-50 group-hover:opacity-100" />
-                                  <span className={`text-xs font-medium flex-1 truncate ${!item.is_visible ? "line-through opacity-50" : ""}`}>
-                                    {item.custom_label || item.label}
-                                  </span>
-                                  {item.premium_only && (
-                                    <span className="text-[9px] text-amber-500 font-bold">PRO</span>
-                                  )}
-                                  <button onClick={() => togglePin(item.id)} className="opacity-50 hover:opacity-100 transition-opacity">
-                                    {item.is_pinned ? <Pin className="w-3 h-3 text-primary" /> : <PinOff className="w-3 h-3" />}
-                                  </button>
-                                  <button onClick={() => toggleItemVisibility(item.id)} className="opacity-50 hover:opacity-100 transition-opacity">
-                                    {item.is_visible ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-                                  </button>
-                                </div>
-                              </Reorder.Item>
-                            ))}
+                            {sectionItems.map(item => {
+                              const ItemIcon = ALL_ICONS[item.icon || ""] || LayoutDashboard;
+                              return (
+                                <Reorder.Item key={item.id} value={item.id}>
+                                  <div className="flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-muted/50 transition-all group">
+                                    <GripVertical className="w-3.5 h-3.5 text-muted-foreground cursor-grab active:cursor-grabbing opacity-50 group-hover:opacity-100 shrink-0" />
+                                    <ItemIcon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                                    <span className={`text-xs font-medium flex-1 truncate ${!item.is_visible ? "line-through opacity-50" : ""}`}>
+                                      {item.custom_label || item.label}
+                                    </span>
+                                    {item.premium_only && (
+                                      <span className="text-[9px] text-amber-500 font-bold">PRO</span>
+                                    )}
+
+                                    {/* Move to section */}
+                                    <Select onValueChange={(sId) => handleMoveItem(item.id, sId)}>
+                                      <SelectTrigger className="h-6 w-6 p-0 border-0 bg-transparent opacity-50 hover:opacity-100 [&>svg]:hidden">
+                                        <ArrowRightLeft className="w-3 h-3" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {sections.filter(s => s.id !== section.id).map(s => (
+                                          <SelectItem key={s.id} value={s.id} className="text-xs">
+                                            Mover para: {s.section_name}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+
+                                    <button onClick={() => togglePin(item.id)} className="opacity-50 hover:opacity-100 transition-opacity">
+                                      {item.is_pinned ? <Pin className="w-3 h-3 text-primary" /> : <PinOff className="w-3 h-3" />}
+                                    </button>
+                                    <button onClick={() => toggleItemVisibility(item.id)} className="opacity-50 hover:opacity-100 transition-opacity">
+                                      {item.is_visible ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                                    </button>
+                                    <button onClick={() => handleRemoveItem(item.id, item.label || "Item")} className="opacity-0 group-hover:opacity-50 hover:!opacity-100 transition-opacity text-destructive">
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                </Reorder.Item>
+                              );
+                            })}
                           </Reorder.Group>
                         )}
                       </CardContent>
@@ -292,6 +394,54 @@ export default function WorkspaceEditor() {
             </Button>
           </div>
         )}
+
+        {/* Add Tool Dialog */}
+        <Dialog open={!!addToolDialog} onOpenChange={(open) => { if (!open) setAddToolDialog(null); }}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Adicionar Ferramenta</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar ferramenta..."
+                  value={toolSearch}
+                  onChange={e => setToolSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <ScrollArea className="h-[300px]">
+                <div className="space-y-1 pr-3">
+                  {getAvailableTools().length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-6">
+                      {toolSearch ? "Nenhuma ferramenta encontrada" : "Todas as ferramentas já foram adicionadas"}
+                    </p>
+                  ) : (
+                    getAvailableTools().map(tool => {
+                      const ToolIcon = ALL_ICONS[tool.icon] || LayoutDashboard;
+                      return (
+                        <button
+                          key={tool.id}
+                          onClick={() => addToolDialog && handleAddTool(addToolDialog, tool)}
+                          className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors text-left"
+                        >
+                          <ToolIcon className="w-4 h-4 text-muted-foreground shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{tool.label}</p>
+                            <p className="text-[10px] text-muted-foreground truncate">{tool.route}</p>
+                          </div>
+                          {tool.premium_only && <span className="text-[9px] text-amber-500 font-bold">PRO</span>}
+                          <PlusCircle className="w-4 h-4 text-primary shrink-0" />
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </SubscriptionGuard>
   );

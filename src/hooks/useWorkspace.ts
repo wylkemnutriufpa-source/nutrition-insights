@@ -183,6 +183,28 @@ export function useWorkspace() {
     setItems(prev => prev.map(i => i.id === itemId ? { ...i, is_pinned: newPin } : i));
   }, [items]);
 
+  const addItem = useCallback(async (sectionId: string, menuItemId: string, menuData: { label: string; label_key: string; route: string; icon: string; premium_only: boolean }) => {
+    if (!profile) return;
+    // Check if already exists
+    if (items.some(i => i.menu_item_id === menuItemId)) {
+      return;
+    }
+    const maxOrder = items.filter(i => i.section_id === sectionId).reduce((m, i) => Math.max(m, i.sort_order), -1);
+    const { data } = await supabase
+      .from("workspace_items" as any)
+      .insert({ workspace_id: profile.id, section_id: sectionId, menu_item_id: menuItemId, sort_order: maxOrder + 1 })
+      .select()
+      .single();
+    if (data) {
+      setItems(prev => [...prev, { ...(data as any), ...menuData }]);
+    }
+  }, [profile, items]);
+
+  const removeItem = useCallback(async (itemId: string) => {
+    await supabase.from("workspace_items" as any).delete().eq("id", itemId);
+    setItems(prev => prev.filter(i => i.id !== itemId));
+  }, []);
+
   const reorderItems = useCallback(async (sectionId: string, orderedItemIds: string[]) => {
     for (let i = 0; i < orderedItemIds.length; i++) {
       await supabase.from("workspace_items" as any).update({ sort_order: i }).eq("id", orderedItemIds[i]);
@@ -220,7 +242,7 @@ export function useWorkspace() {
   return {
     profile, sections, items, loading,
     addSection, updateSection, deleteSection, reorderSections,
-    moveItem, toggleItemVisibility, togglePin, reorderItems,
+    moveItem, toggleItemVisibility, togglePin, reorderItems, addItem, removeItem,
     getItemsForSection, resetToDefault, refresh: initialize,
   };
 }
