@@ -897,6 +897,7 @@ export default function Patients() {
           </>
         )}
       </div>
+      )}
 
       {/* Bulk Manage Dialog */}
       <Dialog open={bulkManageOpen} onOpenChange={setBulkManageOpen}>
