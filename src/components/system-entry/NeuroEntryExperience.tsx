@@ -18,18 +18,22 @@ function playTone() {
   try {
     if (localStorage.getItem("fj_audio_muted") === "1") return;
     const ctx = new AudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(396, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(528, ctx.currentTime + 0.5);
-    gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.04, ctx.currentTime + 0.12);
-    gain.gain.linearRampToValueAtTime(0.02, ctx.currentTime + 0.35);
-    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.65);
-    osc.connect(gain).connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.7);
+    const t = ctx.currentTime;
+
+    // Soft crystalline chime — two layered harmonics
+    const notes = [880, 1318.5]; // A5 + E6
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, t);
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.035, t + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.8 + i * 0.15);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(t + i * 0.08);
+      osc.stop(t + 1 + i * 0.15);
+    });
   } catch { /* Web Audio unavailable */ }
 }
 
