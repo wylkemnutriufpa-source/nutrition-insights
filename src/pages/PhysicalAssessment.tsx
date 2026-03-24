@@ -48,7 +48,10 @@ interface Assessment {
   protein_target: string; carbs_target: string; fat_target: string; calories_target: string;
   goal_weight: string; goal_body_fat: string;
   notes: string; method: string;
+  front_photo_url: string; side_photo_url: string; back_photo_url: string;
 }
+
+type SkinfoldMethod = "jackson_pollock_7" | "jackson_pollock_3";
 
 const emptyAssessment = (patientId: string, assessorId: string): Assessment => ({
   patient_id: patientId,
@@ -65,6 +68,7 @@ const emptyAssessment = (patientId: string, assessorId: string): Assessment => (
   protein_target: "", carbs_target: "", fat_target: "", calories_target: "",
   goal_weight: "", goal_body_fat: "",
   notes: "", method: "jackson_pollock_7",
+  front_photo_url: "", side_photo_url: "", back_photo_url: "",
 });
 
 const ACTIVITY_FACTORS = [
