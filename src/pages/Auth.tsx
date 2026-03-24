@@ -327,7 +327,9 @@ export default function Auth() {
         </Card>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
-          {t("auth.accessNote")}
+          {mode === "register"
+            ? "Pacientes não podem criar contas. O acesso é concedido por convite do profissional."
+            : t("auth.accessNote")}
         </p>
 
         {/* Biquíni Branco Banner */}
