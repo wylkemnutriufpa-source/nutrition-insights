@@ -69,10 +69,17 @@ const features = [
 ];
 
 const howItWorks = [
-  { step: "01", title: "Crie sua conta", desc: "Teste grátis por 7 dias. Sem cartão de crédito.", icon: Sparkles },
-  { step: "02", title: "Cadastre pacientes", desc: "Adicione pacientes com 1 clique. Eles recebem acesso automaticamente.", icon: Users },
+  { step: "01", title: "Crie sua conta profissional", desc: "Cadastro exclusivo para nutricionistas. 7 dias grátis, sem cartão.", icon: Sparkles },
+  { step: "02", title: "Convide seus pacientes", desc: "Pacientes recebem acesso por convite — via link mágico ou senha temporária.", icon: Users },
   { step: "03", title: "Configure protocolos", desc: "Crie planos alimentares, protocolos e metas personalizadas.", icon: ClipboardCheck },
   { step: "04", title: "Acompanhe com IA", desc: "A IA analisa evolução, gera relatórios e sugere ajustes automaticamente.", icon: Brain },
+];
+
+const howItWorksPatient = [
+  { step: "01", title: "Receba o convite", desc: "Seu nutricionista cria sua conta e envia o acesso por e-mail.", icon: Lock },
+  { step: "02", title: "Complete seu onboarding", desc: "Preencha a anamnese e aceite os termos clínicos (LGPD).", icon: ClipboardCheck },
+  { step: "03", title: "Siga seu plano", desc: "Acesse dietas, checklists, receitas e acompanhe sua evolução.", icon: Target },
+  { step: "04", title: "Evolua com dados", desc: "Sua jornada é acompanhada por inteligência clínica em tempo real.", icon: Brain },
 ];
 
 const defaultTestimonials = [
