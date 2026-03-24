@@ -405,34 +405,20 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ══════════ HOW IT WORKS ══════════ */}
+      {/* ══════════ HOW IT WORKS — PROFESSIONALS ══════════ */}
       <section id="how" className="py-28 px-4 relative noise-overlay">
         <div className="max-w-5xl mx-auto relative z-10">
           <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-20">
-            <span className="inline-block px-4 py-1.5 rounded-full glass-premium text-accent text-xs font-bold mb-5 gradient-border uppercase tracking-widest">Como Funciona</span>
-            <h2 className="font-display text-3xl md:text-5xl font-bold mb-4">Simples de começar.<br /><span className="text-gradient-animated">Poderoso de usar.</span></h2>
+            <span className="inline-block px-4 py-1.5 rounded-full glass-premium text-accent text-xs font-bold mb-5 gradient-border uppercase tracking-widest">Para Nutricionistas</span>
+            <h2 className="font-display text-3xl md:text-5xl font-bold mb-4">Comece em minutos.<br /><span className="text-gradient-animated">Escale com inteligência.</span></h2>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {howItWorks.map((step, i) => (
-              <motion.div
-                key={step.step}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.15, ease: [0.22, 1, 0.36, 1] }}
-                className="relative text-center group"
-              >
+              <motion.div key={step.step} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15, ease: [0.22, 1, 0.36, 1] }} className="relative text-center group">
                 {i < 3 && (
                   <div className="hidden md:block absolute top-10 left-[60%] w-[80%] h-[2px]">
                     <div className="w-full h-full bg-gradient-to-r from-primary/30 to-transparent" />
-                    <motion.div
-                      className="absolute top-0 left-0 h-full bg-primary/60"
-                      initial={{ width: "0%" }}
-                      whileInView={{ width: "100%" }}
-                      viewport={{ once: true }}
-                      transition={{ delay: 0.5 + i * 0.3, duration: 1, ease: "easeOut" }}
-                    />
                   </div>
                 )}
                 <div className="w-20 h-20 mx-auto rounded-2xl gradient-primary shadow-glow flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-500">
@@ -444,6 +430,40 @@ export default function Landing() {
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ══════════ HOW IT WORKS — PATIENTS ══════════ */}
+      <section className="py-28 px-4 bg-muted/20 border-y border-border/30">
+        <div className="max-w-5xl mx-auto">
+          <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-20">
+            <span className="inline-block px-4 py-1.5 rounded-full glass-premium text-primary text-xs font-bold mb-5 gradient-border uppercase tracking-widest">Para Pacientes</span>
+            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">Acesso seguro por <span className="text-gradient-animated">convite do profissional</span></h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">Pacientes não criam contas sozinhos. Seu nutricionista convida você, garantindo um ambiente clínico seguro e controlado.</p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {howItWorksPatient.map((step, i) => (
+              <motion.div key={step.step} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }} className="text-center">
+                <div className="w-16 h-16 mx-auto rounded-2xl bg-accent/10 flex items-center justify-center mb-4">
+                  <step.icon className="w-7 h-7 text-accent" />
+                </div>
+                <span className="font-display text-xs font-bold text-accent tracking-widest">{step.step}</span>
+                <h3 className="font-display font-semibold mt-1 mb-2">{step.title}</h3>
+                <p className="text-sm text-muted-foreground">{step.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="mt-16 text-center">
+            <div className="inline-flex items-center gap-3 px-6 py-3 rounded-xl glass-premium gradient-border">
+              <Shield className="w-5 h-5 text-primary" />
+              <div className="text-left">
+                <p className="text-sm font-semibold text-foreground">Conformidade LGPD</p>
+                <p className="text-xs text-muted-foreground">Consentimento clínico explícito, versionado e auditável. Seus dados estão protegidos.</p>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
