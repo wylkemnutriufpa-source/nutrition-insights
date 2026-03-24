@@ -798,11 +798,11 @@ export default function Landing() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/auth">
                 <Button size="lg" className="gradient-primary shadow-glow gap-2 text-base px-12 h-14 font-semibold hover:scale-105 active:scale-[0.98] transition-transform">
-                  <Sparkles className="w-4 h-4" /> Criar Conta Grátis
+                  <Sparkles className="w-4 h-4" /> Criar Conta Profissional
                 </Button>
               </Link>
             </div>
-            <p className="text-xs text-muted-foreground mt-5">Sem cartão de crédito · Setup em 30s · Cancele quando quiser</p>
+            <p className="text-xs text-muted-foreground mt-5">Sem cartão de crédito · 7 dias grátis · Pacientes acessam por convite</p>
           </div>
         </motion.div>
       </section>
