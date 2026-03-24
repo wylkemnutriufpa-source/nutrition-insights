@@ -67,6 +67,9 @@ export default function PatientGridDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* FitJourney Timeline — FIRST block for patients */}
+      <FitJourneyTimeline compact maxHeight="400px" />
+
       {/* Header with view toggle */}
       <div className="flex items-center justify-between">
         <div>

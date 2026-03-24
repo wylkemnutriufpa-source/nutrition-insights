@@ -315,8 +315,11 @@ function NutritionistDashboardContent() {
 
   const [activeTab, setActiveTab] = useState("clinical");
 
-  return (
+   return (
     <div className="space-y-6">
+      {/* FitJourney Timeline — FIRST block */}
+      <FitJourneyTimeline maxHeight="500px" />
+
       {/* Pending Approvals Modal */}
       <PendingApprovalsModal open={approvalsModalOpen} onOpenChange={handleApprovalsModalChange} />
 
