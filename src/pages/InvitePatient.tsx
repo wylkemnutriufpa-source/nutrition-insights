@@ -25,10 +25,7 @@ export default function InvitePatient() {
   const [copied, setCopied] = useState(false);
 
   const generatePassword = () => {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
-    let pwd = "";
-    for (let i = 0; i < 8; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
-    setTempPassword(pwd);
+    setTempPassword("123456");
   };
 
   const handleInvite = async () => {
