@@ -44,49 +44,19 @@ export default function InvitePatient() {
 
     setLoading(true);
     try {
-      // Create patient account
-      const password = method === "password" ? tempPassword : `FJ_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { full_name: name, role: "patient" },
+      // Use edge function to create patient without breaking current session
+      const { data, error } = await supabase.functions.invoke("invite-patient", {
+        body: {
+          name,
+          email,
+          phone: phone || null,
+          method,
+          password: method === "password" ? tempPassword : undefined,
         },
       });
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error("Falha ao criar conta");
-
-      const patientId = authData.user.id;
-
-      // Update profile
-      await supabase.from("profiles" as any).upsert({
-        user_id: patientId,
-        full_name: name,
-        phone: phone || null,
-        journey_status: "invited",
-      });
-
-      // Link to nutritionist
-      await supabase.from("nutritionist_patients" as any).upsert({
-        nutritionist_id: user.id,
-        patient_id: patientId,
-        status: "active",
-      });
-
-      // Assign patient role
-      await supabase.from("user_roles" as any).upsert({
-        user_id: patientId,
-        role: "patient",
-      });
-
-      // If magic link, send reset password email so patient can set their own
-      if (method === "magic_link") {
-        await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/reset-password`,
-        });
-      }
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       setCreated(true);
       toast.success("Paciente convidado com sucesso!");
