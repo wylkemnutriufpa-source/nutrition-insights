@@ -13396,6 +13396,10 @@ export type Database = {
       }
       archive_orphan_onboarding_pipelines: { Args: never; Returns: Json }
       auto_activate_onboarding_for_paid_patients: { Args: never; Returns: Json }
+      auto_activate_patient_onboarding: {
+        Args: { _patient_id: string }
+        Returns: undefined
+      }
       award_points:
         | {
             Args: { _action_key: string; _metadata?: Json; _patient_id: string }

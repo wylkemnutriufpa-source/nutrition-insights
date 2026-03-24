@@ -1,12 +1,11 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
@@ -31,48 +30,82 @@ serve(async (req) => {
     const { name, email, phone, method, password } = await req.json();
     if (!name || !email) throw new Error("Name and email required");
 
-    // Use admin client to create user without affecting caller's session
     const adminClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Check if user already exists
-    const { data: existingUsers } = await adminClient.auth.admin.listUsers();
-    const existing = existingUsers?.users?.find((u: any) => u.email === email);
-
     let patientId: string;
 
-    if (existing) {
-      patientId = existing.id;
+    // Try to create user first
+    const finalPassword = method === "password" && password
+      ? password
+      : `FJ_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+
+    const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
+      email,
+      password: finalPassword,
+      email_confirm: true,
+      user_metadata: { full_name: name, role: "patient" },
+    });
+
+    if (createError) {
+      // If user already exists, find them and link
+      if (createError.message?.includes("already been registered") || (createError as any).code === "email_exists") {
+        console.log(`[invite-patient] User ${email} already exists, linking...`);
+        
+        // Find user by email using admin API
+        const { data: userList } = await adminClient.auth.admin.listUsers({ perPage: 1, page: 1 });
+        // listUsers doesn't filter by email, use RPC instead
+        const { data: foundId } = await adminClient.rpc("find_patient_by_email", { _email: email });
+        
+        if (foundId) {
+          patientId = foundId;
+        } else {
+          // User exists in auth but not found via RPC - try getUserByEmail approach
+          // Search through admin API
+          const { data: { users } } = await adminClient.auth.admin.listUsers();
+          const existingUser = users?.find((u: any) => u.email?.toLowerCase() === email.toLowerCase());
+          if (!existingUser) throw new Error("Usuário existe mas não foi possível localizar. Tente via importação.");
+          patientId = existingUser.id;
+        }
+
+        // If password method, update the password
+        if (method === "password" && password) {
+          await adminClient.auth.admin.updateUserById(patientId, { password });
+        }
+      } else {
+        throw createError;
+      }
     } else {
-      const finalPassword = method === "password" && password
-        ? password
-        : `FJ_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-
-      const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
-        email,
-        password: finalPassword,
-        email_confirm: true,
-        user_metadata: { full_name: name, role: "patient" },
-      });
-
-      if (createError) throw createError;
       patientId = newUser.user.id;
     }
 
     // Upsert profile
-    await adminClient.from("profiles").upsert({
-      user_id: patientId,
-      full_name: name,
-      phone: phone || null,
-      journey_status: "invited",
-    }, { onConflict: "user_id" });
+    const { data: existingProfile } = await adminClient
+      .from("profiles")
+      .select("user_id")
+      .eq("user_id", patientId)
+      .maybeSingle();
+
+    if (existingProfile) {
+      await adminClient.from("profiles").update({
+        full_name: name,
+        phone: phone || null,
+      }).eq("user_id", patientId);
+    } else {
+      await adminClient.from("profiles").insert({
+        user_id: patientId,
+        full_name: name,
+        phone: phone || null,
+      });
+    }
 
     // Link to nutritionist
     await adminClient.from("nutritionist_patients").upsert({
       nutritionist_id: caller.id,
       patient_id: patientId,
       status: "active",
+      journey_status: "awaiting_payment",
     }, { onConflict: "nutritionist_id,patient_id" });
 
     // Assign patient role
@@ -83,11 +116,15 @@ serve(async (req) => {
 
     // Send magic link if requested
     if (method === "magic_link") {
-      await adminClient.auth.admin.generateLink({
-        type: "magiclink",
-        email,
-        options: { redirectTo: `${req.headers.get("origin") || "https://fijourney.lovable.app"}/` },
-      });
+      try {
+        await adminClient.auth.admin.generateLink({
+          type: "magiclink",
+          email,
+          options: { redirectTo: `${req.headers.get("origin") || "https://fijourney.lovable.app"}/` },
+        });
+      } catch (e) {
+        console.log("[invite-patient] Magic link generation failed, patient can use forgot password:", e);
+      }
     }
 
     return new Response(JSON.stringify({ success: true, patient_id: patientId }), {
