@@ -73,7 +73,7 @@ const CURIOSIDADES: Curiosidade[] = [
   },
   {
     id: "12", title: "Proteína no Café da Manhã", question: "Por que devo comer proteína de manhã?",
-    answer: "Consumir 20-30g de proteína no café da manhã estabiliza a glicemia, reduz picos de fome ao longo do dia e aumenta a termogênese (queima calórica da digestão) em até 30%. Opções práticas: ovos, iogurte grego, queijo cottage, whey ou pasta de amendoim com pão integral.",
+    answer: "Consumir 20-30g de proteína no café da manhã estabiliza a glicemia, reduz picos de fome ao longo do dia e aumenta a termogênese (queima calórica da digestão) em até 30%. Opções práticas: ovos, iogurte grego, ricota, whey ou pasta de amendoim com pão integral.",
     category: "Nutrição", icon: Flame, emoji: "🔥"
   },
   {
