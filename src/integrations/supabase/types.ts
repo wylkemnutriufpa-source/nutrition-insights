@@ -12119,6 +12119,153 @@ export type Database = {
         }
         Relationships: []
       }
+      timeline_comments: {
+        Row: {
+          author_id: string
+          comment_text: string
+          created_at: string
+          event_id: string
+          id: string
+        }
+        Insert: {
+          author_id: string
+          comment_text: string
+          created_at?: string
+          event_id: string
+          id?: string
+        }
+        Update: {
+          author_id?: string
+          comment_text?: string
+          created_at?: string
+          event_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timeline_comments_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "timeline_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      timeline_events: {
+        Row: {
+          author_id: string
+          created_at: string
+          description: string | null
+          event_type: string
+          id: string
+          is_pinned: boolean | null
+          media_url: string | null
+          metadata_json: Json | null
+          poll_options: Json | null
+          poll_question: string | null
+          target_patient_id: string | null
+          title: string
+          visibility_scope: string
+          workspace_id: string
+        }
+        Insert: {
+          author_id: string
+          created_at?: string
+          description?: string | null
+          event_type?: string
+          id?: string
+          is_pinned?: boolean | null
+          media_url?: string | null
+          metadata_json?: Json | null
+          poll_options?: Json | null
+          poll_question?: string | null
+          target_patient_id?: string | null
+          title: string
+          visibility_scope?: string
+          workspace_id: string
+        }
+        Update: {
+          author_id?: string
+          created_at?: string
+          description?: string | null
+          event_type?: string
+          id?: string
+          is_pinned?: boolean | null
+          media_url?: string | null
+          metadata_json?: Json | null
+          poll_options?: Json | null
+          poll_question?: string | null
+          target_patient_id?: string | null
+          title?: string
+          visibility_scope?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      timeline_poll_votes: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          option_selected: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          option_selected: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          option_selected?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timeline_poll_votes_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "timeline_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      timeline_reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          event_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji?: string
+          event_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          event_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timeline_reactions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "timeline_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tip_library: {
         Row: {
           age_group: string | null

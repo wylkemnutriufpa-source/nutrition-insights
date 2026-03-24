@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import GuidedTour, { PROFESSIONAL_TOUR_STEPS, PATIENT_TOUR_STEPS } from "@/components/common/GuidedTour";
 import { motion, AnimatePresence } from "framer-motion";
 import PatientGridDashboard from "@/components/dashboard/PatientGridDashboard";
+import FitJourneyTimeline from "@/components/timeline/FitJourneyTimeline";
 import ProStrategicDashboard from "@/components/dashboard/ProStrategicDashboard";
 import { useLayoutPreference } from "@/hooks/useLayoutPreference";
 import { LayoutGrid, List as ListIcon } from "lucide-react";
@@ -314,8 +315,11 @@ function NutritionistDashboardContent() {
 
   const [activeTab, setActiveTab] = useState("clinical");
 
-  return (
+   return (
     <div className="space-y-6">
+      {/* FitJourney Timeline — FIRST block */}
+      <FitJourneyTimeline maxHeight="500px" />
+
       {/* Pending Approvals Modal */}
       <PendingApprovalsModal open={approvalsModalOpen} onOpenChange={handleApprovalsModalChange} />
 

@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLayoutPreference } from "@/hooks/useLayoutPreference";
+import FitJourneyTimeline from "@/components/timeline/FitJourneyTimeline";
 import {
   UtensilsCrossed, CheckCircle2, Calendar, Dumbbell,
   TrendingUp, Brain, Camera, Target,
@@ -66,6 +67,9 @@ export default function PatientGridDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* FitJourney Timeline — FIRST block for patients */}
+      <FitJourneyTimeline compact maxHeight="400px" />
+
       {/* Header with view toggle */}
       <div className="flex items-center justify-between">
         <div>
