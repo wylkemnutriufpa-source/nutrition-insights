@@ -13,7 +13,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { toast } from "sonner";
 import {
   Search, CreditCard, Play, FileCheck, ArrowLeft,
-  Users, Loader2, Eye, ChevronRight, DollarSign, ShieldCheck
+  Users, Loader2, Eye, ChevronRight, DollarSign, ShieldCheck,
+  ClipboardList, KeyRound, Send, UserCog
 } from "lucide-react";
 import { releaseOnboarding } from "@/lib/serverTransitions";
 import type { PatientInfo } from "@/hooks/queries/usePatientsList";
