@@ -113,8 +113,11 @@ export default function PatientDetail() {
   const [upgradeRole, setUpgradeRole] = useState<string>("");
   const [upgrading, setUpgrading] = useState(false);
   const [editProfileForm, setEditProfileForm] = useState({
-    full_name: profile?.full_name || "",
-    phone: profile?.phone || "",
+    full_name: "",
+    phone: "",
+    email: "",
+    goal: "",
+    notes: "",
   });
   const [savingProfile, setSavingProfile] = useState(false);
   const [releaseOnboardingOpen, setReleaseOnboardingOpen] = useState(false);
