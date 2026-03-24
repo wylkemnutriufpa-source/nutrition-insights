@@ -13447,6 +13447,10 @@ export type Database = {
         }
         Returns: Json
       }
+      complete_patient_onboarding_by_patient: {
+        Args: { _patient_id: string; _pipeline_id: string }
+        Returns: Json
+      }
       confirm_patient_payment: {
         Args: { _nutritionist_id: string; _patient_id: string }
         Returns: Json
