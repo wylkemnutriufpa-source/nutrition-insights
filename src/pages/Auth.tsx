@@ -204,7 +204,52 @@ export default function Auth() {
             )}
 
             <AnimatePresence mode="wait">
-              {mode === "forgot" ? (
+              {mode === "register" ? (
+                registerSuccess ? (
+                  <motion.div key="reg-success" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-6 space-y-3">
+                    <div className="w-14 h-14 mx-auto rounded-full bg-primary/20 flex items-center justify-center">
+                      <Stethoscope className="w-7 h-7 text-primary" />
+                    </div>
+                    <h3 className="font-semibold text-foreground">Conta criada com sucesso! 🎉</h3>
+                    <p className="text-sm text-muted-foreground">Verifique seu e-mail para confirmar a conta. Depois, faça login para acessar sua plataforma.</p>
+                    <Button variant="outline" onClick={() => { setMode("login"); setRegisterSuccess(false); }} className="mt-2">
+                      Ir para Login
+                    </Button>
+                  </motion.div>
+                ) : (
+                  <motion.form key="register" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+                    onSubmit={handleRegister} className="space-y-4">
+                    <div>
+                      <Label htmlFor="fullName">Nome completo</Label>
+                      <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Dr(a). seu nome" required />
+                    </div>
+                    <div>
+                      <Label htmlFor="email">{t("auth.email")}</Label>
+                      <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" required />
+                    </div>
+                    <div>
+                      <Label htmlFor="password">{t("auth.password")}</Label>
+                      <div className="relative">
+                        <Input id="password" type={showPassword ? "text" : "password"} value={password}
+                          onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required minLength={6} />
+                        <button type="button" onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <Stethoscope className="w-3.5 h-3.5" /> Conta exclusiva para nutricionistas e profissionais de saúde.
+                    </p>
+                    <Button type="submit" className="w-full" disabled={loading}>
+                      {loading ? "Criando..." : <span className="flex items-center gap-2">Criar Conta <ArrowRight className="w-4 h-4" /></span>}
+                    </Button>
+                    <button type="button" onClick={() => setMode("login")} className="text-sm text-primary hover:underline w-full text-center">
+                      Já tenho conta — fazer login
+                    </button>
+                  </motion.form>
+                )
+              ) : mode === "forgot" ? (
                 <motion.form key="forgot" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
                   onSubmit={handleForgot} className="space-y-4">
                   <div>
