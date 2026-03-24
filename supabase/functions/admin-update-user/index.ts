@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
       }
 
       case "reset_password": {
-        const newPassword = payload?.password || "123456";
+        const newPassword = payload?.password || "Fit@2026!";
         const { error: pwErr } = await adminClient.auth.admin.updateUserById(target_user_id, {
           password: newPassword,
         });
