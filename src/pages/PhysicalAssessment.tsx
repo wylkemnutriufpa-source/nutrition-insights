@@ -48,7 +48,10 @@ interface Assessment {
   protein_target: string; carbs_target: string; fat_target: string; calories_target: string;
   goal_weight: string; goal_body_fat: string;
   notes: string; method: string;
+  front_photo_url: string; side_photo_url: string; back_photo_url: string;
 }
+
+type SkinfoldMethod = "jackson_pollock_7" | "jackson_pollock_3";
 
 const emptyAssessment = (patientId: string, assessorId: string): Assessment => ({
   patient_id: patientId,
@@ -65,6 +68,7 @@ const emptyAssessment = (patientId: string, assessorId: string): Assessment => (
   protein_target: "", carbs_target: "", fat_target: "", calories_target: "",
   goal_weight: "", goal_body_fat: "",
   notes: "", method: "jackson_pollock_7",
+  front_photo_url: "", side_photo_url: "", back_photo_url: "",
 });
 
 const ACTIVITY_FACTORS = [
@@ -207,26 +211,49 @@ export default function PhysicalAssessment() {
     // TEF (Thermic Effect of Food ~10%)
     const tef = tdee * 0.1;
 
-    // Body fat from skinfolds (Jackson-Pollock 7-site)
+    // Body fat from skinfolds
     let bodyFat = parseFloat(form.body_fat_percentage) || 0;
-    const folds = [
-      parseFloat(form.chest_fold), parseFloat(form.abdominal_fold),
-      parseFloat(form.thigh_fold), parseFloat(form.triceps_fold),
-      parseFloat(form.subscapular_fold), parseFloat(form.suprailiac_fold),
-      parseFloat(form.midaxillary_fold)
-    ];
-    const validFolds = folds.filter((f) => f > 0);
-    if (validFolds.length === 7) {
-      const sumFolds = validFolds.reduce((s, f) => s + f, 0);
-      let density: number;
-      if (sex === "male") {
-        density = 1.112 - 0.00043499 * sumFolds + 0.00000055 * sumFolds ** 2 - 0.00028826 * age;
-      } else {
-        density = 1.097 - 0.00046971 * sumFolds + 0.00000056 * sumFolds ** 2 - 0.00012828 * age;
+    const method = form.method as SkinfoldMethod;
+    
+    if (method === "jackson_pollock_3") {
+      // Jackson-Pollock 3-site
+      const threeFolds = sex === "male"
+        ? [parseFloat(form.chest_fold), parseFloat(form.abdominal_fold), parseFloat(form.thigh_fold)]
+        : [parseFloat(form.triceps_fold), parseFloat(form.suprailiac_fold), parseFloat(form.thigh_fold)];
+      const valid3 = threeFolds.filter((f) => f > 0);
+      if (valid3.length === 3) {
+        const sumFolds = valid3.reduce((s, f) => s + f, 0);
+        let density: number;
+        if (sex === "male") {
+          density = 1.10938 - 0.0008267 * sumFolds + 0.0000016 * sumFolds ** 2 - 0.0002574 * age;
+        } else {
+          density = 1.0994921 - 0.0009929 * sumFolds + 0.0000023 * sumFolds ** 2 - 0.0001392 * age;
+        }
+        bodyFat = (495 / density) - 450;
+        if (bodyFat < 3) bodyFat = 3;
+        if (bodyFat > 60) bodyFat = 60;
       }
-      bodyFat = (495 / density) - 450;
-      if (bodyFat < 3) bodyFat = 3;
-      if (bodyFat > 60) bodyFat = 60;
+    } else {
+      // Jackson-Pollock 7-site
+      const folds = [
+        parseFloat(form.chest_fold), parseFloat(form.abdominal_fold),
+        parseFloat(form.thigh_fold), parseFloat(form.triceps_fold),
+        parseFloat(form.subscapular_fold), parseFloat(form.suprailiac_fold),
+        parseFloat(form.midaxillary_fold)
+      ];
+      const validFolds = folds.filter((f) => f > 0);
+      if (validFolds.length === 7) {
+        const sumFolds = validFolds.reduce((s, f) => s + f, 0);
+        let density: number;
+        if (sex === "male") {
+          density = 1.112 - 0.00043499 * sumFolds + 0.00000055 * sumFolds ** 2 - 0.00028826 * age;
+        } else {
+          density = 1.097 - 0.00046971 * sumFolds + 0.00000056 * sumFolds ** 2 - 0.00012828 * age;
+        }
+        bodyFat = (495 / density) - 450;
+        if (bodyFat < 3) bodyFat = 3;
+        if (bodyFat > 60) bodyFat = 60;
+      }
     }
 
     const fatMass = w > 0 && bodyFat > 0 ? w * (bodyFat / 100) : 0;
@@ -468,20 +495,48 @@ export default function PhysicalAssessment() {
           <div className="space-y-4">
             <div className="glass rounded-xl p-5">
               <h3 className="font-display font-semibold mb-2 flex items-center gap-2">
-                <TrendingDown className="w-5 h-5 text-primary" /> Dobras Cutâneas — Jackson-Pollock 7 Dobras
+                <TrendingDown className="w-5 h-5 text-primary" /> Dobras Cutâneas
               </h3>
-              <p className="text-xs text-muted-foreground mb-4">
-                Preencha todas as 7 dobras para cálculo automático do % de gordura corporal.
-              </p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <NumField label="Peitoral" value={form.chest_fold} onChange={(v) => set("chest_fold", v)} unit="mm" />
-                <NumField label="Abdominal" value={form.abdominal_fold} onChange={(v) => set("abdominal_fold", v)} unit="mm" />
-                <NumField label="Coxa" value={form.thigh_fold} onChange={(v) => set("thigh_fold", v)} unit="mm" />
-                <NumField label="Tríceps" value={form.triceps_fold} onChange={(v) => set("triceps_fold", v)} unit="mm" />
-                <NumField label="Subescapular" value={form.subscapular_fold} onChange={(v) => set("subscapular_fold", v)} unit="mm" />
-                <NumField label="Suprailíaca" value={form.suprailiac_fold} onChange={(v) => set("suprailiac_fold", v)} unit="mm" />
-                <NumField label="Axilar Média" value={form.midaxillary_fold} onChange={(v) => set("midaxillary_fold", v)} unit="mm" />
+              <div className="flex items-center gap-3 mb-4">
+                <Label className="text-xs text-muted-foreground">Protocolo:</Label>
+                <Select value={form.method} onValueChange={(v) => set("method", v)}>
+                  <SelectTrigger className="w-[250px] h-8 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="jackson_pollock_3">Jackson-Pollock 3 Dobras</SelectItem>
+                    <SelectItem value="jackson_pollock_7">Jackson-Pollock 7 Dobras</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+              
+              {form.method === "jackson_pollock_3" ? (
+                <>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Protocolo 3 dobras — Homens: Peitoral, Abdominal, Coxa | Mulheres: Tríceps, Suprailíaca, Coxa
+                  </p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <NumField label="Peitoral" value={form.chest_fold} onChange={(v) => set("chest_fold", v)} unit="mm" />
+                    <NumField label="Abdominal" value={form.abdominal_fold} onChange={(v) => set("abdominal_fold", v)} unit="mm" />
+                    <NumField label="Coxa" value={form.thigh_fold} onChange={(v) => set("thigh_fold", v)} unit="mm" />
+                    <NumField label="Tríceps" value={form.triceps_fold} onChange={(v) => set("triceps_fold", v)} unit="mm" />
+                    <NumField label="Suprailíaca" value={form.suprailiac_fold} onChange={(v) => set("suprailiac_fold", v)} unit="mm" />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Preencha todas as 7 dobras para cálculo automático do % de gordura corporal.
+                  </p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <NumField label="Peitoral" value={form.chest_fold} onChange={(v) => set("chest_fold", v)} unit="mm" />
+                    <NumField label="Abdominal" value={form.abdominal_fold} onChange={(v) => set("abdominal_fold", v)} unit="mm" />
+                    <NumField label="Coxa" value={form.thigh_fold} onChange={(v) => set("thigh_fold", v)} unit="mm" />
+                    <NumField label="Tríceps" value={form.triceps_fold} onChange={(v) => set("triceps_fold", v)} unit="mm" />
+                    <NumField label="Subescapular" value={form.subscapular_fold} onChange={(v) => set("subscapular_fold", v)} unit="mm" />
+                    <NumField label="Suprailíaca" value={form.suprailiac_fold} onChange={(v) => set("suprailiac_fold", v)} unit="mm" />
+                    <NumField label="Axilar Média" value={form.midaxillary_fold} onChange={(v) => set("midaxillary_fold", v)} unit="mm" />
+                  </div>
+                </>
+              )}
 
               {computed.bodyFat > 0 && (
                 <div className="mt-6 p-4 rounded-lg bg-primary/5 border border-primary/20">
@@ -630,6 +685,63 @@ export default function PhysicalAssessment() {
                   rows={3}
                   className="mt-1"
                 />
+              </div>
+            </div>
+          </div>
+
+          {/* Photo Upload - 3 mandatory fields */}
+          <div className="space-y-4">
+            <div className="glass rounded-xl p-5">
+              <h3 className="font-display font-semibold mb-4 flex items-center gap-2">
+                📸 Fotos de Avaliação (Frente / Lado / Costas)
+              </h3>
+              <p className="text-xs text-muted-foreground mb-4">
+                Registre 3 fotos para acompanhamento visual da evolução corporal.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {(["front", "side", "back"] as const).map((view) => {
+                  const labels = { front: "Frente", side: "Lado", back: "Costas" };
+                  const fieldKey = `${view}_photo_url` as keyof Assessment;
+                  const url = form[fieldKey];
+                  return (
+                    <div key={view} className="flex flex-col items-center gap-2">
+                      <Label className="text-sm font-medium">{labels[view]}</Label>
+                      {url ? (
+                        <div className="relative w-full h-48 rounded-xl overflow-hidden border border-border">
+                          <img src={url} alt={labels[view]} className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => set(fieldKey, "")}
+                            className="absolute top-2 right-2 w-6 h-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center text-xs"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="w-full h-48 rounded-xl border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors bg-muted/30">
+                          <Upload className="w-8 h-8 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">Enviar foto {labels[view]}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file || !patientId) return;
+                              const ext = file.name.split(".").pop();
+                              const path = `${patientId}/${view}_${Date.now()}.${ext}`;
+                              const { error } = await supabase.storage.from("checkin-photos").upload(path, file);
+                              if (error) { toast.error("Erro no upload: " + error.message); return; }
+                              const { data: urlData } = supabase.storage.from("checkin-photos").getPublicUrl(path);
+                              set(fieldKey, urlData.publicUrl);
+                              toast.success(`Foto ${labels[view]} enviada!`);
+                            }}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>

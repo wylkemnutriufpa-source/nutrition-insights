@@ -519,6 +519,11 @@ export default function PatientDetail() {
             <Button variant="outline" className="gap-2 border-warning/30 text-warning hover:bg-warning/10" onClick={() => setReleaseOnboardingOpen(true)}>
               <Rocket className="w-4 h-4" /> Liberar Onboarding
             </Button>
+            {isAdmin && (
+              <Button variant="outline" className="gap-2 border-primary/30 text-primary hover:bg-primary/10" onClick={() => navigate("/admin/profissionais")}>
+                <UserCog className="w-4 h-4" /> Gerenciar Profissionais
+              </Button>
+            )}
             <Dialog open={activateOpen} onOpenChange={setActivateOpen}>
               <DialogTrigger asChild>
                 <Button className="gradient-primary gap-2 shadow-glow">
@@ -1068,10 +1073,58 @@ export default function PatientDetail() {
                 <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Planos Alimentares</DialogTitle></DialogHeader>
                   <div className="space-y-6">
-                    <div className="flex items-center justify-end">
-                      <Button onClick={() => { setOpenSection(null); navigate(`/meal-plans?patientId=${patientId}`); }} className="gradient-primary gap-2 shadow-glow">
-                        <Plus className="w-4 h-4" /> Criar Plano
+                    {/* Fast Plan Actions Panel */}
+                    <div className="flex flex-wrap gap-2 p-3 rounded-lg bg-muted/30 border border-border">
+                      <span className="text-xs font-medium text-muted-foreground self-center mr-2">Ações Rápidas:</span>
+                      <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={() => { setOpenSection(null); navigate(`/meal-plans?patientId=${patientId}&source=onboarding`); }}>
+                        <Zap className="w-3 h-3" /> A partir do Onboarding
                       </Button>
+                      <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={() => { setOpenSection(null); navigate(`/diet-templates?patientId=${patientId}`); }}>
+                        <BookOpen className="w-3 h-3" /> A partir de Template
+                      </Button>
+                      <Button size="sm" className="gap-1 text-xs h-7 gradient-primary" onClick={() => { setOpenSection(null); navigate(`/meal-plans?patientId=${patientId}`); }}>
+                        <Plus className="w-3 h-3" /> Do Zero
+                      </Button>
+                      {mealPlans.some((p: any) => p.is_active) && (
+                        <>
+                          <EditorVersionPicker
+                            planId={mealPlans.find((p: any) => p.is_active)?.id}
+                            onBeforeNavigate={() => setOpenSection(null)}
+                            label="Editar Ativo"
+                            variant="outline"
+                            className="gap-1 text-xs h-7"
+                            icon={<Pencil className="w-3 h-3" />}
+                          />
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="sm" variant="destructive" className="gap-1 text-xs h-7">
+                                <Trash2 className="w-3 h-3" /> Excluir Ativo
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Excluir plano ativo?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Isso irá excluir permanentemente o plano alimentar ativo deste paciente. Esta ação não pode ser desfeita.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={async () => {
+                                  const activePlan = mealPlans.find((p: any) => p.is_active);
+                                  if (!activePlan) return;
+                                  await supabase.from("meal_plan_items").delete().eq("meal_plan_id", activePlan.id);
+                                  await supabase.from("meal_plans").delete().eq("id", activePlan.id);
+                                  toast.success("Plano alimentar excluído!");
+                                  invalidate();
+                                }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                  Excluir Permanentemente
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </>
+                      )}
                     </div>
                     {mealPlans.length === 0 ? (
                       <div className="glass rounded-xl p-12 text-center">
@@ -1246,6 +1299,75 @@ export default function PatientDetail() {
               <Dialog open={openSection === "onboarding"} onOpenChange={(v) => !v && setOpenSection(null)}>
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Onboarding Automático</DialogTitle></DialogHeader>
+                  
+                  {/* Onboarding Management Controls */}
+                  <div className="flex flex-wrap gap-2 mb-4 p-3 rounded-lg bg-muted/30 border border-border">
+                    <span className="text-xs font-medium text-muted-foreground self-center mr-2">Gerenciar:</span>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="outline" className="gap-1 text-xs h-7 border-warning/30 text-warning hover:bg-warning/10">
+                          <Zap className="w-3 h-3" /> Resetar
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Resetar Onboarding?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Isso irá limpar o progresso atual do onboarding e permitir que o paciente refaça o processo do zero. O histórico será mantido.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={async () => {
+                            if (!patientId) return;
+                            await supabase.from("onboarding_pipelines" as any).update({ status: "reset", current_step: null }).eq("patient_id", patientId);
+                            await supabase.from("patient_anamnesis").delete().eq("user_id", patientId);
+                            toast.success("Onboarding resetado! Paciente pode refazer.");
+                            invalidate();
+                          }} className="bg-warning text-warning-foreground hover:bg-warning/90">
+                            Confirmar Reset
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    
+                    <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={async () => {
+                      if (!patientId || !user) return;
+                      await supabase.from("onboarding_pipelines" as any).update({ status: "active", current_step: "anamnesis" }).eq("patient_id", patientId);
+                      toast.success("Onboarding reiniciado!");
+                      invalidate();
+                    }}>
+                      <Play className="w-3 h-3" /> Reiniciar
+                    </Button>
+                    
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="destructive" className="gap-1 text-xs h-7">
+                          <Trash2 className="w-3 h-3" /> Excluir Pipeline
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Excluir pipeline de onboarding?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Isso removerá permanentemente a pipeline de onboarding deste paciente. Use para limpar pipelines legadas ou duplicadas.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={async () => {
+                            if (!patientId) return;
+                            await supabase.from("onboarding_pipelines" as any).delete().eq("patient_id", patientId);
+                            toast.success("Pipeline de onboarding excluída.");
+                            invalidate();
+                          }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            Excluir Permanentemente
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                  
                   <OnboardingApprovalQueue patientId={patientId!} patientName={profile?.full_name || "Paciente"} />
                 </DialogContent>
               </Dialog>
