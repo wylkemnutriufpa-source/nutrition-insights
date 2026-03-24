@@ -10,7 +10,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
   Clock, CreditCard, Play, CheckCircle2, Activity,
-  UserCheck, Loader2, Rocket
+  UserCheck, Loader2, Rocket, DollarSign
 } from "lucide-react";
 import OnboardingReleaseDialog from "@/components/patient/OnboardingReleaseDialog";
 
@@ -38,6 +38,7 @@ export default function PatientQueueTabs() {
   const [loading, setLoading] = useState(false);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [releasePatientId, setReleasePatientId] = useState<string | null>(null);
+  const [confirmingPayment, setConfirmingPayment] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -92,8 +93,28 @@ export default function PatientQueueTabs() {
     setLoading(false);
   };
 
-  const handleReleaseOnboarding = async (patientId: string) => {
-    setReleasePatientId(patientId);
+  const handleConfirmPayment = async (patientId: string) => {
+    if (!user) return;
+    setConfirmingPayment(patientId);
+    try {
+      const { data, error } = await supabase.rpc("confirm_patient_payment" as any, {
+        _patient_id: patientId,
+        _nutritionist_id: user.id,
+      });
+      if (error) throw error;
+      const result = data as any;
+      if (!result?.success) {
+        toast.error(result?.error || "Erro ao confirmar pagamento");
+        return;
+      }
+      toast.success("Pagamento confirmado! Paciente liberado para onboarding 🎉");
+      fetchCounts();
+      fetchPatients(tab);
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao confirmar pagamento");
+    } finally {
+      setConfirmingPayment(null);
+    }
   };
 
   const handleQuickRelease = async (patientId: string) => {
@@ -166,7 +187,25 @@ export default function PatientQueueTabs() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      {(tab === "awaiting_payment" || tab === "awaiting_onboarding_release" || tab === "lead_created") && (
+                      {/* Confirm Payment button — only for awaiting_payment and lead_created */}
+                      {(tab === "awaiting_payment" || tab === "lead_created") && (
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={(e) => { e.stopPropagation(); handleConfirmPayment(p.patient_id); }}
+                          disabled={confirmingPayment === p.patient_id}
+                          className="text-xs gap-1 bg-emerald-600 hover:bg-emerald-700"
+                        >
+                          {confirmingPayment === p.patient_id ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <DollarSign className="w-3 h-3" />
+                          )}
+                          Confirmar Pgto
+                        </Button>
+                      )}
+                      {/* Release onboarding — for awaiting_onboarding_release */}
+                      {tab === "awaiting_onboarding_release" && (
                         <Button
                           size="sm"
                           variant="outline"
