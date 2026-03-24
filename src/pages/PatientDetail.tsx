@@ -1068,10 +1068,58 @@ export default function PatientDetail() {
                 <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Planos Alimentares</DialogTitle></DialogHeader>
                   <div className="space-y-6">
-                    <div className="flex items-center justify-end">
-                      <Button onClick={() => { setOpenSection(null); navigate(`/meal-plans?patientId=${patientId}`); }} className="gradient-primary gap-2 shadow-glow">
-                        <Plus className="w-4 h-4" /> Criar Plano
+                    {/* Fast Plan Actions Panel */}
+                    <div className="flex flex-wrap gap-2 p-3 rounded-lg bg-muted/30 border border-border">
+                      <span className="text-xs font-medium text-muted-foreground self-center mr-2">Ações Rápidas:</span>
+                      <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={() => { setOpenSection(null); navigate(`/meal-plans?patientId=${patientId}&source=onboarding`); }}>
+                        <Zap className="w-3 h-3" /> A partir do Onboarding
                       </Button>
+                      <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={() => { setOpenSection(null); navigate(`/diet-templates?patientId=${patientId}`); }}>
+                        <BookOpen className="w-3 h-3" /> A partir de Template
+                      </Button>
+                      <Button size="sm" className="gap-1 text-xs h-7 gradient-primary" onClick={() => { setOpenSection(null); navigate(`/meal-plans?patientId=${patientId}`); }}>
+                        <Plus className="w-3 h-3" /> Do Zero
+                      </Button>
+                      {mealPlans.some((p: any) => p.is_active) && (
+                        <>
+                          <EditorVersionPicker
+                            planId={mealPlans.find((p: any) => p.is_active)?.id}
+                            onBeforeNavigate={() => setOpenSection(null)}
+                            label="Editar Ativo"
+                            variant="outline"
+                            className="gap-1 text-xs h-7"
+                            icon={<Pencil className="w-3 h-3" />}
+                          />
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="sm" variant="destructive" className="gap-1 text-xs h-7">
+                                <Trash2 className="w-3 h-3" /> Excluir Ativo
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Excluir plano ativo?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Isso irá excluir permanentemente o plano alimentar ativo deste paciente. Esta ação não pode ser desfeita.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={async () => {
+                                  const activePlan = mealPlans.find((p: any) => p.is_active);
+                                  if (!activePlan) return;
+                                  await supabase.from("meal_plan_items").delete().eq("meal_plan_id", activePlan.id);
+                                  await supabase.from("meal_plans").delete().eq("id", activePlan.id);
+                                  toast.success("Plano alimentar excluído!");
+                                  invalidate();
+                                }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                  Excluir Permanentemente
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </>
+                      )}
                     </div>
                     {mealPlans.length === 0 ? (
                       <div className="glass rounded-xl p-12 text-center">
