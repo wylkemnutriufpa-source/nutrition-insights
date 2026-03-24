@@ -633,11 +633,86 @@ export default function PatientDetail() {
                 })}
               </div>
 
-              {/* Overview Modal */}
+              {/* Overview Modal — Full Clinical Summary */}
               <Dialog open={openSection === "overview"} onOpenChange={(v) => !v && setOpenSection(null)}>
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle className="font-display">Visão Geral</DialogTitle></DialogHeader>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <DialogHeader><DialogTitle className="font-display">Visão Geral Clínica</DialogTitle></DialogHeader>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Plan & Payment Info */}
+                    <div className="glass rounded-xl p-5">
+                      <h3 className="font-display font-semibold flex items-center gap-2 mb-3">
+                        <CreditCard className="w-5 h-5 text-primary" /> Plano & Financeiro
+                      </h3>
+                      {patientSubscription ? (
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between"><span className="text-muted-foreground">Plano</span><span className="font-medium">{patientSubscription.plan_name}</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Status</span>
+                            <Badge className={patientSubscription.status === "active" ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"}>
+                              {patientSubscription.status === "active" ? "Ativo" : patientSubscription.status}
+                            </Badge>
+                          </div>
+                          {patientSubscription.started_at && <div className="flex justify-between"><span className="text-muted-foreground">Início</span><span className="font-medium">{new Date(patientSubscription.started_at).toLocaleDateString("pt-BR")}</span></div>}
+                          {patientSubscription.expires_at && <div className="flex justify-between"><span className="text-muted-foreground">Expiração</span><span className="font-medium">{new Date(patientSubscription.expires_at).toLocaleDateString("pt-BR")}</span></div>}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">Nenhum plano atribuído</p>
+                      )}
+                    </div>
+
+                    {/* Active Protocols */}
+                    <div className="glass rounded-xl p-5">
+                      <h3 className="font-display font-semibold flex items-center gap-2 mb-3">
+                        <FileText className="w-5 h-5 text-accent" /> Protocolos Ativos
+                      </h3>
+                      {patientProtocols.filter(p => p.status === "active").length > 0 ? (
+                        <div className="space-y-2">
+                          {patientProtocols.filter(p => p.status === "active").map((pp: any) => (
+                            <div key={pp.id} className="flex items-center gap-2 p-2 rounded-lg bg-card border border-border text-sm">
+                              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                              <span className="font-medium">{pp.protocol_title}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">Nenhum protocolo ativo</p>
+                      )}
+                    </div>
+
+                    {/* Prestige & Project */}
+                    <div className="glass rounded-xl p-5">
+                      <h3 className="font-display font-semibold flex items-center gap-2 mb-3">
+                        <Crown className="w-5 h-5 text-amber-500" /> Prestígio & Projetos
+                      </h3>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between"><span className="text-muted-foreground">Prestígio</span>
+                          <span className="font-medium">{currentPrestigePlan ? `${currentPrestigePlan.badge_icon || "⭐"} ${currentPrestigePlan.name}` : "Nenhum"}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Onboarding & Meal Plan Status */}
+                    <div className="glass rounded-xl p-5">
+                      <h3 className="font-display font-semibold flex items-center gap-2 mb-3">
+                        <Zap className="w-5 h-5 text-warning" /> Status do Paciente
+                      </h3>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between"><span className="text-muted-foreground">Anamnese</span>
+                          <Badge variant={anamnesis?.status === "completed" ? "default" : "secondary"}>
+                            {anamnesis?.status === "completed" ? "✅ Completa" : "Pendente"}
+                          </Badge>
+                        </div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Plano Alimentar</span>
+                          <Badge variant={mealPlans.some((p: any) => p.is_active) ? "default" : "secondary"}>
+                            {mealPlans.some((p: any) => p.is_active) ? "✅ Ativo" : "Inativo"}
+                          </Badge>
+                        </div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Checklist</span>
+                          <span className="font-medium">{checklistStats.completed}/{checklistStats.total} hoje</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Risk Diagnosis */}
                     <div className="glass rounded-xl p-5 md:col-span-2">
                       <h3 className="font-display font-semibold flex items-center gap-2 mb-3">
                         <AlertTriangle className="w-5 h-5 text-warning" /> Diagnóstico Inteligente
@@ -658,31 +733,14 @@ export default function PatientDetail() {
                         </div>
                       )}
                     </div>
-                    <div className="glass rounded-xl p-5">
-                      <h3 className="font-display font-semibold flex items-center gap-2 mb-3">
-                        <Heart className="w-5 h-5 text-primary" /> Anamnese
-                      </h3>
-                      {anamnesis ? (
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between"><span className="text-muted-foreground">TMB</span><span className="font-medium">{anamnesis.computed_tmb} kcal</span></div>
-                          <div className="flex justify-between"><span className="text-muted-foreground">Meta calórica</span><span className="font-medium">{anamnesis.computed_kcal_target} kcal</span></div>
-                          <div className="flex justify-between"><span className="text-muted-foreground">Proteína</span><span className="font-medium">{anamnesis.computed_protein}g</span></div>
-                          <div className="flex justify-between"><span className="text-muted-foreground">Carboidratos</span><span className="font-medium">{anamnesis.computed_carbs}g</span></div>
-                          <div className="flex justify-between"><span className="text-muted-foreground">Gorduras</span><span className="font-medium">{anamnesis.computed_fat}g</span></div>
-                          <div className="pt-2 border-t border-border">
-                            <span className="text-xs text-muted-foreground">Objetivo: {{ lose_weight: "Emagrecimento", gain_muscle: "Ganho de massa", maintain: "Manutenção", health: "Saúde geral" }[(anamnesis.answers as any)?.goal] || (anamnesis.answers as any)?.goal || "—"}</span>
-                          </div>
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">Anamnese não preenchida.</p>
-                      )}
-                    </div>
-                    {/* Clinical Flags in Overview */}
+
+                    {/* Clinical Flags */}
                     <div className="glass rounded-xl p-5">
                       <ClinicalFlagsSummary patientId={patientId!} compact />
                     </div>
-                    {/* Meal Adherence Widget */}
-                    <div className="md:col-span-3">
+
+                    {/* Meal Adherence */}
+                    <div className="md:col-span-2">
                       <MealAdherenceWidget patientId={patientId!} />
                     </div>
                   </div>
