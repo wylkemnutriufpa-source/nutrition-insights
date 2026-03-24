@@ -17,9 +17,10 @@ import { toast } from "sonner";
 import {
   Users, Plus, UserCheck, UserX, ChevronRight, Search,
   TrendingUp, TrendingDown, Minus, Target, Loader2, ToggleLeft, ToggleRight, X, CalendarDays,
-  LayoutGrid, List, Crown
+  LayoutGrid, List, Crown, Settings2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import PatientStatusManager from "@/components/patients/PatientStatusManager";
 import PrestigeBadge from "@/components/prestige/PrestigeBadge";
 import { useOnlinePatients } from "@/hooks/useOnlinePatients";
 import {
@@ -522,6 +523,7 @@ export default function Patients() {
   const [bulkMode, setBulkMode] = useState<"deactivate" | "activate">("deactivate");
   const [statusManagerOpen, setStatusManagerOpen] = useState(false);
   const [statusManagerSearch, setStatusManagerSearch] = useState("");
+  const [statusManagerMode, setStatusManagerMode] = useState(false);
   const { onlineUsers } = useOnlinePatients();
   const onlineSet = useMemo(() => new Set(onlineUsers.map(u => u.user_id)), [onlineUsers]);
 
@@ -676,6 +678,13 @@ export default function Patients() {
 
   return (
     <DashboardLayout>
+      {statusManagerMode ? (
+        <PatientStatusManager
+          patients={patients}
+          onToggleStatus={toggleStatus}
+          onClose={() => setStatusManagerMode(false)}
+        />
+      ) : (
       <div className="space-y-6">
         {/* Patient Queue */}
         <PatientQueueTabs />
@@ -697,8 +706,8 @@ export default function Patients() {
                 </p>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <Button variant="outline" size="sm" onClick={() => { setStatusManagerSearch(""); setStatusManagerOpen(true); }} className="gap-1.5 text-xs">
-                  <ToggleRight className="w-3.5 h-3.5" /> Gerenciar Status
+                <Button variant="outline" size="sm" onClick={() => setStatusManagerMode(true)} className="gap-1.5 text-xs">
+                  <Settings2 className="w-3.5 h-3.5" /> Controle Rápido
                 </Button>
                 <Dialog open={open} onOpenChange={setOpen}>
                   <DialogTrigger asChild>
@@ -888,6 +897,7 @@ export default function Patients() {
           </>
         )}
       </div>
+      )}
 
       {/* Bulk Manage Dialog */}
       <Dialog open={bulkManageOpen} onOpenChange={setBulkManageOpen}>
@@ -975,142 +985,6 @@ export default function Patients() {
         </DialogContent>
       </Dialog>
 
-      {/* Status Manager Dialog — two-tab: Inativos / Ativos */}
-      <Dialog open={statusManagerOpen} onOpenChange={setStatusManagerOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="font-display flex items-center gap-2">
-              <Users className="w-5 h-5 text-primary" /> Gerenciar Status
-            </DialogTitle>
-          </DialogHeader>
-          <p className="text-xs text-muted-foreground -mt-2">
-            Clique no checkbox para mover o paciente entre as listas. Ao marcar, ele sai da lista atual e vai para a outra.
-          </p>
-          <div className="space-y-3">
-            <Tabs defaultValue="inativos" className="w-full">
-              <TabsList className="w-full">
-                <TabsTrigger value="inativos" className="flex-1 gap-1.5">
-                  <UserX className="w-3.5 h-3.5" /> Inativos
-                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 ml-1">
-                    {patients.filter(p => p.status !== "active").length}
-                  </Badge>
-                </TabsTrigger>
-                <TabsTrigger value="ativos" className="flex-1 gap-1.5">
-                  <UserCheck className="w-3.5 h-3.5" /> Ativos
-                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 ml-1">
-                    {patients.filter(p => p.status === "active").length}
-                  </Badge>
-                </TabsTrigger>
-              </TabsList>
-
-              <div className="relative mt-3">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por nome ou email..."
-                  value={statusManagerSearch}
-                  onChange={e => setStatusManagerSearch(e.target.value)}
-                  className="pl-10"
-                  autoFocus
-                />
-              </div>
-
-              <TabsContent value="inativos" className="mt-3">
-                <ScrollArea className="h-[350px] rounded-lg border border-border">
-                  <div className="divide-y divide-border">
-                    {(() => {
-                      const q = statusManagerSearch.toLowerCase().trim();
-                      const list = patients
-                        .filter(p => p.status !== "active")
-                        .filter(p => !q || p.profile?.full_name?.toLowerCase().includes(q) || p.email?.toLowerCase().includes(q))
-                        .sort((a, b) => (a.profile?.full_name || "").localeCompare(b.profile?.full_name || ""));
-
-                      if (list.length === 0) {
-                        return (
-                          <div className="p-8 text-center text-muted-foreground text-sm">
-                            {q ? "Nenhum resultado" : "Nenhum paciente inativo 🎉"}
-                          </div>
-                        );
-                      }
-
-                      return list.map(p => {
-                        const displayName = p.profile?.full_name || p.email || "Paciente";
-                        const initials = displayName.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
-                        return (
-                          <button
-                            key={p.id}
-                            type="button"
-                            className="flex items-center gap-3 w-full px-4 py-3 text-left transition-colors hover:bg-success/10 group"
-                            onClick={() => toggleStatus(p.id, p.status)}
-                          >
-                            <Checkbox checked={false} onCheckedChange={() => toggleStatus(p.id, p.status)} onClick={e => e.stopPropagation()} />
-                            <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold bg-muted text-muted-foreground">
-                              {initials}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate text-muted-foreground group-hover:text-foreground">{displayName}</p>
-                              <p className="text-[10px] text-muted-foreground truncate">{p.email || "—"}</p>
-                            </div>
-                            <span className="text-[10px] text-success opacity-0 group-hover:opacity-100 transition-opacity font-medium">
-                              Ativar →
-                            </span>
-                          </button>
-                        );
-                      });
-                    })()}
-                  </div>
-                </ScrollArea>
-              </TabsContent>
-
-              <TabsContent value="ativos" className="mt-3">
-                <ScrollArea className="h-[350px] rounded-lg border border-border">
-                  <div className="divide-y divide-border">
-                    {(() => {
-                      const q = statusManagerSearch.toLowerCase().trim();
-                      const list = patients
-                        .filter(p => p.status === "active")
-                        .filter(p => !q || p.profile?.full_name?.toLowerCase().includes(q) || p.email?.toLowerCase().includes(q))
-                        .sort((a, b) => (a.profile?.full_name || "").localeCompare(b.profile?.full_name || ""));
-
-                      if (list.length === 0) {
-                        return (
-                          <div className="p-8 text-center text-muted-foreground text-sm">
-                            {q ? "Nenhum resultado" : "Nenhum paciente ativo"}
-                          </div>
-                        );
-                      }
-
-                      return list.map(p => {
-                        const displayName = p.profile?.full_name || p.email || "Paciente";
-                        const initials = displayName.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
-                        return (
-                          <button
-                            key={p.id}
-                            type="button"
-                            className="flex items-center gap-3 w-full px-4 py-3 text-left transition-colors hover:bg-destructive/10 group"
-                            onClick={() => toggleStatus(p.id, p.status)}
-                          >
-                            <Checkbox checked={true} onCheckedChange={() => toggleStatus(p.id, p.status)} onClick={e => e.stopPropagation()} />
-                            <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold bg-primary/10 text-primary">
-                              {initials}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">{displayName}</p>
-                              <p className="text-[10px] text-muted-foreground truncate">{p.email || "—"}</p>
-                            </div>
-                            <span className="text-[10px] text-destructive opacity-0 group-hover:opacity-100 transition-opacity font-medium">
-                              Desativar →
-                            </span>
-                          </button>
-                        );
-                      });
-                    })()}
-                  </div>
-                </ScrollArea>
-              </TabsContent>
-            </Tabs>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <AssignProgramDialog
         open={assignDialogOpen}
