@@ -2,7 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 Deno.serve(async (req) => {
@@ -11,13 +11,18 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const adminClient = createClient(supabaseUrl, serviceRoleKey);
+    const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
 
     // Authenticate caller via JWT
     const authHeader = req.headers.get("Authorization") ?? "";
-    const token = authHeader.replace("Bearer ", "");
-    
-    const { data: { user: caller }, error: authError } = await adminClient.auth.getUser(token);
+    const callerClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
+    const { data: { user: caller }, error: authError } = await callerClient.auth.getUser();
     
     if (authError || !caller) {
       console.log("Auth failed:", authError?.message);
@@ -25,8 +30,9 @@ Deno.serve(async (req) => {
     }
 
     // Check caller is nutritionist or admin
-    const { data: callerRole } = await adminClient.from("user_roles").select("role").eq("user_id", caller.id).single();
-    if (!callerRole || (callerRole.role !== "nutritionist" && callerRole.role !== "admin")) {
+    const { data: callerRoles } = await adminClient.from("user_roles").select("role").eq("user_id", caller.id);
+    const isAuthorized = callerRoles?.some((row: any) => ["nutritionist", "admin", "personal"].includes(row.role));
+    if (!isAuthorized) {
       return new Response(JSON.stringify({ error: "Sem permissão" }), { status: 403, headers: corsHeaders });
     }
 

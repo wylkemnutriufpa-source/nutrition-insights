@@ -127,6 +127,51 @@ export default function PatientDetail() {
     queryClient.invalidateQueries({ queryKey: queryKeys.patients.detail(patientId ?? "") });
   };
 
+  const invokeAdminIdentityAction = useCallback(async (action: string, payload: Record<string, unknown>) => {
+    if (!patientId) throw new Error("Paciente inválido");
+
+    const { data: { session } } = await supabase.auth.getSession();
+
+    const { data, error } = await supabase.functions.invoke("admin-update-user", {
+      body: {
+        target_user_id: patientId,
+        action,
+        payload,
+      },
+      headers: session?.access_token ? {
+        Authorization: `Bearer ${session.access_token}`,
+      } : undefined,
+    });
+
+    if (error || !data?.success) {
+      throw new Error(error?.message || data?.error || "Erro na ação administrativa");
+    }
+
+    return data;
+  }, [patientId]);
+
+  const invokeAdminPasswordReset = useCallback(async (password: string) => {
+    if (!patientId) throw new Error("Paciente inválido");
+
+    const { data: { session } } = await supabase.auth.getSession();
+
+    const { data, error } = await supabase.functions.invoke("admin-reset-password", {
+      body: {
+        user_id: patientId,
+        new_password: password,
+      },
+      headers: session?.access_token ? {
+        Authorization: `Bearer ${session.access_token}`,
+      } : undefined,
+    });
+
+    if (error || !data?.success) {
+      throw new Error(error?.message || data?.error || "Erro ao redefinir senha");
+    }
+
+    return data;
+  }, [patientId]);
+
   const handleUpgradePatient = async () => {
     if (!patientId || !upgradeRole) return;
     setUpgrading(true);
@@ -1421,20 +1466,11 @@ export default function PatientDetail() {
                             if (!patientId || normalizedEmail === patientEmail) return;
                             if (!confirm(`Alterar email de autenticação para ${normalizedEmail}?`)) return;
                             try {
-                              const { data, error } = await supabase.functions.invoke("admin-update-user", {
-                                body: {
-                                  target_user_id: patientId,
-                                  action: "update_email",
-                                  payload: { email: normalizedEmail },
-                                },
-                              });
-                              if (error) throw error;
-                              if (data?.success) {
-                                setEditProfileForm((prev) => ({ ...prev, email: normalizedEmail }));
-                                toast.success("Email atualizado com sucesso");
-                                invalidate();
-                              } else toast.error(data?.error || "Erro ao atualizar email");
-                            } catch { toast.error("Erro ao atualizar email"); }
+                              await invokeAdminIdentityAction("update_email", { email: normalizedEmail });
+                              setEditProfileForm((prev) => ({ ...prev, email: normalizedEmail }));
+                              toast.success("Email atualizado com sucesso");
+                              invalidate();
+                            } catch (e: any) { toast.error(e?.message || "Erro ao atualizar email"); }
                           }}
                         >
                           Salvar Email
@@ -1487,25 +1523,10 @@ export default function PatientDetail() {
                           const tempPassword = "Fit@2026!";
                           if (!confirm(`Redefinir senha do paciente para ${tempPassword}?`)) return;
                           try {
-                            const { data, error } = await supabase.functions.invoke("admin-update-user", {
-                              body: {
-                                target_user_id: patientId,
-                                action: "reset_password",
-                                payload: { password: tempPassword },
-                              },
-                            });
-
-                            if (error || !data?.success) {
-                              const fallback = await supabase.functions.invoke("admin-reset-password", {
-                                body: {
-                                  user_id: patientId,
-                                  new_password: tempPassword,
-                                },
-                              });
-
-                              if (fallback.error || !fallback.data?.success) {
-                                throw new Error(fallback.error?.message || data?.error || "Erro ao redefinir senha");
-                              }
+                            try {
+                              await invokeAdminIdentityAction("reset_password", { password: tempPassword });
+                            } catch {
+                              await invokeAdminPasswordReset(tempPassword);
                             }
 
                             toast.success(`Senha redefinida para ${tempPassword}`);
@@ -1523,17 +1544,8 @@ export default function PatientDetail() {
                         onClick={async () => {
                           if (!patientId) return;
                           try {
-                            const { data, error } = await supabase.functions.invoke("admin-update-user", {
-                              body: {
-                                target_user_id: patientId,
-                                action: "resend_invite",
-                                payload: {},
-                              },
-                            });
-
-                            if (error) throw error;
-                            if (data?.success) toast.success("Convite reenviado com sucesso");
-                            else toast.error(data?.error || "Erro ao reenviar convite");
+                            await invokeAdminIdentityAction("resend_invite", {});
+                            toast.success("Convite reenviado com sucesso");
                           } catch (e: any) {
                             toast.error(e?.message || "Erro ao reenviar convite");
                           }
