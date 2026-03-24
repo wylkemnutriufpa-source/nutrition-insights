@@ -201,20 +201,6 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
             status: "scheduled",
           } as any);
       }
-
-      // Schedule criteria if enabled
-      if (useScheduling) {
-        const activateDate = new Date();
-        activateDate.setDate(activateDate.getDate() + (criteria.checklist_days || 14));
-        await supabase
-          .from("plan_schedules" as any)
-          .insert({
-            meal_plan_id: pipeline.generated_plan_id,
-            activate_at: activateDate.toISOString().split("T")[0],
-            criteria: criteria,
-            status: "scheduled",
-          } as any);
-      }
     }
 
     // Notify patient
