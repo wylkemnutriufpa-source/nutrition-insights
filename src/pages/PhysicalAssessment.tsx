@@ -211,26 +211,49 @@ export default function PhysicalAssessment() {
     // TEF (Thermic Effect of Food ~10%)
     const tef = tdee * 0.1;
 
-    // Body fat from skinfolds (Jackson-Pollock 7-site)
+    // Body fat from skinfolds
     let bodyFat = parseFloat(form.body_fat_percentage) || 0;
-    const folds = [
-      parseFloat(form.chest_fold), parseFloat(form.abdominal_fold),
-      parseFloat(form.thigh_fold), parseFloat(form.triceps_fold),
-      parseFloat(form.subscapular_fold), parseFloat(form.suprailiac_fold),
-      parseFloat(form.midaxillary_fold)
-    ];
-    const validFolds = folds.filter((f) => f > 0);
-    if (validFolds.length === 7) {
-      const sumFolds = validFolds.reduce((s, f) => s + f, 0);
-      let density: number;
-      if (sex === "male") {
-        density = 1.112 - 0.00043499 * sumFolds + 0.00000055 * sumFolds ** 2 - 0.00028826 * age;
-      } else {
-        density = 1.097 - 0.00046971 * sumFolds + 0.00000056 * sumFolds ** 2 - 0.00012828 * age;
+    const method = form.method as SkinfoldMethod;
+    
+    if (method === "jackson_pollock_3") {
+      // Jackson-Pollock 3-site
+      const threeFolds = sex === "male"
+        ? [parseFloat(form.chest_fold), parseFloat(form.abdominal_fold), parseFloat(form.thigh_fold)]
+        : [parseFloat(form.triceps_fold), parseFloat(form.suprailiac_fold), parseFloat(form.thigh_fold)];
+      const valid3 = threeFolds.filter((f) => f > 0);
+      if (valid3.length === 3) {
+        const sumFolds = valid3.reduce((s, f) => s + f, 0);
+        let density: number;
+        if (sex === "male") {
+          density = 1.10938 - 0.0008267 * sumFolds + 0.0000016 * sumFolds ** 2 - 0.0002574 * age;
+        } else {
+          density = 1.0994921 - 0.0009929 * sumFolds + 0.0000023 * sumFolds ** 2 - 0.0001392 * age;
+        }
+        bodyFat = (495 / density) - 450;
+        if (bodyFat < 3) bodyFat = 3;
+        if (bodyFat > 60) bodyFat = 60;
       }
-      bodyFat = (495 / density) - 450;
-      if (bodyFat < 3) bodyFat = 3;
-      if (bodyFat > 60) bodyFat = 60;
+    } else {
+      // Jackson-Pollock 7-site
+      const folds = [
+        parseFloat(form.chest_fold), parseFloat(form.abdominal_fold),
+        parseFloat(form.thigh_fold), parseFloat(form.triceps_fold),
+        parseFloat(form.subscapular_fold), parseFloat(form.suprailiac_fold),
+        parseFloat(form.midaxillary_fold)
+      ];
+      const validFolds = folds.filter((f) => f > 0);
+      if (validFolds.length === 7) {
+        const sumFolds = validFolds.reduce((s, f) => s + f, 0);
+        let density: number;
+        if (sex === "male") {
+          density = 1.112 - 0.00043499 * sumFolds + 0.00000055 * sumFolds ** 2 - 0.00028826 * age;
+        } else {
+          density = 1.097 - 0.00046971 * sumFolds + 0.00000056 * sumFolds ** 2 - 0.00012828 * age;
+        }
+        bodyFat = (495 / density) - 450;
+        if (bodyFat < 3) bodyFat = 3;
+        if (bodyFat > 60) bodyFat = 60;
+      }
     }
 
     const fatMass = w > 0 && bodyFat > 0 ? w * (bodyFat / 100) : 0;
