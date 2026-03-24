@@ -25,7 +25,7 @@ export default function InvitePatient() {
   const [copied, setCopied] = useState(false);
 
   const generatePassword = () => {
-    setTempPassword("123456");
+    setTempPassword("Fit@2026!");
   };
 
   const handleInvite = async () => {
