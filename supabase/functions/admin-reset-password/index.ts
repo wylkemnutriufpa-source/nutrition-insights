@@ -11,22 +11,23 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
+    // Authenticate caller via JWT
     const authHeader = req.headers.get("Authorization") ?? "";
     const token = authHeader.replace("Bearer ", "");
+    
+    const { data: { user: caller }, error: authError } = await adminClient.auth.getUser(token);
+    
+    if (authError || !caller) {
+      console.log("Auth failed:", authError?.message);
+      return new Response(JSON.stringify({ error: "Não autenticado" }), { status: 401, headers: corsHeaders });
+    }
 
-    // Allow service role calls directly
-    if (token !== serviceRoleKey) {
-      const anonClient = createClient(supabaseUrl, anonKey);
-      const { data: { user: caller } } = await anonClient.auth.getUser(token);
-      if (!caller) return new Response(JSON.stringify({ error: "Não autenticado" }), { status: 401, headers: corsHeaders });
-
-      const { data: callerRole } = await adminClient.from("user_roles").select("role").eq("user_id", caller.id).single();
-      if (!callerRole || (callerRole.role !== "nutritionist" && callerRole.role !== "admin")) {
-        return new Response(JSON.stringify({ error: "Sem permissão" }), { status: 403, headers: corsHeaders });
-      }
+    // Check caller is nutritionist or admin
+    const { data: callerRole } = await adminClient.from("user_roles").select("role").eq("user_id", caller.id).single();
+    if (!callerRole || (callerRole.role !== "nutritionist" && callerRole.role !== "admin")) {
+      return new Response(JSON.stringify({ error: "Sem permissão" }), { status: 403, headers: corsHeaders });
     }
 
     const { user_id, new_password } = await req.json();
@@ -41,6 +42,7 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
+    console.error("Error:", e);
     return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: corsHeaders });
   }
 });
