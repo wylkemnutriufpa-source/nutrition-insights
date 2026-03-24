@@ -523,6 +523,7 @@ export default function Patients() {
   const [bulkMode, setBulkMode] = useState<"deactivate" | "activate">("deactivate");
   const [statusManagerOpen, setStatusManagerOpen] = useState(false);
   const [statusManagerSearch, setStatusManagerSearch] = useState("");
+  const [statusManagerMode, setStatusManagerMode] = useState(false);
   const { onlineUsers } = useOnlinePatients();
   const onlineSet = useMemo(() => new Set(onlineUsers.map(u => u.user_id)), [onlineUsers]);
 
