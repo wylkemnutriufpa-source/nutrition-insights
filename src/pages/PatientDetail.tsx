@@ -1246,6 +1246,75 @@ export default function PatientDetail() {
               <Dialog open={openSection === "onboarding"} onOpenChange={(v) => !v && setOpenSection(null)}>
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Onboarding Automático</DialogTitle></DialogHeader>
+                  
+                  {/* Onboarding Management Controls */}
+                  <div className="flex flex-wrap gap-2 mb-4 p-3 rounded-lg bg-muted/30 border border-border">
+                    <span className="text-xs font-medium text-muted-foreground self-center mr-2">Gerenciar:</span>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="outline" className="gap-1 text-xs h-7 border-warning/30 text-warning hover:bg-warning/10">
+                          <Zap className="w-3 h-3" /> Resetar
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Resetar Onboarding?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Isso irá limpar o progresso atual do onboarding e permitir que o paciente refaça o processo do zero. O histórico será mantido.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={async () => {
+                            if (!patientId) return;
+                            await supabase.from("onboarding_pipelines" as any).update({ status: "reset", current_step: null }).eq("patient_id", patientId);
+                            await supabase.from("patient_anamnesis").delete().eq("user_id", patientId);
+                            toast.success("Onboarding resetado! Paciente pode refazer.");
+                            invalidate();
+                          }} className="bg-warning text-warning-foreground hover:bg-warning/90">
+                            Confirmar Reset
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    
+                    <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={async () => {
+                      if (!patientId || !user) return;
+                      await supabase.from("onboarding_pipelines" as any).update({ status: "active", current_step: "anamnesis" }).eq("patient_id", patientId);
+                      toast.success("Onboarding reiniciado!");
+                      invalidate();
+                    }}>
+                      <Play className="w-3 h-3" /> Reiniciar
+                    </Button>
+                    
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="destructive" className="gap-1 text-xs h-7">
+                          <Trash2 className="w-3 h-3" /> Excluir Pipeline
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Excluir pipeline de onboarding?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Isso removerá permanentemente a pipeline de onboarding deste paciente. Use para limpar pipelines legadas ou duplicadas.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={async () => {
+                            if (!patientId) return;
+                            await supabase.from("onboarding_pipelines" as any).delete().eq("patient_id", patientId);
+                            toast.success("Pipeline de onboarding excluída.");
+                            invalidate();
+                          }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            Excluir Permanentemente
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                  
                   <OnboardingApprovalQueue patientId={patientId!} patientName={profile?.full_name || "Paciente"} />
                 </DialogContent>
               </Dialog>
