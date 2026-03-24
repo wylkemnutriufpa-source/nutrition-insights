@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLayoutPreference } from "@/hooks/useLayoutPreference";
+import FitJourneyTimeline from "@/components/timeline/FitJourneyTimeline";
 import {
   UtensilsCrossed, CheckCircle2, Calendar, Dumbbell,
   TrendingUp, Brain, Camera, Target,
