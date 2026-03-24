@@ -14,7 +14,7 @@ import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import LanguageSelector from "@/components/common/LanguageSelector";
 import { useTranslation } from "react-i18next";
 
-type AuthMode = "login" | "forgot";
+type AuthMode = "login" | "forgot" | "register";
 
 export default function Auth() {
   const navigate = useNavigate();
