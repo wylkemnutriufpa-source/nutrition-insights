@@ -689,6 +689,63 @@ export default function PhysicalAssessment() {
             </div>
           </div>
 
+          {/* Photo Upload - 3 mandatory fields */}
+          <div className="space-y-4">
+            <div className="glass rounded-xl p-5">
+              <h3 className="font-display font-semibold mb-4 flex items-center gap-2">
+                📸 Fotos de Avaliação (Frente / Lado / Costas)
+              </h3>
+              <p className="text-xs text-muted-foreground mb-4">
+                Registre 3 fotos para acompanhamento visual da evolução corporal.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {(["front", "side", "back"] as const).map((view) => {
+                  const labels = { front: "Frente", side: "Lado", back: "Costas" };
+                  const fieldKey = `${view}_photo_url` as keyof Assessment;
+                  const url = form[fieldKey];
+                  return (
+                    <div key={view} className="flex flex-col items-center gap-2">
+                      <Label className="text-sm font-medium">{labels[view]}</Label>
+                      {url ? (
+                        <div className="relative w-full h-48 rounded-xl overflow-hidden border border-border">
+                          <img src={url} alt={labels[view]} className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => set(fieldKey, "")}
+                            className="absolute top-2 right-2 w-6 h-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center text-xs"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="w-full h-48 rounded-xl border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors bg-muted/30">
+                          <Upload className="w-8 h-8 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">Enviar foto {labels[view]}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file || !patientId) return;
+                              const ext = file.name.split(".").pop();
+                              const path = `${patientId}/${view}_${Date.now()}.${ext}`;
+                              const { error } = await supabase.storage.from("checkin-photos").upload(path, file);
+                              if (error) { toast.error("Erro no upload: " + error.message); return; }
+                              const { data: urlData } = supabase.storage.from("checkin-photos").getPublicUrl(path);
+                              set(fieldKey, urlData.publicUrl);
+                              toast.success(`Foto ${labels[view]} enviada!`);
+                            }}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
           {/* Comparison between consultations */}
           <div className="space-y-4">
             {patientId && <ConsultationCompare patientId={patientId} />}
