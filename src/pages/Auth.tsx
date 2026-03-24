@@ -76,6 +76,36 @@ export default function Auth() {
     }
   };
 
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fullName.trim()) { toast.error("Informe seu nome completo"); return; }
+    setLoading(true);
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: fullName, role: "nutritionist" } },
+    });
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      // Create profile + role for professional
+      if (data.user) {
+        await supabase.from("profiles").upsert({
+          id: data.user.id,
+          user_id: data.user.id,
+          full_name: fullName,
+        }, { onConflict: "user_id" });
+        await supabase.from("user_roles").upsert({
+          user_id: data.user.id,
+          role: "nutritionist" as any,
+        }, { onConflict: "user_id,role" });
+      }
+      setRegisterSuccess(true);
+      toast.success("Conta criada! Verifique seu e-mail para confirmar.");
+    }
+  };
+
   const handleForgot = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
