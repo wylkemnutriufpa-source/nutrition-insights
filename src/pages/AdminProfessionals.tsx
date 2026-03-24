@@ -195,7 +195,6 @@ function ProfessionalDialog({
                   <Input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Ex: Fit@2026!" />
                   <p className="text-xs text-muted-foreground mt-1">Senha forte obrigatória. Padrão: Fit@2026!</p>
                 </div>
-                </div>
               </>
             )}
             <div>
