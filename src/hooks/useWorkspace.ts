@@ -242,7 +242,7 @@ export function useWorkspace() {
   return {
     profile, sections, items, loading,
     addSection, updateSection, deleteSection, reorderSections,
-    moveItem, toggleItemVisibility, togglePin, reorderItems,
+    moveItem, toggleItemVisibility, togglePin, reorderItems, addItem, removeItem,
     getItemsForSection, resetToDefault, refresh: initialize,
   };
 }
