@@ -519,6 +519,11 @@ export default function PatientDetail() {
             <Button variant="outline" className="gap-2 border-warning/30 text-warning hover:bg-warning/10" onClick={() => setReleaseOnboardingOpen(true)}>
               <Rocket className="w-4 h-4" /> Liberar Onboarding
             </Button>
+            {isAdmin && (
+              <Button variant="outline" className="gap-2 border-primary/30 text-primary hover:bg-primary/10" onClick={() => navigate("/admin/profissionais")}>
+                <UserCog className="w-4 h-4" /> Gerenciar Profissionais
+              </Button>
+            )}
             <Dialog open={activateOpen} onOpenChange={setActivateOpen}>
               <DialogTrigger asChild>
                 <Button className="gradient-primary gap-2 shadow-glow">
