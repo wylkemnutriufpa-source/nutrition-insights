@@ -730,8 +730,8 @@ export default function Patients() {
                       </div>
                       <div>
                         <Label>Senha inicial</Label>
-                        <Input type="password" value={patientPassword} onChange={(e) => setPatientPassword(e.target.value)} placeholder="Mínimo 6 caracteres" minLength={6} required />
-                        <p className="text-xs text-muted-foreground mt-1">O paciente poderá alterar a senha depois em Configurações.</p>
+                        <Input type="password" value={patientPassword} onChange={(e) => setPatientPassword(e.target.value)} placeholder="Ex: Fit@2026!" minLength={6} required />
+                        <p className="text-xs text-muted-foreground mt-1">Senha forte obrigatória (ex: Fit@2026!). O paciente poderá alterar depois em Configurações.</p>
                       </div>
                       <Button type="submit" className="w-full gradient-primary" disabled={addPatientMutation.isPending}>
                         {addPatientMutation.isPending ? "Criando conta..." : "Cadastrar Paciente"}
