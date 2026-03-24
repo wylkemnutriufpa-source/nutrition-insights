@@ -1,21 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { transitionJourneyStatus } from "@/lib/serverTransitions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import {
-  Eye, EyeOff, ArrowRight, ArrowLeft, CreditCard, QrCode,
-  MessageCircle, CheckCircle2, Search, User, Stethoscope, Loader2
+  Eye, EyeOff, ArrowRight, CheckCircle2, Search, Stethoscope, Loader2, UserPlus
 } from "lucide-react";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
-
-type Step = "has_professional" | "register" | "payment_question" | "payment" | "done";
 
 interface ProfessionalResult {
   user_id: string;
@@ -31,26 +26,21 @@ export default function PatientRegister() {
   const refCode = searchParams.get("ref") || "";
   const preselectedNutri = searchParams.get("nutri") || "";
 
-  const [step, setStep] = useState<Step>(preselectedNutri ? "register" : "has_professional");
-  const [hasProfessional, setHasProfessional] = useState<"yes" | "no" | "">("");
-
-  // Professional search
-  const [profSearch, setProfSearch] = useState("");
-  const [profResults, setProfResults] = useState<ProfessionalResult[]>([]);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [selectedProfessional, setSelectedProfessional] = useState<ProfessionalResult | null>(null);
-
-  // Registration
+  // Form
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
 
-  // Payment
-  const [alreadyPaid, setAlreadyPaid] = useState<"yes" | "no" | "">("");
+  // Professional (optional)
+  const [showProfSearch, setShowProfSearch] = useState(!!preselectedNutri);
+  const [profSearch, setProfSearch] = useState("");
+  const [profResults, setProfResults] = useState<ProfessionalResult[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [selectedProfessional, setSelectedProfessional] = useState<ProfessionalResult | null>(null);
 
   // Pre-select professional from URL
   useEffect(() => {
@@ -92,7 +82,6 @@ export default function PatientRegister() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    e.stopPropagation();
     if (password.length < 6) {
       toast.error("A senha deve ter pelo menos 6 caracteres");
       return;
@@ -114,35 +103,32 @@ export default function PatientRegister() {
       }
 
       if (data.user) {
-        setUserId(data.user.id);
-
-        // Register as patient and link to nutritionist if selected
-        const nutriId = selectedProfessional?.user_id || null;
+        // Register as patient role
         const { error: rpcError } = await supabase.rpc("self_register_patient", {
           _user_id: data.user.id,
           _referral_code: refCode || null,
         });
         if (rpcError) console.error("RPC error:", rpcError);
 
-        // Create profile with phone
+        // Ensure profile with phone
         await supabase.from("profiles").upsert({
           user_id: data.user.id,
           full_name: name,
           phone: phone || null,
         }, { onConflict: "user_id" });
 
-        // If professional selected, update journey_status via server-authoritative RPC
+        // Link to nutritionist if selected
+        const nutriId = selectedProfessional?.user_id || null;
         if (nutriId) {
-          // Server-authoritative: RPC handles validation; no direct .update() fallback
-          await transitionJourneyStatus(data.user.id, nutriId, "lead_created").catch((err) => {
-            console.warn("[PatientRegister] transitionJourneyStatus failed for lead_created, link may not exist yet:", err);
-          });
+          // Create link via RPC
+          const { transitionJourneyStatus } = await import("@/lib/serverTransitions");
+          await transitionJourneyStatus(data.user.id, nutriId, "lead_created").catch(console.warn);
 
-          // Notify the professional
+          // Notify professional
           await supabase.from("notifications").insert({
             user_id: nutriId,
             title: "Novo paciente cadastrado",
-            message: `${name} se cadastrou e vinculou ao seu perfil. Aguardando ativação.`,
+            message: `${name} se cadastrou e vinculou ao seu perfil.`,
             type: "patient_registered",
             entity_type: "patient",
             entity_id: data.user.id,
@@ -150,8 +136,8 @@ export default function PatientRegister() {
           } as any);
         }
 
-        toast.success("Conta criada com sucesso!");
-        setStep("payment_question");
+        toast.success("Conta criada! Verifique seu e-mail para confirmar.");
+        setDone(true);
       }
     } catch {
       toast.error("Erro ao criar conta. Tente novamente.");
@@ -159,66 +145,8 @@ export default function PatientRegister() {
     setLoading(false);
   };
 
-  const handlePaymentDecision = async () => {
-    if (!userId || !selectedProfessional) return;
-
-    if (alreadyPaid === "yes") {
-      // Server-authoritative: no direct .update() fallback
-      await transitionJourneyStatus(userId, selectedProfessional.user_id, "awaiting_onboarding_release").catch((err) => {
-        console.warn("[PatientRegister] transition failed:", err);
-      });
-      setStep("done");
-    } else {
-      await transitionJourneyStatus(userId, selectedProfessional.user_id, "awaiting_payment").catch((err) => {
-        console.warn("[PatientRegister] transition failed:", err);
-      });
-      setStep("payment");
-    }
-  };
-
-  const handleWhatsAppReceipt = () => {
-    const profPhone = selectedProfessional?.phone?.replace(/\D/g, "") || "5591980124814";
-    const message = encodeURIComponent(
-      `Olá! Acabei de me cadastrar no FitJourney.\n\nNome: ${name}\nE-mail: ${email}\n\nSegue o comprovante de pagamento.`
-    );
-    window.open(`https://wa.me/${profPhone}?text=${message}`, "_blank");
-    toast.success("WhatsApp aberto! Envie o comprovante para confirmar.");
-    setStep("done");
-  };
-
-  const handleStripePayment = async () => {
-    if (!userId) return;
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { plan_slug: "basic" },
-      });
-      if (error) throw error;
-      if (data?.url) {
-        // Update to onboarding_active will happen via webhook/manual
-        window.open(data.url, "_blank");
-        toast.info("Após o pagamento, seu onboarding será liberado automaticamente.");
-        setStep("done");
-      } else {
-        toast.info("Checkout não disponível. Use PIX por enquanto.");
-      }
-    } catch {
-      toast.error("Erro ao iniciar pagamento. Tente PIX.");
-    }
-    setLoading(false);
-  };
-
-  const handleSkipPayment = async () => {
-    setStep("done");
-  };
-
-  // Current step number for progress bar
-  const stepOrder: Step[] = ["has_professional", "register", "payment_question", "payment", "done"];
-  const currentIdx = stepOrder.indexOf(step);
-
-  // ─── Step: Done ───
-  if (step === "done") {
-    const waitingRelease = alreadyPaid === "yes";
+  // ─── Done Screen ───
+  if (done) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md text-center">
@@ -231,10 +159,7 @@ export default function PatientRegister() {
               <div>
                 <h2 className="text-xl font-bold text-foreground mb-2">Cadastro Realizado! 🎉</h2>
                 <p className="text-muted-foreground text-sm">
-                  {waitingRelease
-                    ? "Verifique seu e-mail para confirmar a conta. Seu profissional irá validar o pagamento e liberar seu onboarding."
-                    : "Verifique seu e-mail para confirmar a conta. Depois, faça login para acompanhar seu status."
-                  }
+                  Verifique seu e-mail para confirmar a conta. Depois, faça login para iniciar sua jornada.
                 </p>
               </div>
               <Button onClick={() => navigate("/auth")} className="w-full">
@@ -255,292 +180,128 @@ export default function PatientRegister() {
       </div>
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md relative z-10">
-        <div className="flex flex-col items-center mb-8">
+        <div className="flex flex-col items-center mb-6">
           <FitJourneyLogo size="lg" />
-          <p className="text-muted-foreground mt-2 text-sm text-center">
-            {step === "has_professional" && "Crie sua conta de paciente"}
-            {step === "register" && "Preencha seus dados"}
-            {step === "payment_question" && "Status do pagamento"}
-            {step === "payment" && "Escolha a forma de pagamento"}
-          </p>
-        </div>
-
-        {/* Progress */}
-        <div className="flex items-center gap-1 mb-6 px-4">
-          {[0, 1, 2, 3].map(i => (
-            <div key={i} className={`h-1 flex-1 rounded-full transition-all duration-500 ${i <= currentIdx ? "bg-primary" : "bg-muted"}`} />
-          ))}
+          <p className="text-muted-foreground mt-2 text-sm">Crie sua conta em segundos</p>
         </div>
 
         <Card className="shadow-card border-border/50 bg-card/80 backdrop-blur-sm">
           <CardContent className="pt-6 pb-6">
-            <AnimatePresence mode="wait">
+            <form onSubmit={handleRegister} className="space-y-4">
 
-              {/* ─── Step 1: Has Professional? ─── */}
-              {step === "has_professional" && (
-                <motion.div key="has_prof" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-5">
-                  <div className="text-center">
-                    <Stethoscope className="w-10 h-10 text-primary mx-auto mb-3 opacity-80" />
-                    <h2 className="text-lg font-semibold text-foreground">Você já possui um profissional na plataforma?</h2>
+              {/* Selected professional badge */}
+              {selectedProfessional && (
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <Stethoscope className="w-4 h-4 text-primary" />
                   </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-muted-foreground">Profissional</p>
+                    <p className="font-medium text-sm text-foreground truncate">{selectedProfessional.full_name}</p>
+                  </div>
+                  {!preselectedNutri && (
+                    <button type="button" onClick={() => { setSelectedProfessional(null); setShowProfSearch(true); }}
+                      className="text-xs text-primary hover:underline shrink-0">Trocar</button>
+                  )}
+                </div>
+              )}
 
-                  <RadioGroup value={hasProfessional} onValueChange={(v) => setHasProfessional(v as "yes" | "no")} className="space-y-3">
-                    <label className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${hasProfessional === "yes" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"}`}>
-                      <RadioGroupItem value="yes" />
-                      <div>
-                        <p className="font-medium text-foreground">Sim</p>
-                        <p className="text-xs text-muted-foreground">Vou buscar meu profissional</p>
-                      </div>
-                    </label>
-                    <label className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${hasProfessional === "no" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"}`}>
-                      <RadioGroupItem value="no" />
-                      <div>
-                        <p className="font-medium text-foreground">Não</p>
-                        <p className="text-xs text-muted-foreground">Quero me cadastrar sem vínculo</p>
-                      </div>
-                    </label>
-                  </RadioGroup>
+              <div>
+                <Label htmlFor="name">Nome completo</Label>
+                <Input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome" required />
+              </div>
+              <div>
+                <Label htmlFor="email">E-mail</Label>
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" required />
+              </div>
+              <div>
+                <Label htmlFor="phone">WhatsApp (opcional)</Label>
+                <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-9999" />
+              </div>
+              <div>
+                <Label htmlFor="password">Senha</Label>
+                <div className="relative">
+                  <Input id="password" type={showPassword ? "text" : "password"} value={password}
+                    onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required minLength={6} />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
 
-                  {/* Professional search */}
-                  {hasProfessional === "yes" && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-3">
+              {/* Optional: Link to professional */}
+              {!selectedProfessional && !preselectedNutri && (
+                <>
+                  {!showProfSearch ? (
+                    <button type="button" onClick={() => setShowProfSearch(true)}
+                      className="w-full flex items-center justify-center gap-2 text-sm text-primary hover:underline py-1">
+                      <Stethoscope className="w-3.5 h-3.5" /> Vincular a um profissional
+                    </button>
+                  ) : (
+                    <div className="space-y-2 p-3 rounded-lg border border-border bg-muted/30">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-foreground">Buscar profissional</span>
+                        <button type="button" onClick={() => { setShowProfSearch(false); setProfSearch(""); setProfResults([]); }}
+                          className="text-xs text-muted-foreground hover:text-foreground">Pular</button>
+                      </div>
                       <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          value={profSearch}
-                          onChange={(e) => setProfSearch(e.target.value)}
-                          placeholder="Digite o nome do profissional (mín. 2 letras)"
-                          className="pl-10"
-                        />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                        <Input value={profSearch} onChange={(e) => setProfSearch(e.target.value)}
+                          placeholder="Nome do profissional" className="pl-9 h-9 text-sm" />
                       </div>
-
-                      {searchLoading && (
-                        <div className="flex items-center justify-center py-3">
-                          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                        </div>
-                      )}
-
+                      {searchLoading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground mx-auto" />}
                       {profResults.length > 0 && (
-                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                        <div className="space-y-1 max-h-36 overflow-y-auto">
                           {profResults.map(prof => (
-                            <button
-                              key={prof.user_id}
-                              onClick={() => setSelectedProfessional(prof)}
-                              className={`w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${
-                                selectedProfessional?.user_id === prof.user_id
-                                  ? "border-primary bg-primary/5 ring-1 ring-primary/30"
-                                  : "border-border hover:border-primary/30"
-                              }`}
-                            >
-                              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                                {prof.avatar_url ? (
-                                  <img src={prof.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover" />
-                                ) : (
-                                  <span className="text-sm font-bold text-primary">{prof.full_name?.[0]?.toUpperCase()}</span>
-                                )}
+                            <button key={prof.user_id} type="button"
+                              onClick={() => { setSelectedProfessional(prof); setShowProfSearch(false); }}
+                              className="w-full flex items-center gap-2 p-2 rounded-lg text-left hover:bg-primary/10 transition-all text-sm">
+                              <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                <span className="text-xs font-bold text-primary">{prof.full_name?.[0]?.toUpperCase()}</span>
                               </div>
-                              <div className="min-w-0">
-                                <p className="font-medium text-foreground text-sm truncate">{prof.full_name}</p>
-                                {prof.clinic_name && <p className="text-xs text-muted-foreground truncate">{prof.clinic_name}</p>}
-                              </div>
-                              {selectedProfessional?.user_id === prof.user_id && (
-                                <CheckCircle2 className="w-5 h-5 text-primary shrink-0 ml-auto" />
-                              )}
+                              <span className="truncate text-foreground">{prof.full_name}</span>
                             </button>
                           ))}
                         </div>
                       )}
-
                       {profSearch.length >= 2 && !searchLoading && profResults.length === 0 && (
-                        <p className="text-sm text-muted-foreground text-center py-3">Nenhum profissional encontrado</p>
+                        <p className="text-xs text-muted-foreground text-center py-1">Nenhum encontrado</p>
                       )}
-                    </motion.div>
+                    </div>
                   )}
-
-                  <Button
-                    onClick={() => setStep("register")}
-                    disabled={hasProfessional === "yes" && !selectedProfessional}
-                    className="w-full"
-                  >
-                    Continuar <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </motion.div>
+                </>
               )}
 
-              {/* ─── Step 2: Registration ─── */}
-              {step === "register" && (
-                <motion.form key="register" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} onSubmit={handleRegister} className="space-y-4">
-                  {selectedProfessional && (
-                    <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20 mb-2">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                        <Stethoscope className="w-4 h-4 text-primary" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs text-muted-foreground">Profissional selecionado</p>
-                        <p className="font-medium text-sm text-foreground truncate">{selectedProfessional.full_name}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  <div>
-                    <Label htmlFor="name">Nome completo</Label>
-                    <Input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome completo" required />
-                  </div>
-                  <div>
-                    <Label htmlFor="email">E-mail</Label>
-                    <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" required />
-                  </div>
-                  <div>
-                    <Label htmlFor="phone">Telefone / WhatsApp</Label>
-                    <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-9999" />
-                  </div>
-                  <div>
-                    <Label htmlFor="password">Senha</Label>
-                    <div className="relative">
-                      <Input id="password" type={showPassword ? "text" : "password"} value={password}
-                        onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required minLength={6} />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
-
-                  {refCode && (
-                    <div className="flex items-center gap-2 p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                      <span className="text-xs text-emerald-600 dark:text-emerald-400">
-                        Código de referência: <strong>{refCode}</strong>
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="flex gap-2">
-                    {!preselectedNutri && (
-                      <Button type="button" variant="outline" onClick={() => setStep("has_professional")} className="shrink-0">
-                        <ArrowLeft className="w-4 h-4" />
-                      </Button>
-                    )}
-                    <Button type="submit" className="flex-1" disabled={loading}>
-                      {loading ? "Criando conta..." : (
-                        <span className="flex items-center gap-2">Criar Conta <ArrowRight className="w-4 h-4" /></span>
-                      )}
-                    </Button>
-                  </div>
-
-                  <div className="text-center">
-                    <Link to="/auth" className="text-sm text-primary hover:underline">
-                      Já tenho conta — fazer login
-                    </Link>
-                  </div>
-                </motion.form>
+              {refCode && (
+                <div className="flex items-center gap-2 p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span className="text-xs text-emerald-600 dark:text-emerald-400">
+                    Código de referência: <strong>{refCode}</strong>
+                  </span>
+                </div>
               )}
 
-              {/* ─── Step 3: Payment Question ─── */}
-              {step === "payment_question" && (
-                <motion.div key="pay_q" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-5">
-                  <div className="text-center">
-                    <CreditCard className="w-10 h-10 text-primary mx-auto mb-3 opacity-80" />
-                    <h2 className="text-lg font-semibold text-foreground">Você já realizou o pagamento do acompanhamento?</h2>
-                  </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? (
+                  <span className="flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Criando conta...</span>
+                ) : (
+                  <span className="flex items-center gap-2"><UserPlus className="w-4 h-4" /> Criar Conta</span>
+                )}
+              </Button>
 
-                  <RadioGroup value={alreadyPaid} onValueChange={(v) => setAlreadyPaid(v as "yes" | "no")} className="space-y-3">
-                    <label className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${alreadyPaid === "yes" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"}`}>
-                      <RadioGroupItem value="yes" />
-                      <div>
-                        <p className="font-medium text-foreground">Sim, já paguei</p>
-                        <p className="text-xs text-muted-foreground">Vou enviar comprovante ao profissional</p>
-                      </div>
-                    </label>
-                    <label className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${alreadyPaid === "no" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"}`}>
-                      <RadioGroupItem value="no" />
-                      <div>
-                        <p className="font-medium text-foreground">Não, quero pagar agora</p>
-                        <p className="text-xs text-muted-foreground">Escolher forma de pagamento</p>
-                      </div>
-                    </label>
-                  </RadioGroup>
-
-                  {alreadyPaid === "yes" && selectedProfessional && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 space-y-3">
-                      <p className="text-sm text-foreground">
-                        Envie seu comprovante para <strong>{selectedProfessional.full_name}</strong> via WhatsApp:
-                      </p>
-                      <Button onClick={handleWhatsAppReceipt} variant="outline" className="w-full gap-2 border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10">
-                        <MessageCircle className="w-4 h-4" /> Enviar comprovante via WhatsApp
-                      </Button>
-                    </motion.div>
-                  )}
-
-                  <Button
-                    onClick={handlePaymentDecision}
-                    disabled={!alreadyPaid || (alreadyPaid === "yes" && !selectedProfessional)}
-                    className="w-full"
-                  >
-                    Continuar <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-
-                  {!selectedProfessional && (
-                    <button onClick={() => setStep("done")} className="w-full text-sm text-muted-foreground hover:text-foreground text-center py-1 transition-colors">
-                      Pular por agora →
-                    </button>
-                  )}
-                </motion.div>
-              )}
-
-              {/* ─── Step 4: Payment ─── */}
-              {step === "payment" && (
-                <motion.div key="payment" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
-                  <p className="text-sm text-muted-foreground text-center mb-2">
-                    Escolha como deseja realizar o pagamento:
-                  </p>
-
-                  <button
-                    onClick={handleStripePayment}
-                    disabled={loading}
-                    className="w-full flex items-center gap-4 p-4 rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left group"
-                  >
-                    <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
-                      <CreditCard className="w-6 h-6 text-blue-500" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-foreground group-hover:text-primary transition-colors">Cartão de Crédito</p>
-                      <p className="text-xs text-muted-foreground">Pagamento seguro via Stripe</p>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                  </button>
-
-                  <button
-                    onClick={handleWhatsAppReceipt}
-                    className="w-full flex items-center gap-4 p-4 rounded-xl border border-border hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all text-left group"
-                  >
-                    <div className="w-12 h-12 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
-                      <QrCode className="w-6 h-6 text-emerald-500" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-foreground group-hover:text-emerald-600 transition-colors">PIX</p>
-                      <p className="text-xs text-muted-foreground">Envie o comprovante via WhatsApp</p>
-                    </div>
-                    <MessageCircle className="w-4 h-4 text-emerald-500" />
-                  </button>
-
-                  <div className="pt-2 border-t border-border">
-                    <button onClick={handleSkipPayment} className="w-full text-sm text-muted-foreground hover:text-foreground text-center py-2 transition-colors">
-                      Pular por agora →
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-
-            </AnimatePresence>
+              <div className="text-center">
+                <Link to="/auth" className="text-sm text-primary hover:underline">
+                  Já tenho conta — fazer login
+                </Link>
+              </div>
+            </form>
           </CardContent>
         </Card>
 
-        {step === "has_professional" && (
-          <p className="text-center text-xs text-muted-foreground mt-6">
-            Ao criar sua conta, você concorda com os termos de uso.
-          </p>
-        )}
+        <p className="text-center text-xs text-muted-foreground mt-4">
+          Ao criar sua conta, você concorda com os termos de uso.
+        </p>
       </motion.div>
     </div>
   );
