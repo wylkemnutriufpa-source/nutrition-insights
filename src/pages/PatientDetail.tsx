@@ -604,7 +604,18 @@ export default function PatientDetail() {
                       key={s.key}
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.97 }}
-                      onClick={() => setOpenSection(s.key)}
+                      onClick={() => {
+                        if (s.key === "edit-profile") {
+                          setEditProfileForm({
+                            full_name: profile?.full_name || "",
+                            phone: profile?.phone || "",
+                            email: patientEmail || "",
+                            goal: (profile as any)?.goal || "",
+                            notes: (profile as any)?.notes || "",
+                          });
+                        }
+                        setOpenSection(s.key);
+                      }}
                       className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border border-border bg-gradient-to-br ${s.color} hover:shadow-md transition-all group cursor-pointer text-center`}
                     >
                       <div className="w-10 h-10 rounded-xl bg-card shadow-sm flex items-center justify-center group-hover:shadow-md transition-shadow">
