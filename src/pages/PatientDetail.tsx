@@ -1445,7 +1445,7 @@ export default function PatientDetail() {
                       variant="outline"
                       className="w-full gap-2 border-warning/30 text-warning hover:bg-warning/10"
                       onClick={async () => {
-                        if (!profile?.user_id) return;
+                        if (!patientId) return;
                         if (!confirm("Redefinir senha do paciente para 123456?")) return;
                         try {
                           const { data: { session } } = await supabase.auth.getSession();
@@ -1457,7 +1457,7 @@ export default function PatientDetail() {
                                 "Content-Type": "application/json",
                                 "Authorization": `Bearer ${session?.access_token}`,
                               },
-                              body: JSON.stringify({ user_id: profile.user_id, new_password: "123456" }),
+                              body: JSON.stringify({ user_id: patientId, new_password: "123456" }),
                             }
                           );
                           const result = await res.json();
