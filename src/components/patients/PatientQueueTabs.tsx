@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { releaseOnboarding } from "@/lib/serverTransitions";
+import { acquireActionLock, releaseActionLock } from "@/lib/fitjourneyBible";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -96,7 +97,13 @@ export default function PatientQueueTabs() {
 
   const handleConfirmPayment = async (patientId: string) => {
     if (!user) return;
+    if (!acquireActionLock("confirm_payment", patientId)) {
+      toast.info("Ação já em andamento...");
+      return;
+    }
     setConfirmingPayment(patientId);
+    // ⚡ Optimistic: remove from current list immediately
+    setPatients(prev => prev.filter(p => p.patient_id !== patientId));
     try {
       const { data, error } = await supabase.rpc("confirm_patient_payment" as any, {
         _patient_id: patientId,
@@ -106,13 +113,16 @@ export default function PatientQueueTabs() {
       const result = data as any;
       if (!result?.success) {
         toast.error(result?.error || "Erro ao confirmar pagamento");
+        fetchPatients(tab); // Rollback
+        releaseActionLock("confirm_payment", patientId);
         return;
       }
-      toast.success("Pagamento confirmado! Paciente liberado para onboarding 🎉");
+      toast.success("✅ Pagamento confirmado! Onboarding liberado automaticamente.");
       fetchCounts();
-      fetchPatients(tab);
     } catch (err: any) {
       toast.error(err.message || "Erro ao confirmar pagamento");
+      fetchPatients(tab); // Rollback
+      releaseActionLock("confirm_payment", patientId);
     } finally {
       setConfirmingPayment(null);
     }
@@ -120,14 +130,21 @@ export default function PatientQueueTabs() {
 
   const handleQuickRelease = async (patientId: string) => {
     if (!user) return;
+    if (!acquireActionLock("release_onboarding", patientId)) {
+      toast.info("Ação já em andamento...");
+      return;
+    }
+    // ⚡ Optimistic: remove from consent queue immediately
+    setPatients(prev => prev.filter(p => p.patient_id !== patientId));
     const result = await releaseOnboarding(patientId, user.id);
     if (!result.success) {
       toast.error(result.error || "Erro ao liberar onboarding");
+      fetchPatients(tab); // Rollback
+      releaseActionLock("release_onboarding", patientId);
       return;
     }
-    toast.success("Onboarding liberado com sucesso!");
+    toast.success("✅ Onboarding liberado! Paciente já pode preencher.");
     fetchCounts();
-    fetchPatients(tab);
   };
 
   const totalPending = Object.values(counts).reduce((a, b) => a + b, 0);

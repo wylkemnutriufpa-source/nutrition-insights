@@ -18,6 +18,7 @@ import {
   ClipboardList, KeyRound, Send, UserCog
 } from "lucide-react";
 import { releaseOnboarding } from "@/lib/serverTransitions";
+import { acquireActionLock, releaseActionLock, isAtOrPast } from "@/lib/fitjourneyBible";
 import type { PatientInfo } from "@/hooks/queries/usePatientsList";
 
 const JOURNEY_LABELS: Record<string, { label: string; color: string }> = {
@@ -66,38 +67,58 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
   };
 
   const confirmPayment = async (patientId: string) => {
+    if (!acquireActionLock("confirm_payment", patientId)) {
+      toast.info("Ação já em andamento...");
+      return;
+    }
+    // ⚡ Optimistic UI — hide button immediately
+    setConfirmedPayments(prev => new Set(prev).add(patientId));
     setProcessingId(patientId);
     try {
       const { data, error } = await supabase.rpc("confirm_patient_payment", { _patient_id: patientId, _nutritionist_id: user!.id });
       if (error) throw error;
       const result = data as any;
       if (!result?.success) {
+        // Rollback optimistic state
+        setConfirmedPayments(prev => { const n = new Set(prev); n.delete(patientId); return n; });
+        releaseActionLock("confirm_payment", patientId);
         toast.error(result?.error || "Erro ao confirmar pagamento");
       } else {
-        toast.success("Pagamento confirmado!");
-        setConfirmedPayments(prev => new Set(prev).add(patientId));
+        toast.success("✅ Pagamento confirmado! Onboarding liberado automaticamente.");
         refreshAll();
       }
-    } catch { toast.error("Erro ao confirmar pagamento"); }
+    } catch {
+      setConfirmedPayments(prev => { const n = new Set(prev); n.delete(patientId); return n; });
+      releaseActionLock("confirm_payment", patientId);
+      toast.error("Erro ao confirmar pagamento");
+    }
     setProcessingId(null);
   };
 
   const doReleaseOnboarding = async (patientId: string) => {
-    // Check if already past onboarding
-    const patient = patients.find(p => p.patient_id === patientId);
-    const journey = patient ? getJourney(patient) : "active";
-    const alreadyPast = ["onboarding_active", "onboarding_completed", "draft_ready_for_review", "plan_published", "active_followup"].includes(journey);
-    if (alreadyPast) {
-      toast.info("Onboarding já foi liberado ou concluído para este paciente");
+    if (!acquireActionLock("release_onboarding", patientId)) {
+      toast.info("Ação já em andamento...");
       return;
     }
+    const patient = patients.find(p => p.patient_id === patientId);
+    const journey = patient ? getJourney(patient) : "active";
+    if (isAtOrPast(journey, "onboarding_active")) {
+      toast.info("Onboarding já foi liberado ou concluído para este paciente");
+      releaseActionLock("release_onboarding", patientId);
+      return;
+    }
+    // ⚡ Optimistic UI
+    setReleasedOnboarding(prev => new Set(prev).add(patientId));
     setProcessingId(patientId);
     try {
       await releaseOnboarding(patientId, user!.id);
-      toast.success("Onboarding liberado!");
-      setReleasedOnboarding(prev => new Set(prev).add(patientId));
+      toast.success("✅ Onboarding liberado! Paciente já pode preencher.");
       refreshAll();
-    } catch { toast.error("Erro ao liberar onboarding"); }
+    } catch {
+      setReleasedOnboarding(prev => { const n = new Set(prev); n.delete(patientId); return n; });
+      releaseActionLock("release_onboarding", patientId);
+      toast.error("Erro ao liberar onboarding");
+    }
     setProcessingId(null);
   };
 
