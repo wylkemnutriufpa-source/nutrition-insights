@@ -5,13 +5,14 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Brain, MessageSquare, HelpCircle, Settings2, Sparkles, Users } from "lucide-react";
+import { Brain, MessageSquare, HelpCircle, Settings2, Sparkles, Users, Play } from "lucide-react";
 import IntelligenceGoldenHeader from "./settings/IntelligenceGoldenHeader";
 import IntelligenceGeneralSettings from "./settings/IntelligenceGeneralSettings";
 import IntelligenceCustomPrompts from "./settings/IntelligenceCustomPrompts";
 import IntelligenceCustomQuestions from "./settings/IntelligenceCustomQuestions";
 import IntelligenceActiveUsers from "./settings/IntelligenceActiveUsers";
 import IntelligenceParticles from "./settings/IntelligenceParticles";
+import IntelligenceActivationPreview from "./settings/IntelligenceActivationPreview";
 
 export default function IntelligenceSettingsPanel() {
   const [activeTab, setActiveTab] = useState("general");
@@ -44,6 +45,9 @@ export default function IntelligenceSettingsPanel() {
             <TabsTrigger value="active" className="gap-2 data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-600">
               <Users className="w-4 h-4" /> Ativos
             </TabsTrigger>
+            <TabsTrigger value="preview" className="gap-2 data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-600">
+              <Play className="w-4 h-4" /> Apresentação
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="general">
@@ -60,6 +64,10 @@ export default function IntelligenceSettingsPanel() {
 
           <TabsContent value="active">
             <IntelligenceActiveUsers />
+          </TabsContent>
+
+          <TabsContent value="preview">
+            <IntelligenceActivationPreview />
           </TabsContent>
         </Tabs>
       </motion.div>
