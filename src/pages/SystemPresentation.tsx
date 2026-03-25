@@ -205,6 +205,34 @@ export default function SystemPresentation() {
           </div>
         </motion.div>
 
+        {/* Neural Entry Demo */}
+        <div>
+          <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <Brain className="w-5 h-5 text-primary" />
+            Neural Entry — Ativação do Sistema
+          </h2>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <Card className="group hover:shadow-md transition-shadow border-primary/20">
+              <CardContent className="p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0 shadow-md shadow-primary/30">
+                  <Brain className="w-7 h-7 text-primary-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-lg">Neural Boot Experience</h3>
+                  <p className="text-sm text-muted-foreground">Tela de entrada premium que aparece após o login — cérebro neural, ondas de ativação e transição inteligente.</p>
+                  <span className="text-xs text-muted-foreground mt-1 block">~3 segundos • Animação neural imersiva • Skip disponível</span>
+                </div>
+                <Button
+                  onClick={() => setShowNeuralEntry(true)}
+                  className="bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/30"
+                >
+                  <Play className="w-4 h-4 mr-1" /> Visualizar
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+
         {/* Cinematic demos — primary section */}
         <div>
           <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
