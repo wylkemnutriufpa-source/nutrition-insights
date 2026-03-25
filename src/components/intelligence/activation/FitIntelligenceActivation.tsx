@@ -59,10 +59,12 @@ function PremiumPhrase({
       <motion.p
         className={styles.text}
         style={{
-          background: styles.color,
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          backgroundClip: "text",
+          color:
+            variant === "hero"
+              ? "hsl(42 78% 72%)"
+              : variant === "caption"
+                ? "hsl(40 32% 68%)"
+                : "hsl(40 52% 80%)",
           textShadow: styles.glow,
         }}
         initial="hidden"
