@@ -190,42 +190,88 @@ function DynamicSidebar({
         <FitJourneyLogo collapsed={collapsed} size="sm" />
       </div>
 
-      <div className="px-3 mb-1">
-        <button
-          onClick={() => setIntelligenceOpen(true)}
-          className={`flex items-center gap-2 w-full rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
-        >
-          <div className="relative flex-shrink-0">
-            <motion.div
-              className="absolute -inset-1.5 rounded-full"
-              style={{
-                background: "radial-gradient(circle, hsl(150 80% 50% / 0.3), transparent 70%)",
-              }}
-              animate={{ scale: [1, 1.4, 1], opacity: [0.3, 0.7, 0.3] }}
-              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-            />
-            <motion.span
-              className="text-lg leading-none select-none relative z-10"
-              animate={{ rotate: [0, 8, -8, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              style={{ filter: "drop-shadow(0 0 6px hsl(150 80% 50% / 0.5))" }}
-            >
-              🧠
-            </motion.span>
-            <motion.div
-              className="absolute inset-0 rounded-full"
-              style={{ border: "1px solid hsl(150 70% 50% / 0.4)" }}
-              animate={{ scale: [1, 1.8], opacity: [0.5, 0] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
-            />
-          </div>
-          {!collapsed && (
-            <span className="text-xs font-semibold text-emerald-500 truncate group-hover:text-emerald-400 transition-colors">
-              Inteligência FitJourney
-            </span>
-          )}
-        </button>
-      </div>
+      {isProRole ? (
+        <div className="px-3 mb-1">
+          <Link
+            to="/intelligence-settings"
+            onClick={onLinkClick}
+            className={`flex items-center gap-2 w-full rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
+          >
+            <div className="relative flex-shrink-0">
+              <motion.div
+                className="absolute -inset-1.5 rounded-full"
+                style={{
+                  background: "radial-gradient(circle, hsl(45 100% 50% / 0.3), transparent 70%)",
+                }}
+                animate={{ scale: [1, 1.4, 1], opacity: [0.3, 0.7, 0.3] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <motion.span
+                className="text-lg leading-none select-none relative z-10"
+                animate={{ rotate: [0, 8, -8, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                style={{ filter: "drop-shadow(0 0 6px hsl(45 100% 50% / 0.5))" }}
+              >
+                🧠
+              </motion.span>
+              <motion.div
+                className="absolute inset-0 rounded-full"
+                style={{ border: "1px solid hsl(45 100% 60% / 0.4)" }}
+                animate={{ scale: [1, 1.8], opacity: [0.5, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+              />
+            </div>
+            {!collapsed && (
+              <span className="text-xs font-semibold truncate transition-colors"
+                style={{
+                  background: "linear-gradient(90deg, #FFD700, #FFA500)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
+              >
+                Inteligência FitJourney
+              </span>
+            )}
+          </Link>
+        </div>
+      ) : (
+        <div className="px-3 mb-1">
+          <button
+            onClick={() => setShowcaseOpen(true)}
+            className={`flex items-center gap-2 w-full rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
+          >
+            <div className="relative flex-shrink-0">
+              <motion.div
+                className="absolute -inset-1.5 rounded-full"
+                style={{
+                  background: "radial-gradient(circle, hsl(150 80% 50% / 0.3), transparent 70%)",
+                }}
+                animate={{ scale: [1, 1.4, 1], opacity: [0.3, 0.7, 0.3] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <motion.span
+                className="text-lg leading-none select-none relative z-10"
+                animate={{ rotate: [0, 8, -8, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                style={{ filter: "drop-shadow(0 0 6px hsl(150 80% 50% / 0.5))" }}
+              >
+                🧠
+              </motion.span>
+              <motion.div
+                className="absolute inset-0 rounded-full"
+                style={{ border: "1px solid hsl(150 70% 50% / 0.4)" }}
+                animate={{ scale: [1, 1.8], opacity: [0.5, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+              />
+            </div>
+            {!collapsed && (
+              <span className="text-xs font-semibold text-emerald-500 truncate group-hover:text-emerald-400 transition-colors">
+                Inteligência FitJourney
+              </span>
+            )}
+          </button>
+        </div>
+      )}
 
       {isProRole && (
         <div className="px-3 mb-1 space-y-1">
