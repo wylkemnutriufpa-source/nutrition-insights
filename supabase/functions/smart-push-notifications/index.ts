@@ -27,6 +27,7 @@ async function sendRealPush(
   userId: string,
   payload: { title: string; body: string; url?: string; tag?: string }
 ) {
+  if (!ensureVapid()) return 0;
   const { data: subscriptions } = await supabase
     .from("push_subscriptions")
     .select("endpoint, p256dh, auth")
