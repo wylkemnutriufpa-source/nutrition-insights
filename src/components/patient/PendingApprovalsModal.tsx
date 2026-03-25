@@ -104,7 +104,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
         .in("user_id", patientIds),
       supabase
         .from("nutritionist_patients")
-        .select("patient_id, status, onboarding_status")
+        .select("patient_id, status")
         .eq("nutritionist_id", user.id)
         .in("patient_id", patientIds)
         .eq("status", "active"),
