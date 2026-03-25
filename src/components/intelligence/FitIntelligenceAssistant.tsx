@@ -30,6 +30,7 @@ export default function FitIntelligenceAssistant() {
   const [prompt, setPrompt] = useState<IntelligencePrompt | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
+  const [showActivation, setShowActivation] = useState(false);
   const [wizardJustCompleted, setWizardJustCompleted] = useState(false);
   const [responding, setResponding] = useState(false);
   const [responseText, setResponseText] = useState<string | null>(null);
