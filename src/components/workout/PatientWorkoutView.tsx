@@ -146,11 +146,11 @@ export default function PatientWorkoutView() {
       // Submit pain feedback if any
       if (painReport) {
         await (supabase as any).from("training_feedback").insert({
-          student_id: user.id,
+          patient_id: user.id,
           completion_id: completion.id,
           feedback_type: "pain",
           pain_location: painReport,
-          severity: effort >= 8 ? "high" : "medium",
+          difficulty_rating: effort >= 8 ? 8 : 5,
           notes: `Dor/desconforto: ${painReport}`,
         }).catch(() => {});
       }
