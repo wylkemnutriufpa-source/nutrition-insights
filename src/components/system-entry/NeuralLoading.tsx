@@ -306,8 +306,8 @@ function NeuralParticleCanvas({ durationMultiplier }: { durationMultiplier: numb
       });
 
       // Slow core rotation
-      coreGroup.rotation.y = t * 0.03;
-      coreGroup.rotation.x = Math.sin(t * 0.015) * 0.12;
+      coreGroup.rotation.y = t * 0.15;
+      coreGroup.rotation.x = Math.sin(t * 0.02) * 0.1;
 
       // Dust slow drift
       dustPoints.rotation.y = t * 0.005;
@@ -406,96 +406,6 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
         transition={{ duration: 3 * durationMultiplier, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* Logo — 3D coin rotation */}
-      <motion.div
-        className="absolute inset-0 flex items-center justify-center z-10"
-        style={{ perspective: 900 }}
-        initial={{ opacity: 0, scale: 0.6 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{
-          opacity: { duration: 1.2 },
-          scale: { duration: 1.4, ease: [0.22, 1, 0.36, 1] },
-        }}
-      >
-        <motion.div
-          style={{
-            transformStyle: "preserve-3d",
-            width: 130,
-            height: 130,
-            position: "relative",
-          }}
-          animate={{ rotateY: -360 }}
-          transition={{ rotateY: { duration: 20, repeat: Infinity, ease: "linear" } }}
-        >
-          {/* Front face */}
-          <div
-            className="absolute inset-0 flex items-center justify-center"
-            style={{
-              backfaceVisibility: "hidden",
-              transform: "translateZ(6px)",
-            }}
-          >
-            <img
-              src={logoPng}
-              alt="FitJourney"
-              draggable={false}
-              className="select-none"
-              style={{
-                width: 130,
-                height: 130,
-                objectFit: "contain",
-                filter:
-                  "drop-shadow(0 0 20px hsl(var(--primary) / 0.5)) " +
-                  "drop-shadow(0 0 50px hsl(var(--primary) / 0.2))",
-              }}
-            />
-          </div>
-
-          {/* Edge shadow — single dark silhouette behind for depth illusion */}
-          <div
-            className="absolute inset-0 flex items-center justify-center"
-            style={{ transform: "translateZ(0px)" }}
-          >
-            <img
-              src={logoPng}
-              alt=""
-              draggable={false}
-              className="select-none"
-              style={{
-                width: 132,
-                height: 132,
-                objectFit: "contain",
-                filter: "brightness(0) blur(1px)",
-                opacity: 0.5,
-              }}
-            />
-          </div>
-
-          {/* Back face — same logo */}
-          <div
-            className="absolute inset-0 flex items-center justify-center"
-            style={{
-              backfaceVisibility: "hidden",
-              transform: "rotateY(180deg) translateZ(6px)",
-            }}
-          >
-            <img
-              src={logoPng}
-              alt="FitJourney"
-              draggable={false}
-              className="select-none"
-              style={{
-                width: 130,
-                height: 130,
-                objectFit: "contain",
-                filter:
-                  "drop-shadow(0 0 20px hsl(var(--primary) / 0.5)) " +
-                  "drop-shadow(0 0 50px hsl(var(--primary) / 0.2))",
-              }}
-            />
-          </div>
-        </motion.div>
-      </motion.div>
 
       {/* Reduced motion fallback */}
       {reduced && (
