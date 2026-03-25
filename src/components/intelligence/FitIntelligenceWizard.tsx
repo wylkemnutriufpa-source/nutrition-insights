@@ -139,6 +139,15 @@ export default function FitIntelligenceWizard({ open, onClose, patientId, patien
         engaged_count: 0,
       } as any, { onConflict: "patient_id" });
 
+      // Log wizard completion
+      await supabase.from("fit_intelligence_interactions" as any).insert({
+        patient_id: patientId,
+        interaction_type: "wizard_completed",
+        prompt_title: "Wizard Comportamental",
+        prompt_text: "Onboarding comportamental concluído",
+        was_dismissed: false,
+      } as any);
+
       toast.success("Inteligência FitJourney configurada! 🧠✨");
       handleClose();
     } catch (e: any) {
