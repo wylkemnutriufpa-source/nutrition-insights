@@ -55,6 +55,7 @@ import OnboardingReleaseDialog from "@/components/patient/OnboardingReleaseDialo
 import ClinicalFlagsSummary from "@/components/patient/ClinicalFlagsSummary";
 import PatientBehavioralManager from "@/components/patient/PatientBehavioralManager";
 import PatientEvolutionPDF from "@/components/patient/PatientEvolutionPDF";
+import FitIntelligenceToggle from "@/components/intelligence/FitIntelligenceToggle";
 
 export default function PatientDetail() {
   const { patientId } = useParams<{ patientId: string }>();
