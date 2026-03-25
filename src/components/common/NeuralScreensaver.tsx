@@ -28,6 +28,7 @@ export default function NeuralScreensaver() {
   const [active, setActive] = useState(false);
   const [stage, setStage] = useState<ScreensaverStage>("sleeping");
   const [restoreCtx, setRestoreCtx] = useState<SessionContext | null>(null);
+  const [weekendTip, setWeekendTip] = useState<string | null>(null);
   const dismissedRef = useRef(false);
 
   // Check on visibility change
