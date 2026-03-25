@@ -49,50 +49,50 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const targetPatientIds: string[] | undefined = body.patient_ids;
+    const mode: string = body.mode || "specific"; // "specific" or "all_my_patients"
+    const standardPassword = "Fit@2026!";
 
-    // If specific patient IDs provided, reset only those; otherwise reject mass reset
-    if (!targetPatientIds || !Array.isArray(targetPatientIds) || targetPatientIds.length === 0) {
-      return new Response(JSON.stringify({ error: "Forneça patient_ids específicos. Reset em massa não é permitido." }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    let idsToReset: string[] = [];
 
-    // Limit batch size
-    if (targetPatientIds.length > 50) {
-      return new Response(JSON.stringify({ error: "Máximo de 50 pacientes por vez." }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (mode === "all_my_patients") {
+      // Get all patients linked to this nutritionist
+      const { data: patients } = await supabase
+        .from("nutritionist_patients")
+        .select("patient_id")
+        .eq("nutritionist_id", user.id);
+      
+      idsToReset = (patients || []).map((p: any) => p.patient_id);
+    } else {
+      if (!targetPatientIds || !Array.isArray(targetPatientIds) || targetPatientIds.length === 0) {
+        return new Response(JSON.stringify({ error: "Forneça patient_ids ou use mode: all_my_patients" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      idsToReset = targetPatientIds;
     }
 
     let updated = 0;
     let errors: string[] = [];
+    const BATCH = 5;
 
-    for (const patientId of targetPatientIds) {
-      // Verify the target is actually a patient
-      const { data: roleCheck } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", patientId)
-        .eq("role", "patient")
-        .maybeSingle();
+    for (let i = 0; i < idsToReset.length; i += BATCH) {
+      const chunk = idsToReset.slice(i, i + BATCH);
+      const results = await Promise.all(chunk.map(async (patientId) => {
+        try {
+          const { error } = await supabase.auth.admin.updateUserById(patientId, {
+            password: standardPassword,
+          });
+          if (error) return { ok: false, err: `${patientId}: ${error.message}` };
+          return { ok: true };
+        } catch (e: any) {
+          return { ok: false, err: `${patientId}: ${e.message}` };
+        }
+      }));
 
-      if (!roleCheck) {
-        errors.push(`${patientId}: not a patient`);
-        continue;
-      }
-
-      // Generate a unique random password per patient
-      const randomPassword = crypto.randomUUID() + crypto.randomUUID().slice(0, 8);
-
-      const { error } = await supabase.auth.admin.updateUserById(patientId, {
-        password: randomPassword,
-      });
-      if (error) {
-        errors.push(`${patientId}: ${error.message}`);
-      } else {
-        updated++;
+      for (const r of results) {
+        if (r.ok) updated++;
+        else if (r.err) errors.push(r.err);
       }
     }
 
