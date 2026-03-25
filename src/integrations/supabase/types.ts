@@ -12817,60 +12817,168 @@ export type Database = {
       trainer_assessments: {
         Row: {
           available_equipment: string[] | null
+          available_hours: string[] | null
+          coaching_intensity: string | null
           created_at: string | null
+          current_pain: boolean | null
+          disliked_exercises: string | null
+          does_physiotherapy: boolean | null
+          energy_level: string | null
           goals: string | null
+          has_medical_report: boolean | null
+          has_trained_before: boolean | null
           id: string
           injuries: Json | null
+          is_complete: boolean | null
           joint_pain: Json | null
+          last_training_period: string | null
+          liked_exercises: string | null
           medical_clearance: boolean | null
           medical_clearance_notes: string | null
+          modalities_practiced: string[] | null
           movement_restrictions: string | null
+          movements_that_worsen: string[] | null
+          movements_to_avoid: string[] | null
           notes: string | null
+          pain_intensity: number | null
+          pain_locations: Json | null
           patient_id: string
+          perceived_level: string | null
+          plan_flexibility: string | null
+          previous_frequency: number | null
+          primary_goal: string | null
+          readiness_screening: Json | null
+          requires_medical_review: boolean | null
+          secondary_goals: string[] | null
+          session_duration: number | null
+          sleep_quality: string | null
+          specific_conditions: string[] | null
           surgeries: Json | null
+          synced_patient_data: Json | null
           trainer_id: string
+          training_difficulties: string | null
           training_experience: string | null
+          training_location: string | null
+          training_modality: string | null
           training_preference: string | null
+          training_years: number | null
           updated_at: string | null
+          wants_post_workout_feedback: boolean | null
+          wants_reminders: boolean | null
+          wants_video_tutorials: boolean | null
           weekly_availability: number | null
+          wizard_step: number | null
+          work_routine: string | null
         }
         Insert: {
           available_equipment?: string[] | null
+          available_hours?: string[] | null
+          coaching_intensity?: string | null
           created_at?: string | null
+          current_pain?: boolean | null
+          disliked_exercises?: string | null
+          does_physiotherapy?: boolean | null
+          energy_level?: string | null
           goals?: string | null
+          has_medical_report?: boolean | null
+          has_trained_before?: boolean | null
           id?: string
           injuries?: Json | null
+          is_complete?: boolean | null
           joint_pain?: Json | null
+          last_training_period?: string | null
+          liked_exercises?: string | null
           medical_clearance?: boolean | null
           medical_clearance_notes?: string | null
+          modalities_practiced?: string[] | null
           movement_restrictions?: string | null
+          movements_that_worsen?: string[] | null
+          movements_to_avoid?: string[] | null
           notes?: string | null
+          pain_intensity?: number | null
+          pain_locations?: Json | null
           patient_id: string
+          perceived_level?: string | null
+          plan_flexibility?: string | null
+          previous_frequency?: number | null
+          primary_goal?: string | null
+          readiness_screening?: Json | null
+          requires_medical_review?: boolean | null
+          secondary_goals?: string[] | null
+          session_duration?: number | null
+          sleep_quality?: string | null
+          specific_conditions?: string[] | null
           surgeries?: Json | null
+          synced_patient_data?: Json | null
           trainer_id: string
+          training_difficulties?: string | null
           training_experience?: string | null
+          training_location?: string | null
+          training_modality?: string | null
           training_preference?: string | null
+          training_years?: number | null
           updated_at?: string | null
+          wants_post_workout_feedback?: boolean | null
+          wants_reminders?: boolean | null
+          wants_video_tutorials?: boolean | null
           weekly_availability?: number | null
+          wizard_step?: number | null
+          work_routine?: string | null
         }
         Update: {
           available_equipment?: string[] | null
+          available_hours?: string[] | null
+          coaching_intensity?: string | null
           created_at?: string | null
+          current_pain?: boolean | null
+          disliked_exercises?: string | null
+          does_physiotherapy?: boolean | null
+          energy_level?: string | null
           goals?: string | null
+          has_medical_report?: boolean | null
+          has_trained_before?: boolean | null
           id?: string
           injuries?: Json | null
+          is_complete?: boolean | null
           joint_pain?: Json | null
+          last_training_period?: string | null
+          liked_exercises?: string | null
           medical_clearance?: boolean | null
           medical_clearance_notes?: string | null
+          modalities_practiced?: string[] | null
           movement_restrictions?: string | null
+          movements_that_worsen?: string[] | null
+          movements_to_avoid?: string[] | null
           notes?: string | null
+          pain_intensity?: number | null
+          pain_locations?: Json | null
           patient_id?: string
+          perceived_level?: string | null
+          plan_flexibility?: string | null
+          previous_frequency?: number | null
+          primary_goal?: string | null
+          readiness_screening?: Json | null
+          requires_medical_review?: boolean | null
+          secondary_goals?: string[] | null
+          session_duration?: number | null
+          sleep_quality?: string | null
+          specific_conditions?: string[] | null
           surgeries?: Json | null
+          synced_patient_data?: Json | null
           trainer_id?: string
+          training_difficulties?: string | null
           training_experience?: string | null
+          training_location?: string | null
+          training_modality?: string | null
           training_preference?: string | null
+          training_years?: number | null
           updated_at?: string | null
+          wants_post_workout_feedback?: boolean | null
+          wants_reminders?: boolean | null
+          wants_video_tutorials?: boolean | null
           weekly_availability?: number | null
+          wizard_step?: number | null
+          work_routine?: string | null
         }
         Relationships: []
       }

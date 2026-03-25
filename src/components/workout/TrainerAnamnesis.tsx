@@ -1,20 +1,25 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import {
-  ClipboardList, AlertTriangle, Activity, Dumbbell, Heart,
-  Calendar, Save, User, Target
+  ClipboardList, ChevronLeft, ChevronRight, Save, ShieldAlert,
+  Database, HeartPulse, Stethoscope, Dumbbell, Clock, Target, MessageCircle,
 } from "lucide-react";
+
+import StepSyncedData from "./anamnesis/StepSyncedData";
+import StepReadiness from "./anamnesis/StepReadiness";
+import StepPainInjury from "./anamnesis/StepPainInjury";
+import StepTrainingHistory from "./anamnesis/StepTrainingHistory";
+import StepAvailability from "./anamnesis/StepAvailability";
+import StepGoals from "./anamnesis/StepGoals";
+import StepCoachingStyle from "./anamnesis/StepCoachingStyle";
+import { INITIAL_DATA, STEP_TITLES, type TrainerAnamnesisData } from "./anamnesis/types";
 
 interface TrainerAnamnesisProps {
   studentId: string;
@@ -23,49 +28,17 @@ interface TrainerAnamnesisProps {
   onClose: () => void;
 }
 
-const JOINT_PAINS = [
-  "Ombro", "Cotovelo", "Punho", "Lombar", "Quadril",
-  "Joelho", "Tornozelo", "Cervical", "Nenhuma"
-];
-
-const MOVEMENT_RESTRICTIONS = [
-  "Agachamento profundo", "Overhead press", "Rotação de tronco",
-  "Flexão de quadril", "Extensão lombar", "Nenhuma"
-];
-
-const TRAINING_PREFERENCES = [
-  "Musculação", "Funcional", "Crossfit", "Calistenia",
-  "HIIT", "Cardio", "Yoga/Pilates", "Artes marciais"
-];
-
-const EQUIPMENT_LIST = [
-  "Academia completa", "Home gym básico", "Apenas peso corporal",
-  "Halteres", "Barra e anilhas", "Elásticos", "Kettlebell", "TRX"
-];
+const STEP_ICONS = [Database, HeartPulse, Stethoscope, Dumbbell, Clock, Target, MessageCircle];
+const TOTAL_STEPS = 7;
 
 export default function TrainerAnamnesis({ studentId, studentName, open, onClose }: TrainerAnamnesisProps) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [existingId, setExistingId] = useState<string | null>(null);
-
-  // Form fields
-  const [jointPains, setJointPains] = useState<string[]>([]);
-  const [injuries, setInjuries] = useState("");
-  const [surgeries, setSurgeries] = useState("");
-  const [movementRestrictions, setMovementRestrictions] = useState<string[]>([]);
-  const [trainingExperience, setTrainingExperience] = useState("beginner");
-  const [trainingYears, setTrainingYears] = useState("");
-  const [weeklyAvailability, setWeeklyAvailability] = useState("3");
-  const [sessionDuration, setSessionDuration] = useState("60");
-  const [trainingPreferences, setTrainingPreferences] = useState<string[]>([]);
-  const [equipment, setEquipment] = useState<string[]>([]);
-  const [medicalClearance, setMedicalClearance] = useState(false);
-  const [goals, setGoals] = useState("");
-  const [observations, setObservations] = useState("");
-
-  // Pre-fill from patient profile
-  const [patientInfo, setPatientInfo] = useState<any>(null);
+  const [step, setStep] = useState(0);
+  const [data, setData] = useState<TrainerAnamnesisData>({ ...INITIAL_DATA });
+  const [professionals, setProfessionals] = useState<{ role: string; name: string }[]>([]);
 
   useEffect(() => {
     if (!open || !studentId) return;
@@ -74,71 +47,191 @@ export default function TrainerAnamnesis({ studentId, studentName, open, onClose
 
   const loadData = async () => {
     setLoading(true);
-    const [profileRes, assessmentRes] = await Promise.all([
-      supabase.from("profiles").select("full_name, height, birth_date").eq("user_id", studentId).single(),
-      (supabase as any).from("trainer_assessments").select("*").eq("student_id", studentId).eq("trainer_id", user?.id).order("created_at", { ascending: false }).limit(1),
-    ]);
+    try {
+      const [profileRes, anamnesisRes, assessmentRes, linksRes] = await Promise.all([
+        supabase.from("profiles").select("full_name, phone, avatar_url, goal").eq("user_id", studentId).maybeSingle(),
+        supabase.from("patient_anamnesis").select("answers").eq("user_id", studentId).eq("status", "completed").order("created_at", { ascending: false }).limit(1),
+        (supabase as any).from("trainer_assessments").select("*").eq("patient_id", studentId).eq("trainer_id", user?.id).order("created_at", { ascending: false }).limit(1),
+        (supabase as any).from("patient_professional_links").select("professional_role, profiles!patient_professional_links_professional_id_fkey(full_name)").eq("patient_id", studentId).eq("status", "active"),
+      ]);
 
-    setPatientInfo(profileRes.data);
+      // Build synced data
+      const profile = profileRes.data;
+      const answers = (anamnesisRes.data as any)?.[0]?.answers as Record<string, any> | null;
+      const birthDate = answers?.birth_date || answers?.birthdate;
+      const age = birthDate
+        ? Math.floor((Date.now() - new Date(birthDate).getTime()) / 31557600000)
+        : null;
 
-    const existing = assessmentRes.data?.[0];
-    if (existing) {
-      setExistingId(existing.id);
-      setJointPains(existing.joint_pains || []);
-      setInjuries(existing.injuries || "");
-      setSurgeries(existing.surgeries || "");
-      setMovementRestrictions(existing.movement_restrictions || []);
-      setTrainingExperience(existing.training_experience || "beginner");
-      setTrainingYears(existing.training_years?.toString() || "");
-      setWeeklyAvailability(existing.weekly_availability?.toString() || "3");
-      setSessionDuration(existing.session_duration?.toString() || "60");
-      setTrainingPreferences(existing.training_preferences || []);
-      setEquipment(existing.equipment_available || []);
-      setMedicalClearance(existing.medical_clearance || false);
-      setGoals(existing.goals || "");
-      setObservations(existing.observations || "");
+      const syncedData = {
+        name: profile?.full_name || studentName,
+        age: age ?? undefined,
+        height: answers?.height ?? undefined,
+        weight: answers?.weight ?? undefined,
+        sex: answers?.biological_sex ?? answers?.sex ?? undefined,
+        goal: answers?.primary_goal ?? answers?.goal ?? undefined,
+        flags: [] as string[],
+        restrictions: (answers?.food_intolerances || answers?.allergies || []) as string[],
+      };
+
+      // Professionals
+      const profs = (linksRes.data || []).map((l: any) => ({
+        role: l.professional_role === "nutritionist" ? "Nutricionista" : l.professional_role === "trainer" ? "Personal" : l.professional_role,
+        name: l.profiles?.full_name || "—",
+      }));
+      setProfessionals(profs);
+
+      // Load existing assessment
+      const existing = assessmentRes.data?.[0];
+      if (existing) {
+        setExistingId(existing.id);
+        setData({
+          synced_patient_data: existing.synced_patient_data || syncedData,
+          readiness_screening: existing.readiness_screening || INITIAL_DATA.readiness_screening,
+          requires_medical_review: existing.requires_medical_review || false,
+          medical_clearance: existing.medical_clearance || false,
+          medical_clearance_notes: existing.medical_clearance_notes || "",
+          current_pain: existing.current_pain || false,
+          pain_locations: existing.pain_locations || [],
+          injuries: typeof existing.injuries === "string" ? existing.injuries : JSON.stringify(existing.injuries || ""),
+          surgeries: typeof existing.surgeries === "string" ? existing.surgeries : JSON.stringify(existing.surgeries || ""),
+          specific_conditions: existing.specific_conditions || [],
+          movements_to_avoid: existing.movements_to_avoid || [],
+          movements_that_worsen: existing.movements_that_worsen || [],
+          does_physiotherapy: existing.does_physiotherapy || false,
+          has_medical_report: existing.has_medical_report || false,
+          has_trained_before: existing.has_trained_before || false,
+          training_years: existing.training_years,
+          last_training_period: existing.last_training_period || "",
+          perceived_level: existing.perceived_level || "beginner",
+          modalities_practiced: existing.modalities_practiced || [],
+          previous_frequency: existing.previous_frequency,
+          liked_exercises: existing.liked_exercises || "",
+          disliked_exercises: existing.disliked_exercises || "",
+          training_difficulties: existing.training_difficulties || "",
+          weekly_availability: existing.weekly_availability || 3,
+          available_hours: existing.available_hours || [],
+          session_duration: existing.session_duration || 60,
+          training_location: existing.training_location || "gym",
+          training_modality: existing.training_modality || "presencial",
+          available_equipment: existing.available_equipment || [],
+          work_routine: existing.work_routine || "",
+          sleep_quality: existing.sleep_quality || "",
+          energy_level: existing.energy_level || "",
+          primary_goal: existing.primary_goal || "",
+          secondary_goals: existing.secondary_goals || [],
+          coaching_intensity: existing.coaching_intensity || "moderate",
+          wants_reminders: existing.wants_reminders ?? true,
+          wants_video_tutorials: existing.wants_video_tutorials ?? true,
+          wants_post_workout_feedback: existing.wants_post_workout_feedback ?? true,
+          plan_flexibility: existing.plan_flexibility || "flexible",
+          notes: existing.notes || "",
+          wizard_step: existing.wizard_step || 0,
+          is_complete: existing.is_complete || false,
+        });
+        setStep(existing.wizard_step || 0);
+      } else {
+        setData({ ...INITIAL_DATA, synced_patient_data: syncedData });
+        setStep(0);
+      }
+    } catch (err) {
+      console.error("Error loading anamnesis:", err);
     }
     setLoading(false);
   };
 
-  const toggleItem = (list: string[], setList: (v: string[]) => void, item: string) => {
-    if (item === "Nenhuma" || item === "Nenhum") {
-      setList([item]);
-      return;
-    }
-    const filtered = list.filter(i => i !== "Nenhuma" && i !== "Nenhum");
-    setList(filtered.includes(item) ? filtered.filter(i => i !== item) : [...filtered, item]);
+  const updateData = (partial: Partial<TrainerAnamnesisData>) => {
+    setData(prev => ({ ...prev, ...partial }));
   };
 
-  const save = async () => {
+  const autoSave = async (nextStep: number) => {
+    if (!user) return;
+    const payload = buildPayload(nextStep, false);
+    try {
+      if (existingId) {
+        await (supabase as any).from("trainer_assessments").update(payload).eq("id", existingId);
+      } else {
+        const { data: inserted } = await (supabase as any).from("trainer_assessments").insert(payload).select("id").single();
+        if (inserted) setExistingId(inserted.id);
+      }
+    } catch {}
+  };
+
+  const buildPayload = (wizardStep: number, complete: boolean) => ({
+    patient_id: studentId,
+    trainer_id: user!.id,
+    synced_patient_data: data.synced_patient_data,
+    readiness_screening: data.readiness_screening,
+    requires_medical_review: data.requires_medical_review,
+    medical_clearance: data.medical_clearance,
+    medical_clearance_notes: data.medical_clearance_notes || null,
+    current_pain: data.current_pain,
+    pain_locations: data.pain_locations,
+    injuries: data.injuries || null,
+    surgeries: data.surgeries || null,
+    specific_conditions: data.specific_conditions,
+    movements_to_avoid: data.movements_to_avoid,
+    movements_that_worsen: data.movements_that_worsen,
+    does_physiotherapy: data.does_physiotherapy,
+    has_medical_report: data.has_medical_report,
+    has_trained_before: data.has_trained_before,
+    training_years: data.training_years,
+    last_training_period: data.last_training_period || null,
+    perceived_level: data.perceived_level,
+    modalities_practiced: data.modalities_practiced,
+    previous_frequency: data.previous_frequency,
+    liked_exercises: data.liked_exercises || null,
+    disliked_exercises: data.disliked_exercises || null,
+    training_difficulties: data.training_difficulties || null,
+    weekly_availability: data.weekly_availability,
+    available_hours: data.available_hours,
+    session_duration: data.session_duration,
+    training_location: data.training_location,
+    training_modality: data.training_modality,
+    available_equipment: data.available_equipment,
+    work_routine: data.work_routine || null,
+    sleep_quality: data.sleep_quality || null,
+    energy_level: data.energy_level || null,
+    primary_goal: data.primary_goal || null,
+    secondary_goals: data.secondary_goals,
+    goals: data.primary_goal || null,
+    coaching_intensity: data.coaching_intensity,
+    wants_reminders: data.wants_reminders,
+    wants_video_tutorials: data.wants_video_tutorials,
+    wants_post_workout_feedback: data.wants_post_workout_feedback,
+    plan_flexibility: data.plan_flexibility,
+    notes: data.notes || null,
+    joint_pain: data.pain_locations,
+    movement_restrictions: data.movements_to_avoid.join(", ") || null,
+    training_experience: data.perceived_level,
+    training_preference: data.modalities_practiced.join(", ") || null,
+    wizard_step: wizardStep,
+    is_complete: complete,
+  });
+
+  const nextStep = () => {
+    if (step < TOTAL_STEPS - 1) {
+      const next = step + 1;
+      setStep(next);
+      autoSave(next);
+    }
+  };
+
+  const prevStep = () => {
+    if (step > 0) setStep(step - 1);
+  };
+
+  const finalize = async () => {
     if (!user) return;
     setSaving(true);
     try {
-      const payload = {
-        student_id: studentId,
-        trainer_id: user.id,
-        joint_pains: jointPains,
-        injuries: injuries || null,
-        surgeries: surgeries || null,
-        movement_restrictions: movementRestrictions,
-        training_experience: trainingExperience,
-        training_years: trainingYears ? parseInt(trainingYears) : null,
-        weekly_availability: parseInt(weeklyAvailability),
-        session_duration: parseInt(sessionDuration),
-        training_preferences: trainingPreferences,
-        equipment_available: equipment,
-        medical_clearance: medicalClearance,
-        goals: goals || null,
-        observations: observations || null,
-      };
-
+      const payload = buildPayload(TOTAL_STEPS - 1, true);
       if (existingId) {
         await (supabase as any).from("trainer_assessments").update(payload).eq("id", existingId);
       } else {
         await (supabase as any).from("trainer_assessments").insert(payload);
       }
-
-      toast.success("Avaliação salva com sucesso! ✅");
+      toast.success("Avaliação concluída com sucesso! ✅");
       onClose();
     } catch {
       toast.error("Erro ao salvar avaliação");
@@ -146,201 +239,95 @@ export default function TrainerAnamnesis({ studentId, studentName, open, onClose
     setSaving(false);
   };
 
+  const progress = ((step + 1) / TOTAL_STEPS) * 100;
+  const StepIcon = STEP_ICONS[step];
+  const isLastStep = step === TOTAL_STEPS - 1;
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <ClipboardList className="w-5 h-5 text-primary" />
-            Avaliação do Personal — {studentName}
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[92vh] overflow-hidden flex flex-col p-0">
+        {/* Header */}
+        <div className="p-4 pb-2 border-b border-border/50">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <ClipboardList className="w-5 h-5 text-primary" />
+              Avaliação do Personal
+              {data.requires_medical_review && (
+                <Badge variant="destructive" className="text-[10px] flex items-center gap-1">
+                  <ShieldAlert className="w-3 h-3" /> Requer revisão
+                </Badge>
+              )}
+            </DialogTitle>
+          </DialogHeader>
 
-        {loading ? (
-          <div className="py-12 text-center text-muted-foreground">Carregando...</div>
-        ) : (
-          <div className="space-y-5 mt-2">
-            {/* Patient info (auto-filled) */}
-            {patientInfo && (
-              <Card className="bg-muted/30 border-border/50">
-                <CardContent className="p-3 flex items-center gap-3">
-                  <User className="w-5 h-5 text-primary" />
-                  <div className="text-sm">
-                    <span className="font-medium">{patientInfo.full_name}</span>
-                    {patientInfo.height && <span className="text-muted-foreground ml-2">{patientInfo.height}cm</span>}
-                    {patientInfo.birth_date && (
-                      <span className="text-muted-foreground ml-2">
-                        {Math.floor((Date.now() - new Date(patientInfo.birth_date).getTime()) / 31557600000)} anos
-                      </span>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Goals */}
-            <div>
-              <label className="text-sm font-medium flex items-center gap-1.5 mb-2">
-                <Target className="w-4 h-4 text-primary" /> Objetivo principal
-              </label>
-              <Textarea
-                value={goals}
-                onChange={(e) => setGoals(e.target.value)}
-                placeholder="Ex: Ganho de massa muscular, emagrecimento, reabilitação..."
-                rows={2}
-              />
-            </div>
-
-            {/* Joint Pains */}
-            <div>
-              <label className="text-sm font-medium flex items-center gap-1.5 mb-2">
-                <AlertTriangle className="w-4 h-4 text-warning" /> Dores articulares
-              </label>
-              <div className="flex flex-wrap gap-1.5">
-                {JOINT_PAINS.map(p => (
-                  <button
-                    key={p}
-                    onClick={() => toggleItem(jointPains, setJointPains, p)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                      jointPains.includes(p)
-                        ? "bg-warning/20 text-warning border border-warning/30"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >{p}</button>
-                ))}
+          {/* Step indicator */}
+          <div className="mt-3">
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-1.5">
+                <StepIcon className="w-4 h-4 text-primary" />
+                <span className="text-sm font-medium">{STEP_TITLES[step]}</span>
               </div>
+              <span className="text-xs text-muted-foreground">{step + 1}/{TOTAL_STEPS}</span>
             </div>
+            <Progress value={progress} className="h-1.5" />
 
-            {/* Injuries & Surgeries */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-sm font-medium mb-1 block">Lesões anteriores</label>
-                <Textarea value={injuries} onChange={(e) => setInjuries(e.target.value)} placeholder="Descreva lesões..." rows={2} />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">Cirurgias</label>
-                <Textarea value={surgeries} onChange={(e) => setSurgeries(e.target.value)} placeholder="Descreva cirurgias..." rows={2} />
-              </div>
+            {/* Step dots */}
+            <div className="flex justify-center gap-1.5 mt-2">
+              {STEP_TITLES.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => { autoSave(i); setStep(i); }}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    i === step ? "bg-primary w-5" : i < step ? "bg-primary/50" : "bg-muted-foreground/20"
+                  }`}
+                />
+              ))}
             </div>
+          </div>
+        </div>
 
-            {/* Movement Restrictions */}
-            <div>
-              <label className="text-sm font-medium flex items-center gap-1.5 mb-2">
-                <Activity className="w-4 h-4 text-destructive" /> Restrições de movimento
-              </label>
-              <div className="flex flex-wrap gap-1.5">
-                {MOVEMENT_RESTRICTIONS.map(r => (
-                  <button
-                    key={r}
-                    onClick={() => toggleItem(movementRestrictions, setMovementRestrictions, r)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                      movementRestrictions.includes(r)
-                        ? "bg-destructive/20 text-destructive border border-destructive/30"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >{r}</button>
-                ))}
-              </div>
-            </div>
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-4">
+          {loading ? (
+            <div className="py-16 text-center text-muted-foreground">Carregando dados...</div>
+          ) : (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={step}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.2 }}
+              >
+                {step === 0 && <StepSyncedData data={data} professionals={professionals} />}
+                {step === 1 && <StepReadiness data={data} onChange={updateData} />}
+                {step === 2 && <StepPainInjury data={data} onChange={updateData} />}
+                {step === 3 && <StepTrainingHistory data={data} onChange={updateData} />}
+                {step === 4 && <StepAvailability data={data} onChange={updateData} />}
+                {step === 5 && <StepGoals data={data} onChange={updateData} />}
+                {step === 6 && <StepCoachingStyle data={data} onChange={updateData} />}
+              </motion.div>
+            </AnimatePresence>
+          )}
+        </div>
 
-            {/* Training Experience */}
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label className="text-sm font-medium mb-1 block">Experiência</label>
-                <Select value={trainingExperience} onValueChange={setTrainingExperience}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="beginner">Iniciante</SelectItem>
-                    <SelectItem value="intermediate">Intermediário</SelectItem>
-                    <SelectItem value="advanced">Avançado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">Anos de treino</label>
-                <Input type="number" value={trainingYears} onChange={(e) => setTrainingYears(e.target.value)} placeholder="0" />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5" /> Dias/semana
-                </label>
-                <Select value={weeklyAvailability} onValueChange={setWeeklyAvailability}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {[1,2,3,4,5,6,7].map(n => <SelectItem key={n} value={n.toString()}>{n}x</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Session duration */}
-            <div>
-              <label className="text-sm font-medium mb-1 block">Duração da sessão (min)</label>
-              <Select value={sessionDuration} onValueChange={setSessionDuration}>
-                <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {[30, 45, 60, 75, 90, 120].map(n => <SelectItem key={n} value={n.toString()}>{n} min</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Training Preferences */}
-            <div>
-              <label className="text-sm font-medium flex items-center gap-1.5 mb-2">
-                <Dumbbell className="w-4 h-4 text-primary" /> Preferências de treino
-              </label>
-              <div className="flex flex-wrap gap-1.5">
-                {TRAINING_PREFERENCES.map(p => (
-                  <button
-                    key={p}
-                    onClick={() => toggleItem(trainingPreferences, setTrainingPreferences, p)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                      trainingPreferences.includes(p)
-                        ? "bg-primary/20 text-primary border border-primary/30"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >{p}</button>
-                ))}
-              </div>
-            </div>
-
-            {/* Equipment */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">Equipamento disponível</label>
-              <div className="flex flex-wrap gap-1.5">
-                {EQUIPMENT_LIST.map(e => (
-                  <button
-                    key={e}
-                    onClick={() => toggleItem(equipment, setEquipment, e)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                      equipment.includes(e)
-                        ? "bg-secondary text-secondary-foreground border border-border"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >{e}</button>
-                ))}
-              </div>
-            </div>
-
-            {/* Medical Clearance */}
-            <div className="flex items-center gap-2">
-              <Checkbox checked={medicalClearance} onCheckedChange={(c) => setMedicalClearance(!!c)} />
-              <label className="text-sm flex items-center gap-1.5">
-                <Heart className="w-4 h-4 text-destructive" /> Possui liberação médica para atividade física
-              </label>
-            </div>
-
-            {/* Observations */}
-            <div>
-              <label className="text-sm font-medium mb-1 block">Observações gerais</label>
-              <Textarea value={observations} onChange={(e) => setObservations(e.target.value)} placeholder="Informações adicionais..." rows={3} />
-            </div>
-
-            {/* Save */}
-            <Button onClick={save} disabled={saving} className="w-full" size="lg">
-              <Save className="w-4 h-4 mr-2" />
-              {saving ? "Salvando..." : existingId ? "Atualizar Avaliação" : "Salvar Avaliação"}
+        {/* Footer */}
+        {!loading && (
+          <div className="p-4 pt-2 border-t border-border/50 flex items-center justify-between gap-2">
+            <Button variant="ghost" size="sm" onClick={prevStep} disabled={step === 0}>
+              <ChevronLeft className="w-4 h-4 mr-1" /> Voltar
             </Button>
+
+            {isLastStep ? (
+              <Button onClick={finalize} disabled={saving} size="sm" className="min-w-[140px]">
+                <Save className="w-4 h-4 mr-1" />
+                {saving ? "Salvando..." : existingId ? "Atualizar" : "Concluir Avaliação"}
+              </Button>
+            ) : (
+              <Button onClick={nextStep} size="sm">
+                Próximo <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            )}
           </div>
         )}
       </DialogContent>
