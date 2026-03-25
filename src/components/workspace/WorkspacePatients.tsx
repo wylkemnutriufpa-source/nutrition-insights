@@ -51,7 +51,7 @@ export default function WorkspacePatients({ search }: Props) {
           const profile = p.profiles as any;
           const name = profile?.full_name || "Sem nome";
           const initials = name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
-          const status = profile?.journey_status || "unknown";
+          const status = (p as any).journey_status || "unknown";
 
           return (
             <Link
