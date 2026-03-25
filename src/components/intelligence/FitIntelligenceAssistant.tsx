@@ -339,7 +339,35 @@ export default function FitIntelligenceAssistant() {
     );
   }
 
-  if (!isActiveAccess || !prompt) return null;
+  if (!isActiveAccess) return null;
+
+  // No prompt: show mini orb with replay option on long press
+  if (!prompt) {
+    return (
+      <motion.button
+        key="orb-idle"
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 0.6 }}
+        whileHover={{ opacity: 1, scale: 1.1 }}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          setReplayActivation(true);
+        }}
+        onClick={() => {
+          // Long press hint
+          toast("Segure para rever a apresentação ✨", { duration: 2000 });
+        }}
+        className="fixed bottom-24 right-4 z-[9990] w-12 h-12 rounded-full flex items-center justify-center opacity-50 hover:opacity-100 transition-opacity"
+        style={{
+          background: "linear-gradient(135deg, hsl(var(--primary)), hsl(45 70% 40%))",
+          boxShadow: "0 0 20px -5px hsl(45 80% 55% / 0.2)",
+        }}
+        title="Segure para rever apresentação"
+      >
+        <Brain className="w-5 h-5 text-primary-foreground" />
+      </motion.button>
+    );
+  }
 
   return (
     <AnimatePresence mode="wait">
