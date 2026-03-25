@@ -80,6 +80,7 @@ export default function PatientDetail() {
   const mealPlanDocs = data?.mealPlanDocs ?? [];
   const assessmentDocs = data?.assessmentDocs ?? [];
   const patientStatus = data?.patientStatus ?? "active";
+  const journeyStatus = data?.journeyStatus ?? "active";
   const npId = data?.npId ?? null;
   const prestigePlans = data?.prestigePlans ?? [];
   const currentPrestigePlan = data?.currentPrestigePlan ?? null;
