@@ -45,6 +45,8 @@ export interface PatientsListResult {
   counts: { active: number; inactive: number };
 }
 
+const isInactiveStatus = (status: string | null | undefined) => status === "inactive";
+
 function computeScore(stats: any, checklistData: any): number {
   let score = 0;
   if (checklistData) {
@@ -95,7 +97,7 @@ function getRecentScore(patientId: string): number {
 
 export { computeScore, getRecentScore };
 
-export const DEFAULT_PAGE_SIZE = 50;
+export const DEFAULT_PAGE_SIZE = 250;
 
 export interface PatientsListParams {
   page?: number;
@@ -123,9 +125,9 @@ export function usePatientsList(params: PatientsListParams = {}) {
       // 1. Get total counts by status (lightweight count queries)
       const [activeCountRes, inactiveCountRes] = await Promise.all([
         supabase.from("nutritionist_patients").select("id", { count: "exact", head: true })
-          .eq("nutritionist_id", userId).eq("status", "active"),
+          .eq("nutritionist_id", userId).neq("status", "inactive"),
         supabase.from("nutritionist_patients").select("id", { count: "exact", head: true })
-          .eq("nutritionist_id", userId).neq("status", "active"),
+          .eq("nutritionist_id", userId).eq("status", "inactive"),
       ]);
 
       const activeCount = activeCountRes.count || 0;
@@ -138,8 +140,8 @@ export function usePatientsList(params: PatientsListParams = {}) {
         .eq("nutritionist_id", userId)
         .order("created_at", { ascending: false });
 
-      if (statusFilter === "active") query = query.eq("status", "active");
-      else if (statusFilter === "inactive") query = query.neq("status", "active");
+       if (statusFilter === "active") query = query.neq("status", "inactive");
+       else if (statusFilter === "inactive") query = query.eq("status", "inactive");
 
       // Server-side search: fetch matching profiles, then filter links
       let allData: any[] = [];
@@ -176,8 +178,8 @@ export function usePatientsList(params: PatientsListParams = {}) {
           .select("*")
           .eq("nutritionist_id", userId)
           .in("patient_id", Array.from(matchingIds));
-        if (statusFilter === "active") linksQuery = linksQuery.eq("status", "active");
-        else if (statusFilter === "inactive") linksQuery = linksQuery.neq("status", "active");
+        if (statusFilter === "active") linksQuery = linksQuery.neq("status", "inactive");
+        else if (statusFilter === "inactive") linksQuery = linksQuery.eq("status", "inactive");
 
         const { data: filteredLinks } = await linksQuery;
         totalCount = (filteredLinks || []).length;
@@ -336,9 +338,68 @@ function mapPrestigePlans(data: any[] | null): PrestigePlan[] {
   }));
 }
 
+function updateCachedPatientsAfterStatusToggle(
+  currentData: PatientsListResult | undefined,
+  linkId: string,
+  newStatus: "active" | "inactive",
+  statusFilter: PatientsListParams["statusFilter"] = "all",
+) {
+  if (!currentData) return currentData;
+
+  const previousPatient = currentData.patients.find((patient) => patient.id === linkId);
+  if (!previousPatient) return currentData;
+
+  const previousStatus = previousPatient.status;
+  const nextPatients = currentData.patients
+    .map((patient) => patient.id === linkId ? { ...patient, status: newStatus } : patient)
+    .filter((patient) => {
+      if (statusFilter === "active") return patient.status === "active";
+      if (statusFilter === "inactive") return patient.status !== "active";
+      return true;
+    });
+
+  const activeDelta = !isInactiveStatus(previousStatus) && isInactiveStatus(newStatus)
+    ? -1
+    : isInactiveStatus(previousStatus) && !isInactiveStatus(newStatus)
+      ? 1
+      : 0;
+
+  const nextCounts = {
+    active: Math.max(0, currentData.counts.active + activeDelta),
+    inactive: Math.max(0, currentData.counts.inactive - activeDelta),
+  };
+
+  const nextTotalCount = Math.max(
+    0,
+    currentData.pagination.totalCount + (
+      statusFilter === "active" && !isInactiveStatus(previousStatus) && isInactiveStatus(newStatus)
+        ? -1
+        : statusFilter === "inactive" && isInactiveStatus(previousStatus) && !isInactiveStatus(newStatus)
+          ? -1
+          : 0
+    ),
+  );
+
+  const totalPages = nextTotalCount > 0 ? Math.ceil(nextTotalCount / currentData.pagination.pageSize) : 0;
+
+  return {
+    ...currentData,
+    patients: nextPatients,
+    counts: nextCounts,
+    pagination: {
+      ...currentData.pagination,
+      totalCount: nextTotalCount,
+      totalPages,
+      hasNextPage: totalPages > 0 && currentData.pagination.page < totalPages,
+      hasPreviousPage: currentData.pagination.page > 1,
+    },
+  };
+}
+
 export function useTogglePatientStatus() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const patientQueryKey = queryKeys.patients.all(user?.id ?? "");
 
   return useMutation({
     mutationFn: async ({ linkId, currentStatus }: { linkId: string; currentStatus: string }) => {
@@ -351,15 +412,39 @@ export function useTogglePatientStatus() {
       logAudit("toggle_patient_status", "patient", linkId, { new_status: newStatus });
       return newStatus;
     },
+    onMutate: async ({ linkId, currentStatus }) => {
+      const nextStatus = currentStatus === "active" ? "inactive" : "active";
+      await queryClient.cancelQueries({ queryKey: patientQueryKey });
+
+      const previousQueries = queryClient.getQueriesData<PatientsListResult>({ queryKey: patientQueryKey });
+
+      previousQueries.forEach(([key, value]) => {
+        const statusFilter = Array.isArray(key) ? key[4] as PatientsListParams["statusFilter"] | undefined : undefined;
+        queryClient.setQueryData<PatientsListResult>(
+          key,
+          updateCachedPatientsAfterStatusToggle(value, linkId, nextStatus, statusFilter),
+        );
+      });
+
+      return { previousQueries };
+    },
     onSuccess: (newStatus) => {
-      queryClient.invalidateQueries({ queryKey: ["patients", user?.id ?? ""] });
+      queryClient.invalidateQueries({ queryKey: patientQueryKey });
       toast.success(
         newStatus === "active"
           ? "Paciente ativado — dados incluídos nas métricas"
           : "Paciente desativado — excluído das métricas e leituras de IA"
       );
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any, _vars, context) => {
+      context?.previousQueries?.forEach(([key, value]) => {
+        queryClient.setQueryData(key, value);
+      });
+      toast.error(err.message);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: patientQueryKey });
+    },
   });
 }
 

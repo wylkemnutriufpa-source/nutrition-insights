@@ -169,7 +169,7 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
   allPrestigePlans?: PrestigePlan[];
   isOnline?: boolean;
 }) {
-  const isInactive = p.status !== "active";
+  const isInactive = p.status === "inactive";
   const score = p.priorityScore || 0;
   const tier = getScoreTier(score);
   const hasPrograms = p.programs && p.programs.length > 0;
@@ -206,9 +206,9 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
           </div>
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
             <span className={`text-xs px-2 py-0.5 rounded-full ${
-              p.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
+              !isInactive ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
             }`}>
-              {p.status === "active" 
+              {!isInactive 
                 ? p.expires_at 
                   ? (() => {
                       const exp = new Date(p.expires_at);
@@ -223,7 +223,7 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
                 : "Inativo"
               }
             </span>
-            {p.status === "active" && p.expires_at && (() => {
+            {!isInactive && p.expires_at && (() => {
               const diffDays = Math.ceil((new Date(p.expires_at).getTime() - Date.now()) / 86400000);
               if (diffDays < 0) return <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive font-medium">Vencido</span>;
               if (diffDays <= 7) return <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-warning/10 text-warning font-medium">{diffDays}d restantes</span>;
@@ -260,10 +260,10 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
             <Target className="w-4 h-4" />
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); toggleStatus(p.id, p.status); }}
-            className="text-muted-foreground hover:text-foreground p-1" title={p.status === "active" ? "Desativar" : "Ativar"}
+              onClick={(e) => { e.stopPropagation(); toggleStatus(p.id, p.status); }}
+              className="text-muted-foreground hover:text-foreground p-1" title={!isInactive ? "Desativar" : "Ativar"}
           >
-            {p.status === "active" ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+              {!isInactive ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
           </button>
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
         </div>
@@ -325,7 +325,7 @@ function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssign
   onUpdateExpiry: (id: string, date: string | null) => void;
   allPrestigePlans?: PrestigePlan[];
 }) {
-  const isInactive = p.status !== "active";
+  const isInactive = p.status === "inactive";
   const score = p.priorityScore || 0;
   const displayName = p.profile?.full_name || p.email || "Paciente";
 
@@ -347,9 +347,9 @@ function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssign
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-            p.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
+            !isInactive ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
           }`}>
-            {p.status === "active"
+            {!isInactive
               ? p.expires_at
                 ? (() => {
                     const exp = new Date(p.expires_at);
@@ -583,16 +583,18 @@ export default function Patients() {
     setBulkManageOpen(true);
   };
 
+  const isInactivePatient = useCallback((patient: PatientInfo) => patient.status === "inactive", []);
+
   const bulkManageList = useMemo(() => {
     const source = bulkMode === "deactivate"
-      ? patients.filter(p => p.status === "active")
-      : patients.filter(p => p.status !== "active");
+      ? patients.filter(p => !isInactivePatient(p))
+      : patients.filter(p => isInactivePatient(p));
     if (!bulkSearch.trim()) return source;
     const q = bulkSearch.toLowerCase();
     return source.filter(p =>
       p.profile?.full_name?.toLowerCase().includes(q) || p.email?.toLowerCase().includes(q)
     );
-  }, [patients, bulkMode, bulkSearch]);
+  }, [patients, bulkMode, bulkSearch, isInactivePatient]);
 
   const toggleBulkSelect = (id: string) => {
     setBulkSelected(prev => {
@@ -640,7 +642,7 @@ export default function Patients() {
   const scoreFilter = (p: PatientInfo) => {
     const score = p.priorityScore || 0;
     if (filter === "all") return true;
-    if (p.status !== "active") return true;
+    if (isInactivePatient(p)) return true;
     if (filter === "critical") return score < 40;
     if (filter === "medium") return score >= 40 && score < 70;
     return score >= 70;
@@ -701,7 +703,7 @@ export default function Patients() {
                   <Users className="w-7 h-7 text-primary" /> Pacientes
                 </h1>
                 <p className="text-muted-foreground text-sm">
-                  {counts.active} ativos · {counts.inactive} inativos · página {pagination.page} de {pagination.totalPages || 1}
+                  {counts.active} visíveis · {counts.inactive} inativos · página {pagination.page} de {pagination.totalPages || 1}
                   {isFetching && !isLoading && <span className="ml-2 text-xs text-primary animate-pulse">atualizando...</span>}
                 </p>
               </div>
@@ -858,7 +860,7 @@ export default function Patients() {
             <Tabs value={statusTab === "active" ? "ativos" : statusTab === "inactive" ? "inativos" : "todos"} onValueChange={handleTabChange} className="space-y-4">
               <TabsList className="flex flex-wrap h-auto gap-1">
                 <TabsTrigger value="ativos" className="gap-1.5">
-                  <UserCheck className="w-3.5 h-3.5" /> Ativos
+                  <UserCheck className="w-3.5 h-3.5" /> Lista principal
                   <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">{counts.active}</Badge>
                 </TabsTrigger>
                 <TabsTrigger value="inativos" className="gap-1.5">
@@ -879,7 +881,7 @@ export default function Patients() {
                   removeFromProgram={removeFromProgram}
                   onUpdateExpiry={updateExpiry}
                   search={search}
-                  emptyMessage={statusTab === "active" ? "Nenhum paciente ativo" : statusTab === "inactive" ? "Nenhum paciente inativo" : "Nenhum paciente encontrado"}
+                  emptyMessage={statusTab === "active" ? "Nenhum paciente ativo na lista principal" : statusTab === "inactive" ? "Nenhum paciente inativo" : "Nenhum paciente encontrado"}
                   layout={layout}
                   allPrestigePlans={prestigePlansList}
                   onlineSet={onlineSet}

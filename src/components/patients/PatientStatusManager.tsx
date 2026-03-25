@@ -45,13 +45,14 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"all" | "active" | "inactive">("all");
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const isInactivePatient = (patient: PatientInfo) => patient.status !== "active";
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
     return patients
       .filter(p => {
-        if (tab === "active") return p.status === "active";
-        if (tab === "inactive") return p.status !== "active";
+        if (tab === "active") return !isInactivePatient(p);
+        if (tab === "inactive") return isInactivePatient(p);
         return true;
       })
       .filter(p => !q || p.profile?.full_name?.toLowerCase().includes(q) || p.email?.toLowerCase().includes(q))
@@ -108,8 +109,8 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
 
   const counts = {
     all: patients.length,
-    active: patients.filter(p => p.status === "active").length,
-    inactive: patients.filter(p => p.status !== "active").length,
+    active: patients.filter(p => !isInactivePatient(p)).length,
+    inactive: patients.filter(p => isInactivePatient(p)).length,
   };
 
   return (
@@ -173,15 +174,15 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
               filtered.map((p, idx) => {
                 const name = p.profile?.full_name || p.email || "Paciente";
                 const initials = name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
-                const isActive = p.status === "active";
+                 const isActive = !isInactivePatient(p);
                 const journey = getJourney(p);
                 const journeyInfo = JOURNEY_LABELS[journey] || JOURNEY_LABELS.active;
                 const isProcessing = processingId === p.patient_id;
                 const completed = hasCompletedOnboarding(journey);
 
                 // Determine which actions to show
-                const showConfirmPayment = journey === "awaiting_payment" || journey === "invited" || journey === "active";
-                const showReleaseOnboarding = (journey === "awaiting_consent" || journey === "active") && !completed;
+                const showConfirmPayment = isActive && (journey === "awaiting_payment" || journey === "invited" || journey === "active");
+                const showReleaseOnboarding = isActive && (journey === "awaiting_consent" || journey === "active") && !completed;
                 const showReviewPlan = journey === "draft_ready_for_review" || journey === "onboarding_completed";
 
                 return (

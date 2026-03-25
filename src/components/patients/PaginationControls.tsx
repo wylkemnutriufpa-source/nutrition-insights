@@ -10,7 +10,7 @@ interface PaginationControlsProps {
   isLoading?: boolean;
 }
 
-const PAGE_SIZE_OPTIONS = [25, 50, 100];
+const PAGE_SIZE_OPTIONS = [25, 50, 100, 250];
 
 export default function PaginationControls({ pagination, onPageChange, onPageSizeChange, isLoading }: PaginationControlsProps) {
   const { page, pageSize, totalCount, totalPages, hasNextPage, hasPreviousPage } = pagination;
