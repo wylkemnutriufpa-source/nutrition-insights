@@ -86,6 +86,7 @@ export function usePatientDetail(patientId: string | undefined) {
         mealPlanDocs: (docs || []).filter((d: any) => d.document_type === "meal_plan"),
         assessmentDocs: (docs || []).filter((d: any) => d.document_type === "assessment"),
         patientStatus: npRes.data?.status || "active",
+        journeyStatus: (npRes.data as any)?.journey_status || "active",
         npId: npRes.data?.id || null,
         prestigePlans,
         currentPrestigePlan,
