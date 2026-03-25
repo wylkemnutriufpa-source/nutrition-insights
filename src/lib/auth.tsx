@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRoles(data?.map((r) => r.role) || []);
   };
 
-  const subCheckRef = { current: false };
+  const subCheckRef = useRef(false);
   const checkSubscription = async () => {
     if (subCheckRef.current) return; // deduplicate concurrent calls
     subCheckRef.current = true;
@@ -133,6 +133,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === "INITIAL_SESSION") return;
+
+        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+          setLoading(true);
+        }
 
         if (event === "SIGNED_IN" && session?.user) {
           logAudit("login", "auth", session.user.id, { email: session.user.email ?? "" });

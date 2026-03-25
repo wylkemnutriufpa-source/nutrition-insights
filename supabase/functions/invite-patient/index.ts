@@ -28,7 +28,8 @@ Deno.serve(async (req) => {
     if (!isPro) throw new Error("Only professionals can invite patients");
 
     const { name, email, phone, method, password } = await req.json();
-    if (!name || !email) throw new Error("Name and email required");
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+    if (!name || !normalizedEmail) throw new Error("Name and email required");
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
@@ -42,7 +43,7 @@ Deno.serve(async (req) => {
       : "Fit@2026!";
 
     const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
-      email,
+      email: normalizedEmail,
       password: finalPassword,
       email_confirm: true,
       user_metadata: { full_name: name, role: "patient" },
@@ -51,12 +52,12 @@ Deno.serve(async (req) => {
     if (createError) {
       // If user already exists, find them and link
       if (createError.message?.includes("already been registered") || (createError as any).code === "email_exists") {
-        console.log(`[invite-patient] User ${email} already exists, linking...`);
+        console.log(`[invite-patient] User ${normalizedEmail} already exists, linking...`);
         
         // Find user by email using admin API
         const { data: userList } = await adminClient.auth.admin.listUsers({ perPage: 1, page: 1 });
         // listUsers doesn't filter by email, use RPC instead
-        const { data: foundId } = await adminClient.rpc("find_patient_by_email", { _email: email });
+        const { data: foundId } = await adminClient.rpc("find_patient_by_email", { _email: normalizedEmail });
         
         if (foundId) {
           patientId = foundId;
@@ -64,7 +65,7 @@ Deno.serve(async (req) => {
           // User exists in auth but not found via RPC - try getUserByEmail approach
           // Search through admin API
           const { data: { users } } = await adminClient.auth.admin.listUsers();
-          const existingUser = users?.find((u: any) => u.email?.toLowerCase() === email.toLowerCase());
+          const existingUser = users?.find((u: any) => u.email?.toLowerCase() === normalizedEmail);
           if (!existingUser) throw new Error("Usuário existe mas não foi possível localizar. Tente via importação.");
           patientId = existingUser.id;
         }
@@ -128,7 +129,7 @@ Deno.serve(async (req) => {
       try {
         await adminClient.auth.admin.generateLink({
           type: "magiclink",
-          email,
+          email: normalizedEmail,
           options: { redirectTo: `${req.headers.get("origin") || "https://fijourney.lovable.app"}/` },
         });
       } catch (e) {
