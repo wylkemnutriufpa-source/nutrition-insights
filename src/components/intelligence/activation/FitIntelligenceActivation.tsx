@@ -57,13 +57,20 @@ function PremiumPhrase({
       <motion.p
         className={styles.text}
         style={{
-          color:
-            variant === "hero"
-              ? "hsl(42 78% 72%)"
-              : variant === "caption"
-                ? "hsl(40 32% 68%)"
-                : "hsl(40 52% 80%)",
-          textShadow: styles.glow,
+          ...(styles.useGradient
+            ? {
+                background: "linear-gradient(180deg, #B8860B 0%, #FFD700 25%, #FFFACD 50%, #FFD700 75%, #B8860B 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                filter: `drop-shadow(0 2px 8px rgba(255,215,0,0.3)) drop-shadow(0 0 20px rgba(255,215,0,0.15))`,
+              }
+            : {
+                color:
+                  variant === "caption"
+                    ? "hsl(40 32% 68%)"
+                    : "hsl(40 52% 80%)",
+                textShadow: styles.glow,
+              }),
         }}
         initial="hidden"
         animate="visible"
