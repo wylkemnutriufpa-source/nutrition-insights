@@ -14,7 +14,7 @@ import { BrainLoaderScreen } from "@/components/common/BrainLoader";
 import { NeuroEntryExperience } from "@/components/system-entry";
 import { CommandPaletteProvider } from "@/components/common/CommandPalette";
 import { readActiveEditorRoute } from "@/lib/mealPlanEditorStore";
-import SessionRestoreBanner from "@/components/common/SessionRestoreBanner";
+import NeuralScreensaver from "@/components/common/NeuralScreensaver";
 import { installGlobalErrorHandlers } from "@/lib/monitoring";
 import { initFeatureFlags } from "@/lib/featureFlags";
 import { useConsentGuard } from "@/hooks/useConsentGuard";
@@ -337,7 +337,7 @@ const App = () => (
           <AuthProvider>
             <CelebrationProvider>
             <DarkModeInit />
-            <SessionRestoreBanner />
+            <NeuralScreensaver />
             <CommandPaletteProvider>
              <Routes>
               {/* Public landing pages */}
