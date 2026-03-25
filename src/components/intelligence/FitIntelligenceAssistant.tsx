@@ -31,6 +31,7 @@ export default function FitIntelligenceAssistant() {
   const [expanded, setExpanded] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
   const [showActivation, setShowActivation] = useState(false);
+  const [replayActivation, setReplayActivation] = useState(false);
   const [wizardJustCompleted, setWizardJustCompleted] = useState(false);
   const [responding, setResponding] = useState(false);
   const [responseText, setResponseText] = useState<string | null>(null);
