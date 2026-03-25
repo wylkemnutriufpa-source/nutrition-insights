@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -125,6 +125,13 @@ export default function PatientDetail() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [releaseOnboardingOpen, setReleaseOnboardingOpen] = useState(false);
   const [confirmingPayment, setConfirmingPayment] = useState(false);
+
+  // Sync selectedPrestigePlanId when data loads asynchronously
+  useEffect(() => {
+    if (data?.currentPrestigePlanId) {
+      setSelectedPrestigePlanId(data.currentPrestigePlanId);
+    }
+  }, [data?.currentPrestigePlanId]);
 
   // Invalidation helper
   const invalidate = () => {
@@ -390,13 +397,14 @@ export default function PatientDetail() {
         const selectedPlan = prestigePlans.find(p => p.id === selectedPrestigePlanId);
         toast.success(`Prestígio ${selectedPlan?.name || ''} aplicado! ${selectedPlan?.badge_icon || ''}`, { duration: 3000 });
       }
-    } else if (selectedPrestigePlanId === "" || selectedPrestigePlanId === "none") {
-      // Remove prestige if "none" selected explicitly and there was one before
+    } else if (selectedPrestigePlanId === "none") {
+      // Remove prestige ONLY if user explicitly selected "none"
       if (currentPrestigePlan) {
         await supabase.from("patient_prestige").update({ is_active: false } as any).eq("patient_id", patientId).eq("is_active", true);
         toast.success("Prestígio removido");
       }
     }
+    // If selectedPrestigePlanId is "" (untouched), preserve existing prestige
     setPlanOpen(false);
     invalidate();
   };

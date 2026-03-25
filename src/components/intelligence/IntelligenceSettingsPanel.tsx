@@ -5,11 +5,12 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Brain, MessageSquare, HelpCircle, Settings2, Sparkles } from "lucide-react";
+import { Brain, MessageSquare, HelpCircle, Settings2, Sparkles, Users } from "lucide-react";
 import IntelligenceGoldenHeader from "./settings/IntelligenceGoldenHeader";
 import IntelligenceGeneralSettings from "./settings/IntelligenceGeneralSettings";
 import IntelligenceCustomPrompts from "./settings/IntelligenceCustomPrompts";
 import IntelligenceCustomQuestions from "./settings/IntelligenceCustomQuestions";
+import IntelligenceActiveUsers from "./settings/IntelligenceActiveUsers";
 import IntelligenceParticles from "./settings/IntelligenceParticles";
 
 export default function IntelligenceSettingsPanel() {
@@ -40,6 +41,9 @@ export default function IntelligenceSettingsPanel() {
             <TabsTrigger value="questions" className="gap-2 data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-600">
               <HelpCircle className="w-4 h-4" /> Perguntas
             </TabsTrigger>
+            <TabsTrigger value="active" className="gap-2 data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-600">
+              <Users className="w-4 h-4" /> Ativos
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="general">
@@ -52,6 +56,10 @@ export default function IntelligenceSettingsPanel() {
 
           <TabsContent value="questions">
             <IntelligenceCustomQuestions />
+          </TabsContent>
+
+          <TabsContent value="active">
+            <IntelligenceActiveUsers />
           </TabsContent>
         </Tabs>
       </motion.div>
