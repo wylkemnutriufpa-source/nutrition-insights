@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
       : "Fit@2026!";
 
     const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
-      email,
+      email: normalizedEmail,
       password: finalPassword,
       email_confirm: true,
       user_metadata: { full_name: name, role: "patient" },
