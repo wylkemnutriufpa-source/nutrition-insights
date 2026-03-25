@@ -1002,7 +1002,9 @@ export default function Anamnesis() {
                   <Save className="w-3 h-3" /> Salvo
                 </span>
               )}
-              <span className="text-sm font-medium text-primary">{Math.round(progress)}%</span>
+              <ProgressPulse trigger={step}>
+                <span className="text-sm font-medium text-primary">{Math.round(progress)}%</span>
+              </ProgressPulse>
             </div>
           </div>
           <Progress value={progress} className="h-2" />
