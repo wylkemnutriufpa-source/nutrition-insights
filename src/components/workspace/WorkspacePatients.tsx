@@ -19,7 +19,7 @@ export default function WorkspacePatients({ search }: Props) {
     const fetch = async () => {
       const { data } = await supabase
         .from("nutritionist_patients")
-        .select("patient_id, status, profiles!nutritionist_patients_patient_id_fkey(full_name, phone, journey_status)")
+        .select("patient_id, status, journey_status, profiles!nutritionist_patients_patient_id_fkey(full_name, phone)")
         .eq("nutritionist_id", user.id)
         .eq("status", "active");
       setPatients(data || []);
@@ -51,7 +51,7 @@ export default function WorkspacePatients({ search }: Props) {
           const profile = p.profiles as any;
           const name = profile?.full_name || "Sem nome";
           const initials = name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
-          const status = profile?.journey_status || "unknown";
+          const status = (p as any).journey_status || "unknown";
 
           return (
             <Link
