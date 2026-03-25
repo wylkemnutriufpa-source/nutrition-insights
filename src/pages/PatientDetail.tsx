@@ -385,16 +385,17 @@ export default function PatientDetail() {
     }
 
     // Apply prestige if selected
-    if (selectedPrestigePlanId && selectedPrestigePlanId !== "none") {
+    const effectivePrestigeId = selectedPrestigePlanId || currentPrestigePlan?.id || "";
+    if (effectivePrestigeId && effectivePrestigeId !== "none") {
       await supabase.from("patient_prestige").update({ is_active: false } as any).eq("patient_id", patientId).eq("is_active", true);
       const { error: prestigeErr } = await supabase.from("patient_prestige").insert({
         patient_id: patientId,
-        plan_id: selectedPrestigePlanId,
+        plan_id: effectivePrestigeId,
         assigned_by: user.id,
         is_active: true,
       });
       if (!prestigeErr) {
-        const selectedPlan = prestigePlans.find(p => p.id === selectedPrestigePlanId);
+        const selectedPlan = prestigePlans.find(p => p.id === effectivePrestigeId);
         toast.success(`Prestígio ${selectedPlan?.name || ''} aplicado! ${selectedPlan?.badge_icon || ''}`, { duration: 3000 });
       }
     } else if (selectedPrestigePlanId === "none") {
@@ -404,7 +405,6 @@ export default function PatientDetail() {
         toast.success("Prestígio removido");
       }
     }
-    // If selectedPrestigePlanId is "" (untouched), preserve existing prestige
     setPlanOpen(false);
     invalidate();
   };

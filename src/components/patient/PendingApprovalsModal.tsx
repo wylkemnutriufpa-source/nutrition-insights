@@ -580,7 +580,7 @@ export function usePendingApprovals() {
       const patientIds = (pipelines as any[]).map((p: any) => p.patient_id);
       const { data: activeLinks } = await supabase
         .from("nutritionist_patients")
-        .select("patient_id, onboarding_status")
+        .select("patient_id")
         .eq("nutritionist_id", user.id)
         .in("patient_id", patientIds)
         .eq("status", "active");
