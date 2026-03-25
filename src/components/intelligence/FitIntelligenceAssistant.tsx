@@ -226,8 +226,9 @@ export default function FitIntelligenceAssistant() {
         setPrompt(null);
         setResponseText(null);
       }, 3000);
-    } catch {
-      toast.error("Erro ao registrar");
+    } catch (e) {
+      console.warn("[FitIntelligence] Quick action error:", e instanceof Error ? e.message : e);
+      toast.error("Não foi possível registrar. Tente novamente.");
     }
     setResponding(false);
   };

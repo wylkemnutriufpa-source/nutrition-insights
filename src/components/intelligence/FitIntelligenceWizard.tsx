@@ -151,7 +151,8 @@ export default function FitIntelligenceWizard({ open, onClose, patientId, patien
       toast.success("Inteligência FitJourney configurada! 🧠✨");
       handleClose();
     } catch (e: any) {
-      toast.error("Erro ao salvar: " + (e.message || "Tente novamente"));
+      console.warn("[FitIntelligence] Wizard save failed:", e?.message);
+      toast.error("Não foi possível salvar suas preferências. Tente novamente.");
     }
     setSaving(false);
   };
