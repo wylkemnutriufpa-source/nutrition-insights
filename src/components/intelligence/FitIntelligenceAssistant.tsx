@@ -296,11 +296,14 @@ export default function FitIntelligenceAssistant() {
   if (!isPatient || !user) return null;
 
   // Show wizard
-  if (showWizard && isEnabled && !isOnboarded) {
+  if (showWizard && isEnabled && !isOnboarded && !wizardJustCompleted) {
     return (
       <FitIntelligenceWizard
         open={showWizard}
-        onClose={() => setShowWizard(false)}
+        onClose={() => {
+          setShowWizard(false);
+          setWizardJustCompleted(true);
+        }}
         patientId={user.id}
         patientName={profile?.full_name || ""}
       />
