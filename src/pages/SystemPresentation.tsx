@@ -74,6 +74,7 @@ export default function SystemPresentation() {
   const navigate = useNavigate();
   const [activePresentation, setActivePresentation] = useState<"professional" | "patient" | null>(null);
   const [activeCinematic, setActiveCinematic] = useState<"professional" | "patient" | null>(null);
+  const [showNeuralEntry, setShowNeuralEntry] = useState(false);
   const [proDone, setProDone] = useState(() => localStorage.getItem(STORAGE_KEY_PRO) === "true");
   const [patDone, setPatDone] = useState(() => localStorage.getItem(STORAGE_KEY_PAT) === "true");
   const [cinematicProDone, setCinematicProDone] = useState(() => localStorage.getItem(CINEMATIC_PRO_KEY) === "true");
