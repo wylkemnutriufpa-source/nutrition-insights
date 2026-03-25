@@ -101,6 +101,42 @@ export default function FitIntelligenceAssistant() {
         return;
       }
 
+      // Fetch trainer data for workout-aware prompts
+      let hasTrainer = false;
+      let daysSinceLastWorkout: number | null = null;
+      let weeklyWorkoutCount = 0;
+      let lastWorkoutEffort: number | null = null;
+
+      try {
+        const { data: trainerLinks } = await (supabase as any)
+          .from("patient_professional_links")
+          .select("id")
+          .eq("patient_id", user.id)
+          .eq("professional_role", "trainer")
+          .eq("link_status", "active")
+          .limit(1);
+
+        if (trainerLinks && trainerLinks.length > 0) {
+          hasTrainer = true;
+          const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+          const { data: completions } = await (supabase as any)
+            .from("workout_completions")
+            .select("completed_at, perceived_effort")
+            .eq("student_id", user.id)
+            .gte("completed_at", weekAgo)
+            .order("completed_at", { ascending: false });
+
+          if (completions && completions.length > 0) {
+            weeklyWorkoutCount = completions.length;
+            lastWorkoutEffort = completions[0].perceived_effort || null;
+            const lastDate = new Date(completions[0].completed_at);
+            daysSinceLastWorkout = Math.floor((Date.now() - lastDate.getTime()) / 86400000);
+          } else {
+            daysSinceLastWorkout = 7; // No completions in a week
+          }
+        }
+      } catch {}
+
       const behavioralCtx: BehavioralContext = {
         firstName: ctx.firstName,
         waterTarget: ctx.waterTarget,
