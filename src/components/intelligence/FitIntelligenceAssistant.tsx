@@ -143,7 +143,7 @@ export default function FitIntelligenceAssistant() {
     } finally {
       checkingRef.current = false;
     }
-  }, [user, isPatient, isEnabled, isOnboarded, profile, prompt]);
+  }, [user, isPatient, isActiveAccess, isOnboarded, profile, prompt]);
 
   // Periodic checks
   useEffect(() => {
