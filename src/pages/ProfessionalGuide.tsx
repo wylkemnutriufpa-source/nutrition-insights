@@ -51,6 +51,136 @@ function getLevel(progress: number) {
   return lvl;
 }
 
+const WORKFLOW_STEPS = [
+  {
+    step: 1,
+    icon: UserPlus,
+    title: "Cadastrar / Importar Paciente",
+    status: "invited",
+    description: "Adicione pacientes manualmente ou importe via planilha. Todos entram automaticamente com status 'Convidado'.",
+    details: [
+      "Vá em Pacientes → botão 'Novo Paciente' ou 'Importar'",
+      "Preencha nome e email (obrigatórios)",
+      "O sistema cria a conta automaticamente com senha temporária Fit@2026!",
+      "O paciente recebe acesso mas fica bloqueado até pagamento",
+    ],
+    tip: "O email deve ser único. Se já existe, o sistema vincula o paciente existente.",
+    route: "/patients",
+  },
+  {
+    step: 2,
+    icon: CreditCard,
+    title: "Confirmar Pagamento",
+    status: "awaiting_payment → awaiting_consent",
+    description: "Confirme o pagamento do paciente para liberar o próximo passo. Sem isso, o paciente fica bloqueado.",
+    details: [
+      "No painel de controle rápido, clique no ícone 💳 do paciente",
+      "Ou acesse o perfil do paciente e clique em 'Confirmar Pagamento'",
+      "Após confirmação, o status muda para 'Aguardando Consentimento'",
+      "O paciente recebe notificação automática",
+    ],
+    tip: "Você pode confirmar pagamentos em lote pelo controle rápido de pacientes.",
+    route: "/patients",
+  },
+  {
+    step: 3,
+    icon: ShieldCheck,
+    title: "Consentimento LGPD",
+    status: "awaiting_consent → onboarding_active",
+    description: "O paciente aceita os termos de consentimento (LGPD). Esta etapa é feita pelo próprio paciente.",
+    details: [
+      "O paciente vê a tela de consentimento ao fazer login",
+      "Após aceitar, o status muda para 'Onboarding Ativo'",
+      "Nenhuma ação necessária do profissional",
+      "Se demorar, você pode enviar lembrete pelo chat",
+    ],
+    tip: "Esta etapa é automática. O paciente precisa apenas aceitar os termos.",
+  },
+  {
+    step: 4,
+    icon: ClipboardList,
+    title: "Onboarding (Anamnese)",
+    status: "onboarding_active → onboarding_completed",
+    description: "O paciente preenche a anamnese completa com dados clínicos, hábitos e objetivos.",
+    details: [
+      "O paciente responde o questionário de onboarding",
+      "Dados incluem: histórico clínico, hábitos alimentares, objetivos",
+      "Ao finalizar, status muda para 'Onboarding Concluído'",
+      "Você pode liberar onboarding manualmente pelo controle rápido (ícone 🚀)",
+    ],
+    tip: "Se o paciente travar, você pode liberar o onboarding manualmente.",
+    route: "/patients",
+  },
+  {
+    step: 5,
+    icon: FileText,
+    title: "Revisão do Profissional",
+    status: "draft_ready_for_review",
+    description: "Revise os dados da anamnese e prepare o plano alimentar personalizado.",
+    details: [
+      "Acesse o perfil do paciente para ver dados do onboarding",
+      "Use a IA para gerar insights da anamnese",
+      "Monte o protocolo nutricional baseado nos dados coletados",
+      "Crie o plano alimentar personalizado",
+    ],
+    tip: "Use os protocolos pré-criados para agilizar a montagem do plano.",
+    route: "/protocols",
+  },
+  {
+    step: 6,
+    icon: UtensilsCrossed,
+    title: "Publicar Plano Alimentar",
+    status: "plan_published",
+    description: "Publique o plano alimentar para o paciente ter acesso à sua dieta.",
+    details: [
+      "Vá em Planos Alimentares → selecione o paciente",
+      "Monte as refeições e macros conforme protocolo",
+      "Clique em 'Publicar' para liberar acesso ao paciente",
+      "O paciente recebe notificação push automática",
+    ],
+    tip: "Você pode duplicar planos existentes para agilizar.",
+    route: "/meal-plans",
+  },
+  {
+    step: 7,
+    icon: Activity,
+    title: "Acompanhamento Ativo",
+    status: "active_followup",
+    description: "Paciente está ativo! Acompanhe evolução, check-ins, adesão e faça ajustes.",
+    details: [
+      "Monitore o dashboard clínico para ver alertas",
+      "Acompanhe adesão ao plano alimentar",
+      "Use check-ins periódicos para coletar dados",
+      "Ajuste protocolos conforme evolução clínica",
+    ],
+    tip: "O motor de inteligência clínica gera alertas automáticos de pacientes em risco.",
+    route: "/clinical-brain",
+  },
+];
+
+const COMMON_ISSUES = [
+  {
+    question: "Paciente não consegue fazer login?",
+    answer: "A senha padrão é Fit@2026! (exatamente assim, com F maiúsculo e ! no final). Verifique se o email está correto e sem espaços. Se persistir, redefina a senha pelo perfil do paciente.",
+  },
+  {
+    question: "Paciente está bloqueado mesmo após pagamento?",
+    answer: "Confirme o pagamento pelo controle rápido (ícone 💳). Verifique se o status mudou para 'Aguardando Consentimento'. Se ainda bloqueado, acesse o perfil e clique em 'Confirmar Pagamento'.",
+  },
+  {
+    question: "Paciente completou onboarding mas aparece como incompleto?",
+    answer: "Acesse o perfil do paciente e use o botão 'Liberar Onboarding' para forçar a transição de status manualmente.",
+  },
+  {
+    question: "Como desativar um paciente?",
+    answer: "No controle rápido de pacientes, clique no X para desativar. O paciente sai da lista de ativos e vai para a lista de inativos. Pode reativar a qualquer momento.",
+  },
+  {
+    question: "Notificações push não chegam?",
+    answer: "O paciente precisa ter autorizado notificações no navegador. Peça para ele acessar o sistema e permitir notificações quando solicitado.",
+  },
+];
+
 export default function ProfessionalGuide() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -58,6 +188,8 @@ export default function ProfessionalGuide() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"manual" | "features">("manual");
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   const totalFeatures = FEATURE_REGISTRY.length;
 
@@ -77,8 +209,6 @@ export default function ProfessionalGuide() {
 
   const handleNavigate = useCallback(async (featureName: string) => {
     if (!user) return;
-
-    // Mark as explored in background
     if (!exploredKeys.includes(featureName)) {
       supabase
         .from("professional_feature_usage")
@@ -89,8 +219,6 @@ export default function ProfessionalGuide() {
           }
         });
     }
-
-    // Navigate to the real route
     const route = PROFESSIONAL_ROUTE_MAP[featureName];
     if (route) {
       navigate(route);
@@ -150,7 +278,7 @@ export default function ProfessionalGuide() {
                   Guia do Profissional
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  Domine todas as {totalFeatures} ferramentas da plataforma
+                  Manual completo + {totalFeatures} ferramentas da plataforma
                 </p>
               </div>
             </div>
@@ -177,150 +305,310 @@ export default function ProfessionalGuide() {
                 />
               </div>
             </div>
-
-            <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1">
-              <Crown className="w-3 h-3 text-warning" />
-              Clique em "Ir para" para navegar diretamente à funcionalidade!
-            </p>
           </div>
         </motion.div>
 
-        {/* Search & filters */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Buscar funcionalidade..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-muted/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-            />
-          </div>
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            <button
-              onClick={() => setActiveCategory(null)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
-                !activeCategory ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
-            >
-              Todas
-            </button>
-            {categoryNames.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
-                  activeCategory === cat ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
-                }`}
-              >
-                {CATEGORY_META[cat]?.emoji} {cat}
-              </button>
-            ))}
-          </div>
+        {/* Tab switcher */}
+        <div className="flex gap-2 bg-muted/50 p-1 rounded-xl border border-border">
+          <button
+            onClick={() => setActiveTab("manual")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
+              activeTab === "manual"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <BookOpen className="w-4 h-4" />
+            Manual Operacional
+          </button>
+          <button
+            onClick={() => setActiveTab("features")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
+              activeTab === "features"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Compass className="w-4 h-4" />
+            Explorar Funcionalidades
+          </button>
         </div>
 
-        {/* Features */}
-        <AnimatePresence mode="popLayout">
-          {filteredCategories.map(({ cat, features }, catIdx) => (
+        <AnimatePresence mode="wait">
+          {activeTab === "manual" ? (
             <motion.div
-              key={cat}
-              initial={{ opacity: 0, y: 20 }}
+              key="manual"
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              transition={{ delay: catIdx * 0.05 }}
+              className="space-y-6"
             >
-              <h2 className="text-lg font-display font-bold mb-3 flex items-center gap-2">
-                <span>{CATEGORY_META[cat]?.emoji}</span>
-                {cat}
-                <Badge variant="secondary" className="text-xs">
-                  {features.filter((f) => exploredKeys.includes(f.name)).length}/{features.length}
-                </Badge>
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
-                {features.map((feature, idx) => {
-                  const isExplored = exploredKeys.includes(feature.name);
-                  const Icon = feature.icon;
-                  const tier = TIER_LABELS[feature.defaultTier || "basic"];
-                  const hasRoute = !!PROFESSIONAL_ROUTE_MAP[feature.name];
-                  return (
-                    <motion.div
-                      key={feature.name}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: idx * 0.03 }}
-                    >
-                      <Card
-                        className={`group relative overflow-hidden transition-all hover:shadow-md cursor-pointer ${
-                          isExplored ? "border-primary/30 bg-primary/5" : "hover:border-primary/20"
-                        }`}
-                        onClick={() => handleNavigate(feature.name)}
+              {/* Lifecycle Steps */}
+              <div>
+                <h2 className="text-lg font-display font-bold mb-1 flex items-center gap-2">
+                  📋 Fluxo Completo do Paciente
+                </h2>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Siga estas 7 etapas na ordem para garantir que tudo funcione perfeitamente.
+                </p>
+
+                <div className="space-y-3">
+                  {WORKFLOW_STEPS.map((ws, i) => {
+                    const Icon = ws.icon;
+                    return (
+                      <Collapsible key={ws.step}>
+                        <Card className="overflow-hidden border-border hover:border-primary/30 transition-colors">
+                          <CollapsibleTrigger className="w-full text-left">
+                            <CardContent className="p-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center flex-shrink-0">
+                                  <Icon className="w-5 h-5 text-primary" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant="outline" className="text-[10px] px-1.5 flex-shrink-0">
+                                      Etapa {ws.step}
+                                    </Badge>
+                                    <p className="text-sm font-semibold truncate">{ws.title}</p>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{ws.description}</p>
+                                </div>
+                                <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform group-data-[state=open]:rotate-180" />
+                              </div>
+                            </CardContent>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent>
+                            <div className="px-4 pb-4 space-y-3 border-t border-border pt-3">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="secondary" className="text-[10px]">Status: {ws.status}</Badge>
+                              </div>
+                              <ul className="space-y-1.5">
+                                {ws.details.map((d, j) => (
+                                  <li key={j} className="flex items-start gap-2 text-xs text-muted-foreground">
+                                    <ArrowRight className="w-3 h-3 text-primary mt-0.5 flex-shrink-0" />
+                                    {d}
+                                  </li>
+                                ))}
+                              </ul>
+                              {ws.tip && (
+                                <div className="flex items-start gap-2 p-2.5 rounded-lg bg-warning/5 border border-warning/20">
+                                  <Sparkles className="w-3.5 h-3.5 text-warning mt-0.5 flex-shrink-0" />
+                                  <p className="text-xs text-warning-foreground"><span className="font-semibold">Dica:</span> {ws.tip}</p>
+                                </div>
+                              )}
+                              {ws.route && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-xs h-8 gap-1.5"
+                                  onClick={() => navigate(ws.route!)}
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5" />
+                                  Ir para esta etapa
+                                </Button>
+                              )}
+                            </div>
+                          </CollapsibleContent>
+                        </Card>
+                      </Collapsible>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* FAQ */}
+              <div>
+                <h2 className="text-lg font-display font-bold mb-1 flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-warning" />
+                  Problemas Comuns e Soluções
+                </h2>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Respostas rápidas para os problemas mais frequentes.
+                </p>
+
+                <div className="space-y-2">
+                  {COMMON_ISSUES.map((faq, i) => (
+                    <Card key={i} className="overflow-hidden">
+                      <button
+                        onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                        className="w-full text-left p-4 flex items-center gap-3"
                       >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
-                        <CardContent className="p-4 relative z-10">
-                          <div className="flex items-start gap-3">
-                            <div
-                              className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                                isExplored ? "bg-gradient-to-br from-primary/20 to-accent/20" : "bg-muted"
-                              }`}
-                            >
-                              <Icon className={`w-5 h-5 ${isExplored ? "text-primary" : "text-muted-foreground"}`} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <p className="text-sm font-semibold truncate">{feature.label}</p>
-                                {isExplored && <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />}
-                              </div>
-                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{feature.description}</p>
-                              <div className="flex items-center gap-2 mt-1.5">
-                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${tier.color}`}>
-                                  {tier.label}
-                                </span>
-                                {feature.addedVersion && (
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
-                                    v{feature.addedVersion}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          <Button
-                            size="sm"
-                            variant={isExplored ? "outline" : "default"}
-                            className="w-full mt-3 text-xs h-8 gap-1.5"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleNavigate(feature.name);
-                            }}
+                        <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center flex-shrink-0">
+                          <AlertTriangle className="w-4 h-4 text-destructive" />
+                        </div>
+                        <p className="text-sm font-medium flex-1">{faq.question}</p>
+                        {openFaq === i ? (
+                          <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                        )}
+                      </button>
+                      <AnimatePresence>
+                        {openFaq === i && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden"
                           >
-                            {hasRoute ? (
-                              <>
-                                <ExternalLink className="w-3.5 h-3.5" />
-                                Ir para {feature.label}
-                              </>
-                            ) : (
-                              <>
-                                <Sparkles className="w-3.5 h-3.5" />
-                                Em breve
-                              </>
-                            )}
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  );
-                })}
+                            <div className="px-4 pb-4 border-t border-border pt-3">
+                              <p className="text-sm text-muted-foreground">{faq.answer}</p>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </Card>
+                  ))}
+                </div>
               </div>
             </motion.div>
-          ))}
-        </AnimatePresence>
+          ) : (
+            <motion.div
+              key="features"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-6"
+            >
+              {/* Search & filters */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Buscar funcionalidade..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-muted/50 border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  <button
+                    onClick={() => setActiveCategory(null)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+                      !activeCategory ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    Todas
+                  </button>
+                  {categoryNames.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+                        activeCategory === cat ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      }`}
+                    >
+                      {CATEGORY_META[cat]?.emoji} {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-        {filteredCategories.length === 0 && (
-          <div className="text-center py-12">
-            <Search className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-            <p className="text-muted-foreground">Nenhuma funcionalidade encontrada.</p>
-          </div>
-        )}
+              {/* Features */}
+              <AnimatePresence mode="popLayout">
+                {filteredCategories.map(({ cat, features }, catIdx) => (
+                  <motion.div
+                    key={cat}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ delay: catIdx * 0.05 }}
+                  >
+                    <h2 className="text-lg font-display font-bold mb-3 flex items-center gap-2">
+                      <span>{CATEGORY_META[cat]?.emoji}</span>
+                      {cat}
+                      <Badge variant="secondary" className="text-xs">
+                        {features.filter((f) => exploredKeys.includes(f.name)).length}/{features.length}
+                      </Badge>
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+                      {features.map((feature, idx) => {
+                        const isExplored = exploredKeys.includes(feature.name);
+                        const Icon = feature.icon;
+                        const tier = TIER_LABELS[feature.defaultTier || "basic"];
+                        const hasRoute = !!PROFESSIONAL_ROUTE_MAP[feature.name];
+                        return (
+                          <motion.div
+                            key={feature.name}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: idx * 0.03 }}
+                          >
+                            <Card
+                              className={`group relative overflow-hidden transition-all hover:shadow-md cursor-pointer ${
+                                isExplored ? "border-primary/30 bg-primary/5" : "hover:border-primary/20"
+                              }`}
+                              onClick={() => handleNavigate(feature.name)}
+                            >
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
+                              <CardContent className="p-4 relative z-10">
+                                <div className="flex items-start gap-3">
+                                  <div
+                                    className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                                      isExplored ? "bg-gradient-to-br from-primary/20 to-accent/20" : "bg-muted"
+                                    }`}
+                                  >
+                                    <Icon className={`w-5 h-5 ${isExplored ? "text-primary" : "text-muted-foreground"}`} />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <p className="text-sm font-semibold truncate">{feature.label}</p>
+                                      {isExplored && <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{feature.description}</p>
+                                    <div className="flex items-center gap-2 mt-1.5">
+                                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${tier.color}`}>
+                                        {tier.label}
+                                      </span>
+                                      {feature.addedVersion && (
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                                          v{feature.addedVersion}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant={isExplored ? "outline" : "default"}
+                                  className="w-full mt-3 text-xs h-8 gap-1.5"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleNavigate(feature.name);
+                                  }}
+                                >
+                                  {hasRoute ? (
+                                    <>
+                                      <ExternalLink className="w-3.5 h-3.5" />
+                                      Ir para {feature.label}
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Sparkles className="w-3.5 h-3.5" />
+                                      Em breve
+                                    </>
+                                  )}
+                                </Button>
+                              </CardContent>
+                            </Card>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+
+              {filteredCategories.length === 0 && (
+                <div className="text-center py-12">
+                  <Search className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-muted-foreground">Nenhuma funcionalidade encontrada.</p>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </DashboardLayout>
   );
