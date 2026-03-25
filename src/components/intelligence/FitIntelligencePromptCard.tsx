@@ -64,8 +64,8 @@ export default function FitIntelligencePromptCard({
           </div>
           <div>
             <p className="text-xs font-semibold">{prompt.title}</p>
-            <Badge variant="outline" className="text-[9px] py-0 border-primary/20 text-primary">
-              Inteligência FitJourney
+            <Badge variant="outline" className="text-[9px] py-0 border-primary/20 text-primary/70">
+              FitJourney Intelligence
             </Badge>
           </div>
         </div>

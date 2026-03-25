@@ -28,7 +28,8 @@ export default function FitIntelligenceToggle({ patientId, enabled, onboarded, o
       .eq("user_id", patientId);
 
     if (error) {
-      toast.error("Erro ao atualizar");
+      console.warn("[FitIntelligence] Toggle error:", error.message);
+      toast.error("Não foi possível atualizar. Tente novamente.");
     } else {
       toast.success(checked ? "Inteligência FitJourney ativada! 🧠" : "Inteligência FitJourney desativada");
       onToggle(checked);

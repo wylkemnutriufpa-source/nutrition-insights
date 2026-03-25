@@ -136,7 +136,7 @@ export default function FitIntelligenceAssistant() {
           .eq("user_id", user.id);
       }
     } catch (e) {
-      console.error("FitIntelligence check error:", e);
+      console.warn("[FitIntelligence] Prompt check failed:", e instanceof Error ? e.message : e);
     } finally {
       checkingRef.current = false;
     }
@@ -226,8 +226,9 @@ export default function FitIntelligenceAssistant() {
         setPrompt(null);
         setResponseText(null);
       }, 3000);
-    } catch {
-      toast.error("Erro ao registrar");
+    } catch (e) {
+      console.warn("[FitIntelligence] Quick action error:", e instanceof Error ? e.message : e);
+      toast.error("Não foi possível registrar. Tente novamente.");
     }
     setResponding(false);
   };
