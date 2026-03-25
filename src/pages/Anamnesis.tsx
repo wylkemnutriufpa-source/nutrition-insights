@@ -1009,15 +1009,8 @@ export default function Anamnesis() {
         </div>
 
         {/* Question */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={q.id}
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -30 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-6"
-          >
+        <NeuralStepTransition stepKey={q.id}>
+          <div className="space-y-6">
             {q.id !== "goal" && (
               <div className="text-center mb-8">
                 <h2 className="font-display text-2xl font-bold mb-1">{q.title}</h2>
