@@ -2,13 +2,13 @@
  * FitIntelligence First-Time Activation Experience
  * 
  * Ultra-premium cinematic sequence (6-8s) that runs ONLY on first activation.
- * Dark screen → golden particles converge into neural brain → typewriter phrases → CTA → cosmic dissolve.
+ * Dark screen → golden 3D neural brain → typewriter phrases → CTA → dissolve.
  */
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import GoldenParticleField from "./GoldenParticleField";
+import NeuralLoading from "@/components/system-entry/NeuralLoading";
 import {
   startNeuralAmbient,
   crescendo,
@@ -61,29 +61,9 @@ function TypewriterText({
         animate={{ opacity: [1, 0] }}
         transition={{ duration: 0.5, repeat: Infinity }}
         className="inline-block w-[2px] h-[1em] ml-0.5 align-middle"
-        style={{ background: "hsl(var(--premium-gold))" }}
+        style={{ background: "hsl(40 65% 55%)" }}
       />
     </span>
-  );
-}
-
-/* ─── Halo Ring ─── */
-function HaloRing() {
-  return (
-    <motion.div
-      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none"
-      style={{
-        width: 280,
-        height: 280,
-        border: "1.5px solid hsl(40 65% 55% / 0.2)",
-        boxShadow: "0 0 40px hsl(40 65% 55% / 0.1), inset 0 0 40px hsl(40 65% 55% / 0.05)",
-      }}
-      animate={{
-        scale: [0.8, 1.1, 0.8],
-        opacity: [0.3, 0.7, 0.3],
-      }}
-      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-    />
   );
 }
 
@@ -95,18 +75,15 @@ interface Props {
 
 export default function FitIntelligenceActivation({ userId, onComplete }: Props) {
   const [stage, setStage] = useState<
-    "dark" | "scatter" | "converge" | "phrase1" | "phrase2" | "phrase3" | "cta" | "dissolve" | "done"
+    "dark" | "brain" | "phrase1" | "phrase2" | "phrase3" | "cta" | "dissolve" | "done"
   >("dark");
-  const [particlePhase, setParticlePhase] = useState<"scatter" | "converge" | "pulse" | "dissolve">("scatter");
-  const [currentPhrase, setCurrentPhrase] = useState(0);
   const audioStarted = useRef(false);
 
   // Timeline orchestration
   useEffect(() => {
     const timeline = [
-      { delay: 300, action: () => { setStage("scatter"); startNeuralAmbient(); audioStarted.current = true; microVibrate(8); } },
-      { delay: 1800, action: () => { setStage("converge"); setParticlePhase("converge"); } },
-      { delay: 3500, action: () => { setParticlePhase("pulse"); setStage("phrase1"); setCurrentPhrase(0); microVibrate(6); } },
+      { delay: 400, action: () => { setStage("brain"); startNeuralAmbient(); audioStarted.current = true; microVibrate(8); } },
+      { delay: 3500, action: () => { setStage("phrase1"); microVibrate(6); } },
     ];
 
     const timers = timeline.map(({ delay, action }) => setTimeout(action, delay));
@@ -116,28 +93,25 @@ export default function FitIntelligenceActivation({ userId, onComplete }: Props)
   const handlePhrase1Done = useCallback(() => {
     setTimeout(() => {
       setStage("phrase2");
-      setCurrentPhrase(1);
       crescendo();
-    }, 800); // dramatic pause
+    }, 600);
   }, []);
 
   const handlePhrase2Done = useCallback(() => {
     setTimeout(() => {
       setStage("phrase3");
-      setCurrentPhrase(2);
-    }, 600);
+    }, 500);
   }, []);
 
   const handlePhrase3Done = useCallback(() => {
     setTimeout(() => {
       setStage("cta");
-    }, 500);
+    }, 400);
   }, []);
 
   const handleStart = useCallback(async () => {
     microVibrate(15);
     setStage("dissolve");
-    setParticlePhase("dissolve");
     fadeOutAudio();
 
     // Mark as seen
@@ -154,6 +128,10 @@ export default function FitIntelligenceActivation({ userId, onComplete }: Props)
 
   if (stage === "done") return null;
 
+  const showBrain = stage !== "dark";
+  const brainSmall = stage === "phrase1" || stage === "phrase2" || stage === "phrase3" || stage === "cta";
+  const brainDissolved = stage === "dissolve";
+
   return (
     <AnimatePresence>
       <motion.div
@@ -167,7 +145,7 @@ export default function FitIntelligenceActivation({ userId, onComplete }: Props)
           background: "radial-gradient(ellipse at 50% 40%, hsl(40 10% 6%) 0%, hsl(240 20% 4%) 50%, hsl(0 0% 1%) 100%)",
         }}
       >
-        {/* Subtle tech texture overlay */}
+        {/* Subtle tech grid */}
         <div
           className="absolute inset-0 pointer-events-none opacity-[0.03]"
           style={{
@@ -177,29 +155,36 @@ export default function FitIntelligenceActivation({ userId, onComplete }: Props)
           }}
         />
 
-        {/* Golden particle field */}
-        {stage !== "dark" && (
+        {/* 3D Neural Brain — golden hue-rotated from the green NeuralLoading */}
+        {showBrain && (
           <motion.div
-            className="absolute inset-0"
+            className="absolute inset-0 flex items-center justify-center pointer-events-none"
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1.5 }}
+            animate={{
+              opacity: brainDissolved ? 0 : 1,
+              scale: brainDissolved ? 1.4 : brainSmall ? 0.55 : 1,
+              y: brainSmall ? -80 : 0,
+            }}
+            transition={{
+              duration: brainDissolved ? 1.5 : 1,
+              ease: EASE_PREMIUM,
+            }}
+            style={{
+              // Shift green (150°) to gold (40°) → rotate by -110°
+              filter: "hue-rotate(-110deg) saturate(1.3) brightness(1.1)",
+            }}
           >
-            <GoldenParticleField phase={particlePhase} />
+            <NeuralLoading active={true} durationMultiplier={1} />
           </motion.div>
         )}
 
-        {/* Halo ring during converge/pulse */}
-        {(stage === "converge" || stage === "phrase1" || stage === "phrase2" || stage === "phrase3" || stage === "cta") && (
-          <HaloRing />
-        )}
-
-        {/* Volumetric golden glow */}
-        {stage !== "dark" && stage !== "dissolve" && (
+        {/* Volumetric golden glow behind brain */}
+        {showBrain && !brainDissolved && (
           <motion.div
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full pointer-events-none"
             style={{
-              background: "radial-gradient(circle, hsl(40 65% 55% / 0.06) 0%, transparent 60%)",
+              background: "radial-gradient(circle, hsl(40 65% 55% / 0.08) 0%, transparent 60%)",
+              y: brainSmall ? -80 : 0,
             }}
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
@@ -207,73 +192,68 @@ export default function FitIntelligenceActivation({ userId, onComplete }: Props)
           />
         )}
 
-        {/* Dissolve wave */}
+        {/* Dissolve flash */}
         {stage === "dissolve" && (
           <motion.div
             className="absolute inset-0 pointer-events-none"
             initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: [0, 0.8, 0], scale: [0.5, 3] }}
+            animate={{ opacity: [0, 0.6, 0], scale: [0.5, 3] }}
             transition={{ duration: 1.5, ease: "easeOut" }}
             style={{
-              background: "radial-gradient(circle, hsl(40 70% 60% / 0.15) 0%, transparent 50%)",
+              background: "radial-gradient(circle, hsl(40 70% 60% / 0.2) 0%, transparent 50%)",
             }}
           />
         )}
 
-        {/* Text area */}
-        <div className="relative z-10 text-center px-6 mt-32 md:mt-40 min-h-[140px] flex flex-col items-center justify-center">
+        {/* Text area — positioned in bottom half, clear separation from brain */}
+        <div className="absolute bottom-[15%] left-0 right-0 z-10 flex flex-col items-center px-6">
           <AnimatePresence mode="wait">
             {stage === "phrase1" && (
-              <motion.div
+              <motion.p
                 key="p1"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
+                exit={{ opacity: 0, y: -15 }}
                 transition={{ duration: 0.6, ease: EASE_PREMIUM }}
-                className="text-lg md:text-xl font-light tracking-wide max-w-md"
+                className="text-center text-lg md:text-xl font-light tracking-wide max-w-md leading-relaxed"
                 style={{ color: "hsl(40 50% 75%)" }}
               >
                 <TypewriterText text={PHRASES[0]} onComplete={handlePhrase1Done} charDelay={35} />
-              </motion.div>
+              </motion.p>
             )}
 
             {stage === "phrase2" && (
-              <motion.div
+              <motion.h2
                 key="p2"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, y: -10 }}
+                exit={{ opacity: 0, y: -15 }}
                 transition={{ duration: 0.7, ease: EASE_PREMIUM }}
-                className="flex flex-col items-center gap-3"
+                className="text-center text-2xl md:text-4xl font-bold tracking-[0.1em] uppercase max-w-lg leading-tight"
+                style={{
+                  background: "linear-gradient(135deg, hsl(40 70% 65%), hsl(45 80% 75%), hsl(35 65% 55%))",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                  filter: "drop-shadow(0 0 20px hsl(40 65% 55% / 0.3))",
+                }}
               >
-                <motion.h2
-                  className="text-2xl md:text-3xl font-bold tracking-[0.12em] uppercase"
-                  style={{
-                    background: "linear-gradient(135deg, hsl(40 70% 65%), hsl(45 80% 75%), hsl(35 65% 55%))",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    backgroundClip: "text",
-                    textShadow: "none",
-                    filter: "drop-shadow(0 0 20px hsl(40 65% 55% / 0.3))",
-                  }}
-                >
-                  <TypewriterText text={PHRASES[1]} onComplete={handlePhrase2Done} charDelay={45} />
-                </motion.h2>
-              </motion.div>
+                <TypewriterText text={PHRASES[1]} onComplete={handlePhrase2Done} charDelay={45} />
+              </motion.h2>
             )}
 
             {stage === "phrase3" && (
-              <motion.div
+              <motion.p
                 key="p3"
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.6, ease: EASE_PREMIUM }}
-                className="text-sm md:text-base font-medium tracking-[0.06em] max-w-sm"
+                className="text-center text-sm md:text-base font-medium tracking-[0.04em] max-w-sm leading-relaxed"
                 style={{ color: "hsl(40 30% 65%)" }}
               >
                 <TypewriterText text={PHRASES[2]} onComplete={handlePhrase3Done} charDelay={30} />
-              </motion.div>
+              </motion.p>
             )}
 
             {stage === "cta" && (
@@ -282,11 +262,10 @@ export default function FitIntelligenceActivation({ userId, onComplete }: Props)
                 initial={{ opacity: 0, y: 30, scale: 0.9 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.8, ease: EASE_PREMIUM }}
-                className="flex flex-col items-center gap-6 mt-4"
+                className="flex flex-col items-center gap-5"
               >
-                {/* Recap message */}
                 <motion.p
-                  className="text-sm tracking-wide max-w-xs"
+                  className="text-sm tracking-wide max-w-xs text-center"
                   style={{ color: "hsl(40 25% 55%)" }}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 0.8 }}
@@ -328,14 +307,6 @@ export default function FitIntelligenceActivation({ userId, onComplete }: Props)
                     }}
                     animate={{ backgroundPosition: ["-200% center", "200% center"] }}
                     transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  />
-
-                  {/* Glass refraction */}
-                  <div
-                    className="absolute inset-0 rounded-xl pointer-events-none"
-                    style={{
-                      background: "linear-gradient(180deg, hsl(40 60% 70% / 0.06) 0%, transparent 50%)",
-                    }}
                   />
 
                   <span className="relative z-10 flex items-center gap-2">
