@@ -53,7 +53,7 @@ export default function FitIntelligenceAssistant() {
 
   // Clean up when feature is disabled
   useEffect(() => {
-    if (!isEnabled) {
+    if (!isActiveAccess) {
       setPrompt(null);
       setExpanded(false);
       setResponseText(null);
@@ -62,7 +62,7 @@ export default function FitIntelligenceAssistant() {
         intervalRef.current = undefined;
       }
     }
-  }, [isEnabled]);
+  }, [isActiveAccess]);
 
   // Prompt engine
   const checkForPrompt = useCallback(async () => {
