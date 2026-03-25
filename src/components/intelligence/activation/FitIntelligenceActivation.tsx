@@ -136,23 +136,29 @@ export default function FitIntelligenceActivation({ userId, onComplete }: Props)
   useEffect(() => {
     const timeline = [
       {
-        delay: 700,
+        delay: 500,
         action: () => {
-          setStage("brain");
+          setStage("converging");
           startNeuralAmbient();
           audioStarted.current = true;
           microVibrate(8);
         },
       },
       {
-        delay: 5200,
+        delay: 4200,
+        action: () => {
+          setStage("brain");
+        },
+      },
+      {
+        delay: 8500,
         action: () => {
           setStage("phrase1");
           microVibrate(6);
         },
       },
       {
-        delay: 9800,
+        delay: 13100,
         action: () => {
           setStage("phrase2");
           crescendo();
@@ -160,13 +166,13 @@ export default function FitIntelligenceActivation({ userId, onComplete }: Props)
         },
       },
       {
-        delay: 14800,
+        delay: 18100,
         action: () => {
           setStage("phrase3");
         },
       },
       {
-        delay: 19200,
+        delay: 22500,
         action: () => {
           setStage("cta");
         },
