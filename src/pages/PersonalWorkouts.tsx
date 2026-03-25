@@ -10,10 +10,12 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
   Dumbbell, Plus, Search, ChevronDown, Pause, Play, CheckCircle2,
-  BookOpen, Layers, Target
+  BookOpen, Layers, Target, ClipboardList, Sparkles
 } from "lucide-react";
 import WorkoutEditor from "@/components/workout/WorkoutEditor";
 import ExerciseLibrary from "@/components/workout/ExerciseLibrary";
+import WorkoutTemplates from "@/components/workout/WorkoutTemplates";
+import TrainerAnamnesis from "@/components/workout/TrainerAnamnesis";
 
 export default function PersonalWorkouts() {
   const { user } = useAuth();
@@ -26,6 +28,7 @@ export default function PersonalWorkouts() {
   const [creating, setCreating] = useState(false);
   const [expandedPlan, setExpandedPlan] = useState<string | null>(null);
   const [planDetails, setPlanDetails] = useState<Record<string, any>>({});
+  const [anamnesisStudent, setAnamnesisStudent] = useState<{ id: string; name: string } | null>(null);
 
   const load = async () => {
     if (!user) return;
@@ -74,6 +77,13 @@ export default function PersonalWorkouts() {
     circuit: "border-l-amber-500",
   };
 
+  const handleUseTemplate = (template: any) => {
+    // Store template data and switch to creating mode
+    setCreating(true);
+    setActiveTab("plans");
+    toast.info(`Template "${template.name}" carregado! Selecione o aluno e salve.`);
+  };
+
   if (creating) {
     return (
       <DashboardLayout>
@@ -103,9 +113,14 @@ export default function PersonalWorkouts() {
               <p className="text-xs text-muted-foreground">{plans.length} planos • {students.length} alunos</p>
             </div>
           </div>
-          <Button onClick={() => setCreating(true)} className="gap-1.5">
-            <Plus className="w-4 h-4" /> Novo Plano
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setActiveTab("anamnesis")} className="gap-1.5">
+              <ClipboardList className="w-4 h-4" /> Avaliações
+            </Button>
+            <Button onClick={() => setCreating(true)} className="gap-1.5">
+              <Plus className="w-4 h-4" /> Novo Plano
+            </Button>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -113,8 +128,14 @@ export default function PersonalWorkouts() {
             <TabsTrigger value="plans" className="gap-1.5 text-xs">
               <Layers className="w-3.5 h-3.5" /> Planos
             </TabsTrigger>
+            <TabsTrigger value="templates" className="gap-1.5 text-xs">
+              <Sparkles className="w-3.5 h-3.5" /> Templates
+            </TabsTrigger>
             <TabsTrigger value="library" className="gap-1.5 text-xs">
               <BookOpen className="w-3.5 h-3.5" /> Biblioteca
+            </TabsTrigger>
+            <TabsTrigger value="anamnesis" className="gap-1.5 text-xs">
+              <ClipboardList className="w-3.5 h-3.5" /> Avaliações
             </TabsTrigger>
           </TabsList>
 
@@ -195,10 +216,55 @@ export default function PersonalWorkouts() {
             )}
           </TabsContent>
 
+          <TabsContent value="templates" className="mt-4">
+            <WorkoutTemplates onUseTemplate={handleUseTemplate} />
+          </TabsContent>
+
           <TabsContent value="library" className="mt-4">
             <ExerciseLibrary />
           </TabsContent>
+
+          <TabsContent value="anamnesis" className="mt-4">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <ClipboardList className="w-5 h-5 text-primary" />
+                <h2 className="text-lg font-bold">Avaliações dos Alunos</h2>
+              </div>
+              {students.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <ClipboardList className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                  <p>Nenhum aluno vinculado</p>
+                </div>
+              ) : (
+                <div className="grid gap-2">
+                  {students.map(s => (
+                    <Card key={s.student_id} className="hover:border-primary/20 transition-all cursor-pointer" onClick={() => setAnamnesisStudent({ id: s.student_id, name: s.full_name })}>
+                      <CardContent className="p-3 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                            <ClipboardList className="w-4 h-4 text-primary" />
+                          </div>
+                          <span className="font-medium text-sm">{s.full_name}</span>
+                        </div>
+                        <Button variant="outline" size="sm">Avaliar</Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          </TabsContent>
         </Tabs>
+
+        {/* Trainer Anamnesis Modal */}
+        {anamnesisStudent && (
+          <TrainerAnamnesis
+            studentId={anamnesisStudent.id}
+            studentName={anamnesisStudent.name}
+            open={!!anamnesisStudent}
+            onClose={() => setAnamnesisStudent(null)}
+          />
+        )}
       </div>
     </DashboardLayout>
   );
