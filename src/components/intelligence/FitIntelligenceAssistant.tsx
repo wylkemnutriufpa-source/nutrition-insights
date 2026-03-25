@@ -6,6 +6,7 @@
  */
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import FitIntelligenceActivation from "./activation/FitIntelligenceActivation";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
@@ -29,6 +30,7 @@ export default function FitIntelligenceAssistant() {
   const [prompt, setPrompt] = useState<IntelligencePrompt | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
+  const [showActivation, setShowActivation] = useState(false);
   const [wizardJustCompleted, setWizardJustCompleted] = useState(false);
   const [responding, setResponding] = useState(false);
   const [responseText, setResponseText] = useState<string | null>(null);
@@ -38,18 +40,27 @@ export default function FitIntelligenceAssistant() {
   const isPatient = !roles?.includes("nutritionist") && !roles?.includes("admin");
   const isEnabled = (profile as any)?.fit_intelligence_enabled === true;
   const isOnboarded = (profile as any)?.fit_intelligence_onboarded === true;
+  const hasSeenActivation = (profile as any)?.fit_intelligence_first_experience_seen === true;
   const expiresAt = (profile as any)?.fit_intelligence_expires_at;
   const isExpired = expiresAt && new Date(expiresAt) < new Date();
   const isActiveAccess = isEnabled && !isExpired;
 
-  // Show wizard if enabled but not onboarded
+  // Show first-time activation experience
   useEffect(() => {
-    if (user && isPatient && isActiveAccess && !isOnboarded && !wizardJustCompleted) {
+    if (user && isPatient && isActiveAccess && !hasSeenActivation) {
+      const timer = setTimeout(() => setShowActivation(true), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [user, isPatient, isActiveAccess, hasSeenActivation]);
+
+  // Show wizard if enabled but not onboarded (and activation already seen)
+  useEffect(() => {
+    if (user && isPatient && isActiveAccess && hasSeenActivation && !isOnboarded && !wizardJustCompleted) {
       const timer = setTimeout(() => setShowWizard(true), 2000);
       return () => clearTimeout(timer);
     }
     if (!isActiveAccess) setShowWizard(false);
-  }, [user, isPatient, isActiveAccess, isOnboarded, wizardJustCompleted]);
+  }, [user, isPatient, isActiveAccess, hasSeenActivation, isOnboarded, wizardJustCompleted]);
 
   // Clean up when feature is disabled
   useEffect(() => {
@@ -299,8 +310,20 @@ export default function FitIntelligenceAssistant() {
 
   if (!isPatient || !user) return null;
 
+  // Show first-time activation cinematic
+  if (showActivation && isActiveAccess && !hasSeenActivation) {
+    return (
+      <FitIntelligenceActivation
+        userId={user.id}
+        onComplete={() => {
+          setShowActivation(false);
+        }}
+      />
+    );
+  }
+
   // Show wizard
-  if (showWizard && isActiveAccess && !isOnboarded && !wizardJustCompleted) {
+  if (showWizard && isActiveAccess && hasSeenActivation && !isOnboarded && !wizardJustCompleted) {
     return (
       <FitIntelligenceWizard
         open={showWizard}

@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS fit_intelligence_first_experience_seen boolean DEFAULT false;

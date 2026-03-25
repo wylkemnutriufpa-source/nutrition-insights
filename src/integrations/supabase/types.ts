@@ -10118,6 +10118,7 @@ export type Database = {
           fit_intelligence_access_mode: string | null
           fit_intelligence_enabled: boolean
           fit_intelligence_expires_at: string | null
+          fit_intelligence_first_experience_seen: boolean | null
           fit_intelligence_last_seen_at: string | null
           fit_intelligence_mode: string | null
           fit_intelligence_onboarded: boolean
@@ -10158,6 +10159,7 @@ export type Database = {
           fit_intelligence_access_mode?: string | null
           fit_intelligence_enabled?: boolean
           fit_intelligence_expires_at?: string | null
+          fit_intelligence_first_experience_seen?: boolean | null
           fit_intelligence_last_seen_at?: string | null
           fit_intelligence_mode?: string | null
           fit_intelligence_onboarded?: boolean
@@ -10198,6 +10200,7 @@ export type Database = {
           fit_intelligence_access_mode?: string | null
           fit_intelligence_enabled?: boolean
           fit_intelligence_expires_at?: string | null
+          fit_intelligence_first_experience_seen?: boolean | null
           fit_intelligence_last_seen_at?: string | null
           fit_intelligence_mode?: string | null
           fit_intelligence_onboarded?: boolean
