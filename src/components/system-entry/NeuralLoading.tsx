@@ -427,72 +427,48 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
             className="absolute inset-0 rounded-full flex items-center justify-center"
             style={{
               backfaceVisibility: "hidden",
-              transform: "translateZ(4px)",
-              background: "radial-gradient(circle at 40% 35%, hsl(152 40% 18%) 0%, hsl(152 30% 10%) 60%, hsl(152 25% 6%) 100%)",
+              transform: "translateZ(3px)",
+              background: "radial-gradient(circle at 38% 32%, hsl(152 40% 20%) 0%, hsl(152 30% 10%) 60%, hsl(152 20% 5%) 100%)",
               boxShadow:
-                "inset 0 2px 8px hsl(152 50% 40% / 0.3), " +
-                "inset 0 -2px 6px hsl(0 0% 0% / 0.4), " +
+                "inset 0 2px 10px hsl(152 50% 45% / 0.3), " +
+                "inset 0 -3px 8px hsl(0 0% 0% / 0.5), " +
                 "0 0 30px hsl(var(--primary) / 0.4), " +
                 "0 0 60px hsl(var(--primary) / 0.15)",
-              border: "2px solid hsl(152 40% 30% / 0.6)",
+              border: "2.5px solid hsl(152 45% 30% / 0.7)",
             }}
           >
-            <img
-              src={logoPng}
-              alt="FitJourney"
-              draggable={false}
-              className="select-none"
-              style={{ width: 70, height: 70, objectFit: "contain" }}
-            />
+            <img src={logoPng} alt="FitJourney" draggable={false} className="select-none" style={{ width: 68, height: 68, objectFit: "contain" }} />
           </div>
+
+          {/* Coin edge layers — stacked thin circles */}
+          {Array.from({ length: 6 }, (_, i) => (
+            <div
+              key={i}
+              className="absolute inset-0 rounded-full"
+              style={{
+                transform: `translateZ(${-i}px)`,
+                background: "linear-gradient(180deg, hsl(152 35% 22%) 0%, hsl(152 28% 12%) 50%, hsl(152 20% 7%) 100%)",
+                border: "2px solid hsl(152 40% 18% / 0.5)",
+                boxShadow: i === 5 ? "0 0 12px hsl(0 0% 0% / 0.5)" : "none",
+              }}
+            />
+          ))}
 
           {/* Back face */}
           <div
             className="absolute inset-0 rounded-full flex items-center justify-center"
             style={{
               backfaceVisibility: "hidden",
-              transform: "rotateY(180deg) translateZ(4px)",
-              background: "radial-gradient(circle at 60% 35%, hsl(152 40% 18%) 0%, hsl(152 30% 10%) 60%, hsl(152 25% 6%) 100%)",
+              transform: "rotateY(180deg) translateZ(3px)",
+              background: "radial-gradient(circle at 62% 32%, hsl(152 40% 20%) 0%, hsl(152 30% 10%) 60%, hsl(152 20% 5%) 100%)",
               boxShadow:
-                "inset 0 2px 8px hsl(152 50% 40% / 0.3), " +
-                "inset 0 -2px 6px hsl(0 0% 0% / 0.4)",
-              border: "2px solid hsl(152 40% 30% / 0.6)",
+                "inset 0 2px 10px hsl(152 50% 45% / 0.3), " +
+                "inset 0 -3px 8px hsl(0 0% 0% / 0.5)",
+              border: "2.5px solid hsl(152 45% 30% / 0.7)",
             }}
           >
-            <img
-              src={logoPng}
-              alt="FitJourney"
-              draggable={false}
-              className="select-none"
-              style={{ width: 70, height: 70, objectFit: "contain", transform: "scaleX(-1)" }}
-            />
+            <img src={logoPng} alt="FitJourney" draggable={false} className="select-none" style={{ width: 68, height: 68, objectFit: "contain", transform: "scaleX(-1)" }} />
           </div>
-
-          {/* Coin edge — thin vertical strips around the perimeter */}
-          {Array.from({ length: 80 }, (_, i) => {
-            const angle = (i / 80) * 360;
-            const rad = (angle * Math.PI) / 180;
-            const radius = 50; // half of 100px
-            const x = Math.sin(rad) * radius;
-            const z = Math.cos(rad) * radius;
-            return (
-              <div
-                key={i}
-                className="absolute"
-                style={{
-                  width: 4,
-                  height: 100,
-                  left: "50%",
-                  top: 0,
-                  transformOrigin: "center center",
-                  transform: `translateX(${x - 2}px) translateZ(${z}px) rotateY(${angle}deg)`,
-                  background: "linear-gradient(180deg, hsl(152 40% 28%) 0%, hsl(152 30% 14%) 40%, hsl(152 25% 10%) 100%)",
-                  borderLeft: "0.5px solid hsl(152 50% 35% / 0.2)",
-                  borderRight: "0.5px solid hsl(152 50% 35% / 0.2)",
-                }}
-              />
-            );
-          })}
         </motion.div>
       </motion.div>
 
