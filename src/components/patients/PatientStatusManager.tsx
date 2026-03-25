@@ -185,8 +185,8 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
                 const completed = hasCompletedOnboarding(journey);
 
                 // Determine which actions to show
-                const showConfirmPayment = isActive && (journey === "awaiting_payment" || journey === "invited" || journey === "active");
-                const showReleaseOnboarding = isActive && (journey === "awaiting_consent" || journey === "active") && !completed;
+                const showConfirmPayment = isActive && !confirmedPayments.has(p.patient_id) && (journey === "awaiting_payment" || journey === "invited" || journey === "active");
+                const showReleaseOnboarding = isActive && !releasedOnboarding.has(p.patient_id) && (journey === "awaiting_consent" || journey === "active") && !completed;
                 const showReviewPlan = journey === "draft_ready_for_review" || journey === "onboarding_completed";
 
                 return (
