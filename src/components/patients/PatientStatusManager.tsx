@@ -75,6 +75,7 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
         toast.error(result?.error || "Erro ao confirmar pagamento");
       } else {
         toast.success("Pagamento confirmado!");
+        setConfirmedPayments(prev => new Set(prev).add(patientId));
         refreshAll();
       }
     } catch { toast.error("Erro ao confirmar pagamento"); }
