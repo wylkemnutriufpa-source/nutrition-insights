@@ -166,6 +166,7 @@ const PatientOverview = lazy(() => import("./pages/PatientOverview"));
 const ClinicalWorkspace = lazy(() => import("./pages/ClinicalWorkspace"));
 const InvitePatient = lazy(() => import("./pages/InvitePatient"));
 const WorkspaceEditor = lazy(() => import("./pages/WorkspaceEditor"));
+const IntelligenceSettings = lazy(() => import("./pages/IntelligenceSettings"));
 
 // Install global error handlers once at module load
 installGlobalErrorHandlers();
@@ -492,6 +493,7 @@ const App = () => (
               <Route path="/system-health-live" element={<AdminRoute><LP section="System Health"><SystemHealthLive /></LP></AdminRoute>} />
               <Route path="/professional/crm" element={<NutritionistRoute><LP section="CRM"><ClinicalCRM /></LP></NutritionistRoute>} />
               <Route path="/clinical-brain" element={<NutritionistRoute><LP section="Clinical Brain"><ClinicalBrain /></LP></NutritionistRoute>} />
+              <Route path="/intelligence-settings" element={<NutritionistRoute><LP section="Inteligência FitJourney"><IntelligenceSettings /></LP></NutritionistRoute>} />
 
               {/* Public pricing */}
               <Route path="/pricing" element={<LP section="Pricing"><Pricing /></LP>} />
