@@ -51,6 +51,8 @@ const ROUTE_LABELS: Record<string, string> = {
   "/curiosidades": "Curiosidades",
   "/planner": "Planejador",
   "/workouts": "Treinos",
+  "/patient-intelligence": "Inteligência FitJourney",
+  "/intelligence-settings": "Inteligência FitJourney",
 };
 
 function getRouteLabel(route: string): string {
