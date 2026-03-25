@@ -45,6 +45,8 @@ export interface PatientsListResult {
   counts: { active: number; inactive: number };
 }
 
+const isInactiveStatus = (status: string | null | undefined) => status === "inactive";
+
 function computeScore(stats: any, checklistData: any): number {
   let score = 0;
   if (checklistData) {
@@ -123,9 +125,9 @@ export function usePatientsList(params: PatientsListParams = {}) {
       // 1. Get total counts by status (lightweight count queries)
       const [activeCountRes, inactiveCountRes] = await Promise.all([
         supabase.from("nutritionist_patients").select("id", { count: "exact", head: true })
-          .eq("nutritionist_id", userId).eq("status", "active"),
+          .eq("nutritionist_id", userId).neq("status", "inactive"),
         supabase.from("nutritionist_patients").select("id", { count: "exact", head: true })
-          .eq("nutritionist_id", userId).neq("status", "active"),
+          .eq("nutritionist_id", userId).eq("status", "inactive"),
       ]);
 
       const activeCount = activeCountRes.count || 0;
@@ -138,8 +140,8 @@ export function usePatientsList(params: PatientsListParams = {}) {
         .eq("nutritionist_id", userId)
         .order("created_at", { ascending: false });
 
-      if (statusFilter === "active") query = query.eq("status", "active");
-      else if (statusFilter === "inactive") query = query.neq("status", "active");
+       if (statusFilter === "active") query = query.neq("status", "inactive");
+       else if (statusFilter === "inactive") query = query.eq("status", "inactive");
 
       // Server-side search: fetch matching profiles, then filter links
       let allData: any[] = [];
@@ -176,8 +178,8 @@ export function usePatientsList(params: PatientsListParams = {}) {
           .select("*")
           .eq("nutritionist_id", userId)
           .in("patient_id", Array.from(matchingIds));
-        if (statusFilter === "active") linksQuery = linksQuery.eq("status", "active");
-        else if (statusFilter === "inactive") linksQuery = linksQuery.neq("status", "active");
+        if (statusFilter === "active") linksQuery = linksQuery.neq("status", "inactive");
+        else if (statusFilter === "inactive") linksQuery = linksQuery.eq("status", "inactive");
 
         const { data: filteredLinks } = await linksQuery;
         totalCount = (filteredLinks || []).length;
@@ -356,9 +358,9 @@ function updateCachedPatientsAfterStatusToggle(
       return true;
     });
 
-  const activeDelta = previousStatus === "active" && newStatus !== "active"
+  const activeDelta = !isInactiveStatus(previousStatus) && isInactiveStatus(newStatus)
     ? -1
-    : previousStatus !== "active" && newStatus === "active"
+    : isInactiveStatus(previousStatus) && !isInactiveStatus(newStatus)
       ? 1
       : 0;
 
@@ -370,9 +372,9 @@ function updateCachedPatientsAfterStatusToggle(
   const nextTotalCount = Math.max(
     0,
     currentData.pagination.totalCount + (
-      statusFilter === "active" && previousStatus === "active" && newStatus !== "active"
+      statusFilter === "active" && !isInactiveStatus(previousStatus) && isInactiveStatus(newStatus)
         ? -1
-        : statusFilter === "inactive" && previousStatus !== "active" && newStatus === "active"
+        : statusFilter === "inactive" && isInactiveStatus(previousStatus) && !isInactiveStatus(newStatus)
           ? -1
           : 0
     ),

@@ -169,7 +169,7 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
   allPrestigePlans?: PrestigePlan[];
   isOnline?: boolean;
 }) {
-  const isInactive = p.status !== "active";
+  const isInactive = p.status === "inactive";
   const score = p.priorityScore || 0;
   const tier = getScoreTier(score);
   const hasPrograms = p.programs && p.programs.length > 0;
@@ -206,9 +206,9 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
           </div>
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
             <span className={`text-xs px-2 py-0.5 rounded-full ${
-              p.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
+              !isInactive ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
             }`}>
-              {p.status === "active" 
+              {!isInactive 
                 ? p.expires_at 
                   ? (() => {
                       const exp = new Date(p.expires_at);
@@ -223,7 +223,7 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
                 : "Inativo"
               }
             </span>
-            {p.status === "active" && p.expires_at && (() => {
+            {!isInactive && p.expires_at && (() => {
               const diffDays = Math.ceil((new Date(p.expires_at).getTime() - Date.now()) / 86400000);
               if (diffDays < 0) return <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive font-medium">Vencido</span>;
               if (diffDays <= 7) return <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-warning/10 text-warning font-medium">{diffDays}d restantes</span>;
@@ -260,10 +260,10 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
             <Target className="w-4 h-4" />
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); toggleStatus(p.id, p.status); }}
-            className="text-muted-foreground hover:text-foreground p-1" title={p.status === "active" ? "Desativar" : "Ativar"}
+              onClick={(e) => { e.stopPropagation(); toggleStatus(p.id, p.status); }}
+              className="text-muted-foreground hover:text-foreground p-1" title={!isInactive ? "Desativar" : "Ativar"}
           >
-            {p.status === "active" ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+              {!isInactive ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
           </button>
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
         </div>
@@ -325,7 +325,7 @@ function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssign
   onUpdateExpiry: (id: string, date: string | null) => void;
   allPrestigePlans?: PrestigePlan[];
 }) {
-  const isInactive = p.status !== "active";
+  const isInactive = p.status === "inactive";
   const score = p.priorityScore || 0;
   const displayName = p.profile?.full_name || p.email || "Paciente";
 
@@ -347,9 +347,9 @@ function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssign
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-            p.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
+            !isInactive ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
           }`}>
-            {p.status === "active"
+            {!isInactive
               ? p.expires_at
                 ? (() => {
                     const exp = new Date(p.expires_at);
@@ -583,7 +583,7 @@ export default function Patients() {
     setBulkManageOpen(true);
   };
 
-  const isInactivePatient = useCallback((patient: PatientInfo) => patient.status !== "active", []);
+  const isInactivePatient = useCallback((patient: PatientInfo) => patient.status === "inactive", []);
 
   const bulkManageList = useMemo(() => {
     const source = bulkMode === "deactivate"
