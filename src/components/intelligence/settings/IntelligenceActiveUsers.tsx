@@ -56,12 +56,31 @@ export default function IntelligenceActiveUsers() {
       .select("user_id, full_name, fit_intelligence_enabled, fit_intelligence_onboarded, fit_intelligence_first_experience_seen, fit_intelligence_access_mode, fit_intelligence_expires_at, fit_intelligence_last_seen_at")
       .in("user_id", patientIds);
 
+    // Also get patients with active premium prestige (Premium plan = display_order >= 4)
+    const { data: prestigeData } = await supabase
+      .from("patient_prestige")
+      .select("patient_id, plan_id")
+      .in("patient_id", patientIds)
+      .eq("is_active", true);
+
+    const { data: premiumPlans } = await supabase
+      .from("prestige_plans")
+      .select("id, name, display_order")
+      .gte("display_order", 4);
+
+    const premiumPlanIds = new Set((premiumPlans || []).map((p: any) => p.id));
+    const premiumPatientIds = new Set(
+      (prestigeData || [])
+        .filter((pp: any) => premiumPlanIds.has(pp.plan_id))
+        .map((pp: any) => pp.patient_id)
+    );
+
     const result: ActiveUser[] = (profiles || [])
-      .filter((p: any) => p.fit_intelligence_enabled === true)
+      .filter((p: any) => p.fit_intelligence_enabled === true || premiumPatientIds.has(p.user_id))
       .map((p: any) => ({
         user_id: p.user_id,
         full_name: p.full_name || "Paciente",
-        enabled: p.fit_intelligence_enabled,
+        enabled: p.fit_intelligence_enabled || premiumPatientIds.has(p.user_id),
         onboarded: p.fit_intelligence_onboarded || false,
         firstExperienceSeen: p.fit_intelligence_first_experience_seen || false,
         accessMode: p.fit_intelligence_access_mode,

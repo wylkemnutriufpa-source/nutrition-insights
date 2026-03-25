@@ -385,16 +385,17 @@ export default function PatientDetail() {
     }
 
     // Apply prestige if selected
-    if (selectedPrestigePlanId && selectedPrestigePlanId !== "none") {
+    const effectivePrestigeId = selectedPrestigePlanId || currentPrestigePlan?.id || "";
+    if (effectivePrestigeId && effectivePrestigeId !== "none") {
       await supabase.from("patient_prestige").update({ is_active: false } as any).eq("patient_id", patientId).eq("is_active", true);
       const { error: prestigeErr } = await supabase.from("patient_prestige").insert({
         patient_id: patientId,
-        plan_id: selectedPrestigePlanId,
+        plan_id: effectivePrestigeId,
         assigned_by: user.id,
         is_active: true,
       });
       if (!prestigeErr) {
-        const selectedPlan = prestigePlans.find(p => p.id === selectedPrestigePlanId);
+        const selectedPlan = prestigePlans.find(p => p.id === effectivePrestigeId);
         toast.success(`Prestígio ${selectedPlan?.name || ''} aplicado! ${selectedPlan?.badge_icon || ''}`, { duration: 3000 });
       }
     } else if (selectedPrestigePlanId === "none") {
@@ -404,7 +405,6 @@ export default function PatientDetail() {
         toast.success("Prestígio removido");
       }
     }
-    // If selectedPrestigePlanId is "" (untouched), preserve existing prestige
     setPlanOpen(false);
     invalidate();
   };
@@ -1108,9 +1108,8 @@ export default function PatientDetail() {
                               newExpires = end.toISOString().split("T")[0];
                             }
                             let autoValue = planForm.value;
-                            const pid = selectedPrestigePlanId || currentPrestigePlan?.id || (prestigePlans.length > 0 ? prestigePlans[0].id : "");
+                            const pid = selectedPrestigePlanId && selectedPrestigePlanId !== "none" ? selectedPrestigePlanId : (currentPrestigePlan?.id || (prestigePlans.length > 0 ? prestigePlans[0].id : ""));
                             if (pid) {
-                              if (!selectedPrestigePlanId) setSelectedPrestigePlanId(pid);
                               const sp = prestigePlans.find(p => p.id === pid);
                               if (sp) {
                                 const priceMap: Record<string, number | null> = { "Mensal": sp.price_monthly, "Trimestral": sp.price_quarterly, "Semestral": sp.price_semiannual, "Anual": sp.price_annual };
@@ -1152,8 +1151,8 @@ export default function PatientDetail() {
                         <div>
                           <Label>Prestígio</Label>
                           <Select
-                            value={selectedPrestigePlanId || "none"}
-                            onValueChange={(v) => setSelectedPrestigePlanId(v === "none" ? "" : v)}
+                            value={selectedPrestigePlanId || currentPrestigePlan?.id || "none"}
+                            onValueChange={(v) => setSelectedPrestigePlanId(v)}
                           >
                             <SelectTrigger><SelectValue placeholder="Selecione um prestígio..." /></SelectTrigger>
                             <SelectContent>

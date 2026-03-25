@@ -104,7 +104,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
         .in("user_id", patientIds),
       supabase
         .from("nutritionist_patients")
-        .select("patient_id, status, onboarding_status")
+        .select("patient_id, status")
         .eq("nutritionist_id", user.id)
         .in("patient_id", patientIds)
         .eq("status", "active"),
@@ -117,13 +117,6 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
     const eligibleItems = items.filter((pipeline: any) => {
       const link = activeLinkMap.get(pipeline.patient_id);
       if (!link) return false; // No active link = legacy/orphan
-
-      // Reject legacy statuses that indicate pre-commercial patients
-      const legacyStatuses = ["lead_created", "awaiting_payment"];
-      if (link.onboarding_status && legacyStatuses.includes(link.onboarding_status)) {
-        return false;
-      }
-
       return true;
     });
 
@@ -580,18 +573,12 @@ export function usePendingApprovals() {
       const patientIds = (pipelines as any[]).map((p: any) => p.patient_id);
       const { data: activeLinks } = await supabase
         .from("nutritionist_patients")
-        .select("patient_id, onboarding_status")
+        .select("patient_id")
         .eq("nutritionist_id", user.id)
         .in("patient_id", patientIds)
         .eq("status", "active");
 
-      // Same business rule: exclude legacy statuses
-      const legacyStatuses = ["lead_created", "awaiting_payment"];
-      const eligible = (activeLinks || []).filter((l: any) => {
-        if (l.onboarding_status && legacyStatuses.includes(l.onboarding_status)) return false;
-        return true;
-      });
-      const activeSet = new Set(eligible.map((l: any) => l.patient_id));
+      const activeSet = new Set((activeLinks || []).map((l: any) => l.patient_id));
       const validPipelines = (pipelines as any[]).filter((p: any) => activeSet.has(p.patient_id));
       setCount(validPipelines.length);
     };
