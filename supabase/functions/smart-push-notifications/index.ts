@@ -8,10 +8,19 @@ const corsHeaders = {
 };
 
 const VAPID_PUBLIC_KEY = "BEvGFMB5dpy0wBBOKQhwOY_duamSBsGsu0CTVhu9W6IoEzmxI2BFbZR8c0Q6T5wEwiqT7kHdKwXNSiUlYYQ745s";
-const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY") ?? "";
 const VAPID_SUBJECT = "mailto:contato@fitjourney.app";
 
-webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+let vapidConfigured = false;
+function ensureVapid() {
+  if (vapidConfigured) return true;
+  const key = Deno.env.get("VAPID_PRIVATE_KEY");
+  if (!key || key.length < 10) return false;
+  try {
+    webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, key);
+    vapidConfigured = true;
+    return true;
+  } catch { return false; }
+}
 
 async function sendRealPush(
   supabase: any,
