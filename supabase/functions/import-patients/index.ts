@@ -92,7 +92,7 @@ async function importOnePatient(
 
     // Link to nutritionist
     await supabase.from("nutritionist_patients").upsert(
-      { nutritionist_id: nutritionistId, patient_id: finalId, status: "active" },
+      { nutritionist_id: nutritionistId, patient_id: finalId, status: "active", journey_status: "awaiting_payment" },
       { onConflict: "nutritionist_id,patient_id" }
     );
 
