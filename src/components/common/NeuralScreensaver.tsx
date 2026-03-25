@@ -114,6 +114,10 @@ export default function NeuralScreensaver() {
               failureCount: 0, isWeekend: true,
               currentHour: new Date().getHours(),
               clinicalFlags: (flags || []).map((f: any) => f.flag_key),
+              hasTrainer: false,
+              daysSinceLastWorkout: null,
+              weeklyWorkoutCount: 0,
+              lastWorkoutEffort: null,
             };
             const tip = getWeekendRiskPrompt(ctx);
             if (tip) setWeekendTip(tip.body);
