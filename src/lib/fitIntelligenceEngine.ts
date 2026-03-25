@@ -275,6 +275,51 @@ export function getMotivationNudge(ctx: BehavioralContext): IntelligencePrompt {
   };
 }
 
+// ─── Workout Absence / Post-Workout Nudge ───
+export function getTrainerIntegrationPrompt(ctx: BehavioralContext): IntelligencePrompt | null {
+  if (!ctx.hasTrainer) return null;
+
+  // Missed workout for 3+ days
+  if (ctx.daysSinceLastWorkout !== null && ctx.daysSinceLastWorkout >= 3) {
+    return {
+      type: "workout_reminder",
+      title: "Cadê o Treino? 🏋️",
+      body: ctx.motivationStyle === "firm"
+        ? `${ctx.firstName}, são ${ctx.daysSinceLastWorkout} dias sem treinar! Seu personal tá de olho. Bora voltar? 💪`
+        : `${ctx.firstName}, faz ${ctx.daysSinceLastWorkout} dias desde seu último treino. Que tal retomar hoje? 🙌`,
+      emoji: "🏋️",
+      tone: ctx.motivationStyle,
+      escalationLevel: ctx.daysSinceLastWorkout >= 7 ? 2 : 1,
+    };
+  }
+
+  // Post-intense workout (effort 8+) — suggest lighter eating
+  if (ctx.lastWorkoutEffort !== null && ctx.lastWorkoutEffort >= 8) {
+    return {
+      type: "motivation_nudge",
+      title: "Treino Intenso! 🔥",
+      body: `${ctx.firstName}, seu treino foi intenso (${ctx.lastWorkoutEffort}/10)! Hidrate-se bem e priorize proteínas na próxima refeição. 💧🥩`,
+      emoji: "🔥",
+      tone: "gentle",
+      escalationLevel: 0,
+    };
+  }
+
+  // Consistent training (5+ per week) — badge nudge
+  if (ctx.weeklyWorkoutCount >= 5) {
+    return {
+      type: "motivation_nudge",
+      title: "Disciplina Total! 🏆",
+      body: `${ctx.firstName}, ${ctx.weeklyWorkoutCount} treinos essa semana! Você é referência de consistência. Continue assim! 🌟`,
+      emoji: "🏆",
+      tone: "gentle",
+      escalationLevel: 0,
+    };
+  }
+
+  return null;
+}
+
 // ─── Main Engine: Get Current Prompt ───
 export function generateCurrentPrompt(ctx: BehavioralContext): IntelligencePrompt | null {
   const now = ctx.currentHour;
@@ -291,11 +336,15 @@ export function generateCurrentPrompt(ctx: BehavioralContext): IntelligencePromp
     if (weekendPrompt) return weekendPrompt;
   }
 
-  // 3. Workout reminder — near workout time
+  // 3. Trainer-aware prompts (workout absence, post-workout)
+  const trainerPrompt = getTrainerIntegrationPrompt(ctx);
+  if (trainerPrompt) return trainerPrompt;
+
+  // 4. Workout reminder — near workout time
   const workoutPrompt = getWorkoutPrompt(ctx);
   if (workoutPrompt) return workoutPrompt;
 
-  // 4. Hydration — in windows around 10am, 2pm, 6pm (±1 hour)
+  // 5. Hydration — in windows around 10am, 2pm, 6pm (±1 hour)
   const hydrationWindows = [
     { start: 9, end: 11 },
     { start: 13, end: 15 },
@@ -307,7 +356,7 @@ export function generateCurrentPrompt(ctx: BehavioralContext): IntelligencePromp
     if (hydrationPrompt) return hydrationPrompt;
   }
 
-  // 5. Evening non-adherence check (8pm-10pm)
+  // 6. Evening non-adherence check (8pm-10pm)
   if (now >= 20 && now <= 22 && ctx.failureCount > 0) {
     return getNonAdherenceResponse(ctx.failureCount, ctx.firstName, ctx.messageTone);
   }
