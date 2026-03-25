@@ -71,6 +71,7 @@ export function usePaymentGuard(): PaymentGuardState {
         .maybeSingle();
 
       const releasedStatuses = [
+        "active",
         "awaiting_consent",
         "awaiting_onboarding_release",
         "onboarding_active",
