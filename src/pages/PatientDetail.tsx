@@ -33,7 +33,7 @@ import OnboardingApprovalQueue from "@/components/patient/OnboardingApprovalQueu
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
-  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope, Crown, UserCog, Pencil, Sparkles, Rocket, Shield
+  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope, Crown, UserCog, Pencil, Sparkles, Rocket, Shield, Loader2
 } from "lucide-react";
 import BodyProjectionProCard from "@/components/patient/BodyProjectionProCard";
 import ActiveProtocolBadge from "@/components/patient/ActiveProtocolBadge";
@@ -80,6 +80,7 @@ export default function PatientDetail() {
   const mealPlanDocs = data?.mealPlanDocs ?? [];
   const assessmentDocs = data?.assessmentDocs ?? [];
   const patientStatus = data?.patientStatus ?? "active";
+  const journeyStatus = data?.journeyStatus ?? "active";
   const npId = data?.npId ?? null;
   const prestigePlans = data?.prestigePlans ?? [];
   const currentPrestigePlan = data?.currentPrestigePlan ?? null;
@@ -121,10 +122,48 @@ export default function PatientDetail() {
   });
   const [savingProfile, setSavingProfile] = useState(false);
   const [releaseOnboardingOpen, setReleaseOnboardingOpen] = useState(false);
+  const [confirmingPayment, setConfirmingPayment] = useState(false);
 
   // Invalidation helper
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: queryKeys.patients.detail(patientId ?? "") });
+    queryClient.invalidateQueries({ queryKey: ["patients"] });
+  };
+
+  // Confirm payment + auto-release onboarding
+  const handleConfirmPayment = async () => {
+    if (!user || !patientId) return;
+    setConfirmingPayment(true);
+    try {
+      const { data, error } = await supabase.rpc("confirm_patient_payment", {
+        _patient_id: patientId,
+        _nutritionist_id: user.id,
+      });
+      if (error) throw error;
+      const result = data as any;
+      if (!result?.success) {
+        toast.error(result?.error || "Erro ao confirmar pagamento");
+        setConfirmingPayment(false);
+        return;
+      }
+      toast.success("Pagamento confirmado! Paciente avançou para consentimento 🎉");
+      invalidate();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao confirmar pagamento");
+    }
+    setConfirmingPayment(false);
+  };
+
+  // Smart onboarding release — idempotent
+  const handleSmartReleaseOnboarding = async () => {
+    if (!user || !patientId) return;
+    const alreadyPastOnboarding = ["onboarding_active", "onboarding_completed", "draft_ready_for_review", "plan_published", "active_followup"].includes(journeyStatus);
+    if (alreadyPastOnboarding) {
+      toast.info("Onboarding já foi liberado ou concluído para este paciente");
+      return;
+    }
+    // Open the dialog for proper release flow
+    setReleaseOnboardingOpen(true);
   };
 
   const invokeAdminIdentityAction = useCallback(async (action: string, payload: Record<string, unknown>) => {
@@ -561,7 +600,20 @@ export default function PatientDetail() {
             <Button variant="outline" className="gap-2" onClick={() => navigate(`/anamnesis?patientId=${patientId}`)}>
               <Heart className="w-4 h-4" /> {anamnesis ? "Editar Anamnese" : "Preencher Anamnese"}
             </Button>
-            <Button variant="outline" className="gap-2 border-warning/30 text-warning hover:bg-warning/10" onClick={() => setReleaseOnboardingOpen(true)}>
+            {/* Confirmar Pagamento — only if not yet paid */}
+            {["invited", "awaiting_payment", "lead_created", "active"].includes(journeyStatus) && (
+              <Button
+                variant="outline"
+                className="gap-2 border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10"
+                onClick={handleConfirmPayment}
+                disabled={confirmingPayment}
+              >
+                {confirmingPayment ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+                Confirmar Pagamento
+              </Button>
+            )}
+            {/* Liberar Onboarding — smart/idempotent */}
+            <Button variant="outline" className="gap-2 border-warning/30 text-warning hover:bg-warning/10" onClick={handleSmartReleaseOnboarding}>
               <Rocket className="w-4 h-4" /> Liberar Onboarding
             </Button>
             {isAdmin && (
