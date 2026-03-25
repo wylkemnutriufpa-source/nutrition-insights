@@ -34,20 +34,13 @@ export interface BehavioralContext {
 }
 
 // ─── Hydration Templates ───
-function getHydrationPrompt(ctx: BehavioralContext): IntelligencePrompt {
-  const remaining = ctx.waterTarget - ctx.waterConsumed;
-  const progress = ctx.waterConsumed / ctx.waterTarget;
+function getHydrationPrompt(ctx: BehavioralContext): IntelligencePrompt | null {
+  const progress = ctx.waterTarget > 0 ? ctx.waterConsumed / ctx.waterTarget : 0;
 
-  if (progress >= 1) {
-    return {
-      type: 'hydration_check',
-      title: 'Meta atingida! 💧',
-      body: `Parabéns ${ctx.firstName}! Você completou sua meta de ${ctx.waterTarget} copos hoje! 🎉`,
-      emoji: '🎉',
-      tone: 'gentle',
-      escalationLevel: 0,
-    };
-  }
+  // FIX: Don't show prompt if goal already met
+  if (progress >= 1) return null;
+
+  const remaining = ctx.waterTarget - ctx.waterConsumed;
 
   const templates = {
     gentle: {
@@ -94,7 +87,7 @@ function getHydrationPrompt(ctx: BehavioralContext): IntelligencePrompt {
 
 // ─── Hydration Positive Reinforcement ───
 export function getHydrationResponse(cups: number, target: number, name: string): string {
-  const progress = cups / target;
+  const progress = target > 0 ? cups / target : 0;
   if (progress >= 1) return `Excelente ${name}! 🎉 Meta de hidratação atingida! Seu corpo agradece.`;
   if (progress >= 0.75) return `Muito bem ${name} 👏 Quase lá! Faltam só ${target - cups} copos!`;
   if (progress >= 0.5) return `Bom progresso ${name}! 💪 Metade da meta concluída.`;
@@ -175,7 +168,7 @@ export function getWorkoutPrompt(ctx: BehavioralContext): IntelligencePrompt | n
   // Only show within 1 hour window of workout time
   if (Math.abs(ctx.currentHour - targetHour) > 1) return null;
 
-  const blockerTip = ctx.workoutBlocker
+  const blockerTip = ctx.workoutBlocker && ctx.workoutBlocker !== 'nenhum'
     ? `\nDica: ${ctx.workoutBlocker === 'tempo' ? 'Mesmo 15 minutos já fazem diferença!' : ctx.workoutBlocker === 'motivacao' ? 'Coloque sua playlist favorita e comece!' : 'Você consegue!'}`
     : '';
 
@@ -192,10 +185,11 @@ export function getWorkoutPrompt(ctx: BehavioralContext): IntelligencePrompt | n
 }
 
 // ─── Main Engine: Get Current Prompt ───
+// FIX: Use range-based hour check instead of exact match
 export function generateCurrentPrompt(ctx: BehavioralContext): IntelligencePrompt | null {
   const now = ctx.currentHour;
 
-  // Weekend risk — show once in the morning
+  // Weekend risk — show in the morning window (8-10)
   if (ctx.isWeekend && now >= 8 && now <= 10) {
     const weekendPrompt = getWeekendRiskPrompt(ctx);
     if (weekendPrompt) return weekendPrompt;
@@ -205,13 +199,20 @@ export function generateCurrentPrompt(ctx: BehavioralContext): IntelligencePromp
   const workoutPrompt = getWorkoutPrompt(ctx);
   if (workoutPrompt) return workoutPrompt;
 
-  // Hydration — check 3x per day (10am, 2pm, 6pm)
-  if ([10, 14, 18].includes(now)) {
-    return getHydrationPrompt(ctx);
+  // FIX: Hydration — check in windows around 10am, 2pm, 6pm (±1 hour)
+  const hydrationWindows = [
+    { start: 9, end: 11 },
+    { start: 13, end: 15 },
+    { start: 17, end: 19 },
+  ];
+  const inHydrationWindow = hydrationWindows.some(w => now >= w.start && now <= w.end);
+  if (inHydrationWindow) {
+    const hydrationPrompt = getHydrationPrompt(ctx);
+    if (hydrationPrompt) return hydrationPrompt;
   }
 
-  // Evening non-adherence check
-  if (now >= 20 && ctx.failureCount > 0) {
+  // Evening non-adherence check (8pm-10pm)
+  if (now >= 20 && now <= 22 && ctx.failureCount > 0) {
     return getNonAdherenceResponse(ctx.failureCount, ctx.firstName, ctx.messageTone);
   }
 
@@ -230,8 +231,12 @@ export function shouldShowPrompt(
   const elapsed = (Date.now() - lastPromptAt.getTime()) / 60_000;
 
   // Adaptive: increase cooldown if user ignores, decrease if engaged
-  const ratio = engagedCount > 0 ? ignoredCount / engagedCount : ignoredCount;
+  const ratio = engagedCount > 0 ? ignoredCount / engagedCount : Math.min(ignoredCount, 5);
   const adaptedCooldown = cooldownMinutes * (1 + ratio * 0.5);
 
-  return elapsed >= adaptedCooldown;
+  // Cap max cooldown at 8 hours to prevent infinite silence
+  const maxCooldown = 480;
+  const finalCooldown = Math.min(adaptedCooldown, maxCooldown);
+
+  return elapsed >= finalCooldown;
 }

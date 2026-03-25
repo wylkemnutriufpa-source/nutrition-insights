@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Brain, Droplets, Dumbbell, Heart, Sparkles, ChevronRight, ChevronLeft, Check, Loader2 } from "lucide-react";
 
@@ -37,6 +36,23 @@ const STEPS = [
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
+// FIX: Extract OptionButton outside component to prevent re-creation on every render
+function OptionButton({ selected, onClick, children, className = '' }: { selected: boolean; onClick: () => void; children: React.ReactNode; className?: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`px-4 py-3 rounded-xl border text-sm font-medium transition-all duration-200 text-left ${
+        selected
+          ? 'border-primary bg-primary/10 text-primary shadow-sm shadow-primary/10'
+          : 'border-border bg-card hover:border-primary/30 text-foreground/70'
+      } ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
+
 export default function FitIntelligenceWizard({ open, onClose, patientId, patientName }: Props) {
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -55,18 +71,28 @@ export default function FitIntelligenceWizard({ open, onClose, patientId, patien
 
   const firstName = patientName?.split(' ')[0] || 'você';
 
-  const update = (key: keyof WizardData, value: any) => setData(prev => ({ ...prev, [key]: value }));
+  const update = useCallback((key: keyof WizardData, value: any) => {
+    setData(prev => ({ ...prev, [key]: value }));
+  }, []);
 
-  const toggleCraving = (hour: string) => {
+  const toggleCraving = useCallback((hour: string) => {
     setData(prev => ({
       ...prev,
       craving_hours: prev.craving_hours.includes(hour)
         ? prev.craving_hours.filter(h => h !== hour)
         : [...prev.craving_hours, hour],
     }));
-  };
+  }, []);
+
+  // FIX: Reset step on close so re-open starts fresh
+  const handleClose = useCallback(() => {
+    onClose();
+    // Reset after animation completes
+    setTimeout(() => setStep(0), 300);
+  }, [onClose]);
 
   const handleSave = async () => {
+    if (saving) return; // FIX: Prevent double-submit
     setSaving(true);
     try {
       const { error: profileError } = await supabase
@@ -94,11 +120,12 @@ export default function FitIntelligenceWizard({ open, onClose, patientId, patien
         .update({ fit_intelligence_onboarded: true } as any)
         .eq("user_id", patientId);
 
-      // Create initial hydration record
+      // Create initial hydration record for today
+      const targetCups = data.water_cups_per_day > 0 ? Math.ceil(data.water_cups_per_day * 1.5) : 8;
       await supabase.from("fit_intelligence_hydration" as any).upsert({
         patient_id: patientId,
         date: new Date().toISOString().split('T')[0],
-        target_cups: data.water_cups_per_day > 0 ? Math.ceil(data.water_cups_per_day * 1.5) : 8,
+        target_cups: targetCups,
         consumed_cups: 0,
       } as any, { onConflict: "patient_id,date" });
 
@@ -107,35 +134,23 @@ export default function FitIntelligenceWizard({ open, onClose, patientId, patien
         patient_id: patientId,
         optimal_hours: [9, 12, 15, 18],
         cooldown_minutes: 120,
+        ignored_count: 0,
+        engaged_count: 0,
       } as any, { onConflict: "patient_id" });
 
       toast.success("Inteligência FitJourney configurada! 🧠✨");
-      onClose();
+      handleClose();
     } catch (e: any) {
       toast.error("Erro ao salvar: " + (e.message || "Tente novamente"));
     }
     setSaving(false);
   };
 
-  const canNext = step < STEPS.length - 1;
   const canPrev = step > 0;
   const isLast = step === STEPS.length - 1;
 
-  const OptionButton = ({ selected, onClick, children, className = '' }: { selected: boolean; onClick: () => void; children: React.ReactNode; className?: string }) => (
-    <button
-      onClick={onClick}
-      className={`px-4 py-3 rounded-xl border text-sm font-medium transition-all duration-200 ${
-        selected
-          ? 'border-primary bg-primary/10 text-primary shadow-sm shadow-primary/10'
-          : 'border-border bg-card hover:border-primary/30 text-foreground/70'
-      } ${className}`}
-    >
-      {children}
-    </button>
-  );
-
   return (
-    <Dialog open={open} onOpenChange={() => !saving && onClose()}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v && !saving) handleClose(); }}>
       <DialogContent className="max-w-md p-0 overflow-hidden bg-background border-primary/20">
         {/* Progress bar */}
         <div className="h-1 bg-muted">
@@ -196,7 +211,7 @@ export default function FitIntelligenceWizard({ open, onClose, patientId, patien
                       <Sparkles className="w-4 h-4" />
                       Sim, ensinar agora
                     </Button>
-                    <Button variant="ghost" onClick={onClose} className="text-muted-foreground">
+                    <Button variant="ghost" onClick={handleClose} className="text-muted-foreground">
                       Agora não
                     </Button>
                   </div>
@@ -401,7 +416,7 @@ export default function FitIntelligenceWizard({ open, onClose, patientId, patien
                 Finalizar
               </Button>
             ) : (
-              <Button onClick={() => setStep(s => s + 1)} disabled={!canNext} className="gap-1">
+              <Button onClick={() => setStep(s => s + 1)} className="gap-1">
                 Próximo <ChevronRight className="w-4 h-4" />
               </Button>
             )}
