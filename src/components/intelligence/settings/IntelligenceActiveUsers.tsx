@@ -137,7 +137,7 @@ export default function IntelligenceActiveUsers() {
           </p>
         </div>
       ) : (
-        <ScrollArea className="max-h-[50vh]">
+        <ScrollArea className="max-h-[65vh]">
           <div className="space-y-2">
             {users.map((u) => {
               const isExpired = u.expiresAt && new Date(u.expiresAt) < new Date();
