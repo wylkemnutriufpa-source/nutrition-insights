@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
 import { PROFESSIONAL_SLIDES, PATIENT_SLIDES } from "@/lib/presentationSlides";
 import { useFeatureGuide } from "@/hooks/useFeatureGuide";
-import { GraduationCap, Stethoscope, User, Play, CheckCircle2, RotateCcw, Clapperboard, Map, Rocket, Users, LayoutDashboard, Sparkles } from "lucide-react";
+import { GraduationCap, Stethoscope, User, Play, CheckCircle2, RotateCcw, Clapperboard, Map, Rocket, Users, LayoutDashboard, Sparkles, Brain } from "lucide-react";
 import { MagicSlideButton } from "@/components/common/MagicSlideGenerator";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
