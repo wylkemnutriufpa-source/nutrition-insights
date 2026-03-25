@@ -115,6 +115,7 @@ export default function SystemPresentation() {
         dataReady={true}
         userRole={userRole as "patient" | "professional" | "admin"}
         onComplete={() => setShowNeuralEntry(false)}
+        demoMode={true}
       />
     );
   }

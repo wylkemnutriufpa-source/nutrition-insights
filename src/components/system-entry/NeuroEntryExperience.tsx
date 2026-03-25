@@ -8,6 +8,7 @@ interface NeuroEntryExperienceProps {
   dataReady: boolean;
   userRole?: "patient" | "professional" | "admin";
   onComplete: () => void;
+  demoMode?: boolean;
 }
 
 function microVibrate(ms = 10) {
@@ -174,10 +175,11 @@ export default function NeuroEntryExperience({
   dataReady,
   userRole = "patient",
   onComplete,
+  demoMode = false,
 }: NeuroEntryExperienceProps) {
   const reduced = useReducedMotion();
   const { state, awarenessMessage, durationMultiplier, skipToReady } = useSystemEntryController({
-    dataReady,
+    dataReady: demoMode ? false : dataReady,
     userRole,
   });
 
