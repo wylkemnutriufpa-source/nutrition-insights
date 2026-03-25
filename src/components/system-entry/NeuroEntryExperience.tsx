@@ -175,10 +175,11 @@ export default function NeuroEntryExperience({
   dataReady,
   userRole = "patient",
   onComplete,
+  demoMode = false,
 }: NeuroEntryExperienceProps) {
   const reduced = useReducedMotion();
   const { state, awarenessMessage, durationMultiplier, skipToReady } = useSystemEntryController({
-    dataReady,
+    dataReady: demoMode ? false : dataReady,
     userRole,
   });
 
