@@ -45,6 +45,9 @@ export default function IntelligenceSettingsPanel() {
             <TabsTrigger value="active" className="gap-2 data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-600">
               <Users className="w-4 h-4" /> Ativos
             </TabsTrigger>
+            <TabsTrigger value="preview" className="gap-2 data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-600">
+              <Play className="w-4 h-4" /> Apresentação
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="general">
