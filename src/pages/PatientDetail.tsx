@@ -1152,8 +1152,8 @@ export default function PatientDetail() {
                         <div>
                           <Label>Prestígio</Label>
                           <Select
-                            value={selectedPrestigePlanId || "none"}
-                            onValueChange={(v) => setSelectedPrestigePlanId(v === "none" ? "" : v)}
+                            value={selectedPrestigePlanId || currentPrestigePlan?.id || "none"}
+                            onValueChange={(v) => setSelectedPrestigePlanId(v)}
                           >
                             <SelectTrigger><SelectValue placeholder="Selecione um prestígio..." /></SelectTrigger>
                             <SelectContent>
