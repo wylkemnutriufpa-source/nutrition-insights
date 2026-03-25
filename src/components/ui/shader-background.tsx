@@ -15,7 +15,7 @@ const ShaderBackground = () => {
     uniform vec2 iResolution;
     uniform float iTime;
 
-    const float overallSpeed = 0.2;
+    const float overallSpeed = 0.07;
     const float gridSmoothWidth = 0.015;
     const float axisWidth = 0.05;
     const float majorLineWidth = 0.025;
