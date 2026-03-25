@@ -18,6 +18,7 @@ import {
   ClipboardList, KeyRound, Send, UserCog
 } from "lucide-react";
 import { releaseOnboarding } from "@/lib/serverTransitions";
+import { acquireActionLock, releaseActionLock, isAtOrPast } from "@/lib/fitjourneyBible";
 import type { PatientInfo } from "@/hooks/queries/usePatientsList";
 
 const JOURNEY_LABELS: Record<string, { label: string; color: string }> = {
