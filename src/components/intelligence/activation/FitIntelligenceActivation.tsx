@@ -1,15 +1,14 @@
 /**
  * FitIntelligence First-Time Activation Experience
  *
- * Premium cinematic sequence (~18s) that runs ONLY on first activation.
- * Dark screen → golden 3D neural brain → premium typography phrases → CTA → dissolve.
+ * Premium cinematic sequence (~22s) that runs ONLY on first activation.
+ * Particles converge → brain forms → premium phrases → CTA → particles diverge.
  */
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import NeuralLoading from "@/components/system-entry/NeuralLoading";
-import BrainParticleEffect from "./BrainParticleEffect";
+import NeuralLoading, { type NeuralAnimationMode } from "@/components/system-entry/NeuralLoading";
 import {
   startNeuralAmbient,
   crescendo,
@@ -86,7 +85,6 @@ function PremiumPhrase({
                     WebkitTextFillColor: "transparent",
                     color: "transparent",
                     textShadow: "none",
-                    filter: "drop-shadow(0 0 8px hsl(45 100% 62% / 0.18))",
                   }
                 : {
                     color: styles.color,
@@ -104,9 +102,7 @@ function PremiumPhrase({
                 opacity: 1,
                 y: 0,
                 scale: 1,
-                filter: styles.useGradient
-                  ? "drop-shadow(0 0 8px hsl(45 100% 62% / 0.18))"
-                  : "blur(0px)",
+                filter: "blur(0px)",
                 transition: {
                   duration: variant === "hero" ? 1.15 : 0.92,
                   ease: EASE_PREMIUM,
@@ -131,6 +127,7 @@ export default function FitIntelligenceActivation({ userId, onComplete }: Props)
   const [stage, setStage] = useState<
     "dark" | "converging" | "brain" | "phrase1" | "phrase2" | "phrase3" | "cta" | "dissolve" | "done"
   >("dark");
+  const [brainMode, setBrainMode] = useState<NeuralAnimationMode>("converge");
   const audioStarted = useRef(false);
 
   useEffect(() => {
@@ -139,26 +136,28 @@ export default function FitIntelligenceActivation({ userId, onComplete }: Props)
         delay: 500,
         action: () => {
           setStage("converging");
+          setBrainMode("converge");
           startNeuralAmbient();
           audioStarted.current = true;
           microVibrate(8);
         },
       },
       {
-        delay: 4200,
+        delay: 4500,
         action: () => {
           setStage("brain");
+          setBrainMode("idle");
         },
       },
       {
-        delay: 8500,
+        delay: 8800,
         action: () => {
           setStage("phrase1");
           microVibrate(6);
         },
       },
       {
-        delay: 13100,
+        delay: 13400,
         action: () => {
           setStage("phrase2");
           crescendo();
@@ -166,13 +165,13 @@ export default function FitIntelligenceActivation({ userId, onComplete }: Props)
         },
       },
       {
-        delay: 18100,
+        delay: 18400,
         action: () => {
           setStage("phrase3");
         },
       },
       {
-        delay: 22500,
+        delay: 22800,
         action: () => {
           setStage("cta");
         },
@@ -186,6 +185,7 @@ export default function FitIntelligenceActivation({ userId, onComplete }: Props)
   const handleStart = useCallback(async () => {
     microVibrate(15);
     setStage("dissolve");
+    setBrainMode("diverge");
     fadeOutAudio();
 
     await supabase
@@ -196,15 +196,13 @@ export default function FitIntelligenceActivation({ userId, onComplete }: Props)
     setTimeout(() => {
       setStage("done");
       onComplete();
-    }, 2000);
+    }, 2500);
   }, [userId, onComplete]);
 
   if (stage === "done") return null;
 
-  const showBrain = stage === "brain" || stage === "phrase1" || stage === "phrase2" || stage === "phrase3" || stage === "cta";
+  const showBrain = stage !== "dark";
   const brainSmall = stage === "phrase1" || stage === "phrase2" || stage === "phrase3" || stage === "cta";
-  const brainDissolved = stage === "dissolve";
-  const isConverging = stage === "converging";
 
   return (
     <AnimatePresence>
@@ -228,61 +226,32 @@ export default function FitIntelligenceActivation({ userId, onComplete }: Props)
           }}
         />
 
-        {/* Converging particles entrance */}
-        <BrainParticleEffect
-          mode="converge"
-          active={isConverging}
-          duration={3500}
-          particleCount={320}
-        />
-
-        {/* Brain appears after convergence */}
+        {/* Brain with converge/idle/diverge modes */}
         {showBrain && (
           <motion.div
             className="absolute inset-0 flex items-center justify-center pointer-events-none"
-            initial={{ opacity: 0, scale: 0.8 }}
             animate={{
-              opacity: 1,
               scale: brainSmall ? 0.46 : 1,
               y: brainSmall ? "-16%" : "0%",
             }}
             transition={{
               duration: 1.6,
               ease: EASE_PREMIUM,
-              opacity: { duration: 1.2 },
             }}
             style={{
               filter: "hue-rotate(-110deg) saturate(1.3) brightness(1.1)",
             }}
           >
-            <NeuralLoading active={true} durationMultiplier={1} />
+            <NeuralLoading
+              active={true}
+              durationMultiplier={1}
+              animationMode={brainMode}
+              transitionDuration={brainMode === "converge" ? 3.5 : 2.0}
+            />
           </motion.div>
         )}
 
-        {/* Dissolve: diverging particles */}
-        {brainDissolved && (
-          <>
-            <motion.div
-              className="absolute inset-0 flex items-center justify-center pointer-events-none"
-              initial={{ opacity: 1 }}
-              animate={{ opacity: 0, scale: 1.2 }}
-              transition={{ duration: 1.5, ease: EASE_PREMIUM }}
-              style={{
-                filter: "hue-rotate(-110deg) saturate(1.3) brightness(1.1)",
-              }}
-            >
-              <NeuralLoading active={true} durationMultiplier={1} />
-            </motion.div>
-            <BrainParticleEffect
-              mode="diverge"
-              active={true}
-              duration={2000}
-              particleCount={250}
-            />
-          </>
-        )}
-
-        {showBrain && !brainDissolved && (
+        {showBrain && stage !== "dissolve" && (
           <motion.div
             className="absolute top-[35%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[540px] h-[540px] rounded-full pointer-events-none"
             style={{
