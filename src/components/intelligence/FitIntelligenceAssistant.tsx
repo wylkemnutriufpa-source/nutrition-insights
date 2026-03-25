@@ -107,8 +107,8 @@ export default function FitIntelligenceAssistant() {
       const now = new Date();
       const ctx: BehavioralContext = {
         firstName: profile?.full_name?.split(' ')[0] || 'você',
-        waterTarget: hydration?.target_cups || (bp as any).water_cups_per_day * 1.5 || 8,
-        waterConsumed: hydration?.consumed_cups || 0,
+        waterTarget: (hydration as any)?.target_cups || (bp as any).water_cups_per_day * 1.5 || 8,
+        waterConsumed: (hydration as any)?.consumed_cups || 0,
         motivationStyle: (bp as any).motivation_style || 'gentle',
         messageTone: (bp as any).message_tone || 'funny',
         weekendDietBreaks: (bp as any).weekend_diet_breaks || false,
