@@ -49,7 +49,7 @@ export default function TrainerAnamnesis({ studentId, studentName, open, onClose
     setLoading(true);
     try {
       const [profileRes, anamnesisRes, assessmentRes, linksRes] = await Promise.all([
-        supabase.from("profiles").select("full_name, height, birth_date, phone, avatar_url").eq("user_id", studentId).maybeSingle(),
+        supabase.from("profiles").select("full_name, birth_date, phone, avatar_url").eq("user_id", studentId).maybeSingle(),
         supabase.from("patient_anamnesis").select("answers").eq("user_id", studentId).eq("status", "completed").order("created_at", { ascending: false }).limit(1),
         (supabase as any).from("trainer_assessments").select("*").eq("patient_id", studentId).eq("trainer_id", user?.id).order("created_at", { ascending: false }).limit(1),
         (supabase as any).from("patient_professional_links").select("professional_role, profiles!patient_professional_links_professional_id_fkey(full_name)").eq("patient_id", studentId).eq("status", "active"),
