@@ -41,12 +41,12 @@ export default function FitIntelligenceAssistant() {
 
   // Show wizard if enabled but not onboarded
   useEffect(() => {
-    if (user && isPatient && isEnabled && !isOnboarded) {
+    if (user && isPatient && isEnabled && !isOnboarded && !wizardJustCompleted) {
       const timer = setTimeout(() => setShowWizard(true), 2000);
       return () => clearTimeout(timer);
     }
     if (!isEnabled) setShowWizard(false);
-  }, [user, isPatient, isEnabled, isOnboarded]);
+  }, [user, isPatient, isEnabled, isOnboarded, wizardJustCompleted]);
 
   // Clean up when feature is disabled
   useEffect(() => {
