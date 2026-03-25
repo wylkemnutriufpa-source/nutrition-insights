@@ -109,6 +109,7 @@ export default function FitIntelligenceWizard({ open, onClose, patientId, patien
           craving_hours: data.craving_hours,
           motivation_style: data.motivation_style,
           message_tone: data.message_tone,
+          preferred_reminder_windows: [9, 12, 15, 18],
           updated_at: new Date().toISOString(),
         } as any, { onConflict: "patient_id" });
 
