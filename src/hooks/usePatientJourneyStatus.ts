@@ -43,7 +43,7 @@ export function usePatientJourneyStatus() {
     })();
   }, [user, isPatient]);
 
-  const canAccessOnboarding = status === "onboarding_active" || status === "active" || status === "clinical_followup_active" || status === "onboarding_completed";
+  const canAccessOnboarding = status === "awaiting_consent" || status === "onboarding_active" || status === "onboarding_completed" || status === "draft_ready_for_review" || status === "plan_published" || status === "active_followup" || status === "active" || status === "clinical_followup_active";
 
   return { status, loading, canAccessOnboarding };
 }
