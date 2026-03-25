@@ -39,7 +39,14 @@ serve(async (req) => {
     { auth: { persistSession: false } }
   );
 
-  try {
+    if (!ensureVapid()) {
+      return new Response(JSON.stringify({ error: "VAPID not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+
     const { user_id, title, body, url, tag, skip_inapp } = await req.json();
 
     if (!user_id || !title) {
