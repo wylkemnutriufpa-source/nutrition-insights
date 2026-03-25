@@ -2,28 +2,27 @@
  * FitJourney Intelligence Assistant
  * 
  * Floating neural orb for patient experience.
- * Shows contextual prompts (hydration, workout, weekend risk).
- * Handles quick-tap responses and adaptive frequency.
+ * Uses context builder + prompt engine for adaptive prompts.
  */
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Brain, X, Droplets, Dumbbell, AlertTriangle, Sparkles, Check } from "lucide-react";
+import { Brain } from "lucide-react";
 import {
   generateCurrentPrompt,
   getHydrationResponse,
   shouldShowPrompt,
+  isSnoozed,
   type IntelligencePrompt,
   type BehavioralContext,
 } from "@/lib/fitIntelligenceEngine";
+import { buildIntelligenceContext } from "@/lib/fitIntelligenceContext";
 import FitIntelligenceWizard from "./FitIntelligenceWizard";
+import FitIntelligencePromptCard from "./FitIntelligencePromptCard";
 
-const EASE = [0.22, 1, 0.36, 1] as const;
-const CHECK_INTERVAL = 5 * 60_000; // Check every 5 min
+const CHECK_INTERVAL = 5 * 60_000; // 5 min
 
 export default function FitIntelligenceAssistant() {
   const { user, profile, roles } = useAuth();
@@ -33,7 +32,7 @@ export default function FitIntelligenceAssistant() {
   const [responding, setResponding] = useState(false);
   const [responseText, setResponseText] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
-  const checkingRef = useRef(false); // FIX: Guard against concurrent checks
+  const checkingRef = useRef(false);
 
   const isPatient = !roles?.includes("nutritionist") && !roles?.includes("admin");
   const isEnabled = (profile as any)?.fit_intelligence_enabled === true;
@@ -45,13 +44,10 @@ export default function FitIntelligenceAssistant() {
       const timer = setTimeout(() => setShowWizard(true), 2000);
       return () => clearTimeout(timer);
     }
-    // FIX: If feature disabled, ensure wizard doesn't show
-    if (!isEnabled) {
-      setShowWizard(false);
-    }
+    if (!isEnabled) setShowWizard(false);
   }, [user, isPatient, isEnabled, isOnboarded]);
 
-  // FIX: Clean up when feature is disabled
+  // Clean up when feature is disabled
   useEffect(() => {
     if (!isEnabled) {
       setPrompt(null);
@@ -64,98 +60,79 @@ export default function FitIntelligenceAssistant() {
     }
   }, [isEnabled]);
 
-  // Prompt engine — with concurrency guard
+  // Prompt engine
   const checkForPrompt = useCallback(async () => {
     if (!user || !isPatient || !isEnabled || !isOnboarded) return;
-    if (checkingRef.current) return; // FIX: Prevent concurrent checks
-    if (prompt) return; // FIX: Don't check if there's already an active prompt
+    if (checkingRef.current || prompt) return;
 
     checkingRef.current = true;
 
     try {
-      // Get behavioral profile
-      const { data: bp } = await supabase
-        .from("behavioral_profile" as any)
-        .select("*")
-        .eq("patient_id", user.id)
-        .maybeSingle();
+      const ctx = await buildIntelligenceContext(
+        user.id,
+        profile?.full_name || "",
+        profile as any
+      );
 
-      if (!bp) { checkingRef.current = false; return; }
+      if (!ctx) { checkingRef.current = false; return; }
 
-      // Get frequency config
-      const { data: freq } = await supabase
-        .from("fit_intelligence_frequency" as any)
-        .select("*")
-        .eq("patient_id", user.id)
-        .maybeSingle();
+      // Check snooze
+      if (isSnoozed(ctx.snoozedUntil)) { checkingRef.current = false; return; }
 
       // Check cooldown
-      const f = freq as any;
-      if (f && !shouldShowPrompt(
-        f.last_prompt_at ? new Date(f.last_prompt_at) : null,
-        f.cooldown_minutes || 120,
-        f.ignored_count || 0,
-        f.engaged_count || 0,
-      )) { checkingRef.current = false; return; }
+      if (!shouldShowPrompt(ctx.lastPromptAt, ctx.cooldownMinutes, ctx.ignoredCount, ctx.engagedCount)) {
+        checkingRef.current = false;
+        return;
+      }
 
-      // Get today's hydration
-      const today = new Date().toISOString().split('T')[0];
-      const { data: hydration } = await supabase
-        .from("fit_intelligence_hydration" as any)
-        .select("*")
-        .eq("patient_id", user.id)
-        .eq("date", today)
-        .maybeSingle();
-
-      // Get clinical flags
-      const { data: flags } = await supabase
-        .from("patient_clinical_flags" as any)
-        .select("flag_key")
-        .eq("patient_id", user.id)
-        .eq("is_active", true);
-
-      // Count recent failures (last 7 days)
-      const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
-      const { data: recentHydration } = await supabase
-        .from("fit_intelligence_hydration" as any)
-        .select("consumed_cups, target_cups")
-        .eq("patient_id", user.id)
-        .gte("date", weekAgo);
-
-      const failureCount = (recentHydration || []).filter(
-        (h: any) => h.target_cups > 0 && h.consumed_cups < h.target_cups * 0.5
-      ).length;
-
-      const now = new Date();
-      const ctx: BehavioralContext = {
-        firstName: profile?.full_name?.split(' ')[0] || 'você',
-        waterTarget: (hydration as any)?.target_cups || Math.ceil(((bp as any).water_cups_per_day || 6) * 1.5),
-        waterConsumed: (hydration as any)?.consumed_cups || 0,
-        motivationStyle: (bp as any).motivation_style || 'gentle',
-        messageTone: (bp as any).message_tone || 'funny',
-        weekendDietBreaks: (bp as any).weekend_diet_breaks || false,
-        forgetsWater: (bp as any).forgets_water || false,
-        workoutTime: (bp as any).workout_time || 'morning',
-        workoutBlocker: (bp as any).workout_blocker || null,
-        cravingHours: (bp as any).craving_hours || [],
-        failureCount,
-        isWeekend: [0, 6].includes(now.getDay()),
-        currentHour: now.getHours(),
-        clinicalFlags: (flags || []).map((fl: any) => fl.flag_key),
+      const behavioralCtx: BehavioralContext = {
+        firstName: ctx.firstName,
+        waterTarget: ctx.waterTarget,
+        waterConsumed: ctx.waterConsumed,
+        motivationStyle: ctx.motivationStyle,
+        messageTone: ctx.messageTone,
+        weekendDietBreaks: ctx.weekendDietBreaks,
+        forgetsWater: ctx.forgetsWater,
+        workoutTime: ctx.workoutTime,
+        workoutBlocker: ctx.workoutBlocker,
+        cravingHours: ctx.cravingHours,
+        failureCount: ctx.failureCount7d,
+        isWeekend: ctx.isWeekend,
+        currentHour: ctx.currentHour,
+        clinicalFlags: ctx.clinicalFlags,
       };
 
-      const newPrompt = generateCurrentPrompt(ctx);
+      const newPrompt = generateCurrentPrompt(behavioralCtx);
       if (newPrompt) {
         setPrompt(newPrompt);
         setExpanded(true);
         setResponseText(null);
 
-        // Update last prompt time
-        await supabase.from("fit_intelligence_frequency" as any).upsert({
+        // Update last prompt time + type
+        await supabase.from("fit_intelligence_frequency" as any).upsert(
+          {
+            patient_id: user.id,
+            last_prompt_at: new Date().toISOString(),
+            last_prompt_type: newPrompt.type,
+            updated_at: new Date().toISOString(),
+          } as any,
+          { onConflict: "patient_id" }
+        );
+
+        // Log prompt shown
+        await supabase.from("fit_intelligence_interactions" as any).insert({
           patient_id: user.id,
-          last_prompt_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        } as any, { onConflict: "patient_id" });
+          interaction_type: newPrompt.type,
+          prompt_title: newPrompt.title,
+          prompt_text: newPrompt.body,
+          was_dismissed: false,
+        } as any);
+
+        // Update last_seen_at
+        await supabase
+          .from("profiles")
+          .update({ fit_intelligence_last_seen_at: new Date().toISOString() } as any)
+          .eq("user_id", user.id);
       }
     } catch (e) {
       console.error("FitIntelligence check error:", e);
@@ -164,11 +141,10 @@ export default function FitIntelligenceAssistant() {
     }
   }, [user, isPatient, isEnabled, isOnboarded, profile, prompt]);
 
-  // Start periodic checks
+  // Periodic checks
   useEffect(() => {
     if (!isEnabled || !isOnboarded || !isPatient) return;
 
-    // Check after 10s on mount
     const initialTimer = setTimeout(checkForPrompt, 10_000);
     intervalRef.current = setInterval(checkForPrompt, CHECK_INTERVAL);
 
@@ -178,19 +154,18 @@ export default function FitIntelligenceAssistant() {
     };
   }, [checkForPrompt, isEnabled, isOnboarded, isPatient]);
 
-  // Handle quick action (e.g., hydration tap)
+  // Handle quick action
   const handleQuickAction = async (value: string) => {
-    if (!user || !prompt || responding) return; // FIX: Guard double-tap
+    if (!user || !prompt || responding) return;
     setResponding(true);
 
     try {
       const cups = parseInt(value);
-      if (isNaN(cups) || cups <= 0) { setResponding(false); return; } // FIX: Validate input
-      
-      const today = new Date().toISOString().split('T')[0];
+      if (isNaN(cups) || cups <= 0) { setResponding(false); return; }
 
-      if (prompt.type === 'hydration_check') {
-        // Update hydration
+      const today = new Date().toISOString().split("T")[0];
+
+      if (prompt.type === "hydration_check") {
         const { data: existing } = await supabase
           .from("fit_intelligence_hydration" as any)
           .select("*")
@@ -202,76 +177,121 @@ export default function FitIntelligenceAssistant() {
         const newConsumed = (ex?.consumed_cups || 0) + cups;
         const target = ex?.target_cups || 8;
 
-        await supabase.from("fit_intelligence_hydration" as any).upsert({
-          patient_id: user.id,
-          date: today,
-          target_cups: target,
-          consumed_cups: newConsumed,
-          last_updated_at: new Date().toISOString(),
-        } as any, { onConflict: "patient_id,date" });
+        await supabase.from("fit_intelligence_hydration" as any).upsert(
+          {
+            patient_id: user.id,
+            date: today,
+            target_cups: target,
+            consumed_cups: newConsumed,
+            last_updated_at: new Date().toISOString(),
+          } as any,
+          { onConflict: "patient_id,date" }
+        );
 
-        setResponseText(getHydrationResponse(newConsumed, target, profile?.full_name?.split(' ')[0] || 'você'));
+        setResponseText(
+          getHydrationResponse(newConsumed, target, profile?.full_name?.split(" ")[0] || "você")
+        );
       }
 
-      // Log interaction
+      // Log response
       await supabase.from("fit_intelligence_interactions" as any).insert({
         patient_id: user.id,
         interaction_type: prompt.type,
+        prompt_title: prompt.title,
         prompt_text: prompt.body,
         response_value: value,
         was_dismissed: false,
       } as any);
 
-      // Update engaged count (best effort)
+      // Increment engaged count
       try {
-        const { data: curFreq } = await supabase.from("fit_intelligence_frequency" as any)
-          .select("engaged_count").eq("patient_id", user.id).maybeSingle();
-        await supabase.from("fit_intelligence_frequency" as any)
-          .update({ engaged_count: ((curFreq as any)?.engaged_count || 0) + 1, updated_at: new Date().toISOString() } as any)
+        const { data: curFreq } = await supabase
+          .from("fit_intelligence_frequency" as any)
+          .select("engaged_count")
+          .eq("patient_id", user.id)
+          .maybeSingle();
+        await supabase
+          .from("fit_intelligence_frequency" as any)
+          .update({
+            engaged_count: ((curFreq as any)?.engaged_count || 0) + 1,
+            updated_at: new Date().toISOString(),
+          } as any)
           .eq("patient_id", user.id);
       } catch {}
 
-      // Auto-dismiss after showing response
+      // Auto-dismiss
       setTimeout(() => {
         setExpanded(false);
         setPrompt(null);
         setResponseText(null);
       }, 3000);
-    } catch (e) {
+    } catch {
       toast.error("Erro ao registrar");
     }
     setResponding(false);
   };
 
-  // FIX: Dismiss properly updates ignored_count for adaptive frequency
+  // Dismiss
   const handleDismiss = async () => {
     if (user && prompt) {
-      // Log dismissed interaction
       await supabase.from("fit_intelligence_interactions" as any).insert({
         patient_id: user.id,
         interaction_type: prompt.type,
+        prompt_title: prompt.title,
         prompt_text: prompt.body,
         was_dismissed: true,
       } as any);
 
-      // FIX: Increment ignored_count for adaptive frequency
       try {
-        const { data: curFreq } = await supabase.from("fit_intelligence_frequency" as any)
-          .select("ignored_count").eq("patient_id", user.id).maybeSingle();
-        await supabase.from("fit_intelligence_frequency" as any)
-          .update({ ignored_count: ((curFreq as any)?.ignored_count || 0) + 1, updated_at: new Date().toISOString() } as any)
+        const { data: curFreq } = await supabase
+          .from("fit_intelligence_frequency" as any)
+          .select("ignored_count")
+          .eq("patient_id", user.id)
+          .maybeSingle();
+        await supabase
+          .from("fit_intelligence_frequency" as any)
+          .update({
+            ignored_count: ((curFreq as any)?.ignored_count || 0) + 1,
+            updated_at: new Date().toISOString(),
+          } as any)
           .eq("patient_id", user.id);
       } catch {}
     }
     setExpanded(false);
-    // FIX: Clear prompt immediately so interval can generate new ones later
     setTimeout(() => {
       setPrompt(null);
       setResponseText(null);
     }, 400);
   };
 
-  // Don't render for non-patients or disabled
+  // Snooze 2 hours
+  const handleSnooze = async () => {
+    if (!user) return;
+    const snoozedUntil = new Date(Date.now() + 2 * 60 * 60_000).toISOString();
+    await supabase
+      .from("profiles")
+      .update({ fit_intelligence_snoozed_until: snoozedUntil } as any)
+      .eq("user_id", user.id);
+
+    if (prompt) {
+      await supabase.from("fit_intelligence_interactions" as any).insert({
+        patient_id: user.id,
+        interaction_type: "snooze",
+        prompt_title: prompt.title,
+        prompt_text: prompt.body,
+        response_value: "snooze_2h",
+        was_dismissed: true,
+      } as any);
+    }
+
+    toast("Silenciado por 2 horas 🔕");
+    setExpanded(false);
+    setTimeout(() => {
+      setPrompt(null);
+      setResponseText(null);
+    }, 400);
+  };
+
   if (!isPatient || !user) return null;
 
   // Show wizard
@@ -281,21 +301,12 @@ export default function FitIntelligenceAssistant() {
         open={showWizard}
         onClose={() => setShowWizard(false)}
         patientId={user.id}
-        patientName={profile?.full_name || ''}
+        patientName={profile?.full_name || ""}
       />
     );
   }
 
   if (!isEnabled || !prompt) return null;
-
-  const iconMap: Record<string, typeof Brain> = {
-    hydration_check: Droplets,
-    workout_reminder: Dumbbell,
-    weekend_risk: AlertTriangle,
-    motivation_nudge: Sparkles,
-    emotional_response: Brain,
-  };
-  const PromptIcon = iconMap[prompt.type] || Brain;
 
   return (
     <AnimatePresence>
@@ -319,7 +330,6 @@ export default function FitIntelligenceAssistant() {
           >
             <Brain className="w-6 h-6 text-primary-foreground" />
           </motion.div>
-          {/* Pulse ring */}
           <motion.div
             className="absolute inset-0 rounded-full border-2 border-primary/40"
             animate={{ scale: [1, 1.5], opacity: [0.6, 0] }}
@@ -330,78 +340,14 @@ export default function FitIntelligenceAssistant() {
 
       {/* Expanded Card */}
       {expanded && prompt && (
-        <motion.div
-          key="card"
-          initial={{ opacity: 0, y: 100, scale: 0.9 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 60, scale: 0.95 }}
-          transition={{ duration: 0.4, ease: EASE }}
-          className="fixed bottom-20 right-4 left-4 sm:left-auto sm:w-[360px] z-[9990] rounded-2xl border border-primary/20 overflow-hidden shadow-2xl shadow-primary/10"
-          style={{
-            background: "linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)",
-          }}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 pt-3 pb-2">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                <PromptIcon className="w-3.5 h-3.5 text-primary" />
-              </div>
-              <div>
-                <p className="text-xs font-semibold">{prompt.title}</p>
-                <Badge variant="outline" className="text-[9px] py-0 border-primary/20 text-primary">
-                  Inteligência FitJourney
-                </Badge>
-              </div>
-            </div>
-            <button onClick={handleDismiss} className="p-1 rounded-lg hover:bg-muted transition-colors">
-              <X className="w-4 h-4 text-muted-foreground" />
-            </button>
-          </div>
-
-          {/* Body */}
-          <div className="px-4 pb-3">
-            {responseText ? (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-3 py-3"
-              >
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  <Check className="w-4 h-4 text-primary" />
-                </div>
-                <p className="text-sm text-foreground/90">{responseText}</p>
-              </motion.div>
-            ) : (
-              <p className="text-sm text-foreground/80 whitespace-pre-line leading-relaxed py-1">
-                {prompt.body}
-              </p>
-            )}
-          </div>
-
-          {/* Quick Actions */}
-          {!responseText && prompt.quickActions && (
-            <div className="px-4 pb-4">
-              <div className="flex gap-2">
-                {prompt.quickActions.map(action => (
-                  <Button
-                    key={action.value}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleQuickAction(action.value)}
-                    disabled={responding}
-                    className="flex-1 border-primary/20 hover:bg-primary/10 hover:border-primary/40 text-sm font-medium"
-                  >
-                    {action.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Gradient bottom accent */}
-          <div className="h-0.5 bg-gradient-to-r from-primary/0 via-primary/40 to-primary/0" />
-        </motion.div>
+        <FitIntelligencePromptCard
+          prompt={prompt}
+          responseText={responseText}
+          responding={responding}
+          onQuickAction={handleQuickAction}
+          onDismiss={handleDismiss}
+          onSnooze={handleSnooze}
+        />
       )}
     </AnimatePresence>
   );
