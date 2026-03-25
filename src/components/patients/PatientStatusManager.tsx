@@ -95,6 +95,7 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
     try {
       await releaseOnboarding(patientId, user!.id);
       toast.success("Onboarding liberado!");
+      setReleasedOnboarding(prev => new Set(prev).add(patientId));
       refreshAll();
     } catch { toast.error("Erro ao liberar onboarding"); }
     setProcessingId(null);
