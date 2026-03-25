@@ -95,7 +95,7 @@ function getRecentScore(patientId: string): number {
 
 export { computeScore, getRecentScore };
 
-export const DEFAULT_PAGE_SIZE = 50;
+export const DEFAULT_PAGE_SIZE = 250;
 
 export interface PatientsListParams {
   page?: number;
@@ -336,9 +336,68 @@ function mapPrestigePlans(data: any[] | null): PrestigePlan[] {
   }));
 }
 
+function updateCachedPatientsAfterStatusToggle(
+  currentData: PatientsListResult | undefined,
+  linkId: string,
+  newStatus: "active" | "inactive",
+  statusFilter: PatientsListParams["statusFilter"] = "all",
+) {
+  if (!currentData) return currentData;
+
+  const previousPatient = currentData.patients.find((patient) => patient.id === linkId);
+  if (!previousPatient) return currentData;
+
+  const previousStatus = previousPatient.status;
+  const nextPatients = currentData.patients
+    .map((patient) => patient.id === linkId ? { ...patient, status: newStatus } : patient)
+    .filter((patient) => {
+      if (statusFilter === "active") return patient.status === "active";
+      if (statusFilter === "inactive") return patient.status !== "active";
+      return true;
+    });
+
+  const activeDelta = previousStatus === "active" && newStatus !== "active"
+    ? -1
+    : previousStatus !== "active" && newStatus === "active"
+      ? 1
+      : 0;
+
+  const nextCounts = {
+    active: Math.max(0, currentData.counts.active + activeDelta),
+    inactive: Math.max(0, currentData.counts.inactive - activeDelta),
+  };
+
+  const nextTotalCount = Math.max(
+    0,
+    currentData.pagination.totalCount + (
+      statusFilter === "active" && previousStatus === "active" && newStatus !== "active"
+        ? -1
+        : statusFilter === "inactive" && previousStatus !== "active" && newStatus === "active"
+          ? -1
+          : 0
+    ),
+  );
+
+  const totalPages = nextTotalCount > 0 ? Math.ceil(nextTotalCount / currentData.pagination.pageSize) : 0;
+
+  return {
+    ...currentData,
+    patients: nextPatients,
+    counts: nextCounts,
+    pagination: {
+      ...currentData.pagination,
+      totalCount: nextTotalCount,
+      totalPages,
+      hasNextPage: totalPages > 0 && currentData.pagination.page < totalPages,
+      hasPreviousPage: currentData.pagination.page > 1,
+    },
+  };
+}
+
 export function useTogglePatientStatus() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const patientQueryKey = queryKeys.patients.all(user?.id ?? "");
 
   return useMutation({
     mutationFn: async ({ linkId, currentStatus }: { linkId: string; currentStatus: string }) => {
@@ -351,15 +410,39 @@ export function useTogglePatientStatus() {
       logAudit("toggle_patient_status", "patient", linkId, { new_status: newStatus });
       return newStatus;
     },
+    onMutate: async ({ linkId, currentStatus }) => {
+      const nextStatus = currentStatus === "active" ? "inactive" : "active";
+      await queryClient.cancelQueries({ queryKey: patientQueryKey });
+
+      const previousQueries = queryClient.getQueriesData<PatientsListResult>({ queryKey: patientQueryKey });
+
+      previousQueries.forEach(([key, value]) => {
+        const statusFilter = Array.isArray(key) ? key[4] as PatientsListParams["statusFilter"] | undefined : undefined;
+        queryClient.setQueryData<PatientsListResult>(
+          key,
+          updateCachedPatientsAfterStatusToggle(value, linkId, nextStatus, statusFilter),
+        );
+      });
+
+      return { previousQueries };
+    },
     onSuccess: (newStatus) => {
-      queryClient.invalidateQueries({ queryKey: ["patients", user?.id ?? ""] });
+      queryClient.invalidateQueries({ queryKey: patientQueryKey });
       toast.success(
         newStatus === "active"
           ? "Paciente ativado — dados incluídos nas métricas"
           : "Paciente desativado — excluído das métricas e leituras de IA"
       );
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any, _vars, context) => {
+      context?.previousQueries?.forEach(([key, value]) => {
+        queryClient.setQueryData(key, value);
+      });
+      toast.error(err.message);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: patientQueryKey });
+    },
   });
 }
 
