@@ -3662,6 +3662,153 @@ export type Database = {
         }
         Relationships: []
       }
+      intelligence_custom_prompts: {
+        Row: {
+          body: string
+          created_at: string
+          emoji: string
+          escalation_level: number
+          id: string
+          is_active: boolean
+          nutritionist_id: string
+          prompt_type: string
+          quick_actions: Json | null
+          schedule_days: string[] | null
+          schedule_hours: number[] | null
+          sort_order: number
+          title: string
+          tone: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          emoji?: string
+          escalation_level?: number
+          id?: string
+          is_active?: boolean
+          nutritionist_id: string
+          prompt_type?: string
+          quick_actions?: Json | null
+          schedule_days?: string[] | null
+          schedule_hours?: number[] | null
+          sort_order?: number
+          title: string
+          tone?: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          emoji?: string
+          escalation_level?: number
+          id?: string
+          is_active?: boolean
+          nutritionist_id?: string
+          prompt_type?: string
+          quick_actions?: Json | null
+          schedule_days?: string[] | null
+          schedule_hours?: number[] | null
+          sort_order?: number
+          title?: string
+          tone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      intelligence_custom_questions: {
+        Row: {
+          created_at: string
+          delivery_mode: string
+          id: string
+          is_active: boolean
+          nutritionist_id: string
+          options: Json | null
+          question_text: string
+          question_type: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_mode?: string
+          id?: string
+          is_active?: boolean
+          nutritionist_id: string
+          options?: Json | null
+          question_text: string
+          question_type?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          delivery_mode?: string
+          id?: string
+          is_active?: boolean
+          nutritionist_id?: string
+          options?: Json | null
+          question_text?: string
+          question_type?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      intelligence_settings: {
+        Row: {
+          clinical_warnings_enabled: boolean
+          cooldown_minutes: number
+          created_at: string
+          custom_prompts_enabled: boolean
+          default_motivation_style: string
+          default_tone: string
+          hydration_enabled: boolean
+          id: string
+          max_prompts_per_day: number
+          motivation_enabled: boolean
+          non_adherence_enabled: boolean
+          nutritionist_id: string
+          updated_at: string
+          weekend_risk_enabled: boolean
+          workout_enabled: boolean
+        }
+        Insert: {
+          clinical_warnings_enabled?: boolean
+          cooldown_minutes?: number
+          created_at?: string
+          custom_prompts_enabled?: boolean
+          default_motivation_style?: string
+          default_tone?: string
+          hydration_enabled?: boolean
+          id?: string
+          max_prompts_per_day?: number
+          motivation_enabled?: boolean
+          non_adherence_enabled?: boolean
+          nutritionist_id: string
+          updated_at?: string
+          weekend_risk_enabled?: boolean
+          workout_enabled?: boolean
+        }
+        Update: {
+          clinical_warnings_enabled?: boolean
+          cooldown_minutes?: number
+          created_at?: string
+          custom_prompts_enabled?: boolean
+          default_motivation_style?: string
+          default_tone?: string
+          hydration_enabled?: boolean
+          id?: string
+          max_prompts_per_day?: number
+          motivation_enabled?: boolean
+          non_adherence_enabled?: boolean
+          nutritionist_id?: string
+          updated_at?: string
+          weekend_risk_enabled?: boolean
+          workout_enabled?: boolean
+        }
+        Relationships: []
+      }
       lab_marker_rules: {
         Row: {
           category: string
