@@ -70,6 +70,9 @@ function NeuralParticleCanvas({
     const mouse = new THREE.Vector2(0, 0);
     const clock = new THREE.Clock();
     const isMobile = width < 500;
+    const aspect = width / height;
+    const visibleHeight = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov * 0.5)) * camera.position.z;
+    const visibleWidth = visibleHeight * aspect;
 
     const coreGroup = new THREE.Group();
     scene.add(coreGroup);
@@ -80,8 +83,9 @@ function NeuralParticleCanvas({
     const coreOriginals = new Float32Array(coreCount * 3);
     const coreColors = new Float32Array(coreCount * 3);
     const coreVelocities = new Float32Array(coreCount * 3);
-    // Scattered start positions for converge mode
+    // Scattered start positions for converge/diverge mode
     const coreScattered = new Float32Array(coreCount * 3);
+    const coreScatterFlow = new Float32Array(coreCount * 3);
 
     const coreGeo = new THREE.BufferGeometry();
     const torusKnot = new THREE.TorusKnotGeometry(1.0, 0.35, 200, 32);
@@ -107,15 +111,33 @@ function NeuralParticleCanvas({
       coreOriginals[i * 3 + 1] = oy;
       coreOriginals[i * 3 + 2] = oz;
 
-      // Scattered positions: truly random spherical distribution (no square artifacts)
-      const u = Math.random();
-      const v = Math.random();
-      const theta = 2 * Math.PI * u;
-      const phi = Math.acos(2 * v - 1);
-      const dist = 6 + Math.random() * 14 + Math.random() * 5;
-      coreScattered[i * 3] = Math.sin(phi) * Math.cos(theta) * dist;
-      coreScattered[i * 3 + 1] = Math.sin(phi) * Math.sin(theta) * dist;
-      coreScattered[i * 3 + 2] = Math.cos(phi) * dist;
+      // Organic spawn lanes from left / right / bottom, outside the visible area.
+      // This avoids the dense square cloud and makes the neural core feel assembled
+      // from flowing streams instead of a filled block.
+      const laneRoll = Math.random();
+      const laneCenter =
+        laneRoll < 0.34
+          ? Math.PI
+          : laneRoll < 0.68
+            ? 0
+            : -Math.PI / 2;
+      const laneSpread = laneRoll < 0.68 ? Math.PI * 0.34 : Math.PI * 0.46;
+      const angle = laneCenter + (Math.random() - 0.5) * laneSpread;
+      const radialPush = 1.15 + Math.random() * 1.1;
+      const ellipseX = Math.cos(angle) * visibleWidth * radialPush;
+      const ellipseY = Math.sin(angle) * visibleHeight * radialPush;
+      const verticalBias = laneRoll >= 0.68 ? -(0.3 + Math.random() * 1.4) : (Math.random() - 0.5) * 0.8;
+      const depth = (Math.random() - 0.5) * 18;
+
+      coreScattered[i * 3] = ellipseX;
+      coreScattered[i * 3 + 1] = ellipseY + verticalBias;
+      coreScattered[i * 3 + 2] = depth;
+
+      const tangentAngle = angle + (Math.random() > 0.5 ? Math.PI / 2 : -Math.PI / 2);
+      const flowStrength = 0.25 + Math.random() * 1.15;
+      coreScatterFlow[i * 3] = Math.cos(tangentAngle) * flowStrength;
+      coreScatterFlow[i * 3 + 1] = Math.sin(tangentAngle) * flowStrength + (laneRoll >= 0.68 ? 0.5 + Math.random() * 0.9 : 0);
+      coreScatterFlow[i * 3 + 2] = (Math.random() - 0.5) * 1.6;
 
       // Start position depends on initial mode
       if (modeRef.current === "converge") {
@@ -289,14 +311,15 @@ function NeuralParticleCanvas({
         const elapsed = t - transitionStartRef.current;
         const progress = Math.min(elapsed / transitionDuration, 1);
         const eased = easeInOutCubic(progress);
+        const curve = Math.sin(progress * Math.PI);
 
         if (mode === "converge") {
           // Lerp particles from scattered → original
           for (let i = 0; i < coreCount; i++) {
             const ix = i * 3, iy = ix + 1, iz = ix + 2;
-            corePositions[ix] = coreScattered[ix] + (coreOriginals[ix] - coreScattered[ix]) * eased;
-            corePositions[iy] = coreScattered[iy] + (coreOriginals[iy] - coreScattered[iy]) * eased;
-            corePositions[iz] = coreScattered[iz] + (coreOriginals[iz] - coreScattered[iz]) * eased;
+            corePositions[ix] = coreScattered[ix] + (coreOriginals[ix] - coreScattered[ix]) * eased + coreScatterFlow[ix] * curve;
+            corePositions[iy] = coreScattered[iy] + (coreOriginals[iy] - coreScattered[iy]) * eased + coreScatterFlow[iy] * curve;
+            corePositions[iz] = coreScattered[iz] + (coreOriginals[iz] - coreScattered[iz]) * eased + coreScatterFlow[iz] * curve;
           }
           // Fade in opacity
           coreMat.opacity = 0.3 + eased * 0.6;
@@ -309,9 +332,9 @@ function NeuralParticleCanvas({
           // Diverge: lerp particles from original → scattered
           for (let i = 0; i < coreCount; i++) {
             const ix = i * 3, iy = ix + 1, iz = ix + 2;
-            corePositions[ix] = coreOriginals[ix] + (coreScattered[ix] - coreOriginals[ix]) * eased;
-            corePositions[iy] = coreOriginals[iy] + (coreScattered[iy] - coreOriginals[iy]) * eased;
-            corePositions[iz] = coreOriginals[iz] + (coreScattered[iz] - coreOriginals[iz]) * eased;
+            corePositions[ix] = coreOriginals[ix] + (coreScattered[ix] - coreOriginals[ix]) * eased + coreScatterFlow[ix] * curve;
+            corePositions[iy] = coreOriginals[iy] + (coreScattered[iy] - coreOriginals[iy]) * eased + coreScatterFlow[iy] * curve;
+            corePositions[iz] = coreOriginals[iz] + (coreScattered[iz] - coreOriginals[iz]) * eased + coreScatterFlow[iz] * curve;
           }
           // Fade out
           coreMat.opacity = 0.9 * (1 - eased);
