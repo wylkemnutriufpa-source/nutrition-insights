@@ -33,6 +33,7 @@ export default function FitIntelligenceAssistant() {
   const [responding, setResponding] = useState(false);
   const [responseText, setResponseText] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
+  const checkingRef = useRef(false); // FIX: Guard against concurrent checks
 
   const isPatient = !roles?.includes("nutritionist") && !roles?.includes("admin");
   const isEnabled = (profile as any)?.fit_intelligence_enabled === true;
@@ -44,11 +45,32 @@ export default function FitIntelligenceAssistant() {
       const timer = setTimeout(() => setShowWizard(true), 2000);
       return () => clearTimeout(timer);
     }
+    // FIX: If feature disabled, ensure wizard doesn't show
+    if (!isEnabled) {
+      setShowWizard(false);
+    }
   }, [user, isPatient, isEnabled, isOnboarded]);
 
-  // Prompt engine
+  // FIX: Clean up when feature is disabled
+  useEffect(() => {
+    if (!isEnabled) {
+      setPrompt(null);
+      setExpanded(false);
+      setResponseText(null);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = undefined;
+      }
+    }
+  }, [isEnabled]);
+
+  // Prompt engine — with concurrency guard
   const checkForPrompt = useCallback(async () => {
     if (!user || !isPatient || !isEnabled || !isOnboarded) return;
+    if (checkingRef.current) return; // FIX: Prevent concurrent checks
+    if (prompt) return; // FIX: Don't check if there's already an active prompt
+
+    checkingRef.current = true;
 
     try {
       // Get behavioral profile
@@ -58,7 +80,7 @@ export default function FitIntelligenceAssistant() {
         .eq("patient_id", user.id)
         .maybeSingle();
 
-      if (!bp) return;
+      if (!bp) { checkingRef.current = false; return; }
 
       // Get frequency config
       const { data: freq } = await supabase
@@ -74,7 +96,7 @@ export default function FitIntelligenceAssistant() {
         f.cooldown_minutes || 120,
         f.ignored_count || 0,
         f.engaged_count || 0,
-      )) return;
+      )) { checkingRef.current = false; return; }
 
       // Get today's hydration
       const today = new Date().toISOString().split('T')[0];
@@ -92,7 +114,7 @@ export default function FitIntelligenceAssistant() {
         .eq("patient_id", user.id)
         .eq("is_active", true);
 
-      // Count recent failures
+      // Count recent failures (last 7 days)
       const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
       const { data: recentHydration } = await supabase
         .from("fit_intelligence_hydration" as any)
@@ -101,13 +123,13 @@ export default function FitIntelligenceAssistant() {
         .gte("date", weekAgo);
 
       const failureCount = (recentHydration || []).filter(
-        (h: any) => h.consumed_cups < h.target_cups * 0.5
+        (h: any) => h.target_cups > 0 && h.consumed_cups < h.target_cups * 0.5
       ).length;
 
       const now = new Date();
       const ctx: BehavioralContext = {
         firstName: profile?.full_name?.split(' ')[0] || 'você',
-        waterTarget: (hydration as any)?.target_cups || (bp as any).water_cups_per_day * 1.5 || 8,
+        waterTarget: (hydration as any)?.target_cups || Math.ceil(((bp as any).water_cups_per_day || 6) * 1.5),
         waterConsumed: (hydration as any)?.consumed_cups || 0,
         motivationStyle: (bp as any).motivation_style || 'gentle',
         messageTone: (bp as any).message_tone || 'funny',
@@ -119,7 +141,7 @@ export default function FitIntelligenceAssistant() {
         failureCount,
         isWeekend: [0, 6].includes(now.getDay()),
         currentHour: now.getHours(),
-        clinicalFlags: (flags || []).map((f: any) => f.flag_key),
+        clinicalFlags: (flags || []).map((fl: any) => fl.flag_key),
       };
 
       const newPrompt = generateCurrentPrompt(ctx);
@@ -137,8 +159,10 @@ export default function FitIntelligenceAssistant() {
       }
     } catch (e) {
       console.error("FitIntelligence check error:", e);
+    } finally {
+      checkingRef.current = false;
     }
-  }, [user, isPatient, isEnabled, isOnboarded, profile]);
+  }, [user, isPatient, isEnabled, isOnboarded, profile, prompt]);
 
   // Start periodic checks
   useEffect(() => {
@@ -156,11 +180,13 @@ export default function FitIntelligenceAssistant() {
 
   // Handle quick action (e.g., hydration tap)
   const handleQuickAction = async (value: string) => {
-    if (!user || !prompt) return;
+    if (!user || !prompt || responding) return; // FIX: Guard double-tap
     setResponding(true);
 
     try {
       const cups = parseInt(value);
+      if (isNaN(cups) || cups <= 0) { setResponding(false); return; } // FIX: Validate input
+      
       const today = new Date().toISOString().split('T')[0];
 
       if (prompt.type === 'hydration_check') {
@@ -217,25 +243,39 @@ export default function FitIntelligenceAssistant() {
     setResponding(false);
   };
 
-  // Dismiss prompt
+  // FIX: Dismiss properly updates ignored_count for adaptive frequency
   const handleDismiss = async () => {
     if (user && prompt) {
+      // Log dismissed interaction
       await supabase.from("fit_intelligence_interactions" as any).insert({
         patient_id: user.id,
         interaction_type: prompt.type,
         prompt_text: prompt.body,
         was_dismissed: true,
       } as any);
+
+      // FIX: Increment ignored_count for adaptive frequency
+      try {
+        const { data: curFreq } = await supabase.from("fit_intelligence_frequency" as any)
+          .select("ignored_count").eq("patient_id", user.id).maybeSingle();
+        await supabase.from("fit_intelligence_frequency" as any)
+          .update({ ignored_count: ((curFreq as any)?.ignored_count || 0) + 1, updated_at: new Date().toISOString() } as any)
+          .eq("patient_id", user.id);
+      } catch {}
     }
     setExpanded(false);
-    setTimeout(() => setPrompt(null), 400);
+    // FIX: Clear prompt immediately so interval can generate new ones later
+    setTimeout(() => {
+      setPrompt(null);
+      setResponseText(null);
+    }, 400);
   };
 
   // Don't render for non-patients or disabled
   if (!isPatient || !user) return null;
 
   // Show wizard
-  if (showWizard) {
+  if (showWizard && isEnabled && !isOnboarded) {
     return (
       <FitIntelligenceWizard
         open={showWizard}
@@ -248,7 +288,7 @@ export default function FitIntelligenceAssistant() {
 
   if (!isEnabled || !prompt) return null;
 
-  const iconMap: Record<string, any> = {
+  const iconMap: Record<string, typeof Brain> = {
     hydration_check: Droplets,
     workout_reminder: Dumbbell,
     weekend_risk: AlertTriangle,
@@ -327,8 +367,8 @@ export default function FitIntelligenceAssistant() {
                 animate={{ opacity: 1, y: 0 }}
                 className="flex items-center gap-3 py-3"
               >
-                <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center shrink-0">
-                  <Check className="w-4 h-4 text-green-500" />
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <Check className="w-4 h-4 text-primary" />
                 </div>
                 <p className="text-sm text-foreground/90">{responseText}</p>
               </motion.div>
