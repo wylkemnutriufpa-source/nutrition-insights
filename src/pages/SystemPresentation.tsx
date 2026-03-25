@@ -107,6 +107,18 @@ export default function SystemPresentation() {
     toast.success("Apresentação concluída! 🎉");
   };
 
+  // Neural Entry demo overlay
+  if (showNeuralEntry) {
+    const userRole = isPatient ? "patient" : "professional";
+    return (
+      <NeuroEntryExperience
+        dataReady={true}
+        userRole={userRole as "patient" | "professional" | "admin"}
+        onComplete={() => setShowNeuralEntry(false)}
+      />
+    );
+  }
+
   // Active standard presentation overlay
   if (activePresentation === "professional") {
     return <GuidedPresentation slides={proSlides} title="Guia do Profissional" onComplete={() => handleComplete("professional")} onSkip={() => setActivePresentation(null)} />;
