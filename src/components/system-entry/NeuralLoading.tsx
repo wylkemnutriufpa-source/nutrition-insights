@@ -418,7 +418,7 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
         }}
       >
         <motion.div
-          style={{ transformStyle: "preserve-3d", width: 100, height: 100 }}
+          style={{ transformStyle: "preserve-3d", width: 100, height: 100, position: "relative" }}
           animate={{ rotateY: 360 }}
           transition={{ rotateY: { duration: 20, repeat: Infinity, ease: "linear" } }}
         >
@@ -427,13 +427,14 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
             className="absolute inset-0 rounded-full flex items-center justify-center"
             style={{
               backfaceVisibility: "hidden",
+              transform: "translateZ(4px)",
               background: "radial-gradient(circle at 40% 35%, hsl(152 40% 18%) 0%, hsl(152 30% 10%) 60%, hsl(152 25% 6%) 100%)",
               boxShadow:
                 "inset 0 2px 8px hsl(152 50% 40% / 0.3), " +
                 "inset 0 -2px 6px hsl(0 0% 0% / 0.4), " +
                 "0 0 30px hsl(var(--primary) / 0.4), " +
                 "0 0 60px hsl(var(--primary) / 0.15)",
-              border: "2px solid hsl(152 40% 25% / 0.6)",
+              border: "2px solid hsl(152 40% 30% / 0.6)",
             }}
           >
             <img
@@ -447,33 +448,47 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
 
           {/* Back face */}
           <div
-            className="absolute inset-0 rounded-full"
+            className="absolute inset-0 rounded-full flex items-center justify-center"
             style={{
               backfaceVisibility: "hidden",
-              transform: "rotateY(180deg)",
+              transform: "rotateY(180deg) translateZ(4px)",
               background: "radial-gradient(circle at 60% 35%, hsl(152 40% 18%) 0%, hsl(152 30% 10%) 60%, hsl(152 25% 6%) 100%)",
               boxShadow:
                 "inset 0 2px 8px hsl(152 50% 40% / 0.3), " +
                 "inset 0 -2px 6px hsl(0 0% 0% / 0.4)",
-              border: "2px solid hsl(152 40% 25% / 0.6)",
+              border: "2px solid hsl(152 40% 30% / 0.6)",
             }}
-          />
+          >
+            <img
+              src={logoPng}
+              alt="FitJourney"
+              draggable={false}
+              className="select-none"
+              style={{ width: 70, height: 70, objectFit: "contain", transform: "scaleX(-1)" }}
+            />
+          </div>
 
-          {/* Edge slices — create coin thickness */}
-          {Array.from({ length: 36 }, (_, i) => {
-            const angle = i * 10;
+          {/* Coin edge — thin vertical strips around the perimeter */}
+          {Array.from({ length: 80 }, (_, i) => {
+            const angle = (i / 80) * 360;
+            const rad = (angle * Math.PI) / 180;
+            const radius = 50; // half of 100px
+            const x = Math.sin(rad) * radius;
+            const z = Math.cos(rad) * radius;
             return (
               <div
                 key={i}
-                className="absolute rounded-full"
+                className="absolute"
                 style={{
-                  width: "100%",
-                  height: "100%",
-                  transform: `rotateY(${angle}deg) translateZ(3px)`,
-                  backfaceVisibility: "hidden",
-                  background: "linear-gradient(180deg, hsl(152 35% 22%) 0%, hsl(152 30% 12%) 50%, hsl(152 25% 8%) 100%)",
-                  border: "1px solid hsl(152 40% 25% / 0.3)",
-                  opacity: 0.7,
+                  width: 4,
+                  height: 100,
+                  left: "50%",
+                  top: 0,
+                  transformOrigin: "center center",
+                  transform: `translateX(${x - 2}px) translateZ(${z}px) rotateY(${angle}deg)`,
+                  background: "linear-gradient(180deg, hsl(152 40% 28%) 0%, hsl(152 30% 14%) 40%, hsl(152 25% 10%) 100%)",
+                  borderLeft: "0.5px solid hsl(152 50% 35% / 0.2)",
+                  borderRight: "0.5px solid hsl(152 50% 35% / 0.2)",
                 }}
               />
             );
