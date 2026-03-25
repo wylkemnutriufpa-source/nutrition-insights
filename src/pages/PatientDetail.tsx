@@ -1614,6 +1614,8 @@ export default function PatientDetail() {
                         patientId={patientId!}
                         enabled={(profile as any)?.fit_intelligence_enabled || false}
                         onboarded={(profile as any)?.fit_intelligence_onboarded || false}
+                        expiresAt={(profile as any)?.fit_intelligence_expires_at || null}
+                        accessMode={(profile as any)?.fit_intelligence_access_mode || "unlimited"}
                         onToggle={() => invalidate()}
                       />
                     </div>

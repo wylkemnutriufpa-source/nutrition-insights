@@ -38,19 +38,22 @@ export default function FitIntelligenceAssistant() {
   const isPatient = !roles?.includes("nutritionist") && !roles?.includes("admin");
   const isEnabled = (profile as any)?.fit_intelligence_enabled === true;
   const isOnboarded = (profile as any)?.fit_intelligence_onboarded === true;
+  const expiresAt = (profile as any)?.fit_intelligence_expires_at;
+  const isExpired = expiresAt && new Date(expiresAt) < new Date();
+  const isActiveAccess = isEnabled && !isExpired;
 
   // Show wizard if enabled but not onboarded
   useEffect(() => {
-    if (user && isPatient && isEnabled && !isOnboarded && !wizardJustCompleted) {
+    if (user && isPatient && isActiveAccess && !isOnboarded && !wizardJustCompleted) {
       const timer = setTimeout(() => setShowWizard(true), 2000);
       return () => clearTimeout(timer);
     }
-    if (!isEnabled) setShowWizard(false);
-  }, [user, isPatient, isEnabled, isOnboarded, wizardJustCompleted]);
+    if (!isActiveAccess) setShowWizard(false);
+  }, [user, isPatient, isActiveAccess, isOnboarded, wizardJustCompleted]);
 
   // Clean up when feature is disabled
   useEffect(() => {
-    if (!isEnabled) {
+    if (!isActiveAccess) {
       setPrompt(null);
       setExpanded(false);
       setResponseText(null);
@@ -59,11 +62,11 @@ export default function FitIntelligenceAssistant() {
         intervalRef.current = undefined;
       }
     }
-  }, [isEnabled]);
+  }, [isActiveAccess]);
 
   // Prompt engine
   const checkForPrompt = useCallback(async () => {
-    if (!user || !isPatient || !isEnabled || !isOnboarded) return;
+    if (!user || !isPatient || !isActiveAccess || !isOnboarded) return;
     if (checkingRef.current || prompt) return;
 
     checkingRef.current = true;
@@ -140,11 +143,11 @@ export default function FitIntelligenceAssistant() {
     } finally {
       checkingRef.current = false;
     }
-  }, [user, isPatient, isEnabled, isOnboarded, profile, prompt]);
+  }, [user, isPatient, isActiveAccess, isOnboarded, profile, prompt]);
 
   // Periodic checks
   useEffect(() => {
-    if (!isEnabled || !isOnboarded || !isPatient) return;
+    if (!isActiveAccess || !isOnboarded || !isPatient) return;
 
     const initialTimer = setTimeout(checkForPrompt, 10_000);
     intervalRef.current = setInterval(checkForPrompt, CHECK_INTERVAL);
@@ -153,7 +156,7 @@ export default function FitIntelligenceAssistant() {
       clearTimeout(initialTimer);
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [checkForPrompt, isEnabled, isOnboarded, isPatient]);
+  }, [checkForPrompt, isActiveAccess, isOnboarded, isPatient]);
 
   // Handle quick action
   const handleQuickAction = async (value: string) => {
@@ -297,7 +300,7 @@ export default function FitIntelligenceAssistant() {
   if (!isPatient || !user) return null;
 
   // Show wizard
-  if (showWizard && isEnabled && !isOnboarded && !wizardJustCompleted) {
+  if (showWizard && isActiveAccess && !isOnboarded && !wizardJustCompleted) {
     return (
       <FitIntelligenceWizard
         open={showWizard}
@@ -311,7 +314,7 @@ export default function FitIntelligenceAssistant() {
     );
   }
 
-  if (!isEnabled || !prompt) return null;
+  if (!isActiveAccess || !prompt) return null;
 
   return (
     <AnimatePresence>

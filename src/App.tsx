@@ -167,6 +167,7 @@ const ClinicalWorkspace = lazy(() => import("./pages/ClinicalWorkspace"));
 const InvitePatient = lazy(() => import("./pages/InvitePatient"));
 const WorkspaceEditor = lazy(() => import("./pages/WorkspaceEditor"));
 const IntelligenceSettings = lazy(() => import("./pages/IntelligenceSettings"));
+const PatientIntelligence = lazy(() => import("./pages/PatientIntelligence"));
 
 // Install global error handlers once at module load
 installGlobalErrorHandlers();
@@ -435,6 +436,7 @@ const App = () => (
               <Route path="/client/dashboard" element={<ConsentGuardedPatientRoute><LP section="Dashboard"><ClientDashboard /></LP></ConsentGuardedPatientRoute>} />
               <Route path="/patient-overview" element={<ConsentGuardedPatientRoute><LP section="Meu Painel"><PatientOverview /></LP></ConsentGuardedPatientRoute>} />
               <Route path="/my-workouts" element={<ConsentGuardedPatientRoute><LP section="Treinos"><PatientWorkouts /></LP></ConsentGuardedPatientRoute>} />
+              <Route path="/patient-intelligence" element={<ConsentGuardedPatientRoute><LP section="Inteligência FitJourney"><PatientIntelligence /></LP></ConsentGuardedPatientRoute>} />
 
               {/* Patient-only routes — consent guarded */}
               <Route path="/meals" element={<ConsentGuardedPatientRoute><LP section="Refeições"><Meals /></LP></ConsentGuardedPatientRoute>} />
