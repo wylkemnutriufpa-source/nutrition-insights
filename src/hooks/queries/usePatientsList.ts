@@ -454,26 +454,25 @@ export function useAddPatient() {
 
   return useMutation({
     mutationFn: async ({ email, name, password }: { email: string; name: string; password: string }) => {
-      const { data: patientId, error: createError } = await supabase
-        .rpc("create_patient_account", {
-          _email: email.trim().toLowerCase(),
-          _full_name: name.trim(),
-          _password: password,
-        });
-      if (createError) throw createError;
+      const normalizedEmail = email.trim().toLowerCase();
+      const trimmedName = name.trim();
+
+      const { data, error } = await supabase.functions.invoke("invite-patient", {
+        body: {
+          name: trimmedName,
+          email: normalizedEmail,
+          method: "password",
+          password,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const patientId = data?.patient_id;
       if (!patientId) throw new Error("Erro ao criar conta do paciente");
 
-      const { error: linkError } = await supabase.from("nutritionist_patients").insert({
-        nutritionist_id: user!.id, patient_id: patientId,
-      });
-      if (linkError) {
-        if (linkError.code === "23505") {
-          toast.info("Paciente já está na sua lista.");
-          return patientId;
-        }
-        throw linkError;
-      }
-      logAudit("create_patient", "patient", patientId as string, { email: email.trim().toLowerCase(), name: name.trim() });
+      logAudit("create_patient", "patient", patientId as string, { email: normalizedEmail, name: trimmedName });
       return patientId;
     },
     onSuccess: () => {
