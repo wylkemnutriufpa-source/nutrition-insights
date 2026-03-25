@@ -376,8 +376,9 @@ export default function PatientDetail() {
       }
     }
 
-    if (selectedPrestigePlanId) {
-      await supabase.from("patient_prestige").delete().eq("patient_id", patientId);
+    // Apply prestige if selected
+    if (selectedPrestigePlanId && selectedPrestigePlanId !== "none") {
+      await supabase.from("patient_prestige").update({ is_active: false } as any).eq("patient_id", patientId).eq("is_active", true);
       const { error: prestigeErr } = await supabase.from("patient_prestige").insert({
         patient_id: patientId,
         plan_id: selectedPrestigePlanId,
@@ -387,6 +388,12 @@ export default function PatientDetail() {
       if (!prestigeErr) {
         const selectedPlan = prestigePlans.find(p => p.id === selectedPrestigePlanId);
         toast.success(`Prestígio ${selectedPlan?.name || ''} aplicado! ${selectedPlan?.badge_icon || ''}`, { duration: 3000 });
+      }
+    } else if (selectedPrestigePlanId === "" || selectedPrestigePlanId === "none") {
+      // Remove prestige if "none" selected explicitly and there was one before
+      if (currentPrestigePlan) {
+        await supabase.from("patient_prestige").update({ is_active: false } as any).eq("patient_id", patientId).eq("is_active", true);
+        toast.success("Prestígio removido");
       }
     }
     setPlanOpen(false);
