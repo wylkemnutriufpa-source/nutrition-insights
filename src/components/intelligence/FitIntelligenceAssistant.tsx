@@ -300,7 +300,7 @@ export default function FitIntelligenceAssistant() {
   if (!isPatient || !user) return null;
 
   // Show wizard
-  if (showWizard && isEnabled && !isOnboarded && !wizardJustCompleted) {
+  if (showWizard && isActiveAccess && !isOnboarded && !wizardJustCompleted) {
     return (
       <FitIntelligenceWizard
         open={showWizard}
