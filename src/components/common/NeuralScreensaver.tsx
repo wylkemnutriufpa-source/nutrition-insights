@@ -86,7 +86,7 @@ export default function NeuralScreensaver() {
           patient_id: user.id,
           interaction_type: "screensaver_wake",
           was_dismissed: false,
-        } as any).catch(() => {});
+        } as any).then(() => {});
 
         // Fetch weekend tip if applicable
         const isWeekend = [0, 6].includes(new Date().getDay());
