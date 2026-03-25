@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -24,6 +23,28 @@ interface CustomQuestion {
   sort_order: number;
 }
 
+const DEFAULT_QUESTIONS = [
+  // Comportamental
+  { question_text: "Como você está se sentindo hoje em relação à sua dieta?", question_type: "quick_reply", options: ["Ótimo 😊", "Mais ou menos 😐", "Difícil 😔", "Quero desistir 😢"], delivery_mode: "prompt", sort_order: 0 },
+  { question_text: "De 1 a 10, qual seu nível de fome neste momento?", question_type: "scale", options: null, delivery_mode: "prompt", sort_order: 1 },
+  { question_text: "Você conseguiu seguir o plano alimentar hoje?", question_type: "quick_reply", options: ["Sim, 100% ✅", "Quase tudo 🟡", "Metade 🟠", "Não consegui ❌"], delivery_mode: "prompt", sort_order: 2 },
+  { question_text: "Quantos copos de água você tomou até agora?", question_type: "quick_reply", options: ["0-2 copos", "3-5 copos", "6-8 copos", "8+ copos 💧"], delivery_mode: "prompt", sort_order: 3 },
+  // Treino
+  { question_text: "Você treinou hoje?", question_type: "quick_reply", options: ["Sim! 💪", "Vou treinar mais tarde", "Hoje é descanso", "Não consegui"], delivery_mode: "prompt", sort_order: 4 },
+  { question_text: "Como foi a qualidade do seu sono ontem?", question_type: "scale", options: null, delivery_mode: "prompt", sort_order: 5 },
+  // Emocional
+  { question_text: "Teve alguma compulsão ou desejo intenso hoje?", question_type: "quick_reply", options: ["Não tive 😌", "Tive mas resisti 💪", "Cedi um pouco 😅", "Cedi totalmente 😓"], delivery_mode: "prompt", sort_order: 6 },
+  { question_text: "Qual a maior dificuldade que você está enfrentando agora no plano?", question_type: "free_text", options: null, delivery_mode: "prompt", sort_order: 7 },
+  // Check-in semanal
+  { question_text: "Como foi sua semana de alimentação no geral?", question_type: "quick_reply", options: ["Excelente 🌟", "Boa 👍", "Regular 😐", "Ruim 👎"], delivery_mode: "prompt", sort_order: 8 },
+  { question_text: "Tem algo que você gostaria de ajustar no seu plano alimentar?", question_type: "free_text", options: null, delivery_mode: "prompt", sort_order: 9 },
+  // Suplementação
+  { question_text: "Você tomou seus suplementos hoje?", question_type: "quick_reply", options: ["Sim, todos ✅", "Alguns", "Esqueci ❌"], delivery_mode: "prompt", sort_order: 10 },
+  // Energia / Bem-estar
+  { question_text: "De 1 a 10, como está seu nível de energia hoje?", question_type: "scale", options: null, delivery_mode: "prompt", sort_order: 11 },
+  { question_text: "Está sentindo algum sintoma diferente? (inchaço, dor, cansaço excessivo)", question_type: "free_text", options: null, delivery_mode: "prompt", sort_order: 12 },
+];
+
 export default function IntelligenceCustomQuestions() {
   const { user } = useAuth();
   const [questions, setQuestions] = useState<CustomQuestion[]>([]);
@@ -45,7 +66,25 @@ export default function IntelligenceCustomQuestions() {
       .select("*")
       .eq("nutritionist_id", user.id)
       .order("sort_order", { ascending: true });
-    setQuestions((data ?? []) as unknown as CustomQuestion[]);
+
+    const rows = (data ?? []) as unknown as CustomQuestion[];
+
+    // Auto-seed default questions on first access
+    if (rows.length === 0) {
+      const seeds = DEFAULT_QUESTIONS.map((q) => ({
+        ...q,
+        nutritionist_id: user.id,
+      }));
+      await supabase.from("intelligence_custom_questions").insert(seeds);
+      const { data: seeded } = await supabase
+        .from("intelligence_custom_questions")
+        .select("*")
+        .eq("nutritionist_id", user.id)
+        .order("sort_order", { ascending: true });
+      setQuestions((seeded ?? []) as unknown as CustomQuestion[]);
+    } else {
+      setQuestions(rows);
+    }
     setLoading(false);
   };
 
@@ -119,6 +158,9 @@ export default function IntelligenceCustomQuestions() {
     load();
   };
 
+  const typeLabel = (t: string) =>
+    t === "quick_reply" ? "Resposta Rápida" : t === "scale" ? "Escala 1-10" : "Texto Livre";
+
   return (
     <div className="space-y-4">
       <Card className="border-amber-500/20 bg-card/80 backdrop-blur-sm">
@@ -132,12 +174,12 @@ export default function IntelligenceCustomQuestions() {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Crie perguntas que serão exibidas no orb do paciente. As respostas ficam disponíveis no painel clínico.
+            Perguntas pré-configuradas + personalizadas. A IFJ usa essas perguntas para coletar dados comportamentais do paciente via Orb Neural.
           </p>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-sm text-muted-foreground text-center py-8">Carregando...</p>
+            <p className="text-sm text-muted-foreground text-center py-8">Carregando perguntas...</p>
           ) : questions.length === 0 ? (
             <div className="text-center py-8 space-y-3">
               <div className="w-14 h-14 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto">
@@ -158,15 +200,15 @@ export default function IntelligenceCustomQuestions() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ delay: i * 0.05 }}
+                    transition={{ delay: i * 0.03 }}
                     className={`flex items-start gap-3 p-3 rounded-xl border transition-all ${q.is_active ? "border-amber-500/20 bg-amber-500/5" : "border-border/50 bg-muted/30 opacity-60"}`}
                   >
                     <HelpCircle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium">{q.question_text}</p>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <Badge variant="outline" className="text-[10px] h-4">
-                          {q.question_type === "quick_reply" ? "Resposta Rápida" : q.question_type === "scale" ? "Escala" : "Texto Livre"}
+                          {typeLabel(q.question_type)}
                         </Badge>
                         <Badge variant="outline" className="text-[10px] h-4">
                           {q.delivery_mode === "prompt" ? "Via Orb" : "No Wizard"}
