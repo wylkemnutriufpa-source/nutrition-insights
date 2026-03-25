@@ -306,8 +306,8 @@ function NeuralParticleCanvas({ durationMultiplier }: { durationMultiplier: numb
       });
 
       // Slow core rotation
-      coreGroup.rotation.y = t * 0.03;
-      coreGroup.rotation.x = Math.sin(t * 0.015) * 0.12;
+      coreGroup.rotation.y = t * 0.15;
+      coreGroup.rotation.x = Math.sin(t * 0.02) * 0.1;
 
       // Dust slow drift
       dustPoints.rotation.y = t * 0.005;
