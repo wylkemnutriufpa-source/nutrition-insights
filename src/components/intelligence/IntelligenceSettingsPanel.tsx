@@ -5,13 +5,14 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Brain, MessageSquare, HelpCircle, Settings2, Sparkles, Users } from "lucide-react";
+import { Brain, MessageSquare, HelpCircle, Settings2, Sparkles, Users, Play } from "lucide-react";
 import IntelligenceGoldenHeader from "./settings/IntelligenceGoldenHeader";
 import IntelligenceGeneralSettings from "./settings/IntelligenceGeneralSettings";
 import IntelligenceCustomPrompts from "./settings/IntelligenceCustomPrompts";
 import IntelligenceCustomQuestions from "./settings/IntelligenceCustomQuestions";
 import IntelligenceActiveUsers from "./settings/IntelligenceActiveUsers";
 import IntelligenceParticles from "./settings/IntelligenceParticles";
+import IntelligenceActivationPreview from "./settings/IntelligenceActivationPreview";
 
 export default function IntelligenceSettingsPanel() {
   const [activeTab, setActiveTab] = useState("general");
