@@ -6,10 +6,12 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Brain, Clock, CheckCircle2, AlertCircle, Loader2, Users } from "lucide-react";
+import { Brain, Clock, CheckCircle2, AlertCircle, Loader2, Users, Bell, Send } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toast } from "sonner";
 
 interface ActiveUser {
   user_id: string;
@@ -26,6 +28,8 @@ export default function IntelligenceActiveUsers() {
   const { user } = useAuth();
   const [users, setUsers] = useState<ActiveUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [notifying, setNotifying] = useState(false);
+  const [notifyingUser, setNotifyingUser] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -35,7 +39,6 @@ export default function IntelligenceActiveUsers() {
   async function loadActiveUsers() {
     setLoading(true);
 
-    // Get patients linked to this nutritionist
     const { data: links } = await supabase
       .from("nutritionist_patients")
       .select("patient_id")
@@ -50,13 +53,11 @@ export default function IntelligenceActiveUsers() {
 
     const patientIds = links.map((l) => l.patient_id);
 
-    // Get profiles with IFJ fields
     const { data: profiles } = await supabase
       .from("profiles")
       .select("user_id, full_name, fit_intelligence_enabled, fit_intelligence_onboarded, fit_intelligence_first_experience_seen, fit_intelligence_access_mode, fit_intelligence_expires_at, fit_intelligence_last_seen_at")
       .in("user_id", patientIds);
 
-    // Also get patients with active premium prestige (Premium plan = display_order >= 4)
     const { data: prestigeData } = await supabase
       .from("patient_prestige")
       .select("patient_id, plan_id")
@@ -92,6 +93,56 @@ export default function IntelligenceActiveUsers() {
     setLoading(false);
   }
 
+  async function notifyAllPremium() {
+    if (!user?.id) return;
+    setNotifying(true);
+    try {
+      const toNotify = users.filter((u) => u.enabled);
+      if (toNotify.length === 0) {
+        toast.info("Nenhum paciente premium para notificar.");
+        setNotifying(false);
+        return;
+      }
+
+      const notifications = toNotify.map((u) => ({
+        user_id: u.user_id,
+        title: "🧠 Inteligência FitJourney disponível!",
+        message: "Sua Inteligência FitJourney está ativa e pronta para uso! Acesse agora e descubra lembretes inteligentes, hidratação, tarefas personalizadas e muito mais. Toque para explorar! ✨",
+        type: "intelligence",
+        action_url: "/patient-intelligence",
+      }));
+
+      const { error } = await supabase.from("notifications").insert(notifications);
+      if (error) throw error;
+
+      toast.success(`${toNotify.length} paciente(s) notificado(s) com sucesso! 🚀`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao enviar notificações");
+    }
+    setNotifying(false);
+  }
+
+  async function notifySingleUser(targetUser: ActiveUser) {
+    if (!user?.id) return;
+    setNotifyingUser(targetUser.user_id);
+    try {
+      const { error } = await supabase.from("notifications").insert({
+        user_id: targetUser.user_id,
+        title: "🧠 Inteligência FitJourney disponível!",
+        message: `Olá ${targetUser.full_name.split(" ")[0]}! Sua Inteligência FitJourney está ativa. Acesse agora para lembretes inteligentes, hidratação, tarefas e muito mais! ✨`,
+        type: "intelligence",
+        action_url: "/patient-intelligence",
+      });
+      if (error) throw error;
+      toast.success(`Notificação enviada para ${targetUser.full_name}! ✅`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao notificar paciente");
+    }
+    setNotifyingUser(null);
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -125,6 +176,18 @@ export default function IntelligenceActiveUsers() {
           value={users.filter((u) => !u.onboarded).length}
         />
       </div>
+
+      {/* Notify All Button */}
+      {users.length > 0 && (
+        <Button
+          onClick={notifyAllPremium}
+          disabled={notifying}
+          className="w-full gap-2 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white"
+        >
+          <Bell className="w-4 h-4" />
+          {notifying ? "Enviando..." : `Notificar todos os ${users.length} pacientes para testar a IFJ`}
+        </Button>
+      )}
 
       {users.length === 0 ? (
         <div className="text-center py-12">
@@ -196,6 +259,16 @@ export default function IntelligenceActiveUsers() {
                         até {format(new Date(u.expiresAt), "dd/MM/yy")}
                       </span>
                     )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10"
+                      onClick={() => notifySingleUser(u)}
+                      disabled={notifyingUser === u.user_id}
+                      title={`Notificar ${u.full_name}`}
+                    >
+                      <Send className={`w-4 h-4 ${notifyingUser === u.user_id ? "animate-pulse" : ""}`} />
+                    </Button>
                   </div>
                 </div>
               );
