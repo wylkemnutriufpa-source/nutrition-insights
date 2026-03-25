@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { NeuroEntryExperience } from "@/components/system-entry";
 import GuidedPresentation from "@/components/common/GuidedPresentation";
 import GuidedTour, { PROFESSIONAL_TOUR_STEPS, PATIENT_TOUR_STEPS } from "@/components/common/GuidedTour";
 import FullscreenPresentationViewer, { type PresentationSlide } from "@/components/common/FullscreenPresentationViewer";
@@ -10,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
 import { PROFESSIONAL_SLIDES, PATIENT_SLIDES } from "@/lib/presentationSlides";
 import { useFeatureGuide } from "@/hooks/useFeatureGuide";
-import { GraduationCap, Stethoscope, User, Play, CheckCircle2, RotateCcw, Clapperboard, Map, Rocket, Users, LayoutDashboard, Sparkles } from "lucide-react";
+import { GraduationCap, Stethoscope, User, Play, CheckCircle2, RotateCcw, Clapperboard, Map, Rocket, Users, LayoutDashboard, Sparkles, Brain } from "lucide-react";
 import { MagicSlideButton } from "@/components/common/MagicSlideGenerator";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -73,6 +74,7 @@ export default function SystemPresentation() {
   const navigate = useNavigate();
   const [activePresentation, setActivePresentation] = useState<"professional" | "patient" | null>(null);
   const [activeCinematic, setActiveCinematic] = useState<"professional" | "patient" | null>(null);
+  const [showNeuralEntry, setShowNeuralEntry] = useState(false);
   const [proDone, setProDone] = useState(() => localStorage.getItem(STORAGE_KEY_PRO) === "true");
   const [patDone, setPatDone] = useState(() => localStorage.getItem(STORAGE_KEY_PAT) === "true");
   const [cinematicProDone, setCinematicProDone] = useState(() => localStorage.getItem(CINEMATIC_PRO_KEY) === "true");
@@ -104,6 +106,18 @@ export default function SystemPresentation() {
     navigate("/");
     toast.success("Apresentação concluída! 🎉");
   };
+
+  // Neural Entry demo overlay
+  if (showNeuralEntry) {
+    const userRole = isPatient ? "patient" : "professional";
+    return (
+      <NeuroEntryExperience
+        dataReady={true}
+        userRole={userRole as "patient" | "professional" | "admin"}
+        onComplete={() => setShowNeuralEntry(false)}
+      />
+    );
+  }
 
   // Active standard presentation overlay
   if (activePresentation === "professional") {
@@ -190,6 +204,34 @@ export default function SystemPresentation() {
             <MagicSlideButton />
           </div>
         </motion.div>
+
+        {/* Neural Entry Demo */}
+        <div>
+          <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <Brain className="w-5 h-5 text-primary" />
+            Neural Entry — Ativação do Sistema
+          </h2>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <Card className="group hover:shadow-md transition-shadow border-primary/20">
+              <CardContent className="p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0 shadow-md shadow-primary/30">
+                  <Brain className="w-7 h-7 text-primary-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-lg">Neural Boot Experience</h3>
+                  <p className="text-sm text-muted-foreground">Tela de entrada premium que aparece após o login — cérebro neural, ondas de ativação e transição inteligente.</p>
+                  <span className="text-xs text-muted-foreground mt-1 block">~3 segundos • Animação neural imersiva • Skip disponível</span>
+                </div>
+                <Button
+                  onClick={() => setShowNeuralEntry(true)}
+                  className="bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/30"
+                >
+                  <Play className="w-4 h-4 mr-1" /> Visualizar
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
 
         {/* Cinematic demos — primary section */}
         <div>
