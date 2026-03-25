@@ -270,15 +270,13 @@ function RootRoute() {
 
   const userRole = isPatient ? "patient" : isAdmin ? "admin" : "professional";
 
-  // Show neuro entry while loading or boot not done
+  // Show page loader while auth is loading
   if (!bootDone) {
-    return (
-      <NeuroEntryExperience
-        dataReady={!loading}
-        userRole={userRole}
-        onComplete={() => setBootDone(true)}
-      />
-    );
+    if (!loading) {
+      // Data ready, mark boot as done
+      setTimeout(() => setBootDone(true), 0);
+    }
+    return <PageLoader />;
   }
 
   if (!user) return <GatewayPage />;
