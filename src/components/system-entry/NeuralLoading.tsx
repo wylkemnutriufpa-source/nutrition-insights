@@ -424,7 +424,7 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
             height: 130,
             position: "relative",
           }}
-          animate={{ rotateY: 360 }}
+          animate={{ rotateY: -360 }}
           transition={{ rotateY: { duration: 20, repeat: Infinity, ease: "linear" } }}
         >
           {/* Front face */}
@@ -451,13 +451,13 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
             />
           </div>
 
-          {/* Depth layers — stacked logo copies for 3D thickness */}
-          {Array.from({ length: 10 }, (_, i) => (
+          {/* Depth layers — continuous edge */}
+          {Array.from({ length: 12 }, (_, i) => (
             <div
               key={i}
               className="absolute inset-0 flex items-center justify-center"
               style={{
-                transform: `translateZ(${5 - i}px)`,
+                transform: `translateZ(${5.5 - i}px)`,
               }}
             >
               <img
@@ -469,8 +469,7 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
                   width: 130,
                   height: 130,
                   objectFit: "contain",
-                  filter: "brightness(0.35) saturate(1.5)",
-                  opacity: 0.9,
+                  filter: "brightness(0.25) saturate(0.8) blur(0.3px)",
                 }}
               />
             </div>
