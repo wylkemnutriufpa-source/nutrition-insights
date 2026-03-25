@@ -57,6 +57,10 @@ export default function IntelligenceSettingsPanel() {
           <TabsContent value="questions">
             <IntelligenceCustomQuestions />
           </TabsContent>
+
+          <TabsContent value="active">
+            <IntelligenceActiveUsers />
+          </TabsContent>
         </Tabs>
       </motion.div>
     </div>
