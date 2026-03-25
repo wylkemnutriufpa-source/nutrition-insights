@@ -15,6 +15,7 @@ import { NeuroEntryExperience } from "@/components/system-entry";
 import { CommandPaletteProvider } from "@/components/common/CommandPalette";
 import { readActiveEditorRoute } from "@/lib/mealPlanEditorStore";
 import NeuralScreensaver from "@/components/common/NeuralScreensaver";
+import FitIntelligenceAssistant from "@/components/intelligence/FitIntelligenceAssistant";
 import { installGlobalErrorHandlers } from "@/lib/monitoring";
 import { initFeatureFlags } from "@/lib/featureFlags";
 import { useConsentGuard } from "@/hooks/useConsentGuard";
@@ -338,6 +339,7 @@ const App = () => (
             <CelebrationProvider>
             <DarkModeInit />
             <NeuralScreensaver />
+            <FitIntelligenceAssistant />
             <CommandPaletteProvider>
              <Routes>
               {/* Public landing pages */}

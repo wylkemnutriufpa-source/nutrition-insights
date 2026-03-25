@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowRight, Compass } from "lucide-react";
+import { ArrowRight, Compass, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { checkShouldRestore, clearSessionContext, saveSessionContext, type SessionContext } from "@/lib/sessionContext";
+import { getWeekendRiskPrompt, type BehavioralContext } from "@/lib/fitIntelligenceEngine";
 import NeuralLoading from "@/components/system-entry/NeuralLoading";
 
 const EASE_PREMIUM = [0.22, 1, 0.36, 1] as const;
@@ -26,6 +28,7 @@ export default function NeuralScreensaver() {
   const [active, setActive] = useState(false);
   const [stage, setStage] = useState<ScreensaverStage>("sleeping");
   const [restoreCtx, setRestoreCtx] = useState<SessionContext | null>(null);
+  const [weekendTip, setWeekendTip] = useState<string | null>(null);
   const dismissedRef = useRef(false);
 
   // Check on visibility change
@@ -73,13 +76,54 @@ export default function NeuralScreensaver() {
     dismissedRef.current = false;
   }, [location.pathname]);
 
-  const handleScreenClick = useCallback(() => {
+  const handleScreenClick = useCallback(async () => {
     if (stage === "sleeping") {
       setStage("waking");
-      // Brief wave expansion, then show content
+
+      // Log screensaver wake interaction
+      if (user && (profile as any)?.fit_intelligence_enabled) {
+        supabase.from("fit_intelligence_interactions" as any).insert({
+          patient_id: user.id,
+          interaction_type: "screensaver_wake",
+          was_dismissed: false,
+        } as any).then(() => {});
+
+        // Fetch weekend tip if applicable
+        const isWeekend = [0, 6].includes(new Date().getDay());
+        if (isWeekend) {
+          const { data: bp } = await supabase
+            .from("behavioral_profile" as any)
+            .select("weekend_diet_breaks, craving_hours")
+            .eq("patient_id", user.id)
+            .maybeSingle();
+          const { data: flags } = await supabase
+            .from("patient_clinical_flags" as any)
+            .select("flag_key")
+            .eq("patient_id", user.id)
+            .eq("is_active", true);
+          
+          if (bp || flags) {
+            const ctx: BehavioralContext = {
+              firstName: profile?.full_name?.split(' ')[0] || '',
+              waterTarget: 8, waterConsumed: 0,
+              motivationStyle: 'gentle', messageTone: 'funny',
+              weekendDietBreaks: (bp as any)?.weekend_diet_breaks || false,
+              forgetsWater: false, workoutTime: 'morning',
+              workoutBlocker: null,
+              cravingHours: (bp as any)?.craving_hours || [],
+              failureCount: 0, isWeekend: true,
+              currentHour: new Date().getHours(),
+              clinicalFlags: (flags || []).map((f: any) => f.flag_key),
+            };
+            const tip = getWeekendRiskPrompt(ctx);
+            if (tip) setWeekendTip(tip.body);
+          }
+        }
+      }
+
       setTimeout(() => setStage("awake"), 800);
     }
-  }, [stage]);
+  }, [stage, user, profile]);
 
   const handleContinue = useCallback(() => {
     if (!restoreCtx) return;
@@ -228,7 +272,21 @@ export default function NeuralScreensaver() {
                 </motion.p>
               </div>
 
-              {/* Action buttons */}
+              {/* Weekend risk tip from FitJourney Intelligence */}
+              {weekendTip && (
+                <motion.div
+                  className="flex items-start gap-2 px-4 py-3 rounded-xl max-w-sm"
+                  style={{ background: "hsl(var(--primary) / 0.08)", border: "1px solid hsl(var(--primary) / 0.15)" }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.35, ease: EASE_PREMIUM }}
+                >
+                  <AlertTriangle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  <p className="text-xs text-foreground/80 whitespace-pre-line">{weekendTip}</p>
+                </motion.div>
+              )}
+
+
               <motion.div
                 className="flex flex-col sm:flex-row gap-3 w-full max-w-sm"
                 initial={{ opacity: 0, y: 16 }}

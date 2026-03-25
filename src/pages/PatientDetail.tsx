@@ -55,6 +55,7 @@ import OnboardingReleaseDialog from "@/components/patient/OnboardingReleaseDialo
 import ClinicalFlagsSummary from "@/components/patient/ClinicalFlagsSummary";
 import PatientBehavioralManager from "@/components/patient/PatientBehavioralManager";
 import PatientEvolutionPDF from "@/components/patient/PatientEvolutionPDF";
+import FitIntelligenceToggle from "@/components/intelligence/FitIntelligenceToggle";
 
 export default function PatientDetail() {
   const { patientId } = useParams<{ patientId: string }>();
@@ -1606,6 +1607,16 @@ export default function PatientDetail() {
                     <Button type="submit" className="w-full" disabled={savingProfile || !editProfileForm.full_name.trim()}>
                       {savingProfile ? "Salvando..." : "Salvar Nome, Telefone e Dados"}
                     </Button>
+
+                    {/* FitJourney Intelligence Toggle */}
+                    <div className="border-t pt-3">
+                      <FitIntelligenceToggle
+                        patientId={patientId!}
+                        enabled={(profile as any)?.fit_intelligence_enabled || false}
+                        onboarded={(profile as any)?.fit_intelligence_onboarded || false}
+                        onToggle={() => invalidate()}
+                      />
+                    </div>
 
                     <div className="border-t pt-3 space-y-2">
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ações de Identidade (Admin)</p>

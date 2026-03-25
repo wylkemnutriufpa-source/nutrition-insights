@@ -652,6 +652,57 @@ export type Database = {
           },
         ]
       }
+      behavioral_profile: {
+        Row: {
+          craving_hours: string[] | null
+          created_at: string
+          forgets_water: boolean | null
+          id: string
+          message_tone: string | null
+          motivation_style: string | null
+          patient_id: string
+          trains_alone: boolean | null
+          updated_at: string
+          wake_up_time: string | null
+          water_cups_per_day: number | null
+          weekend_diet_breaks: boolean | null
+          workout_blocker: string | null
+          workout_time: string | null
+        }
+        Insert: {
+          craving_hours?: string[] | null
+          created_at?: string
+          forgets_water?: boolean | null
+          id?: string
+          message_tone?: string | null
+          motivation_style?: string | null
+          patient_id: string
+          trains_alone?: boolean | null
+          updated_at?: string
+          wake_up_time?: string | null
+          water_cups_per_day?: number | null
+          weekend_diet_breaks?: boolean | null
+          workout_blocker?: string | null
+          workout_time?: string | null
+        }
+        Update: {
+          craving_hours?: string[] | null
+          created_at?: string
+          forgets_water?: boolean | null
+          id?: string
+          message_tone?: string | null
+          motivation_style?: string | null
+          patient_id?: string
+          trains_alone?: boolean | null
+          updated_at?: string
+          wake_up_time?: string | null
+          water_cups_per_day?: number | null
+          weekend_diet_breaks?: boolean | null
+          workout_blocker?: string | null
+          workout_time?: string | null
+        }
+        Relationships: []
+      }
       behavioral_recovery_actions: {
         Row: {
           adherence_at_moment: number | null
@@ -3083,6 +3134,99 @@ export type Database = {
           status?: string
           type?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      fit_intelligence_frequency: {
+        Row: {
+          cooldown_minutes: number | null
+          engaged_count: number | null
+          id: string
+          ignored_count: number | null
+          last_prompt_at: string | null
+          optimal_hours: number[] | null
+          patient_id: string
+          updated_at: string
+        }
+        Insert: {
+          cooldown_minutes?: number | null
+          engaged_count?: number | null
+          id?: string
+          ignored_count?: number | null
+          last_prompt_at?: string | null
+          optimal_hours?: number[] | null
+          patient_id: string
+          updated_at?: string
+        }
+        Update: {
+          cooldown_minutes?: number | null
+          engaged_count?: number | null
+          id?: string
+          ignored_count?: number | null
+          last_prompt_at?: string | null
+          optimal_hours?: number[] | null
+          patient_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      fit_intelligence_hydration: {
+        Row: {
+          consumed_cups: number
+          date: string
+          id: string
+          last_updated_at: string
+          patient_id: string
+          target_cups: number
+        }
+        Insert: {
+          consumed_cups?: number
+          date?: string
+          id?: string
+          last_updated_at?: string
+          patient_id: string
+          target_cups?: number
+        }
+        Update: {
+          consumed_cups?: number
+          date?: string
+          id?: string
+          last_updated_at?: string
+          patient_id?: string
+          target_cups?: number
+        }
+        Relationships: []
+      }
+      fit_intelligence_interactions: {
+        Row: {
+          created_at: string
+          id: string
+          interaction_type: string
+          patient_id: string
+          prompt_text: string | null
+          response_metadata: Json | null
+          response_value: string | null
+          was_dismissed: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          interaction_type: string
+          patient_id: string
+          prompt_text?: string | null
+          response_metadata?: Json | null
+          response_value?: string | null
+          was_dismissed?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          interaction_type?: string
+          patient_id?: string
+          prompt_text?: string | null
+          response_metadata?: Json | null
+          response_value?: string | null
+          was_dismissed?: boolean | null
         }
         Relationships: []
       }
@@ -9782,6 +9926,8 @@ export type Database = {
           created_at: string
           engagement_index: number | null
           engagement_level: string | null
+          fit_intelligence_enabled: boolean
+          fit_intelligence_onboarded: boolean
           full_name: string
           goal: string | null
           historical_loss_rate: number | null
@@ -9815,6 +9961,8 @@ export type Database = {
           created_at?: string
           engagement_index?: number | null
           engagement_level?: string | null
+          fit_intelligence_enabled?: boolean
+          fit_intelligence_onboarded?: boolean
           full_name?: string
           goal?: string | null
           historical_loss_rate?: number | null
@@ -9848,6 +9996,8 @@ export type Database = {
           created_at?: string
           engagement_index?: number | null
           engagement_level?: string | null
+          fit_intelligence_enabled?: boolean
+          fit_intelligence_onboarded?: boolean
           full_name?: string
           goal?: string | null
           historical_loss_rate?: number | null
