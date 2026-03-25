@@ -11,7 +11,7 @@ import FitJourneyTimeline from "@/components/timeline/FitJourneyTimeline";
 import {
   UtensilsCrossed, CheckCircle2, Calendar, Dumbbell,
   TrendingUp, Brain, Camera, Target,
-  LayoutGrid, List, ArrowRight, Sparkles,
+  LayoutGrid, List, ArrowRight, Sparkles, Rocket, ChevronRight,
 } from "lucide-react";
 
 interface GridCard {
