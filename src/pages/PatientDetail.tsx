@@ -134,6 +134,10 @@ export default function PatientDetail() {
   // Confirm payment + auto-release onboarding
   const handleConfirmPayment = async () => {
     if (!user || !patientId) return;
+    if (!acquireActionLock("confirm_payment", patientId)) {
+      toast.info("Ação já em andamento...");
+      return;
+    }
     setConfirmingPayment(true);
     try {
       const { data, error } = await supabase.rpc("confirm_patient_payment", {
@@ -144,13 +148,15 @@ export default function PatientDetail() {
       const result = data as any;
       if (!result?.success) {
         toast.error(result?.error || "Erro ao confirmar pagamento");
+        releaseActionLock("confirm_payment", patientId);
         setConfirmingPayment(false);
         return;
       }
-      toast.success("Pagamento confirmado! Paciente avançou para consentimento 🎉");
+      toast.success("✅ Pagamento confirmado! Onboarding liberado automaticamente.");
       invalidate();
     } catch (err: any) {
       toast.error(err.message || "Erro ao confirmar pagamento");
+      releaseActionLock("confirm_payment", patientId);
     }
     setConfirmingPayment(false);
   };
