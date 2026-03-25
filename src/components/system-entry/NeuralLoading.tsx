@@ -420,8 +420,8 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
         <motion.div
           style={{
             transformStyle: "preserve-3d",
-            width: 100,
-            height: 100,
+            width: 130,
+            height: 130,
             position: "relative",
           }}
           animate={{ rotateY: 360 }}
@@ -429,46 +429,51 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
         >
           {/* Front face */}
           <div
-            className="absolute inset-0 rounded-full flex items-center justify-center overflow-hidden"
+            className="absolute inset-0 flex items-center justify-center"
             style={{
               backfaceVisibility: "hidden",
-              transform: "translateZ(4px)",
-              background: "radial-gradient(circle at 38% 32%, hsl(152 35% 16%), hsl(152 25% 6%))",
-              boxShadow: "0 0 30px hsl(var(--primary) / 0.4), 0 0 60px hsl(var(--primary) / 0.15)",
-              border: "2px solid hsl(152 45% 28% / 0.7)",
+              transform: "translateZ(1px)",
             }}
           >
-            <img src={logoPng} alt="FitJourney" draggable={false} className="select-none" style={{ width: 68, height: 68, objectFit: "contain" }} />
+            <img
+              src={logoPng}
+              alt="FitJourney"
+              draggable={false}
+              className="select-none"
+              style={{
+                width: 130,
+                height: 130,
+                objectFit: "contain",
+                filter:
+                  "drop-shadow(0 0 20px hsl(var(--primary) / 0.5)) " +
+                  "drop-shadow(0 0 50px hsl(var(--primary) / 0.2))",
+              }}
+            />
           </div>
 
-          {/* Back face (mirrored) */}
+          {/* Back face — same logo, not mirrored */}
           <div
-            className="absolute inset-0 rounded-full flex items-center justify-center overflow-hidden"
+            className="absolute inset-0 flex items-center justify-center"
             style={{
               backfaceVisibility: "hidden",
-              transform: "rotateY(180deg) translateZ(4px)",
-              background: "radial-gradient(circle at 62% 32%, hsl(152 35% 16%), hsl(152 25% 6%))",
-              border: "2px solid hsl(152 45% 28% / 0.7)",
+              transform: "rotateY(180deg) translateZ(1px)",
             }}
           >
-            <img src={logoPng} alt="FitJourney" draggable={false} className="select-none" style={{ width: 68, height: 68, objectFit: "contain", transform: "scaleX(-1)" }} />
+            <img
+              src={logoPng}
+              alt="FitJourney"
+              draggable={false}
+              className="select-none"
+              style={{
+                width: 130,
+                height: 130,
+                objectFit: "contain",
+                filter:
+                  "drop-shadow(0 0 20px hsl(var(--primary) / 0.5)) " +
+                  "drop-shadow(0 0 50px hsl(var(--primary) / 0.2))",
+              }}
+            />
           </div>
-
-          {/* Edge: thin stacked discs to form the rim */}
-          {Array.from({ length: 8 }, (_, i) => {
-            const z = 3 - i; // from +3 to -4
-            return (
-              <div
-                key={i}
-                className="absolute inset-[2px] rounded-full"
-                style={{
-                  transform: `translateZ(${z}px)`,
-                  background: `linear-gradient(${180 + i * 20}deg, hsl(152 30% 18%), hsl(152 25% 8%))`,
-                  border: "1.5px solid hsl(152 35% 22% / 0.5)",
-                }}
-              />
-            );
-          })}
         </motion.div>
       </motion.div>
 
