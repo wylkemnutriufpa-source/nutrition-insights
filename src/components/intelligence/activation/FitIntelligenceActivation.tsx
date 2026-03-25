@@ -35,22 +35,19 @@ function PremiumPhrase({
 
   const styles = {
     body: {
-      wrapper: "max-w-3xl px-6",
-      text: "text-center text-xl md:text-2xl font-light tracking-[0.08em] leading-[1.7]",
+      wrapper: "max-w-[90vw] md:max-w-3xl px-4 md:px-6",
+      text: "text-center text-base sm:text-lg md:text-2xl font-light tracking-[0.06em] md:tracking-[0.08em] leading-[1.6] md:leading-[1.7]",
       glow: "0 0 24px hsl(40 65% 55% / 0.14)",
-      color: "linear-gradient(180deg, hsl(40 55% 82%), hsl(40 28% 66%))",
     },
     hero: {
-      wrapper: "max-w-4xl px-6",
-      text: "text-center text-3xl md:text-5xl font-semibold tracking-[0.12em] uppercase leading-[1.25]",
+      wrapper: "max-w-[92vw] md:max-w-4xl px-4 md:px-6",
+      text: "text-center text-2xl sm:text-3xl md:text-5xl font-semibold tracking-[0.08em] md:tracking-[0.12em] uppercase leading-[1.2] md:leading-[1.25]",
       glow: "0 0 30px hsl(40 70% 60% / 0.18)",
-      color: "linear-gradient(135deg, hsl(40 72% 70%), hsl(45 82% 78%), hsl(35 62% 58%))",
     },
     caption: {
-      wrapper: "max-w-2xl px-6",
-      text: "text-center text-sm md:text-base font-medium tracking-[0.06em] leading-[1.8]",
+      wrapper: "max-w-[88vw] md:max-w-2xl px-4 md:px-6",
+      text: "text-center text-xs sm:text-sm md:text-base font-medium tracking-[0.04em] md:tracking-[0.06em] leading-[1.7] md:leading-[1.8]",
       glow: "0 0 18px hsl(40 65% 55% / 0.1)",
-      color: "linear-gradient(180deg, hsl(40 35% 72%), hsl(40 20% 58%))",
     },
   }[variant];
 
