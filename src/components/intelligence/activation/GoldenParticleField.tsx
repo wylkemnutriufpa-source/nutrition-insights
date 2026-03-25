@@ -140,39 +140,18 @@ export default function GoldenParticleField({ phase, className }: Props) {
         ctx.fill();
       }
 
-      // Draw neural connections in converge/pulse
+      // Energy pulses in converge/pulse (no straight lines)
       if (currentPhase === "converge" || currentPhase === "pulse") {
-        ctx.strokeStyle = `hsla(40, 65%, 55%, 0.08)`;
-        ctx.lineWidth = 0.5;
-        for (let i = 0; i < particles.length; i++) {
-          for (let j = i + 1; j < Math.min(i + 6, particles.length); j++) {
-            const a = particles[i], b = particles[j];
-            const dist = Math.hypot(a.x - b.x, a.y - b.y);
-            if (dist < 60) {
-              ctx.globalAlpha = (1 - dist / 60) * 0.3;
-              ctx.beginPath();
-              ctx.moveTo(a.x, a.y);
-              ctx.lineTo(b.x, b.y);
-              ctx.stroke();
-            }
-          }
-        }
-        ctx.globalAlpha = 1;
-
-        // Energy pulses traveling along connections
         const t = Date.now() * 0.001;
         for (let i = 0; i < particles.length; i += 8) {
-          const next = (i + 1) % particles.length;
-          const a = particles[i], b = particles[next];
-          const progress = (Math.sin(t * 2 + i) * 0.5 + 0.5);
-          const px = a.x + (b.x - a.x) * progress;
-          const py = a.y + (b.y - a.y) * progress;
-          const g = ctx.createRadialGradient(px, py, 0, px, py, 4);
-          g.addColorStop(0, `hsla(45, 90%, 75%, 0.6)`);
+          const p = particles[i];
+          const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 4);
+          const pulseAlpha = 0.3 + Math.sin(t * 2 + i) * 0.3;
+          g.addColorStop(0, `hsla(45, 90%, 75%, ${pulseAlpha})`);
           g.addColorStop(1, `hsla(45, 90%, 75%, 0)`);
           ctx.fillStyle = g;
           ctx.beginPath();
-          ctx.arc(px, py, 4, 0, Math.PI * 2);
+          ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
           ctx.fill();
         }
       }
