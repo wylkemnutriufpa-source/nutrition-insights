@@ -126,6 +126,13 @@ export default function PatientDetail() {
   const [releaseOnboardingOpen, setReleaseOnboardingOpen] = useState(false);
   const [confirmingPayment, setConfirmingPayment] = useState(false);
 
+  // Sync selectedPrestigePlanId when data loads asynchronously
+  useEffect(() => {
+    if (data?.currentPrestigePlanId) {
+      setSelectedPrestigePlanId(data.currentPrestigePlanId);
+    }
+  }, [data?.currentPrestigePlanId]);
+
   // Invalidation helper
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: queryKeys.patients.detail(patientId ?? "") });
