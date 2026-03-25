@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { NeuralStepTransition } from "@/components/ui/neural-transitions";
+import { ProgressPulse } from "@/components/ui/micro-interactions";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -1000,22 +1002,17 @@ export default function Anamnesis() {
                   <Save className="w-3 h-3" /> Salvo
                 </span>
               )}
-              <span className="text-sm font-medium text-primary">{Math.round(progress)}%</span>
+              <ProgressPulse trigger={step}>
+                <span className="text-sm font-medium text-primary">{Math.round(progress)}%</span>
+              </ProgressPulse>
             </div>
           </div>
           <Progress value={progress} className="h-2" />
         </div>
 
         {/* Question */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={q.id}
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -30 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-6"
-          >
+        <NeuralStepTransition stepKey={q.id}>
+          <div className="space-y-6">
             {q.id !== "goal" && (
               <div className="text-center mb-8">
                 <h2 className="font-display text-2xl font-bold mb-1">{q.title}</h2>
@@ -1085,8 +1082,8 @@ export default function Anamnesis() {
                 />
               </div>
             )}
-          </motion.div>
-        </AnimatePresence>
+          </div>
+        </NeuralStepTransition>
 
         {/* Navigation */}
         <div className="flex items-center justify-between mt-10">
