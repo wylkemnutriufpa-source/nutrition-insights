@@ -1,7 +1,7 @@
 import { useRef, useEffect, useCallback } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Brain } from "lucide-react";
 import * as THREE from "three";
+import logoPng from "@/assets/logo.png";
 
 interface NeuralLoadingProps {
   active: boolean;
