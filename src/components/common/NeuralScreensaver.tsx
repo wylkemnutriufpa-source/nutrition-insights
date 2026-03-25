@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowRight, Compass } from "lucide-react";
+import { ArrowRight, Compass, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { checkShouldRestore, clearSessionContext, saveSessionContext, type SessionContext } from "@/lib/sessionContext";
+import { getWeekendRiskPrompt, type BehavioralContext } from "@/lib/fitIntelligenceEngine";
 import NeuralLoading from "@/components/system-entry/NeuralLoading";
 
 const EASE_PREMIUM = [0.22, 1, 0.36, 1] as const;
