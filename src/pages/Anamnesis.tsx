@@ -11,6 +11,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
 import { getActiveAdaptiveBlocks, extractClinicalFlags, type AdaptiveBlock } from "@/lib/adaptiveAnamnesisBlocks";
 import { processAnamnesisFlags } from "@/lib/clinicalFlags";
+import GoalOrbitalStep from "@/components/onboarding/GoalOrbitalStep";
 
 // ──── Question definitions ────
 interface Option {
@@ -1015,12 +1016,19 @@ export default function Anamnesis() {
             transition={{ duration: 0.3 }}
             className="space-y-6"
           >
-            <div className="text-center mb-8">
-              <h2 className="font-display text-2xl font-bold mb-1">{q.title}</h2>
-              <p className="text-muted-foreground">{q.subtitle}</p>
-            </div>
+            {q.id !== "goal" && (
+              <div className="text-center mb-8">
+                <h2 className="font-display text-2xl font-bold mb-1">{q.title}</h2>
+                <p className="text-muted-foreground">{q.subtitle}</p>
+              </div>
+            )}
 
-            {q.type === "single" && q.options && (
+            {/* Special orbital selector for goal question */}
+            {q.id === "goal" && (
+              <GoalOrbitalStep value={answers[q.id]} onChange={(v) => setAnswer(v)} />
+            )}
+
+            {q.type === "single" && q.options && q.id !== "goal" && (
               <div className={`grid gap-3 ${q.options.length <= 3 ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2 sm:grid-cols-3"}`}>
                 {q.options.map((opt) => (
                   <OptionCard key={opt.value} opt={opt} selected={answers[q.id] === opt.value} onClick={() => setAnswer(opt.value)} />
