@@ -3,19 +3,53 @@ import { motion, useReducedMotion } from "framer-motion";
 import * as THREE from "three";
 import logoPng from "@/assets/logo.png";
 
+export type NeuralAnimationMode = "idle" | "converge" | "diverge";
+
 interface NeuralLoadingProps {
   active: boolean;
   durationMultiplier?: number;
+  /** Controls particle entrance/exit animation */
+  animationMode?: NeuralAnimationMode;
+  /** Duration in seconds for converge/diverge */
+  transitionDuration?: number;
+  /** Called when converge/diverge animation completes */
+  onTransitionComplete?: () => void;
 }
 
 /**
  * 3D Neural Core — FitJourney clinical-tech aesthetic.
- * Inspired by futuristic AI brain with concentric energy rings,
- * circuit-like particle streams, and reactive expansion waves.
+ * Now supports converge (particles assemble from edges) and diverge (particles scatter).
  */
-function NeuralParticleCanvas({ durationMultiplier }: { durationMultiplier: number }) {
+function NeuralParticleCanvas({
+  durationMultiplier,
+  animationMode = "idle",
+  transitionDuration = 3.5,
+  onTransitionComplete,
+}: {
+  durationMultiplier: number;
+  animationMode: NeuralAnimationMode;
+  transitionDuration: number;
+  onTransitionComplete?: () => void;
+}) {
   const mountRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<number>(0);
+  const modeRef = useRef<NeuralAnimationMode>(animationMode);
+  const transitionStartRef = useRef<number | null>(null);
+  const transitionDone = useRef(false);
+  const onCompleteRef = useRef(onTransitionComplete);
+
+  // Keep refs in sync
+  useEffect(() => {
+    onCompleteRef.current = onTransitionComplete;
+  }, [onTransitionComplete]);
+
+  useEffect(() => {
+    if (animationMode !== modeRef.current) {
+      modeRef.current = animationMode;
+      transitionStartRef.current = null; // will be set on next frame
+      transitionDone.current = false;
+    }
+  }, [animationMode]);
 
   useEffect(() => {
     const container = mountRef.current;
@@ -24,7 +58,6 @@ function NeuralParticleCanvas({ durationMultiplier }: { durationMultiplier: numb
     const width = container.clientWidth;
     const height = container.clientHeight;
 
-    // Scene
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
     camera.position.z = 6;
@@ -38,7 +71,6 @@ function NeuralParticleCanvas({ durationMultiplier }: { durationMultiplier: numb
     const clock = new THREE.Clock();
     const isMobile = width < 500;
 
-    // ─── GROUP: Everything rotates together ───
     const coreGroup = new THREE.Group();
     scene.add(coreGroup);
 
@@ -48,11 +80,12 @@ function NeuralParticleCanvas({ durationMultiplier }: { durationMultiplier: numb
     const coreOriginals = new Float32Array(coreCount * 3);
     const coreColors = new Float32Array(coreCount * 3);
     const coreVelocities = new Float32Array(coreCount * 3);
+    // Scattered start positions for converge mode
+    const coreScattered = new Float32Array(coreCount * 3);
 
     const coreGeo = new THREE.BufferGeometry();
     const torusKnot = new THREE.TorusKnotGeometry(1.0, 0.35, 200, 32);
 
-    // Clinical green palette
     const coreHues = [
       { h: 152 / 360, s: 0.7, lMin: 0.35, lMax: 0.6, w: 0.45 },
       { h: 160 / 360, s: 0.6, lMin: 0.4, lMax: 0.65, w: 0.3 },
@@ -66,12 +99,32 @@ function NeuralParticleCanvas({ durationMultiplier }: { durationMultiplier: numb
       const y = torusKnot.attributes.position.getY(vi);
       const z = torusKnot.attributes.position.getZ(vi);
       const j = 0.04;
-      corePositions[i * 3] = x + (Math.random() - 0.5) * j;
-      corePositions[i * 3 + 1] = y + (Math.random() - 0.5) * j;
-      corePositions[i * 3 + 2] = z + (Math.random() - 0.5) * j;
-      coreOriginals[i * 3] = corePositions[i * 3];
-      coreOriginals[i * 3 + 1] = corePositions[i * 3 + 1];
-      coreOriginals[i * 3 + 2] = corePositions[i * 3 + 2];
+      const ox = x + (Math.random() - 0.5) * j;
+      const oy = y + (Math.random() - 0.5) * j;
+      const oz = z + (Math.random() - 0.5) * j;
+
+      coreOriginals[i * 3] = ox;
+      coreOriginals[i * 3 + 1] = oy;
+      coreOriginals[i * 3 + 2] = oz;
+
+      // Scattered positions: far away in random directions
+      const angle1 = Math.random() * Math.PI * 2;
+      const angle2 = (Math.random() - 0.5) * Math.PI;
+      const dist = 8 + Math.random() * 12;
+      coreScattered[i * 3] = Math.cos(angle1) * Math.cos(angle2) * dist;
+      coreScattered[i * 3 + 1] = Math.sin(angle2) * dist;
+      coreScattered[i * 3 + 2] = Math.sin(angle1) * Math.cos(angle2) * dist;
+
+      // Start position depends on initial mode
+      if (modeRef.current === "converge") {
+        corePositions[i * 3] = coreScattered[i * 3];
+        corePositions[i * 3 + 1] = coreScattered[i * 3 + 1];
+        corePositions[i * 3 + 2] = coreScattered[i * 3 + 2];
+      } else {
+        corePositions[i * 3] = ox;
+        corePositions[i * 3 + 1] = oy;
+        corePositions[i * 3 + 2] = oz;
+      }
 
       let rand = Math.random(), cumW = 0, band = coreHues[0];
       for (const b of coreHues) { cumW += b.w; if (rand <= cumW) { band = b; break; } }
@@ -93,15 +146,16 @@ function NeuralParticleCanvas({ durationMultiplier }: { durationMultiplier: numb
       vertexColors: true,
       blending: THREE.AdditiveBlending,
       transparent: true,
-      opacity: 0.9,
+      opacity: modeRef.current === "converge" ? 0.3 : 0.9,
       depthWrite: false,
     });
     const corePoints = new THREE.Points(coreGeo, coreMat);
     coreGroup.add(corePoints);
 
-    // ─── 2. CONCENTRIC RINGS (metallic orbital rings from reference) ───
+    // ─── 2. CONCENTRIC RINGS ───
     const ringCount = isMobile ? 3 : 5;
     const rings: THREE.Line[] = [];
+    const ringMats: THREE.LineBasicMaterial[] = [];
     for (let r = 0; r < ringCount; r++) {
       const radius = 1.8 + r * 0.45;
       const segments = 128;
@@ -117,18 +171,18 @@ function NeuralParticleCanvas({ durationMultiplier }: { durationMultiplier: numb
       const ringMat = new THREE.LineBasicMaterial({
         color: new THREE.Color().setHSL(152 / 360, 0.5, 0.3 + r * 0.08),
         transparent: true,
-        opacity: 0.15 + r * 0.05,
+        opacity: modeRef.current === "converge" ? 0 : 0.15 + r * 0.05,
         blending: THREE.AdditiveBlending,
       });
       const ring = new THREE.LineLoop(ringGeo, ringMat);
-      // Tilt each ring differently for 3D depth
       ring.rotation.x = Math.PI * 0.3 + r * 0.12;
       ring.rotation.y = r * 0.25;
       rings.push(ring);
+      ringMats.push(ringMat);
       coreGroup.add(ring);
     }
 
-    // ─── 3. ENERGY NODES on rings (glowing dots like reference) ───
+    // ─── 3. ENERGY NODES ───
     const nodeCount = isMobile ? 20 : 40;
     const nodeGeo = new THREE.BufferGeometry();
     const nodePositions = new Float32Array(nodeCount * 3);
@@ -141,11 +195,9 @@ function NeuralParticleCanvas({ durationMultiplier }: { durationMultiplier: numb
       const angle = Math.random() * Math.PI * 2;
       const speed = 0.15 + Math.random() * 0.3;
       nodeData.push({ ringIdx: rIdx, angle, speed });
-
       nodePositions[i * 3] = Math.cos(angle) * radius;
       nodePositions[i * 3 + 1] = Math.sin(angle) * radius;
       nodePositions[i * 3 + 2] = 0;
-
       const col = new THREE.Color();
       col.setHSL(140 / 360 + Math.random() * 0.1, 0.8, 0.5 + Math.random() * 0.3);
       nodeColors[i * 3] = col.r;
@@ -160,15 +212,13 @@ function NeuralParticleCanvas({ durationMultiplier }: { durationMultiplier: numb
       vertexColors: true,
       blending: THREE.AdditiveBlending,
       transparent: true,
-      opacity: 0.9,
+      opacity: modeRef.current === "converge" ? 0 : 0.9,
       depthWrite: false,
     });
     const nodePoints = new THREE.Points(nodeGeo, nodeMat);
     coreGroup.add(nodePoints);
 
-    // (Circuit beams removed — only particles + rings)
-
-    // ─── 5. AMBIENT DUST (floating particles around scene) ───
+    // ─── 5. AMBIENT DUST ───
     const dustCount = isMobile ? 500 : 1500;
     const dustGeo = new THREE.BufferGeometry();
     const dustPos = new Float32Array(dustCount * 3);
@@ -212,7 +262,6 @@ function NeuralParticleCanvas({ durationMultiplier }: { durationMultiplier: numb
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
     window.addEventListener("touchmove", handleTouchMove, { passive: true });
 
-    // ─── Reusable vectors ───
     const mouseWorld = new THREE.Vector3();
     const currentPos = new THREE.Vector3();
     const originalPos = new THREE.Vector3();
@@ -220,42 +269,95 @@ function NeuralParticleCanvas({ durationMultiplier }: { durationMultiplier: numb
     const direction = new THREE.Vector3();
     const returnForce = new THREE.Vector3();
 
+    // Easing
+    const easeInOutCubic = (x: number) =>
+      x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+
     // ─── Animation loop ───
     const animate = () => {
       frameRef.current = requestAnimationFrame(animate);
       const t = clock.getElapsedTime();
+      const mode = modeRef.current;
 
-      mouseWorld.set(mouse.x * 4, mouse.y * 4, 0);
+      // Track transition progress
+      if (mode === "converge" || mode === "diverge") {
+        if (transitionStartRef.current === null) {
+          transitionStartRef.current = t;
+        }
+        const elapsed = t - transitionStartRef.current;
+        const progress = Math.min(elapsed / transitionDuration, 1);
+        const eased = easeInOutCubic(progress);
 
-      // Update core particles (batched)
-      const batch = isMobile ? 4000 : 10000;
-      const start = Math.floor((t * 2000) % coreCount);
-      for (let k = 0; k < batch; k++) {
-        const i = (start + k) % coreCount;
-        const ix = i * 3, iy = ix + 1, iz = ix + 2;
-        currentPos.set(corePositions[ix], corePositions[iy], corePositions[iz]);
-        originalPos.set(coreOriginals[ix], coreOriginals[iy], coreOriginals[iz]);
-        velocity.set(coreVelocities[ix], coreVelocities[iy], coreVelocities[iz]);
-
-        const dist = currentPos.distanceTo(mouseWorld);
-        if (dist < 2.0) {
-          const force = (2.0 - dist) * 0.012;
-          direction.subVectors(currentPos, mouseWorld).normalize();
-          velocity.add(direction.multiplyScalar(force));
+        if (mode === "converge") {
+          // Lerp particles from scattered → original
+          for (let i = 0; i < coreCount; i++) {
+            const ix = i * 3, iy = ix + 1, iz = ix + 2;
+            corePositions[ix] = coreScattered[ix] + (coreOriginals[ix] - coreScattered[ix]) * eased;
+            corePositions[iy] = coreScattered[iy] + (coreOriginals[iy] - coreScattered[iy]) * eased;
+            corePositions[iz] = coreScattered[iz] + (coreOriginals[iz] - coreScattered[iz]) * eased;
+          }
+          // Fade in opacity
+          coreMat.opacity = 0.3 + eased * 0.6;
+          // Fade in rings and nodes
+          ringMats.forEach((rm, r) => {
+            rm.opacity = eased * (0.15 + r * 0.05);
+          });
+          nodeMat.opacity = eased * 0.9;
+        } else {
+          // Diverge: lerp particles from original → scattered
+          for (let i = 0; i < coreCount; i++) {
+            const ix = i * 3, iy = ix + 1, iz = ix + 2;
+            corePositions[ix] = coreOriginals[ix] + (coreScattered[ix] - coreOriginals[ix]) * eased;
+            corePositions[iy] = coreOriginals[iy] + (coreScattered[iy] - coreOriginals[iy]) * eased;
+            corePositions[iz] = coreOriginals[iz] + (coreScattered[iz] - coreOriginals[iz]) * eased;
+          }
+          // Fade out
+          coreMat.opacity = 0.9 * (1 - eased);
+          ringMats.forEach((rm, r) => {
+            rm.opacity = (0.15 + r * 0.05) * (1 - eased);
+          });
+          nodeMat.opacity = 0.9 * (1 - eased);
         }
 
-        returnForce.subVectors(originalPos, currentPos).multiplyScalar(0.002);
-        velocity.add(returnForce);
-        velocity.multiplyScalar(0.93);
+        coreGeo.attributes.position.needsUpdate = true;
 
-        corePositions[ix] += velocity.x;
-        corePositions[iy] += velocity.y;
-        corePositions[iz] += velocity.z;
-        coreVelocities[ix] = velocity.x;
-        coreVelocities[iy] = velocity.y;
-        coreVelocities[iz] = velocity.z;
+        if (progress >= 1 && !transitionDone.current) {
+          transitionDone.current = true;
+          onCompleteRef.current?.();
+        }
+      } else {
+        // ─── IDLE MODE: normal interactive behavior ───
+        mouseWorld.set(mouse.x * 4, mouse.y * 4, 0);
+
+        const batch = isMobile ? 4000 : 10000;
+        const start = Math.floor((t * 2000) % coreCount);
+        for (let k = 0; k < batch; k++) {
+          const i = (start + k) % coreCount;
+          const ix = i * 3, iy = ix + 1, iz = ix + 2;
+          currentPos.set(corePositions[ix], corePositions[iy], corePositions[iz]);
+          originalPos.set(coreOriginals[ix], coreOriginals[iy], coreOriginals[iz]);
+          velocity.set(coreVelocities[ix], coreVelocities[iy], coreVelocities[iz]);
+
+          const dist = currentPos.distanceTo(mouseWorld);
+          if (dist < 2.0) {
+            const force = (2.0 - dist) * 0.012;
+            direction.subVectors(currentPos, mouseWorld).normalize();
+            velocity.add(direction.multiplyScalar(force));
+          }
+
+          returnForce.subVectors(originalPos, currentPos).multiplyScalar(0.002);
+          velocity.add(returnForce);
+          velocity.multiplyScalar(0.93);
+
+          corePositions[ix] += velocity.x;
+          corePositions[iy] += velocity.y;
+          corePositions[iz] += velocity.z;
+          coreVelocities[ix] = velocity.x;
+          coreVelocities[iy] = velocity.y;
+          coreVelocities[iz] = velocity.z;
+        }
+        coreGeo.attributes.position.needsUpdate = true;
       }
-      coreGeo.attributes.position.needsUpdate = true;
 
       // Animate energy nodes orbiting along rings
       for (let i = 0; i < nodeCount; i++) {
@@ -268,19 +370,15 @@ function NeuralParticleCanvas({ durationMultiplier }: { durationMultiplier: numb
       }
       nodeGeo.attributes.position.needsUpdate = true;
 
-      // Animate rings — gentle breathing scale + individual rotation
+      // Ring breathing
       rings.forEach((ring, r) => {
         const breath = 1 + Math.sin(t * 0.5 + r * 0.8) * 0.03;
         ring.scale.set(breath, breath, breath);
         ring.rotation.z = t * 0.02 * (r % 2 === 0 ? 1 : -1);
       });
 
-
-      // Slow core rotation
       coreGroup.rotation.y = t * 0.15;
       coreGroup.rotation.x = Math.sin(t * 0.02) * 0.1;
-
-      // Dust slow drift
       dustPoints.rotation.y = t * 0.005;
       dustPoints.rotation.x = t * 0.003;
 
@@ -310,41 +408,50 @@ function NeuralParticleCanvas({ durationMultiplier }: { durationMultiplier: numb
       dustGeo.dispose();
       dustMat.dispose();
       rings.forEach(r => { r.geometry.dispose(); (r.material as THREE.Material).dispose(); });
-      
       renderer.dispose();
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
     };
-  }, [durationMultiplier]);
+  }, [durationMultiplier, transitionDuration]);
 
   return <div ref={mountRef} className="absolute inset-0" />;
 }
 
-export default function NeuralLoading({ active, durationMultiplier = 1 }: NeuralLoadingProps) {
+export default function NeuralLoading({
+  active,
+  durationMultiplier = 1,
+  animationMode = "idle",
+  transitionDuration = 3.5,
+  onTransitionComplete,
+}: NeuralLoadingProps) {
   const reduced = useReducedMotion();
 
   if (!active) return null;
 
   return (
     <div className="relative w-[min(85vw,600px)] h-[min(85vw,600px)] md:w-[800px] md:h-[800px]">
-      {/* 3D particle canvas */}
-      {!reduced && <NeuralParticleCanvas durationMultiplier={durationMultiplier} />}
+      {!reduced && (
+        <NeuralParticleCanvas
+          durationMultiplier={durationMultiplier}
+          animationMode={animationMode}
+          transitionDuration={transitionDuration}
+          onTransitionComplete={onTransitionComplete}
+        />
+      )}
 
-      {/* Outer ring glow (mimics metallic ring from reference) */}
+      {/* Outer ring glow */}
       <motion.div
         className="absolute inset-[-15%] rounded-full pointer-events-none"
         style={{
           border: "1px solid hsl(var(--primary) / 0.12)",
           boxShadow:
-            "0 0 40px hsl(var(--primary) / 0.08), " +
-            "inset 0 0 60px hsl(var(--primary) / 0.04)",
+            "0 0 40px hsl(var(--primary) / 0.08), inset 0 0 60px hsl(var(--primary) / 0.04)",
         }}
         animate={{ scale: [0.95, 1.05, 0.95], opacity: [0.4, 0.7, 0.4] }}
         transition={{ duration: 6 * durationMultiplier, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* Second ring */}
       <motion.div
         className="absolute inset-[-8%] rounded-full pointer-events-none"
         style={{
@@ -355,7 +462,6 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
         transition={{ duration: 5 * durationMultiplier, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* Core volumetric glow */}
       <motion.div
         className="absolute inset-[-25%] rounded-full pointer-events-none"
         style={{
@@ -366,7 +472,6 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
         transition={{ duration: 5.5 * durationMultiplier, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* Center glow point (the bright green center from reference) */}
       <motion.div
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full pointer-events-none"
         style={{
@@ -377,8 +482,6 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
         transition={{ duration: 3 * durationMultiplier, repeat: Infinity, ease: "easeInOut" }}
       />
 
-
-      {/* Reduced motion fallback */}
       {reduced && (
         <div
           className="absolute inset-0 rounded-full"
