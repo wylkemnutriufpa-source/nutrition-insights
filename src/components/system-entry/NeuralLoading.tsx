@@ -166,31 +166,7 @@ function NeuralParticleCanvas({ durationMultiplier }: { durationMultiplier: numb
     const nodePoints = new THREE.Points(nodeGeo, nodeMat);
     coreGroup.add(nodePoints);
 
-    // ─── 4. CIRCUIT LINES (radial energy beams from brain center) ───
-    const beamCount = isMobile ? 8 : 16;
-    const beams: THREE.Line[] = [];
-    for (let b = 0; b < beamCount; b++) {
-      const angle = (b / beamCount) * Math.PI * 2;
-      const len = 2.5 + Math.random() * 1.5;
-      const beamGeo = new THREE.BufferGeometry();
-      const pts = new Float32Array(6);
-      pts[0] = Math.cos(angle) * 0.5;
-      pts[1] = Math.sin(angle) * 0.5;
-      pts[2] = 0;
-      pts[3] = Math.cos(angle) * len;
-      pts[4] = Math.sin(angle) * len;
-      pts[5] = (Math.random() - 0.5) * 0.5;
-      beamGeo.setAttribute("position", new THREE.BufferAttribute(pts, 3));
-      const beamMat = new THREE.LineBasicMaterial({
-        color: new THREE.Color().setHSL(152 / 360, 0.6, 0.45),
-        transparent: true,
-        opacity: 0.08 + Math.random() * 0.07,
-        blending: THREE.AdditiveBlending,
-      });
-      const beam = new THREE.Line(beamGeo, beamMat);
-      beams.push(beam);
-      coreGroup.add(beam);
-    }
+    // (Circuit beams removed — only particles + rings)
 
     // ─── 5. AMBIENT DUST (floating particles around scene) ───
     const dustCount = isMobile ? 500 : 1500;
