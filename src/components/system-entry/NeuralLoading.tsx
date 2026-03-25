@@ -107,13 +107,15 @@ function NeuralParticleCanvas({
       coreOriginals[i * 3 + 1] = oy;
       coreOriginals[i * 3 + 2] = oz;
 
-      // Scattered positions: far away in random directions
-      const angle1 = Math.random() * Math.PI * 2;
-      const angle2 = (Math.random() - 0.5) * Math.PI;
-      const dist = 8 + Math.random() * 12;
-      coreScattered[i * 3] = Math.cos(angle1) * Math.cos(angle2) * dist;
-      coreScattered[i * 3 + 1] = Math.sin(angle2) * dist;
-      coreScattered[i * 3 + 2] = Math.sin(angle1) * Math.cos(angle2) * dist;
+      // Scattered positions: truly random spherical distribution (no square artifacts)
+      const u = Math.random();
+      const v = Math.random();
+      const theta = 2 * Math.PI * u;
+      const phi = Math.acos(2 * v - 1);
+      const dist = 6 + Math.random() * 14 + Math.random() * 5;
+      coreScattered[i * 3] = Math.sin(phi) * Math.cos(theta) * dist;
+      coreScattered[i * 3 + 1] = Math.sin(phi) * Math.sin(theta) * dist;
+      coreScattered[i * 3 + 2] = Math.cos(phi) * dist;
 
       // Start position depends on initial mode
       if (modeRef.current === "converge") {
