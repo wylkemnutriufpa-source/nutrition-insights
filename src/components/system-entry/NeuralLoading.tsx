@@ -406,23 +406,18 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
         transition={{ duration: 3 * durationMultiplier, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* Logo — hero center */}
+      {/* Logo — hero center with full 3D Y-axis rotation */}
       <motion.div
         className="absolute inset-0 flex items-center justify-center z-10"
-        style={{ perspective: 800 }}
+        style={{ perspective: 1000 }}
         initial={{ opacity: 0, scale: 0.6 }}
-        animate={{
-          opacity: 1,
-          scale: 1,
-          rotateY: [0, 5, -5, 0],
-        }}
+        animate={{ opacity: 1, scale: 1 }}
         transition={{
           opacity: { duration: 1.2 },
           scale: { duration: 1.4, ease: [0.22, 1, 0.36, 1] },
-          rotateY: { duration: 12, repeat: Infinity, ease: "easeInOut" },
         }}
       >
-        <img
+        <motion.img
           src={logoPng}
           alt="FitJourney"
           draggable={false}
@@ -435,6 +430,10 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
               "drop-shadow(0 0 24px hsl(var(--primary) / 0.6)) " +
               "drop-shadow(0 0 50px hsl(var(--primary) / 0.25)) " +
               "drop-shadow(0 0 90px hsl(var(--primary) / 0.1))",
+          }}
+          animate={{ rotateY: 360 }}
+          transition={{
+            rotateY: { duration: 20, repeat: Infinity, ease: "linear" },
           }}
         />
       </motion.div>
