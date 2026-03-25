@@ -272,7 +272,21 @@ export default function NeuralScreensaver() {
                 </motion.p>
               </div>
 
-              {/* Action buttons */}
+              {/* Weekend risk tip from FitJourney Intelligence */}
+              {weekendTip && (
+                <motion.div
+                  className="flex items-start gap-2 px-4 py-3 rounded-xl max-w-sm"
+                  style={{ background: "hsl(var(--primary) / 0.08)", border: "1px solid hsl(var(--primary) / 0.15)" }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.35, ease: EASE_PREMIUM }}
+                >
+                  <AlertTriangle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  <p className="text-xs text-foreground/80 whitespace-pre-line">{weekendTip}</p>
+                </motion.div>
+              )}
+
+
               <motion.div
                 className="flex flex-col sm:flex-row gap-3 w-full max-w-sm"
                 initial={{ opacity: 0, y: 16 }}
