@@ -49,7 +49,7 @@ export default function TrainerAnamnesis({ studentId, studentName, open, onClose
     setLoading(true);
     try {
       const [profileRes, anamnesisRes, assessmentRes, linksRes] = await Promise.all([
-        supabase.from("profiles").select("full_name, birth_date, phone, avatar_url").eq("user_id", studentId).maybeSingle(),
+        supabase.from("profiles").select("full_name, phone, avatar_url, goal").eq("user_id", studentId).maybeSingle(),
         supabase.from("patient_anamnesis").select("answers").eq("user_id", studentId).eq("status", "completed").order("created_at", { ascending: false }).limit(1),
         (supabase as any).from("trainer_assessments").select("*").eq("patient_id", studentId).eq("trainer_id", user?.id).order("created_at", { ascending: false }).limit(1),
         (supabase as any).from("patient_professional_links").select("professional_role, profiles!patient_professional_links_professional_id_fkey(full_name)").eq("patient_id", studentId).eq("status", "active"),
@@ -57,15 +57,16 @@ export default function TrainerAnamnesis({ studentId, studentName, open, onClose
 
       // Build synced data
       const profile = profileRes.data;
-      const answers = anamnesisRes.data?.[0]?.answers as Record<string, any> | null;
-      const age = profile?.birth_date
-        ? Math.floor((Date.now() - new Date(profile.birth_date).getTime()) / 31557600000)
+      const answers = (anamnesisRes.data as any)?.[0]?.answers as Record<string, any> | null;
+      const birthDate = answers?.birth_date || answers?.birthdate;
+      const age = birthDate
+        ? Math.floor((Date.now() - new Date(birthDate).getTime()) / 31557600000)
         : null;
 
       const syncedData = {
         name: profile?.full_name || studentName,
         age: age ?? undefined,
-        height: profile?.height ?? answers?.height ?? undefined,
+        height: answers?.height ?? undefined,
         weight: answers?.weight ?? undefined,
         sex: answers?.biological_sex ?? answers?.sex ?? undefined,
         goal: answers?.primary_goal ?? answers?.goal ?? undefined,
