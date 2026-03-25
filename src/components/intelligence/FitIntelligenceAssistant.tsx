@@ -310,8 +310,20 @@ export default function FitIntelligenceAssistant() {
 
   if (!isPatient || !user) return null;
 
+  // Show first-time activation cinematic
+  if (showActivation && isActiveAccess && !hasSeenActivation) {
+    return (
+      <FitIntelligenceActivation
+        userId={user.id}
+        onComplete={() => {
+          setShowActivation(false);
+        }}
+      />
+    );
+  }
+
   // Show wizard
-  if (showWizard && isActiveAccess && !isOnboarded && !wizardJustCompleted) {
+  if (showWizard && isActiveAccess && hasSeenActivation && !isOnboarded && !wizardJustCompleted) {
     return (
       <FitIntelligenceWizard
         open={showWizard}
