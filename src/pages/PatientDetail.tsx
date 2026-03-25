@@ -1108,9 +1108,8 @@ export default function PatientDetail() {
                               newExpires = end.toISOString().split("T")[0];
                             }
                             let autoValue = planForm.value;
-                            const pid = selectedPrestigePlanId || currentPrestigePlan?.id || (prestigePlans.length > 0 ? prestigePlans[0].id : "");
+                            const pid = selectedPrestigePlanId && selectedPrestigePlanId !== "none" ? selectedPrestigePlanId : (currentPrestigePlan?.id || (prestigePlans.length > 0 ? prestigePlans[0].id : ""));
                             if (pid) {
-                              if (!selectedPrestigePlanId) setSelectedPrestigePlanId(pid);
                               const sp = prestigePlans.find(p => p.id === pid);
                               if (sp) {
                                 const priceMap: Record<string, number | null> = { "Mensal": sp.price_monthly, "Trimestral": sp.price_quarterly, "Semestral": sp.price_semiannual, "Anual": sp.price_annual };
