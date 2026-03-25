@@ -41,8 +41,9 @@ function PremiumPhrase({
     },
     hero: {
       wrapper: "max-w-[92vw] md:max-w-4xl px-4 md:px-6",
-      text: "text-center text-2xl sm:text-3xl md:text-5xl font-semibold tracking-[0.08em] md:tracking-[0.12em] uppercase leading-[1.2] md:leading-[1.25]",
-      glow: "0 0 30px hsl(40 70% 60% / 0.18)",
+      text: "text-center text-2xl sm:text-3xl md:text-5xl font-bold tracking-[0.08em] md:tracking-[0.12em] uppercase leading-[1.2] md:leading-[1.25]",
+      glow: "0 0 30px hsl(40 70% 60% / 0.25), 0 0 60px hsl(40 65% 55% / 0.12)",
+      useGradient: true,
     },
     caption: {
       wrapper: "max-w-[88vw] md:max-w-2xl px-4 md:px-6",
