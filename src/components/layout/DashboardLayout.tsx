@@ -338,6 +338,9 @@ function DynamicSidebar({
       <ErrorBoundary section="Layout:IntelligenceModal" fallback={null}>
         <IntelligenceModal open={intelligenceOpen} onOpenChange={setIntelligenceOpen} />
       </ErrorBoundary>
+      <ErrorBoundary section="Layout:IntelligenceShowcase" fallback={null}>
+        <IntelligenceShowcaseModal open={showcaseOpen} onClose={() => setShowcaseOpen(false)} />
+      </ErrorBoundary>
       <ErrorBoundary section="Layout:SmartResumeModal" fallback={null}>
         <SmartResumeModal />
       </ErrorBoundary>
