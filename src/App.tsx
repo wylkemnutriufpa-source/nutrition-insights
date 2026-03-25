@@ -338,6 +338,7 @@ const App = () => (
             <CelebrationProvider>
             <DarkModeInit />
             <NeuralScreensaver />
+            <FitIntelligenceAssistant />
             <CommandPaletteProvider>
              <Routes>
               {/* Public landing pages */}
