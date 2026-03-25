@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
       try {
         await adminClient.auth.admin.generateLink({
           type: "magiclink",
-          email,
+          email: normalizedEmail,
           options: { redirectTo: `${req.headers.get("origin") || "https://fijourney.lovable.app"}/` },
         });
       } catch (e) {
