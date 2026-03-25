@@ -25,7 +25,7 @@ serve(async (req) => {
   );
 
   try {
-    const { user_id, title, body, url, tag } = await req.json();
+    const { user_id, title, body, url, tag, skip_inapp } = await req.json();
 
     if (!user_id || !title) {
       return new Response(JSON.stringify({ error: "user_id and title required" }), {
