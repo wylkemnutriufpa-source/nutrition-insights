@@ -5,9 +5,13 @@ import { useAuth } from "@/lib/auth";
 export type JourneyStatus =
   | "lead_created"
   | "awaiting_payment"
+  | "awaiting_consent"
   | "awaiting_onboarding_release"
   | "onboarding_active"
   | "onboarding_completed"
+  | "draft_ready_for_review"
+  | "plan_published"
+  | "active_followup"
   | "clinical_followup_active"
   | "active" // legacy
   | null;
