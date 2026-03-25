@@ -41,6 +41,7 @@ interface Props {
 export default function PatientStatusManager({ patients, onToggleStatus, onClose }: Props) {
   const { user } = useAuth();
   const nav = useNavigate();
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"all" | "active" | "inactive">("all");
   const [processingId, setProcessingId] = useState<string | null>(null);
