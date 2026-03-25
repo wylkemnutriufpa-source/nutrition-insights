@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
           // User exists in auth but not found via RPC - try getUserByEmail approach
           // Search through admin API
           const { data: { users } } = await adminClient.auth.admin.listUsers();
-          const existingUser = users?.find((u: any) => u.email?.toLowerCase() === email.toLowerCase());
+          const existingUser = users?.find((u: any) => u.email?.toLowerCase() === normalizedEmail);
           if (!existingUser) throw new Error("Usuário existe mas não foi possível localizar. Tente via importação.");
           patientId = existingUser.id;
         }
