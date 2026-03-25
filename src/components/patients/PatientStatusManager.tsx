@@ -45,6 +45,8 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"all" | "active" | "inactive">("all");
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [confirmedPayments, setConfirmedPayments] = useState<Set<string>>(new Set());
+  const [releasedOnboarding, setReleasedOnboarding] = useState<Set<string>>(new Set());
   const isInactivePatient = (patient: PatientInfo) => patient.status !== "active";
 
   const filtered = useMemo(() => {
