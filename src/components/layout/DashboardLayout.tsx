@@ -16,6 +16,7 @@ import PendingApprovalsModal, { usePendingApprovals } from "@/components/patient
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import SmartResumeModal from "@/components/common/SmartResumeModal";
 import IntelligenceModal from "@/components/common/IntelligenceModal";
+import IntelligenceShowcaseModal from "@/components/intelligence/IntelligenceShowcaseModal";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import ClinicalAIEntity from "@/components/ai-entity/ClinicalAIEntity";
 
