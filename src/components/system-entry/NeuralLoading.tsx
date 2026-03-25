@@ -327,7 +327,7 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
   if (!active) return null;
 
   return (
-    <div className="relative w-[420px] h-[420px] md:w-[560px] md:h-[560px]">
+    <div className="relative w-[600px] h-[600px] md:w-[800px] md:h-[800px]">
       {/* 3D particle canvas */}
       {!reduced && <NeuralParticleCanvas durationMultiplier={durationMultiplier} />}
 
