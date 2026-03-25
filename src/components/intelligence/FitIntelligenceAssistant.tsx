@@ -198,8 +198,10 @@ export default function FitIntelligenceAssistant() {
 
       // Update engaged count (best effort)
       try {
+        const { data: curFreq } = await supabase.from("fit_intelligence_frequency" as any)
+          .select("engaged_count").eq("patient_id", user.id).maybeSingle();
         await supabase.from("fit_intelligence_frequency" as any)
-          .update({ engaged_count: ((freq as any)?.engaged_count || 0) + 1, updated_at: new Date().toISOString() } as any)
+          .update({ engaged_count: ((curFreq as any)?.engaged_count || 0) + 1, updated_at: new Date().toISOString() } as any)
           .eq("patient_id", user.id);
       } catch {}
 
