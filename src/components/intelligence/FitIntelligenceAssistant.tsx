@@ -172,8 +172,9 @@ export default function FitIntelligenceAssistant() {
           .eq("date", today)
           .maybeSingle();
 
-        const newConsumed = (existing?.consumed_cups || 0) + cups;
-        const target = existing?.target_cups || 8;
+        const ex = existing as any;
+        const newConsumed = (ex?.consumed_cups || 0) + cups;
+        const target = ex?.target_cups || 8;
 
         await supabase.from("fit_intelligence_hydration" as any).upsert({
           patient_id: user.id,
