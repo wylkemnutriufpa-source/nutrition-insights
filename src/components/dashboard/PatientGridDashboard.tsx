@@ -65,8 +65,28 @@ const cardAnim = {
 export default function PatientGridDashboard() {
   const navigate = useNavigate();
   const { patientView, setPatientView } = useLayoutPreference();
+  const { user } = useAuth();
+  const [onboarding, setOnboarding] = useState<any>(null);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase
+      .from("onboarding_pipelines" as any)
+      .select("id, status, current_step")
+      .eq("patient_id", user.id)
+      .in("status", ["active", "in_progress", "pending"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .then(({ data }) => {
+        if (data && data.length > 0) setOnboarding(data[0]);
+      });
+  }, [user?.id]);
 
   const rows = [1, 2, 3];
+
+  const ONBOARDING_KEY = "patient_onboarding_completed";
+  const onboardingDone = localStorage.getItem(ONBOARDING_KEY) === "true";
+  const showOnboardingCard = onboarding || !onboardingDone;
 
   return (
     <div className="space-y-6">
