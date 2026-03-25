@@ -310,7 +310,7 @@ function NeuralParticleCanvas({ durationMultiplier }: { durationMultiplier: numb
       dustGeo.dispose();
       dustMat.dispose();
       rings.forEach(r => { r.geometry.dispose(); (r.material as THREE.Material).dispose(); });
-      beams.forEach(b => { b.geometry.dispose(); (b.material as THREE.Material).dispose(); });
+      
       renderer.dispose();
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
