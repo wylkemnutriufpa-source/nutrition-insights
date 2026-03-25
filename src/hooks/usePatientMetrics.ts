@@ -23,10 +23,10 @@ export function usePatientMetrics() {
       let gender: "male" | "female" | null = null;
       let source: string | null = null;
 
-      // 1. Try latest physical assessment (most recent weight)
-      const { data: assessment } = await supabase
+      // 1. Latest physical assessment
+      const { data: assessment } = await (supabase as any)
         .from("physical_assessments")
-        .select("weight, height, gender")
+        .select("weight, height")
         .eq("patient_id", user!.id)
         .order("assessment_date", { ascending: false })
         .limit(1)
@@ -36,10 +36,9 @@ export function usePatientMetrics() {
         weight = assessment.weight;
         source = "avaliação física";
         if (assessment.height) height = assessment.height;
-        if (assessment.gender) gender = assessment.gender === "female" ? "female" : "male";
       }
 
-      // 2. Try latest check-in weight (may be more recent)
+      // 2. Latest check-in weight (may be more recent)
       const { data: checkin } = await supabase
         .from("patient_checkins")
         .select("weight")
@@ -54,39 +53,28 @@ export function usePatientMetrics() {
         source = "check-in";
       }
 
-      // 3. Fallback to anamnesis data
-      if (!weight || !height || !gender) {
-        const { data: anamnesis } = await supabase
-          .from("patient_anamnesis")
-          .select("answers")
-          .eq("user_id", user!.id)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
+      // 3. Anamnesis data (weight, height, gender)
+      const { data: anamnesis } = await supabase
+        .from("patient_anamnesis")
+        .select("answers")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-        if (anamnesis?.answers) {
-          const a = anamnesis.answers as any;
-          if (!weight && a.weight) { weight = parseFloat(a.weight); source = "anamnese"; }
-          if (!height && a.height) {
-            let h = parseFloat(a.height);
-            if (h > 0 && h < 3) h = h * 100; // Convert m to cm
-            height = h;
-          }
-          if (!gender && a.gender) {
-            gender = a.gender === "female" || a.gender === "feminino" ? "female" : "male";
-          }
+      if (anamnesis?.answers) {
+        const a = anamnesis.answers as any;
+        if (!weight && a.weight) { weight = parseFloat(a.weight); source = "anamnese"; }
+        if (!height && a.height) {
+          let h = parseFloat(a.height);
+          if (h > 0 && h < 3) h = h * 100;
+          height = h;
         }
-      }
-
-      // 4. Fallback to profile
-      if (!gender) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("gender")
-          .eq("user_id", user!.id)
-          .maybeSingle();
-        if (profile?.gender) {
-          gender = (profile.gender as string) === "female" || (profile.gender as string) === "feminino" ? "female" : "male";
+        if (!gender && a.gender) {
+          gender = a.gender === "female" || a.gender === "feminino" ? "female" : "male";
+        }
+        if (!gender && a.sex) {
+          gender = a.sex === "female" || a.sex === "feminino" ? "female" : "male";
         }
       }
 
