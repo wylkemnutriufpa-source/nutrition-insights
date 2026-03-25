@@ -129,7 +129,7 @@ interface Props {
 
 export default function FitIntelligenceActivation({ userId, onComplete }: Props) {
   const [stage, setStage] = useState<
-    "dark" | "brain" | "phrase1" | "phrase2" | "phrase3" | "cta" | "dissolve" | "done"
+    "dark" | "converging" | "brain" | "phrase1" | "phrase2" | "phrase3" | "cta" | "dissolve" | "done"
   >("dark");
   const audioStarted = useRef(false);
 
