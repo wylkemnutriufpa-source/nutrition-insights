@@ -424,7 +424,7 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
             height: 130,
             position: "relative",
           }}
-          animate={{ rotateY: 360 }}
+          animate={{ rotateY: -360 }}
           transition={{ rotateY: { duration: 20, repeat: Infinity, ease: "linear" } }}
         >
           {/* Front face */}
