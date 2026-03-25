@@ -376,8 +376,9 @@ export default function PatientDetail() {
       }
     }
 
-    if (selectedPrestigePlanId) {
-      await supabase.from("patient_prestige").delete().eq("patient_id", patientId);
+    // Apply prestige if selected
+    if (selectedPrestigePlanId && selectedPrestigePlanId !== "none") {
+      await supabase.from("patient_prestige").update({ is_active: false } as any).eq("patient_id", patientId).eq("is_active", true);
       const { error: prestigeErr } = await supabase.from("patient_prestige").insert({
         patient_id: patientId,
         plan_id: selectedPrestigePlanId,
@@ -387,6 +388,12 @@ export default function PatientDetail() {
       if (!prestigeErr) {
         const selectedPlan = prestigePlans.find(p => p.id === selectedPrestigePlanId);
         toast.success(`Prestígio ${selectedPlan?.name || ''} aplicado! ${selectedPlan?.badge_icon || ''}`, { duration: 3000 });
+      }
+    } else if (selectedPrestigePlanId === "" || selectedPrestigePlanId === "none") {
+      // Remove prestige if "none" selected explicitly and there was one before
+      if (currentPrestigePlan) {
+        await supabase.from("patient_prestige").update({ is_active: false } as any).eq("patient_id", patientId).eq("is_active", true);
+        toast.success("Prestígio removido");
       }
     }
     setPlanOpen(false);
@@ -1118,8 +1125,37 @@ export default function PatientDetail() {
                           <Input type="number" step="0.01" min="0" placeholder="Ex: 150.00" value={planForm.value} onChange={(e) => setPlanForm({ ...planForm, value: e.target.value })} />
                         </div>
                         <div className="grid grid-cols-2 gap-3">
-                          <div><Label>Data Início</Label><Input type="date" value={planForm.started_at} onChange={(e) => setPlanForm({ ...planForm, started_at: e.target.value })} required /></div>
+                          <div><Label>Data Início</Label><Input type="date" value={planForm.started_at} onChange={(e) => {
+                            const newStart = e.target.value;
+                            const monthsMap: Record<string, number> = { "Mensal": 1, "Trimestral": 3, "Semestral": 6, "Anual": 12 };
+                            const months = monthsMap[planForm.plan_name];
+                            let newExpires = planForm.expires_at;
+                            if (months && newStart) {
+                              const end = new Date(newStart);
+                              end.setMonth(end.getMonth() + months);
+                              newExpires = end.toISOString().split("T")[0];
+                            }
+                            setPlanForm(f => ({ ...f, started_at: newStart, expires_at: newExpires }));
+                          }} required /></div>
                           <div><Label>Data Fim</Label><Input type="date" value={planForm.expires_at} onChange={(e) => setPlanForm({ ...planForm, expires_at: e.target.value })} /></div>
+                        </div>
+                        {/* Prestígio inline */}
+                        <div>
+                          <Label>Prestígio</Label>
+                          <Select
+                            value={selectedPrestigePlanId || "none"}
+                            onValueChange={(v) => setSelectedPrestigePlanId(v === "none" ? "" : v)}
+                          >
+                            <SelectTrigger><SelectValue placeholder="Selecione um prestígio..." /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">❌ Sem Prestígio</SelectItem>
+                              {prestigePlans.map((p: any) => (
+                                <SelectItem key={p.id} value={p.id}>
+                                  {p.badge_icon || "⭐"} {p.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                         <Button type="submit" className="w-full gradient-primary" disabled={!planForm.plan_name}>
                           {patientSubscription ? "Atualizar Plano" : "Atribuir Plano"}
