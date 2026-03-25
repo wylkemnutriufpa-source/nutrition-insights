@@ -147,7 +147,7 @@ export default function FitIntelligenceAssistant() {
 
   // Periodic checks
   useEffect(() => {
-    if (!isEnabled || !isOnboarded || !isPatient) return;
+    if (!isActiveAccess || !isOnboarded || !isPatient) return;
 
     const initialTimer = setTimeout(checkForPrompt, 10_000);
     intervalRef.current = setInterval(checkForPrompt, CHECK_INTERVAL);
@@ -156,7 +156,7 @@ export default function FitIntelligenceAssistant() {
       clearTimeout(initialTimer);
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [checkForPrompt, isEnabled, isOnboarded, isPatient]);
+  }, [checkForPrompt, isActiveAccess, isOnboarded, isPatient]);
 
   // Handle quick action
   const handleQuickAction = async (value: string) => {
