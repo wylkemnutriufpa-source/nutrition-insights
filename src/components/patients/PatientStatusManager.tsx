@@ -58,21 +58,40 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
       .sort((a, b) => (a.profile?.full_name || "").localeCompare(b.profile?.full_name || ""));
   }, [patients, search, tab]);
 
+  const refreshAll = () => {
+    queryClient.invalidateQueries({ queryKey: ["patients"] });
+  };
+
   const confirmPayment = async (patientId: string) => {
     setProcessingId(patientId);
     try {
-      const { error } = await supabase.rpc("confirm_patient_payment", { _patient_id: patientId, _nutritionist_id: user!.id });
+      const { data, error } = await supabase.rpc("confirm_patient_payment", { _patient_id: patientId, _nutritionist_id: user!.id });
       if (error) throw error;
-      toast.success("Pagamento confirmado!");
+      const result = data as any;
+      if (!result?.success) {
+        toast.error(result?.error || "Erro ao confirmar pagamento");
+      } else {
+        toast.success("Pagamento confirmado!");
+        refreshAll();
+      }
     } catch { toast.error("Erro ao confirmar pagamento"); }
     setProcessingId(null);
   };
 
   const doReleaseOnboarding = async (patientId: string) => {
+    // Check if already past onboarding
+    const patient = patients.find(p => p.patient_id === patientId);
+    const journey = patient ? getJourney(patient) : "active";
+    const alreadyPast = ["onboarding_active", "onboarding_completed", "draft_ready_for_review", "plan_published", "active_followup"].includes(journey);
+    if (alreadyPast) {
+      toast.info("Onboarding já foi liberado ou concluído para este paciente");
+      return;
+    }
     setProcessingId(patientId);
     try {
       await releaseOnboarding(patientId, user!.id);
       toast.success("Onboarding liberado!");
+      refreshAll();
     } catch { toast.error("Erro ao liberar onboarding"); }
     setProcessingId(null);
   };
