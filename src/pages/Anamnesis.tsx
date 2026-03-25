@@ -1021,7 +1021,12 @@ export default function Anamnesis() {
               <p className="text-muted-foreground">{q.subtitle}</p>
             </div>
 
-            {q.type === "single" && q.options && (
+            {/* Special orbital selector for goal question */}
+            {q.id === "goal" && (
+              <GoalOrbitalStep value={answers[q.id]} onChange={(v) => setAnswer(v)} />
+            )}
+
+            {q.type === "single" && q.options && q.id !== "goal" && (
               <div className={`grid gap-3 ${q.options.length <= 3 ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2 sm:grid-cols-3"}`}>
                 {q.options.map((opt) => (
                   <OptionCard key={opt.value} opt={opt} selected={answers[q.id] === opt.value} onClick={() => setAnswer(opt.value)} />
