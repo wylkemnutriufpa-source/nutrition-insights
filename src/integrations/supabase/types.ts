@@ -2901,6 +2901,66 @@ export type Database = {
           },
         ]
       }
+      exercises_library: {
+        Row: {
+          common_mistakes: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          equipment: string | null
+          execution_tips: string | null
+          exercise_type: string | null
+          id: string
+          is_system: boolean | null
+          level: string | null
+          muscle_group: string
+          name: string
+          sub_group: string | null
+          tags: string[] | null
+          thumbnail_url: string | null
+          updated_at: string | null
+          video_url: string | null
+        }
+        Insert: {
+          common_mistakes?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          equipment?: string | null
+          execution_tips?: string | null
+          exercise_type?: string | null
+          id?: string
+          is_system?: boolean | null
+          level?: string | null
+          muscle_group?: string
+          name: string
+          sub_group?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          common_mistakes?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          equipment?: string | null
+          execution_tips?: string | null
+          exercise_type?: string | null
+          id?: string
+          is_system?: boolean | null
+          level?: string | null
+          muscle_group?: string
+          name?: string
+          sub_group?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       feature_flags: {
         Row: {
           created_at: string
@@ -12754,6 +12814,122 @@ export type Database = {
           },
         ]
       }
+      trainer_assessments: {
+        Row: {
+          available_equipment: string[] | null
+          created_at: string | null
+          goals: string | null
+          id: string
+          injuries: Json | null
+          joint_pain: Json | null
+          medical_clearance: boolean | null
+          medical_clearance_notes: string | null
+          movement_restrictions: string | null
+          notes: string | null
+          patient_id: string
+          surgeries: Json | null
+          trainer_id: string
+          training_experience: string | null
+          training_preference: string | null
+          updated_at: string | null
+          weekly_availability: number | null
+        }
+        Insert: {
+          available_equipment?: string[] | null
+          created_at?: string | null
+          goals?: string | null
+          id?: string
+          injuries?: Json | null
+          joint_pain?: Json | null
+          medical_clearance?: boolean | null
+          medical_clearance_notes?: string | null
+          movement_restrictions?: string | null
+          notes?: string | null
+          patient_id: string
+          surgeries?: Json | null
+          trainer_id: string
+          training_experience?: string | null
+          training_preference?: string | null
+          updated_at?: string | null
+          weekly_availability?: number | null
+        }
+        Update: {
+          available_equipment?: string[] | null
+          created_at?: string | null
+          goals?: string | null
+          id?: string
+          injuries?: Json | null
+          joint_pain?: Json | null
+          medical_clearance?: boolean | null
+          medical_clearance_notes?: string | null
+          movement_restrictions?: string | null
+          notes?: string | null
+          patient_id?: string
+          surgeries?: Json | null
+          trainer_id?: string
+          training_experience?: string | null
+          training_preference?: string | null
+          updated_at?: string | null
+          weekly_availability?: number | null
+        }
+        Relationships: []
+      }
+      training_feedback: {
+        Row: {
+          completion_id: string | null
+          could_not_execute: boolean | null
+          created_at: string | null
+          difficulty_rating: number | null
+          exercise_id: string | null
+          exercise_name: string | null
+          feedback_type: string
+          id: string
+          notes: string | null
+          pain_level: number | null
+          pain_location: string | null
+          patient_id: string
+          substituted_with: string | null
+        }
+        Insert: {
+          completion_id?: string | null
+          could_not_execute?: boolean | null
+          created_at?: string | null
+          difficulty_rating?: number | null
+          exercise_id?: string | null
+          exercise_name?: string | null
+          feedback_type?: string
+          id?: string
+          notes?: string | null
+          pain_level?: number | null
+          pain_location?: string | null
+          patient_id: string
+          substituted_with?: string | null
+        }
+        Update: {
+          completion_id?: string | null
+          could_not_execute?: boolean | null
+          created_at?: string | null
+          difficulty_rating?: number | null
+          exercise_id?: string | null
+          exercise_name?: string | null
+          feedback_type?: string
+          id?: string
+          notes?: string | null
+          pain_level?: number | null
+          pain_location?: string | null
+          patient_id?: string
+          substituted_with?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_feedback_completion_id_fkey"
+            columns: ["completion_id"]
+            isOneToOne: false
+            referencedRelation: "workout_completions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_achievements: {
         Row: {
           achievement_id: string
@@ -13412,54 +13588,82 @@ export type Database = {
       }
       workout_exercises: {
         Row: {
+          cadence: string | null
           created_at: string
+          exercise_library_id: string | null
+          group_id: string | null
+          group_order: number | null
+          group_type: string | null
           id: string
           image_url: string | null
           load_kg: number | null
           media_url: string | null
+          method_label: string | null
           muscle_group: string | null
           name: string
           notes: string | null
           reps: string
           rest_seconds: number | null
           routine_id: string
+          rpe: number | null
           sets: number
           sort_order: number
           video_url: string | null
         }
         Insert: {
+          cadence?: string | null
           created_at?: string
+          exercise_library_id?: string | null
+          group_id?: string | null
+          group_order?: number | null
+          group_type?: string | null
           id?: string
           image_url?: string | null
           load_kg?: number | null
           media_url?: string | null
+          method_label?: string | null
           muscle_group?: string | null
           name: string
           notes?: string | null
           reps?: string
           rest_seconds?: number | null
           routine_id: string
+          rpe?: number | null
           sets?: number
           sort_order?: number
           video_url?: string | null
         }
         Update: {
+          cadence?: string | null
           created_at?: string
+          exercise_library_id?: string | null
+          group_id?: string | null
+          group_order?: number | null
+          group_type?: string | null
           id?: string
           image_url?: string | null
           load_kg?: number | null
           media_url?: string | null
+          method_label?: string | null
           muscle_group?: string | null
           name?: string
           notes?: string | null
           reps?: string
           rest_seconds?: number | null
           routine_id?: string
+          rpe?: number | null
           sets?: number
           sort_order?: number
           video_url?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "workout_exercises_exercise_library_id_fkey"
+            columns: ["exercise_library_id"]
+            isOneToOne: false
+            referencedRelation: "exercises_library"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "workout_exercises_routine_id_fkey"
             columns: ["routine_id"]
@@ -13554,6 +13758,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      workout_templates: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_system: boolean | null
+          level: string | null
+          name: string
+          objective: string | null
+          routines_json: Json | null
+          tags: string[] | null
+          thumbnail_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_system?: boolean | null
+          level?: string | null
+          name: string
+          objective?: string | null
+          routines_json?: Json | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_system?: boolean | null
+          level?: string | null
+          name?: string
+          objective?: string | null
+          routines_json?: Json | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       workspace_items: {
         Row: {
