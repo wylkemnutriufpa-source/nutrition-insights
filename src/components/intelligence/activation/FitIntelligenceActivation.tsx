@@ -41,8 +41,9 @@ function PremiumPhrase({
     },
     hero: {
       wrapper: "max-w-[92vw] md:max-w-4xl px-4 md:px-6",
-      text: "text-center text-2xl sm:text-3xl md:text-5xl font-semibold tracking-[0.08em] md:tracking-[0.12em] uppercase leading-[1.2] md:leading-[1.25]",
-      glow: "0 0 30px hsl(40 70% 60% / 0.18)",
+      text: "text-center text-2xl sm:text-3xl md:text-5xl font-bold tracking-[0.08em] md:tracking-[0.12em] uppercase leading-[1.2] md:leading-[1.25]",
+      glow: "0 0 30px hsl(40 70% 60% / 0.25), 0 0 60px hsl(40 65% 55% / 0.12)",
+      useGradient: true,
     },
     caption: {
       wrapper: "max-w-[88vw] md:max-w-2xl px-4 md:px-6",
@@ -56,13 +57,20 @@ function PremiumPhrase({
       <motion.p
         className={styles.text}
         style={{
-          color:
-            variant === "hero"
-              ? "hsl(42 78% 72%)"
-              : variant === "caption"
-                ? "hsl(40 32% 68%)"
-                : "hsl(40 52% 80%)",
-          textShadow: styles.glow,
+          ...(styles.useGradient
+            ? {
+                background: "linear-gradient(180deg, #B8860B 0%, #FFD700 25%, #FFFACD 50%, #FFD700 75%, #B8860B 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                filter: `drop-shadow(0 2px 8px rgba(255,215,0,0.3)) drop-shadow(0 0 20px rgba(255,215,0,0.15))`,
+              }
+            : {
+                color:
+                  variant === "caption"
+                    ? "hsl(40 32% 68%)"
+                    : "hsl(40 52% 80%)",
+                textShadow: styles.glow,
+              }),
         }}
         initial="hidden"
         animate="visible"
