@@ -432,7 +432,7 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
             className="absolute inset-0 flex items-center justify-center"
             style={{
               backfaceVisibility: "hidden",
-              transform: "translateZ(1px)",
+              transform: "translateZ(6px)",
             }}
           >
             <img
@@ -451,12 +451,37 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
             />
           </div>
 
-          {/* Back face — same logo, not mirrored */}
+          {/* Depth layers — stacked logo copies for 3D thickness */}
+          {Array.from({ length: 10 }, (_, i) => (
+            <div
+              key={i}
+              className="absolute inset-0 flex items-center justify-center"
+              style={{
+                transform: `translateZ(${5 - i}px)`,
+              }}
+            >
+              <img
+                src={logoPng}
+                alt=""
+                draggable={false}
+                className="select-none"
+                style={{
+                  width: 130,
+                  height: 130,
+                  objectFit: "contain",
+                  filter: "brightness(0.35) saturate(1.5)",
+                  opacity: 0.9,
+                }}
+              />
+            </div>
+          ))}
+
+          {/* Back face — same logo */}
           <div
             className="absolute inset-0 flex items-center justify-center"
             style={{
               backfaceVisibility: "hidden",
-              transform: "rotateY(180deg) translateZ(1px)",
+              transform: "rotateY(180deg) translateZ(6px)",
             }}
           >
             <img
