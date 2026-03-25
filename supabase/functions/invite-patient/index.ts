@@ -28,7 +28,8 @@ Deno.serve(async (req) => {
     if (!isPro) throw new Error("Only professionals can invite patients");
 
     const { name, email, phone, method, password } = await req.json();
-    if (!name || !email) throw new Error("Name and email required");
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+    if (!name || !normalizedEmail) throw new Error("Name and email required");
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },

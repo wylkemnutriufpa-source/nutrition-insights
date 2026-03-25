@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRoles(data?.map((r) => r.role) || []);
   };
 
-  const subCheckRef = { current: false };
+  const subCheckRef = useRef(false);
   const checkSubscription = async () => {
     if (subCheckRef.current) return; // deduplicate concurrent calls
     subCheckRef.current = true;
