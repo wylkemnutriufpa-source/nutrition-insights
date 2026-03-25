@@ -76,13 +76,54 @@ export default function NeuralScreensaver() {
     dismissedRef.current = false;
   }, [location.pathname]);
 
-  const handleScreenClick = useCallback(() => {
+  const handleScreenClick = useCallback(async () => {
     if (stage === "sleeping") {
       setStage("waking");
-      // Brief wave expansion, then show content
+
+      // Log screensaver wake interaction
+      if (user && (profile as any)?.fit_intelligence_enabled) {
+        supabase.from("fit_intelligence_interactions" as any).insert({
+          patient_id: user.id,
+          interaction_type: "screensaver_wake",
+          was_dismissed: false,
+        } as any).catch(() => {});
+
+        // Fetch weekend tip if applicable
+        const isWeekend = [0, 6].includes(new Date().getDay());
+        if (isWeekend) {
+          const { data: bp } = await supabase
+            .from("behavioral_profile" as any)
+            .select("weekend_diet_breaks, craving_hours")
+            .eq("patient_id", user.id)
+            .maybeSingle();
+          const { data: flags } = await supabase
+            .from("patient_clinical_flags" as any)
+            .select("flag_key")
+            .eq("patient_id", user.id)
+            .eq("is_active", true);
+          
+          if (bp || flags) {
+            const ctx: BehavioralContext = {
+              firstName: profile?.full_name?.split(' ')[0] || '',
+              waterTarget: 8, waterConsumed: 0,
+              motivationStyle: 'gentle', messageTone: 'funny',
+              weekendDietBreaks: (bp as any)?.weekend_diet_breaks || false,
+              forgetsWater: false, workoutTime: 'morning',
+              workoutBlocker: null,
+              cravingHours: (bp as any)?.craving_hours || [],
+              failureCount: 0, isWeekend: true,
+              currentHour: new Date().getHours(),
+              clinicalFlags: (flags || []).map((f: any) => f.flag_key),
+            };
+            const tip = getWeekendRiskPrompt(ctx);
+            if (tip) setWeekendTip(tip.body);
+          }
+        }
+      }
+
       setTimeout(() => setStage("awake"), 800);
     }
-  }, [stage]);
+  }, [stage, user, profile]);
 
   const handleContinue = useCallback(() => {
     if (!restoreCtx) return;
