@@ -299,7 +299,7 @@ export default function FitIntelligenceActivation({ userId, onComplete }: Props)
                 className="flex flex-col items-center gap-6"
               >
                 <motion.p
-                  className="max-w-md px-6 text-center text-sm tracking-[0.08em] leading-relaxed"
+                  className="max-w-[85vw] md:max-w-md px-4 md:px-6 text-center text-xs sm:text-sm tracking-[0.06em] md:tracking-[0.08em] leading-relaxed"
                   style={{ color: "hsl(40 25% 55%)" }}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 0.85 }}
