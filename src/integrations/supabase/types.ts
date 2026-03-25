@@ -661,6 +661,7 @@ export type Database = {
           message_tone: string | null
           motivation_style: string | null
           patient_id: string
+          preferred_reminder_windows: number[] | null
           trains_alone: boolean | null
           updated_at: string
           wake_up_time: string | null
@@ -677,6 +678,7 @@ export type Database = {
           message_tone?: string | null
           motivation_style?: string | null
           patient_id: string
+          preferred_reminder_windows?: number[] | null
           trains_alone?: boolean | null
           updated_at?: string
           wake_up_time?: string | null
@@ -693,6 +695,7 @@ export type Database = {
           message_tone?: string | null
           motivation_style?: string | null
           patient_id?: string
+          preferred_reminder_windows?: number[] | null
           trains_alone?: boolean | null
           updated_at?: string
           wake_up_time?: string | null
@@ -3204,6 +3207,7 @@ export type Database = {
           interaction_type: string
           patient_id: string
           prompt_text: string | null
+          prompt_title: string | null
           response_metadata: Json | null
           response_value: string | null
           was_dismissed: boolean | null
@@ -3214,6 +3218,7 @@ export type Database = {
           interaction_type: string
           patient_id: string
           prompt_text?: string | null
+          prompt_title?: string | null
           response_metadata?: Json | null
           response_value?: string | null
           was_dismissed?: boolean | null
@@ -3224,9 +3229,46 @@ export type Database = {
           interaction_type?: string
           patient_id?: string
           prompt_text?: string | null
+          prompt_title?: string | null
           response_metadata?: Json | null
           response_value?: string | null
           was_dismissed?: boolean | null
+        }
+        Relationships: []
+      }
+      fit_intelligence_tasks: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          delivered_at: string | null
+          id: string
+          patient_id: string
+          payload: Json | null
+          scheduled_for: string | null
+          status: string | null
+          task_type: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          delivered_at?: string | null
+          id?: string
+          patient_id: string
+          payload?: Json | null
+          scheduled_for?: string | null
+          status?: string | null
+          task_type: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          delivered_at?: string | null
+          id?: string
+          patient_id?: string
+          payload?: Json | null
+          scheduled_for?: string | null
+          status?: string | null
+          task_type?: string
         }
         Relationships: []
       }
@@ -9927,7 +9969,10 @@ export type Database = {
           engagement_index: number | null
           engagement_level: string | null
           fit_intelligence_enabled: boolean
+          fit_intelligence_last_seen_at: string | null
+          fit_intelligence_mode: string | null
           fit_intelligence_onboarded: boolean
+          fit_intelligence_snoozed_until: string | null
           full_name: string
           goal: string | null
           historical_loss_rate: number | null
@@ -9962,7 +10007,10 @@ export type Database = {
           engagement_index?: number | null
           engagement_level?: string | null
           fit_intelligence_enabled?: boolean
+          fit_intelligence_last_seen_at?: string | null
+          fit_intelligence_mode?: string | null
           fit_intelligence_onboarded?: boolean
+          fit_intelligence_snoozed_until?: string | null
           full_name?: string
           goal?: string | null
           historical_loss_rate?: number | null
@@ -9997,7 +10045,10 @@ export type Database = {
           engagement_index?: number | null
           engagement_level?: string | null
           fit_intelligence_enabled?: boolean
+          fit_intelligence_last_seen_at?: string | null
+          fit_intelligence_mode?: string | null
           fit_intelligence_onboarded?: boolean
+          fit_intelligence_snoozed_until?: string | null
           full_name?: string
           goal?: string | null
           historical_loss_rate?: number | null

@@ -109,6 +109,7 @@ export default function FitIntelligenceWizard({ open, onClose, patientId, patien
           craving_hours: data.craving_hours,
           motivation_style: data.motivation_style,
           message_tone: data.message_tone,
+          preferred_reminder_windows: [9, 12, 15, 18],
           updated_at: new Date().toISOString(),
         } as any, { onConflict: "patient_id" });
 
@@ -137,6 +138,15 @@ export default function FitIntelligenceWizard({ open, onClose, patientId, patien
         ignored_count: 0,
         engaged_count: 0,
       } as any, { onConflict: "patient_id" });
+
+      // Log wizard completion
+      await supabase.from("fit_intelligence_interactions" as any).insert({
+        patient_id: patientId,
+        interaction_type: "wizard_completed",
+        prompt_title: "Wizard Comportamental",
+        prompt_text: "Onboarding comportamental concluído",
+        was_dismissed: false,
+      } as any);
 
       toast.success("Inteligência FitJourney configurada! 🧠✨");
       handleClose();
