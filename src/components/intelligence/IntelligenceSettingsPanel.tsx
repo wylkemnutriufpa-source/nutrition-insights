@@ -41,6 +41,9 @@ export default function IntelligenceSettingsPanel() {
             <TabsTrigger value="questions" className="gap-2 data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-600">
               <HelpCircle className="w-4 h-4" /> Perguntas
             </TabsTrigger>
+            <TabsTrigger value="active" className="gap-2 data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-600">
+              <Users className="w-4 h-4" /> Ativos
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="general">
