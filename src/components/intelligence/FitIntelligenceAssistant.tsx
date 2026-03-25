@@ -311,13 +311,14 @@ export default function FitIntelligenceAssistant() {
 
   if (!isPatient || !user) return null;
 
-  // Show first-time activation cinematic
-  if (showActivation && isActiveAccess && !hasSeenActivation) {
+  // Show first-time activation cinematic OR replay
+  if ((showActivation && isActiveAccess && !hasSeenActivation) || replayActivation) {
     return (
       <FitIntelligenceActivation
         userId={user.id}
         onComplete={() => {
           setShowActivation(false);
+          setReplayActivation(false);
         }}
       />
     );
