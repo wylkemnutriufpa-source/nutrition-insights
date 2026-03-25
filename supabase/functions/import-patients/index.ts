@@ -26,7 +26,7 @@ async function importOnePatient(
     // 1. Try RPC first (fastest path)
     const { data: patientUserId, error: rpcError } = await supabase.rpc(
       "create_patient_account",
-      { _email: email, _full_name: fullName, _password: randomPassword }
+      { _email: email, _full_name: fullName, _password: standardPassword }
     );
 
     let finalId = patientUserId;
