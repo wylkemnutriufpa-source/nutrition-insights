@@ -275,11 +275,6 @@ function NeuralParticleCanvas({ durationMultiplier }: { durationMultiplier: numb
         ring.rotation.z = t * 0.02 * (r % 2 === 0 ? 1 : -1);
       });
 
-      // Animate circuit beams — pulse opacity
-      beams.forEach((beam, b) => {
-        const mat = beam.material as THREE.LineBasicMaterial;
-        mat.opacity = 0.06 + Math.sin(t * 1.5 + b * 0.5) * 0.06;
-      });
 
       // Slow core rotation
       coreGroup.rotation.y = t * 0.15;
