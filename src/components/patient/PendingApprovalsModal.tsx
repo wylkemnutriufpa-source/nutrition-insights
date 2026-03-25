@@ -117,13 +117,6 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
     const eligibleItems = items.filter((pipeline: any) => {
       const link = activeLinkMap.get(pipeline.patient_id);
       if (!link) return false; // No active link = legacy/orphan
-
-      // Reject legacy statuses that indicate pre-commercial patients
-      const legacyStatuses = ["lead_created", "awaiting_payment"];
-      if (link.onboarding_status && legacyStatuses.includes(link.onboarding_status)) {
-        return false;
-      }
-
       return true;
     });
 
