@@ -36,50 +36,37 @@ function PremiumPhrase({
   const styles = {
     body: {
       wrapper: "max-w-[90vw] md:max-w-3xl px-4 md:px-6",
-      text: "text-center text-base sm:text-lg md:text-2xl font-light tracking-[0.06em] md:tracking-[0.08em] leading-[1.6] md:leading-[1.7]",
-      glow: "0 0 24px hsl(40 65% 55% / 0.14)",
+      text: "justify-center text-center text-base sm:text-lg md:text-2xl font-light tracking-[0.05em] md:tracking-[0.07em] leading-[1.6] md:leading-[1.7]",
+      color: "hsl(40 52% 80%)",
+      shadow: "0 0 24px hsl(40 65% 55% / 0.14)",
     },
     hero: {
       wrapper: "max-w-[92vw] md:max-w-4xl px-4 md:px-6",
-      text: "text-center text-2xl sm:text-3xl md:text-5xl font-bold tracking-[0.08em] md:tracking-[0.12em] uppercase leading-[1.2] md:leading-[1.25]",
-      glow: "0 0 30px hsl(40 70% 60% / 0.25), 0 0 60px hsl(40 65% 55% / 0.12)",
+      text: "justify-center text-center text-2xl sm:text-3xl md:text-5xl font-extrabold tracking-[0.06em] md:tracking-[0.1em] uppercase leading-[1.2] md:leading-[1.25]",
+      color: "hsl(45 95% 72%)",
+      shadow: "0 0 22px hsl(46 100% 62% / 0.22), 0 0 48px hsl(40 70% 58% / 0.12)",
       useGradient: true,
     },
     caption: {
       wrapper: "max-w-[88vw] md:max-w-2xl px-4 md:px-6",
-      text: "text-center text-xs sm:text-sm md:text-base font-medium tracking-[0.04em] md:tracking-[0.06em] leading-[1.7] md:leading-[1.8]",
-      glow: "0 0 18px hsl(40 65% 55% / 0.1)",
+      text: "justify-center text-center text-xs sm:text-sm md:text-base font-medium tracking-[0.04em] md:tracking-[0.06em] leading-[1.7] md:leading-[1.8]",
+      color: "hsl(40 32% 68%)",
+      shadow: "0 0 18px hsl(40 65% 55% / 0.1)",
     },
   }[variant];
 
   return (
     <div className={styles.wrapper}>
       <motion.p
-        className={styles.text}
-        style={{
-          ...((styles as any).useGradient
-            ? {
-                background: "linear-gradient(180deg, #B8860B 0%, #FFD700 25%, #FFFACD 50%, #FFD700 75%, #B8860B 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                textShadow: "none",
-              }
-            : {
-                color:
-                  variant === "caption"
-                    ? "hsl(40 32% 68%)"
-                    : "hsl(40 52% 80%)",
-                textShadow: styles!.glow,
-              }),
-        }}
+        className={`flex flex-wrap items-center gap-x-[0.3em] gap-y-2 ${styles.text}`}
         initial="hidden"
         animate="visible"
         variants={{
           hidden: {},
           visible: {
             transition: {
-              staggerChildren: variant === "hero" ? 0.14 : 0.08,
-              delayChildren: 0.2,
+              staggerChildren: variant === "hero" ? 0.16 : 0.09,
+              delayChildren: 0.18,
             },
           },
         }}
@@ -87,19 +74,40 @@ function PremiumPhrase({
         {words.map((word, index) => (
           <motion.span
             key={`${word}-${index}`}
-            className="inline-block mr-[0.45em]"
+            className="inline-block whitespace-nowrap will-change-transform"
+            style={
+              styles.useGradient
+                ? {
+                    backgroundImage:
+                      "linear-gradient(180deg, hsl(38 70% 40%) 0%, hsl(45 100% 58%) 24%, hsl(48 100% 86%) 50%, hsl(45 100% 60%) 74%, hsl(36 64% 38%) 100%)",
+                    WebkitBackgroundClip: "text",
+                    backgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    color: "transparent",
+                    textShadow: "none",
+                    filter: "drop-shadow(0 0 8px hsl(45 100% 62% / 0.18))",
+                  }
+                : {
+                    color: styles.color,
+                    textShadow: styles.shadow,
+                  }
+            }
             variants={{
               hidden: {
                 opacity: 0,
-                y: 28,
-                filter: "blur(12px)",
+                y: 24,
+                scale: 0.96,
+                filter: "blur(10px)",
               },
               visible: {
                 opacity: 1,
                 y: 0,
-                filter: "blur(0px)",
+                scale: 1,
+                filter: styles.useGradient
+                  ? "drop-shadow(0 0 8px hsl(45 100% 62% / 0.18))"
+                  : "blur(0px)",
                 transition: {
-                  duration: variant === "hero" ? 1.1 : 0.9,
+                  duration: variant === "hero" ? 1.15 : 0.92,
                   ease: EASE_PREMIUM,
                 },
               },
