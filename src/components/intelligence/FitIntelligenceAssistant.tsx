@@ -136,7 +136,7 @@ export default function FitIntelligenceAssistant() {
           .eq("user_id", user.id);
       }
     } catch (e) {
-      console.error("FitIntelligence check error:", e);
+      console.warn("[FitIntelligence] Prompt check failed:", e instanceof Error ? e.message : e);
     } finally {
       checkingRef.current = false;
     }
