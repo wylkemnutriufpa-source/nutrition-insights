@@ -451,29 +451,25 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
             />
           </div>
 
-          {/* Depth layers — continuous edge */}
-          {Array.from({ length: 12 }, (_, i) => (
-            <div
-              key={i}
-              className="absolute inset-0 flex items-center justify-center"
+          {/* Edge shadow — single dark silhouette behind for depth illusion */}
+          <div
+            className="absolute inset-0 flex items-center justify-center"
+            style={{ transform: "translateZ(0px)" }}
+          >
+            <img
+              src={logoPng}
+              alt=""
+              draggable={false}
+              className="select-none"
               style={{
-                transform: `translateZ(${5.5 - i}px)`,
+                width: 132,
+                height: 132,
+                objectFit: "contain",
+                filter: "brightness(0) blur(1px)",
+                opacity: 0.5,
               }}
-            >
-              <img
-                src={logoPng}
-                alt=""
-                draggable={false}
-                className="select-none"
-                style={{
-                  width: 130,
-                  height: 130,
-                  objectFit: "contain",
-                  filter: "brightness(0.25) saturate(0.8) blur(0.3px)",
-                }}
-              />
-            </div>
-          ))}
+            />
+          </div>
 
           {/* Back face — same logo */}
           <div
