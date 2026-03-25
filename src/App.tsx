@@ -166,6 +166,7 @@ const PatientOverview = lazy(() => import("./pages/PatientOverview"));
 const ClinicalWorkspace = lazy(() => import("./pages/ClinicalWorkspace"));
 const InvitePatient = lazy(() => import("./pages/InvitePatient"));
 const WorkspaceEditor = lazy(() => import("./pages/WorkspaceEditor"));
+const IntelligenceSettings = lazy(() => import("./pages/IntelligenceSettings"));
 
 // Install global error handlers once at module load
 installGlobalErrorHandlers();
