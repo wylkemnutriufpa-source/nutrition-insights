@@ -122,10 +122,48 @@ export default function PatientDetail() {
   });
   const [savingProfile, setSavingProfile] = useState(false);
   const [releaseOnboardingOpen, setReleaseOnboardingOpen] = useState(false);
+  const [confirmingPayment, setConfirmingPayment] = useState(false);
 
   // Invalidation helper
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: queryKeys.patients.detail(patientId ?? "") });
+    queryClient.invalidateQueries({ queryKey: ["patients"] });
+  };
+
+  // Confirm payment + auto-release onboarding
+  const handleConfirmPayment = async () => {
+    if (!user || !patientId) return;
+    setConfirmingPayment(true);
+    try {
+      const { data, error } = await supabase.rpc("confirm_patient_payment", {
+        _patient_id: patientId,
+        _nutritionist_id: user.id,
+      });
+      if (error) throw error;
+      const result = data as any;
+      if (!result?.success) {
+        toast.error(result?.error || "Erro ao confirmar pagamento");
+        setConfirmingPayment(false);
+        return;
+      }
+      toast.success("Pagamento confirmado! Paciente avançou para consentimento 🎉");
+      invalidate();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao confirmar pagamento");
+    }
+    setConfirmingPayment(false);
+  };
+
+  // Smart onboarding release — idempotent
+  const handleSmartReleaseOnboarding = async () => {
+    if (!user || !patientId) return;
+    const alreadyPastOnboarding = ["onboarding_active", "onboarding_completed", "draft_ready_for_review", "plan_published", "active_followup"].includes(journeyStatus);
+    if (alreadyPastOnboarding) {
+      toast.info("Onboarding já foi liberado ou concluído para este paciente");
+      return;
+    }
+    // Open the dialog for proper release flow
+    setReleaseOnboardingOpen(true);
   };
 
   const invokeAdminIdentityAction = useCallback(async (action: string, payload: Record<string, unknown>) => {
