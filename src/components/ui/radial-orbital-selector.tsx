@@ -24,16 +24,6 @@ interface RadialOrbitalSelectorProps {
   showConfirmButton?: boolean;
 }
 
-// Orbital positions for desktop (angles in degrees, 0 = top)
-function getOrbitalPositions(count: number, radius: number) {
-  const startAngle = -90; // top
-  return Array.from({ length: count }, (_, i) => {
-    const angle = startAngle + (360 / count) * i;
-    const rad = (angle * Math.PI) / 180;
-    return { x: Math.cos(rad) * radius, y: Math.sin(rad) * radius, angle };
-  });
-}
-
 export function RadialOrbitalSelector({
   title,
   subtitle,
@@ -128,7 +118,7 @@ export function RadialOrbitalSelector({
   );
 }
 
-// ─── Desktop: Full orbital layout ───
+// ─── Desktop: Rotating orbital layout ───
 function DesktopOrbital({
   title,
   subtitle,
@@ -152,8 +142,15 @@ function DesktopOrbital({
   showConfirmButton: boolean;
   onKeyDown: (e: React.KeyboardEvent) => void;
 }) {
-  const radius = options.length <= 4 ? 180 : 210;
-  const positions = useMemo(() => getOrbitalPositions(options.length, radius), [options.length, radius]);
+  const radius = 190;
+  const containerSize = radius * 2 + 180;
+
+  // Calculate rotation: selected item goes to top (12 o'clock = -90deg)
+  const selectedIndex = options.findIndex((o) => o.id === selected);
+  const sliceAngle = 360 / options.length;
+  // Each item's base angle: item i is at -90 + i * sliceAngle
+  // To bring selectedIndex to top, rotate by: -selectedIndex * sliceAngle
+  const orbitRotation = selectedIndex >= 0 ? -selectedIndex * sliceAngle : 0;
 
   return (
     <div
@@ -170,8 +167,18 @@ function DesktopOrbital({
       </div>
 
       {/* Orbital container */}
-      <div className="relative" style={{ width: radius * 2 + 160, height: radius * 2 + 160 }}>
-        {/* Orbital ring */}
+      <div className="relative" style={{ width: containerSize, height: containerSize }}>
+        {/* Outer ambient glow */}
+        <div
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none"
+          style={{
+            width: radius * 2 + 60,
+            height: radius * 2 + 60,
+            background: "radial-gradient(circle, hsl(var(--primary) / 0.04) 0%, transparent 70%)",
+          }}
+        />
+
+        {/* Orbital ring - static */}
         <div
           className="absolute rounded-full border border-primary/10"
           style={{
@@ -182,94 +189,174 @@ function DesktopOrbital({
             transform: "translate(-50%, -50%)",
           }}
         />
-        {/* Subtle secondary ring */}
+        {/* Secondary ring */}
         <div
           className="absolute rounded-full border border-primary/5"
           style={{
-            width: radius * 2 + 40,
-            height: radius * 2 + 40,
+            width: radius * 2 + 44,
+            height: radius * 2 + 44,
             left: "50%",
             top: "50%",
             transform: "translate(-50%, -50%)",
           }}
         />
 
+        {/* Focal position indicator - top glow */}
+        <motion.div
+          className="absolute left-1/2 -translate-x-1/2 pointer-events-none z-0"
+          style={{ top: `calc(50% - ${radius}px - 12px)` }}
+          animate={{
+            opacity: selected ? [0.4, 0.8, 0.4] : 0,
+          }}
+          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <div
+            className="w-20 h-20 rounded-full"
+            style={{
+              background: "radial-gradient(circle, hsl(var(--primary) / 0.3) 0%, hsl(40 65% 55% / 0.1) 50%, transparent 80%)",
+              filter: "blur(12px)",
+            }}
+          />
+        </motion.div>
+
         {/* Center panel */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
           <CenterPanel option={activeOption} showConfirmButton={showConfirmButton} confirmLabel={confirmLabel} onConfirm={onConfirm} />
         </div>
 
-        {/* Orbital items */}
-        {options.map((opt, i) => {
-          const pos = positions[i];
-          const isActive = opt.id === selected;
-          const Icon = opt.icon;
+        {/* Rotating orbit group */}
+        <motion.div
+          className="absolute inset-0"
+          animate={{ rotate: orbitRotation }}
+          transition={{ type: "spring", stiffness: 60, damping: 18, mass: 1 }}
+        >
+          {options.map((opt, i) => {
+            const baseAngle = -90 + i * sliceAngle;
+            const rad = (baseAngle * Math.PI) / 180;
+            const x = Math.cos(rad) * radius;
+            const y = Math.sin(rad) * radius;
+            const isActive = opt.id === selected;
+            const Icon = opt.icon;
 
-          return (
-            <motion.button
-              key={opt.id}
-              role="radio"
-              aria-checked={isActive}
-              aria-label={opt.label}
-              onClick={() => onSelect(opt.id)}
-              className={cn(
-                "absolute z-20 flex flex-col items-center gap-1.5 rounded-2xl px-4 py-3 transition-all duration-300 cursor-pointer border",
-                "hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-                isActive
-                  ? "bg-primary/15 border-primary/50 shadow-lg shadow-primary/10 scale-105"
-                  : "bg-card/60 border-border/40 backdrop-blur-sm hover:bg-card/80 hover:border-primary/30"
-              )}
-              style={{
-                left: `calc(50% + ${pos.x}px)`,
-                top: `calc(50% + ${pos.y}px)`,
-                transform: "translate(-50%, -50%)",
-                minWidth: 110,
-              }}
-              initial={{ opacity: 0, scale: 0.7 }}
-              animate={{ opacity: 1, scale: isActive ? 1.08 : 1 }}
-              transition={{ delay: i * 0.08, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              whileHover={{ scale: isActive ? 1.1 : 1.06 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {/* Selection indicator */}
-              {isActive && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow-md"
+            // Counter-rotate each item so text stays upright
+            const counterRotation = -orbitRotation;
+
+            return (
+              <motion.div
+                key={opt.id}
+                className="absolute z-20"
+                style={{
+                  left: `calc(50% + ${x}px)`,
+                  top: `calc(50% + ${y}px)`,
+                  transform: "translate(-50%, -50%)",
+                }}
+              >
+                {/* Energy rings behind active item */}
+                {isActive && (
+                  <>
+                    <motion.div
+                      className="absolute inset-0 rounded-2xl pointer-events-none"
+                      style={{
+                        margin: "-6px",
+                        border: "1.5px solid hsl(var(--primary) / 0.4)",
+                        boxShadow: "0 0 18px hsl(var(--primary) / 0.2), 0 0 6px hsl(40 65% 55% / 0.15)",
+                      }}
+                      animate={{
+                        opacity: [0.5, 1, 0.5],
+                        scale: [1, 1.04, 1],
+                      }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                    <motion.div
+                      className="absolute inset-0 rounded-2xl pointer-events-none"
+                      style={{ margin: "-12px" }}
+                      animate={{
+                        opacity: [0, 0.3, 0],
+                        scale: [0.95, 1.08, 0.95],
+                      }}
+                      transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
+                    >
+                      <div
+                        className="w-full h-full rounded-2xl"
+                        style={{
+                          border: "1px solid hsl(var(--primary) / 0.15)",
+                          boxShadow: "0 0 24px hsl(var(--primary) / 0.1), 0 0 8px hsl(40 65% 55% / 0.08)",
+                        }}
+                      />
+                    </motion.div>
+                  </>
+                )}
+
+                <motion.button
+                  role="radio"
+                  aria-checked={isActive}
+                  aria-label={opt.label}
+                  onClick={() => onSelect(opt.id)}
+                  animate={{ rotate: counterRotation }}
+                  transition={{ type: "spring", stiffness: 60, damping: 18, mass: 1 }}
+                  className={cn(
+                    "relative flex flex-col items-center gap-1.5 rounded-2xl px-4 py-3 transition-colors duration-300 cursor-pointer border",
+                    "hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                    isActive
+                      ? "bg-primary/15 border-primary/50"
+                      : "bg-card/60 border-border/40 backdrop-blur-sm hover:bg-card/80 hover:border-primary/30"
+                  )}
+                  style={{
+                    minWidth: 110,
+                    boxShadow: isActive
+                      ? "0 0 20px hsl(var(--primary) / 0.2), 0 4px 12px hsl(0 0% 0% / 0.3), inset 0 1px 0 hsl(40 65% 55% / 0.1)"
+                      : "0 2px 8px hsl(0 0% 0% / 0.15)",
+                  }}
+                  whileHover={{ scale: isActive ? 1.08 : 1.06 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <Check className="w-3 h-3 text-primary-foreground" />
-                </motion.div>
-              )}
+                  {/* Check badge */}
+                  {isActive && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center shadow-md"
+                      style={{
+                        background: "linear-gradient(135deg, hsl(var(--primary)), hsl(40 65% 55%))",
+                      }}
+                    >
+                      <Check className="w-3 h-3 text-primary-foreground" />
+                    </motion.div>
+                  )}
 
-              <div
-                className={cn(
-                  "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
-                  isActive ? "bg-primary/20 text-primary" : "bg-muted/50 text-muted-foreground"
-                )}
-              >
-                <Icon className="w-5 h-5" />
-              </div>
-              <span
-                className={cn(
-                  "text-xs font-semibold whitespace-nowrap",
-                  isActive ? "text-primary" : "text-foreground/80"
-                )}
-              >
-                {opt.label}
-              </span>
-            </motion.button>
-          );
-        })}
+                  <div
+                    className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
+                      isActive ? "text-primary" : "bg-muted/50 text-muted-foreground"
+                    )}
+                    style={isActive ? {
+                      background: "linear-gradient(135deg, hsl(var(--primary) / 0.25), hsl(40 65% 55% / 0.1))",
+                    } : undefined}
+                  >
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <span
+                    className={cn(
+                      "text-xs font-semibold whitespace-nowrap",
+                      isActive ? "text-primary" : "text-foreground/80"
+                    )}
+                  >
+                    {opt.label}
+                  </span>
+                </motion.button>
+              </motion.div>
+            );
+          })}
+        </motion.div>
 
-        {/* Glow effect behind center */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+        {/* Center ambient glow */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-44 h-44 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
       </div>
     </div>
   );
 }
 
-// ─── Mobile: Stacked guided layout ───
+// ─── Mobile: Stacked guided layout with premium energy ───
 function MobileSelector({
   title,
   subtitle,
@@ -295,13 +382,11 @@ function MobileSelector({
 }) {
   return (
     <div className="flex flex-col gap-4 w-full max-w-md mx-auto" tabIndex={0} onKeyDown={onKeyDown} role="radiogroup" aria-label={title}>
-      {/* Title */}
       <div className="text-center">
         <h2 className="text-xl font-bold text-foreground">{title}</h2>
         {subtitle && <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>}
       </div>
 
-      {/* Options grid */}
       <div className="grid grid-cols-2 gap-3">
         {options.map((opt, i) => {
           const isActive = opt.id === selected;
@@ -316,28 +401,46 @@ function MobileSelector({
                 "relative flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                 isActive
-                  ? "border-primary bg-primary/10 shadow-lg shadow-primary/10"
+                  ? "border-primary bg-primary/10"
                   : "border-border bg-card/60 hover:border-primary/40"
               )}
+              style={isActive ? {
+                boxShadow: "0 0 20px hsl(var(--primary) / 0.2), 0 0 6px hsl(40 65% 55% / 0.12), 0 4px 16px hsl(0 0% 0% / 0.2)",
+              } : undefined}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.06, duration: 0.35 }}
               whileTap={{ scale: 0.96 }}
             >
               {isActive && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center"
-                >
-                  <Check className="w-3 h-3 text-primary-foreground" />
-                </motion.div>
+                <>
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center"
+                    style={{
+                      background: "linear-gradient(135deg, hsl(var(--primary)), hsl(40 65% 55%))",
+                    }}
+                  >
+                    <Check className="w-3 h-3 text-primary-foreground" />
+                  </motion.div>
+                  {/* Energy pulse ring */}
+                  <motion.div
+                    className="absolute inset-0 rounded-2xl pointer-events-none"
+                    style={{ border: "1px solid hsl(var(--primary) / 0.3)" }}
+                    animate={{ opacity: [0.3, 0.7, 0.3], scale: [1, 1.02, 1] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                </>
               )}
               <div
                 className={cn(
                   "w-11 h-11 rounded-xl flex items-center justify-center",
-                  isActive ? "bg-primary/20 text-primary" : "bg-muted/50 text-muted-foreground"
+                  isActive ? "text-primary" : "bg-muted/50 text-muted-foreground"
                 )}
+                style={isActive ? {
+                  background: "linear-gradient(135deg, hsl(var(--primary) / 0.25), hsl(40 65% 55% / 0.1))",
+                } : undefined}
               >
                 <Icon className="w-6 h-6" />
               </div>
@@ -354,7 +457,6 @@ function MobileSelector({
         })}
       </div>
 
-      {/* Explanation panel */}
       <AnimatePresence mode="wait">
         {activeOption && (
           <motion.div
@@ -365,7 +467,12 @@ function MobileSelector({
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             className="overflow-hidden"
           >
-            <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 space-y-2">
+            <div
+              className="rounded-2xl border border-primary/20 bg-primary/5 p-4 space-y-2"
+              style={{
+                boxShadow: "inset 0 1px 0 hsl(40 65% 55% / 0.08), 0 0 12px hsl(var(--primary) / 0.06)",
+              }}
+            >
               <div className="flex items-center gap-2">
                 <activeOption.icon className="w-5 h-5 text-primary" />
                 <span className="font-semibold text-foreground">{activeOption.label}</span>
@@ -379,12 +486,8 @@ function MobileSelector({
         )}
       </AnimatePresence>
 
-      {/* Confirm */}
       {showConfirmButton && selected && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
           <Button onClick={onConfirm} className="w-full gap-2 h-12 text-base font-semibold">
             <Sparkles className="w-4 h-4" />
             {confirmLabel}
@@ -408,8 +511,12 @@ function CenterPanel({
   onConfirm: () => void;
 }) {
   return (
-    <div className="w-52 h-52 rounded-3xl border border-primary/20 bg-card/80 backdrop-blur-md shadow-xl flex flex-col items-center justify-center p-4 text-center relative overflow-hidden">
-      {/* Subtle gradient bg */}
+    <div
+      className="w-52 h-52 rounded-3xl border border-primary/20 bg-card/80 backdrop-blur-md flex flex-col items-center justify-center p-4 text-center relative overflow-hidden"
+      style={{
+        boxShadow: "0 0 30px hsl(var(--primary) / 0.08), 0 8px 32px hsl(0 0% 0% / 0.25), inset 0 1px 0 hsl(40 65% 55% / 0.06)",
+      }}
+    >
       <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
 
       <AnimatePresence mode="wait">
@@ -422,7 +529,12 @@ function CenterPanel({
             transition={{ duration: 0.3 }}
             className="relative z-10 flex flex-col items-center gap-2"
           >
-            <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center">
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center"
+              style={{
+                background: "linear-gradient(135deg, hsl(var(--primary) / 0.2), hsl(40 65% 55% / 0.1))",
+              }}
+            >
               <option.icon className="w-6 h-6 text-primary" />
             </div>
             <span className="text-sm font-bold text-foreground">{option.label}</span>
