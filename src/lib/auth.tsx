@@ -134,6 +134,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       (event, session) => {
         if (event === "INITIAL_SESSION") return;
 
+        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+          setLoading(true);
+        }
+
         if (event === "SIGNED_IN" && session?.user) {
           logAudit("login", "auth", session.user.id, { email: session.user.email ?? "" });
           
