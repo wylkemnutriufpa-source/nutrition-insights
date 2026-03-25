@@ -90,7 +90,38 @@ export default function PatientGridDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* FitJourney Timeline — FIRST block for patients */}
+      {/* Onboarding Card — top priority */}
+      {showOnboardingCard && (
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+          <Card
+            className="relative cursor-pointer overflow-hidden border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-emerald-600/5 to-teal-500/10 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-300 group"
+            onClick={() => navigate("/onboarding-paciente")}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="relative flex items-center gap-4 p-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-500/20 flex-shrink-0">
+                <Rocket className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-foreground">Onboarding FitJourney</h3>
+                  <Badge variant="default" className="text-[9px] h-5 bg-emerald-600 hover:bg-emerald-500">
+                    {onboarding ? (onboarding as any).status === "active" ? "Em andamento" : "Pendente" : "Iniciar"}
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {onboarding
+                    ? `Etapa atual: ${(onboarding as any).current_step || (onboarding as any).status}`
+                    : "Conheça o sistema e comece sua jornada de transformação"}
+                </p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-emerald-500/60 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all flex-shrink-0" />
+            </div>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* FitJourney Timeline */}
       <FitJourneyTimeline compact maxHeight="400px" />
 
       {/* Header with view toggle */}
