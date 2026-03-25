@@ -1080,8 +1080,8 @@ export default function Anamnesis() {
                 />
               </div>
             )}
-          </motion.div>
-        </AnimatePresence>
+          </div>
+        </NeuralStepTransition>
 
         {/* Navigation */}
         <div className="flex items-center justify-between mt-10">
