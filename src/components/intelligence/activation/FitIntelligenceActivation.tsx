@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import NeuralLoading from "@/components/system-entry/NeuralLoading";
+import BrainParticleEffect from "./BrainParticleEffect";
 import {
   startNeuralAmbient,
   crescendo,
