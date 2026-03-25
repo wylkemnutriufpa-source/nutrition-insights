@@ -1016,10 +1016,12 @@ export default function Anamnesis() {
             transition={{ duration: 0.3 }}
             className="space-y-6"
           >
-            <div className="text-center mb-8">
-              <h2 className="font-display text-2xl font-bold mb-1">{q.title}</h2>
-              <p className="text-muted-foreground">{q.subtitle}</p>
-            </div>
+            {q.id !== "goal" && (
+              <div className="text-center mb-8">
+                <h2 className="font-display text-2xl font-bold mb-1">{q.title}</h2>
+                <p className="text-muted-foreground">{q.subtitle}</p>
+              </div>
+            )}
 
             {/* Special orbital selector for goal question */}
             {q.id === "goal" && (
