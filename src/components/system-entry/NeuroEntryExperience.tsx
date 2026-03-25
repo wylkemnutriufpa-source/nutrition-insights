@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { SkipForward } from "lucide-react";
 import NeuralLoading from "./NeuralLoading";
 import SystemAwarenessMoment from "./SystemAwarenessMoment";
 import { useSystemEntryController, type AppEntryState } from "./useSystemEntryController";
@@ -19,9 +20,7 @@ function playTone() {
     if (localStorage.getItem("fj_audio_muted") === "1") return;
     const ctx = new AudioContext();
     const t = ctx.currentTime;
-
-    // Soft crystalline chime — two layered harmonics
-    const notes = [880, 1318.5]; // A5 + E6
+    const notes = [880, 1318.5];
     notes.forEach((freq, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -43,14 +42,13 @@ export default function NeuroEntryExperience({
   onComplete,
 }: NeuroEntryExperienceProps) {
   const reduced = useReducedMotion();
-  const { state, awarenessMessage, durationMultiplier } = useSystemEntryController({
+  const { state, awarenessMessage, durationMultiplier, skipToReady } = useSystemEntryController({
     dataReady,
     userRole,
   });
 
   const tonePlayed = useRef(false);
 
-  // Play tone on awareness
   useEffect(() => {
     if (state === "awareness" && !tonePlayed.current) {
       tonePlayed.current = true;
@@ -59,19 +57,14 @@ export default function NeuroEntryExperience({
     }
   }, [state]);
 
-  // Haptic on reveal
   useEffect(() => {
     if (state === "reveal") microVibrate(6);
   }, [state]);
 
-  // Notify parent when ready
   useEffect(() => {
-    if (state === "ready") {
-      onComplete();
-    }
+    if (state === "ready") onComplete();
   }, [state, onComplete]);
 
-  // Reduced motion: skip to ready immediately when data is ready
   useEffect(() => {
     if (reduced && dataReady) {
       const t = setTimeout(onComplete, 300);
@@ -79,19 +72,18 @@ export default function NeuroEntryExperience({
     }
   }, [reduced, dataReady, onComplete]);
 
-  const handleExitComplete = useCallback(() => {
+  const handleSkip = useCallback(() => {
+    skipToReady();
     onComplete();
-  }, [onComplete]);
+  }, [skipToReady, onComplete]);
 
-  if (reduced && dataReady) {
-    return null;
-  }
+  if (reduced && dataReady) return null;
 
   const showBrain = state === "loading" || state === "awareness";
   const showAwareness = state === "awareness";
 
   return (
-    <AnimatePresence onExitComplete={handleExitComplete}>
+    <AnimatePresence>
       {state !== "ready" ? (
         <motion.div
           key="neuro-entry"
@@ -167,6 +159,19 @@ export default function NeuroEntryExperience({
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Skip button */}
+          <motion.button
+            onClick={handleSkip}
+            className="absolute top-6 right-6 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-muted-foreground/60 hover:text-muted-foreground hover:bg-white/[0.05] transition-colors duration-200 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8, duration: 0.4 }}
+            aria-label="Pular introdução"
+          >
+            <span className="hidden sm:inline">Pular</span>
+            <SkipForward className="w-3.5 h-3.5" />
+          </motion.button>
 
           {/* Loading bar */}
           <motion.div
