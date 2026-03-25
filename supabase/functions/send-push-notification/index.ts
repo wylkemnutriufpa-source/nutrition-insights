@@ -76,14 +76,16 @@ serve(async (req) => {
       }
     }
 
-    // Also store as in-app notification
-    await supabase.from("notifications").insert({
-      user_id,
-      title,
-      message: body || "",
-      type: "push",
-      action_url: url || null,
-    });
+    // Only store as in-app notification if NOT called from DB trigger (avoid duplicates)
+    if (!skip_inapp) {
+      await supabase.from("notifications").insert({
+        user_id,
+        title,
+        message: body || "",
+        type: "push",
+        action_url: url || null,
+      });
+    }
 
     return new Response(JSON.stringify({ success: true, ...results }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
