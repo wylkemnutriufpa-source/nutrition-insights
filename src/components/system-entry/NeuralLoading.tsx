@@ -440,7 +440,7 @@ function NeuralParticleCanvas({
     };
   }, [durationMultiplier, transitionDuration]);
 
-  return <div ref={mountRef} className="absolute inset-0" />;
+  return <div ref={mountRef} className="absolute inset-0 overflow-visible" />;
 }
 
 export default function NeuralLoading({
@@ -455,7 +455,7 @@ export default function NeuralLoading({
   if (!active) return null;
 
   return (
-    <div className="relative w-[min(85vw,600px)] h-[min(85vw,600px)] md:w-[800px] md:h-[800px]">
+    <div className="relative w-[min(85vw,600px)] h-[min(85vw,600px)] md:w-[800px] md:h-[800px] overflow-visible">
       {!reduced && (
         <NeuralParticleCanvas
           durationMultiplier={durationMultiplier}
