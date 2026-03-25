@@ -152,10 +152,10 @@ export default function FitIntelligenceAssistant() {
         isWeekend: ctx.isWeekend,
         currentHour: ctx.currentHour,
         clinicalFlags: ctx.clinicalFlags,
-        hasTrainer: false,
-        daysSinceLastWorkout: null,
-        weeklyWorkoutCount: 0,
-        lastWorkoutEffort: null,
+        hasTrainer,
+        daysSinceLastWorkout,
+        weeklyWorkoutCount,
+        lastWorkoutEffort,
       };
 
       const newPrompt = generateCurrentPrompt(behavioralCtx);
