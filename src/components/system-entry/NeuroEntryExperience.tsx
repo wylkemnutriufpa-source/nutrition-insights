@@ -8,6 +8,7 @@ interface NeuroEntryExperienceProps {
   dataReady: boolean;
   userRole?: "patient" | "professional" | "admin";
   onComplete: () => void;
+  demoMode?: boolean;
 }
 
 function microVibrate(ms = 10) {
