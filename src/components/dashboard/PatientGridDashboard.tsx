@@ -3,6 +3,9 @@ import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
 import { useLayoutPreference } from "@/hooks/useLayoutPreference";
 import FitJourneyTimeline from "@/components/timeline/FitJourneyTimeline";
 import {
