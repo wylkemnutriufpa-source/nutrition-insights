@@ -337,6 +337,7 @@ const App = () => (
           <AuthProvider>
             <CelebrationProvider>
             <DarkModeInit />
+            <SessionRestoreBanner />
             <CommandPaletteProvider>
              <Routes>
               {/* Public landing pages */}
