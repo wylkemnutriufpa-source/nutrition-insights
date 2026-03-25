@@ -29,6 +29,7 @@ export default function FitIntelligenceAssistant() {
   const [prompt, setPrompt] = useState<IntelligencePrompt | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
+  const [wizardJustCompleted, setWizardJustCompleted] = useState(false);
   const [responding, setResponding] = useState(false);
   const [responseText, setResponseText] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
@@ -40,12 +41,12 @@ export default function FitIntelligenceAssistant() {
 
   // Show wizard if enabled but not onboarded
   useEffect(() => {
-    if (user && isPatient && isEnabled && !isOnboarded) {
+    if (user && isPatient && isEnabled && !isOnboarded && !wizardJustCompleted) {
       const timer = setTimeout(() => setShowWizard(true), 2000);
       return () => clearTimeout(timer);
     }
     if (!isEnabled) setShowWizard(false);
-  }, [user, isPatient, isEnabled, isOnboarded]);
+  }, [user, isPatient, isEnabled, isOnboarded, wizardJustCompleted]);
 
   // Clean up when feature is disabled
   useEffect(() => {
@@ -295,11 +296,14 @@ export default function FitIntelligenceAssistant() {
   if (!isPatient || !user) return null;
 
   // Show wizard
-  if (showWizard && isEnabled && !isOnboarded) {
+  if (showWizard && isEnabled && !isOnboarded && !wizardJustCompleted) {
     return (
       <FitIntelligenceWizard
         open={showWizard}
-        onClose={() => setShowWizard(false)}
+        onClose={() => {
+          setShowWizard(false);
+          setWizardJustCompleted(true);
+        }}
         patientId={user.id}
         patientName={profile?.full_name || ""}
       />
