@@ -66,7 +66,7 @@ export default function FitIntelligenceAssistant() {
 
   // Prompt engine
   const checkForPrompt = useCallback(async () => {
-    if (!user || !isPatient || !isEnabled || !isOnboarded) return;
+    if (!user || !isPatient || !isActiveAccess || !isOnboarded) return;
     if (checkingRef.current || prompt) return;
 
     checkingRef.current = true;
