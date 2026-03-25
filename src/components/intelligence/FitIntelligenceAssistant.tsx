@@ -68,11 +68,12 @@ export default function FitIntelligenceAssistant() {
         .maybeSingle();
 
       // Check cooldown
-      if (freq && !shouldShowPrompt(
-        freq.last_prompt_at ? new Date(freq.last_prompt_at) : null,
-        freq.cooldown_minutes || 120,
-        freq.ignored_count || 0,
-        freq.engaged_count || 0,
+      const f = freq as any;
+      if (f && !shouldShowPrompt(
+        f.last_prompt_at ? new Date(f.last_prompt_at) : null,
+        f.cooldown_minutes || 120,
+        f.ignored_count || 0,
+        f.engaged_count || 0,
       )) return;
 
       // Get today's hydration
