@@ -38,6 +38,9 @@ export default function FitIntelligenceAssistant() {
   const isPatient = !roles?.includes("nutritionist") && !roles?.includes("admin");
   const isEnabled = (profile as any)?.fit_intelligence_enabled === true;
   const isOnboarded = (profile as any)?.fit_intelligence_onboarded === true;
+  const expiresAt = (profile as any)?.fit_intelligence_expires_at;
+  const isExpired = expiresAt && new Date(expiresAt) < new Date();
+  const isActiveAccess = isEnabled && !isExpired;
 
   // Show wizard if enabled but not onboarded
   useEffect(() => {
