@@ -9,9 +9,9 @@ interface NeuralLoadingProps {
 }
 
 /**
- * 3D Neural Particle System — FitJourney clinical-tech aesthetic.
- * Uses a TorusKnot geometry as base shape, with particles in the
- * green → gold → teal palette. Mouse proximity creates expansion waves.
+ * 3D Neural Core — FitJourney clinical-tech aesthetic.
+ * Inspired by futuristic AI brain with concentric energy rings,
+ * circuit-like particle streams, and reactive expansion waves.
  */
 function NeuralParticleCanvas({ durationMultiplier }: { durationMultiplier: number }) {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -24,10 +24,10 @@ function NeuralParticleCanvas({ durationMultiplier }: { durationMultiplier: numb
     const width = container.clientWidth;
     const height = container.clientHeight;
 
-    // Scene setup
+    // Scene
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-    camera.position.z = 4.5;
+    const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
+    camera.position.z = 6;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
@@ -36,86 +36,196 @@ function NeuralParticleCanvas({ durationMultiplier }: { durationMultiplier: numb
 
     const mouse = new THREE.Vector2(0, 0);
     const clock = new THREE.Clock();
-
-    // Particle count — reduce on mobile
     const isMobile = width < 500;
-    const particleCount = isMobile ? 18000 : 40000;
 
-    const positions = new Float32Array(particleCount * 3);
-    const originalPositions = new Float32Array(particleCount * 3);
-    const colors = new Float32Array(particleCount * 3);
-    const velocities = new Float32Array(particleCount * 3);
+    // ─── GROUP: Everything rotates together ───
+    const coreGroup = new THREE.Group();
+    scene.add(coreGroup);
 
-    const geometry = new THREE.BufferGeometry();
-    const torusKnot = new THREE.TorusKnotGeometry(1.4, 0.45, 200, 32);
+    // ─── 1. BRAIN CORE PARTICLES (TorusKnot shape) ───
+    const coreCount = isMobile ? 12000 : 30000;
+    const corePositions = new Float32Array(coreCount * 3);
+    const coreOriginals = new Float32Array(coreCount * 3);
+    const coreColors = new Float32Array(coreCount * 3);
+    const coreVelocities = new Float32Array(coreCount * 3);
 
-    // FitJourney palette HSL ranges
-    // Primary green: H=152 S=58% L=45-55%
-    // Accent gold:   H=40  S=65% L=50-60%
-    // Teal:          H=170 S=55% L=45-50%
-    const paletteBands = [
-      { h: 152 / 360, s: 0.6, lMin: 0.4, lMax: 0.6, weight: 0.5 },
-      { h: 170 / 360, s: 0.5, lMin: 0.38, lMax: 0.55, weight: 0.3 },
-      { h: 40 / 360, s: 0.65, lMin: 0.48, lMax: 0.62, weight: 0.2 },
+    const coreGeo = new THREE.BufferGeometry();
+    const torusKnot = new THREE.TorusKnotGeometry(1.0, 0.35, 200, 32);
+
+    // Clinical green palette
+    const coreHues = [
+      { h: 152 / 360, s: 0.7, lMin: 0.35, lMax: 0.6, w: 0.45 },
+      { h: 160 / 360, s: 0.6, lMin: 0.4, lMax: 0.65, w: 0.3 },
+      { h: 80 / 360, s: 0.5, lMin: 0.45, lMax: 0.6, w: 0.15 },
+      { h: 180 / 360, s: 0.4, lMin: 0.55, lMax: 0.8, w: 0.1 },
     ];
 
-    for (let i = 0; i < particleCount; i++) {
-      const vertexIndex = i % torusKnot.attributes.position.count;
-      const x = torusKnot.attributes.position.getX(vertexIndex);
-      const y = torusKnot.attributes.position.getY(vertexIndex);
-      const z = torusKnot.attributes.position.getZ(vertexIndex);
+    for (let i = 0; i < coreCount; i++) {
+      const vi = i % torusKnot.attributes.position.count;
+      const x = torusKnot.attributes.position.getX(vi);
+      const y = torusKnot.attributes.position.getY(vi);
+      const z = torusKnot.attributes.position.getZ(vi);
+      const j = 0.04;
+      corePositions[i * 3] = x + (Math.random() - 0.5) * j;
+      corePositions[i * 3 + 1] = y + (Math.random() - 0.5) * j;
+      corePositions[i * 3 + 2] = z + (Math.random() - 0.5) * j;
+      coreOriginals[i * 3] = corePositions[i * 3];
+      coreOriginals[i * 3 + 1] = corePositions[i * 3 + 1];
+      coreOriginals[i * 3 + 2] = corePositions[i * 3 + 2];
 
-      // Small random offset for organic feel
-      const jitter = 0.06;
-      positions[i * 3] = x + (Math.random() - 0.5) * jitter;
-      positions[i * 3 + 1] = y + (Math.random() - 0.5) * jitter;
-      positions[i * 3 + 2] = z + (Math.random() - 0.5) * jitter;
-      originalPositions[i * 3] = positions[i * 3];
-      originalPositions[i * 3 + 1] = positions[i * 3 + 1];
-      originalPositions[i * 3 + 2] = positions[i * 3 + 2];
-
-      // Pick color from palette bands
-      const rand = Math.random();
-      let band = paletteBands[0];
-      let cumWeight = 0;
-      for (const b of paletteBands) {
-        cumWeight += b.weight;
-        if (rand <= cumWeight) { band = b; break; }
-      }
-      const color = new THREE.Color();
-      const lightness = band.lMin + Math.random() * (band.lMax - band.lMin);
-      color.setHSL(band.h + (Math.random() - 0.5) * 0.03, band.s, lightness);
-      colors[i * 3] = color.r;
-      colors[i * 3 + 1] = color.g;
-      colors[i * 3 + 2] = color.b;
-
-      velocities[i * 3] = 0;
-      velocities[i * 3 + 1] = 0;
-      velocities[i * 3 + 2] = 0;
+      let rand = Math.random(), cumW = 0, band = coreHues[0];
+      for (const b of coreHues) { cumW += b.w; if (rand <= cumW) { band = b; break; } }
+      const col = new THREE.Color();
+      col.setHSL(band.h + (Math.random() - 0.5) * 0.02, band.s, band.lMin + Math.random() * (band.lMax - band.lMin));
+      coreColors[i * 3] = col.r;
+      coreColors[i * 3 + 1] = col.g;
+      coreColors[i * 3 + 2] = col.b;
+      coreVelocities[i * 3] = 0;
+      coreVelocities[i * 3 + 1] = 0;
+      coreVelocities[i * 3 + 2] = 0;
     }
 
-    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    coreGeo.setAttribute("position", new THREE.BufferAttribute(corePositions, 3));
+    coreGeo.setAttribute("color", new THREE.BufferAttribute(coreColors, 3));
 
-    const material = new THREE.PointsMaterial({
-      size: isMobile ? 0.025 : 0.018,
+    const coreMat = new THREE.PointsMaterial({
+      size: isMobile ? 0.02 : 0.015,
       vertexColors: true,
       blending: THREE.AdditiveBlending,
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.9,
       depthWrite: false,
     });
+    const corePoints = new THREE.Points(coreGeo, coreMat);
+    coreGroup.add(corePoints);
 
-    const points = new THREE.Points(geometry, material);
-    scene.add(points);
+    // ─── 2. CONCENTRIC RINGS (metallic orbital rings from reference) ───
+    const ringCount = isMobile ? 3 : 5;
+    const rings: THREE.Line[] = [];
+    for (let r = 0; r < ringCount; r++) {
+      const radius = 1.8 + r * 0.45;
+      const segments = 128;
+      const ringGeo = new THREE.BufferGeometry();
+      const ringPos = new Float32Array(segments * 3);
+      for (let s = 0; s < segments; s++) {
+        const angle = (s / segments) * Math.PI * 2;
+        ringPos[s * 3] = Math.cos(angle) * radius;
+        ringPos[s * 3 + 1] = Math.sin(angle) * radius;
+        ringPos[s * 3 + 2] = 0;
+      }
+      ringGeo.setAttribute("position", new THREE.BufferAttribute(ringPos, 3));
+      const ringMat = new THREE.LineBasicMaterial({
+        color: new THREE.Color().setHSL(152 / 360, 0.5, 0.3 + r * 0.08),
+        transparent: true,
+        opacity: 0.15 + r * 0.05,
+        blending: THREE.AdditiveBlending,
+      });
+      const ring = new THREE.LineLoop(ringGeo, ringMat);
+      // Tilt each ring differently for 3D depth
+      ring.rotation.x = Math.PI * 0.3 + r * 0.12;
+      ring.rotation.y = r * 0.25;
+      rings.push(ring);
+      coreGroup.add(ring);
+    }
 
-    // Mouse interaction
+    // ─── 3. ENERGY NODES on rings (glowing dots like reference) ───
+    const nodeCount = isMobile ? 20 : 40;
+    const nodeGeo = new THREE.BufferGeometry();
+    const nodePositions = new Float32Array(nodeCount * 3);
+    const nodeColors = new Float32Array(nodeCount * 3);
+    const nodeData: { ringIdx: number; angle: number; speed: number }[] = [];
+
+    for (let i = 0; i < nodeCount; i++) {
+      const rIdx = Math.floor(Math.random() * ringCount);
+      const radius = 1.8 + rIdx * 0.45;
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 0.15 + Math.random() * 0.3;
+      nodeData.push({ ringIdx: rIdx, angle, speed });
+
+      nodePositions[i * 3] = Math.cos(angle) * radius;
+      nodePositions[i * 3 + 1] = Math.sin(angle) * radius;
+      nodePositions[i * 3 + 2] = 0;
+
+      const col = new THREE.Color();
+      col.setHSL(140 / 360 + Math.random() * 0.1, 0.8, 0.5 + Math.random() * 0.3);
+      nodeColors[i * 3] = col.r;
+      nodeColors[i * 3 + 1] = col.g;
+      nodeColors[i * 3 + 2] = col.b;
+    }
+    nodeGeo.setAttribute("position", new THREE.BufferAttribute(nodePositions, 3));
+    nodeGeo.setAttribute("color", new THREE.BufferAttribute(nodeColors, 3));
+
+    const nodeMat = new THREE.PointsMaterial({
+      size: isMobile ? 0.08 : 0.06,
+      vertexColors: true,
+      blending: THREE.AdditiveBlending,
+      transparent: true,
+      opacity: 0.9,
+      depthWrite: false,
+    });
+    const nodePoints = new THREE.Points(nodeGeo, nodeMat);
+    coreGroup.add(nodePoints);
+
+    // ─── 4. CIRCUIT LINES (radial energy beams from brain center) ───
+    const beamCount = isMobile ? 8 : 16;
+    const beams: THREE.Line[] = [];
+    for (let b = 0; b < beamCount; b++) {
+      const angle = (b / beamCount) * Math.PI * 2;
+      const len = 2.5 + Math.random() * 1.5;
+      const beamGeo = new THREE.BufferGeometry();
+      const pts = new Float32Array(6);
+      pts[0] = Math.cos(angle) * 0.5;
+      pts[1] = Math.sin(angle) * 0.5;
+      pts[2] = 0;
+      pts[3] = Math.cos(angle) * len;
+      pts[4] = Math.sin(angle) * len;
+      pts[5] = (Math.random() - 0.5) * 0.5;
+      beamGeo.setAttribute("position", new THREE.BufferAttribute(pts, 3));
+      const beamMat = new THREE.LineBasicMaterial({
+        color: new THREE.Color().setHSL(152 / 360, 0.6, 0.45),
+        transparent: true,
+        opacity: 0.08 + Math.random() * 0.07,
+        blending: THREE.AdditiveBlending,
+      });
+      const beam = new THREE.Line(beamGeo, beamMat);
+      beams.push(beam);
+      coreGroup.add(beam);
+    }
+
+    // ─── 5. AMBIENT DUST (floating particles around scene) ───
+    const dustCount = isMobile ? 500 : 1500;
+    const dustGeo = new THREE.BufferGeometry();
+    const dustPos = new Float32Array(dustCount * 3);
+    const dustCol = new Float32Array(dustCount * 3);
+    for (let i = 0; i < dustCount; i++) {
+      dustPos[i * 3] = (Math.random() - 0.5) * 12;
+      dustPos[i * 3 + 1] = (Math.random() - 0.5) * 12;
+      dustPos[i * 3 + 2] = (Math.random() - 0.5) * 6;
+      const c = new THREE.Color();
+      c.setHSL(152 / 360, 0.3, 0.2 + Math.random() * 0.15);
+      dustCol[i * 3] = c.r;
+      dustCol[i * 3 + 1] = c.g;
+      dustCol[i * 3 + 2] = c.b;
+    }
+    dustGeo.setAttribute("position", new THREE.BufferAttribute(dustPos, 3));
+    dustGeo.setAttribute("color", new THREE.BufferAttribute(dustCol, 3));
+    const dustMat = new THREE.PointsMaterial({
+      size: 0.025,
+      vertexColors: true,
+      blending: THREE.AdditiveBlending,
+      transparent: true,
+      opacity: 0.3,
+      depthWrite: false,
+    });
+    const dustPoints = new THREE.Points(dustGeo, dustMat);
+    scene.add(dustPoints);
+
+    // ─── Mouse interaction ───
     const handleMouseMove = (event: MouseEvent) => {
       const rect = container.getBoundingClientRect();
       mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     };
-
     const handleTouchMove = (event: TouchEvent) => {
       const touch = event.touches[0];
       if (!touch) return;
@@ -123,11 +233,10 @@ function NeuralParticleCanvas({ durationMultiplier }: { durationMultiplier: numb
       mouse.x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
     };
-
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
     window.addEventListener("touchmove", handleTouchMove, { passive: true });
 
-    // Animation loop
+    // ─── Reusable vectors ───
     const mouseWorld = new THREE.Vector3();
     const currentPos = new THREE.Vector3();
     const originalPos = new THREE.Vector3();
@@ -135,54 +244,74 @@ function NeuralParticleCanvas({ durationMultiplier }: { durationMultiplier: numb
     const direction = new THREE.Vector3();
     const returnForce = new THREE.Vector3();
 
+    // ─── Animation loop ───
     const animate = () => {
       frameRef.current = requestAnimationFrame(animate);
-      const elapsedTime = clock.getElapsedTime();
+      const t = clock.getElapsedTime();
 
-      mouseWorld.set(mouse.x * 3, mouse.y * 3, 0);
+      mouseWorld.set(mouse.x * 4, mouse.y * 4, 0);
 
-      // Update only a portion of particles per frame for performance
-      const batchSize = isMobile ? 6000 : 12000;
-      const startIdx = Math.floor((elapsedTime * 2000) % particleCount);
-
-      for (let k = 0; k < batchSize; k++) {
-        const i = (startIdx + k) % particleCount;
-        const ix = i * 3;
-        const iy = i * 3 + 1;
-        const iz = i * 3 + 2;
-
-        currentPos.set(positions[ix], positions[iy], positions[iz]);
-        originalPos.set(originalPositions[ix], originalPositions[iy], originalPositions[iz]);
-        velocity.set(velocities[ix], velocities[iy], velocities[iz]);
+      // Update core particles (batched)
+      const batch = isMobile ? 4000 : 10000;
+      const start = Math.floor((t * 2000) % coreCount);
+      for (let k = 0; k < batch; k++) {
+        const i = (start + k) % coreCount;
+        const ix = i * 3, iy = ix + 1, iz = ix + 2;
+        currentPos.set(corePositions[ix], corePositions[iy], corePositions[iz]);
+        originalPos.set(coreOriginals[ix], coreOriginals[iy], coreOriginals[iz]);
+        velocity.set(coreVelocities[ix], coreVelocities[iy], coreVelocities[iz]);
 
         const dist = currentPos.distanceTo(mouseWorld);
-        if (dist < 1.5) {
-          const force = (1.5 - dist) * 0.008;
+        if (dist < 2.0) {
+          const force = (2.0 - dist) * 0.012;
           direction.subVectors(currentPos, mouseWorld).normalize();
           velocity.add(direction.multiplyScalar(force));
         }
 
-        // Return to original
-        returnForce.subVectors(originalPos, currentPos).multiplyScalar(0.0015);
+        returnForce.subVectors(originalPos, currentPos).multiplyScalar(0.002);
         velocity.add(returnForce);
+        velocity.multiplyScalar(0.93);
 
-        // Damping
-        velocity.multiplyScalar(0.94);
-
-        positions[ix] += velocity.x;
-        positions[iy] += velocity.y;
-        positions[iz] += velocity.z;
-
-        velocities[ix] = velocity.x;
-        velocities[iy] = velocity.y;
-        velocities[iz] = velocity.z;
+        corePositions[ix] += velocity.x;
+        corePositions[iy] += velocity.y;
+        corePositions[iz] += velocity.z;
+        coreVelocities[ix] = velocity.x;
+        coreVelocities[iy] = velocity.y;
+        coreVelocities[iz] = velocity.z;
       }
+      coreGeo.attributes.position.needsUpdate = true;
 
-      geometry.attributes.position.needsUpdate = true;
+      // Animate energy nodes orbiting along rings
+      for (let i = 0; i < nodeCount; i++) {
+        const nd = nodeData[i];
+        nd.angle += nd.speed * 0.01;
+        const radius = 1.8 + nd.ringIdx * 0.45;
+        nodePositions[i * 3] = Math.cos(nd.angle) * radius;
+        nodePositions[i * 3 + 1] = Math.sin(nd.angle) * radius;
+        nodePositions[i * 3 + 2] = Math.sin(nd.angle * 2) * 0.15;
+      }
+      nodeGeo.attributes.position.needsUpdate = true;
 
-      // Slow elegant rotation
-      points.rotation.y = elapsedTime * 0.04;
-      points.rotation.x = Math.sin(elapsedTime * 0.02) * 0.1;
+      // Animate rings — gentle breathing scale + individual rotation
+      rings.forEach((ring, r) => {
+        const breath = 1 + Math.sin(t * 0.5 + r * 0.8) * 0.03;
+        ring.scale.set(breath, breath, breath);
+        ring.rotation.z = t * 0.02 * (r % 2 === 0 ? 1 : -1);
+      });
+
+      // Animate circuit beams — pulse opacity
+      beams.forEach((beam, b) => {
+        const mat = beam.material as THREE.LineBasicMaterial;
+        mat.opacity = 0.06 + Math.sin(t * 1.5 + b * 0.5) * 0.06;
+      });
+
+      // Slow core rotation
+      coreGroup.rotation.y = t * 0.03;
+      coreGroup.rotation.x = Math.sin(t * 0.015) * 0.12;
+
+      // Dust slow drift
+      dustPoints.rotation.y = t * 0.005;
+      dustPoints.rotation.x = t * 0.003;
 
       renderer.render(scene, camera);
     };
@@ -202,9 +331,15 @@ function NeuralParticleCanvas({ durationMultiplier }: { durationMultiplier: numb
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("touchmove", handleTouchMove);
-      geometry.dispose();
-      material.dispose();
+      coreGeo.dispose();
+      coreMat.dispose();
       torusKnot.dispose();
+      nodeGeo.dispose();
+      nodeMat.dispose();
+      dustGeo.dispose();
+      dustMat.dispose();
+      rings.forEach(r => { r.geometry.dispose(); (r.material as THREE.Material).dispose(); });
+      beams.forEach(b => { b.geometry.dispose(); (b.material as THREE.Material).dispose(); });
       renderer.dispose();
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
@@ -221,55 +356,92 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
   if (!active) return null;
 
   return (
-    <div className="relative w-[320px] h-[320px] md:w-[420px] md:h-[420px]">
+    <div className="relative w-[340px] h-[340px] md:w-[460px] md:h-[460px]">
       {/* 3D particle canvas */}
       {!reduced && <NeuralParticleCanvas durationMultiplier={durationMultiplier} />}
 
-      {/* Volumetric glow behind brain */}
+      {/* Outer ring glow (mimics metallic ring from reference) */}
       <motion.div
-        className="absolute inset-[-30%] rounded-full pointer-events-none"
+        className="absolute inset-[-15%] rounded-full pointer-events-none"
         style={{
-          background: "radial-gradient(circle, hsl(var(--primary) / 0.1) 0%, hsl(var(--primary) / 0.03) 40%, transparent 65%)",
+          border: "1px solid hsl(var(--primary) / 0.12)",
+          boxShadow:
+            "0 0 40px hsl(var(--primary) / 0.08), " +
+            "inset 0 0 60px hsl(var(--primary) / 0.04)",
         }}
-        animate={{ scale: [0.9, 1.1, 0.9], opacity: [0.5, 0.9, 0.5] }}
+        animate={{ scale: [0.95, 1.05, 0.95], opacity: [0.4, 0.7, 0.4] }}
+        transition={{ duration: 6 * durationMultiplier, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      {/* Second ring */}
+      <motion.div
+        className="absolute inset-[-8%] rounded-full pointer-events-none"
+        style={{
+          border: "1px solid hsl(var(--primary) / 0.08)",
+          boxShadow: "0 0 30px hsl(var(--primary) / 0.05)",
+        }}
+        animate={{ scale: [1.02, 0.96, 1.02], opacity: [0.3, 0.6, 0.3] }}
         transition={{ duration: 5 * durationMultiplier, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      {/* Core volumetric glow */}
+      <motion.div
+        className="absolute inset-[-25%] rounded-full pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle, hsl(var(--primary) / 0.12) 0%, hsl(var(--primary) / 0.04) 35%, transparent 60%)",
+        }}
+        animate={{ scale: [0.9, 1.15, 0.9], opacity: [0.4, 0.8, 0.4] }}
+        transition={{ duration: 5.5 * durationMultiplier, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      {/* Center glow point (the bright green center from reference) */}
+      <motion.div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(circle, hsl(var(--primary) / 0.35) 0%, hsl(var(--primary) / 0.1) 40%, transparent 70%)",
+        }}
+        animate={{ scale: [0.8, 1.3, 0.8], opacity: [0.6, 1, 0.6] }}
+        transition={{ duration: 3 * durationMultiplier, repeat: Infinity, ease: "easeInOut" }}
       />
 
       {/* Brain icon — hero center */}
       <motion.div
         className="absolute inset-0 flex items-center justify-center z-10"
         style={{ perspective: 800 }}
-        initial={{ opacity: 0, scale: 0.7 }}
+        initial={{ opacity: 0, scale: 0.6 }}
         animate={{
           opacity: 1,
           scale: 1,
-          rotateY: reduced ? 0 : [0, 5, -5, 0],
+          rotateY: [0, 5, -5, 0],
         }}
         transition={{
-          opacity: { duration: 1 },
-          scale: { duration: 1.2, ease: [0.22, 1, 0.36, 1] },
-          rotateY: { duration: 10, repeat: Infinity, ease: "easeInOut" },
+          opacity: { duration: 1.2 },
+          scale: { duration: 1.4, ease: [0.22, 1, 0.36, 1] },
+          rotateY: { duration: 12, repeat: Infinity, ease: "easeInOut" },
         }}
       >
         <Brain
           className="text-primary"
           style={{
-            width: 68,
-            height: 68,
+            width: 76,
+            height: 76,
             filter:
-              "drop-shadow(0 0 20px hsl(var(--primary) / 0.5)) " +
-              "drop-shadow(0 0 50px hsl(var(--primary) / 0.2)) " +
-              "drop-shadow(0 0 80px hsl(var(--primary) / 0.08))",
+              "drop-shadow(0 0 24px hsl(var(--primary) / 0.6)) " +
+              "drop-shadow(0 0 50px hsl(var(--primary) / 0.25)) " +
+              "drop-shadow(0 0 90px hsl(var(--primary) / 0.1))",
           }}
         />
       </motion.div>
 
-      {/* Reduced motion fallback — static glow */}
+      {/* Reduced motion fallback */}
       {reduced && (
         <div
           className="absolute inset-0 rounded-full"
           style={{
-            background: "radial-gradient(circle, hsl(var(--primary) / 0.15) 0%, transparent 60%)",
+            background:
+              "radial-gradient(circle, hsl(var(--primary) / 0.15) 0%, transparent 60%)",
           }}
         />
       )}
