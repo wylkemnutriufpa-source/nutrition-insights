@@ -19,7 +19,7 @@ export default function WorkspacePatients({ search }: Props) {
     const fetch = async () => {
       const { data } = await supabase
         .from("nutritionist_patients")
-        .select("patient_id, status, profiles!nutritionist_patients_patient_id_fkey(full_name, phone, journey_status)")
+        .select("patient_id, status, journey_status, profiles!nutritionist_patients_patient_id_fkey(full_name, phone)")
         .eq("nutritionist_id", user.id)
         .eq("status", "active");
       setPatients(data || []);
