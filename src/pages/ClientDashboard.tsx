@@ -45,6 +45,7 @@ import PatientBehaviorLearningCard from "@/components/patient/PatientBehaviorLea
 import NextMealWidget from "@/components/patient/NextMealWidget";
 import PatientAIInsightsWidget from "@/components/patient/PatientAIInsightsWidget";
 import { PatientIntelligenceBanner } from "@/components/premium/PremiumBanners";
+import MyTeamTab from "@/components/patient/MyTeamTab";
 interface ProgramInfo {
   id: string;
   title: string;
