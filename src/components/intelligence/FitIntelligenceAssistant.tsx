@@ -314,7 +314,7 @@ export default function FitIntelligenceAssistant() {
     );
   }
 
-  if (!isEnabled || !prompt) return null;
+  if (!isActiveAccess || !prompt) return null;
 
   return (
     <AnimatePresence>
