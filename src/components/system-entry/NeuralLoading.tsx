@@ -440,7 +440,7 @@ function NeuralParticleCanvas({
     };
   }, [durationMultiplier, transitionDuration]);
 
-  return <div ref={mountRef} className="absolute inset-0" />;
+  return <div ref={mountRef} className="absolute inset-0 overflow-visible" />;
 }
 
 export default function NeuralLoading({
