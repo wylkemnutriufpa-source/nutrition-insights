@@ -16,17 +16,20 @@ class Particle {
   closeEnoughTarget = 100
   maxSpeed = 1.0
   maxForce = 0.1
-  particleSize = 10
+  particleSize = 3
   isKilled = false
 
   startColor = { r: 0, g: 0, b: 0 }
   targetColor = { r: 0, g: 0, b: 0 }
   colorWeight = 0
   colorBlendRate = 0.01
+  alpha = 1
 
   move() {
     let proximityMult = 1
-    const distance = Math.sqrt(Math.pow(this.pos.x - this.target.x, 2) + Math.pow(this.pos.y - this.target.y, 2))
+    const distance = Math.sqrt(
+      Math.pow(this.pos.x - this.target.x, 2) + Math.pow(this.pos.y - this.target.y, 2)
+    )
 
     if (distance < this.closeEnoughTarget) {
       proximityMult = distance / this.closeEnoughTarget
@@ -70,14 +73,27 @@ class Particle {
       this.colorWeight = Math.min(this.colorWeight + this.colorBlendRate, 1.0)
     }
 
-    const currentColor = {
-      r: Math.round(this.startColor.r + (this.targetColor.r - this.startColor.r) * this.colorWeight),
-      g: Math.round(this.startColor.g + (this.targetColor.g - this.startColor.g) * this.colorWeight),
-      b: Math.round(this.startColor.b + (this.targetColor.b - this.startColor.b) * this.colorWeight),
-    }
+    const r = Math.round(this.startColor.r + (this.targetColor.r - this.startColor.r) * this.colorWeight)
+    const g = Math.round(this.startColor.g + (this.targetColor.g - this.startColor.g) * this.colorWeight)
+    const b = Math.round(this.startColor.b + (this.targetColor.b - this.startColor.b) * this.colorWeight)
 
-    ctx.fillStyle = `rgb(${currentColor.r}, ${currentColor.g}, ${currentColor.b})`
-    ctx.fillRect(this.pos.x, this.pos.y, 2, 2)
+    // Draw glow
+    const glowSize = this.particleSize * 3
+    const gradient = ctx.createRadialGradient(
+      this.pos.x, this.pos.y, 0,
+      this.pos.x, this.pos.y, glowSize
+    )
+    gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${this.alpha * 0.9})`)
+    gradient.addColorStop(0.4, `rgba(${r}, ${g}, ${b}, ${this.alpha * 0.3})`)
+    gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`)
+    ctx.fillStyle = gradient
+    ctx.fillRect(this.pos.x - glowSize, this.pos.y - glowSize, glowSize * 2, glowSize * 2)
+
+    // Draw core dot
+    ctx.fillStyle = `rgba(${Math.min(r + 60, 255)}, ${Math.min(g + 60, 255)}, ${Math.min(b + 30, 255)}, ${this.alpha})`
+    ctx.beginPath()
+    ctx.arc(this.pos.x, this.pos.y, this.particleSize * 0.6, 0, Math.PI * 2)
+    ctx.fill()
   }
 
   kill(width: number, height: number) {
@@ -100,25 +116,15 @@ class Particle {
 }
 
 interface ParticleTextEffectProps {
-  /** Array of text lines to cycle through */
   words?: string[]
-  /** Frames between word transitions (higher = slower). Default 240 (~4s at 60fps) */
   transitionInterval?: number
-  /** Fixed gold color for particles. Provide {r,g,b} or leave undefined for random colors */
   particleColor?: { r: number; g: number; b: number }
-  /** Font size in px for the rendered text */
   fontSize?: number
-  /** Font family */
   fontFamily?: string
-  /** Canvas width */
   width?: number
-  /** Canvas height */
   height?: number
-  /** CSS class */
   className?: string
-  /** Pixel sampling step — lower = more particles but heavier */
   pixelSteps?: number
-  /** Callback when a word transition happens, receives new index */
   onWordChange?: (index: number) => void
 }
 
@@ -156,9 +162,9 @@ export function ParticleTextEffect({
     const pixels = imageData.data
 
     const newColor = particleColor || {
-      r: 180 + Math.random() * 75,
-      g: 140 + Math.random() * 60,
-      b: 50 + Math.random() * 40,
+      r: 200 + Math.random() * 55,
+      g: 160 + Math.random() * 50,
+      b: 60 + Math.random() * 40,
     }
 
     const particles = particlesRef.current
@@ -169,7 +175,6 @@ export function ParticleTextEffect({
       coordsIndexes.push(i)
     }
 
-    // Shuffle for fluid motion
     for (let i = coordsIndexes.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1))
       ;[coordsIndexes[i], coordsIndexes[j]] = [coordsIndexes[j], coordsIndexes[i]]
@@ -195,10 +200,11 @@ export function ParticleTextEffect({
           particle.pos.x = canvas.width / 2 + Math.cos(angle) * mag
           particle.pos.y = canvas.height / 2 + Math.sin(angle) * mag
 
-          particle.maxSpeed = Math.random() * 4 + 2
-          particle.maxForce = particle.maxSpeed * 0.04
-          particle.particleSize = Math.random() * 4 + 3
-          particle.colorBlendRate = Math.random() * 0.02 + 0.002
+          particle.maxSpeed = Math.random() * 3 + 1.5
+          particle.maxForce = particle.maxSpeed * 0.035
+          particle.particleSize = Math.random() * 3 + 2
+          particle.colorBlendRate = Math.random() * 0.015 + 0.002
+          particle.alpha = 0.7 + Math.random() * 0.3
 
           particles.push(particle)
         }
@@ -234,8 +240,8 @@ export function ParticleTextEffect({
       const ctx = canvas.getContext("2d")!
       const particles = particlesRef.current
 
-      ctx.fillStyle = "rgba(0, 0, 0, 0.1)"
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      // Fully transparent clear — no black rectangle
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
 
       for (let i = particles.length - 1; i >= 0; i--) {
         const particle = particles[i]
@@ -277,7 +283,6 @@ export function ParticleTextEffect({
       style={{
         width: "100%",
         height: "100%",
-        background: "transparent",
       }}
     />
   )
