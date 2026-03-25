@@ -42,6 +42,11 @@ export interface BehavioralContext {
   isWeekend: boolean;
   currentHour: number;
   clinicalFlags: string[];
+  // Trainer integration
+  hasTrainer: boolean;
+  daysSinceLastWorkout: number | null;
+  weeklyWorkoutCount: number;
+  lastWorkoutEffort: number | null;
 }
 
 // ─── Hydration Templates ───
