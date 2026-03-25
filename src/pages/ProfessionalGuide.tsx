@@ -6,12 +6,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FEATURE_REGISTRY, getFeaturesByCategory } from "@/lib/featureRegistry";
-import { Compass, CheckCircle2, Sparkles, Search, Zap, Crown, ExternalLink } from "lucide-react";
+import { 
+  Compass, CheckCircle2, Sparkles, Search, Zap, Crown, ExternalLink,
+  BookOpen, UserPlus, CreditCard, ShieldCheck, ClipboardList, FileText, 
+  UtensilsCrossed, Activity, ChevronDown, ChevronUp, AlertTriangle, ArrowRight
+} from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect, useCallback } from "react";
 import { PROFESSIONAL_ROUTE_MAP } from "@/lib/featureRouteMap";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const CATEGORY_META: Record<string, { gradient: string; emoji: string }> = {
   "IA & Automação": { gradient: "from-primary/20 to-primary/5", emoji: "🤖" },
