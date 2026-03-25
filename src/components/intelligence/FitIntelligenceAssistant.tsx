@@ -196,17 +196,12 @@ export default function FitIntelligenceAssistant() {
         was_dismissed: false,
       } as any);
 
-      // Update engaged count
-      await supabase.rpc("increment_field" as any, {
-        table_name: "fit_intelligence_frequency",
-        field_name: "engaged_count",
-        row_id: user.id,
-      }).catch(() => {
-        // Fallback: direct update
-        supabase.from("fit_intelligence_frequency" as any)
-          .update({ engaged_count: (1) } as any) // Will be incremented server-side ideally
+      // Update engaged count (best effort)
+      try {
+        await supabase.from("fit_intelligence_frequency" as any)
+          .update({ engaged_count: ((freq as any)?.engaged_count || 0) + 1, updated_at: new Date().toISOString() } as any)
           .eq("patient_id", user.id);
-      });
+      } catch {}
 
       // Auto-dismiss after showing response
       setTimeout(() => {
