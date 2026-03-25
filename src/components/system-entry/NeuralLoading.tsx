@@ -409,7 +409,7 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
       {/* Logo — 3D coin rotation */}
       <motion.div
         className="absolute inset-0 flex items-center justify-center z-10"
-        style={{ perspective: 1200 }}
+        style={{ perspective: 900 }}
         initial={{ opacity: 0, scale: 0.6 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{
@@ -418,57 +418,57 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
         }}
       >
         <motion.div
-          style={{ transformStyle: "preserve-3d", width: 100, height: 100, position: "relative" }}
+          style={{
+            transformStyle: "preserve-3d",
+            width: 100,
+            height: 100,
+            position: "relative",
+          }}
           animate={{ rotateY: 360 }}
           transition={{ rotateY: { duration: 20, repeat: Infinity, ease: "linear" } }}
         >
           {/* Front face */}
           <div
-            className="absolute inset-0 rounded-full flex items-center justify-center"
+            className="absolute inset-0 rounded-full flex items-center justify-center overflow-hidden"
             style={{
               backfaceVisibility: "hidden",
-              transform: "translateZ(3px)",
-              background: "radial-gradient(circle at 38% 32%, hsl(152 40% 20%) 0%, hsl(152 30% 10%) 60%, hsl(152 20% 5%) 100%)",
-              boxShadow:
-                "inset 0 2px 10px hsl(152 50% 45% / 0.3), " +
-                "inset 0 -3px 8px hsl(0 0% 0% / 0.5), " +
-                "0 0 30px hsl(var(--primary) / 0.4), " +
-                "0 0 60px hsl(var(--primary) / 0.15)",
-              border: "2.5px solid hsl(152 45% 30% / 0.7)",
+              transform: "translateZ(4px)",
+              background: "radial-gradient(circle at 38% 32%, hsl(152 35% 16%), hsl(152 25% 6%))",
+              boxShadow: "0 0 30px hsl(var(--primary) / 0.4), 0 0 60px hsl(var(--primary) / 0.15)",
+              border: "2px solid hsl(152 45% 28% / 0.7)",
             }}
           >
             <img src={logoPng} alt="FitJourney" draggable={false} className="select-none" style={{ width: 68, height: 68, objectFit: "contain" }} />
           </div>
 
-          {/* Coin edge layers — stacked thin circles */}
-          {Array.from({ length: 6 }, (_, i) => (
-            <div
-              key={i}
-              className="absolute inset-0 rounded-full"
-              style={{
-                transform: `translateZ(${-i}px)`,
-                background: "linear-gradient(180deg, hsl(152 35% 22%) 0%, hsl(152 28% 12%) 50%, hsl(152 20% 7%) 100%)",
-                border: "2px solid hsl(152 40% 18% / 0.5)",
-                boxShadow: i === 5 ? "0 0 12px hsl(0 0% 0% / 0.5)" : "none",
-              }}
-            />
-          ))}
-
-          {/* Back face */}
+          {/* Back face (mirrored) */}
           <div
-            className="absolute inset-0 rounded-full flex items-center justify-center"
+            className="absolute inset-0 rounded-full flex items-center justify-center overflow-hidden"
             style={{
               backfaceVisibility: "hidden",
-              transform: "rotateY(180deg) translateZ(3px)",
-              background: "radial-gradient(circle at 62% 32%, hsl(152 40% 20%) 0%, hsl(152 30% 10%) 60%, hsl(152 20% 5%) 100%)",
-              boxShadow:
-                "inset 0 2px 10px hsl(152 50% 45% / 0.3), " +
-                "inset 0 -3px 8px hsl(0 0% 0% / 0.5)",
-              border: "2.5px solid hsl(152 45% 30% / 0.7)",
+              transform: "rotateY(180deg) translateZ(4px)",
+              background: "radial-gradient(circle at 62% 32%, hsl(152 35% 16%), hsl(152 25% 6%))",
+              border: "2px solid hsl(152 45% 28% / 0.7)",
             }}
           >
             <img src={logoPng} alt="FitJourney" draggable={false} className="select-none" style={{ width: 68, height: 68, objectFit: "contain", transform: "scaleX(-1)" }} />
           </div>
+
+          {/* Edge: thin stacked discs to form the rim */}
+          {Array.from({ length: 8 }, (_, i) => {
+            const z = 3 - i; // from +3 to -4
+            return (
+              <div
+                key={i}
+                className="absolute inset-[2px] rounded-full"
+                style={{
+                  transform: `translateZ(${z}px)`,
+                  background: `linear-gradient(${180 + i * 20}deg, hsl(152 30% 18%), hsl(152 25% 8%))`,
+                  border: "1.5px solid hsl(152 35% 22% / 0.5)",
+                }}
+              />
+            );
+          })}
         </motion.div>
       </motion.div>
 
