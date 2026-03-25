@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { NeuroEntryExperience } from "@/components/system-entry";
 import GuidedPresentation from "@/components/common/GuidedPresentation";
 import GuidedTour, { PROFESSIONAL_TOUR_STEPS, PATIENT_TOUR_STEPS } from "@/components/common/GuidedTour";
 import FullscreenPresentationViewer, { type PresentationSlide } from "@/components/common/FullscreenPresentationViewer";
