@@ -65,6 +65,10 @@ export default function IntelligenceSettingsPanel() {
           <TabsContent value="active">
             <IntelligenceActiveUsers />
           </TabsContent>
+
+          <TabsContent value="preview">
+            <IntelligenceActivationPreview />
+          </TabsContent>
         </Tabs>
       </motion.div>
     </div>
