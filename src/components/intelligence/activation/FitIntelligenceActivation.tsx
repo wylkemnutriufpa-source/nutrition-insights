@@ -310,7 +310,7 @@ export default function FitIntelligenceActivation({ userId, onComplete }: Props)
 
                 <motion.button
                   onClick={handleStart}
-                  className="relative overflow-hidden rounded-xl px-10 py-4 text-sm font-semibold uppercase tracking-[0.15em]"
+                  className="relative overflow-hidden rounded-xl px-6 sm:px-10 py-3.5 sm:py-4 text-xs sm:text-sm font-semibold uppercase tracking-[0.1em] sm:tracking-[0.15em]"
                   style={{
                     background: "linear-gradient(135deg, hsl(40 50% 12%) 0%, hsl(35 40% 8%) 100%)",
                     border: "1px solid hsl(40 65% 55% / 0.3)",
