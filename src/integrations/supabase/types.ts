@@ -7962,6 +7962,42 @@ export type Database = {
           },
         ]
       }
+      patient_professional_links: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          link_status: string
+          patient_id: string
+          permissions: Json | null
+          professional_id: string
+          professional_role: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          link_status?: string
+          patient_id: string
+          permissions?: Json | null
+          professional_id: string
+          professional_role?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          link_status?: string
+          patient_id?: string
+          permissions?: Json | null
+          professional_id?: string
+          professional_role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       patient_project_history: {
         Row: {
           approved_by: string | null
@@ -13978,6 +14014,10 @@ export type Database = {
         Returns: string
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_linked_professional: {
+        Args: { _patient_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_org_member: {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean

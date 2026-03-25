@@ -13,7 +13,7 @@ import BehavioralTasksWidget from "@/components/patient/BehavioralTasksWidget";
 import ClinicalMessagesWidget from "@/components/patient/ClinicalMessagesWidget";
 import {
   Rocket, CalendarDays, Bell, TrendingUp, CheckCircle2,
-  UtensilsCrossed, Trophy, Target, Dumbbell, Flame, ArrowRight, Clock
+  UtensilsCrossed, Trophy, Target, Dumbbell, Flame, ArrowRight, Clock, Users
 } from "lucide-react";
 import RankingWidget from "@/components/prestige/RankingWidget";
 import ExplorerProgressWidget from "@/components/dashboard/ExplorerProgressWidget";
@@ -45,6 +45,7 @@ import PatientBehaviorLearningCard from "@/components/patient/PatientBehaviorLea
 import NextMealWidget from "@/components/patient/NextMealWidget";
 import PatientAIInsightsWidget from "@/components/patient/PatientAIInsightsWidget";
 import { PatientIntelligenceBanner } from "@/components/premium/PremiumBanners";
+import MyTeamTab from "@/components/patient/MyTeamTab";
 interface ProgramInfo {
   id: string;
   title: string;
@@ -623,6 +624,21 @@ export default function ClientDashboard() {
             </div>
           </motion.div>
         )}
+
+        {/* Meu Time - Multi-professional team */}
+        <motion.div variants={item}>
+          <div className="glass-premium rounded-xl overflow-hidden shimmer-sweep">
+            <div className="p-5 pb-3 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center">
+                <Users className="w-4.5 h-4.5 text-primary" />
+              </div>
+              <h3 className="font-display font-semibold text-base">Meu Time</h3>
+            </div>
+            <div className="px-5 pb-5">
+              <MyTeamTab />
+            </div>
+          </div>
+        </motion.div>
 
         <div className="grid md:grid-cols-2 gap-6">
           {/* Active Programs */}

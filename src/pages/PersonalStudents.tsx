@@ -2,81 +2,41 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Users, Plus, Search, UserCheck, UserX } from "lucide-react";
+import { Users, Plus, Search, UserX, Dumbbell, TrendingUp, Sparkles } from "lucide-react";
+import LinkStudentModal from "@/components/professional/LinkStudentModal";
+import { useProfessionalLinks } from "@/hooks/useProfessionalLinks";
 
 export default function PersonalStudents() {
   const { user } = useAuth();
-  const [students, setStudents] = useState<any[]>([]);
+  const { links, loading, refetch, revokeLink } = useProfessionalLinks("trainer");
   const [profiles, setProfiles] = useState<Record<string, any>>({});
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [addEmail, setAddEmail] = useState("");
   const [addOpen, setAddOpen] = useState(false);
-  const [adding, setAdding] = useState(false);
 
-  const load = async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from("personal_trainer_students")
-      .select("*")
-      .eq("personal_id", user.id);
-    setStudents(data || []);
-
-    if (data && data.length > 0) {
-      const ids = data.map(s => s.student_id);
-      const { data: profs } = await supabase.from("profiles").select("*").in("user_id", ids);
-      const map: Record<string, any> = {};
-      profs?.forEach(p => { map[p.user_id] = p; });
-      setProfiles(map);
+  useEffect(() => {
+    if (links.length > 0) {
+      const ids = links.map((l) => l.patient_id);
+      supabase
+        .from("profiles")
+        .select("*")
+        .in("user_id", ids)
+        .then(({ data }) => {
+          const map: Record<string, any> = {};
+          data?.forEach((p) => { map[p.user_id] = p; });
+          setProfiles(map);
+        });
     }
-    setLoading(false);
-  };
+  }, [links]);
 
-  useEffect(() => { load(); }, [user]);
-
-  const addStudent = async () => {
-    if (!addEmail.trim() || !user) return;
-    setAdding(true);
-    try {
-      const { data: patientId } = await supabase.rpc("find_patient_by_email", { _email: addEmail.trim().toLowerCase() });
-      if (!patientId) {
-        toast.error("Paciente não encontrado com este email");
-        setAdding(false);
-        return;
-      }
-      const { error } = await supabase.from("personal_trainer_students").insert({
-        personal_id: user.id,
-        student_id: patientId,
-      });
-      if (error) {
-        if (error.code === "23505") toast.error("Aluno já vinculado");
-        else toast.error("Erro ao vincular aluno");
-      } else {
-        toast.success("Aluno vinculado com sucesso!");
-        setAddEmail("");
-        setAddOpen(false);
-        load();
-      }
-    } catch { toast.error("Erro inesperado"); }
-    setAdding(false);
-  };
-
-  const removeStudent = async (id: string) => {
-    await supabase.from("personal_trainer_students").update({ status: "inactive" }).eq("id", id);
-    toast.success("Aluno removido");
-    load();
-  };
-
-  const filtered = students.filter(s => {
+  const filtered = links.filter((l) => {
     if (!search) return true;
-    const p = profiles[s.student_id];
+    const p = profiles[l.patient_id];
     return p?.full_name?.toLowerCase().includes(search.toLowerCase());
   });
 
@@ -85,70 +45,84 @@ export default function PersonalStudents() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Meus Alunos</h1>
-            <p className="text-muted-foreground text-sm">{students.filter(s => s.status === "active").length} alunos ativos</p>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <Dumbbell className="w-6 h-6 text-primary" />
+              Meus Alunos
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              {links.length} aluno{links.length !== 1 ? "s" : ""} vinculado{links.length !== 1 ? "s" : ""}
+            </p>
           </div>
-          <Dialog open={addOpen} onOpenChange={setAddOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm"><Plus className="w-4 h-4 mr-1" /> Vincular Aluno</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Vincular Aluno</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 mt-2">
-                <Input
-                  placeholder="Email do paciente/aluno"
-                  value={addEmail}
-                  onChange={e => setAddEmail(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && addStudent()}
-                />
-                <Button onClick={addStudent} disabled={adding} className="w-full">
-                  {adding ? "Vinculando..." : "Vincular"}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => setAddOpen(true)} size="sm" className="gap-1.5 bg-gradient-to-r from-primary to-primary/80">
+            <Plus className="w-4 h-4" />
+            Vincular Aluno
+          </Button>
         </div>
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Buscar aluno..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
+          <Input
+            placeholder="Buscar aluno..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10"
+          />
         </div>
 
         <div className="grid gap-3">
-          {filtered.map(s => {
-            const p = profiles[s.student_id];
-            const initials = (p?.full_name || "?").split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
+          {filtered.map((link) => {
+            const p = profiles[link.patient_id];
+            const initials = (p?.full_name || "?")
+              .split(" ")
+              .map((n: string) => n[0])
+              .join("")
+              .slice(0, 2)
+              .toUpperCase();
+
             return (
-              <Card key={s.id}>
+              <Card key={link.id} className="group hover:border-primary/20 transition-all">
                 <CardContent className="p-4 flex items-center gap-4">
-                  <Avatar className="w-12 h-12">
+                  <Avatar className="w-12 h-12 border-2 border-primary/10">
                     <AvatarFallback className="bg-primary/10 text-primary font-bold">{initials}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold">{p?.full_name || "Aluno"}</p>
-                    <p className="text-xs text-muted-foreground">Desde {new Date(s.created_at).toLocaleDateString("pt-BR")}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Desde {new Date(link.created_at).toLocaleDateString("pt-BR")}
+                    </p>
                   </div>
-                  <Badge variant={s.status === "active" ? "default" : "secondary"}>
-                    {s.status === "active" ? "Ativo" : "Inativo"}
+                  <Badge variant="default" className="bg-primary/10 text-primary border-0">
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    Ativo
                   </Badge>
-                  {s.status === "active" && (
-                    <Button variant="ghost" size="icon" onClick={() => removeStudent(s.id)}>
-                      <UserX className="w-4 h-4 text-destructive" />
-                    </Button>
-                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => revokeLink.mutate(link.id)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <UserX className="w-4 h-4 text-destructive" />
+                  </Button>
                 </CardContent>
               </Card>
             );
           })}
+
           {filtered.length === 0 && !loading && (
             <div className="text-center py-12 text-muted-foreground">
               <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p>Nenhum aluno vinculado ainda.</p>
+              <p className="font-medium">Nenhum aluno vinculado ainda.</p>
+              <p className="text-sm mt-1">Clique em "Vincular Aluno" para começar.</p>
             </div>
           )}
         </div>
+
+        <LinkStudentModal
+          open={addOpen}
+          onOpenChange={setAddOpen}
+          onLinked={() => refetch()}
+          professionalRole="trainer"
+        />
       </div>
     </DashboardLayout>
   );
