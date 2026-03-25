@@ -397,13 +397,14 @@ export default function PatientDetail() {
         const selectedPlan = prestigePlans.find(p => p.id === selectedPrestigePlanId);
         toast.success(`Prestígio ${selectedPlan?.name || ''} aplicado! ${selectedPlan?.badge_icon || ''}`, { duration: 3000 });
       }
-    } else if (selectedPrestigePlanId === "" || selectedPrestigePlanId === "none") {
-      // Remove prestige if "none" selected explicitly and there was one before
+    } else if (selectedPrestigePlanId === "none") {
+      // Remove prestige ONLY if user explicitly selected "none"
       if (currentPrestigePlan) {
         await supabase.from("patient_prestige").update({ is_active: false } as any).eq("patient_id", patientId).eq("is_active", true);
         toast.success("Prestígio removido");
       }
     }
+    // If selectedPrestigePlanId is "" (untouched), preserve existing prestige
     setPlanOpen(false);
     invalidate();
   };
