@@ -317,32 +317,65 @@ export default function FitIntelligenceAssistant() {
   if (!isActiveAccess || !prompt) return null;
 
   return (
-    <AnimatePresence>
-      {/* Floating Orb */}
+    <AnimatePresence mode="wait">
+      {/* Floating Orb — Premium golden emergence */}
       {!expanded && prompt && (
         <motion.button
           key="orb"
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          initial={{ scale: 0, opacity: 0, y: 120, filter: "blur(16px)" }}
+          animate={{ scale: 1, opacity: 1, y: 0, filter: "blur(0px)" }}
+          exit={{
+            scale: 1.3,
+            opacity: 0,
+            filter: "blur(12px)",
+          }}
+          transition={{
+            type: "spring",
+            stiffness: 180,
+            damping: 18,
+            mass: 1.2,
+          }}
           onClick={() => setExpanded(true)}
-          className="fixed bottom-24 right-4 z-[9990] w-14 h-14 rounded-full flex items-center justify-center shadow-lg shadow-primary/20"
+          className="fixed bottom-24 right-4 z-[9990] w-16 h-16 rounded-full flex items-center justify-center"
           style={{
-            background: "linear-gradient(135deg, hsl(var(--primary)), hsl(152 60% 30%))",
+            background: "linear-gradient(135deg, hsl(var(--primary)), hsl(45 70% 40%), hsl(var(--primary)))",
+            boxShadow: "0 0 40px -5px hsl(45 80% 55% / 0.3), 0 0 80px -10px hsl(45 80% 55% / 0.15), 0 8px 30px -8px hsl(0 0% 0% / 0.4)",
           }}
         >
+          {/* Breathing glow */}
           <motion.div
-            animate={{ scale: [1, 1.15, 1] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <Brain className="w-6 h-6 text-primary-foreground" />
-          </motion.div>
-          <motion.div
-            className="absolute inset-0 rounded-full border-2 border-primary/40"
-            animate={{ scale: [1, 1.5], opacity: [0.6, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
+            className="absolute inset-0 rounded-full"
+            style={{
+              background: "radial-gradient(circle, hsl(45 90% 65% / 0.15), transparent 70%)",
+            }}
+            animate={{
+              scale: [1, 1.4, 1],
+              opacity: [0.4, 0.8, 0.4],
+            }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
           />
+          {/* Pulse ring */}
+          <motion.div
+            className="absolute inset-0 rounded-full"
+            style={{ border: "2px solid hsl(45 80% 60% / 0.3)" }}
+            animate={{ scale: [1, 1.8], opacity: [0.5, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+          />
+          {/* Second pulse ring offset */}
+          <motion.div
+            className="absolute inset-0 rounded-full"
+            style={{ border: "1px solid hsl(45 80% 65% / 0.2)" }}
+            animate={{ scale: [1, 2.2], opacity: [0.3, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeOut", delay: 0.6 }}
+          />
+          {/* Brain icon */}
+          <motion.div
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+            className="relative z-10"
+          >
+            <Brain className="w-7 h-7 text-primary-foreground drop-shadow-lg" />
+          </motion.div>
         </motion.button>
       )}
 
