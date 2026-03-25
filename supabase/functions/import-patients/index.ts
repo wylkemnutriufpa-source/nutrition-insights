@@ -20,8 +20,8 @@ async function importOnePatient(
   nutritionistId: string
 ): Promise<{ ok: boolean; error?: string }> {
   try {
-    // Generate a cryptographically random password per patient
-    const randomPassword = crypto.randomUUID() + crypto.randomUUID().slice(0, 8);
+    // Standard temporary password - patient changes on first login
+    const standardPassword = "Fit@2026!";
 
     // 1. Try RPC first (fastest path)
     const { data: patientUserId, error: rpcError } = await supabase.rpc(
