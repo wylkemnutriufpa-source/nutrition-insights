@@ -45,6 +45,8 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"all" | "active" | "inactive">("all");
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [confirmedPayments, setConfirmedPayments] = useState<Set<string>>(new Set());
+  const [releasedOnboarding, setReleasedOnboarding] = useState<Set<string>>(new Set());
   const isInactivePatient = (patient: PatientInfo) => patient.status !== "active";
 
   const filtered = useMemo(() => {
@@ -73,6 +75,7 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
         toast.error(result?.error || "Erro ao confirmar pagamento");
       } else {
         toast.success("Pagamento confirmado!");
+        setConfirmedPayments(prev => new Set(prev).add(patientId));
         refreshAll();
       }
     } catch { toast.error("Erro ao confirmar pagamento"); }
@@ -92,6 +95,7 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
     try {
       await releaseOnboarding(patientId, user!.id);
       toast.success("Onboarding liberado!");
+      setReleasedOnboarding(prev => new Set(prev).add(patientId));
       refreshAll();
     } catch { toast.error("Erro ao liberar onboarding"); }
     setProcessingId(null);
@@ -181,8 +185,8 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
                 const completed = hasCompletedOnboarding(journey);
 
                 // Determine which actions to show
-                const showConfirmPayment = isActive && (journey === "awaiting_payment" || journey === "invited" || journey === "active");
-                const showReleaseOnboarding = isActive && (journey === "awaiting_consent" || journey === "active") && !completed;
+                const showConfirmPayment = isActive && !confirmedPayments.has(p.patient_id) && (journey === "awaiting_payment" || journey === "invited" || journey === "active");
+                const showReleaseOnboarding = isActive && !releasedOnboarding.has(p.patient_id) && (journey === "awaiting_consent" || journey === "active") && !completed;
                 const showReviewPlan = journey === "draft_ready_for_review" || journey === "onboarding_completed";
 
                 return (
