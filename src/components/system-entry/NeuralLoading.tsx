@@ -406,7 +406,7 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
         transition={{ duration: 3 * durationMultiplier, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* Brain icon — hero center */}
+      {/* Logo — hero center */}
       <motion.div
         className="absolute inset-0 flex items-center justify-center z-10"
         style={{ perspective: 800 }}
@@ -422,11 +422,15 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
           rotateY: { duration: 12, repeat: Infinity, ease: "easeInOut" },
         }}
       >
-        <Brain
-          className="text-primary"
+        <img
+          src={logoPng}
+          alt="FitJourney"
+          draggable={false}
+          className="select-none"
           style={{
-            width: 76,
-            height: 76,
+            width: 90,
+            height: 90,
+            objectFit: "contain",
             filter:
               "drop-shadow(0 0 24px hsl(var(--primary) / 0.6)) " +
               "drop-shadow(0 0 50px hsl(var(--primary) / 0.25)) " +
