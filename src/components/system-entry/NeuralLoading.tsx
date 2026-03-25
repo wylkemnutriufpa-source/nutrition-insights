@@ -406,10 +406,10 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
         transition={{ duration: 3 * durationMultiplier, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* Logo — hero center with full 3D Y-axis rotation */}
+      {/* Logo — 3D coin rotation */}
       <motion.div
         className="absolute inset-0 flex items-center justify-center z-10"
-        style={{ perspective: 1000 }}
+        style={{ perspective: 1200 }}
         initial={{ opacity: 0, scale: 0.6 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{
@@ -417,25 +417,68 @@ export default function NeuralLoading({ active, durationMultiplier = 1 }: Neural
           scale: { duration: 1.4, ease: [0.22, 1, 0.36, 1] },
         }}
       >
-        <motion.img
-          src={logoPng}
-          alt="FitJourney"
-          draggable={false}
-          className="select-none"
-          style={{
-            width: 90,
-            height: 90,
-            objectFit: "contain",
-            filter:
-              "drop-shadow(0 0 24px hsl(var(--primary) / 0.6)) " +
-              "drop-shadow(0 0 50px hsl(var(--primary) / 0.25)) " +
-              "drop-shadow(0 0 90px hsl(var(--primary) / 0.1))",
-          }}
+        <motion.div
+          style={{ transformStyle: "preserve-3d", width: 100, height: 100 }}
           animate={{ rotateY: 360 }}
-          transition={{
-            rotateY: { duration: 20, repeat: Infinity, ease: "linear" },
-          }}
-        />
+          transition={{ rotateY: { duration: 20, repeat: Infinity, ease: "linear" } }}
+        >
+          {/* Front face */}
+          <div
+            className="absolute inset-0 rounded-full flex items-center justify-center"
+            style={{
+              backfaceVisibility: "hidden",
+              background: "radial-gradient(circle at 40% 35%, hsl(152 40% 18%) 0%, hsl(152 30% 10%) 60%, hsl(152 25% 6%) 100%)",
+              boxShadow:
+                "inset 0 2px 8px hsl(152 50% 40% / 0.3), " +
+                "inset 0 -2px 6px hsl(0 0% 0% / 0.4), " +
+                "0 0 30px hsl(var(--primary) / 0.4), " +
+                "0 0 60px hsl(var(--primary) / 0.15)",
+              border: "2px solid hsl(152 40% 25% / 0.6)",
+            }}
+          >
+            <img
+              src={logoPng}
+              alt="FitJourney"
+              draggable={false}
+              className="select-none"
+              style={{ width: 70, height: 70, objectFit: "contain" }}
+            />
+          </div>
+
+          {/* Back face */}
+          <div
+            className="absolute inset-0 rounded-full"
+            style={{
+              backfaceVisibility: "hidden",
+              transform: "rotateY(180deg)",
+              background: "radial-gradient(circle at 60% 35%, hsl(152 40% 18%) 0%, hsl(152 30% 10%) 60%, hsl(152 25% 6%) 100%)",
+              boxShadow:
+                "inset 0 2px 8px hsl(152 50% 40% / 0.3), " +
+                "inset 0 -2px 6px hsl(0 0% 0% / 0.4)",
+              border: "2px solid hsl(152 40% 25% / 0.6)",
+            }}
+          />
+
+          {/* Edge slices — create coin thickness */}
+          {Array.from({ length: 36 }, (_, i) => {
+            const angle = i * 10;
+            return (
+              <div
+                key={i}
+                className="absolute rounded-full"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  transform: `rotateY(${angle}deg) translateZ(3px)`,
+                  backfaceVisibility: "hidden",
+                  background: "linear-gradient(180deg, hsl(152 35% 22%) 0%, hsl(152 30% 12%) 50%, hsl(152 25% 8%) 100%)",
+                  border: "1px solid hsl(152 40% 25% / 0.3)",
+                  opacity: 0.7,
+                }}
+              />
+            );
+          })}
+        </motion.div>
       </motion.div>
 
       {/* Reduced motion fallback */}
