@@ -351,7 +351,7 @@ function NeuralParticleCanvas({
         // ─── IDLE MODE: normal interactive behavior ───
         mouseWorld.set(mouse.x * 4, mouse.y * 4, 0);
 
-        const batch = isMobile ? 4000 : 10000;
+        const batch = isMobile ? 2000 : 6000;
         const start = Math.floor((t * 2000) % coreCount);
         for (let k = 0; k < batch; k++) {
           const i = (start + k) % coreCount;
