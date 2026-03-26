@@ -191,10 +191,10 @@ export default function NeuralScreensaver() {
           className="relative z-10 pointer-events-none"
           animate={
             stage === "waking"
-              ? { scale: [1, 1.15, 0.9], opacity: [1, 1, 0.8] }
+              ? { scale: [0.75, 0.9, 0.7], opacity: [1, 1, 0.8] }
               : stage === "awake"
-                ? { scale: 0.8, y: -40, opacity: 0.6 }
-                : { scale: 1, opacity: 1 }
+                ? { scale: 0.7, y: -40, opacity: 0.6 }
+                : { scale: 0.75, opacity: 1 }
           }
           transition={{
             duration: stage === "waking" ? 0.8 : 0.9,
