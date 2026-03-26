@@ -550,7 +550,14 @@ export function generatePrePlanFromAnamnesis(anamnesisData: {
   // Selecionar glúteo feminino se for mulher com foco em glúteos
   if (sex === "F" && (goal?.includes("glut") || goal?.includes("perna"))) {
     const gluteTemplate = BUILT_IN_TEMPLATES.find(t => t.id === "tpl-gluteo-fem");
-    if (gluteTemplate) return { ...gluteTemplate };
+    if (gluteTemplate) {
+      const selected = { ...gluteTemplate, routines: gluteTemplate.routines.map(r => ({ ...r, exercises: [...r.exercises] })) };
+      // Aplicar alertas de dor antes de retornar
+      if (painAreas.length > 0) {
+        selected.routines = applyPainAlerts(selected.routines, painAreas);
+      }
+      return selected;
+    }
   }
 
   // Buscar template mais adequado
