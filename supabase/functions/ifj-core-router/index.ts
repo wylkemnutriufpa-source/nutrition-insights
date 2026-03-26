@@ -569,7 +569,7 @@ function resolveNavigation(n: string): { route: string; label: string } | null {
 // ═══════════════════════════════════════════════════════════════
 
 // ── CLINICAL ENGINE ────────────────────────────────────────────
-async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], today: string): Promise<IFJResponse> {
+async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], today: string, role?: string): Promise<IFJResponse> {
   const patientIds = patients.map(p => p.id);
   const safeIds = patientIds.length ? patientIds : ["00000000-0000-0000-0000-000000000000"];
 
