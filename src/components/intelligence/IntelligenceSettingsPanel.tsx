@@ -38,6 +38,9 @@ export default function IntelligenceSettingsPanel() {
       >
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="bg-background/80 backdrop-blur-sm border border-amber-500/20 p-1 flex-wrap h-auto gap-1">
+            <TabsTrigger value="core" className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500/20 data-[state=active]:to-yellow-500/10 data-[state=active]:text-amber-500 data-[state=active]:border-amber-500/30 data-[state=active]:border font-semibold">
+              <Cpu className="w-4 h-4" /> IFJ Core
+            </TabsTrigger>
             <TabsTrigger value="command" className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500/20 data-[state=active]:to-yellow-500/10 data-[state=active]:text-amber-500 data-[state=active]:border-amber-500/30 data-[state=active]:border font-semibold">
               <Command className="w-4 h-4" /> Meu Painel IFJ
             </TabsTrigger>
