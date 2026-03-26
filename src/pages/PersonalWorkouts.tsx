@@ -12,7 +12,7 @@ import {
   Dumbbell, Plus, Search, ChevronDown, Pause, Play,
   BookOpen, Layers, ClipboardList, Sparkles,
   TrendingUp, Heart, Ruler, Trophy, ArrowRightLeft, BarChart3,
-  CalendarDays, MessageCircle, FileText, Zap, Timer
+  CalendarDays, MessageCircle, FileText, Zap, Timer, Command
 } from "lucide-react";
 import WorkoutEditor from "@/components/workout/WorkoutEditor";
 import ExerciseLibrary from "@/components/workout/ExerciseLibrary";
