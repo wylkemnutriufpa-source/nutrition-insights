@@ -60,6 +60,27 @@ export const PATIENT_FEATURE_REGISTRY: PatientFeatureDefinition[] = [
 
   // Prestígio
   { key: "prestige_view", label: "Meu Prestígio", description: "Visualizar seu nível de prestígio, badge e benefícios exclusivos", icon: Crown, category: "Engajamento" },
+
+  // Treino (Personal Trainer)
+  { key: "workout_plan_view", label: "Ver Plano de Treino", description: "Visualizar treino prescrito pelo personal com séries, reps e carga", icon: Dumbbell, category: "Treino" },
+  { key: "workout_log", label: "Registrar Treino", description: "Registrar execução de treinos com carga e repetições reais", icon: ClipboardCheck, category: "Treino" },
+  { key: "workout_feedback", label: "Feedback Pós-Treino", description: "Reportar dor, fadiga, desconforto e motivação após cada treino", icon: MessageSquare, category: "Treino" },
+  { key: "workout_timer", label: "Timer de Descanso", description: "Cronômetro inteligente durante o treino com alertas sonoros", icon: Target, category: "Treino" },
+  { key: "workout_history", label: "Histórico de Treinos", description: "Ver evolução de carga e volume por exercício", icon: BarChart3, category: "Treino" },
+  { key: "workout_prs", label: "Meus Recordes", description: "Visualizar recordes pessoais de carga por exercício", icon: Trophy, category: "Treino" },
+  { key: "workout_calendar", label: "Calendário de Treinos", description: "Calendário mensal com aderência e status dos treinos", icon: Star, category: "Treino" },
+  { key: "workout_videos", label: "Vídeos de Exercícios", description: "Assistir demonstrações de execução correta", icon: Heart, category: "Treino" },
+
+  // Exames
+  { key: "lab_exams_view", label: "Ver Exames", description: "Visualizar resultados de exames laboratoriais com semáforo clínico", icon: Heart, category: "Saúde & Ferramentas" },
+  { key: "lab_marker_history", label: "Evolução de Marcadores", description: "Gráficos de evolução dos marcadores laboratoriais ao longo do tempo", icon: BarChart3, category: "Saúde & Ferramentas" },
+
+  // IFJ
+  { key: "ifj_prompts", label: "IFJ Prompts", description: "Receber prompts inteligentes e motivacionais da Inteligência FitJourney", icon: Brain, category: "IA & Análises" },
+  { key: "ifj_push_notifications", label: "Notificações IFJ", description: "Notificações push personalizadas por horário e comportamento", icon: Bell, category: "IA & Análises" },
+
+  // Meu Painel
+  { key: "patient_overview", label: "Meu Painel", description: "Dashboard premium com momentum, conquistas e próximos passos", icon: Crown, category: "Engajamento" },
 ];
 
 export function getPatientFeaturesByCategory(): Record<string, PatientFeatureDefinition[]> {

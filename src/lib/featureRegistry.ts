@@ -161,6 +161,41 @@ export const FEATURE_REGISTRY: FeatureDefinition[] = [
 
   // Cockpit Operacional
   { name: "operational_cost_cockpit", label: "Cockpit de Custos Operacionais", description: "Projeção financeira determinística com simulação de escala para 200-2000 pacientes", icon: DollarSign, category: "Analytics & Relatórios", defaultTier: "premium", addedVersion: "5.0" },
+
+  // Exames Laboratoriais
+  { name: "lab_exams", label: "Exames Laboratoriais", description: "Importação, extração automática e interpretação clínica de exames laboratoriais com 25+ marcadores", icon: TestTube, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "6.0" },
+  { name: "lab_marker_evolution", label: "Evolução de Marcadores", description: "Gráficos de evolução histórica de marcadores laboratoriais por categoria clínica", icon: LineChart, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "6.0" },
+  { name: "lab_clinical_alerts", label: "Alertas de Exames", description: "Semáforo clínico automático (Normal/Alerta/Crítico) para valores laboratoriais fora da faixa", icon: AlertTriangle, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "6.0" },
+
+  // Personal Trainer
+  { name: "personal_trainer_dashboard", label: "Dashboard Personal Trainer", description: "Painel inteligente com KPIs de adesão, RPE médio, inatividade e alertas de treino", icon: Dumbbell, category: "Personal Trainer", defaultTier: "premium", addedVersion: "6.0" },
+  { name: "workout_templates", label: "Templates de Treino", description: "12 templates profissionais editáveis: Hipertrofia, Emagrecimento, Flexibilidade (3 níveis cada)", icon: LayoutGrid, category: "Personal Trainer", defaultTier: "premium", addedVersion: "6.0" },
+  { name: "workout_periodization", label: "Periodização Avançada", description: "Periodização linear, ondulatória e em blocos com progressão automática de carga", icon: Repeat, category: "Personal Trainer", defaultTier: "premium", addedVersion: "6.0" },
+  { name: "workout_timers", label: "Timers Inteligentes", description: "Cronômetros de descanso e bi-sets com alertas sonoros e progressão automática", icon: Timer, category: "Personal Trainer", defaultTier: "premium", addedVersion: "6.0" },
+  { name: "workout_pr_detection", label: "Detecção de PRs", description: "Detecção automática de recordes pessoais de carga com histórico e celebração", icon: Trophy, category: "Personal Trainer", defaultTier: "premium", addedVersion: "6.0" },
+  { name: "workout_cardio", label: "Cardio & Zonas de FC", description: "Prescrição de cardio por zonas de frequência cardíaca com protocolos HIIT", icon: Activity, category: "Personal Trainer", defaultTier: "premium", addedVersion: "6.0" },
+  { name: "workout_calendar", label: "Calendário de Treinos", description: "Calendário visual de aderência mensal com status por treino", icon: Calendar, category: "Personal Trainer", defaultTier: "premium", addedVersion: "6.0" },
+  { name: "workout_pdf_export", label: "Exportação de Treinos PDF", description: "Geração de PDF profissional com plano de treino completo do aluno", icon: FileText, category: "Personal Trainer", defaultTier: "premium", addedVersion: "6.0" },
+  { name: "workout_load_history", label: "Histórico de Evolução de Carga", description: "Gráficos de evolução de volume e peso por exercício e grupo muscular", icon: TrendingUp, category: "Personal Trainer", defaultTier: "premium", addedVersion: "6.0" },
+  { name: "workout_assessment_comparison", label: "Comparativo de Avaliações", description: "Deltas históricos e tendências entre avaliações físicas com gráficos", icon: BarChart3, category: "Personal Trainer", defaultTier: "premium", addedVersion: "6.0" },
+  { name: "workout_challenges", label: "Desafios de Treino", description: "Gamificação com metas de treino, XP e conquistas específicas para alunos", icon: Target, category: "Personal Trainer", defaultTier: "premium", addedVersion: "6.0" },
+  { name: "workout_pre_plan_ai", label: "Pré-Plano de Treino IA", description: "Geração automática de treino via anamnese com segurança biomecânica e alertas de dor", icon: Brain, category: "Personal Trainer", defaultTier: "premium", addedVersion: "6.0" },
+  { name: "workout_multimedia", label: "Vídeos de Execução", description: "Biblioteca de vídeos demonstrativos de exercícios integrada ao treino", icon: Play, category: "Personal Trainer", defaultTier: "premium", addedVersion: "6.0" },
+  { name: "cross_professional_alerts", label: "Alertas Multidisciplinares", description: "Sincronização de alertas de dor e fadiga entre Personal Trainer e Nutricionista", icon: Bell, category: "Personal Trainer", defaultTier: "premium", addedVersion: "6.0" },
+
+  // IFJ — Inteligência FitJourney
+  { name: "ifj_intelligence", label: "Inteligência FitJourney (IFJ)", description: "Motor de engajamento comportamental com prompts personalizados, push notifications e aprendizado contínuo", icon: Brain, category: "IA & Automação", defaultTier: "premium", addedVersion: "5.0" },
+  { name: "ifj_scheduled_messages", label: "Mensagens Agendadas IFJ", description: "Agendamento de mensagens comportamentais por dia da semana e faixa horária", icon: Megaphone, category: "IA & Automação", defaultTier: "premium", addedVersion: "5.5" },
+  { name: "ifj_workout_intelligence", label: "IFJ Workout Intelligence", description: "Feedback pós-treino com mapa de dor, sugestões de substituição e aprendizado por aluno", icon: Dumbbell, category: "Personal Trainer", defaultTier: "premium", addedVersion: "6.0" },
+
+  // Campanhas
+  { name: "campaign_center", label: "Central de Campanhas", description: "Criação e envio de campanhas segmentadas por público, canal e agendamento", icon: Megaphone, category: "Comunicação", defaultTier: "premium", addedVersion: "5.0" },
+
+  // Control Tower
+  { name: "control_tower", label: "Torre de Controle Clínica", description: "Centro de comando cinemático com radar de prioridades e matriz de saúde da carteira", icon: Rocket, category: "Inteligência Clínica", defaultTier: "premium", addedVersion: "5.0" },
+
+  // Patient Overview
+  { name: "patient_overview", label: "Meu Painel (Paciente)", description: "Dashboard premium do paciente com momentum de adesão, conquistas e próximos passos", icon: BarChart3, category: "Gestão de Pacientes", defaultTier: "premium", addedVersion: "5.0" },
 ];
 
 /** Retorna os nomes de todas as features registradas */
