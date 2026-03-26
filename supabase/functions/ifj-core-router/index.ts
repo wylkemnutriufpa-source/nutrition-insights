@@ -131,6 +131,10 @@ function detectIntent(n: string, ctx: SessionCtx): IFJIntent {
     return { ...base, intent: "action_compound_premium_ifj", target_entity: "patient", target_name: nameMatch?.[1] || null, module: "action_engine", confidence: 0.97, response_mode: "action" };
   }
 
+  // Batch release: "libere todos" / "liberar todos"
+  if (matchesIntent(n, "action_release_all_onboarding"))
+    return { ...base, intent: "action_release_all_onboarding", module: "action_engine", confidence: 0.97, response_mode: "action" };
+
   if (matchesIntent(n, "action_release_onboarding")) {
     const nameMatch = n.match(/(?:libere?|ative?)\s+(?:o\s+)?onboarding\s+(?:d[aeo]\s+)?(.+)/);
     return { ...base, intent: "action_release_onboarding", target_entity: "patient", target_name: nameMatch?.[1] || null, module: "action_engine", confidence: 0.96, response_mode: "action" };
