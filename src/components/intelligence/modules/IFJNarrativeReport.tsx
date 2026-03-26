@@ -67,7 +67,7 @@ export default function IFJNarrativeReport() {
       const [snapshotRes, anamnesisRes, mealsRes, alertsRes] = await Promise.all([
         supabase.from("clinical_daily_snapshots").select("*").eq("patient_id", selectedPatient).order("snapshot_date", { ascending: false }).limit(7),
         supabase.from("patient_anamnesis").select("*").eq("user_id", selectedPatient).order("created_at", { ascending: false }).limit(1),
-        supabase.from("meal_plans").select("id, plan_name, is_active, plan_status, created_at").eq("patient_id", selectedPatient).eq("is_active", true).limit(1),
+        supabase.from("meal_plans").select("id, description, is_active, plan_status, created_at").eq("patient_id", selectedPatient).eq("is_active", true).limit(1),
         supabase.from("clinical_alerts").select("*").eq("patient_id", selectedPatient).eq("is_active", true).order("created_at", { ascending: false }).limit(5),
       ]);
 
