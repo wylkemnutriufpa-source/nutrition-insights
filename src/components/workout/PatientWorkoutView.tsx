@@ -634,6 +634,18 @@ export default function PatientWorkoutView() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Post-Workout Feedback Modal */}
+      {feedbackOpen && lastCompletionId && (
+        <PostWorkoutFeedback
+          open={feedbackOpen}
+          onClose={() => setFeedbackOpen(false)}
+          completionId={lastCompletionId}
+          routineId={lastRoutineIdForFeedback || ""}
+          planId={lastPlanIdForFeedback || ""}
+          exercises={exercises}
+        />
+      )}
     </div>
   );
 }
