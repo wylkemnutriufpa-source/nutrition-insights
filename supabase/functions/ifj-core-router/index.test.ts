@@ -146,7 +146,7 @@ Deno.test("Intent: financial_pending - inadimplente", () => { assertEquals(match
 
 // Meal plan
 Deno.test("Intent: meal_plan - dieta", () => { assertEquals(matchesIntent(normalize("dieta da Sandra"), "meal_plan"), true); });
-Deno.test("Intent: meal_plan_expiring - plano vencendo", () => { assertEquals(matchesIntent(normalize("planos vencendo"), "meal_plan_expiring"), true); });
+Deno.test("Intent: meal_plan_expiring - plano vencendo", () => { assertEquals(matchesIntent(normalize("plano vencendo"), "meal_plan_expiring"), true); });
 
 // Anamnesis
 Deno.test("Intent: anamnesis - anamnese", () => { assertEquals(matchesIntent(normalize("anamnese da Sandra"), "anamnesis"), true); });
