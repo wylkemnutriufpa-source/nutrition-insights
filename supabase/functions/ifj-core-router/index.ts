@@ -240,9 +240,23 @@ function detectIntent(n: string, ctx: SessionCtx): IFJIntent {
   if (matchesIntent(n, "portfolio_health"))
     return { ...base, intent: "portfolio_health", module: "clinical_engine", confidence: 0.91, response_mode: "overview" };
 
-  // Nutrition / food / substitution questions → AI fallback
-  if (/(?:comer|substituir|trocar|lugar de|no lugar|substituic|alimento|comida|pode comer|o que comer|receita|ingrediente|lanche|cafe da manha|almoco|janta|saudavel|engorda|emagrec|caloria|proteina|carboidrato|gordura|fibra|vitamina|mineral|nutriente)/.test(n))
-    return { ...base, intent: "nutrition_ai_question", module: "ai_fallback", confidence: 0.80, response_mode: "ai_text" };
+  // Food substitution intent — deterministic first
+  const subPatterns = [
+    /(?:substituir?|trocar?|no lugar d[eao]|em vez d[eao]|outra? opcao para|o que (?:posso |pode )?(?:comer|usar|colocar) (?:no lugar|em vez|ao inves))\s*(?:d[eao]\s+)?(.+)/,
+    /(?:posso trocar|posso substituir|tem substitut|quero trocar)\s*(?:o\s+|a\s+)?(.+?)(?:\s+por\s+|$)/,
+    /(?:nao tenho|acabou|sem)\s+(.+?)(?:,|\s+o que|\s+que|\s+posso|$)/,
+    /(?:me de|da|sugira)\s+(?:outra?s?\s+)?(?:opcao|opcoes|alternativa)\s+(?:para|d[eao]|ao)\s+(.+)/,
+  ];
+  for (const p of subPatterns) {
+    const m = n.match(p);
+    if (m && m[1]?.trim()) {
+      return { ...base, intent: "food_substitution", target_name: m[1].trim(), module: "nutrition_engine", confidence: 0.93, response_mode: "substitution" };
+    }
+  }
+
+  // Nutrition question (NOT substitution) — will use contextual AI only if enough data
+  if (/(?:posso comer|pode comer|faz mal|devo evitar|o que comer|receita|saudavel|engorda|emagrec)/.test(n))
+    return { ...base, intent: "nutrition_question", module: "nutrition_engine", confidence: 0.80, response_mode: "nutrition" };
 
   // Context-aware follow-ups
   if (ctx.last_patient_id) {
