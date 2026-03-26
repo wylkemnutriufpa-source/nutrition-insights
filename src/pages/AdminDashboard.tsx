@@ -1045,6 +1045,15 @@ export default function AdminDashboard() {
                     </div>
                   </CardContent>
                 </Card>
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow border-primary/20" onClick={() => navigate("/admin/personal-workouts")}>
+                  <CardContent className="flex items-center gap-4 py-6">
+                    <Dumbbell className="w-8 h-8 text-orange-400" />
+                    <div>
+                      <p className="font-display font-semibold">Módulo Personal Trainer</p>
+                      <p className="text-sm text-muted-foreground">Templates, pré-planos, treinos e periodização</p>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
 
               {/* ─── Simulação de Progresso ─── */}
