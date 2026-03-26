@@ -752,62 +752,287 @@ async function runActionEngine(supabaseAdmin: any, supabase: any, intent: IFJInt
 }
 
 // ═══════════════════════════════════════════════════════════════
-// AI FALLBACK ENGINE — Handles free-form nutrition questions via LLM
+// FOOD DATABASE — Embedded for deterministic substitutions
 // ═══════════════════════════════════════════════════════════════
-async function runAIFallbackEngine(intent: IFJIntent, inputText: string, ctx: SessionCtx, patientName?: string): Promise<IFJResponse> {
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  if (!LOVABLE_API_KEY) {
-    return fmt("IA indisponível", "⚠️", "error", "Chave de IA não configurada.", "A funcionalidade de IA não está disponível no momento.", [], intent, "ai_fallback", ctx);
+interface FoodItem { name: string; portion: string; calories: number; protein: number; carbs: number; fat: number; category: string; }
+
+const FOOD_DB: FoodItem[] = [
+  { name: "Frango grelhado", portion: "120g", calories: 198, protein: 37, carbs: 0, fat: 4.3, category: "proteina" },
+  { name: "Peito de frango cozido", portion: "120g", calories: 192, protein: 36, carbs: 0, fat: 4, category: "proteina" },
+  { name: "Patinho grelhado", portion: "120g", calories: 219, protein: 36, carbs: 0, fat: 7.5, category: "proteina" },
+  { name: "Carne moída magra", portion: "120g", calories: 230, protein: 30, carbs: 0, fat: 12, category: "proteina" },
+  { name: "Alcatra grelhada", portion: "120g", calories: 235, protein: 34, carbs: 0, fat: 10, category: "proteina" },
+  { name: "Tilápia grelhada", portion: "120g", calories: 148, protein: 30, carbs: 0, fat: 3, category: "proteina" },
+  { name: "Sardinha assada", portion: "100g", calories: 208, protein: 25, carbs: 0, fat: 11, category: "proteina" },
+  { name: "Ovo cozido", portion: "1 un (50g)", calories: 72, protein: 6.3, carbs: 0.4, fat: 5, category: "proteina" },
+  { name: "Whey Protein", portion: "30g", calories: 120, protein: 24, carbs: 3, fat: 1.5, category: "proteina" },
+  { name: "Peito de peru", portion: "4 fatias (60g)", calories: 60, protein: 12, carbs: 1, fat: 0.6, category: "proteina" },
+  { name: "Lombo suíno assado", portion: "120g", calories: 228, protein: 33, carbs: 0, fat: 10, category: "proteina" },
+  { name: "Camarão cozido", portion: "100g", calories: 99, protein: 21, carbs: 0.2, fat: 1.1, category: "proteina" },
+  { name: "Arroz branco", portion: "150g", calories: 195, protein: 4, carbs: 43, fat: 0.4, category: "carboidrato" },
+  { name: "Arroz integral", portion: "150g", calories: 165, protein: 4.5, carbs: 35, fat: 1.5, category: "carboidrato" },
+  { name: "Feijão carioca", portion: "1 concha", calories: 76, protein: 4.8, carbs: 14, fat: 0.5, category: "carboidrato" },
+  { name: "Feijão preto", portion: "1 concha", calories: 77, protein: 4.5, carbs: 14, fat: 0.5, category: "carboidrato" },
+  { name: "Batata doce cozida", portion: "150g", calories: 135, protein: 1.5, carbs: 32, fat: 0.1, category: "carboidrato" },
+  { name: "Batata inglesa cozida", portion: "150g", calories: 117, protein: 2.7, carbs: 26, fat: 0.1, category: "carboidrato" },
+  { name: "Mandioca cozida", portion: "100g", calories: 125, protein: 0.6, carbs: 30, fat: 0.3, category: "carboidrato" },
+  { name: "Inhame cozido", portion: "100g", calories: 97, protein: 2, carbs: 23, fat: 0.1, category: "carboidrato" },
+  { name: "Macarrão integral", portion: "100g", calories: 124, protein: 5.3, carbs: 24, fat: 1.1, category: "carboidrato" },
+  { name: "Pão integral", portion: "2 fatias", calories: 124, protein: 5, carbs: 23, fat: 1.4, category: "carboidrato" },
+  { name: "Tapioca", portion: "2 col sopa", calories: 108, protein: 0, carbs: 26, fat: 0, category: "carboidrato" },
+  { name: "Cuscuz de milho", portion: "100g", calories: 113, protein: 2.5, carbs: 25, fat: 0.3, category: "carboidrato" },
+  { name: "Aveia em flocos", portion: "30g", calories: 117, protein: 4.4, carbs: 20, fat: 2.6, category: "carboidrato" },
+  { name: "Lentilha cozida", portion: "100g", calories: 93, protein: 6.3, carbs: 16, fat: 0.5, category: "carboidrato" },
+  { name: "Grão de bico cozido", portion: "100g", calories: 130, protein: 7, carbs: 20, fat: 2.5, category: "carboidrato" },
+  { name: "Brócolis cozido", portion: "100g", calories: 35, protein: 2.4, carbs: 7, fat: 0.4, category: "verdura" },
+  { name: "Couve refogada", portion: "100g", calories: 45, protein: 2.9, carbs: 6.3, fat: 1.3, category: "verdura" },
+  { name: "Espinafre cozido", portion: "100g", calories: 23, protein: 2.9, carbs: 3.6, fat: 0.3, category: "verdura" },
+  { name: "Abobrinha refogada", portion: "100g", calories: 24, protein: 1.1, carbs: 4.3, fat: 0.3, category: "verdura" },
+  { name: "Cenoura crua", portion: "1 un", calories: 34, protein: 0.7, carbs: 8, fat: 0.2, category: "verdura" },
+  { name: "Banana prata", portion: "1 un", calories: 89, protein: 1.3, carbs: 23, fat: 0.1, category: "fruta" },
+  { name: "Maçã", portion: "1 un", calories: 56, protein: 0.3, carbs: 15, fat: 0.1, category: "fruta" },
+  { name: "Mamão papaia", portion: "1/2 un", calories: 46, protein: 0.5, carbs: 12, fat: 0.1, category: "fruta" },
+  { name: "Morango", portion: "10 un", calories: 30, protein: 0.6, carbs: 7, fat: 0.2, category: "fruta" },
+  { name: "Melancia", portion: "200g", calories: 60, protein: 1.2, carbs: 15, fat: 0.3, category: "fruta" },
+  { name: "Manga", portion: "1/2 un", calories: 72, protein: 0.5, carbs: 19, fat: 0.3, category: "fruta" },
+  { name: "Abacate", portion: "50g", calories: 80, protein: 1, carbs: 4, fat: 7.5, category: "gordura" },
+  { name: "Azeite de oliva", portion: "1 col sopa", calories: 108, protein: 0, carbs: 0, fat: 12, category: "gordura" },
+  { name: "Castanha de caju", portion: "15g (5 un)", calories: 86, protein: 2.7, carbs: 4.5, fat: 6.7, category: "gordura" },
+  { name: "Amendoim torrado", portion: "20g", calories: 114, protein: 5.2, carbs: 3.6, fat: 9, category: "gordura" },
+  { name: "Pasta de amendoim", portion: "15g", calories: 93, protein: 3.8, carbs: 3, fat: 7.8, category: "gordura" },
+  { name: "Chia", portion: "15g", calories: 73, protein: 2.5, carbs: 6.3, fat: 4.7, category: "gordura" },
+  { name: "Linhaça", portion: "15g", calories: 80, protein: 2.7, carbs: 4.3, fat: 6.3, category: "gordura" },
+  { name: "Iogurte natural", portion: "170g", calories: 90, protein: 5, carbs: 7, fat: 5, category: "laticinio" },
+  { name: "Queijo cottage", portion: "50g", calories: 49, protein: 6, carbs: 1.7, fat: 2.2, category: "laticinio" },
+  { name: "Queijo minas frescal", portion: "30g", calories: 74, protein: 5.2, carbs: 0.7, fat: 5.6, category: "laticinio" },
+  { name: "Leite desnatado", portion: "200ml", calories: 68, protein: 6.6, carbs: 10, fat: 0.4, category: "laticinio" },
+  { name: "Kefir", portion: "200ml", calories: 64, protein: 4, carbs: 7, fat: 2, category: "laticinio" },
+  { name: "Pistache", portion: "20g", calories: 113, protein: 4.1, carbs: 5.6, fat: 9, category: "gordura" },
+];
+
+const CATEGORY_LABELS: Record<string, string> = {
+  proteina: "🥩 Proteínas", carboidrato: "🌾 Carboidratos", verdura: "🥦 Verduras",
+  fruta: "🍎 Frutas", gordura: "🥑 Gorduras", laticinio: "🥛 Laticínios",
+};
+
+function findFoodMatch(query: string): FoodItem | null {
+  const q = normalize(query);
+  // Exact name match
+  let match = FOOD_DB.find(f => normalize(f.name) === q);
+  if (match) return match;
+  // Partial match
+  match = FOOD_DB.find(f => normalize(f.name).includes(q) || q.includes(normalize(f.name)));
+  if (match) return match;
+  // Word match
+  const words = q.split(" ").filter(w => w.length > 2);
+  for (const w of words) {
+    match = FOOD_DB.find(f => normalize(f.name).includes(w));
+    if (match) return match;
+  }
+  return null;
+}
+
+function getSubstitutions(food: FoodItem, restrictions: string[], maxItems: number): FoodItem[] {
+  const restrictionsNorm = restrictions.map(r => normalize(r));
+  return FOOD_DB
+    .filter(f => f.category === food.category && f.name !== food.name)
+    .filter(f => !restrictionsNorm.some(r => normalize(f.name).includes(r) || r.includes(normalize(f.name))))
+    .sort((a, b) => Math.abs(a.calories - food.calories) - Math.abs(b.calories - food.calories))
+    .slice(0, maxItems);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NUTRITION ENGINE — Deterministic substitutions + contextual AI
+// ═══════════════════════════════════════════════════════════════
+
+async function runNutritionEngine(
+  supabaseAdmin: any, intent: IFJIntent, userId: string, role: string, ctx: SessionCtx, inputText: string
+): Promise<IFJResponse> {
+  // 1. Check IFJ permissions for patient
+  const targetId = role === "patient" ? userId : (ctx.last_patient_id || null);
+
+  if (role === "patient") {
+    const { data: perms } = await supabaseAdmin.from("ifj_patient_permissions")
+      .select("ifj_mode, substitutions, meal_plan").eq("patient_id", userId).maybeSingle();
+
+    if (!perms) {
+      return fmt("IFJ não ativa", "🔒", "access_denied", "IFJ não está habilitada.", "🔒 Solicite ao seu nutricionista a liberação do IFJ.", [], intent, "nutrition", ctx);
+    }
+
+    // Check substitutions permission
+    if (intent.intent === "food_substitution" && perms.substitutions === false) {
+      return fmt("Substituições desativadas", "🔒", "access_denied",
+        "As substituições não estão habilitadas para sua conta.",
+        "🔒 **Substituições inteligentes** não estão liberadas no seu perfil.\n\nSolicite ao seu nutricionista para ativar essa funcionalidade.",
+        [], intent, "nutrition", ctx);
+    }
+
+    // Load patient context
+    const [profileRes, anamRes, planRes] = await Promise.all([
+      supabaseAdmin.from("profiles").select("full_name, goal").eq("user_id", userId).maybeSingle(),
+      supabaseAdmin.from("patient_anamnesis").select("allergies, dietary_restrictions, dietary_strategy, answers")
+        .eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+      supabaseAdmin.from("meal_plans").select("id, title, total_target_calories")
+        .eq("patient_id", userId).or("is_active.eq.true,plan_status.eq.published,plan_status.eq.active").limit(1).maybeSingle(),
+    ]);
+
+    const profile = profileRes.data;
+    const anam = anamRes.data;
+    const plan = planRes.data;
+    const allergies = [...(anam?.allergies || []), ...(anam?.dietary_restrictions || [])];
+
+    if (intent.intent === "food_substitution") {
+      return handleFoodSubstitution(intent, allergies, profile, plan, perms, ctx);
+    }
+
+    // nutrition_question — use AI only with full context
+    if (!plan && !anam) {
+      return fmt("Dados insuficientes", "📋", "info",
+        "Não tenho dados suficientes para responder.",
+        "📋 Ainda não tenho seus dados completos (anamnese e plano alimentar).\n\n**Consulte seu nutricionista** para orientação personalizada.",
+        [], intent, "nutrition", ctx);
+    }
+
+    return runContextualAI(intent, inputText, profile, anam, plan, allergies, perms, ctx);
   }
 
+  // Professional asking nutrition question — not allowed via AI
+  return fmt("Comando não reconhecido", "❓", "info",
+    "Não entendi. Use comandos do sistema.",
+    "💡 Tente:\n- *\"Quem precisa de atenção?\"*\n- *\"Sobre [paciente]\"*\n- *\"Libere onboarding da [nome]\"*",
+    [], intent, "nutrition", ctx);
+}
+
+function handleFoodSubstitution(
+  intent: IFJIntent, restrictions: string[], profile: any, plan: any, perms: any, ctx: SessionCtx
+): IFJResponse {
+  const foodName = intent.target_name || "";
+  const match = findFoodMatch(foodName);
+
+  if (!match) {
+    return fmt("Alimento não encontrado", "🔍", "info",
+      `Não encontrei "${foodName}" na base.`,
+      `🔍 Não encontrei **"${foodName}"** na base de alimentos.\n\n**Consulte seu nutricionista** para orientação sobre substituições deste alimento.`,
+      [], intent, "nutrition", ctx);
+  }
+
+  // Determine max substitutions by ifj_mode
+  const mode = perms?.ifj_mode || "standard";
+  const maxItems = mode === "basic" ? 2 : mode === "standard" ? 4 : 5;
+  const showExplanation = mode !== "basic";
+  const showBestPick = mode === "premium";
+
+  const subs = getSubstitutions(match, restrictions, maxItems);
+
+  if (subs.length === 0) {
+    return fmt("Sem substituições", "🔍", "info",
+      `Sem alternativas para "${match.name}" considerando suas restrições.`,
+      `Não encontrei substituições para **${match.name}** que respeitem suas restrições.\n\n**Consulte seu nutricionista.**`,
+      [], intent, "nutrition", ctx);
+  }
+
+  // Build response
+  let md = `## Substituições para ${match.name}\n\n`;
+  md += `📊 **${match.name}** — ${match.portion} | ${match.calories}kcal | ${match.protein}g prot\n`;
+  md += `📂 Categoria: ${CATEGORY_LABELS[match.category] || match.category}\n\n`;
+
+  if (plan) md += `📋 *Baseado no seu plano: ${plan.title}*\n\n`;
+
+  md += `| Opção | Porção | Calorias | Proteína |\n|---|---|---|---|\n`;
+  subs.forEach((s, i) => {
+    const best = showBestPick && i === 0 ? " ⭐" : "";
+    md += `| **${s.name}**${best} | ${s.portion} | ${s.calories}kcal | ${s.protein}g |\n`;
+  });
+
+  if (showExplanation) {
+    md += `\n💡 Substituições da mesma categoria (${CATEGORY_LABELS[match.category] || match.category}) com calorias semelhantes.`;
+  }
+
+  if (showBestPick && subs.length > 0) {
+    md += `\n\n⭐ **Melhor opção:** ${subs[0].name} — mais próximo em perfil nutricional.`;
+  }
+
+  if (restrictions.length > 0) {
+    md += `\n\n⚠️ *Restrições aplicadas: ${restrictions.join(", ")}*`;
+  }
+
+  md += `\n\n---\n*🔬 Dados determinísticos — baseados no seu perfil e plano alimentar.*`;
+
+  // Audit log
+  ctx.last_module = "nutrition";
+
+  return fmt(`Substituições: ${match.name}`, "🔄", "substitution",
+    `${subs.length} opção(ões) para ${match.name}`, md, [], intent, "nutrition", ctx);
+}
+
+async function runContextualAI(
+  intent: IFJIntent, inputText: string, profile: any, anam: any, plan: any, allergies: string[], perms: any, ctx: SessionCtx
+): Promise<IFJResponse> {
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  if (!LOVABLE_API_KEY) {
+    return fmt("Consulte seu nutricionista", "📋", "info",
+      "Para perguntas nutricionais, consulte seu nutricionista.",
+      "📋 **Consulte seu nutricionista** para orientação personalizada sobre esta dúvida.",
+      [], intent, "nutrition", ctx);
+  }
+
+  const systemPrompt = `Você é o IFJ (Inteligência FitJourney), assistente nutricional integrado ao plano alimentar do paciente.
+
+REGRAS CRÍTICAS (NUNCA QUEBRAR):
+1. Você NÃO é um chatbot genérico.
+2. Você só pode responder com base nos dados do paciente fornecidos abaixo.
+3. Você NÃO pode inventar recomendações fora do contexto.
+4. Você NÃO pode sugerir alimentos proibidos, alérgenos ou fora do objetivo.
+5. Se não houver dados suficientes, diga: "Consulte seu nutricionista para orientação específica."
+6. Seja conciso (estilo WhatsApp), máximo 200 palavras.
+7. Use markdown para formatar.
+
+CONTEXTO DO PACIENTE:
+- Nome: ${profile?.full_name || "Paciente"}
+- Objetivo: ${profile?.goal || "Não informado"}
+- Restrições/Alergias: ${allergies.length ? allergies.join(", ") : "Nenhuma registrada"}
+- Estratégia dietética: ${anam?.dietary_strategy || "Não informada"}
+- Plano alimentar: ${plan ? plan.title + " (" + (plan.total_target_calories || "?") + "kcal)" : "Sem plano ativo"}
+
+REGRAS DE RESPOSTA:
+- Priorize alimentos do plano alimentar
+- Nunca sugerir fora das restrições
+- Contextualizar com o objetivo do paciente
+- Se não tiver certeza: "Consulte seu nutricionista"`;
+
   try {
-    const systemPrompt = `Você é um assistente nutricional inteligente integrado ao sistema FitJourney.
-Responda perguntas sobre alimentação, nutrição, substituições alimentares, receitas e dicas de saúde de forma clara e profissional em português brasileiro.
-Use markdown para formatar a resposta. Seja conciso mas completo.
-Se a pergunta não for sobre nutrição/alimentação/saúde, diga educadamente que você é especializado em nutrição e sugira comandos do sistema.
-NUNCA dê diagnósticos médicos. Sempre recomende consultar o nutricionista para orientações personalizadas.`;
-
-    const userContext = patientName ? `Contexto: último paciente consultado foi ${patientName}.\n\n` : "";
-
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `${userContext}${inputText}` },
+          { role: "user", content: inputText },
         ],
-        max_tokens: 1000,
-        temperature: 0.4,
+        max_tokens: 600,
+        temperature: 0.3,
       }),
     });
 
     if (!response.ok) {
-      if (response.status === 429) {
-        return fmt("Limite atingido", "⏳", "error", "Muitas requisições. Aguarde.", "Limite de IA excedido. Tente novamente em alguns instantes.", [], intent, "ai_fallback", ctx);
+      if (response.status === 429 || response.status === 402) {
+        await response.text();
+        return fmt("Consulte seu nutricionista", "📋", "info", "Serviço temporariamente indisponível.", "📋 **Consulte seu nutricionista** para orientação personalizada.", [], intent, "nutrition", ctx);
       }
-      if (response.status === 402) {
-        return fmt("Créditos insuficientes", "💳", "error", "Créditos de IA esgotados.", "Adicione créditos para continuar usando a assistência nutricional por IA.", [], intent, "ai_fallback", ctx);
-      }
-      const errorText = await response.text();
-      console.error("AI fallback error:", response.status, errorText);
-      return fmt("Erro na IA", "❌", "error", "Falha ao consultar IA.", "Tente novamente ou use comandos como *\"ajuda\"*.", [], intent, "ai_fallback", ctx);
+      await response.text();
+      return fmt("Consulte seu nutricionista", "📋", "info", "Não foi possível processar.", "📋 **Consulte seu nutricionista** para orientação personalizada.", [], intent, "nutrition", ctx);
     }
 
     const aiData = await response.json();
-    const aiText = aiData.choices?.[0]?.message?.content || "Sem resposta da IA.";
+    const aiText = aiData.choices?.[0]?.message?.content || "Consulte seu nutricionista para orientação personalizada.";
 
-    return fmt("🤖 Assistente Nutricional", "🧠", "ai_response", "Resposta gerada por IA",
-      `${aiText}\n\n---\n*🤖 Resposta gerada por IA — consulte seu nutricionista para orientação personalizada.*`,
-      [], intent, "ai_fallback", ctx);
-
+    return fmt("🧠 Assistente Nutricional", "🍎", "nutrition_response", "Resposta contextualizada",
+      `${aiText}\n\n---\n*🔬 Resposta baseada no seu perfil e plano alimentar — consulte seu nutricionista para ajustes.*`,
+      [], intent, "nutrition", ctx);
   } catch (e) {
-    console.error("AI fallback exception:", e);
-    return fmt("Erro na IA", "❌", "error", "Falha ao processar.", "Ocorreu um erro. Tente novamente.", [], intent, "ai_fallback", ctx);
+    console.error("Contextual AI error:", e);
+    return fmt("Consulte seu nutricionista", "📋", "info", "Erro ao processar.", "📋 **Consulte seu nutricionista** para orientação personalizada.", [], intent, "nutrition", ctx);
   }
 }
 
