@@ -308,11 +308,9 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
                   Meu Painel IFJ
                 </h2>
                 <Crown className="w-5 h-5 text-amber-500" />
-                {isAdmin && (
-                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 flex items-center gap-1">
-                    <Shield className="w-3 h-3" /> ADMIN — Acesso Total
-                  </span>
-                )}
+                <span className={`text-[9px] px-2 py-0.5 rounded-full border flex items-center gap-1 ${config.badge}`}>
+                  <Shield className="w-3 h-3" /> {config.label}
+                </span>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Centro de Comando Inteligente — Controle total do seu sistema
