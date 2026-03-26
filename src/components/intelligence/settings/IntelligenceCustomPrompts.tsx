@@ -7,11 +7,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { MessageSquare, Plus, Pencil, Trash2, Sparkles } from "lucide-react";
+import { MessageSquare, Plus, Pencil, Trash2, Sparkles, Clock, CalendarDays } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
+
+const DAYS_OF_WEEK = [
+  { value: "mon", label: "Seg" },
+  { value: "tue", label: "Ter" },
+  { value: "wed", label: "Qua" },
+  { value: "thu", label: "Qui" },
+  { value: "fri", label: "Sex" },
+  { value: "sat", label: "Sáb" },
+  { value: "sun", label: "Dom" },
+];
+
+const HOUR_OPTIONS = Array.from({ length: 16 }, (_, i) => i + 6); // 6h - 21h
 import { motion, AnimatePresence } from "framer-motion";
 
 interface CustomPrompt {
