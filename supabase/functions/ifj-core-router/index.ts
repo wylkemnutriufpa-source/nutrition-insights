@@ -7,21 +7,12 @@ const corsHeaders = {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// IFJ CORE ROUTER — Central Deterministic Intelligence Orchestrator
+// IFJ CORE ROUTER v2.0 — Central Deterministic Intelligence Orchestrator
 // Zero LLM. 100% data-driven. Modular engine architecture.
+// Refactored: single patient fetch, proper upsert keys, full audit
 // ═══════════════════════════════════════════════════════════════
 
 // ── TYPES ──────────────────────────────────────────────────────
-interface IFJInput {
-  actor_type: string;
-  actor_id: string;
-  channel: string;
-  input_type: string;
-  input_text: string;
-  session_key?: string;
-  timestamp: string;
-}
-
 interface IFJIntent {
   intent: string;
   target_entity: string | null;
@@ -31,7 +22,6 @@ interface IFJIntent {
   confidence: number;
   needs_disambiguation: boolean;
   response_mode: string;
-  compound_intents?: string[];
 }
 
 interface IFJResponse {
@@ -94,8 +84,7 @@ const SYNONYM_MAP: Record<string, string[]> = {
 };
 
 function matchesIntent(n: string, intentKey: string): boolean {
-  const synonyms = SYNONYM_MAP[intentKey] || [];
-  return synonyms.some(s => n.includes(s));
+  return (SYNONYM_MAP[intentKey] || []).some(s => n.includes(s));
 }
 
 // ── INTENT DETECTION ───────────────────────────────────────────
@@ -105,152 +94,96 @@ function detectIntent(n: string, ctx: SessionCtx): IFJIntent {
     module: "general", confidence: 0, needs_disambiguation: false, response_mode: "text",
   };
 
-  // Compound intent detection: "mostra Sandra e abre o plano dela"
-  const compoundParts: string[] = [];
-
-  // Greeting
-  if (/^(oi|ola|bom dia|boa tarde|boa noite|eai|salve|opa|fala|hey)\b/.test(n)) {
+  if (/^(oi|ola|bom dia|boa tarde|boa noite|eai|salve|opa|fala|hey)\b/.test(n))
     return { ...base, intent: "greeting", module: "general", confidence: 0.99, response_mode: "greeting" };
-  }
 
-  // Help
-  if (matchesIntent(n, "help")) {
+  if (matchesIntent(n, "help"))
     return { ...base, intent: "help", module: "general", confidence: 0.95, response_mode: "help" };
-  }
 
-  // Priorities / what to do today
-  if (n.includes("resolver hoje") || n.includes("prioridade do dia") || n.includes("o que preciso") || n.includes("pendencia") || n.includes("fila ifj") || n.includes("agenda ifj")) {
+  // Priorities / what to do today — MUST come before patients_attention (both share "prioridade")
+  if (n.includes("resolver hoje") || n.includes("prioridade do dia") || n.includes("o que preciso") || n.includes("pendencia") || n.includes("fila ifj") || n.includes("agenda ifj"))
     return { ...base, intent: "priorities_today", module: "priority_engine", confidence: 0.96, response_mode: "priority_list" };
-  }
 
-  // Next best action
-  if (matchesIntent(n, "next_best_action")) {
+  if (matchesIntent(n, "next_best_action"))
     return { ...base, intent: "next_best_action", module: "priority_engine", confidence: 0.94, response_mode: "action" };
-  }
 
-  // Patients at risk / attention
-  if (matchesIntent(n, "patients_attention")) {
+  if (matchesIntent(n, "patients_attention"))
     return { ...base, intent: "patients_attention", target_entity: "patients", module: "clinical_engine", confidence: 0.95, response_mode: "priority_list" };
-  }
 
-  // Patients improved
-  if (matchesIntent(n, "patients_improved")) {
+  if (matchesIntent(n, "patients_improved"))
     return { ...base, intent: "patients_improved", target_entity: "patients", module: "clinical_engine", confidence: 0.92, response_mode: "list" };
-  }
 
-  // Financial pending
-  if (matchesIntent(n, "financial_pending")) {
+  if (matchesIntent(n, "financial_pending"))
     return { ...base, intent: "financial_pending", module: "financial_engine", confidence: 0.94, response_mode: "list" };
-  }
 
-  // Financial overview
-  if (matchesIntent(n, "financial_overview")) {
+  if (matchesIntent(n, "financial_overview"))
     return { ...base, intent: "financial_overview", module: "financial_engine", confidence: 0.93, response_mode: "overview" };
-  }
 
-  // Lab pending
-  if (matchesIntent(n, "lab_pending")) {
+  if (matchesIntent(n, "lab_pending"))
     return { ...base, intent: "lab_pending", module: "clinical_engine", confidence: 0.92, response_mode: "list" };
-  }
 
-  // Meal plan expiring
-  if (matchesIntent(n, "meal_plan_expiring")) {
+  if (matchesIntent(n, "meal_plan_expiring"))
     return { ...base, intent: "meal_plan_expiring", module: "clinical_engine", confidence: 0.93, response_mode: "list" };
-  }
 
-  // Workout pain
-  if (matchesIntent(n, "workout_pain")) {
+  if (matchesIntent(n, "workout_pain"))
     return { ...base, intent: "workout_pain", target_entity: "students", module: "training_engine", confidence: 0.93, response_mode: "list" };
-  }
 
-  // Workout overview
-  if (matchesIntent(n, "workout_overview")) {
+  if (matchesIntent(n, "workout_overview"))
     return { ...base, intent: "workout_overview", module: "training_engine", confidence: 0.90, response_mode: "overview" };
-  }
 
-  // Clinical alerts
-  if (matchesIntent(n, "clinical_alerts")) {
+  if (matchesIntent(n, "clinical_alerts"))
     return { ...base, intent: "clinical_alerts", module: "clinical_engine", confidence: 0.93, response_mode: "list" };
-  }
 
-  // Clinical summary / portfolio
-  if (matchesIntent(n, "clinical_summary")) {
+  if (matchesIntent(n, "clinical_summary"))
     return { ...base, intent: "clinical_summary", module: "clinical_engine", confidence: 0.92, response_mode: "overview" };
-  }
 
-  // Appointments
-  if (matchesIntent(n, "appointments")) {
+  if (matchesIntent(n, "appointments"))
     return { ...base, intent: "appointments", module: "journey_engine", confidence: 0.91, response_mode: "list" };
-  }
 
-  // Journey
-  if (matchesIntent(n, "journey_status")) {
+  if (matchesIntent(n, "journey_status"))
     return { ...base, intent: "journey_status", module: "journey_engine", confidence: 0.90, response_mode: "overview" };
-  }
 
-  // Anamnesis
-  if (matchesIntent(n, "anamnesis")) {
+  if (matchesIntent(n, "anamnesis"))
     return { ...base, intent: "anamnesis", module: "clinical_engine", confidence: 0.91, response_mode: "detail" };
-  }
 
-  // Lab exams
-  if (matchesIntent(n, "lab_exams")) {
+  if (matchesIntent(n, "lab_exams"))
     return { ...base, intent: "lab_exams", module: "clinical_engine", confidence: 0.90, response_mode: "detail" };
-  }
 
-  // Checklist
-  if (matchesIntent(n, "checklist_status")) {
+  if (matchesIntent(n, "checklist_status"))
     return { ...base, intent: "checklist_status", module: "behavioral_engine", confidence: 0.91, response_mode: "overview" };
-  }
 
-  // Hydration
-  if (matchesIntent(n, "hydration")) {
+  if (matchesIntent(n, "hydration"))
     return { ...base, intent: "hydration", module: "behavioral_engine", confidence: 0.88, response_mode: "detail" };
-  }
 
-  // Navigate
-  if (matchesIntent(n, "navigate")) {
+  if (matchesIntent(n, "navigate"))
     return { ...base, intent: "navigate", module: "navigation", confidence: 0.90, response_mode: "navigate" };
-  }
 
-  // Patient detail by name
   if (matchesIntent(n, "patient_detail")) {
     const nameMatch = n.match(/(?:paciente|sobre|como esta|como vai|ficha d[aeo]|perfil d[aeo]|dados d[aeo])\s+(.+)/);
-    if (nameMatch) {
+    if (nameMatch)
       return { ...base, intent: "patient_detail", target_entity: "patient", target_name: nameMatch[1], module: "clinical_engine", confidence: 0.92, response_mode: "detail" };
-    }
-    // Context fallback
-    if (ctx.last_patient_id) {
+    if (ctx.last_patient_id)
       return { ...base, intent: "patient_detail", target_entity: "patient", target_id: ctx.last_patient_id, target_name: ctx.last_patient_name || null, module: "clinical_engine", confidence: 0.85, response_mode: "detail" };
-    }
   }
 
-  // Student detail
   if (matchesIntent(n, "student_detail")) {
     const nameMatch = n.match(/(?:aluno|estudante|meu aluno)\s+(.+)/);
-    if (nameMatch) {
+    if (nameMatch)
       return { ...base, intent: "student_detail", target_entity: "student", target_name: nameMatch[1], module: "training_engine", confidence: 0.91, response_mode: "detail" };
-    }
   }
 
-  // Meal plan
-  if (matchesIntent(n, "meal_plan")) {
-    if (ctx.last_patient_id) {
-      return { ...base, intent: "meal_plan", target_entity: "patient", target_id: ctx.last_patient_id, module: "clinical_engine", confidence: 0.88, response_mode: "detail" };
-    }
-  }
+  if (matchesIntent(n, "meal_plan") && ctx.last_patient_id)
+    return { ...base, intent: "meal_plan", target_entity: "patient", target_id: ctx.last_patient_id, module: "clinical_engine", confidence: 0.88, response_mode: "detail" };
 
-  // Portfolio health
-  if (matchesIntent(n, "portfolio_health")) {
+  if (matchesIntent(n, "portfolio_health"))
     return { ...base, intent: "portfolio_health", module: "clinical_engine", confidence: 0.91, response_mode: "overview" };
-  }
 
   // Context-aware follow-ups
-  if (ctx.last_patient_id && (n.includes("quando vence") || n.includes("plano del") || n.includes("dieta del"))) {
-    return { ...base, intent: "meal_plan", target_entity: "patient", target_id: ctx.last_patient_id, target_name: ctx.last_patient_name || null, module: "clinical_engine", confidence: 0.87, response_mode: "detail" };
-  }
-  if (ctx.last_patient_id && (n.includes("como ele esta") || n.includes("como ela esta") || n.includes("status del"))) {
-    return { ...base, intent: "patient_detail", target_entity: "patient", target_id: ctx.last_patient_id, target_name: ctx.last_patient_name || null, module: "clinical_engine", confidence: 0.86, response_mode: "detail" };
+  if (ctx.last_patient_id) {
+    if (n.includes("quando vence") || n.includes("plano del") || n.includes("dieta del"))
+      return { ...base, intent: "meal_plan", target_entity: "patient", target_id: ctx.last_patient_id, target_name: ctx.last_patient_name || null, module: "clinical_engine", confidence: 0.87, response_mode: "detail" };
+    if (n.includes("como ele esta") || n.includes("como ela esta") || n.includes("status del"))
+      return { ...base, intent: "patient_detail", target_entity: "patient", target_id: ctx.last_patient_id, target_name: ctx.last_patient_name || null, module: "clinical_engine", confidence: 0.86, response_mode: "detail" };
   }
 
   return base;
@@ -267,7 +200,9 @@ function findByName(list: any[], searchName: string, nameField = "full_name"): {
   return { found: null, ambiguous: [] };
 }
 
-// ── CONNECTORS (Data Fetchers) ─────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// CONNECTORS — Single responsibility data fetchers
+// ═══════════════════════════════════════════════════════════════
 async function getPatients(supabase: any, userId: string) {
   const { data } = await supabase.from("patients")
     .select("id, full_name, status, journey_status, goal, current_weight, target_weight, created_at")
@@ -341,7 +276,7 @@ async function getWorkoutFeedback(supabase: any, studentIds: string[]) {
 async function getSnapshots(supabase: any, patientIds: string[], today: string) {
   if (!patientIds.length) return [];
   const { data } = await supabase.from("clinical_daily_snapshots")
-    .select("patient_id, adherence_score, dropout_risk_score, risk_level, checklist_completion_rate, current_weight, weight_trend")
+    .select("patient_id, adherence_score, dropout_risk_score, risk_level, checklist_completion_rate, current_weight, weight_trend, momentum_direction")
     .in("patient_id", patientIds).eq("snapshot_date", today);
   return data || [];
 }
@@ -408,7 +343,9 @@ async function logIntent(supabase: any, userId: string, role: string, input: str
   });
 }
 
-// ── PRIORITY ENGINE ────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// PRIORITY ENGINE — Cross-domain scoring
+// ═══════════════════════════════════════════════════════════════
 interface PriorityItem {
   entity_type: string;
   entity_id: string;
@@ -431,40 +368,42 @@ function calculatePriorities(patients: any[], snapshots: any[], alerts: any[], p
     const pPlan = plans.find((pl: any) => pl.patient_id === p.id);
     const pTx = transactions.filter((t: any) => t.patient_id === p.id && (t.status === "pending" || t.status === "pendente"));
 
-    // Clinical risk
+    // 1. Clinical risk (+50 critical, +35 high)
     if (snap?.risk_level === "critical") { score += 50; reasons.push("Risco clínico crítico"); }
     else if (snap?.risk_level === "high") { score += 35; reasons.push("Risco clínico alto"); }
 
-    // Adherence
+    // 2. Adherence (+25 <40%, +15 <60%)
     if (snap?.adherence_score != null && snap.adherence_score < 40) { score += 25; reasons.push(`Adesão ${snap.adherence_score}%`); }
     else if (snap?.adherence_score != null && snap.adherence_score < 60) { score += 15; reasons.push(`Adesão ${snap.adherence_score}%`); }
 
-    // Dropout risk
+    // 3. Dropout risk (+30 >70%)
     if (snap?.dropout_risk_score != null && snap.dropout_risk_score > 70) { score += 30; reasons.push(`Risco abandono ${snap.dropout_risk_score}%`); }
 
-    // Active alerts
+    // 4. Active alerts (+40 critical, +15 others)
     if (pAlerts.length > 0) {
       const critAlerts = pAlerts.filter((a: any) => a.severity === "critical");
       if (critAlerts.length) { score += 40; reasons.push(`${critAlerts.length} alerta(s) crítico(s)`); }
       else { score += 15; reasons.push(`${pAlerts.length} alerta(s) ativo(s)`); }
     }
 
-    // Plan expiring
+    // 5. Plan expiring (+25 expired, +20 ≤2 days)
     if (pPlan?.end_date) {
       const daysLeft = Math.ceil((new Date(pPlan.end_date).getTime() - today.getTime()) / 86400000);
-      if (daysLeft <= 2 && daysLeft >= 0) { score += 20; reasons.push(`Plano vence em ${daysLeft} dia(s)`); }
-      else if (daysLeft < 0) { score += 25; reasons.push("Plano vencido"); }
+      if (daysLeft < 0) { score += 25; reasons.push("Plano vencido"); }
+      else if (daysLeft <= 2) { score += 20; reasons.push(`Plano vence em ${daysLeft}d`); }
     }
 
-    // Pending payment
-    if (pTx.length > 0) {
-      score += 15;
-      reasons.push(`${pTx.length} pagamento(s) pendente(s)`);
-    }
+    // 6. Financial pending (+15)
+    if (pTx.length > 0) { score += 15; reasons.push(`${pTx.length} pagamento(s) pendente(s)`); }
 
-    // Checklist
+    // 7. Checklist < 30% (+10)
     if (snap?.checklist_completion_rate != null && snap.checklist_completion_rate < 30) {
       score += 10; reasons.push("Checklist < 30%");
+    }
+
+    // 8. Days since last checkin (+15 >7d)
+    if (snap?.days_since_last_checkin != null && snap.days_since_last_checkin > 7) {
+      score += 15; reasons.push(`${snap.days_since_last_checkin}d sem check-in`);
     }
 
     if (score > 0) {
@@ -477,10 +416,10 @@ function calculatePriorities(patients: any[], snapshots: any[], alerts: any[], p
 }
 
 // ── FORMAT RESPONSE ────────────────────────────────────────────
-function formatResponse(title: string, icon: string, responseType: string, summary: string, markdown: string, actions: any[], intent: IFJIntent, engine: string, ctx: SessionCtx): IFJResponse {
+function fmt(title: string, icon: string, responseType: string, summary: string, markdown: string, actions: any[], intent: IFJIntent, engine: string, ctx: SessionCtx): IFJResponse {
   return {
     title, icon, response_type: responseType, summary, body_markdown: markdown, actions,
-    meta: { intent: intent.intent, confidence: intent.confidence, data_source: "deterministic", engine, used_context: !!ctx.last_patient_id },
+    meta: { intent: intent.intent, confidence: intent.confidence, data_source: "deterministic", engine, used_context: !!(ctx.last_patient_id || ctx.last_student_id) },
     sessionContext: ctx,
   };
 }
@@ -505,15 +444,15 @@ const NAV_MAP: Record<string, { route: string; label: string }> = {
 };
 
 function resolveNavigation(n: string): { route: string; label: string } | null {
-  for (const [key, val] of Object.entries(NAV_MAP)) {
-    if (n.includes(key)) return val;
-  }
+  for (const [key, val] of Object.entries(NAV_MAP)) { if (n.includes(key)) return val; }
   return null;
 }
 
-// ── DOMAIN ENGINES ─────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// DOMAIN ENGINES — Each engine owns its domain logic
+// ═══════════════════════════════════════════════════════════════
 
-// CLINICAL ENGINE
+// ── CLINICAL ENGINE ────────────────────────────────────────────
 async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: any[], today: string): Promise<IFJResponse> {
   const patientIds = patients.map((p: any) => p.id);
   const safeIds = patientIds.length ? patientIds : ["00000000-0000-0000-0000-000000000000"];
@@ -523,31 +462,26 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
       const snapshots = await getSnapshots(supabase, safeIds, today);
       const atRisk = snapshots.filter((s: any) => s.risk_level === "high" || s.risk_level === "critical")
         .sort((a: any, b: any) => (b.dropout_risk_score || 0) - (a.dropout_risk_score || 0));
-      if (!atRisk.length) {
-        return formatResponse("Nenhum paciente em risco", "✅", "info", "Carteira estável hoje.", "✅ Todos os pacientes estão dentro dos parâmetros normais.", [], intent, "clinical", ctx);
-      }
-      const md = atRisk.map((s: any) => {
-        const p = patients.find((x: any) => x.id === s.patient_id);
-        return `| **${p?.full_name || "?"}** | ${s.risk_level} | ${s.adherence_score || 0}% | ${s.dropout_risk_score || 0}% |`;
-      }).join("\n");
-      return formatResponse("Pacientes que precisam de atenção", "⚠️", "priority_list",
-        `${atRisk.length} paciente(s) em risco hoje.`,
-        `| Paciente | Risco | Adesão | Dropout |\n|---|---|---|---|\n${md}`,
-        [{ label: "Abrir Control Tower", route: "/control-tower", type: "navigate" }],
-        intent, "clinical", ctx);
+      if (!atRisk.length)
+        return fmt("Nenhum paciente em risco", "✅", "info", "Carteira estável hoje.", "✅ Todos os pacientes estão dentro dos parâmetros normais.", [], intent, "clinical", ctx);
+      const md = `| Paciente | Risco | Adesão | Dropout |\n|---|---|---|---|\n` +
+        atRisk.map((s: any) => {
+          const p = patients.find((x: any) => x.id === s.patient_id);
+          return `| **${p?.full_name || "?"}** | ${s.risk_level} | ${s.adherence_score || 0}% | ${s.dropout_risk_score || 0}% |`;
+        }).join("\n");
+      return fmt("Pacientes que precisam de atenção", "⚠️", "priority_list", `${atRisk.length} paciente(s) em risco hoje.`, md,
+        [{ label: "Abrir Control Tower", route: "/control-tower", type: "navigate" }], intent, "clinical", ctx);
     }
 
     case "patients_improved": {
       const snapshots = await getSnapshots(supabase, safeIds, today);
       const improved = snapshots.filter((s: any) => s.momentum_direction === "up" || (s.adherence_score && s.adherence_score >= 80));
-      if (!improved.length) {
-        return formatResponse("Sem destaques hoje", "📊", "info", "Nenhum paciente com melhora expressiva registrada.", "Aguarde mais dados para identificar tendências positivas.", [], intent, "clinical", ctx);
-      }
+      if (!improved.length) return fmt("Sem destaques hoje", "📊", "info", "Nenhum paciente com melhora expressiva.", "", [], intent, "clinical", ctx);
       const md = improved.map((s: any) => {
         const p = patients.find((x: any) => x.id === s.patient_id);
         return `- **${p?.full_name}** — Adesão: ${s.adherence_score}% | Tendência: ${s.weight_trend || "?"}`;
       }).join("\n");
-      return formatResponse("Pacientes em evolução", "🌟", "list", `${improved.length} paciente(s) com boa evolução.`, md, [], intent, "clinical", ctx);
+      return fmt("Pacientes em evolução", "🌟", "list", `${improved.length} paciente(s) com boa evolução.`, md, [], intent, "clinical", ctx);
     }
 
     case "patient_detail": {
@@ -558,16 +492,14 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
         const { found, ambiguous } = findByName(patients, intent.target_name);
         if (ambiguous.length > 0) {
           const md = ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}** (${p.goal || "?"})`).join("\n");
-          return formatResponse("Múltiplos pacientes encontrados", "🔍", "disambiguation",
-            `${ambiguous.length} pacientes com nome similar.`,
+          return fmt("Múltiplos pacientes encontrados", "🔍", "disambiguation", `${ambiguous.length} pacientes com nome similar.`,
             `Encontrei **${ambiguous.length}** pacientes:\n\n${md}\n\nDigite o nome completo.`, [], intent, "clinical", ctx);
         }
         patient = found;
       }
-      if (!patient) {
-        return formatResponse("Paciente não encontrado", "❌", "error", "Nenhum paciente com esse nome na sua carteira.", "Verifique a grafia ou diga outro nome.", [], intent, "clinical", ctx);
-      }
+      if (!patient) return fmt("Paciente não encontrado", "❌", "error", "Nenhum paciente com esse nome.", "Verifique a grafia ou diga outro nome.", [], intent, "clinical", ctx);
 
+      // Update context
       ctx.last_patient_id = patient.id;
       ctx.last_patient_name = patient.full_name;
       ctx.last_entity_type = "patient";
@@ -575,8 +507,7 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
 
       const overview = await getPatientOverview(supabase, patient.id, today);
       const s = overview.snapshot;
-      const md = `## ${patient.full_name}\n\n` +
-        `| Campo | Valor |\n|---|---|\n` +
+      const md = `## ${patient.full_name}\n\n| Campo | Valor |\n|---|---|\n` +
         `| Status | ${patient.journey_status || patient.status} |\n` +
         `| Objetivo | ${patient.goal || "—"} |\n` +
         `| Peso atual | ${s?.current_weight || patient.current_weight || "—"} kg |\n` +
@@ -589,19 +520,16 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
         `| Plano ativo | ${overview.activePlan?.title || "Nenhum"} |\n` +
         (overview.activePlan?.end_date ? `| Plano vence | ${overview.activePlan.end_date} |\n` : "");
 
-      const actions = [
-        { label: "Abrir ficha", route: `/patients/${patient.id}`, type: "navigate" },
-      ];
+      const actions = [{ label: "Abrir ficha", route: `/patients/${patient.id}`, type: "navigate" }];
       if (overview.activePlan?.id) actions.push({ label: "Ver plano", route: `/meal-plans/${overview.activePlan.id}`, type: "navigate" });
-
-      return formatResponse(`Ficha: ${patient.full_name}`, "👤", "detail", `Resumo clínico de ${patient.full_name}`, md, actions, intent, "clinical", ctx);
+      return fmt(`Ficha: ${patient.full_name}`, "👤", "detail", `Resumo clínico de ${patient.full_name}`, md, actions, intent, "clinical", ctx);
     }
 
     case "anamnesis": {
       const pid = intent.target_id || ctx.last_patient_id;
-      if (!pid) return formatResponse("Paciente não especificado", "❓", "error", "Diga o nome do paciente.", "Ex: *anamnese da Sandra*", [], intent, "clinical", ctx);
+      if (!pid) return fmt("Paciente não especificado", "❓", "error", "Diga o nome do paciente.", "Ex: *anamnese da Sandra*", [], intent, "clinical", ctx);
       const anam = await getPatientAnamnesis(supabase, pid);
-      if (!anam) return formatResponse("Sem anamnese", "📋", "info", "Nenhuma anamnese encontrada.", "O paciente ainda não respondeu a anamnese.", [], intent, "clinical", ctx);
+      if (!anam) return fmt("Sem anamnese", "📋", "info", "Nenhuma anamnese encontrada.", "O paciente ainda não respondeu.", [], intent, "clinical", ctx);
       const p = patients.find((x: any) => x.id === pid);
       const md = `## Anamnese — ${p?.full_name || "Paciente"}\n\n` +
         `- **Restrições**: ${anam.dietary_restrictions || "Nenhuma"}\n` +
@@ -613,14 +541,14 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
         `- **Exercícios**: ${anam.exercise_frequency || "—"}\n` +
         `- **Objetivos**: ${anam.goals_text || "—"}\n` +
         `- **Notas**: ${anam.lifestyle_notes || "—"}`;
-      return formatResponse(`Anamnese: ${p?.full_name}`, "📋", "detail", "Dados da anamnese", md, [], intent, "clinical", ctx);
+      return fmt(`Anamnese: ${p?.full_name}`, "📋", "detail", "Dados da anamnese", md, [], intent, "clinical", ctx);
     }
 
     case "lab_exams": {
       const pid = intent.target_id || ctx.last_patient_id;
-      if (!pid) return formatResponse("Paciente não especificado", "❓", "error", "Diga o nome.", "", [], intent, "clinical", ctx);
+      if (!pid) return fmt("Paciente não especificado", "❓", "error", "Diga o nome.", "", [], intent, "clinical", ctx);
       const labs = await getPatientLabSummary(supabase, pid);
-      if (!labs.length) return formatResponse("Sem exames", "🔬", "info", "Nenhum exame registrado.", "", [], intent, "clinical", ctx);
+      if (!labs.length) return fmt("Sem exames", "🔬", "info", "Nenhum exame registrado.", "", [], intent, "clinical", ctx);
       const p = patients.find((x: any) => x.id === pid);
       const md = `## Exames — ${p?.full_name}\n\n| Marcador | Valor | Ref | Status |\n|---|---|---|---|\n` +
         labs.map((l: any) => {
@@ -632,26 +560,23 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
           if (high != null && val > high) status = "⬆️ Alto";
           return `| ${l.marker_name} | ${l.value} ${l.unit || ""} | ${low || "—"}-${high || "—"} | ${status} |`;
         }).join("\n");
-      return formatResponse(`Exames: ${p?.full_name}`, "🔬", "detail", `${labs.length} marcadores`, md, [], intent, "clinical", ctx);
+      return fmt(`Exames: ${p?.full_name}`, "🔬", "detail", `${labs.length} marcadores`, md, [], intent, "clinical", ctx);
     }
 
-    case "lab_pending": {
-      // Check for patients who have no recent labs
-      const md = "🔬 Funcionalidade em construção. Consulte os exames por paciente.";
-      return formatResponse("Exames pendentes", "🔬", "info", "Em desenvolvimento", md, [], intent, "clinical", ctx);
-    }
+    case "lab_pending":
+      return fmt("Exames pendentes", "🔬", "info", "Em desenvolvimento", "🔬 Consulte os exames por paciente.", [], intent, "clinical", ctx);
 
     case "meal_plan": {
       const pid = intent.target_id || ctx.last_patient_id;
-      if (!pid) return formatResponse("Paciente não especificado", "❓", "error", "Diga o nome.", "", [], intent, "clinical", ctx);
+      if (!pid) return fmt("Paciente não especificado", "❓", "error", "Diga o nome.", "", [], intent, "clinical", ctx);
       const { data: plan } = await supabase.from("meal_plans")
         .select("id, title, status, start_date, end_date, total_calories").eq("patient_id", pid).eq("status", "active").maybeSingle();
       const p = patients.find((x: any) => x.id === pid);
-      if (!plan) return formatResponse("Sem plano ativo", "🍽️", "info", `${p?.full_name} não tem plano alimentar ativo.`, "", [{ label: "Criar plano", route: "/meal-plans", type: "navigate" }], intent, "clinical", ctx);
+      if (!plan) return fmt("Sem plano ativo", "🍽️", "info", `${p?.full_name} não tem plano ativo.`, "", [{ label: "Criar plano", route: "/meal-plans", type: "navigate" }], intent, "clinical", ctx);
       const daysLeft = plan.end_date ? Math.ceil((new Date(plan.end_date).getTime() - Date.now()) / 86400000) : null;
       const md = `## Plano: ${plan.title}\n\n- Status: ${plan.status}\n- Início: ${plan.start_date || "—"}\n- Fim: ${plan.end_date || "—"}\n- Calorias: ${plan.total_calories || "—"} kcal` +
         (daysLeft != null ? `\n- **Vence em ${daysLeft} dia(s)**` : "");
-      return formatResponse(`Plano: ${p?.full_name}`, "🍽️", "detail", `Plano ${plan.title}`, md,
+      return fmt(`Plano: ${p?.full_name}`, "🍽️", "detail", `Plano ${plan.title}`, md,
         [{ label: "Editar plano", route: `/meal-plans/${plan.id}`, type: "navigate" }], intent, "clinical", ctx);
     }
 
@@ -662,57 +587,55 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
         const d = Math.ceil((new Date(pl.end_date).getTime() - Date.now()) / 86400000);
         return d <= 5 && d >= -2;
       });
-      if (!soon.length) return formatResponse("Nenhum plano vencendo", "✅", "info", "Todos os planos estão dentro da validade.", "", [], intent, "clinical", ctx);
+      if (!soon.length) return fmt("Nenhum plano vencendo", "✅", "info", "Todos os planos válidos.", "", [], intent, "clinical", ctx);
       const md = soon.map((pl: any) => {
         const p = patients.find((x: any) => x.id === pl.patient_id);
         const d = Math.ceil((new Date(pl.end_date).getTime() - Date.now()) / 86400000);
         return `- **${p?.full_name || "?"}** — ${pl.title} — ${d < 0 ? "VENCIDO" : `vence em ${d}d`}`;
       }).join("\n");
-      return formatResponse("Planos vencendo", "⏰", "list", `${soon.length} plano(s) próximo(s) do vencimento`, md, [{ label: "Ver planos", route: "/meal-plans", type: "navigate" }], intent, "clinical", ctx);
+      return fmt("Planos vencendo", "⏰", "list", `${soon.length} plano(s)`, md, [{ label: "Ver planos", route: "/meal-plans", type: "navigate" }], intent, "clinical", ctx);
     }
 
     case "clinical_alerts": {
       const alerts = await getActiveAlerts(supabase, userId);
-      if (!alerts.length) return formatResponse("Sem alertas", "✅", "info", "Nenhum alerta clínico ativo.", "", [], intent, "clinical", ctx);
+      if (!alerts.length) return fmt("Sem alertas", "✅", "info", "Nenhum alerta ativo.", "", [], intent, "clinical", ctx);
       const md = `| Paciente | Alerta | Severidade |\n|---|---|---|\n` +
         alerts.map((a: any) => {
           const p = patients.find((x: any) => x.id === a.patient_id);
           return `| ${p?.full_name || "?"} | ${a.title} | ${a.severity} |`;
         }).join("\n");
-      return formatResponse("Alertas Clínicos", "🔔", "list", `${alerts.length} alerta(s) ativo(s)`, md, [{ label: "Ver alertas", route: "/control-tower", type: "navigate" }], intent, "clinical", ctx);
+      return fmt("Alertas Clínicos", "🔔", "list", `${alerts.length} alerta(s)`, md, [{ label: "Control Tower", route: "/control-tower", type: "navigate" }], intent, "clinical", ctx);
     }
 
     case "clinical_summary":
     case "portfolio_health": {
-      const snapshots = await getSnapshots(supabase, patientIds.length ? patientIds : safeIds, today);
-      const alerts = await getActiveAlerts(supabase, userId);
-      const plans = await getMealPlans(supabase, userId);
-      const transactions = await getFinancialSummary(supabase, userId);
+      const [snapshots, alerts, plans, transactions] = await Promise.all([
+        getSnapshots(supabase, safeIds, today),
+        getActiveAlerts(supabase, userId),
+        getMealPlans(supabase, userId),
+        getFinancialSummary(supabase, userId),
+      ]);
       const priorities = calculatePriorities(patients, snapshots, alerts, plans, transactions);
-
       const critical = priorities.filter(p => p.level === "critical").length;
       const high = priorities.filter(p => p.level === "high").length;
       const avgAdherence = snapshots.length ? Math.round(snapshots.reduce((s: number, x: any) => s + (x.adherence_score || 0), 0) / snapshots.length) : 0;
-
-      const md = `## Panorama da Carteira\n\n` +
-        `| Métrica | Valor |\n|---|---|\n` +
+      const md = `## Panorama da Carteira\n\n| Métrica | Valor |\n|---|---|\n` +
         `| Pacientes ativos | **${patients.length}** |\n` +
         `| Prioridade crítica | **${critical}** |\n` +
         `| Prioridade alta | **${high}** |\n` +
         `| Alertas ativos | **${alerts.length}** |\n` +
         `| Adesão média | **${avgAdherence}%** |\n` +
         `| Planos ativos | **${plans.length}** |`;
-
-      return formatResponse("Panorama da Carteira", "📊", "overview", `${patients.length} pacientes, ${critical} críticos`, md,
+      return fmt("Panorama da Carteira", "📊", "overview", `${patients.length} pacientes, ${critical} críticos`, md,
         [{ label: "Control Tower", route: "/control-tower", type: "navigate" }], intent, "clinical", ctx);
     }
 
     default:
-      return formatResponse("Intent não mapeada", "❓", "error", "Comando clínico não reconhecido.", "", [], intent, "clinical", ctx);
+      return fmt("Intent não mapeada", "❓", "error", "Comando clínico não reconhecido.", "", [], intent, "clinical", ctx);
   }
 }
 
-// BEHAVIORAL ENGINE
+// ── BEHAVIORAL ENGINE ──────────────────────────────────────────
 async function runBehavioralEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: any[], today: string): Promise<IFJResponse> {
   switch (intent.intent) {
     case "checklist_status": {
@@ -723,32 +646,28 @@ async function runBehavioralEngine(supabase: any, intent: IFJIntent, userId: str
         const total = (tasks || []).length;
         const done = (tasks || []).filter((t: any) => t.completed).length;
         const p = patients.find((x: any) => x.id === pid);
-        return formatResponse(`Checklist: ${p?.full_name}`, "✅", "detail", `${done}/${total} tarefas`,
-          `**${done}/${total}** tarefas completadas hoje.\n\n` + (tasks || []).map((t: any) => `- ${t.completed ? "✅" : "⬜"} ${t.title}`).join("\n"),
+        return fmt(`Checklist: ${p?.full_name}`, "✅", "detail", `${done}/${total} tarefas`,
+          `**${done}/${total}** tarefas hoje.\n\n` + (tasks || []).map((t: any) => `- ${t.completed ? "✅" : "⬜"} ${t.title}`).join("\n"),
           [], intent, "behavioral", ctx);
       }
-      // Global checklist overview
       const patientIds = patients.map((p: any) => p.id);
       const snapshots = await getSnapshots(supabase, patientIds.length ? patientIds : ["00000000-0000-0000-0000-000000000000"], today);
-      const lowAdherence = snapshots.filter((s: any) => s.checklist_completion_rate != null && s.checklist_completion_rate < 50);
-      if (!lowAdherence.length) return formatResponse("Checklists OK", "✅", "info", "Todos os pacientes com boa adesão ao checklist.", "", [], intent, "behavioral", ctx);
-      const md = lowAdherence.map((s: any) => {
+      const lowAdh = snapshots.filter((s: any) => s.checklist_completion_rate != null && s.checklist_completion_rate < 50);
+      if (!lowAdh.length) return fmt("Checklists OK", "✅", "info", "Todos com boa adesão.", "", [], intent, "behavioral", ctx);
+      const md = lowAdh.map((s: any) => {
         const p = patients.find((x: any) => x.id === s.patient_id);
         return `- **${p?.full_name || "?"}** — ${s.checklist_completion_rate}%`;
       }).join("\n");
-      return formatResponse("Checklist baixo", "📋", "list", `${lowAdherence.length} paciente(s) com checklist < 50%`, md, [], intent, "behavioral", ctx);
+      return fmt("Checklist baixo", "📋", "list", `${lowAdh.length} paciente(s) < 50%`, md, [], intent, "behavioral", ctx);
     }
-
-    case "hydration": {
-      return formatResponse("Hidratação", "💧", "info", "Consulte o checklist do paciente para ver hidratação.", "Diga o nome do paciente para ver detalhes.", [], intent, "behavioral", ctx);
-    }
-
+    case "hydration":
+      return fmt("Hidratação", "💧", "info", "Consulte checklist do paciente.", "Diga o nome do paciente.", [], intent, "behavioral", ctx);
     default:
-      return formatResponse("Intent comportamental", "🧠", "error", "Não reconhecido.", "", [], intent, "behavioral", ctx);
+      return fmt("Comportamental", "🧠", "error", "Não reconhecido.", "", [], intent, "behavioral", ctx);
   }
 }
 
-// FINANCIAL ENGINE
+// ── FINANCIAL ENGINE ───────────────────────────────────────────
 async function runFinancialEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: any[]): Promise<IFJResponse> {
   const transactions = await getFinancialSummary(supabase, userId);
 
@@ -762,99 +681,91 @@ async function runFinancialEngine(supabase: any, intent: IFJIntent, userId: stri
         `| Receitas totais | R$ ${totalIncome.toFixed(2)} |\n` +
         `| Pendente | R$ ${totalPending.toFixed(2)} |\n` +
         `| Transações | ${transactions.length} |`;
-      return formatResponse("Resumo Financeiro", "💰", "overview", `Receita: R$ ${totalIncome.toFixed(2)} | Pendente: R$ ${totalPending.toFixed(2)}`, md,
+      return fmt("Resumo Financeiro", "💰", "overview", `Receita: R$ ${totalIncome.toFixed(2)} | Pendente: R$ ${totalPending.toFixed(2)}`, md,
         [{ label: "Ir para Financeiro", route: "/financial", type: "navigate" }], intent, "financial", ctx);
     }
-
     case "financial_pending": {
       const pending = transactions.filter((t: any) => t.status === "pending" || t.status === "pendente");
-      if (!pending.length) return formatResponse("Sem pendências", "✅", "info", "Nenhum pagamento pendente.", "", [], intent, "financial", ctx);
+      if (!pending.length) return fmt("Sem pendências", "✅", "info", "Nenhum pagamento pendente.", "", [], intent, "financial", ctx);
       const md = pending.map((t: any) => {
         const p = patients.find((x: any) => x.id === t.patient_id);
         return `- **${p?.full_name || "?"}** — R$ ${(t.amount || 0).toFixed(2)} — ${t.due_date || "sem data"}`;
       }).join("\n");
-      return formatResponse("Cobranças pendentes", "💳", "list", `${pending.length} pagamento(s) pendente(s)`, md,
+      return fmt("Cobranças pendentes", "💳", "list", `${pending.length} pendente(s)`, md,
         [{ label: "Ir para Financeiro", route: "/financial", type: "navigate" }], intent, "financial", ctx);
     }
-
     default:
-      return formatResponse("Financeiro", "💰", "error", "Não reconhecido.", "", [], intent, "financial", ctx);
+      return fmt("Financeiro", "💰", "error", "Não reconhecido.", "", [], intent, "financial", ctx);
   }
 }
 
-// TRAINING ENGINE
+// ── TRAINING ENGINE ────────────────────────────────────────────
 async function runTrainingEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx): Promise<IFJResponse> {
   const students = await getStudents(supabase, userId);
   const studentIds = students.map((s: any) => s.id);
 
   switch (intent.intent) {
-    case "workout_overview": {
-      return formatResponse("Visão de Treinos", "🏋️", "overview", `${students.length} aluno(s) ativo(s)`,
+    case "workout_overview":
+      return fmt("Visão de Treinos", "🏋️", "overview", `${students.length} aluno(s) ativo(s)`,
         `Você tem **${students.length}** alunos ativos.`,
         [{ label: "Ver treinos", route: "/workouts", type: "navigate" }], intent, "training", ctx);
-    }
-
     case "workout_pain": {
       const feedback = await getWorkoutFeedback(supabase, studentIds);
       const withPain = feedback.filter((f: any) => f.pain_reported);
-      if (!withPain.length) return formatResponse("Sem dores reportadas", "✅", "info", "Nenhum aluno reportou dor recentemente.", "", [], intent, "training", ctx);
+      if (!withPain.length) return fmt("Sem dores", "✅", "info", "Nenhum aluno com dor.", "", [], intent, "training", ctx);
       const md = withPain.map((f: any) => {
         const s = students.find((x: any) => x.id === f.patient_id);
         return `- **${s?.full_name || "?"}** — ${f.pain_location || "?"} — ${f.session_date}`;
       }).join("\n");
-      return formatResponse("Alunos com dor", "🤕", "list", `${withPain.length} relato(s) de dor`, md, [], intent, "training", ctx);
+      return fmt("Alunos com dor", "🤕", "list", `${withPain.length} relato(s)`, md, [], intent, "training", ctx);
     }
-
     case "student_detail": {
-      if (!intent.target_name) return formatResponse("Aluno não especificado", "❓", "error", "Diga o nome.", "", [], intent, "training", ctx);
+      if (!intent.target_name) return fmt("Aluno não especificado", "❓", "error", "Diga o nome.", "", [], intent, "training", ctx);
       const { found, ambiguous } = findByName(students, intent.target_name);
-      if (ambiguous.length > 0) {
-        const md = ambiguous.map((s: any, i: number) => `${i + 1}. **${s.full_name}**`).join("\n");
-        return formatResponse("Múltiplos alunos", "🔍", "disambiguation", `${ambiguous.length} alunos encontrados`, md, [], intent, "training", ctx);
-      }
-      if (!found) return formatResponse("Aluno não encontrado", "❌", "error", "Não encontrado.", "", [], intent, "training", ctx);
+      if (ambiguous.length > 0)
+        return fmt("Múltiplos alunos", "🔍", "disambiguation", `${ambiguous.length} encontrados`,
+          ambiguous.map((s: any, i: number) => `${i + 1}. **${s.full_name}**`).join("\n"), [], intent, "training", ctx);
+      if (!found) return fmt("Aluno não encontrado", "❌", "error", "Não encontrado.", "", [], intent, "training", ctx);
       ctx.last_student_id = found.id;
       ctx.last_student_name = found.full_name;
-      return formatResponse(`Aluno: ${found.full_name}`, "🏋️", "detail", `Dados de ${found.full_name}`,
+      return fmt(`Aluno: ${found.full_name}`, "🏋️", "detail", `Dados de ${found.full_name}`,
         `## ${found.full_name}\n\n- Peso: ${found.current_weight || "—"} kg\n- Objetivo: ${found.goal || "—"}`,
         [], intent, "training", ctx);
     }
-
     default:
-      return formatResponse("Treino", "🏋️", "error", "Não reconhecido.", "", [], intent, "training", ctx);
+      return fmt("Treino", "🏋️", "error", "Não reconhecido.", "", [], intent, "training", ctx);
   }
 }
 
-// JOURNEY ENGINE
+// ── JOURNEY ENGINE ─────────────────────────────────────────────
 async function runJourneyEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: any[], today: string): Promise<IFJResponse> {
   switch (intent.intent) {
     case "appointments": {
       const appts = await getAppointments(supabase, userId, today);
-      if (!appts.length) return formatResponse("Sem consultas", "📅", "info", "Nenhuma consulta agendada.", "", [{ label: "Agendar", route: "/appointments", type: "navigate" }], intent, "journey", ctx);
+      if (!appts.length) return fmt("Sem consultas", "📅", "info", "Nenhuma consulta agendada.",
+        "", [{ label: "Agendar", route: "/appointments", type: "navigate" }], intent, "journey", ctx);
       const md = `| Paciente | Data | Hora | Tipo | Status |\n|---|---|---|---|---|\n` +
         appts.map((a: any) => {
           const p = patients.find((x: any) => x.id === a.patient_id);
           return `| ${p?.full_name || "?"} | ${a.appointment_date} | ${a.appointment_time || "—"} | ${a.appointment_type || "—"} | ${a.status} |`;
         }).join("\n");
-      return formatResponse("Próximas Consultas", "📅", "list", `${appts.length} consulta(s)`, md,
+      return fmt("Próximas Consultas", "📅", "list", `${appts.length} consulta(s)`, md,
         [{ label: "Ver agenda", route: "/appointments", type: "navigate" }], intent, "journey", ctx);
     }
-
     case "journey_status": {
       const pid = ctx.last_patient_id;
-      if (!pid) return formatResponse("Paciente não especificado", "❓", "error", "Diga o nome.", "", [], intent, "journey", ctx);
+      if (!pid) return fmt("Paciente não especificado", "❓", "error", "Diga o nome.", "", [], intent, "journey", ctx);
       const p = patients.find((x: any) => x.id === pid);
-      return formatResponse(`Jornada: ${p?.full_name}`, "🗺️", "detail", `Status: ${p?.journey_status || p?.status}`,
+      return fmt(`Jornada: ${p?.full_name}`, "🗺️", "detail", `Status: ${p?.journey_status || p?.status}`,
         `## Jornada — ${p?.full_name}\n\n- Status: **${p?.journey_status || p?.status}**\n- Objetivo: ${p?.goal || "—"}`,
         [{ label: "Ver ficha", route: `/patients/${pid}`, type: "navigate" }], intent, "journey", ctx);
     }
-
     default:
-      return formatResponse("Jornada", "🗺️", "error", "Não reconhecido.", "", [], intent, "journey", ctx);
+      return fmt("Jornada", "🗺️", "error", "Não reconhecido.", "", [], intent, "journey", ctx);
   }
 }
 
-// PRIORITY ENGINE (God Mode)
+// ── PRIORITY ENGINE (God Mode) ─────────────────────────────────
 async function runPriorityEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: any[], today: string): Promise<IFJResponse> {
   const patientIds = patients.map((p: any) => p.id);
   const safeIds = patientIds.length ? patientIds : ["00000000-0000-0000-0000-000000000000"];
@@ -868,9 +779,9 @@ async function runPriorityEngine(supabase: any, intent: IFJIntent, userId: strin
 
   const priorities = calculatePriorities(patients, snapshots, alerts, plans, transactions);
 
-  // Save to priority queue
-  for (const item of priorities.slice(0, 20)) {
-    await supabase.from("ifj_priority_queue").upsert({
+  // Persist to priority queue (upsert by owner + entity)
+  const upsertPromises = priorities.slice(0, 20).map(item =>
+    supabase.from("ifj_priority_queue").upsert({
       entity_type: item.entity_type,
       entity_id: item.entity_id,
       entity_name: item.entity_name,
@@ -881,38 +792,34 @@ async function runPriorityEngine(supabase: any, intent: IFJIntent, userId: strin
       source_engine: "priority",
       is_resolved: false,
       updated_at: new Date().toISOString(),
-    }, { onConflict: "entity_type,entity_id" }).catch(() => {});
-  }
+    }, { onConflict: "owner_user_id,entity_type,entity_id" }).catch(() => {})
+  );
+  await Promise.all(upsertPromises);
 
   if (intent.intent === "next_best_action") {
     const top = priorities[0];
-    if (!top) return formatResponse("Nada urgente", "✅", "action", "Não há ação prioritária no momento.", "Seus pacientes estão estáveis! 🎉", [], intent, "priority", ctx);
-    return formatResponse("Próxima Melhor Ação", "🎯", "action",
-      `Prioridade: ${top.entity_name} (Score: ${top.score})`,
+    if (!top) return fmt("Nada urgente", "✅", "action", "Sem ação prioritária.", "Seus pacientes estão estáveis! 🎉", [], intent, "priority", ctx);
+    return fmt("Próxima Melhor Ação", "🎯", "action",
+      `Prioridade: ${top.entity_name} (${top.score}pts)`,
       `## 🎯 Ação recomendada\n\n**Paciente:** ${top.entity_name}\n**Score:** ${top.score}/100\n**Nível:** ${top.level}\n\n**Motivos:**\n${top.reasons.map(r => `- ${r}`).join("\n")}`,
       [{ label: `Abrir ${top.entity_name}`, route: `/patients/${top.entity_id}`, type: "navigate" }],
       intent, "priority", ctx);
   }
 
   // priorities_today
-  if (!priorities.length) return formatResponse("Dia tranquilo", "✅", "info", "Nenhuma prioridade identificada.", "Seus pacientes estão estáveis! 🎉", [], intent, "priority", ctx);
+  if (!priorities.length) return fmt("Dia tranquilo", "✅", "info", "Nenhuma prioridade.", "Seus pacientes estão estáveis! 🎉", [], intent, "priority", ctx);
 
   const critical = priorities.filter(p => p.level === "critical");
   const high = priorities.filter(p => p.level === "high");
   const medium = priorities.filter(p => p.level === "medium");
-
-  // Plans expiring
   const expiringPlans = plans.filter((pl: any) => {
     if (!pl.end_date) return false;
     const d = Math.ceil((new Date(pl.end_date).getTime() - Date.now()) / 86400000);
     return d <= 3 && d >= -1;
   });
-
-  // Pending payments
   const pendingPayments = transactions.filter((t: any) => t.status === "pending" || t.status === "pendente");
 
-  let md = `## 📋 Prioridades do Dia\n\n`;
-  md += `| Indicador | Qtd |\n|---|---|\n`;
+  let md = `## 📋 Prioridades do Dia\n\n| Indicador | Qtd |\n|---|---|\n`;
   md += `| 🔴 Crítico | ${critical.length} |\n`;
   md += `| 🟠 Alto | ${high.length} |\n`;
   md += `| 🟡 Médio | ${medium.length} |\n`;
@@ -930,21 +837,14 @@ async function runPriorityEngine(supabase: any, intent: IFJIntent, userId: strin
     md += "\n\n";
   }
 
-  return formatResponse("Prioridades do Dia", "📋", "priority_list",
-    `${critical.length} crítico(s), ${high.length} alto(s), ${medium.length} médio(s)`,
-    md,
-    [{ label: "Control Tower", route: "/control-tower", type: "navigate" }],
-    intent, "priority", ctx);
+  return fmt("Prioridades do Dia", "📋", "priority_list",
+    `${critical.length} crítico(s), ${high.length} alto(s), ${medium.length} médio(s)`, md,
+    [{ label: "Control Tower", route: "/control-tower", type: "navigate" }], intent, "priority", ctx);
 }
 
-// ── ROLE VALIDATOR ─────────────────────────────────────────────
-async function getUserRole(supabase: any, userId: string): Promise<string> {
-  const { data: profile } = await supabase.from("profiles")
-    .select("role, full_name").eq("user_id", userId).maybeSingle();
-  return profile?.role || "patient";
-}
-
-// ── MAIN ROUTER ────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// MAIN ROUTER — Single entry point
+// ═══════════════════════════════════════════════════════════════
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -964,7 +864,9 @@ serve(async (req) => {
     const today = new Date().toISOString().split("T")[0];
 
     // 1. Validate Role
-    const role = await getUserRole(supabase, user.id);
+    const { data: profile } = await supabase.from("profiles").select("role, full_name").eq("user_id", user.id).maybeSingle();
+    const role = profile?.role || "patient";
+    const userName = profile?.full_name?.split(" ")[0] || "Profissional";
 
     // 2. Load Session Context
     const ctx = await loadSessionContext(supabase, user.id, sessionKey);
@@ -973,87 +875,68 @@ serve(async (req) => {
     const n = normalize(inputText);
     const intent = detectIntent(n, ctx);
 
-    // 4. Get user's name
-    const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle();
-    const userName = profile?.full_name?.split(" ")[0] || "Profissional";
+    // 4. Fetch patients ONCE (shared across engines)
+    // Only fetch if the engine needs it (not training or navigation)
+    const needsPatients = !["navigation", "general"].includes(intent.module) && intent.module !== "training_engine";
+    const patients = needsPatients ? await getPatients(supabase, user.id) : [];
 
     let response: IFJResponse;
 
-    // 5. Route to engine based on intent
+    // 5. Route to correct engine
     try {
-      // GREETING
       if (intent.intent === "greeting") {
+        const pts = patients.length || (await getPatients(supabase, user.id)).length;
         const hour = new Date().getHours();
         const period = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
-        const patients = await getPatients(supabase, user.id);
-        response = formatResponse(`${period}, ${userName}!`, "👋", "greeting",
-          `${patients.length} pacientes ativos.`,
-          `${period}, **${userName}**! 👋\n\nVocê tem **${patients.length}** pacientes ativos.\n\nPergunte:\n- *"O que preciso resolver hoje?"*\n- *"Quem precisa de atenção?"*\n- *"Resumo da carteira"*`,
+        response = fmt(`${period}, ${userName}!`, "👋", "greeting", `${pts} pacientes ativos.`,
+          `${period}, **${userName}**! 👋\n\nVocê tem **${pts}** pacientes ativos.\n\nPergunte:\n- *"O que preciso resolver hoje?"*\n- *"Quem precisa de atenção?"*\n- *"Resumo da carteira"*`,
           [], intent, "general", ctx);
       }
-      // HELP
       else if (intent.intent === "help") {
-        response = formatResponse("Comandos IFJ Core", "📚", "help", "Lista de comandos disponíveis",
+        response = fmt("Comandos IFJ Core", "📚", "help", "Comandos disponíveis",
           `## Comandos disponíveis\n\n` +
-          `### 🎯 Prioridades\n- *"O que preciso resolver hoje?"*\n- *"Próxima melhor ação"*\n- *"Prioridades do dia"*\n\n` +
+          `### 🎯 Prioridades\n- *"O que preciso resolver hoje?"*\n- *"Próxima melhor ação"*\n\n` +
           `### 👥 Pacientes\n- *"Quem precisa de atenção?"*\n- *"Quem melhorou?"*\n- *"Sobre [nome]"*\n- *"Anamnese da [nome]"*\n- *"Exames do [nome]"*\n\n` +
-          `### 📋 Clínico\n- *"Planos vencendo"*\n- *"Alertas clínicos"*\n- *"Resumo da carteira"*\n- *"Checklist do [nome]"*\n\n` +
+          `### 📋 Clínico\n- *"Planos vencendo"*\n- *"Alertas clínicos"*\n- *"Resumo da carteira"*\n\n` +
           `### 💰 Financeiro\n- *"Resumo financeiro"*\n- *"Cobranças pendentes"*\n\n` +
           `### 🏋️ Treinos\n- *"Alunos com dor"*\n- *"Visão de treinos"*\n\n` +
-          `### 📅 Agenda\n- *"Consultas"*\n- *"Próximas consultas"*\n\n` +
+          `### 📅 Agenda\n- *"Consultas"*\n\n` +
           `### 🧭 Navegação\n- *"Abrir financeiro"*\n- *"Ir para Control Tower"*`,
           [], intent, "general", ctx);
       }
-      // NAVIGATE
       else if (intent.intent === "navigate") {
         const nav = resolveNavigation(n);
-        if (nav) {
-          response = formatResponse(`Navegando para ${nav.label}`, "🧭", "navigate", `Abrindo ${nav.label}`,
-            `Abrindo **${nav.label}**...`,
-            [{ label: nav.label, route: nav.route, type: "navigate" }], intent, "navigation", ctx);
-        } else {
-          response = formatResponse("Destino não encontrado", "❓", "error", "Não encontrei essa tela.", "Tente: *abrir financeiro*, *ir para pacientes*, etc.", [], intent, "navigation", ctx);
-        }
+        response = nav
+          ? fmt(`Navegando: ${nav.label}`, "🧭", "navigate", `Abrindo ${nav.label}`, `Abrindo **${nav.label}**...`,
+              [{ label: nav.label, route: nav.route, type: "navigate" }], intent, "navigation", ctx)
+          : fmt("Destino não encontrado", "❓", "error", "Não encontrei essa tela.", "Tente: *abrir financeiro*, *ir para pacientes*", [], intent, "navigation", ctx);
       }
-      // PRIORITY ENGINE
       else if (intent.module === "priority_engine") {
-        const patients = await getPatients(supabase, user.id);
         response = await runPriorityEngine(supabase, intent, user.id, ctx, patients, today);
       }
-      // CLINICAL ENGINE
       else if (intent.module === "clinical_engine") {
-        const patients = await getPatients(supabase, user.id);
         response = await runClinicalEngine(supabase, intent, user.id, ctx, patients, today);
       }
-      // BEHAVIORAL ENGINE
       else if (intent.module === "behavioral_engine") {
-        const patients = await getPatients(supabase, user.id);
         response = await runBehavioralEngine(supabase, intent, user.id, ctx, patients, today);
       }
-      // FINANCIAL ENGINE
       else if (intent.module === "financial_engine") {
-        const patients = await getPatients(supabase, user.id);
         response = await runFinancialEngine(supabase, intent, user.id, ctx, patients);
       }
-      // TRAINING ENGINE
       else if (intent.module === "training_engine") {
         response = await runTrainingEngine(supabase, intent, user.id, ctx);
       }
-      // JOURNEY ENGINE
       else if (intent.module === "journey_engine") {
-        const patients = await getPatients(supabase, user.id);
         response = await runJourneyEngine(supabase, intent, user.id, ctx, patients, today);
       }
-      // UNKNOWN
       else {
-        response = formatResponse("Não entendi", "❓", "error", "Comando não reconhecido.",
-          `Não entendi o comando. Tente:\n- *"O que preciso resolver hoje?"*\n- *"Quem precisa de atenção?"*\n- *"Sobre [nome do paciente]"*\n- *"Resumo financeiro"*\n- *"Ajuda"*`,
+        response = fmt("Não entendi", "❓", "error", "Comando não reconhecido.",
+          `Não entendi. Tente:\n- *"O que preciso resolver hoje?"*\n- *"Quem precisa de atenção?"*\n- *"Sobre [nome]"*\n- *"Resumo financeiro"*\n- *"Ajuda"*`,
           [], intent, "general", ctx);
       }
     } catch (engineError) {
       console.error("Engine error:", engineError);
-      response = formatResponse("Erro no motor", "❌", "error", "Erro ao processar.",
-        `Ocorreu um erro ao processar o comando. Tente novamente.`, [], intent, "error", ctx);
+      response = fmt("Erro no motor", "❌", "error", "Erro ao processar.", "Ocorreu um erro. Tente novamente.", [], intent, "error", ctx);
     }
 
     // 6. Save session context
