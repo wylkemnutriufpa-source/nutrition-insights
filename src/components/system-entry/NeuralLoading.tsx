@@ -191,7 +191,7 @@ function NeuralParticleCanvas({
       }
       ringGeo.setAttribute("position", new THREE.BufferAttribute(ringPos, 3));
       const ringMat = new THREE.LineBasicMaterial({
-        color: new THREE.Color().setHSL(152 / 360, 0.5, 0.3 + r * 0.08),
+        color: new THREE.Color().setHSL(43 / 360, 0.7, 0.3 + r * 0.08),
         transparent: true,
         opacity: modeRef.current === "converge" ? 0 : 0.15 + r * 0.05,
         blending: THREE.AdditiveBlending,
