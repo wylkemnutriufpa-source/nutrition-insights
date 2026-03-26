@@ -122,10 +122,27 @@ function detectIntent(n: string, ctx: SessionCtx): IFJIntent {
   if (matchesIntent(n, "help"))
     return { ...base, intent: "help", module: "general", confidence: 0.95, response_mode: "help" };
 
-  // ACTION INTENTS — execute real operations
+  // ACTION INTENTS — execute real operations (MUST be before journey_status to avoid "onboarding" steal)
+  // Compound action detection: "coloque premium e libere IFJ para Marisa Lima"
+  if (n.match(/(?:coloque|ative|libere|de|dar)\s+premium.*(?:e\s+)?(?:libere|ative|habilite)\s+ifj\s+(?:para|d[aeo]\s+)?(.+)/) ||
+      n.match(/(?:libere|ative|habilite)\s+ifj.*(?:e\s+)?(?:coloque|ative|libere|de)\s+premium\s+(?:para|d[aeo]\s+)?(.+)/)) {
+    const nameMatch = n.match(/(?:para|d[aeo])\s+([a-z\s]+?)(?:\s*$)/);
+    return { ...base, intent: "action_compound_premium_ifj", target_entity: "patient", target_name: nameMatch?.[1] || null, module: "action_engine", confidence: 0.97, response_mode: "action" };
+  }
+
   if (matchesIntent(n, "action_release_onboarding")) {
-    const nameMatch = n.match(/(?:libere?|ative?)\s+onboarding\s+(?:d[aeo]\s+)?(.+)/);
+    const nameMatch = n.match(/(?:libere?|ative?)\s+(?:o\s+)?onboarding\s+(?:d[aeo]\s+)?(.+)/);
     return { ...base, intent: "action_release_onboarding", target_entity: "patient", target_name: nameMatch?.[1] || null, module: "action_engine", confidence: 0.96, response_mode: "action" };
+  }
+
+  if (matchesIntent(n, "action_set_premium")) {
+    const nameMatch = n.match(/(?:coloque|ative|libere|dar|tornar)\s+premium\s+(?:para\s+|d[aeo]\s+)?(.+)/);
+    return { ...base, intent: "action_set_premium", target_entity: "patient", target_name: nameMatch?.[1] || null, module: "action_engine", confidence: 0.95, response_mode: "action" };
+  }
+
+  if (matchesIntent(n, "action_enable_ifj")) {
+    const nameMatch = n.match(/(?:libere?|ative?|habilite?|ligar?)\s+ifj\s+(?:para\s+|d[aeo]\s+)?(.+)/);
+    return { ...base, intent: "action_enable_ifj", target_entity: "patient", target_name: nameMatch?.[1] || null, module: "action_engine", confidence: 0.95, response_mode: "action" };
   }
 
   if (matchesIntent(n, "action_awaiting_onboarding"))
