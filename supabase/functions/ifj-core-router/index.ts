@@ -574,18 +574,37 @@ async function runActionEngine(supabaseAdmin: any, supabase: any, intent: IFJInt
     }
 
     case "action_awaiting_onboarding": {
-      const awaiting = patients.filter(p => p.journey_status === "awaiting_onboarding_release" || p.journey_status === "payment_confirmed");
-      if (!awaiting.length) return fmt("Nenhum pendente", "✅", "info", "Nenhum paciente aguardando onboarding.", "", [], intent, "action", ctx);
-      const md = awaiting.map(p => `- **${p.full_name}** — Status: ${p.journey_status}\n  [ACTION: Liberar onboarding|/patients/${p.id}]`).join("\n");
+      // Real journey_status values that mean "awaiting onboarding release"
+      const PRE_ONBOARDING_STATUSES = [
+        "awaiting_consent", "invited", "awaiting_payment",
+        "payment_confirmed", "awaiting_onboarding_release",
+        "onboarding_active",
+      ];
+      const awaiting = patients.filter(p => PRE_ONBOARDING_STATUSES.includes(p.journey_status || ""));
+      if (!awaiting.length) {
+        // Also check for patients with status "active" but no completed onboarding
+        const noOnboarding = patients.filter(p => !p.journey_status || p.journey_status === "active");
+        // Try to find ones without anamnesis as proxy
+        if (noOnboarding.length > 0) {
+          return fmt("Status da carteira", "📋", "info",
+            `${patients.length} pacientes ativos — todos com journey_status 'active'.`,
+            `## Carteira de pacientes\n\nTodos os **${patients.length}** pacientes estão com status **active**.\n\nNenhum está em fila de espera de onboarding no momento.\n\n💡 Para verificar quem precisa de atenção clínica, diga: *"Quem precisa de atenção?"*`,
+            [{ label: "Pipeline", route: "/onboarding-pipeline", type: "navigate" }], intent, "action", ctx);
+        }
+        return fmt("Nenhum pendente", "✅", "info", "Nenhum paciente aguardando onboarding.", "", [], intent, "action", ctx);
+      }
+      const md = awaiting.map(p => `- **${p.full_name}** — Status: \`${p.journey_status}\`\n  💡 Diga: *"libere onboarding da ${p.full_name.split(" ")[0]}"*`).join("\n");
       return fmt("Aguardando Onboarding", "📋", "list", `${awaiting.length} paciente(s) aguardando`,
         `## Pacientes aguardando onboarding\n\n${md}\n\n💡 Diga: *"libere onboarding da [nome]"* para liberar.`,
         [{ label: "Pipeline", route: "/onboarding-pipeline", type: "navigate" }], intent, "action", ctx);
     }
 
     case "action_awaiting_payment": {
-      const awaiting = patients.filter(p => p.journey_status === "awaiting_payment" || p.journey_status === "pending_payment");
+      const awaiting = patients.filter(p =>
+        p.journey_status === "awaiting_payment" || p.journey_status === "pending_payment" || p.journey_status === "invited"
+      );
       if (!awaiting.length) return fmt("Nenhum pendente", "✅", "info", "Todos os pacientes com pagamento confirmado.", "", [], intent, "action", ctx);
-      const md = awaiting.map(p => `- **${p.full_name}** — Status: ${p.journey_status}`).join("\n");
+      const md = awaiting.map(p => `- **${p.full_name}** — Status: \`${p.journey_status}\``).join("\n");
       return fmt("Aguardando Pagamento", "💳", "list", `${awaiting.length} paciente(s)`,
         `## Pacientes aguardando pagamento\n\n${md}`,
         [{ label: "Financeiro", route: "/financial", type: "navigate" }], intent, "action", ctx);
@@ -595,25 +614,116 @@ async function runActionEngine(supabaseAdmin: any, supabase: any, intent: IFJInt
       const planPatientIds = new Set();
       const plans = await getMealPlans(supabase, userId, role);
       plans.forEach((pl: any) => planPatientIds.add(pl.patient_id));
-      const noDiet = patients.filter(p => !planPatientIds.has(p.id) && p.journey_status !== "awaiting_payment");
+      const noDiet = patients.filter(p => !planPatientIds.has(p.id) && p.journey_status !== "awaiting_payment" && p.journey_status !== "invited");
       if (!noDiet.length) return fmt("Todos com dieta", "✅", "info", "Todos os pacientes possuem plano alimentar.", "", [], intent, "action", ctx);
-      const md = noDiet.map(p => `- **${p.full_name}** — Status: ${p.journey_status || "ativo"}`).join("\n");
+      const md = noDiet.map(p => `- **${p.full_name}** — Status: \`${p.journey_status || "ativo"}\``).join("\n");
       return fmt("Sem Dieta", "🍽️", "list", `${noDiet.length} paciente(s) sem plano`,
         `## Pacientes sem plano alimentar\n\n${md}`,
         [{ label: "Criar plano", route: "/meal-plans", type: "navigate" }], intent, "action", ctx);
     }
 
     case "action_awaiting_approval": {
-      const awaiting = patients.filter(p => p.journey_status === "draft_ready_for_review" || p.journey_status === "onboarding_completed");
+      const awaiting = patients.filter(p =>
+        p.journey_status === "draft_ready_for_review" || p.journey_status === "onboarding_completed" || p.journey_status === "awaiting_consent"
+      );
       if (!awaiting.length) return fmt("Nenhum pendente", "✅", "info", "Nenhuma aprovação pendente.", "", [], intent, "action", ctx);
-      const md = awaiting.map(p => `- **${p.full_name}** — Status: ${p.journey_status}`).join("\n");
+      const md = awaiting.map(p => `- **${p.full_name}** — Status: \`${p.journey_status}\`\n  💡 Diga: *"libere onboarding da ${p.full_name.split(" ")[0]}"*`).join("\n");
       return fmt("Aguardando Aprovação", "⏳", "list", `${awaiting.length} pendente(s)`,
         `## Pacientes aguardando aprovação\n\n${md}`,
         [{ label: "Pipeline", route: "/onboarding-pipeline", type: "navigate" }], intent, "action", ctx);
     }
 
+    case "action_set_premium": {
+      if (!intent.target_name) return fmt("Quem?", "❓", "error", "Diga o nome do paciente.", "Ex: *coloque premium para Maria*", [], intent, "action", ctx);
+      const { found, ambiguous } = findByName(patients, intent.target_name);
+      if (ambiguous.length > 0) {
+        const md = ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}**`).join("\n");
+        return fmt("Qual paciente?", "🔍", "disambiguation", "Múltiplos encontrados", md, [], intent, "action", ctx);
+      }
+      if (!found) return fmt("Não encontrado", "❌", "error", "Paciente não encontrado.", "", [], intent, "action", ctx);
+
+      // Set premium subscription
+      const { error } = await supabaseAdmin.from("user_subscriptions")
+        .upsert({ user_id: found.id, plan_type: "premium", is_active: true, updated_at: new Date().toISOString() },
+        { onConflict: "user_id" });
+
+      if (error) return fmt("Erro", "❌", "error", "Erro ao ativar premium.", error.message, [], intent, "action", ctx);
+
+      ctx.last_patient_id = found.id;
+      ctx.last_patient_name = found.full_name;
+      return fmt("✅ Premium ativado!", "👑", "action_completed",
+        `${found.full_name} agora é Premium.`,
+        `## ✅ Ação executada\n\n**Paciente:** ${found.full_name}\n**Ação:** Plano Premium ativado ✓`,
+        [{ label: `Abrir ficha`, route: `/patients/${found.id}`, type: "navigate" }],
+        intent, "action", ctx);
+    }
+
+    case "action_enable_ifj": {
+      if (!intent.target_name) return fmt("Quem?", "❓", "error", "Diga o nome do paciente.", "Ex: *libere IFJ para Maria*", [], intent, "action", ctx);
+      const { found, ambiguous } = findByName(patients, intent.target_name);
+      if (ambiguous.length > 0) {
+        const md = ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}**`).join("\n");
+        return fmt("Qual paciente?", "🔍", "disambiguation", "Múltiplos encontrados", md, [], intent, "action", ctx);
+      }
+      if (!found) return fmt("Não encontrado", "❌", "error", "Paciente não encontrado.", "", [], intent, "action", ctx);
+
+      // Enable IFJ
+      const { error } = await supabaseAdmin.from("ifj_patient_permissions")
+        .upsert({
+          patient_id: found.id, ifj_mode: "standard",
+          meal_plan: true, recipes: true, checklist: true, hydration: true,
+          progress: true, appointments: true, substitutions: true, messages: true,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "patient_id" });
+
+      if (error) return fmt("Erro", "❌", "error", "Erro ao ativar IFJ.", error.message, [], intent, "action", ctx);
+
+      ctx.last_patient_id = found.id;
+      ctx.last_patient_name = found.full_name;
+      return fmt("✅ IFJ ativada!", "🧠", "action_completed",
+        `IFJ ativada para ${found.full_name} (modo standard).`,
+        `## ✅ Ação executada\n\n**Paciente:** ${found.full_name}\n**Ação:** IFJ habilitada (standard) ✓`,
+        [{ label: `Abrir ficha`, route: `/patients/${found.id}`, type: "navigate" }],
+        intent, "action", ctx);
+    }
+
+    case "action_compound_premium_ifj": {
+      if (!intent.target_name) return fmt("Quem?", "❓", "error", "Diga o nome.", "Ex: *coloque premium e libere IFJ para Maria*", [], intent, "action", ctx);
+      const { found, ambiguous } = findByName(patients, intent.target_name);
+      if (ambiguous.length > 0) {
+        const md = ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}**`).join("\n");
+        return fmt("Qual paciente?", "🔍", "disambiguation", "Múltiplos encontrados", md, [], intent, "action", ctx);
+      }
+      if (!found) return fmt("Não encontrado", "❌", "error", "Paciente não encontrado.", "", [], intent, "action", ctx);
+
+      // Execute both: Premium + IFJ
+      const [premRes, ifjRes] = await Promise.all([
+        supabaseAdmin.from("user_subscriptions").upsert(
+          { user_id: found.id, plan_type: "premium", is_active: true, updated_at: new Date().toISOString() },
+          { onConflict: "user_id" }
+        ),
+        supabaseAdmin.from("ifj_patient_permissions").upsert({
+          patient_id: found.id, ifj_mode: "standard",
+          meal_plan: true, recipes: true, checklist: true, hydration: true,
+          progress: true, appointments: true, substitutions: true, messages: true,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "patient_id" }),
+      ]);
+
+      const errors = [premRes.error, ifjRes.error].filter(Boolean);
+      if (errors.length) return fmt("Erro parcial", "⚠️", "error", "Erro em parte da execução.", errors.map(e => e!.message).join(", "), [], intent, "action", ctx);
+
+      ctx.last_patient_id = found.id;
+      ctx.last_patient_name = found.full_name;
+      return fmt("✅ Premium + IFJ!", "🚀", "action_completed",
+        `${found.full_name}: Premium ativado + IFJ liberada.`,
+        `## ✅ Ações executadas\n\n**Paciente:** ${found.full_name}\n\n- 👑 Plano Premium ativado ✓\n- 🧠 IFJ habilitada (standard) ✓`,
+        [{ label: `Abrir ficha`, route: `/patients/${found.id}`, type: "navigate" }],
+        intent, "action", ctx);
+    }
+
     default:
-      return fmt("Ação não reconhecida", "❓", "error", "Não entendi a ação.", "", [], intent, "action", ctx);
+      return fmt("Ação não reconhecida", "❓", "error", "Não entendi a ação.", "Tente: *coloque premium para [nome]*, *libere IFJ para [nome]*, *libere onboarding da [nome]*", [], intent, "action", ctx);
   }
 }
 
