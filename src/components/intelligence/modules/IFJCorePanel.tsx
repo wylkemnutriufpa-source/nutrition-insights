@@ -11,14 +11,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import ReactMarkdown from "react-markdown";
 import {
   Brain, Send, Loader2, AlertTriangle, Target,
-  TrendingUp, DollarSign, Calendar, Shield,
-  ChevronRight, Zap, Activity, Flame, Sparkles
+  DollarSign, Calendar, Shield,
+  ChevronRight, Zap, Sparkles, RefreshCw
 } from "lucide-react";
-import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { logAudit } from "@/lib/auditLog";
 
@@ -40,13 +38,22 @@ interface Message {
   timestamp: Date;
 }
 
+interface PriorityItem {
+  id: string;
+  entity_type: string;
+  entity_id: string;
+  entity_name: string;
+  priority_score: number;
+  priority_level: string;
+  reasons_json: string[];
+  source_engine: string;
+}
+
 const QUICK_COMMANDS = [
   { label: "Prioridades", cmd: "O que preciso resolver hoje?", icon: Target },
   { label: "Atenção", cmd: "Quem precisa de atenção?", icon: AlertTriangle },
-  { label: "Carteira", cmd: "Resumo da carteira", icon: Activity },
   { label: "Financeiro", cmd: "Resumo financeiro", icon: DollarSign },
   { label: "Consultas", cmd: "Próximas consultas", icon: Calendar },
-  { label: "Planos", cmd: "Planos vencendo", icon: Flame },
 ];
 
 export default function IFJCorePanel() {
@@ -55,17 +62,18 @@ export default function IFJCorePanel() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [priorities, setPriorities] = useState<any[]>([]);
+  const [priorities, setPriorities] = useState<PriorityItem[]>([]);
   const [loadingPriorities, setLoadingPriorities] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const hasSentInitial = useRef(false);
 
-  // Load priorities on mount
   useEffect(() => {
     if (!user) return;
     loadPriorities();
-    // Auto-send initial briefing
-    sendCommand("O que preciso resolver hoje?", true);
+    if (!hasSentInitial.current) {
+      hasSentInitial.current = true;
+      sendCommand("O que preciso resolver hoje?", true);
+    }
   }, [user]);
 
   useEffect(() => {
@@ -83,7 +91,7 @@ export default function IFJCorePanel() {
         .eq("is_resolved", false)
         .order("priority_score", { ascending: false })
         .limit(10);
-      setPriorities(data || []);
+      setPriorities((data as PriorityItem[]) || []);
     } catch { } finally {
       setLoadingPriorities(false);
     }
@@ -111,10 +119,7 @@ export default function IFJCorePanel() {
             Authorization: `Bearer ${session?.access_token}`,
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
-          body: JSON.stringify({
-            input_text: command,
-            session_key: "core_panel",
-          }),
+          body: JSON.stringify({ input_text: command, session_key: "core_panel" }),
         }
       );
 
@@ -129,10 +134,10 @@ export default function IFJCorePanel() {
         timestamp: new Date(),
       }]);
 
-      // Refresh priorities after command
+      // Refresh priorities after command (they may have been recalculated)
       loadPriorities();
 
-    } catch (err) {
+    } catch {
       setMessages(prev => [...prev, {
         role: "ifj",
         text: "❌ Erro ao processar comando. Tente novamente.",
@@ -173,7 +178,7 @@ export default function IFJCorePanel() {
         className="relative overflow-hidden rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-950/40 via-background to-yellow-950/20 p-6"
       >
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent" />
-        <div className="relative flex items-center gap-4">
+        <div className="relative flex items-center gap-4 flex-wrap">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-600 shadow-lg shadow-amber-500/25">
             <Brain className="h-7 w-7 text-black" />
           </div>
@@ -202,9 +207,14 @@ export default function IFJCorePanel() {
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
           <Card className="border-amber-500/20 bg-background/80 backdrop-blur-sm h-full">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2 text-amber-400">
-                <Target className="h-4 w-4" /> Fila de Prioridades
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2 text-amber-400">
+                  <Target className="h-4 w-4" /> Fila de Prioridades
+                </CardTitle>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setLoadingPriorities(true); loadPriorities(); }}>
+                  <RefreshCw className="h-3 w-3" />
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-2">
               {loadingPriorities ? (
@@ -223,7 +233,14 @@ export default function IFJCorePanel() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.05 }}
                     className={`p-3 rounded-lg border cursor-pointer hover:brightness-110 transition-all ${getPriorityColor(p.priority_level)}`}
-                    onClick={() => sendCommand(`Sobre ${p.entity_name}`)}
+                    onClick={() => {
+                      logAudit("ifj_priority_click", "ifj_core", p.entity_id, { entity: p.entity_name, score: p.priority_score });
+                      if (p.entity_type === "patient") {
+                        navigate(`/patients/${p.entity_id}`);
+                      } else {
+                        sendCommand(`Sobre ${p.entity_name}`);
+                      }
+                    }}
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium truncate">{p.entity_name}</span>
@@ -232,7 +249,7 @@ export default function IFJCorePanel() {
                       </Badge>
                     </div>
                     <div className="flex flex-wrap gap-1 mt-1">
-                      {((p.reasons_json as string[]) || []).slice(0, 2).map((r: string, j: number) => (
+                      {(p.reasons_json || []).slice(0, 2).map((r: string, j: number) => (
                         <span key={j} className="text-[10px] opacity-80">{r}</span>
                       ))}
                     </div>
@@ -279,7 +296,6 @@ export default function IFJCorePanel() {
                       </div>
                     ) : (
                       <div className="max-w-[95%]">
-                        {/* Response header */}
                         {msg.response && (
                           <div className="flex items-center gap-2 mb-2">
                             <span className="text-lg">{msg.response.icon}</span>
@@ -291,21 +307,15 @@ export default function IFJCorePanel() {
                             )}
                           </div>
                         )}
-
-                        {/* Summary */}
                         {msg.response?.summary && (
                           <p className="text-xs text-muted-foreground mb-2">{msg.response.summary}</p>
                         )}
-
-                        {/* Markdown body */}
                         <div className="rounded-xl border border-border/50 bg-muted/30 px-4 py-3 prose prose-sm prose-invert max-w-none
                           prose-headings:text-amber-400 prose-strong:text-foreground prose-td:text-sm prose-th:text-xs prose-th:text-amber-400/80
                           prose-table:border-collapse prose-td:border prose-td:border-border/30 prose-td:px-2 prose-td:py-1
                           prose-th:border prose-th:border-border/30 prose-th:px-2 prose-th:py-1">
                           <ReactMarkdown>{msg.text}</ReactMarkdown>
                         </div>
-
-                        {/* Actions */}
                         {msg.response?.actions && msg.response.actions.length > 0 && (
                           <div className="flex flex-wrap gap-2 mt-2">
                             {msg.response.actions.map((action, j) => (
@@ -340,7 +350,6 @@ export default function IFJCorePanel() {
             <form onSubmit={handleSubmit} className="p-3 border-t border-amber-500/10">
               <div className="flex gap-2">
                 <Input
-                  ref={inputRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Pergunte ao IFJ Core... (ex: quem precisa de atenção?)"
