@@ -128,10 +128,20 @@ export default function IntelligenceCustomPrompts() {
     }
     setSaving(true);
 
+    const payload = {
+      title: form.title,
+      body: form.body,
+      emoji: form.emoji,
+      tone: form.tone,
+      escalation_level: form.escalation_level,
+      schedule_hours: form.schedule_hours.length > 0 ? form.schedule_hours : null,
+      schedule_days: form.schedule_days.length > 0 ? form.schedule_days : null,
+    };
+
     if (editing) {
       await supabase
         .from("intelligence_custom_prompts")
-        .update({ ...form, updated_at: new Date().toISOString() })
+        .update({ ...payload, updated_at: new Date().toISOString() })
         .eq("id", editing.id);
       toast.success("Mensagem atualizada!");
     } else {
@@ -139,7 +149,7 @@ export default function IntelligenceCustomPrompts() {
         .from("intelligence_custom_prompts")
         .insert({
           nutritionist_id: user.id,
-          ...form,
+          ...payload,
           sort_order: prompts.length,
         });
       toast.success("Mensagem criada!");
