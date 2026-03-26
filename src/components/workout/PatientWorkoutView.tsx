@@ -197,6 +197,13 @@ export default function PatientWorkoutView() {
       confetti();
       setTimeout(() => setShowReward(false), 3000);
 
+      // Open feedback modal after a brief delay
+      const plan = plans.find(p => p.workout_routines?.some((r: any) => r.id === selectedRoutine.id));
+      setLastCompletionId(completion.id);
+      setLastRoutineIdForFeedback(selectedRoutine.id);
+      setLastPlanIdForFeedback(plan?.id || null);
+      setTimeout(() => setFeedbackOpen(true), 3500);
+
       const { data: historyData } = await supabase
         .from("workout_completions")
         .select("*, workout_routines(name)")
