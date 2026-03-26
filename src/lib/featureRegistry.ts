@@ -15,6 +15,7 @@ import {
   Microscope, LineChart, PieChart, Shuffle, Waypoints,
   ScanLine, AlertTriangle, Lightbulb, Rocket, Crown,
   Map, Compass, BookMarked, Presentation, Globe,
+  TestTube, Timer, Play, Repeat, LayoutGrid, Megaphone,
 } from "lucide-react";
 
 export type FeatureTier = "basic" | "premium" | "coming_soon";
