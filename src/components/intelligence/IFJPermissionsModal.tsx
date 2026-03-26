@@ -1,5 +1,6 @@
 /**
  * IFJ Permissions Modal — Granular feature control per patient
+ * Includes quick presets: Essencial, Acompanhamento, Completo, Premium
  */
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,9 +8,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Brain, Loader2, UtensilsCrossed, BookOpen, CheckSquare, Droplets, TrendingUp, Calendar, Repeat, MessageSquare, Lightbulb } from "lucide-react";
+import { Brain, Loader2, UtensilsCrossed, BookOpen, CheckSquare, Droplets, TrendingUp, Calendar, Repeat, MessageSquare, Lightbulb, Zap } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -31,12 +33,50 @@ const PERMISSION_FIELDS = [
 ] as const;
 
 type PermKey = typeof PERMISSION_FIELDS[number]["key"];
+type PermsMap = Record<PermKey, boolean>;
+
+const PRESETS: Record<string, { label: string; desc: string; color: string; perms: PermsMap; mode: string }> = {
+  essencial: {
+    label: "Essencial",
+    desc: "Plano + Checklist apenas",
+    color: "border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20",
+    mode: "basic",
+    perms: { meal_plan: true, recipes: false, checklist: true, hydration: false, progress: false, appointments: false, substitutions: false, messages: false, recommendations: false },
+  },
+  acompanhamento: {
+    label: "Acompanhamento",
+    desc: "Plano + Checklist + Progresso + Hidratação",
+    color: "border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20",
+    mode: "standard",
+    perms: { meal_plan: true, recipes: true, checklist: true, hydration: true, progress: true, appointments: true, substitutions: false, messages: false, recommendations: false },
+  },
+  completo: {
+    label: "Completo",
+    desc: "Todas as funções sem substituições",
+    color: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20",
+    mode: "standard",
+    perms: { meal_plan: true, recipes: true, checklist: true, hydration: true, progress: true, appointments: true, substitutions: false, messages: true, recommendations: true },
+  },
+  premium: {
+    label: "Premium",
+    desc: "Acesso total com substituições e IA",
+    color: "border-purple-500/30 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20",
+    mode: "premium",
+    perms: { meal_plan: true, recipes: true, checklist: true, hydration: true, progress: true, appointments: true, substitutions: true, messages: true, recommendations: true },
+  },
+};
+
+const DEFAULT_PERMS: PermsMap = {
+  meal_plan: true, recipes: true, checklist: true, hydration: true,
+  progress: true, appointments: true, substitutions: true, messages: true, recommendations: true,
+};
+
+function isCustomized(perms: PermsMap, mode: string): boolean {
+  return !Object.values(PRESETS).some(p => p.mode === mode && PERMISSION_FIELDS.every(f => p.perms[f.key] === perms[f.key]));
+}
 
 export default function IFJPermissionsModal({ open, onOpenChange, patientId, patientName }: Props) {
-  const [perms, setPerms] = useState<Record<PermKey, boolean>>({
-    meal_plan: true, recipes: true, checklist: true, hydration: true,
-    progress: true, appointments: true, substitutions: true, messages: true, recommendations: true,
-  });
+  const [perms, setPerms] = useState<PermsMap>({ ...DEFAULT_PERMS });
   const [mode, setMode] = useState("standard");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -52,14 +92,24 @@ export default function IFJPermissionsModal({ open, onOpenChange, patientId, pat
       .then(({ data }: any) => {
         if (data) {
           const d = data as any;
-          PERMISSION_FIELDS.forEach(f => {
-            if (d[f.key] !== undefined) setPerms(prev => ({ ...prev, [f.key]: d[f.key] }));
-          });
+          const updated: any = {};
+          PERMISSION_FIELDS.forEach(f => { updated[f.key] = d[f.key] !== undefined ? d[f.key] : true; });
+          setPerms(updated);
           setMode(d.ifj_mode || "standard");
+        } else {
+          setPerms({ ...DEFAULT_PERMS });
+          setMode("standard");
         }
         setLoading(false);
       });
   }, [open, patientId]);
+
+  const applyPreset = (presetKey: string) => {
+    const preset = PRESETS[presetKey];
+    if (!preset) return;
+    setPerms({ ...preset.perms });
+    setMode(preset.mode);
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -79,11 +129,7 @@ export default function IFJPermissionsModal({ open, onOpenChange, patientId, pat
     setSaving(false);
   };
 
-  const toggleAll = (val: boolean) => {
-    const updated: any = {};
-    PERMISSION_FIELDS.forEach(f => { updated[f.key] = val; });
-    setPerms(updated);
-  };
+  const customized = isCustomized(perms, mode);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -101,9 +147,35 @@ export default function IFJPermissionsModal({ open, onOpenChange, patientId, pat
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Quick Presets */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium flex items-center gap-1.5">
+                <Zap className="h-3 w-3 text-amber-500" /> Presets Rápidos
+              </Label>
+              <div className="grid grid-cols-2 gap-1.5">
+                {Object.entries(PRESETS).map(([key, preset]) => (
+                  <button
+                    key={key}
+                    onClick={() => applyPreset(key)}
+                    className={`p-2 rounded-lg border text-left transition-all text-xs ${preset.color}`}
+                  >
+                    <p className="font-semibold">{preset.label}</p>
+                    <p className="text-[9px] opacity-70 mt-0.5">{preset.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Mode Selector */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Modo IFJ</Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-medium">Modo IFJ</Label>
+                {customized && (
+                  <Badge variant="outline" className="text-[9px] border-orange-500/30 text-orange-400 bg-orange-500/10">
+                    Customizado
+                  </Badge>
+                )}
+              </div>
               <Select value={mode} onValueChange={setMode}>
                 <SelectTrigger className="h-9 border-amber-500/20">
                   <SelectValue />
@@ -116,14 +188,8 @@ export default function IFJPermissionsModal({ open, onOpenChange, patientId, pat
               </Select>
             </div>
 
-            {/* Toggle All */}
-            <div className="flex justify-end gap-2">
-              <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => toggleAll(true)}>Ativar tudo</Button>
-              <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => toggleAll(false)}>Desativar tudo</Button>
-            </div>
-
             {/* Permission Switches */}
-            <div className="space-y-1 max-h-[350px] overflow-y-auto pr-1">
+            <div className="space-y-1 max-h-[300px] overflow-y-auto pr-1">
               {PERMISSION_FIELDS.map(f => (
                 <div key={f.key} className="flex items-center justify-between p-2.5 rounded-lg hover:bg-muted/50 transition-colors">
                   <div className="flex items-center gap-2.5">
