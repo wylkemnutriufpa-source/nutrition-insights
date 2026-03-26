@@ -91,10 +91,10 @@ function NeuralParticleCanvas({
     const torusKnot = new THREE.TorusKnotGeometry(0.85, 0.3, 200, 32);
 
     const coreHues = [
-      { h: 152 / 360, s: 0.7, lMin: 0.35, lMax: 0.6, w: 0.45 },
-      { h: 160 / 360, s: 0.6, lMin: 0.4, lMax: 0.65, w: 0.3 },
-      { h: 80 / 360, s: 0.5, lMin: 0.45, lMax: 0.6, w: 0.15 },
-      { h: 180 / 360, s: 0.4, lMin: 0.55, lMax: 0.8, w: 0.1 },
+      { h: 43 / 360, s: 0.85, lMin: 0.4, lMax: 0.6, w: 0.40 },
+      { h: 36 / 360, s: 0.80, lMin: 0.35, lMax: 0.55, w: 0.30 },
+      { h: 50 / 360, s: 0.70, lMin: 0.45, lMax: 0.65, w: 0.18 },
+      { h: 30 / 360, s: 0.60, lMin: 0.50, lMax: 0.75, w: 0.12 },
     ];
 
     for (let i = 0; i < coreCount; i++) {
