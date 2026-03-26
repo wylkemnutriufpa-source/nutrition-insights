@@ -305,10 +305,11 @@ async function getPatientLabSummary(supabase: any, patientId: string) {
 }
 
 // financial_transactions: nutritionist_id, no patient_id column
-async function getFinancialSummary(supabase: any, userId: string) {
-  const { data } = await supabase.from("financial_transactions")
-    .select("id, amount, status, type, date, description, category, created_at")
-    .eq("nutritionist_id", userId);
+async function getFinancialSummary(supabase: any, userId: string, role?: string) {
+  let query = supabase.from("financial_transactions")
+    .select("id, amount, status, type, date, description, category, created_at");
+  if (role !== "admin") query = query.eq("nutritionist_id", userId);
+  const { data } = await query.limit(500);
   return data || [];
 }
 
