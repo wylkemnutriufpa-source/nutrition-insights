@@ -196,6 +196,12 @@ export const FEATURE_REGISTRY: FeatureDefinition[] = [
 
   // Patient Overview
   { name: "patient_overview", label: "Meu Painel (Paciente)", description: "Dashboard premium do paciente com momentum de adesão, conquistas e próximos passos", icon: BarChart3, category: "Gestão de Pacientes", defaultTier: "premium", addedVersion: "5.0" },
+
+  // IFJ Advanced Modules v7.0
+  { name: "ifj_conversational_copilot", label: "IFJ Copiloto Conversacional", description: "Chat inteligente para consultar dados clínicos de pacientes via linguagem natural", icon: Bot, category: "Inteligência IFJ", defaultTier: "premium", addedVersion: "7.0" },
+  { name: "ifj_predictive_briefing", label: "IFJ Briefing Preditivo", description: "Previsões semanais de risco de abandono, platôs e quedas de adesão", icon: BarChart3, category: "Inteligência IFJ", defaultTier: "premium", addedVersion: "7.0" },
+  { name: "ifj_patient_coach", label: "IFJ Coach do Paciente", description: "Assistente pessoal de IA para pacientes com conhecimento do plano alimentar", icon: Heart, category: "Inteligência IFJ", defaultTier: "premium", addedVersion: "7.0" },
+  { name: "ifj_narrative_report", label: "IFJ Relatório Narrativo", description: "Geração automática de relatórios clínicos narrativos com IA", icon: FileText, category: "Inteligência IFJ", defaultTier: "premium", addedVersion: "7.0" },
 ];
 
 /** Retorna os nomes de todas as features registradas */
