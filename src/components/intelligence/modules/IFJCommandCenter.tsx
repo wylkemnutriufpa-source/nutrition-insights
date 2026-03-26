@@ -111,17 +111,8 @@ const ROLE_CONFIG: Record<IFJRole, {
       "Quais tarefas preciso fazer hoje?",
       "Me ajude a entender meu plano alimentar",
     ],
-  },
-    subtitle: "Sua assistente pessoal de saúde",
-    suggestions: [
-      "Como está minha dieta hoje?",
-      "Qual minha próxima consulta?",
-      "Mostre meu progresso",
-      "Quais tarefas preciso fazer hoje?",
-      "Me ajude a entender meu plano alimentar",
-    ],
-  },
 };
+
 
 /* ─── Action Level Icons ─── */
 const ACTION_LEVEL_ICON: Record<string, typeof Eye> = {
