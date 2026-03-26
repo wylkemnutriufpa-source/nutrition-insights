@@ -5,7 +5,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Brain, MessageSquare, HelpCircle, Settings2, Users, Play, Bot, BarChart3, FileText, Command } from "lucide-react";
+import { Brain, MessageSquare, HelpCircle, Settings2, Users, Play, Bot, BarChart3, FileText, Command, Cpu } from "lucide-react";
 import IntelligenceGoldenHeader from "./settings/IntelligenceGoldenHeader";
 import IntelligenceGeneralSettings from "./settings/IntelligenceGeneralSettings";
 import IntelligenceCustomPrompts from "./settings/IntelligenceCustomPrompts";
@@ -17,9 +17,10 @@ import IFJConversationalCopilot from "./modules/IFJConversationalCopilot";
 import IFJPredictiveBriefing from "./modules/IFJPredictiveBriefing";
 import IFJNarrativeReport from "./modules/IFJNarrativeReport";
 import IFJCommandCenter from "./modules/IFJCommandCenter";
+import IFJCorePanel from "./modules/IFJCorePanel";
 
 export default function IntelligenceSettingsPanel() {
-  const [activeTab, setActiveTab] = useState("command");
+  const [activeTab, setActiveTab] = useState("core");
 
   return (
     <div className="relative space-y-6 pb-10">
@@ -37,6 +38,9 @@ export default function IntelligenceSettingsPanel() {
       >
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="bg-background/80 backdrop-blur-sm border border-amber-500/20 p-1 flex-wrap h-auto gap-1">
+            <TabsTrigger value="core" className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500/20 data-[state=active]:to-yellow-500/10 data-[state=active]:text-amber-500 data-[state=active]:border-amber-500/30 data-[state=active]:border font-semibold">
+              <Cpu className="w-4 h-4" /> IFJ Core
+            </TabsTrigger>
             <TabsTrigger value="command" className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500/20 data-[state=active]:to-yellow-500/10 data-[state=active]:text-amber-500 data-[state=active]:border-amber-500/30 data-[state=active]:border font-semibold">
               <Command className="w-4 h-4" /> Meu Painel IFJ
             </TabsTrigger>
@@ -65,6 +69,10 @@ export default function IntelligenceSettingsPanel() {
               <Play className="w-4 h-4" /> Apresentação
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="core">
+            <IFJCorePanel />
+          </TabsContent>
 
           <TabsContent value="command">
             <IFJCommandCenter />
