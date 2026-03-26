@@ -36,6 +36,8 @@ interface CustomPrompt {
   is_active: boolean;
   escalation_level: number;
   sort_order: number;
+  schedule_hours: number[] | null;
+  schedule_days: string[] | null;
 }
 
 const EMOJI_OPTIONS = ["💬", "💧", "💪", "🌙", "🩺", "✨", "🎯", "🔥", "❤️", "⚡", "🧠", "🌟"];
