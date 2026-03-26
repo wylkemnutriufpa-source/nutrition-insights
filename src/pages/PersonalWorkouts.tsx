@@ -23,6 +23,7 @@ import PeriodizationManager from "@/components/workout/PeriodizationManager";
 import CardioPrescription from "@/components/workout/CardioPrescription";
 import PersonalRecords from "@/components/workout/PersonalRecords";
 import CrossProfessionalAlerts from "@/components/workout/CrossProfessionalAlerts";
+import WorkoutPrePlanGenerator from "@/components/workout/WorkoutPrePlanGenerator";
 
 export default function PersonalWorkouts() {
   const { user } = useAuth();
