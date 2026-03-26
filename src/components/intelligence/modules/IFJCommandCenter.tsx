@@ -111,6 +111,7 @@ const ROLE_CONFIG: Record<IFJRole, {
       "Quais tarefas preciso fazer hoje?",
       "Me ajude a entender meu plano alimentar",
     ],
+  },
 };
 
 
