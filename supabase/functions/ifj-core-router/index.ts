@@ -89,6 +89,7 @@ const SYNONYM_MAP: Record<string, string[]> = {
   help: ["ajuda", "como usar", "comandos", "o que voce faz", "tutorial"],
   // ACTION INTENTS — real operations
   action_release_onboarding: ["libere onboarding", "liberar onboarding", "ative onboarding", "ativar onboarding", "libere o onboarding"],
+  action_release_all_onboarding: ["libere todos", "liberar todos", "libere todas", "liberar todas", "libere todo mundo", "liberar todo mundo", "libere todos onboarding", "liberar todos onboarding"],
   action_awaiting_onboarding: [
     "aguardando onboarding", "pendente onboarding", "quem precisa ativar onboarding",
     "sem onboarding", "liberacao de onboarding", "liberar onboarding",
@@ -129,6 +130,10 @@ function detectIntent(n: string, ctx: SessionCtx): IFJIntent {
     const nameMatch = n.match(/(?:para|d[aeo])\s+([a-z\s]+?)(?:\s*$)/);
     return { ...base, intent: "action_compound_premium_ifj", target_entity: "patient", target_name: nameMatch?.[1] || null, module: "action_engine", confidence: 0.97, response_mode: "action" };
   }
+
+  // Batch release: "libere todos" / "liberar todos"
+  if (matchesIntent(n, "action_release_all_onboarding"))
+    return { ...base, intent: "action_release_all_onboarding", module: "action_engine", confidence: 0.97, response_mode: "action" };
 
   if (matchesIntent(n, "action_release_onboarding")) {
     const nameMatch = n.match(/(?:libere?|ative?)\s+(?:o\s+)?onboarding\s+(?:d[aeo]\s+)?(.+)/);
@@ -595,6 +600,36 @@ async function runActionEngine(supabaseAdmin: any, supabase: any, intent: IFJInt
         `## ✅ Ação executada\n\n**Paciente:** ${found.full_name}\n**Ação:** Onboarding liberado\n**Notificação:** Enviada ✓\n\nO paciente já pode iniciar o preenchimento.`,
         [{ label: `Abrir ficha`, route: `/patients/${found.id}`, type: "navigate" }],
         intent, "action", ctx);
+    }
+
+    case "action_release_all_onboarding": {
+      const PRE_OB_STATUSES = [
+        "awaiting_consent", "invited", "awaiting_payment",
+        "payment_confirmed", "awaiting_onboarding_release",
+        "onboarding_active",
+      ];
+      const toRelease = patients.filter(p => PRE_OB_STATUSES.includes(p.journey_status || ""));
+      if (!toRelease.length) return fmt("Nenhum pendente", "✅", "info", "Nenhum paciente aguardando liberação de onboarding.", "", [], intent, "action", ctx);
+
+      let released = 0;
+      let errors: string[] = [];
+      for (const p of toRelease) {
+        const { error } = await supabaseAdmin.from("nutritionist_patients")
+          .update({ journey_status: "onboarding_active" })
+          .eq("patient_id", p.id).eq("status", "active");
+        if (error) { errors.push(p.full_name); continue; }
+        await supabaseAdmin.from("notifications").insert({
+          user_id: p.id, title: "Onboarding liberado! 🎉",
+          message: "Seu onboarding foi liberado. Comece agora!",
+          type: "onboarding_released", is_read: false,
+        }).then(() => {});
+        released++;
+      }
+      const md = toRelease.map(p => `- **${p.full_name}** ${errors.includes(p.full_name) ? "❌ erro" : "✅ liberado"}`).join("\n");
+      return fmt("✅ Onboarding em massa!", "🚀", "action_completed",
+        `${released}/${toRelease.length} pacientes liberados e notificados.`,
+        `## ✅ Liberação em massa executada\n\n${md}\n\n${errors.length ? `⚠️ ${errors.length} erro(s)` : "Todos liberados com sucesso!"}`,
+        [{ label: "Pipeline", route: "/onboarding-pipeline", type: "navigate" }], intent, "action", ctx);
     }
 
     case "action_awaiting_onboarding": {
