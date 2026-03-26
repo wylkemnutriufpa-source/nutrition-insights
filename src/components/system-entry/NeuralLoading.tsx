@@ -91,10 +91,10 @@ function NeuralParticleCanvas({
     const torusKnot = new THREE.TorusKnotGeometry(0.85, 0.3, 200, 32);
 
     const coreHues = [
-      { h: 152 / 360, s: 0.7, lMin: 0.35, lMax: 0.6, w: 0.45 },
-      { h: 160 / 360, s: 0.6, lMin: 0.4, lMax: 0.65, w: 0.3 },
-      { h: 80 / 360, s: 0.5, lMin: 0.45, lMax: 0.6, w: 0.15 },
-      { h: 180 / 360, s: 0.4, lMin: 0.55, lMax: 0.8, w: 0.1 },
+      { h: 43 / 360, s: 0.85, lMin: 0.4, lMax: 0.6, w: 0.40 },
+      { h: 36 / 360, s: 0.80, lMin: 0.35, lMax: 0.55, w: 0.30 },
+      { h: 50 / 360, s: 0.70, lMin: 0.45, lMax: 0.65, w: 0.18 },
+      { h: 30 / 360, s: 0.60, lMin: 0.50, lMax: 0.75, w: 0.12 },
     ];
 
     for (let i = 0; i < coreCount; i++) {
@@ -191,7 +191,7 @@ function NeuralParticleCanvas({
       }
       ringGeo.setAttribute("position", new THREE.BufferAttribute(ringPos, 3));
       const ringMat = new THREE.LineBasicMaterial({
-        color: new THREE.Color().setHSL(152 / 360, 0.5, 0.3 + r * 0.08),
+        color: new THREE.Color().setHSL(43 / 360, 0.7, 0.3 + r * 0.08),
         transparent: true,
         opacity: modeRef.current === "converge" ? 0 : 0.15 + r * 0.05,
         blending: THREE.AdditiveBlending,
@@ -221,7 +221,7 @@ function NeuralParticleCanvas({
       nodePositions[i * 3 + 1] = Math.sin(angle) * radius;
       nodePositions[i * 3 + 2] = 0;
       const col = new THREE.Color();
-      col.setHSL(140 / 360 + Math.random() * 0.1, 0.8, 0.5 + Math.random() * 0.3);
+      col.setHSL(43 / 360 + Math.random() * 0.06, 0.85, 0.45 + Math.random() * 0.3);
       nodeColors[i * 3] = col.r;
       nodeColors[i * 3 + 1] = col.g;
       nodeColors[i * 3 + 2] = col.b;
@@ -250,7 +250,7 @@ function NeuralParticleCanvas({
       dustPos[i * 3 + 1] = (Math.random() - 0.5) * 12;
       dustPos[i * 3 + 2] = (Math.random() - 0.5) * 6;
       const c = new THREE.Color();
-      c.setHSL(152 / 360, 0.3, 0.2 + Math.random() * 0.15);
+      c.setHSL(43 / 360, 0.4, 0.2 + Math.random() * 0.15);
       dustCol[i * 3] = c.r;
       dustCol[i * 3 + 1] = c.g;
       dustCol[i * 3 + 2] = c.b;
