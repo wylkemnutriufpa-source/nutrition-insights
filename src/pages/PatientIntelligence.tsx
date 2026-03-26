@@ -61,7 +61,7 @@ export default function PatientIntelligence() {
   const isEnabled = (profile as any)?.fit_intelligence_enabled === true;
   const isOnboarded = (profile as any)?.fit_intelligence_onboarded === true;
   const isPremiumPrestige = prestige.plan?.slug === "premium" || prestige.plan?.slug === "pro" || prestige.plan?.slug === "gold";
-  const hasAccess = isEnabled; // Admin already enabled it
+  const hasAccess = isEnabled || isPremiumPrestige; // Premium prestige = auto-access
 
   // Check expiry
   const expiresAt = (profile as any)?.fit_intelligence_expires_at;
