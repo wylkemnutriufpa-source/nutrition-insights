@@ -334,6 +334,66 @@ export default function IntelligenceCustomPrompts() {
                 </Select>
               </div>
             </div>
+
+            {/* Schedule: Days */}
+            <div className="space-y-2">
+              <Label className="text-xs flex items-center gap-1.5">
+                <CalendarDays className="w-3.5 h-3.5 text-amber-500" /> Dias da Semana
+              </Label>
+              <div className="flex flex-wrap gap-2">
+                {DAYS_OF_WEEK.map((day) => {
+                  const checked = form.schedule_days.includes(day.value);
+                  return (
+                    <label key={day.value} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border cursor-pointer text-xs transition-all ${checked ? "border-amber-500/50 bg-amber-500/10 text-amber-600" : "border-border/50 bg-muted/30 text-muted-foreground hover:bg-muted/50"}`}>
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={(v) => {
+                          setForm((f) => ({
+                            ...f,
+                            schedule_days: v
+                              ? [...f.schedule_days, day.value]
+                              : f.schedule_days.filter((d) => d !== day.value),
+                          }));
+                        }}
+                        className="h-3.5 w-3.5"
+                      />
+                      {day.label}
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="text-[10px] text-muted-foreground">Deixe vazio = todos os dias</p>
+            </div>
+
+            {/* Schedule: Hours */}
+            <div className="space-y-2">
+              <Label className="text-xs flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-amber-500" /> Horários de Disparo
+              </Label>
+              <div className="flex flex-wrap gap-1.5">
+                {HOUR_OPTIONS.map((h) => {
+                  const checked = form.schedule_hours.includes(h);
+                  return (
+                    <button
+                      key={h}
+                      type="button"
+                      onClick={() => {
+                        setForm((f) => ({
+                          ...f,
+                          schedule_hours: checked
+                            ? f.schedule_hours.filter((hr) => hr !== h)
+                            : [...f.schedule_hours, h].sort((a, b) => a - b),
+                        }));
+                      }}
+                      className={`px-2 py-1 rounded-md text-xs font-medium transition-all ${checked ? "bg-amber-500/20 text-amber-600 border border-amber-500/40" : "bg-muted/30 text-muted-foreground border border-border/50 hover:bg-muted/50"}`}
+                    >
+                      {h}h
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[10px] text-muted-foreground">Deixe vazio = qualquer horário válido</p>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
