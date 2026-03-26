@@ -20,7 +20,7 @@ import IFJCommandCenter from "./modules/IFJCommandCenter";
 import IFJCorePanel from "./modules/IFJCorePanel";
 
 export default function IntelligenceSettingsPanel() {
-  const [activeTab, setActiveTab] = useState("command");
+  const [activeTab, setActiveTab] = useState("core");
 
   return (
     <div className="relative space-y-6 pb-10">
