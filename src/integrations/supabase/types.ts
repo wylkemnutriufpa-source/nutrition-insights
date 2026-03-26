@@ -1183,6 +1183,71 @@ export type Database = {
         }
         Relationships: []
       }
+      cardio_prescriptions: {
+        Row: {
+          cardio_type: string
+          created_at: string
+          distance_km: number | null
+          duration_minutes: number
+          frequency_per_week: number
+          id: string
+          intensity: string
+          interval_protocol: Json | null
+          is_active: boolean
+          notes: string | null
+          personal_id: string
+          plan_id: string | null
+          student_id: string
+          target_hr_max: number | null
+          target_hr_min: number | null
+          target_hr_zone: string | null
+        }
+        Insert: {
+          cardio_type: string
+          created_at?: string
+          distance_km?: number | null
+          duration_minutes?: number
+          frequency_per_week?: number
+          id?: string
+          intensity?: string
+          interval_protocol?: Json | null
+          is_active?: boolean
+          notes?: string | null
+          personal_id: string
+          plan_id?: string | null
+          student_id: string
+          target_hr_max?: number | null
+          target_hr_min?: number | null
+          target_hr_zone?: string | null
+        }
+        Update: {
+          cardio_type?: string
+          created_at?: string
+          distance_km?: number | null
+          duration_minutes?: number
+          frequency_per_week?: number
+          id?: string
+          intensity?: string
+          interval_protocol?: Json | null
+          is_active?: boolean
+          notes?: string | null
+          personal_id?: string
+          plan_id?: string | null
+          student_id?: string
+          target_hr_max?: number | null
+          target_hr_min?: number | null
+          target_hr_zone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cardio_prescriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "workout_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       challenges: {
         Row: {
           created_at: string
@@ -2718,6 +2783,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      cross_professional_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string
+          description: string | null
+          id: string
+          is_read: boolean
+          metadata: Json | null
+          patient_id: string
+          severity: string
+          source_professional_id: string
+          source_role: string
+          target_role: string
+          title: string
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_read?: boolean
+          metadata?: Json | null
+          patient_id: string
+          severity?: string
+          source_professional_id: string
+          source_role: string
+          target_role: string
+          title: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_read?: boolean
+          metadata?: Json | null
+          patient_id?: string
+          severity?: string
+          source_professional_id?: string
+          source_role?: string
+          target_role?: string
+          title?: string
+        }
+        Relationships: []
       }
       diet_templates: {
         Row: {
@@ -13777,6 +13887,119 @@ export type Database = {
             columns: ["routine_id"]
             isOneToOne: false
             referencedRelation: "workout_routines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workout_periodization: {
+        Row: {
+          auto_progress_enabled: boolean
+          created_at: string
+          current_week: number
+          deload_reduction_percent: number | null
+          deload_week: number | null
+          id: string
+          mesocycle_name: string
+          mesocycle_weeks: number
+          notes: string | null
+          personal_id: string
+          plan_id: string
+          progression_percent: number
+          progression_type: string
+          updated_at: string
+        }
+        Insert: {
+          auto_progress_enabled?: boolean
+          created_at?: string
+          current_week?: number
+          deload_reduction_percent?: number | null
+          deload_week?: number | null
+          id?: string
+          mesocycle_name?: string
+          mesocycle_weeks?: number
+          notes?: string | null
+          personal_id: string
+          plan_id: string
+          progression_percent?: number
+          progression_type?: string
+          updated_at?: string
+        }
+        Update: {
+          auto_progress_enabled?: boolean
+          created_at?: string
+          current_week?: number
+          deload_reduction_percent?: number | null
+          deload_week?: number | null
+          id?: string
+          mesocycle_name?: string
+          mesocycle_weeks?: number
+          notes?: string | null
+          personal_id?: string
+          plan_id?: string
+          progression_percent?: number
+          progression_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_periodization_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "workout_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workout_personal_records: {
+        Row: {
+          achieved_at: string
+          completion_id: string | null
+          created_at: string
+          exercise_library_id: string | null
+          exercise_name: string
+          id: string
+          previous_value: number | null
+          record_type: string
+          student_id: string
+          value: number
+        }
+        Insert: {
+          achieved_at?: string
+          completion_id?: string | null
+          created_at?: string
+          exercise_library_id?: string | null
+          exercise_name: string
+          id?: string
+          previous_value?: number | null
+          record_type?: string
+          student_id: string
+          value: number
+        }
+        Update: {
+          achieved_at?: string
+          completion_id?: string | null
+          created_at?: string
+          exercise_library_id?: string | null
+          exercise_name?: string
+          id?: string
+          previous_value?: number | null
+          record_type?: string
+          student_id?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_personal_records_completion_id_fkey"
+            columns: ["completion_id"]
+            isOneToOne: false
+            referencedRelation: "workout_completions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workout_personal_records_exercise_library_id_fkey"
+            columns: ["exercise_library_id"]
+            isOneToOne: false
+            referencedRelation: "exercises_library"
             referencedColumns: ["id"]
           },
         ]
