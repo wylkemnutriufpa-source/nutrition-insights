@@ -1,147 +1,156 @@
 /**
- * Intelligence Active Users — Shows which patients currently have IFJ enabled
- * and their engagement status for controlled rollout feedback.
+ * Intelligence Active Users — Full patient list with IFJ ON/OFF toggle
+ * Shows ALL active patients (not just those with IFJ enabled) for quick activation
  */
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Brain, Clock, CheckCircle2, AlertCircle, Loader2, Users, Bell, Send } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Brain, Loader2, Users, Search, CheckCircle2, XCircle, Settings2, Bell, Send } from "lucide-react";
 import { toast } from "sonner";
+import IFJPermissionsModal from "../IFJPermissionsModal";
 
-interface ActiveUser {
-  user_id: string;
+interface PatientIFJ {
+  patient_id: string;
   full_name: string;
-  enabled: boolean;
-  onboarded: boolean;
-  firstExperienceSeen: boolean;
-  accessMode: string | null;
-  expiresAt: string | null;
-  lastSeenAt: string | null;
+  ifj_enabled: boolean;
+  ifj_mode: string;
 }
 
 export default function IntelligenceActiveUsers() {
-  const { user } = useAuth();
-  const [users, setUsers] = useState<ActiveUser[]>([]);
+  const { user, roles } = useAuth();
+  const [patients, setPatients] = useState<PatientIFJ[]>([]);
   const [loading, setLoading] = useState(true);
-  const [notifying, setNotifying] = useState(false);
-  const [notifyingUser, setNotifyingUser] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<"all" | "on" | "off">("all");
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [permModalOpen, setPermModalOpen] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<{ id: string; name: string } | null>(null);
 
-  useEffect(() => {
-    if (!user?.id) return;
-    loadActiveUsers();
-  }, [user?.id]);
+  const isAdmin = roles?.includes("admin");
 
-  async function loadActiveUsers() {
+  const loadPatients = useCallback(async () => {
+    if (!user) return;
     setLoading(true);
 
-    const { data: links } = await supabase
-      .from("nutritionist_patients")
-      .select("patient_id")
-      .eq("nutritionist_id", user!.id)
-      .eq("status", "active");
-
-    if (!links || links.length === 0) {
-      setUsers([]);
-      setLoading(false);
-      return;
-    }
-
-    const patientIds = links.map((l) => l.patient_id);
-
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("user_id, full_name, fit_intelligence_enabled, fit_intelligence_onboarded, fit_intelligence_first_experience_seen, fit_intelligence_access_mode, fit_intelligence_expires_at, fit_intelligence_last_seen_at")
-      .in("user_id", patientIds);
-
-    const { data: prestigeData } = await supabase
-      .from("patient_prestige")
-      .select("patient_id, plan_id")
-      .in("patient_id", patientIds)
-      .eq("is_active", true);
-
-    const { data: premiumPlans } = await supabase
-      .from("prestige_plans")
-      .select("id, name, display_order")
-      .gte("display_order", 4);
-
-    const premiumPlanIds = new Set((premiumPlans || []).map((p: any) => p.id));
-    const premiumPatientIds = new Set(
-      (prestigeData || [])
-        .filter((pp: any) => premiumPlanIds.has(pp.plan_id))
-        .map((pp: any) => pp.patient_id)
-    );
-
-    const result: ActiveUser[] = (profiles || [])
-      .filter((p: any) => p.fit_intelligence_enabled === true || premiumPatientIds.has(p.user_id))
-      .map((p: any) => ({
-        user_id: p.user_id,
-        full_name: p.full_name || "Paciente",
-        enabled: p.fit_intelligence_enabled || premiumPatientIds.has(p.user_id),
-        onboarded: p.fit_intelligence_onboarded || false,
-        firstExperienceSeen: p.fit_intelligence_first_experience_seen || false,
-        accessMode: p.fit_intelligence_access_mode,
-        expiresAt: p.fit_intelligence_expires_at,
-        lastSeenAt: p.fit_intelligence_last_seen_at,
-      }));
-
-    setUsers(result);
-    setLoading(false);
-  }
-
-  async function notifyAllPremium() {
-    if (!user?.id) return;
-    setNotifying(true);
     try {
-      const toNotify = users.filter((u) => u.enabled);
-      if (toNotify.length === 0) {
-        toast.info("Nenhum paciente premium para notificar.");
-        setNotifying(false);
+      // Get active patients
+      let patientQuery = supabase
+        .from("nutritionist_patients")
+        .select("patient_id")
+        .eq("status", "active");
+
+      if (!isAdmin) {
+        patientQuery = patientQuery.eq("nutritionist_id", user.id);
+      }
+
+      const { data: links } = await patientQuery;
+      if (!links || links.length === 0) {
+        setPatients([]);
+        setLoading(false);
         return;
       }
 
-      const notifications = toNotify.map((u) => ({
-        user_id: u.user_id,
-        title: "🧠 Inteligência FitJourney disponível!",
-        message: "Sua Inteligência FitJourney está ativa e pronta para uso! Acesse agora e descubra lembretes inteligentes, hidratação, tarefas personalizadas e muito mais. Toque para explorar! ✨",
-        type: "intelligence",
-        action_url: "/patient-intelligence",
-      }));
+      const patientIds = links.map(l => l.patient_id);
 
-      const { error } = await supabase.from("notifications").insert(notifications);
-      if (error) throw error;
+      // Get profiles
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", patientIds);
 
-      toast.success(`${toNotify.length} paciente(s) notificado(s) com sucesso! 🚀`);
-    } catch (err) {
-      console.error(err);
-      toast.error("Erro ao enviar notificações");
+      // Get IFJ permissions
+      const { data: perms } = await supabase
+        .from("ifj_patient_permissions" as any)
+        .select("patient_id, meal_plan, ifj_mode")
+        .in("patient_id", patientIds);
+
+      const permsMap = new Map((perms || []).map((p: any) => [p.patient_id, p]));
+
+      const result: PatientIFJ[] = (profiles || []).map((p: any) => {
+        const perm = permsMap.get(p.user_id) as any;
+        return {
+          patient_id: p.user_id,
+          full_name: p.full_name || "Paciente",
+          ifj_enabled: perm ? perm.meal_plan !== false : false, // if no permission record, IFJ is OFF
+          ifj_mode: perm?.ifj_mode || "standard",
+        };
+      }).sort((a, b) => a.full_name.localeCompare(b.full_name));
+
+      setPatients(result);
+    } catch (e) {
+      console.error("Error loading patients:", e);
     }
-    setNotifying(false);
-  }
+    setLoading(false);
+  }, [user, isAdmin]);
 
-  async function notifySingleUser(targetUser: ActiveUser) {
-    if (!user?.id) return;
-    setNotifyingUser(targetUser.user_id);
+  useEffect(() => { loadPatients(); }, [loadPatients]);
+
+  const toggleIFJ = async (patientId: string, enable: boolean) => {
+    setTogglingId(patientId);
     try {
-      const { error } = await supabase.from("notifications").insert({
-        user_id: targetUser.user_id,
-        title: "🧠 Inteligência FitJourney disponível!",
-        message: `Olá ${targetUser.full_name.split(" ")[0]}! Sua Inteligência FitJourney está ativa. Acesse agora para lembretes inteligentes, hidratação, tarefas e muito mais! ✨`,
-        type: "intelligence",
-        action_url: "/patient-intelligence",
-      });
+      const payload: any = {
+        patient_id: patientId,
+        meal_plan: enable,
+        recipes: enable,
+        checklist: enable,
+        hydration: enable,
+        progress: enable,
+        appointments: enable,
+        substitutions: enable,
+        messages: enable,
+        recommendations: enable,
+        ifj_mode: "standard",
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from("ifj_patient_permissions" as any)
+        .upsert(payload as any, { onConflict: "patient_id" });
+
       if (error) throw error;
-      toast.success(`Notificação enviada para ${targetUser.full_name}! ✅`);
-    } catch (err) {
-      console.error(err);
-      toast.error("Erro ao notificar paciente");
+
+      setPatients(prev => prev.map(p =>
+        p.patient_id === patientId ? { ...p, ifj_enabled: enable } : p
+      ));
+
+      toast.success(enable ? "IFJ ativado ✓" : "IFJ desativado");
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro ao atualizar IFJ");
     }
-    setNotifyingUser(null);
-  }
+    setTogglingId(null);
+  };
+
+  const bulkToggle = async (enable: boolean) => {
+    const filtered = getFiltered();
+    for (const p of filtered) {
+      if (p.ifj_enabled !== enable) {
+        await toggleIFJ(p.patient_id, enable);
+      }
+    }
+    toast.success(enable ? `IFJ ativado para ${filtered.length} pacientes` : `IFJ desativado para ${filtered.length} pacientes`);
+  };
+
+  const getFiltered = () => {
+    let list = patients;
+    if (search) {
+      const s = search.toLowerCase();
+      list = list.filter(p => p.full_name.toLowerCase().includes(s));
+    }
+    if (filter === "on") list = list.filter(p => p.ifj_enabled);
+    if (filter === "off") list = list.filter(p => !p.ifj_enabled);
+    return list;
+  };
+
+  const filtered = getFiltered();
+  const enabledCount = patients.filter(p => p.ifj_enabled).length;
+  const disabledCount = patients.length - enabledCount;
 
   if (loading) {
     return (
@@ -154,140 +163,132 @@ export default function IntelligenceActiveUsers() {
   return (
     <div className="space-y-4">
       {/* Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <SummaryCard
-          icon={<Users className="w-5 h-5 text-amber-500" />}
-          label="Total Ativos"
-          value={users.length}
-        />
-        <SummaryCard
-          icon={<CheckCircle2 className="w-5 h-5 text-emerald-500" />}
-          label="Onboarding OK"
-          value={users.filter((u) => u.onboarded).length}
-        />
-        <SummaryCard
-          icon={<Brain className="w-5 h-5 text-primary" />}
-          label="Experiência Vista"
-          value={users.filter((u) => u.firstExperienceSeen).length}
-        />
-        <SummaryCard
-          icon={<AlertCircle className="w-5 h-5 text-amber-400" />}
-          label="Pendente Wizard"
-          value={users.filter((u) => !u.onboarded).length}
-        />
+      <div className="grid grid-cols-3 gap-3">
+        <div className="rounded-xl border border-border bg-card p-3 flex items-center gap-2.5">
+          <Users className="w-5 h-5 text-amber-500" />
+          <div>
+            <p className="text-lg font-bold">{patients.length}</p>
+            <p className="text-[10px] text-muted-foreground">Total Ativos</p>
+          </div>
+        </div>
+        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 flex items-center gap-2.5">
+          <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+          <div>
+            <p className="text-lg font-bold text-emerald-500">{enabledCount}</p>
+            <p className="text-[10px] text-muted-foreground">IFJ ON</p>
+          </div>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-3 flex items-center gap-2.5">
+          <XCircle className="w-5 h-5 text-muted-foreground" />
+          <div>
+            <p className="text-lg font-bold">{disabledCount}</p>
+            <p className="text-[10px] text-muted-foreground">IFJ OFF</p>
+          </div>
+        </div>
       </div>
 
-      {/* Notify All Button */}
-      {users.length > 0 && (
-        <Button
-          onClick={notifyAllPremium}
-          disabled={notifying}
-          className="w-full gap-2 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white"
-        >
-          <Bell className="w-4 h-4" />
-          {notifying ? "Enviando..." : `Notificar todos os ${users.length} pacientes para testar a IFJ`}
-        </Button>
-      )}
+      {/* Search + Filter + Bulk */}
+      <div className="flex flex-col sm:flex-row gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar paciente..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 border-amber-500/20"
+          />
+        </div>
+        <Select value={filter} onValueChange={(v) => setFilter(v as any)}>
+          <SelectTrigger className="w-[140px] border-amber-500/20">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="on">IFJ ON</SelectItem>
+            <SelectItem value="off">IFJ OFF</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="flex gap-1">
+          <Button variant="outline" size="sm" className="text-xs border-emerald-500/20 text-emerald-600 hover:bg-emerald-500/10" onClick={() => bulkToggle(true)}>
+            Ativar todos
+          </Button>
+          <Button variant="outline" size="sm" className="text-xs border-border hover:bg-muted" onClick={() => bulkToggle(false)}>
+            Desativar todos
+          </Button>
+        </div>
+      </div>
 
-      {users.length === 0 ? (
+      {/* Patient List */}
+      {patients.length === 0 ? (
         <div className="text-center py-12">
           <Brain className="w-12 h-12 mx-auto text-muted-foreground/30 mb-3" />
-          <p className="text-sm text-muted-foreground">
-            Nenhum paciente com Inteligência FitJourney ativa
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Ative no perfil do paciente → aba Prestígio
-          </p>
+          <p className="text-sm text-muted-foreground">Nenhum paciente ativo encontrado</p>
         </div>
       ) : (
-        <ScrollArea className="max-h-[65vh]">
-          <div className="space-y-2">
-            {users.map((u) => {
-              const isExpired = u.expiresAt && new Date(u.expiresAt) < new Date();
-              return (
-                <div
-                  key={u.user_id}
-                  className="flex items-center justify-between p-3 rounded-xl bg-card border border-border hover:border-amber-500/20 transition-all"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                      style={{
-                        background: u.onboarded
-                          ? "linear-gradient(135deg, hsl(45 80% 50% / 0.15), hsl(45 80% 50% / 0.05))"
-                          : "hsl(var(--muted))",
-                      }}
-                    >
-                      <Brain
-                        className={`w-5 h-5 ${u.onboarded ? "text-amber-500" : "text-muted-foreground"}`}
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{u.full_name}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        {u.lastSeenAt && (
-                          <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            Último: {format(new Date(u.lastSeenAt), "dd/MM HH:mm", { locale: ptBR })}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+        <ScrollArea className="max-h-[60vh]">
+          <div className="space-y-1">
+            {filtered.map((p) => (
+              <div
+                key={p.patient_id}
+                className="flex items-center justify-between p-3 rounded-xl bg-card border border-border hover:border-amber-500/20 transition-all"
+              >
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div
+                    className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
+                      p.ifj_enabled
+                        ? "bg-gradient-to-br from-amber-500/20 to-yellow-500/10"
+                        : "bg-muted"
+                    }`}
+                  >
+                    <Brain className={`w-4 h-4 ${p.ifj_enabled ? "text-amber-500" : "text-muted-foreground"}`} />
                   </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    {u.onboarded ? (
-                      <Badge className="bg-emerald-500/10 text-emerald-500 text-[10px]">
-                        Ativo
-                      </Badge>
-                    ) : u.firstExperienceSeen ? (
-                      <Badge className="bg-amber-500/10 text-amber-500 text-[10px]">
-                        Wizard pendente
-                      </Badge>
-                    ) : (
-                      <Badge className="bg-muted text-muted-foreground text-[10px]">
-                        Aguardando
-                      </Badge>
-                    )}
-                    {isExpired && (
-                      <Badge variant="destructive" className="text-[10px]">
-                        Expirado
-                      </Badge>
-                    )}
-                    {u.accessMode === "timed" && u.expiresAt && !isExpired && (
-                      <span className="text-[10px] text-muted-foreground">
-                        até {format(new Date(u.expiresAt), "dd/MM/yy")}
-                      </span>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10"
-                      onClick={() => notifySingleUser(u)}
-                      disabled={notifyingUser === u.user_id}
-                      title={`Notificar ${u.full_name}`}
-                    >
-                      <Send className={`w-4 h-4 ${notifyingUser === u.user_id ? "animate-pulse" : ""}`} />
-                    </Button>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{p.full_name}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {p.ifj_enabled && (
+                        <Badge className="bg-amber-500/10 text-amber-500 text-[9px] px-1.5 py-0">
+                          {p.ifj_mode === "premium" ? "Premium" : p.ifj_mode === "basic" ? "Básico" : "Padrão"}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
-              );
-            })}
+
+                <div className="flex items-center gap-2 shrink-0">
+                  {p.ifj_enabled && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-[10px] text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 px-2"
+                      onClick={() => {
+                        setSelectedPatient({ id: p.patient_id, name: p.full_name });
+                        setPermModalOpen(true);
+                      }}
+                    >
+                      <Settings2 className="w-3 h-3 mr-1" /> Permissões
+                    </Button>
+                  )}
+                  <Switch
+                    checked={p.ifj_enabled}
+                    disabled={togglingId === p.patient_id}
+                    onCheckedChange={(v) => toggleIFJ(p.patient_id, v)}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         </ScrollArea>
       )}
-    </div>
-  );
-}
 
-function SummaryCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
-  return (
-    <div className="glass rounded-xl p-3 flex items-center gap-2.5">
-      {icon}
-      <div>
-        <p className="text-lg font-bold">{value}</p>
-        <p className="text-[10px] text-muted-foreground">{label}</p>
-      </div>
+      {/* Permissions Modal */}
+      {selectedPatient && (
+        <IFJPermissionsModal
+          open={permModalOpen}
+          onOpenChange={setPermModalOpen}
+          patientId={selectedPatient.id}
+          patientName={selectedPatient.name}
+        />
+      )}
     </div>
   );
 }
