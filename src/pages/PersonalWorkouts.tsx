@@ -34,6 +34,7 @@ import WorkoutPDFExport from "@/components/workout/WorkoutPDFExport";
 import PTStudentChat from "@/components/workout/PTStudentChat";
 import PTChallenges from "@/components/workout/PTChallenges";
 import WorkoutRestTimer from "@/components/workout/WorkoutRestTimer";
+import IFJCommandCenter from "@/components/intelligence/modules/IFJCommandCenter";
 
 // --- Plans Tab Component ---
 function PlansTab({ plans, loading, students, onToggleStatus, onExpandPlan, expandedPlan, planDetails }: any) {
