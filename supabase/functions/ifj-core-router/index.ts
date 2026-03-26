@@ -490,7 +490,7 @@ async function syncPriorityQueue(supabase: any, userId: string, priorities: Prio
       source_engine: "priority",
       is_resolved: false,
       updated_at: now,
-    }, { onConflict: "owner_user_id,entity_type,entity_id" }).then(() => {}).catch?.(() => {})
+    }, { onConflict: "owner_user_id,entity_type,entity_id" }).then(() => {})
   );
   await Promise.all(upsertPromises);
 
