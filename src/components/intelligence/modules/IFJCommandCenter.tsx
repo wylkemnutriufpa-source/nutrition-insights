@@ -179,7 +179,7 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const resp = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ifj-command-center`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${config.edgeFunction}`,
         {
           method: "POST",
           headers: {
