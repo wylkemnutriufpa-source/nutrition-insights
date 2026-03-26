@@ -356,10 +356,11 @@ async function getSnapshots(supabase: any, patientIds: string[], today: string) 
 }
 
 // meal_plans: nutritionist_id, is_active, plan_status (NOT status, NOT created_by)
-async function getMealPlans(supabase: any, userId: string) {
-  const { data } = await supabase.from("meal_plans")
-    .select("id, patient_id, title, plan_status, is_active, start_date, end_date")
-    .eq("nutritionist_id", userId).eq("is_active", true).limit(200);
+async function getMealPlans(supabase: any, userId: string, role?: string) {
+  let query = supabase.from("meal_plans")
+    .select("id, patient_id, title, plan_status, is_active, start_date, end_date");
+  if (role !== "admin") query = query.eq("nutritionist_id", userId);
+  const { data } = await query.eq("is_active", true).limit(500);
   return data || [];
 }
 
