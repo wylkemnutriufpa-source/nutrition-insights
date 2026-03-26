@@ -259,7 +259,7 @@ function NeuralParticleCanvas({
     dustGeo.setAttribute("position", new THREE.BufferAttribute(dustPos, 3));
     dustGeo.setAttribute("color", new THREE.BufferAttribute(dustCol, 3));
     const dustMat = new THREE.PointsMaterial({
-      size: 0.025,
+      size: 0.015,
       vertexColors: true,
       blending: THREE.AdditiveBlending,
       transparent: true,

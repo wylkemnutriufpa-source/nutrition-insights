@@ -169,7 +169,6 @@ export default function NeuroEntryExperience({
   useEffect(() => {
     if (state === "awareness" && !tonePlayed.current) {
       tonePlayed.current = true;
-      playTone();
       microVibrate(10);
     }
   }, [state]);
