@@ -263,13 +263,13 @@ async function getPatients(supabase: any, userId: string, role?: string): Promis
 }
 
 // Shared portfolio data fetch — used by priority engine AND clinical_summary
-async function getPortfolioInputs(supabase: any, userId: string, patientIds: string[], today: string) {
+async function getPortfolioInputs(supabase: any, userId: string, patientIds: string[], today: string, role?: string) {
   const safeIds = patientIds.length ? patientIds : ["00000000-0000-0000-0000-000000000000"];
   const [snapshots, alerts, plans, transactions] = await Promise.all([
     getSnapshots(supabase, safeIds, today),
-    getActiveAlerts(supabase, userId),
-    getMealPlans(supabase, userId),
-    getFinancialSummary(supabase, userId),
+    getActiveAlerts(supabase, userId, role),
+    getMealPlans(supabase, userId, role),
+    getFinancialSummary(supabase, userId, role),
   ]);
   return { snapshots, alerts, plans, transactions };
 }
