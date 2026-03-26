@@ -27,6 +27,7 @@ interface Challenge {
   student_ids: string[];
   created_at: string;
   status: string;
+  xp_reward: number;
 }
 
 const TARGET_TYPES = [
