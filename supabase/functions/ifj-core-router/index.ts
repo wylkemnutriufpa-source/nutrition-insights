@@ -849,10 +849,13 @@ async function runTrainingEngine(supabase: any, intent: IFJIntent, userId: strin
 }
 
 // ── JOURNEY ENGINE ─────────────────────────────────────────────
-async function runJourneyEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], today: string): Promise<IFJResponse> {
+async function runJourneyEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], today: string, role?: string): Promise<IFJResponse> {
   switch (intent.intent) {
     case "appointments": {
-      const appts = await getAppointments(supabase, userId, today);
+      let query = supabase.from("patient_appointments")
+        .select("id, patient_id, appointment_date, appointment_time, status, appointment_type");
+      if (role !== "admin") query = query.eq("nutritionist_id", userId);
+      const { data: appts } = await query.gte("appointment_date", today).order("appointment_date", { ascending: true }).limit(10);
       if (!appts.length) return fmt("Sem consultas", "📅", "info", "Nenhuma consulta agendada.",
         "", [{ label: "Agendar", route: "/appointments", type: "navigate" }], intent, "journey", ctx);
       const md = `| Paciente | Data | Hora | Tipo | Status |\n|---|---|---|---|---|\n` +
