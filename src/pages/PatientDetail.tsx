@@ -34,7 +34,7 @@ import OnboardingApprovalQueue from "@/components/patient/OnboardingApprovalQueu
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
-  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope, Crown, UserCog, Pencil, Sparkles, Rocket, Shield, Loader2
+  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope, Crown, UserCog, Pencil, Sparkles, Rocket, Shield, Loader2, Search
 } from "lucide-react";
 import BodyProjectionProCard from "@/components/patient/BodyProjectionProCard";
 import ActiveProtocolBadge from "@/components/patient/ActiveProtocolBadge";
@@ -56,6 +56,7 @@ import ClinicalFlagsSummary from "@/components/patient/ClinicalFlagsSummary";
 import PatientBehavioralManager from "@/components/patient/PatientBehavioralManager";
 import PatientEvolutionPDF from "@/components/patient/PatientEvolutionPDF";
 import FitIntelligenceToggle from "@/components/intelligence/FitIntelligenceToggle";
+import PatientLabExams from "@/components/patient/PatientLabExams";
 
 export default function PatientDetail() {
   const { patientId } = useParams<{ patientId: string }>();
@@ -714,6 +715,7 @@ export default function PatientDetail() {
             { key: "body-projection", label: "Projeção Corporal", icon: Sparkles, color: "from-purple-500/20 to-violet-500/5", iconColor: "text-purple-500" },
             { key: "onboarding", label: "Onboarding", icon: Zap, color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
             { key: "clinical-flags", label: "Flags Clínicas", icon: Shield, color: "from-emerald-500/20 to-emerald-500/5", iconColor: "text-emerald-500" },
+            { key: "lab-exams", label: "Exames Lab.", icon: Search, color: "from-violet-500/20 to-violet-500/5", iconColor: "text-violet-500" },
             { key: "edit-profile", label: "Editar Cadastro", icon: Pencil, color: "from-info/20 to-info/5", iconColor: "text-info" },
             { key: "projects", label: "Projetos", icon: Rocket, color: "from-pink-500/20 to-pink-500/5", iconColor: "text-pink-500" },
           ];
@@ -1428,7 +1430,12 @@ export default function PatientDetail() {
                 </DialogContent>
               </Dialog>
 
-              <Dialog open={openSection === "missions"} onOpenChange={(v) => !v && setOpenSection(null)}>
+              {/* Lab Exams Modal */}
+              <Dialog open={openSection === "lab-exams"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display">Exames Laboratoriais</DialogTitle></DialogHeader>
+                  <PatientLabExams patientId={patientId!} />
+                </DialogContent>
                 <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Missões do Paciente</DialogTitle></DialogHeader>
                   <MissionCreator patientId={patientId!} patientName={profile?.full_name || undefined} />
