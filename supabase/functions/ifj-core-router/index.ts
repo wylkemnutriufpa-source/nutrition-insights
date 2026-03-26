@@ -7,9 +7,8 @@ const corsHeaders = {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// IFJ CORE ROUTER v2.0 — Central Deterministic Intelligence Orchestrator
-// Zero LLM. 100% data-driven. Modular engine architecture.
-// Refactored: single patient fetch, proper upsert keys, full audit
+// IFJ CORE ROUTER v3.0 — Schema-validated Deterministic Orchestrator
+// Zero LLM. Real tables only. Single source of truth: user_roles.
 // ═══════════════════════════════════════════════════════════════
 
 // ── TYPES ──────────────────────────────────────────────────────
@@ -47,6 +46,15 @@ interface SessionCtx {
   last_entity_id?: string;
 }
 
+// Patient model assembled from real tables
+interface PatientRecord {
+  id: string; // user_id from profiles = patient_id in nutritionist_patients
+  full_name: string;
+  goal: string | null;
+  journey_status: string | null;
+  status: string | null; // link status
+}
+
 // ── NORMALIZE ──────────────────────────────────────────────────
 function normalize(t: string): string {
   return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
@@ -54,7 +62,7 @@ function normalize(t: string): string {
 
 // ── SYNONYM MATCHER ────────────────────────────────────────────
 const SYNONYM_MAP: Record<string, string[]> = {
-  patients_attention: ["atencao", "urgente", "prioridade", "risco", "critico", "resolver hoje", "pendencia", "dropout", "abandono", "piorou", "caiu"],
+  patients_attention: ["atencao", "urgente", "risco", "critico", "dropout", "abandono", "piorou", "caiu"],
   patients_improved: ["melhorou", "evoluiu", "progresso", "avancou", "melhora"],
   patient_detail: ["paciente", "sobre", "como esta", "como vai", "ficha", "perfil", "dados"],
   financial_overview: ["financeiro", "faturamento", "receita", "dinheiro", "pagamento", "cobranc", "caixa", "inadimpl"],
@@ -100,7 +108,6 @@ function detectIntent(n: string, ctx: SessionCtx): IFJIntent {
   if (matchesIntent(n, "help"))
     return { ...base, intent: "help", module: "general", confidence: 0.95, response_mode: "help" };
 
-  // Priorities / what to do today — MUST come before patients_attention (both share "prioridade")
   if (n.includes("resolver hoje") || n.includes("prioridade do dia") || n.includes("o que preciso") || n.includes("pendencia") || n.includes("fila ifj") || n.includes("agenda ifj"))
     return { ...base, intent: "priorities_today", module: "priority_engine", confidence: 0.96, response_mode: "priority_list" };
 
@@ -201,13 +208,57 @@ function findByName(list: any[], searchName: string, nameField = "full_name"): {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// CONNECTORS — Single responsibility data fetchers
+// CONNECTORS — Schema-validated data fetchers
+// Real tables: nutritionist_patients + profiles, meal_plans (is_active, plan_status, nutritionist_id),
+// patient_anamnesis (user_id), financial_transactions, clinical_daily_snapshots, etc.
 // ═══════════════════════════════════════════════════════════════
-async function getPatients(supabase: any, userId: string) {
-  const { data } = await supabase.from("patients")
-    .select("id, full_name, status, journey_status, goal, current_weight, target_weight, created_at")
+
+// Get role from user_roles table (SINGLE SOURCE OF TRUTH — never profiles.role)
+async function getUserRole(supabase: any, userId: string): Promise<string> {
+  const { data } = await supabase.from("user_roles")
+    .select("role").eq("user_id", userId);
+  const roles = (data || []).map((r: any) => r.role);
+  if (roles.includes("admin")) return "admin";
+  if (roles.includes("nutritionist")) return "nutritionist";
+  if (roles.includes("personal")) return "personal";
+  if (roles.includes("patient")) return "patient";
+  return "unknown";
+}
+
+// Get patients for a nutritionist via nutritionist_patients + profiles join
+async function getPatients(supabase: any, userId: string): Promise<PatientRecord[]> {
+  const { data: links } = await supabase.from("nutritionist_patients")
+    .select("patient_id, status, journey_status")
     .eq("nutritionist_id", userId).eq("status", "active").limit(200);
-  return data || [];
+  if (!links?.length) return [];
+
+  const patientIds = links.map((l: any) => l.patient_id);
+  const { data: profiles } = await supabase.from("profiles")
+    .select("user_id, full_name, goal")
+    .in("user_id", patientIds);
+
+  return links.map((link: any) => {
+    const profile = (profiles || []).find((p: any) => p.user_id === link.patient_id);
+    return {
+      id: link.patient_id,
+      full_name: profile?.full_name || "Sem nome",
+      goal: profile?.goal || null,
+      journey_status: link.journey_status,
+      status: link.status,
+    };
+  });
+}
+
+// Shared portfolio data fetch — used by priority engine AND clinical_summary
+async function getPortfolioInputs(supabase: any, userId: string, patientIds: string[], today: string) {
+  const safeIds = patientIds.length ? patientIds : ["00000000-0000-0000-0000-000000000000"];
+  const [snapshots, alerts, plans, transactions] = await Promise.all([
+    getSnapshots(supabase, safeIds, today),
+    getActiveAlerts(supabase, userId),
+    getMealPlans(supabase, userId),
+    getFinancialSummary(supabase, userId),
+  ]);
+  return { snapshots, alerts, plans, transactions };
 }
 
 async function getPatientOverview(supabase: any, patientId: string, today: string) {
@@ -217,16 +268,19 @@ async function getPatientOverview(supabase: any, patientId: string, today: strin
       .eq("patient_id", patientId).eq("snapshot_date", today).maybeSingle(),
     supabase.from("clinical_alerts")
       .select("id, title, severity").eq("patient_id", patientId).eq("is_active", true).limit(5),
+    // meal_plans: use is_active=true (real column)
     supabase.from("meal_plans")
-      .select("id, title, status, start_date, end_date").eq("patient_id", patientId).eq("status", "active").maybeSingle(),
+      .select("id, title, plan_status, is_active, start_date, end_date")
+      .eq("patient_id", patientId).eq("is_active", true).limit(1).maybeSingle(),
   ]);
   return { snapshot: snap, alerts: alerts || [], activePlan: plan };
 }
 
-async function getPatientAnamnesis(supabase: any, patientId: string) {
+// patient_anamnesis uses user_id (NOT patient_id)
+async function getPatientAnamnesis(supabase: any, patientUserId: string) {
   const { data } = await supabase.from("patient_anamnesis")
-    .select("id, dietary_restrictions, allergies, health_conditions, medications, lifestyle_notes, sleep_quality, stress_level, exercise_frequency, goals_text, created_at")
-    .eq("patient_id", patientId).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    .select("id, answers, status, created_at")
+    .eq("user_id", patientUserId).order("created_at", { ascending: false }).limit(1).maybeSingle();
   return data;
 }
 
@@ -237,9 +291,10 @@ async function getPatientLabSummary(supabase: any, patientId: string) {
   return data || [];
 }
 
+// financial_transactions: nutritionist_id, no patient_id column
 async function getFinancialSummary(supabase: any, userId: string) {
   const { data } = await supabase.from("financial_transactions")
-    .select("id, amount, status, type, due_date, patient_id, description, created_at")
+    .select("id, amount, status, type, date, description, category, created_at")
     .eq("nutritionist_id", userId);
   return data || [];
 }
@@ -258,11 +313,15 @@ async function getAppointments(supabase: any, userId: string, today: string) {
   return data || [];
 }
 
-async function getStudents(supabase: any, personalId: string) {
-  const { data } = await supabase.from("patient_professional_links")
-    .select("patient_id, patients:patient_id(id, full_name, status, current_weight, goal)")
-    .eq("professional_id", personalId).eq("link_type", "personal_trainer").eq("status", "active").limit(100);
-  return (data || []).map((d: any) => d.patients).filter(Boolean);
+async function getStudents(supabase: any, personalId: string): Promise<PatientRecord[]> {
+  const { data: links } = await supabase.from("patient_professional_links")
+    .select("patient_id")
+    .eq("professional_id", personalId).eq("professional_role", "personal_trainer").eq("link_status", "active").limit(100);
+  if (!links?.length) return [];
+  const ids = links.map((l: any) => l.patient_id);
+  const { data: profiles } = await supabase.from("profiles")
+    .select("user_id, full_name, goal").in("user_id", ids);
+  return (profiles || []).map((p: any) => ({ id: p.user_id, full_name: p.full_name, goal: p.goal, journey_status: null, status: "active" }));
 }
 
 async function getWorkoutFeedback(supabase: any, studentIds: string[]) {
@@ -276,15 +335,16 @@ async function getWorkoutFeedback(supabase: any, studentIds: string[]) {
 async function getSnapshots(supabase: any, patientIds: string[], today: string) {
   if (!patientIds.length) return [];
   const { data } = await supabase.from("clinical_daily_snapshots")
-    .select("patient_id, adherence_score, dropout_risk_score, risk_level, checklist_completion_rate, current_weight, weight_trend, momentum_direction")
+    .select("patient_id, adherence_score, dropout_risk_score, risk_level, checklist_completion_rate, current_weight, weight_trend, momentum_direction, days_since_last_checkin")
     .in("patient_id", patientIds).eq("snapshot_date", today);
   return data || [];
 }
 
+// meal_plans: nutritionist_id, is_active, plan_status (NOT status, NOT created_by)
 async function getMealPlans(supabase: any, userId: string) {
   const { data } = await supabase.from("meal_plans")
-    .select("id, patient_id, title, status, start_date, end_date")
-    .eq("created_by", userId).in("status", ["active", "published"]).limit(200);
+    .select("id, patient_id, title, plan_status, is_active, start_date, end_date")
+    .eq("nutritionist_id", userId).eq("is_active", true).limit(200);
   return data || [];
 }
 
@@ -344,7 +404,7 @@ async function logIntent(supabase: any, userId: string, role: string, input: str
 }
 
 // ═══════════════════════════════════════════════════════════════
-// PRIORITY ENGINE — Cross-domain scoring
+// PRIORITY ENGINE — Cross-domain scoring with sync
 // ═══════════════════════════════════════════════════════════════
 interface PriorityItem {
   entity_type: string;
@@ -356,7 +416,7 @@ interface PriorityItem {
   source_engine: string;
 }
 
-function calculatePriorities(patients: any[], snapshots: any[], alerts: any[], plans: any[], transactions: any[]): PriorityItem[] {
+function calculatePriorities(patients: PatientRecord[], snapshots: any[], alerts: any[], plans: any[], transactions: any[]): PriorityItem[] {
   const items: PriorityItem[] = [];
   const today = new Date();
 
@@ -366,7 +426,8 @@ function calculatePriorities(patients: any[], snapshots: any[], alerts: any[], p
     const snap = snapshots.find((s: any) => s.patient_id === p.id);
     const pAlerts = alerts.filter((a: any) => a.patient_id === p.id);
     const pPlan = plans.find((pl: any) => pl.patient_id === p.id);
-    const pTx = transactions.filter((t: any) => t.patient_id === p.id && (t.status === "pending" || t.status === "pendente"));
+    // financial_transactions has no patient_id, skip per-patient financial scoring here
+    // Instead, global financial pending is shown in the summary
 
     // 1. Clinical risk (+50 critical, +35 high)
     if (snap?.risk_level === "critical") { score += 50; reasons.push("Risco clínico crítico"); }
@@ -393,15 +454,12 @@ function calculatePriorities(patients: any[], snapshots: any[], alerts: any[], p
       else if (daysLeft <= 2) { score += 20; reasons.push(`Plano vence em ${daysLeft}d`); }
     }
 
-    // 6. Financial pending (+15)
-    if (pTx.length > 0) { score += 15; reasons.push(`${pTx.length} pagamento(s) pendente(s)`); }
-
-    // 7. Checklist < 30% (+10)
+    // 6. Checklist < 30% (+10)
     if (snap?.checklist_completion_rate != null && snap.checklist_completion_rate < 30) {
       score += 10; reasons.push("Checklist < 30%");
     }
 
-    // 8. Days since last checkin (+15 >7d)
+    // 7. Days since last checkin (+15 >7d)
     if (snap?.days_since_last_checkin != null && snap.days_since_last_checkin > 7) {
       score += 15; reasons.push(`${snap.days_since_last_checkin}d sem check-in`);
     }
@@ -413,6 +471,48 @@ function calculatePriorities(patients: any[], snapshots: any[], alerts: any[], p
   }
 
   return items.sort((a, b) => b.score - a.score);
+}
+
+// Sync priority queue: upsert current, mark removed as resolved
+async function syncPriorityQueue(supabase: any, userId: string, priorities: PriorityItem[]) {
+  const now = new Date().toISOString();
+
+  // 1. Upsert current priorities (top 20)
+  const upsertPromises = priorities.slice(0, 20).map(item =>
+    supabase.from("ifj_priority_queue").upsert({
+      entity_type: item.entity_type,
+      entity_id: item.entity_id,
+      entity_name: item.entity_name,
+      owner_user_id: userId,
+      priority_score: item.score,
+      priority_level: item.level,
+      reasons_json: item.reasons,
+      source_engine: "priority",
+      is_resolved: false,
+      updated_at: now,
+    }, { onConflict: "owner_user_id,entity_type,entity_id" }).catch(() => {})
+  );
+  await Promise.all(upsertPromises);
+
+  // 2. Mark as resolved any entries NOT in current priorities
+  const currentEntityIds = priorities.slice(0, 20).map(p => p.entity_id);
+  if (currentEntityIds.length > 0) {
+    // Get all unresolved entries for this user
+    const { data: existing } = await supabase.from("ifj_priority_queue")
+      .select("id, entity_id")
+      .eq("owner_user_id", userId).eq("is_resolved", false);
+    const toResolve = (existing || []).filter((e: any) => !currentEntityIds.includes(e.entity_id));
+    if (toResolve.length > 0) {
+      await Promise.all(toResolve.map((e: any) =>
+        supabase.from("ifj_priority_queue").update({ is_resolved: true, updated_at: now }).eq("id", e.id).catch(() => {})
+      ));
+    }
+  } else {
+    // No priorities = resolve all
+    await supabase.from("ifj_priority_queue")
+      .update({ is_resolved: true, updated_at: now })
+      .eq("owner_user_id", userId).eq("is_resolved", false).catch(() => {});
+  }
 }
 
 // ── FORMAT RESPONSE ────────────────────────────────────────────
@@ -449,12 +549,12 @@ function resolveNavigation(n: string): { route: string; label: string } | null {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// DOMAIN ENGINES — Each engine owns its domain logic
+// DOMAIN ENGINES
 // ═══════════════════════════════════════════════════════════════
 
 // ── CLINICAL ENGINE ────────────────────────────────────────────
-async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: any[], today: string): Promise<IFJResponse> {
-  const patientIds = patients.map((p: any) => p.id);
+async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], today: string): Promise<IFJResponse> {
+  const patientIds = patients.map(p => p.id);
   const safeIds = patientIds.length ? patientIds : ["00000000-0000-0000-0000-000000000000"];
 
   switch (intent.intent) {
@@ -466,7 +566,7 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
         return fmt("Nenhum paciente em risco", "✅", "info", "Carteira estável hoje.", "✅ Todos os pacientes estão dentro dos parâmetros normais.", [], intent, "clinical", ctx);
       const md = `| Paciente | Risco | Adesão | Dropout |\n|---|---|---|---|\n` +
         atRisk.map((s: any) => {
-          const p = patients.find((x: any) => x.id === s.patient_id);
+          const p = patients.find(x => x.id === s.patient_id);
           return `| **${p?.full_name || "?"}** | ${s.risk_level} | ${s.adherence_score || 0}% | ${s.dropout_risk_score || 0}% |`;
         }).join("\n");
       return fmt("Pacientes que precisam de atenção", "⚠️", "priority_list", `${atRisk.length} paciente(s) em risco hoje.`, md,
@@ -478,16 +578,16 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
       const improved = snapshots.filter((s: any) => s.momentum_direction === "up" || (s.adherence_score && s.adherence_score >= 80));
       if (!improved.length) return fmt("Sem destaques hoje", "📊", "info", "Nenhum paciente com melhora expressiva.", "", [], intent, "clinical", ctx);
       const md = improved.map((s: any) => {
-        const p = patients.find((x: any) => x.id === s.patient_id);
+        const p = patients.find(x => x.id === s.patient_id);
         return `- **${p?.full_name}** — Adesão: ${s.adherence_score}% | Tendência: ${s.weight_trend || "?"}`;
       }).join("\n");
       return fmt("Pacientes em evolução", "🌟", "list", `${improved.length} paciente(s) com boa evolução.`, md, [], intent, "clinical", ctx);
     }
 
     case "patient_detail": {
-      let patient: any = null;
+      let patient: PatientRecord | undefined;
       if (intent.target_id) {
-        patient = patients.find((p: any) => p.id === intent.target_id);
+        patient = patients.find(p => p.id === intent.target_id);
       } else if (intent.target_name) {
         const { found, ambiguous } = findByName(patients, intent.target_name);
         if (ambiguous.length > 0) {
@@ -499,7 +599,6 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
       }
       if (!patient) return fmt("Paciente não encontrado", "❌", "error", "Nenhum paciente com esse nome.", "Verifique a grafia ou diga outro nome.", [], intent, "clinical", ctx);
 
-      // Update context
       ctx.last_patient_id = patient.id;
       ctx.last_patient_name = patient.full_name;
       ctx.last_entity_type = "patient";
@@ -510,8 +609,7 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
       const md = `## ${patient.full_name}\n\n| Campo | Valor |\n|---|---|\n` +
         `| Status | ${patient.journey_status || patient.status} |\n` +
         `| Objetivo | ${patient.goal || "—"} |\n` +
-        `| Peso atual | ${s?.current_weight || patient.current_weight || "—"} kg |\n` +
-        `| Meta | ${patient.target_weight || "—"} kg |\n` +
+        `| Peso atual | ${s?.current_weight || "—"} kg |\n` +
         `| Adesão | ${s?.adherence_score ?? "—"}% |\n` +
         `| Risco | ${s?.risk_level || "—"} |\n` +
         `| Dropout | ${s?.dropout_risk_score ?? "—"}% |\n` +
@@ -528,19 +626,17 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
     case "anamnesis": {
       const pid = intent.target_id || ctx.last_patient_id;
       if (!pid) return fmt("Paciente não especificado", "❓", "error", "Diga o nome do paciente.", "Ex: *anamnese da Sandra*", [], intent, "clinical", ctx);
+      // patient_anamnesis uses user_id = patient's user_id
       const anam = await getPatientAnamnesis(supabase, pid);
       if (!anam) return fmt("Sem anamnese", "📋", "info", "Nenhuma anamnese encontrada.", "O paciente ainda não respondeu.", [], intent, "clinical", ctx);
-      const p = patients.find((x: any) => x.id === pid);
+      const p = patients.find(x => x.id === pid);
+      // Answers is JSONB, extract key fields
+      const answers = anam.answers || {};
       const md = `## Anamnese — ${p?.full_name || "Paciente"}\n\n` +
-        `- **Restrições**: ${anam.dietary_restrictions || "Nenhuma"}\n` +
-        `- **Alergias**: ${anam.allergies || "Nenhuma"}\n` +
-        `- **Condições**: ${anam.health_conditions || "—"}\n` +
-        `- **Medicamentos**: ${anam.medications || "—"}\n` +
-        `- **Sono**: ${anam.sleep_quality || "—"}\n` +
-        `- **Estresse**: ${anam.stress_level || "—"}\n` +
-        `- **Exercícios**: ${anam.exercise_frequency || "—"}\n` +
-        `- **Objetivos**: ${anam.goals_text || "—"}\n` +
-        `- **Notas**: ${anam.lifestyle_notes || "—"}`;
+        `- **Status**: ${anam.status}\n` +
+        `- **Data**: ${new Date(anam.created_at).toLocaleDateString("pt-BR")}\n` +
+        `- **Respostas registradas**: ${Object.keys(answers).length} campos\n\n` +
+        Object.entries(answers).slice(0, 15).map(([k, v]) => `- **${k}**: ${typeof v === "object" ? JSON.stringify(v) : v}`).join("\n");
       return fmt(`Anamnese: ${p?.full_name}`, "📋", "detail", "Dados da anamnese", md, [], intent, "clinical", ctx);
     }
 
@@ -549,7 +645,7 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
       if (!pid) return fmt("Paciente não especificado", "❓", "error", "Diga o nome.", "", [], intent, "clinical", ctx);
       const labs = await getPatientLabSummary(supabase, pid);
       if (!labs.length) return fmt("Sem exames", "🔬", "info", "Nenhum exame registrado.", "", [], intent, "clinical", ctx);
-      const p = patients.find((x: any) => x.id === pid);
+      const p = patients.find(x => x.id === pid);
       const md = `## Exames — ${p?.full_name}\n\n| Marcador | Valor | Ref | Status |\n|---|---|---|---|\n` +
         labs.map((l: any) => {
           const val = parseFloat(l.value);
@@ -569,12 +665,14 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
     case "meal_plan": {
       const pid = intent.target_id || ctx.last_patient_id;
       if (!pid) return fmt("Paciente não especificado", "❓", "error", "Diga o nome.", "", [], intent, "clinical", ctx);
+      // meal_plans: is_active=true, plan_status for details
       const { data: plan } = await supabase.from("meal_plans")
-        .select("id, title, status, start_date, end_date, total_calories").eq("patient_id", pid).eq("status", "active").maybeSingle();
-      const p = patients.find((x: any) => x.id === pid);
+        .select("id, title, plan_status, is_active, start_date, end_date, total_target_calories")
+        .eq("patient_id", pid).eq("is_active", true).limit(1).maybeSingle();
+      const p = patients.find(x => x.id === pid);
       if (!plan) return fmt("Sem plano ativo", "🍽️", "info", `${p?.full_name} não tem plano ativo.`, "", [{ label: "Criar plano", route: "/meal-plans", type: "navigate" }], intent, "clinical", ctx);
       const daysLeft = plan.end_date ? Math.ceil((new Date(plan.end_date).getTime() - Date.now()) / 86400000) : null;
-      const md = `## Plano: ${plan.title}\n\n- Status: ${plan.status}\n- Início: ${plan.start_date || "—"}\n- Fim: ${plan.end_date || "—"}\n- Calorias: ${plan.total_calories || "—"} kcal` +
+      const md = `## Plano: ${plan.title}\n\n- Status: ${plan.plan_status}\n- Início: ${plan.start_date || "—"}\n- Fim: ${plan.end_date || "—"}\n- Calorias: ${plan.total_target_calories || "—"} kcal` +
         (daysLeft != null ? `\n- **Vence em ${daysLeft} dia(s)**` : "");
       return fmt(`Plano: ${p?.full_name}`, "🍽️", "detail", `Plano ${plan.title}`, md,
         [{ label: "Editar plano", route: `/meal-plans/${plan.id}`, type: "navigate" }], intent, "clinical", ctx);
@@ -589,7 +687,7 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
       });
       if (!soon.length) return fmt("Nenhum plano vencendo", "✅", "info", "Todos os planos válidos.", "", [], intent, "clinical", ctx);
       const md = soon.map((pl: any) => {
-        const p = patients.find((x: any) => x.id === pl.patient_id);
+        const p = patients.find(x => x.id === pl.patient_id);
         const d = Math.ceil((new Date(pl.end_date).getTime() - Date.now()) / 86400000);
         return `- **${p?.full_name || "?"}** — ${pl.title} — ${d < 0 ? "VENCIDO" : `vence em ${d}d`}`;
       }).join("\n");
@@ -601,7 +699,7 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
       if (!alerts.length) return fmt("Sem alertas", "✅", "info", "Nenhum alerta ativo.", "", [], intent, "clinical", ctx);
       const md = `| Paciente | Alerta | Severidade |\n|---|---|---|\n` +
         alerts.map((a: any) => {
-          const p = patients.find((x: any) => x.id === a.patient_id);
+          const p = patients.find(x => x.id === a.patient_id);
           return `| ${p?.full_name || "?"} | ${a.title} | ${a.severity} |`;
         }).join("\n");
       return fmt("Alertas Clínicos", "🔔", "list", `${alerts.length} alerta(s)`, md, [{ label: "Control Tower", route: "/control-tower", type: "navigate" }], intent, "clinical", ctx);
@@ -609,23 +707,20 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
 
     case "clinical_summary":
     case "portfolio_health": {
-      const [snapshots, alerts, plans, transactions] = await Promise.all([
-        getSnapshots(supabase, safeIds, today),
-        getActiveAlerts(supabase, userId),
-        getMealPlans(supabase, userId),
-        getFinancialSummary(supabase, userId),
-      ]);
+      const { snapshots, alerts, plans, transactions } = await getPortfolioInputs(supabase, userId, patientIds, today);
       const priorities = calculatePriorities(patients, snapshots, alerts, plans, transactions);
       const critical = priorities.filter(p => p.level === "critical").length;
       const high = priorities.filter(p => p.level === "high").length;
       const avgAdherence = snapshots.length ? Math.round(snapshots.reduce((s: number, x: any) => s + (x.adherence_score || 0), 0) / snapshots.length) : 0;
+      const pendingTx = transactions.filter((t: any) => t.status === "pending" || t.status === "pendente");
       const md = `## Panorama da Carteira\n\n| Métrica | Valor |\n|---|---|\n` +
         `| Pacientes ativos | **${patients.length}** |\n` +
         `| Prioridade crítica | **${critical}** |\n` +
         `| Prioridade alta | **${high}** |\n` +
         `| Alertas ativos | **${alerts.length}** |\n` +
         `| Adesão média | **${avgAdherence}%** |\n` +
-        `| Planos ativos | **${plans.length}** |`;
+        `| Planos ativos | **${plans.length}** |\n` +
+        `| Pendências financeiras | **${pendingTx.length}** |`;
       return fmt("Panorama da Carteira", "📊", "overview", `${patients.length} pacientes, ${critical} críticos`, md,
         [{ label: "Control Tower", route: "/control-tower", type: "navigate" }], intent, "clinical", ctx);
     }
@@ -636,7 +731,7 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
 }
 
 // ── BEHAVIORAL ENGINE ──────────────────────────────────────────
-async function runBehavioralEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: any[], today: string): Promise<IFJResponse> {
+async function runBehavioralEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], today: string): Promise<IFJResponse> {
   switch (intent.intent) {
     case "checklist_status": {
       const pid = ctx.last_patient_id;
@@ -645,17 +740,17 @@ async function runBehavioralEngine(supabase: any, intent: IFJIntent, userId: str
           .select("id, title, completed, category").eq("patient_id", pid).eq("date", today);
         const total = (tasks || []).length;
         const done = (tasks || []).filter((t: any) => t.completed).length;
-        const p = patients.find((x: any) => x.id === pid);
+        const p = patients.find(x => x.id === pid);
         return fmt(`Checklist: ${p?.full_name}`, "✅", "detail", `${done}/${total} tarefas`,
           `**${done}/${total}** tarefas hoje.\n\n` + (tasks || []).map((t: any) => `- ${t.completed ? "✅" : "⬜"} ${t.title}`).join("\n"),
           [], intent, "behavioral", ctx);
       }
-      const patientIds = patients.map((p: any) => p.id);
+      const patientIds = patients.map(p => p.id);
       const snapshots = await getSnapshots(supabase, patientIds.length ? patientIds : ["00000000-0000-0000-0000-000000000000"], today);
       const lowAdh = snapshots.filter((s: any) => s.checklist_completion_rate != null && s.checklist_completion_rate < 50);
       if (!lowAdh.length) return fmt("Checklists OK", "✅", "info", "Todos com boa adesão.", "", [], intent, "behavioral", ctx);
       const md = lowAdh.map((s: any) => {
-        const p = patients.find((x: any) => x.id === s.patient_id);
+        const p = patients.find(x => x.id === s.patient_id);
         return `- **${p?.full_name || "?"}** — ${s.checklist_completion_rate}%`;
       }).join("\n");
       return fmt("Checklist baixo", "📋", "list", `${lowAdh.length} paciente(s) < 50%`, md, [], intent, "behavioral", ctx);
@@ -668,7 +763,8 @@ async function runBehavioralEngine(supabase: any, intent: IFJIntent, userId: str
 }
 
 // ── FINANCIAL ENGINE ───────────────────────────────────────────
-async function runFinancialEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: any[]): Promise<IFJResponse> {
+async function runFinancialEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[]): Promise<IFJResponse> {
+  // financial_transactions: id, nutritionist_id, type, description, amount, date, category, status
   const transactions = await getFinancialSummary(supabase, userId);
 
   switch (intent.intent) {
@@ -688,8 +784,7 @@ async function runFinancialEngine(supabase: any, intent: IFJIntent, userId: stri
       const pending = transactions.filter((t: any) => t.status === "pending" || t.status === "pendente");
       if (!pending.length) return fmt("Sem pendências", "✅", "info", "Nenhum pagamento pendente.", "", [], intent, "financial", ctx);
       const md = pending.map((t: any) => {
-        const p = patients.find((x: any) => x.id === t.patient_id);
-        return `- **${p?.full_name || "?"}** — R$ ${(t.amount || 0).toFixed(2)} — ${t.due_date || "sem data"}`;
+        return `- R$ ${(t.amount || 0).toFixed(2)} — ${t.description || t.category || "?"} — ${t.date || "sem data"}`;
       }).join("\n");
       return fmt("Cobranças pendentes", "💳", "list", `${pending.length} pendente(s)`, md,
         [{ label: "Ir para Financeiro", route: "/financial", type: "navigate" }], intent, "financial", ctx);
@@ -702,7 +797,7 @@ async function runFinancialEngine(supabase: any, intent: IFJIntent, userId: stri
 // ── TRAINING ENGINE ────────────────────────────────────────────
 async function runTrainingEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx): Promise<IFJResponse> {
   const students = await getStudents(supabase, userId);
-  const studentIds = students.map((s: any) => s.id);
+  const studentIds = students.map(s => s.id);
 
   switch (intent.intent) {
     case "workout_overview":
@@ -714,7 +809,7 @@ async function runTrainingEngine(supabase: any, intent: IFJIntent, userId: strin
       const withPain = feedback.filter((f: any) => f.pain_reported);
       if (!withPain.length) return fmt("Sem dores", "✅", "info", "Nenhum aluno com dor.", "", [], intent, "training", ctx);
       const md = withPain.map((f: any) => {
-        const s = students.find((x: any) => x.id === f.patient_id);
+        const s = students.find(x => x.id === f.patient_id);
         return `- **${s?.full_name || "?"}** — ${f.pain_location || "?"} — ${f.session_date}`;
       }).join("\n");
       return fmt("Alunos com dor", "🤕", "list", `${withPain.length} relato(s)`, md, [], intent, "training", ctx);
@@ -729,7 +824,7 @@ async function runTrainingEngine(supabase: any, intent: IFJIntent, userId: strin
       ctx.last_student_id = found.id;
       ctx.last_student_name = found.full_name;
       return fmt(`Aluno: ${found.full_name}`, "🏋️", "detail", `Dados de ${found.full_name}`,
-        `## ${found.full_name}\n\n- Peso: ${found.current_weight || "—"} kg\n- Objetivo: ${found.goal || "—"}`,
+        `## ${found.full_name}\n\n- Objetivo: ${found.goal || "—"}`,
         [], intent, "training", ctx);
     }
     default:
@@ -738,7 +833,7 @@ async function runTrainingEngine(supabase: any, intent: IFJIntent, userId: strin
 }
 
 // ── JOURNEY ENGINE ─────────────────────────────────────────────
-async function runJourneyEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: any[], today: string): Promise<IFJResponse> {
+async function runJourneyEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], today: string): Promise<IFJResponse> {
   switch (intent.intent) {
     case "appointments": {
       const appts = await getAppointments(supabase, userId, today);
@@ -746,7 +841,7 @@ async function runJourneyEngine(supabase: any, intent: IFJIntent, userId: string
         "", [{ label: "Agendar", route: "/appointments", type: "navigate" }], intent, "journey", ctx);
       const md = `| Paciente | Data | Hora | Tipo | Status |\n|---|---|---|---|---|\n` +
         appts.map((a: any) => {
-          const p = patients.find((x: any) => x.id === a.patient_id);
+          const p = patients.find(x => x.id === a.patient_id);
           return `| ${p?.full_name || "?"} | ${a.appointment_date} | ${a.appointment_time || "—"} | ${a.appointment_type || "—"} | ${a.status} |`;
         }).join("\n");
       return fmt("Próximas Consultas", "📅", "list", `${appts.length} consulta(s)`, md,
@@ -755,7 +850,7 @@ async function runJourneyEngine(supabase: any, intent: IFJIntent, userId: string
     case "journey_status": {
       const pid = ctx.last_patient_id;
       if (!pid) return fmt("Paciente não especificado", "❓", "error", "Diga o nome.", "", [], intent, "journey", ctx);
-      const p = patients.find((x: any) => x.id === pid);
+      const p = patients.find(x => x.id === pid);
       return fmt(`Jornada: ${p?.full_name}`, "🗺️", "detail", `Status: ${p?.journey_status || p?.status}`,
         `## Jornada — ${p?.full_name}\n\n- Status: **${p?.journey_status || p?.status}**\n- Objetivo: ${p?.goal || "—"}`,
         [{ label: "Ver ficha", route: `/patients/${pid}`, type: "navigate" }], intent, "journey", ctx);
@@ -766,35 +861,13 @@ async function runJourneyEngine(supabase: any, intent: IFJIntent, userId: string
 }
 
 // ── PRIORITY ENGINE (God Mode) ─────────────────────────────────
-async function runPriorityEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: any[], today: string): Promise<IFJResponse> {
-  const patientIds = patients.map((p: any) => p.id);
-  const safeIds = patientIds.length ? patientIds : ["00000000-0000-0000-0000-000000000000"];
-
-  const [snapshots, alerts, plans, transactions] = await Promise.all([
-    getSnapshots(supabase, safeIds, today),
-    getActiveAlerts(supabase, userId),
-    getMealPlans(supabase, userId),
-    getFinancialSummary(supabase, userId),
-  ]);
-
+async function runPriorityEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], today: string): Promise<IFJResponse> {
+  const patientIds = patients.map(p => p.id);
+  const { snapshots, alerts, plans, transactions } = await getPortfolioInputs(supabase, userId, patientIds, today);
   const priorities = calculatePriorities(patients, snapshots, alerts, plans, transactions);
 
-  // Persist to priority queue (upsert by owner + entity)
-  const upsertPromises = priorities.slice(0, 20).map(item =>
-    supabase.from("ifj_priority_queue").upsert({
-      entity_type: item.entity_type,
-      entity_id: item.entity_id,
-      entity_name: item.entity_name,
-      owner_user_id: userId,
-      priority_score: item.score,
-      priority_level: item.level,
-      reasons_json: item.reasons,
-      source_engine: "priority",
-      is_resolved: false,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: "owner_user_id,entity_type,entity_id" }).catch(() => {})
-  );
-  await Promise.all(upsertPromises);
+  // Sync priority queue (upsert + resolve stale)
+  await syncPriorityQueue(supabase, userId, priorities);
 
   if (intent.intent === "next_best_action") {
     const top = priorities[0];
@@ -863,10 +936,10 @@ serve(async (req) => {
     const sessionKey = body.session_key || "default";
     const today = new Date().toISOString().split("T")[0];
 
-    // 1. Validate Role
-    const { data: profile } = await supabase.from("profiles").select("role, full_name").eq("user_id", user.id).maybeSingle();
-    const role = profile?.role || "patient";
-    const userName = profile?.full_name?.split(" ")[0] || "Profissional";
+    // 1. Get Role from user_roles (SINGLE SOURCE OF TRUTH)
+    const role = await getUserRole(supabase, user.id);
+    const { data: profileData } = await supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle();
+    const userName = profileData?.full_name?.split(" ")[0] || "Profissional";
 
     // 2. Load Session Context
     const ctx = await loadSessionContext(supabase, user.id, sessionKey);
@@ -876,7 +949,6 @@ serve(async (req) => {
     const intent = detectIntent(n, ctx);
 
     // 4. Fetch patients ONCE (shared across engines)
-    // Only fetch if the engine needs it (not training or navigation)
     const needsPatients = !["navigation", "general"].includes(intent.module) && intent.module !== "training_engine";
     const patients = needsPatients ? await getPatients(supabase, user.id) : [];
 
