@@ -15,26 +15,7 @@ function microVibrate(ms = 10) {
   try { navigator?.vibrate?.(ms); } catch { /* noop */ }
 }
 
-function playTone() {
-  try {
-    if (localStorage.getItem("fj_audio_muted") === "1") return;
-    const ctx = new AudioContext();
-    const t = ctx.currentTime;
-    const notes = [880, 1318.5];
-    notes.forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(freq, t);
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.035, t + 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.8 + i * 0.15);
-      osc.connect(gain).connect(ctx.destination);
-      osc.start(t + i * 0.08);
-      osc.stop(t + 1 + i * 0.15);
-    });
-  } catch { /* Web Audio unavailable */ }
-}
+// Audio removed for performance
 
 /* ─── Floating background particles ─── */
 function BackgroundParticles() {
@@ -188,7 +169,6 @@ export default function NeuroEntryExperience({
   useEffect(() => {
     if (state === "awareness" && !tonePlayed.current) {
       tonePlayed.current = true;
-      playTone();
       microVibrate(10);
     }
   }, [state]);

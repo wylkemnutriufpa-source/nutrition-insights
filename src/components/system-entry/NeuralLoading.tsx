@@ -79,7 +79,7 @@ function NeuralParticleCanvas({
     scene.add(coreGroup);
 
     // ─── 1. BRAIN CORE PARTICLES (TorusKnot shape) ───
-    const coreCount = isMobile ? 6000 : 18000;
+    const coreCount = isMobile ? 3000 : 10000;
     const corePositions = new Float32Array(coreCount * 3);
     const coreOriginals = new Float32Array(coreCount * 3);
     const coreColors = new Float32Array(coreCount * 3);
@@ -165,7 +165,7 @@ function NeuralParticleCanvas({
     coreGeo.setAttribute("color", new THREE.BufferAttribute(coreColors, 3));
 
     const coreMat = new THREE.PointsMaterial({
-      size: isMobile ? 0.028 : 0.02,
+      size: isMobile ? 0.018 : 0.012,
       vertexColors: true,
       blending: THREE.AdditiveBlending,
       transparent: true,
@@ -206,7 +206,7 @@ function NeuralParticleCanvas({
     }
 
     // ─── 3. ENERGY NODES ───
-    const nodeCount = isMobile ? 12 : 25;
+    const nodeCount = isMobile ? 8 : 16;
     const nodeGeo = new THREE.BufferGeometry();
     const nodePositions = new Float32Array(nodeCount * 3);
     const nodeColors = new Float32Array(nodeCount * 3);
@@ -231,7 +231,7 @@ function NeuralParticleCanvas({
     nodeGeo.setAttribute("color", new THREE.BufferAttribute(nodeColors, 3));
 
     const nodeMat = new THREE.PointsMaterial({
-      size: isMobile ? 0.08 : 0.06,
+      size: isMobile ? 0.05 : 0.04,
       vertexColors: true,
       blending: THREE.AdditiveBlending,
       transparent: true,
@@ -242,7 +242,7 @@ function NeuralParticleCanvas({
     coreGroup.add(nodePoints);
 
     // ─── 5. AMBIENT DUST ───
-    const dustCount = isMobile ? 200 : 800;
+    const dustCount = isMobile ? 100 : 400;
     const dustGeo = new THREE.BufferGeometry();
     const dustPos = new Float32Array(dustCount * 3);
     const dustCol = new Float32Array(dustCount * 3);
@@ -259,7 +259,7 @@ function NeuralParticleCanvas({
     dustGeo.setAttribute("position", new THREE.BufferAttribute(dustPos, 3));
     dustGeo.setAttribute("color", new THREE.BufferAttribute(dustCol, 3));
     const dustMat = new THREE.PointsMaterial({
-      size: 0.025,
+      size: 0.015,
       vertexColors: true,
       blending: THREE.AdditiveBlending,
       transparent: true,
