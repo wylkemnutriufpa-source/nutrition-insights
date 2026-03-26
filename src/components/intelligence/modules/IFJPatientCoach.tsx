@@ -16,10 +16,10 @@ import ReactMarkdown from "react-markdown";
 type Message = { role: "user" | "assistant"; content: string };
 
 const QUICK_QUESTIONS = [
-  "O que posso comer agora?",
-  "Como substituir um alimento?",
-  "Dica para não furar a dieta",
-  "Preciso de motivação 💪",
+  "Como está minha dieta?",
+  "Quais tarefas hoje?",
+  "Meu progresso",
+  "Próxima consulta",
 ];
 
 export default function IFJPatientCoach() {
