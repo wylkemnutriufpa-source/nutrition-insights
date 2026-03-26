@@ -26,13 +26,13 @@ export default function IFJNarrativeReport() {
   const { data: patients } = useQuery({
     queryKey: ["patients-for-report", user?.id],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("patients")
         .select("id, full_name, status, journey_status")
         .eq("nutritionist_id", user!.id)
         .eq("status", "active")
         .order("full_name");
-      return data || [];
+      return (data || []) as { id: string; full_name: string; status: string; journey_status: string }[];
     },
     enabled: !!user,
   });
