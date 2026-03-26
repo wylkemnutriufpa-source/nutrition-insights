@@ -242,7 +242,7 @@ function NeuralParticleCanvas({
     coreGroup.add(nodePoints);
 
     // ─── 5. AMBIENT DUST ───
-    const dustCount = isMobile ? 500 : 1500;
+    const dustCount = isMobile ? 200 : 800;
     const dustGeo = new THREE.BufferGeometry();
     const dustPos = new Float32Array(dustCount * 3);
     const dustCol = new Float32Array(dustCount * 3);
