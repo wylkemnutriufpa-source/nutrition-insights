@@ -462,7 +462,7 @@ export default function NeuralLoading({
   if (!active) return null;
 
   return (
-    <div className="relative w-[min(72vw,500px)] h-[min(72vw,500px)] md:w-[800px] md:h-[800px] overflow-visible">
+    <div className="relative w-[min(68vw,480px)] h-[min(68vw,480px)] md:w-[750px] md:h-[750px] overflow-visible">
       {!reduced && (
         <NeuralParticleCanvas
           durationMultiplier={durationMultiplier}
