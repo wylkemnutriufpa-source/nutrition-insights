@@ -1,6 +1,5 @@
 /**
- * IFJ Core / God Mode Panel
- * Premium golden command center with priorities, risk radar, pending actions, executive feed
+ * IFJ Core / God Mode Panel — Copilot with smart templates and action execution
  */
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,8 +13,9 @@ import { Badge } from "@/components/ui/badge";
 import ReactMarkdown from "react-markdown";
 import {
   Brain, Send, Loader2, AlertTriangle, Target,
-  DollarSign, Calendar, Shield,
-  ChevronRight, Zap, Sparkles, RefreshCw
+  DollarSign, Calendar, Shield, Users, UtensilsCrossed,
+  ChevronRight, Zap, Sparkles, RefreshCw, ClipboardList,
+  UserCheck, CreditCard, FileCheck, TrendingUp, Rocket
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { logAudit } from "@/lib/auditLog";
@@ -49,11 +49,19 @@ interface PriorityItem {
   source_engine: string;
 }
 
-const QUICK_COMMANDS = [
-  { label: "Prioridades", cmd: "O que preciso resolver hoje?", icon: Target },
-  { label: "Atenção", cmd: "Quem precisa de atenção?", icon: AlertTriangle },
-  { label: "Financeiro", cmd: "Resumo financeiro", icon: DollarSign },
-  { label: "Consultas", cmd: "Próximas consultas", icon: Calendar },
+const SMART_TEMPLATES = [
+  { label: "Prioridades do dia", cmd: "O que preciso resolver hoje?", icon: Target, color: "border-red-500/30 text-red-400 hover:bg-red-500/10" },
+  { label: "Quem precisa de atenção", cmd: "Quem precisa de atenção?", icon: AlertTriangle, color: "border-orange-500/30 text-orange-400 hover:bg-orange-500/10" },
+  { label: "Aguardando onboarding", cmd: "Quem está aguardando onboarding?", icon: UserCheck, color: "border-blue-500/30 text-blue-400 hover:bg-blue-500/10" },
+  { label: "Aguardando pagamento", cmd: "Quem não pagou?", icon: CreditCard, color: "border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10" },
+  { label: "Sem dieta", cmd: "Quem está sem dieta?", icon: UtensilsCrossed, color: "border-pink-500/30 text-pink-400 hover:bg-pink-500/10" },
+  { label: "Aguardando aprovação", cmd: "Quem está aguardando aprovação?", icon: FileCheck, color: "border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10" },
+  { label: "Planos vencendo", cmd: "Planos vencendo", icon: Calendar, color: "border-amber-500/30 text-amber-400 hover:bg-amber-500/10" },
+  { label: "Resumo financeiro", cmd: "Resumo financeiro", icon: DollarSign, color: "border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10" },
+  { label: "Panorama da carteira", cmd: "Resumo da carteira", icon: TrendingUp, color: "border-purple-500/30 text-purple-400 hover:bg-purple-500/10" },
+  { label: "Próximas consultas", cmd: "Consultas", icon: Calendar, color: "border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10" },
+  { label: "Alertas clínicos", cmd: "Alertas clínicos", icon: Shield, color: "border-red-500/30 text-red-400 hover:bg-red-500/10" },
+  { label: "Quem melhorou", cmd: "Quem melhorou?", icon: Sparkles, color: "border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10" },
 ];
 
 export default function IFJCorePanel() {
@@ -64,22 +72,16 @@ export default function IFJCorePanel() {
   const [loading, setLoading] = useState(false);
   const [priorities, setPriorities] = useState<PriorityItem[]>([]);
   const [loadingPriorities, setLoadingPriorities] = useState(true);
+  const [showTemplates, setShowTemplates] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const hasSentInitial = useRef(false);
 
   useEffect(() => {
     if (!user) return;
     loadPriorities();
-    if (!hasSentInitial.current) {
-      hasSentInitial.current = true;
-      sendCommand("O que preciso resolver hoje?", true);
-    }
   }, [user]);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages]);
 
   const loadPriorities = async () => {
@@ -92,17 +94,14 @@ export default function IFJCorePanel() {
         .order("priority_score", { ascending: false })
         .limit(10);
       setPriorities((data as PriorityItem[]) || []);
-    } catch { } finally {
-      setLoadingPriorities(false);
-    }
+    } catch { } finally { setLoadingPriorities(false); }
   };
 
   const sendCommand = useCallback(async (command: string, silent = false) => {
     if (!command.trim() || !user) return;
 
-    if (!silent) {
-      setMessages(prev => [...prev, { role: "user", text: command, timestamp: new Date() }]);
-    }
+    setShowTemplates(false);
+    if (!silent) setMessages(prev => [...prev, { role: "user", text: command, timestamp: new Date() }]);
     setInput("");
     setLoading(true);
 
@@ -124,34 +123,22 @@ export default function IFJCorePanel() {
       );
 
       if (!res.ok) throw new Error("Erro na resposta");
-
       const response: IFJResponse = await res.json();
 
-      setMessages(prev => [...prev, {
-        role: "ifj",
-        text: response.body_markdown || response.summary,
-        response,
-        timestamp: new Date(),
-      }]);
+      setMessages(prev => [...prev, { role: "ifj", text: response.body_markdown || response.summary, response, timestamp: new Date() }]);
 
-      // Refresh priorities after command (they may have been recalculated)
+      // Auto-navigate if response_type is "navigate" and has exactly one action
+      if (response.response_type === "navigate" && response.actions?.length === 1) {
+        setTimeout(() => navigate(response.actions[0].route), 500);
+      }
+
       loadPriorities();
-
     } catch {
-      setMessages(prev => [...prev, {
-        role: "ifj",
-        text: "❌ Erro ao processar comando. Tente novamente.",
-        timestamp: new Date(),
-      }]);
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
+      setMessages(prev => [...prev, { role: "ifj", text: "❌ Erro ao processar comando. Tente novamente.", timestamp: new Date() }]);
+    } finally { setLoading(false); }
+  }, [user, navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    sendCommand(input);
-  };
+  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); sendCommand(input); };
 
   const handleAction = (action: { label: string; route: string; type: string }) => {
     if (action.type === "navigate") {
@@ -172,11 +159,8 @@ export default function IFJCorePanel() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-950/40 via-background to-yellow-950/20 p-6"
-      >
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-950/40 via-background to-yellow-950/20 p-6">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent" />
         <div className="relative flex items-center gap-4 flex-wrap">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-600 shadow-lg shadow-amber-500/25">
@@ -184,12 +168,9 @@ export default function IFJCorePanel() {
           </div>
           <div>
             <h2 className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent flex items-center gap-2">
-              IFJ Core
-              <Sparkles className="h-5 w-5 text-amber-400 animate-pulse" />
+              Copilot IFJ <Sparkles className="h-5 w-5 text-amber-400 animate-pulse" />
             </h2>
-            <p className="text-sm text-muted-foreground">
-              Motor de Inteligência Determinística • God Mode
-            </p>
+            <p className="text-sm text-muted-foreground">Orquestrador Central • Diga o que precisa e eu executo</p>
           </div>
           <div className="ml-auto flex items-center gap-2">
             <Badge variant="outline" className="border-amber-500/30 text-amber-400 bg-amber-500/10">
@@ -218,35 +199,21 @@ export default function IFJCorePanel() {
             </CardHeader>
             <CardContent className="space-y-2">
               {loadingPriorities ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-5 w-5 animate-spin text-amber-500" />
-                </div>
+                <div className="flex items-center justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-amber-500" /></div>
               ) : priorities.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  ✅ Nenhuma prioridade pendente
-                </p>
+                <p className="text-sm text-muted-foreground text-center py-4">✅ Nenhuma prioridade pendente</p>
               ) : (
                 priorities.map((p, i) => (
-                  <motion.div
-                    key={p.id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05 }}
+                  <motion.div key={p.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
                     className={`p-3 rounded-lg border cursor-pointer hover:brightness-110 transition-all ${getPriorityColor(p.priority_level)}`}
                     onClick={() => {
                       logAudit("ifj_priority_click", "ifj_core", p.entity_id, { entity: p.entity_name, score: p.priority_score });
-                      if (p.entity_type === "patient") {
-                        navigate(`/patients/${p.entity_id}`);
-                      } else {
-                        sendCommand(`Sobre ${p.entity_name}`);
-                      }
-                    }}
-                  >
+                      if (p.entity_type === "patient") navigate(`/patients/${p.entity_id}`);
+                      else sendCommand(`Sobre ${p.entity_name}`);
+                    }}>
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium truncate">{p.entity_name}</span>
-                      <Badge variant="outline" className="text-xs shrink-0 ml-2">
-                        {p.priority_score}pts
-                      </Badge>
+                      <Badge variant="outline" className="text-xs shrink-0 ml-2">{p.priority_score}pts</Badge>
                     </div>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {(p.reasons_json || []).slice(0, 2).map((r: string, j: number) => (
@@ -263,33 +230,36 @@ export default function IFJCorePanel() {
         {/* Main Chat / Command Panel */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="lg:col-span-2">
           <Card className="border-amber-500/20 bg-background/80 backdrop-blur-sm flex flex-col" style={{ height: "600px" }}>
-            {/* Quick Commands */}
-            <div className="p-3 border-b border-amber-500/10 flex flex-wrap gap-2">
-              {QUICK_COMMANDS.map((qc) => (
-                <Button
-                  key={qc.cmd}
-                  variant="outline"
-                  size="sm"
-                  className="text-xs border-amber-500/20 hover:bg-amber-500/10 hover:text-amber-400 transition-colors"
-                  onClick={() => sendCommand(qc.cmd)}
-                  disabled={loading}
-                >
-                  <qc.icon className="h-3 w-3 mr-1" />
-                  {qc.label}
-                </Button>
-              ))}
-            </div>
-
-            {/* Messages */}
+            {/* Messages Area */}
             <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+              {/* Smart Templates — shown when no messages */}
+              {showTemplates && messages.length === 0 && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+                  <div className="text-center pb-2">
+                    <Rocket className="h-8 w-8 mx-auto text-amber-500 mb-2" />
+                    <h3 className="text-lg font-semibold text-amber-400">O que você precisa?</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Clique em um template ou digite seu comando</p>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {SMART_TEMPLATES.map((t) => (
+                      <button
+                        key={t.cmd}
+                        onClick={() => sendCommand(t.cmd)}
+                        className={`p-3 rounded-xl border text-left transition-all ${t.color} group`}
+                        disabled={loading}
+                      >
+                        <t.icon className="h-4 w-4 mb-1.5 opacity-70 group-hover:opacity-100 transition-opacity" />
+                        <p className="text-xs font-medium leading-tight">{t.label}</p>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
               <AnimatePresence>
                 {messages.map((msg, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`mb-4 ${msg.role === "user" ? "flex justify-end" : ""}`}
-                  >
+                  <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                    className={`mb-4 ${msg.role === "user" ? "flex justify-end" : ""}`}>
                     {msg.role === "user" ? (
                       <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-amber-500/20 border border-amber-500/30 px-4 py-2.5">
                         <p className="text-sm text-amber-100">{msg.text}</p>
@@ -305,11 +275,14 @@ export default function IFJCorePanel() {
                                 {msg.response.meta.engine} • {(msg.response.meta.confidence * 100).toFixed(0)}%
                               </Badge>
                             )}
+                            {msg.response.response_type === "action_completed" && (
+                              <Badge className="bg-emerald-500/20 text-emerald-400 text-[10px] border-emerald-500/30">
+                                ✓ Executado
+                              </Badge>
+                            )}
                           </div>
                         )}
-                        {msg.response?.summary && (
-                          <p className="text-xs text-muted-foreground mb-2">{msg.response.summary}</p>
-                        )}
+                        {msg.response?.summary && <p className="text-xs text-muted-foreground mb-2">{msg.response.summary}</p>}
                         <div className="rounded-xl border border-border/50 bg-muted/30 px-4 py-3 prose prose-sm prose-invert max-w-none
                           prose-headings:text-amber-400 prose-strong:text-foreground prose-td:text-sm prose-th:text-xs prose-th:text-amber-400/80
                           prose-table:border-collapse prose-td:border prose-td:border-border/30 prose-td:px-2 prose-td:py-1
@@ -319,15 +292,10 @@ export default function IFJCorePanel() {
                         {msg.response?.actions && msg.response.actions.length > 0 && (
                           <div className="flex flex-wrap gap-2 mt-2">
                             {msg.response.actions.map((action, j) => (
-                              <Button
-                                key={j}
-                                size="sm"
-                                variant="outline"
+                              <Button key={j} size="sm" variant="outline"
                                 className="text-xs border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
-                                onClick={() => handleAction(action)}
-                              >
-                                <ChevronRight className="h-3 w-3 mr-1" />
-                                {action.label}
+                                onClick={() => handleAction(action)}>
+                                <ChevronRight className="h-3 w-3 mr-1" /> {action.label}
                               </Button>
                             ))}
                           </div>
@@ -346,25 +314,32 @@ export default function IFJCorePanel() {
               )}
             </ScrollArea>
 
-            {/* Input */}
-            <form onSubmit={handleSubmit} className="p-3 border-t border-amber-500/10">
-              <div className="flex gap-2">
-                <Input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Pergunte ao IFJ Core... (ex: quem precisa de atenção?)"
-                  className="flex-1 border-amber-500/20 bg-muted/30 focus:border-amber-500/50 placeholder:text-muted-foreground/50"
-                  disabled={loading}
-                />
-                <Button
-                  type="submit"
-                  disabled={loading || !input.trim()}
-                  className="bg-gradient-to-r from-amber-500 to-yellow-600 text-black hover:from-amber-600 hover:to-yellow-700 shadow-lg shadow-amber-500/20"
-                >
+            {/* Input + quick back to templates */}
+            <div className="border-t border-amber-500/10">
+              {messages.length > 0 && (
+                <div className="px-3 pt-2 flex gap-1 flex-wrap">
+                  <Button variant="ghost" size="sm" className="text-[10px] h-6 text-muted-foreground hover:text-amber-400"
+                    onClick={() => { setMessages([]); setShowTemplates(true); }}>
+                    <ClipboardList className="h-3 w-3 mr-1" /> Templates
+                  </Button>
+                  {SMART_TEMPLATES.slice(0, 4).map((t) => (
+                    <Button key={t.cmd} variant="ghost" size="sm" className="text-[10px] h-6 text-muted-foreground hover:text-amber-400"
+                      onClick={() => sendCommand(t.cmd)} disabled={loading}>
+                      <t.icon className="h-3 w-3 mr-1" /> {t.label}
+                    </Button>
+                  ))}
+                </div>
+              )}
+              <form onSubmit={handleSubmit} className="p-3 flex gap-2">
+                <Input value={input} onChange={(e) => setInput(e.target.value)}
+                  placeholder="Ex: libere onboarding da Maria, quem está sem dieta..."
+                  className="flex-1 border-amber-500/20 bg-muted/30 focus:border-amber-500/50 placeholder:text-muted-foreground/50" disabled={loading} />
+                <Button type="submit" disabled={loading || !input.trim()}
+                  className="bg-gradient-to-r from-amber-500 to-yellow-600 text-black hover:from-amber-600 hover:to-yellow-700 shadow-lg shadow-amber-500/20">
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 </Button>
-              </div>
-            </form>
+              </form>
+            </div>
           </Card>
         </motion.div>
       </div>
