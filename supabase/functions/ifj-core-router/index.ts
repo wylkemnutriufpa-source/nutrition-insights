@@ -779,9 +779,9 @@ async function runBehavioralEngine(supabase: any, intent: IFJIntent, userId: str
 }
 
 // ── FINANCIAL ENGINE ───────────────────────────────────────────
-async function runFinancialEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[]): Promise<IFJResponse> {
+async function runFinancialEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], role?: string): Promise<IFJResponse> {
   // financial_transactions: id, nutritionist_id, type, description, amount, date, category, status
-  const transactions = await getFinancialSummary(supabase, userId);
+  const transactions = await getFinancialSummary(supabase, userId, role);
 
   switch (intent.intent) {
     case "financial_overview": {
