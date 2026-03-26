@@ -1,11 +1,11 @@
 /**
  * Intelligence Settings Panel — Premium golden configuration hub
- * for nutritionists to fully customize the FitJourney Intelligence engine.
+ * Unified IFJ panel: Core (God Mode), Configurações, Preditivo, Relatórios, Ativos
  */
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Brain, MessageSquare, HelpCircle, Settings2, Users, Play, Bot, BarChart3, FileText, Command, Cpu } from "lucide-react";
+import { Settings2, Users, Play, BarChart3, FileText, Cpu, MessageSquare, HelpCircle } from "lucide-react";
 import IntelligenceGoldenHeader from "./settings/IntelligenceGoldenHeader";
 import IntelligenceGeneralSettings from "./settings/IntelligenceGeneralSettings";
 import IntelligenceCustomPrompts from "./settings/IntelligenceCustomPrompts";
@@ -13,10 +13,8 @@ import IntelligenceCustomQuestions from "./settings/IntelligenceCustomQuestions"
 import IntelligenceActiveUsers from "./settings/IntelligenceActiveUsers";
 import IntelligenceParticles from "./settings/IntelligenceParticles";
 import IntelligenceActivationPreview from "./settings/IntelligenceActivationPreview";
-import IFJConversationalCopilot from "./modules/IFJConversationalCopilot";
 import IFJPredictiveBriefing from "./modules/IFJPredictiveBriefing";
 import IFJNarrativeReport from "./modules/IFJNarrativeReport";
-import IFJCommandCenter from "./modules/IFJCommandCenter";
 import IFJCorePanel from "./modules/IFJCorePanel";
 
 export default function IntelligenceSettingsPanel() {
@@ -24,13 +22,9 @@ export default function IntelligenceSettingsPanel() {
 
   return (
     <div className="relative space-y-6 pb-10">
-      {/* Background particles */}
       <IntelligenceParticles />
-
-      {/* Golden Header */}
       <IntelligenceGoldenHeader />
 
-      {/* Tabs */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -41,14 +35,8 @@ export default function IntelligenceSettingsPanel() {
             <TabsTrigger value="core" className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500/20 data-[state=active]:to-yellow-500/10 data-[state=active]:text-amber-500 data-[state=active]:border-amber-500/30 data-[state=active]:border font-semibold">
               <Cpu className="w-4 h-4" /> IFJ Core
             </TabsTrigger>
-            <TabsTrigger value="command" className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500/20 data-[state=active]:to-yellow-500/10 data-[state=active]:text-amber-500 data-[state=active]:border-amber-500/30 data-[state=active]:border font-semibold">
-              <Command className="w-4 h-4" /> Meu Painel IFJ
-            </TabsTrigger>
-            <TabsTrigger value="general" className="gap-2 data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-600">
-              <Settings2 className="w-4 h-4" /> Configurações
-            </TabsTrigger>
-            <TabsTrigger value="copilot" className="gap-2 data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-600">
-              <Bot className="w-4 h-4" /> Copiloto
+            <TabsTrigger value="active" className="gap-2 data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-600">
+              <Users className="w-4 h-4" /> Ativos
             </TabsTrigger>
             <TabsTrigger value="predictions" className="gap-2 data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-600">
               <BarChart3 className="w-4 h-4" /> Preditivo
@@ -56,14 +44,14 @@ export default function IntelligenceSettingsPanel() {
             <TabsTrigger value="reports" className="gap-2 data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-600">
               <FileText className="w-4 h-4" /> Relatórios
             </TabsTrigger>
+            <TabsTrigger value="general" className="gap-2 data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-600">
+              <Settings2 className="w-4 h-4" /> Configurações
+            </TabsTrigger>
             <TabsTrigger value="prompts" className="gap-2 data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-600">
               <MessageSquare className="w-4 h-4" /> Mensagens
             </TabsTrigger>
             <TabsTrigger value="questions" className="gap-2 data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-600">
               <HelpCircle className="w-4 h-4" /> Perguntas
-            </TabsTrigger>
-            <TabsTrigger value="active" className="gap-2 data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-600">
-              <Users className="w-4 h-4" /> Ativos
             </TabsTrigger>
             <TabsTrigger value="preview" className="gap-2 data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-600">
               <Play className="w-4 h-4" /> Apresentação
@@ -74,16 +62,8 @@ export default function IntelligenceSettingsPanel() {
             <IFJCorePanel />
           </TabsContent>
 
-          <TabsContent value="command">
-            <IFJCommandCenter />
-          </TabsContent>
-
-          <TabsContent value="general">
-            <IntelligenceGeneralSettings />
-          </TabsContent>
-
-          <TabsContent value="copilot">
-            <IFJConversationalCopilot />
+          <TabsContent value="active">
+            <IntelligenceActiveUsers />
           </TabsContent>
 
           <TabsContent value="predictions">
@@ -94,16 +74,16 @@ export default function IntelligenceSettingsPanel() {
             <IFJNarrativeReport />
           </TabsContent>
 
+          <TabsContent value="general">
+            <IntelligenceGeneralSettings />
+          </TabsContent>
+
           <TabsContent value="prompts">
             <IntelligenceCustomPrompts />
           </TabsContent>
 
           <TabsContent value="questions">
             <IntelligenceCustomQuestions />
-          </TabsContent>
-
-          <TabsContent value="active">
-            <IntelligenceActiveUsers />
           </TabsContent>
 
           <TabsContent value="preview">

@@ -1,5 +1,6 @@
 /**
- * IFJ Narrative Report — Generate clinical narrative PDF reports
+ * IFJ Narrative Report — Generate clinical narrative reports
+ * Uses correct tables: nutritionist_patients + profiles
  */
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -16,23 +17,38 @@ import { useQuery } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
 
 export default function IFJNarrativeReport() {
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
   const [selectedPatient, setSelectedPatient] = useState("");
   const [report, setReport] = useState<string | null>(null);
   const [clinicalData, setClinicalData] = useState<any>(null);
   const [generating, setGenerating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
+  const isAdmin = roles?.includes("admin");
+
   const { data: patients } = useQuery({
-    queryKey: ["patients-for-report", user?.id],
+    queryKey: ["patients-for-report", user?.id, isAdmin],
     queryFn: async () => {
-      const { data } = await (supabase as any)
-        .from("patients")
-        .select("id, full_name, status, journey_status")
-        .eq("nutritionist_id", user!.id)
-        .eq("status", "active")
+      let query = supabase
+        .from("nutritionist_patients")
+        .select("patient_id")
+        .eq("status", "active");
+
+      if (!isAdmin) {
+        query = query.eq("nutritionist_id", user!.id);
+      }
+
+      const { data: links } = await query;
+      if (!links || links.length === 0) return [];
+
+      const patientIds = links.map(l => l.patient_id);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", patientIds)
         .order("full_name");
-      return (data || []) as { id: string; full_name: string; status: string; journey_status: string }[];
+
+      return (profiles || []).map((p: any) => ({ id: p.user_id, full_name: p.full_name || "Paciente" }));
     },
     enabled: !!user,
   });
@@ -44,15 +60,89 @@ export default function IFJNarrativeReport() {
     setClinicalData(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke("ifj-narrative-report", {
-        body: { patient_id: selectedPatient },
-      });
-      if (error) throw error;
-      setReport(data.report);
-      setClinicalData(data.clinical_data);
+      // Build report from real data (deterministic, no LLM)
+      const patientName = patients?.find(p => p.id === selectedPatient)?.full_name || "Paciente";
+
+      // Fetch clinical data
+      const [snapshotRes, anamnesisRes, mealsRes, alertsRes] = await Promise.all([
+        supabase.from("clinical_daily_snapshots").select("*").eq("patient_id", selectedPatient).order("snapshot_date", { ascending: false }).limit(7),
+        supabase.from("patient_anamnesis").select("*").eq("user_id", selectedPatient).order("created_at", { ascending: false }).limit(1),
+        supabase.from("meal_plans").select("id, plan_name, is_active, plan_status, created_at").eq("patient_id", selectedPatient).eq("is_active", true).limit(1),
+        supabase.from("clinical_alerts").select("*").eq("patient_id", selectedPatient).eq("is_active", true).order("created_at", { ascending: false }).limit(5),
+      ]);
+
+      const snapshots = snapshotRes.data || [];
+      const anamnesis = anamnesisRes.data?.[0];
+      const activePlan = mealsRes.data?.[0];
+      const alerts = alertsRes.data || [];
+      const latest = snapshots[0];
+
+      const data = {
+        patient_name: patientName,
+        days_in_program: anamnesis ? Math.floor((Date.now() - new Date(anamnesis.created_at).getTime()) / 86400000) : 0,
+        avg_adherence: latest?.adherence_score,
+        weight_delta: latest?.weight_change_7d,
+        latest_risk_level: latest?.risk_level || "N/A",
+        active_plan: activePlan?.plan_name || "Nenhum",
+        active_alerts: alerts.length,
+      };
+      setClinicalData(data);
+
+      // Generate deterministic narrative
+      const lines: string[] = [];
+      lines.push(`# Relatório Clínico — ${patientName}`);
+      lines.push(`**Data:** ${new Date().toLocaleDateString("pt-BR")}`);
+      lines.push("");
+      lines.push("## Resumo Geral");
+      lines.push(`- **Dias no programa:** ${data.days_in_program}`);
+      lines.push(`- **Plano ativo:** ${data.active_plan}`);
+      lines.push(`- **Nível de risco:** ${data.latest_risk_level}`);
+      if (data.avg_adherence != null) lines.push(`- **Adesão:** ${data.avg_adherence.toFixed(0)}%`);
+      if (data.weight_delta != null) lines.push(`- **Variação de peso (7d):** ${data.weight_delta > 0 ? "+" : ""}${data.weight_delta.toFixed(1)}kg`);
+      lines.push("");
+
+      if (alerts.length > 0) {
+        lines.push("## Alertas Clínicos Ativos");
+        alerts.forEach((a: any) => {
+          lines.push(`- **${a.severity?.toUpperCase()}** — ${a.title}: ${a.description}`);
+        });
+        lines.push("");
+      }
+
+      if (snapshots.length > 1) {
+        lines.push("## Evolução (últimos 7 dias)");
+        lines.push("| Data | Adesão | Peso | Risco |");
+        lines.push("|------|--------|------|-------|");
+        snapshots.forEach((s: any) => {
+          lines.push(`| ${s.snapshot_date} | ${s.adherence_score?.toFixed(0) ?? "-"}% | ${s.current_weight ?? "-"}kg | ${s.risk_level ?? "-"} |`);
+        });
+        lines.push("");
+      }
+
+      lines.push("## Análise");
+      if (data.avg_adherence != null && data.avg_adherence < 50) {
+        lines.push("⚠️ Adesão abaixo de 50%. Recomenda-se revisão do plano e contato proativo com o paciente.");
+      } else if (data.avg_adherence != null && data.avg_adherence >= 80) {
+        lines.push("✅ Excelente adesão. Paciente demonstra comprometimento consistente com o plano.");
+      } else if (data.avg_adherence != null) {
+        lines.push("📊 Adesão moderada. Monitorar tendências e considerar ajustes pontuais.");
+      }
+
+      if (data.weight_delta != null) {
+        if (data.weight_delta < -1) lines.push("📉 Perda de peso significativa nos últimos 7 dias.");
+        else if (data.weight_delta > 1) lines.push("📈 Ganho de peso nos últimos 7 dias. Avaliar causas.");
+        else lines.push("➡️ Peso estável nos últimos 7 dias.");
+      }
+
+      lines.push("");
+      lines.push("---");
+      lines.push("*Relatório gerado automaticamente pelo IFJ Core — 100% determinístico, baseado em dados reais.*");
+
+      setReport(lines.join("\n"));
       setShowPreview(true);
-      toast.success("Relatório narrativo gerado com sucesso!");
+      toast.success("Relatório narrativo gerado!");
     } catch (e) {
+      console.error(e);
       toast.error("Erro ao gerar relatório narrativo");
     }
     setGenerating(false);
@@ -83,7 +173,7 @@ export default function IFJNarrativeReport() {
             <span className="bg-gradient-to-r from-emerald-500 to-amber-500 bg-clip-text text-transparent font-bold">
               IFJ Relatório Narrativo
             </span>
-            <p className="text-[10px] text-muted-foreground font-normal">Relatórios clínicos automáticos com IA</p>
+            <p className="text-[10px] text-muted-foreground font-normal">Relatórios clínicos determinísticos com dados reais</p>
           </div>
         </CardTitle>
       </CardHeader>
@@ -115,62 +205,40 @@ export default function IFJNarrativeReport() {
 
         {/* Loading state */}
         {generating && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-col items-center py-12 gap-3"
-          >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center py-12 gap-3">
             <div className="relative">
               <Brain className="w-12 h-12 text-amber-500/30" />
-              <motion.div
-                className="absolute inset-0"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-              >
+              <motion.div className="absolute inset-0" animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }}>
                 <div className="w-full h-full rounded-full border-2 border-transparent border-t-amber-500/50" />
               </motion.div>
             </div>
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">Analisando dados clínicos de {selectedName}...</p>
-              <p className="text-[10px] text-muted-foreground/60 mt-1">A IFJ está compilando histórico, métricas e tendências</p>
+              <p className="text-sm text-muted-foreground">Compilando dados clínicos de {selectedName}...</p>
             </div>
           </motion.div>
         )}
 
         {/* Report preview */}
         {report && showPreview && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-3"
-          >
-            {/* Clinical summary badges */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
             {clinicalData && (
               <div className="flex flex-wrap gap-1.5">
-                <Badge variant="outline" className="text-[9px]">
-                  {clinicalData.days_in_program} dias no programa
-                </Badge>
-                {clinicalData.avg_adherence && (
-                  <Badge variant="outline" className={`text-[9px] ${
-                    clinicalData.avg_adherence > 70 ? "border-emerald-500/30 text-emerald-600" : "border-orange-500/30 text-orange-600"
-                  }`}>
+                <Badge variant="outline" className="text-[9px]">{clinicalData.days_in_program} dias no programa</Badge>
+                {clinicalData.avg_adherence != null && (
+                  <Badge variant="outline" className={`text-[9px] ${clinicalData.avg_adherence > 70 ? "border-emerald-500/30 text-emerald-600" : "border-orange-500/30 text-orange-600"}`}>
                     Adesão: {clinicalData.avg_adherence.toFixed(0)}%
                   </Badge>
                 )}
-                {clinicalData.weight_delta !== null && (
-                  <Badge variant="outline" className={`text-[9px] ${
-                    clinicalData.weight_delta < 0 ? "border-emerald-500/30 text-emerald-600" : "border-orange-500/30 text-orange-600"
-                  }`}>
+                {clinicalData.weight_delta != null && (
+                  <Badge variant="outline" className={`text-[9px] ${clinicalData.weight_delta < 0 ? "border-emerald-500/30 text-emerald-600" : "border-orange-500/30 text-orange-600"}`}>
                     Peso: {clinicalData.weight_delta > 0 ? "+" : ""}{clinicalData.weight_delta?.toFixed(1)}kg
                   </Badge>
                 )}
-                <Badge variant="outline" className="text-[9px]">
-                  Risco: {clinicalData.latest_risk_level || "N/A"}
-                </Badge>
+                <Badge variant="outline" className="text-[9px]">Risco: {clinicalData.latest_risk_level}</Badge>
+                <Badge variant="outline" className="text-[9px]">Alertas: {clinicalData.active_alerts}</Badge>
               </div>
             )}
 
-            {/* Report content */}
             <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 overflow-hidden">
               <div className="px-4 py-2 bg-amber-500/10 border-b border-amber-500/20 flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -194,9 +262,9 @@ export default function IFJNarrativeReport() {
         {!report && !generating && (
           <div className="text-center py-8">
             <FileText className="w-10 h-10 mx-auto text-muted-foreground/20 mb-3" />
-            <p className="text-sm text-muted-foreground">Selecione um paciente para gerar um relatório clínico narrativo completo</p>
+            <p className="text-sm text-muted-foreground">Selecione um paciente para gerar um relatório clínico narrativo</p>
             <p className="text-[10px] text-muted-foreground/60 mt-1">
-              Inclui evolução, adesão, riscos, diagnóstico e recomendações
+              Inclui evolução, adesão, alertas, peso e recomendações — 100% baseado em dados reais
             </p>
           </div>
         )}
