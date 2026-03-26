@@ -313,10 +313,11 @@ async function getFinancialSummary(supabase: any, userId: string, role?: string)
   return data || [];
 }
 
-async function getActiveAlerts(supabase: any, userId: string) {
-  const { data } = await supabase.from("clinical_alerts")
-    .select("id, patient_id, title, severity, alert_type, created_at")
-    .eq("nutritionist_id", userId).eq("is_active", true).order("created_at", { ascending: false }).limit(20);
+async function getActiveAlerts(supabase: any, userId: string, role?: string) {
+  let query = supabase.from("clinical_alerts")
+    .select("id, patient_id, title, severity, alert_type, created_at");
+  if (role !== "admin") query = query.eq("nutritionist_id", userId);
+  const { data } = await query.eq("is_active", true).order("created_at", { ascending: false }).limit(50);
   return data || [];
 }
 
