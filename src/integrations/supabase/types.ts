@@ -3832,6 +3832,162 @@ export type Database = {
         }
         Relationships: []
       }
+      ifj_intent_logs: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          detected_intent: string | null
+          engine_used: string | null
+          error_message: string | null
+          id: string
+          input_text: string
+          normalized_text: string | null
+          resolved_entity_id: string | null
+          resolved_entity_type: string | null
+          response_time_ms: number | null
+          response_type: string | null
+          role: string
+          user_id: string
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          detected_intent?: string | null
+          engine_used?: string | null
+          error_message?: string | null
+          id?: string
+          input_text: string
+          normalized_text?: string | null
+          resolved_entity_id?: string | null
+          resolved_entity_type?: string | null
+          response_time_ms?: number | null
+          response_type?: string | null
+          role: string
+          user_id: string
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          detected_intent?: string | null
+          engine_used?: string | null
+          error_message?: string | null
+          id?: string
+          input_text?: string
+          normalized_text?: string | null
+          resolved_entity_id?: string | null
+          resolved_entity_type?: string | null
+          response_time_ms?: number | null
+          response_type?: string | null
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ifj_priority_queue: {
+        Row: {
+          created_at: string
+          entity_id: string
+          entity_name: string | null
+          entity_type: string
+          id: string
+          is_resolved: boolean
+          owner_user_id: string
+          priority_level: string
+          priority_score: number
+          reasons_json: Json | null
+          resolved_at: string | null
+          resolved_by: string | null
+          source_engine: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          entity_name?: string | null
+          entity_type: string
+          id?: string
+          is_resolved?: boolean
+          owner_user_id: string
+          priority_level?: string
+          priority_score?: number
+          reasons_json?: Json | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source_engine?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          entity_name?: string | null
+          entity_type?: string
+          id?: string
+          is_resolved?: boolean
+          owner_user_id?: string
+          priority_level?: string
+          priority_score?: number
+          reasons_json?: Json | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source_engine?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ifj_session_context: {
+        Row: {
+          context_json: Json | null
+          id: string
+          last_entity_id: string | null
+          last_entity_type: string | null
+          last_intent: string | null
+          last_module: string | null
+          last_patient_id: string | null
+          last_patient_name: string | null
+          last_route: string | null
+          last_student_id: string | null
+          last_student_name: string | null
+          role: string
+          session_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          context_json?: Json | null
+          id?: string
+          last_entity_id?: string | null
+          last_entity_type?: string | null
+          last_intent?: string | null
+          last_module?: string | null
+          last_patient_id?: string | null
+          last_patient_name?: string | null
+          last_route?: string | null
+          last_student_id?: string | null
+          last_student_name?: string | null
+          role?: string
+          session_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          context_json?: Json | null
+          id?: string
+          last_entity_id?: string | null
+          last_entity_type?: string | null
+          last_intent?: string | null
+          last_module?: string | null
+          last_patient_id?: string | null
+          last_patient_name?: string | null
+          last_route?: string | null
+          last_student_id?: string | null
+          last_student_name?: string | null
+          role?: string
+          session_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       intelligence_custom_prompts: {
         Row: {
           body: string
