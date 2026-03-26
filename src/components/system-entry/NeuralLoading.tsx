@@ -123,11 +123,11 @@ function NeuralParticleCanvas({
             : -Math.PI / 2;
       const laneSpread = laneRoll < 0.68 ? Math.PI * 0.34 : Math.PI * 0.46;
       const angle = laneCenter + (Math.random() - 0.5) * laneSpread;
-      const radialPush = 1.15 + Math.random() * 1.1;
+      const radialPush = 0.55 + Math.random() * 0.5;
       const ellipseX = Math.cos(angle) * visibleWidth * radialPush;
       const ellipseY = Math.sin(angle) * visibleHeight * radialPush;
       const verticalBias = laneRoll >= 0.68 ? -(0.3 + Math.random() * 1.4) : (Math.random() - 0.5) * 0.8;
-      const depth = (Math.random() - 0.5) * 18;
+      const depth = (Math.random() - 0.5) * 10;
 
       coreScattered[i * 3] = ellipseX;
       coreScattered[i * 3 + 1] = ellipseY + verticalBias;
@@ -462,7 +462,7 @@ export default function NeuralLoading({
   if (!active) return null;
 
   return (
-    <div className="relative w-[min(72vw,500px)] h-[min(72vw,500px)] md:w-[800px] md:h-[800px] overflow-visible">
+    <div className="relative w-[min(68vw,480px)] h-[min(68vw,480px)] md:w-[750px] md:h-[750px] overflow-visible">
       {!reduced && (
         <NeuralParticleCanvas
           durationMultiplier={durationMultiplier}
