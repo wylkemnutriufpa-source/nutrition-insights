@@ -225,26 +225,39 @@ async function getUserRole(supabase: any, userId: string): Promise<string> {
   return "unknown";
 }
 
-// Get patients for a nutritionist via nutritionist_patients + profiles join
-async function getPatients(supabase: any, userId: string): Promise<PatientRecord[]> {
-  const { data: links } = await supabase.from("nutritionist_patients")
-    .select("patient_id, status, journey_status")
-    .eq("nutritionist_id", userId).eq("status", "active").limit(200);
-  if (!links?.length) return [];
+// Get patients — admin sees ALL, nutritionist sees own portfolio
+async function getPatients(supabase: any, userId: string, role?: string): Promise<PatientRecord[]> {
+  let links: any[] = [];
 
-  const patientIds = links.map((l: any) => l.patient_id);
+  if (role === "admin") {
+    // Admin: fetch all active patient links across all nutritionists
+    const { data } = await supabase.from("nutritionist_patients")
+      .select("patient_id, status, journey_status, nutritionist_id")
+      .eq("status", "active").limit(500);
+    links = data || [];
+  } else {
+    const { data } = await supabase.from("nutritionist_patients")
+      .select("patient_id, status, journey_status")
+      .eq("nutritionist_id", userId).eq("status", "active").limit(200);
+    links = data || [];
+  }
+
+  if (!links.length) return [];
+
+  const patientIds = [...new Set(links.map((l: any) => l.patient_id))];
   const { data: profiles } = await supabase.from("profiles")
     .select("user_id, full_name, goal")
     .in("user_id", patientIds);
 
-  return links.map((link: any) => {
-    const profile = (profiles || []).find((p: any) => p.user_id === link.patient_id);
+  return patientIds.map((pid: string) => {
+    const profile = (profiles || []).find((p: any) => p.user_id === pid);
+    const link = links.find((l: any) => l.patient_id === pid);
     return {
-      id: link.patient_id,
+      id: pid,
       full_name: profile?.full_name || "Sem nome",
       goal: profile?.goal || null,
-      journey_status: link.journey_status,
-      status: link.status,
+      journey_status: link?.journey_status,
+      status: link?.status,
     };
   });
 }
