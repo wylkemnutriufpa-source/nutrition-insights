@@ -79,7 +79,7 @@ function NeuralParticleCanvas({
     scene.add(coreGroup);
 
     // ─── 1. BRAIN CORE PARTICLES (TorusKnot shape) ───
-    const coreCount = isMobile ? 3000 : 10000;
+    const coreCount = isMobile ? 2400 : 8000;
     const corePositions = new Float32Array(coreCount * 3);
     const coreOriginals = new Float32Array(coreCount * 3);
     const coreColors = new Float32Array(coreCount * 3);
@@ -206,7 +206,7 @@ function NeuralParticleCanvas({
     }
 
     // ─── 3. ENERGY NODES ───
-    const nodeCount = isMobile ? 8 : 16;
+    const nodeCount = isMobile ? 6 : 12;
     const nodeGeo = new THREE.BufferGeometry();
     const nodePositions = new Float32Array(nodeCount * 3);
     const nodeColors = new Float32Array(nodeCount * 3);
@@ -242,7 +242,7 @@ function NeuralParticleCanvas({
     coreGroup.add(nodePoints);
 
     // ─── 5. AMBIENT DUST ───
-    const dustCount = isMobile ? 100 : 400;
+    const dustCount = isMobile ? 80 : 300;
     const dustGeo = new THREE.BufferGeometry();
     const dustPos = new Float32Array(dustCount * 3);
     const dustCol = new Float32Array(dustCount * 3);
