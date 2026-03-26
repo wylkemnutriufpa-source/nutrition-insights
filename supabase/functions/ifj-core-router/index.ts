@@ -723,7 +723,7 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
 
     case "clinical_summary":
     case "portfolio_health": {
-      const { snapshots, alerts, plans, transactions } = await getPortfolioInputs(supabase, userId, patientIds, today);
+      const { snapshots, alerts, plans, transactions } = await getPortfolioInputs(supabase, userId, patientIds, today, role);
       const priorities = calculatePriorities(patients, snapshots, alerts, plans, transactions);
       const critical = priorities.filter(p => p.level === "critical").length;
       const high = priorities.filter(p => p.level === "high").length;
