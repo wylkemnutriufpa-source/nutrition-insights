@@ -89,6 +89,7 @@ const SYNONYM_MAP: Record<string, string[]> = {
   help: ["ajuda", "como usar", "comandos", "o que voce faz", "tutorial"],
   // ACTION INTENTS — real operations
   action_release_onboarding: ["libere onboarding", "liberar onboarding", "ative onboarding", "ativar onboarding", "libere o onboarding"],
+  action_release_all_onboarding: ["libere todos", "liberar todos", "libere todas", "liberar todas", "libere todo mundo", "liberar todo mundo", "libere todos onboarding", "liberar todos onboarding"],
   action_awaiting_onboarding: [
     "aguardando onboarding", "pendente onboarding", "quem precisa ativar onboarding",
     "sem onboarding", "liberacao de onboarding", "liberar onboarding",
