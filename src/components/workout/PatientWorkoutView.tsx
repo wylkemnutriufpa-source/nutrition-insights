@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import confetti from "@/lib/confetti";
+import PostWorkoutFeedback from "./PostWorkoutFeedback";
 import {
   Dumbbell, CheckCircle2, Clock, Flame, AlertTriangle, Trophy,
   Play, Zap, Timer, ChevronRight, Video, Layers, X
