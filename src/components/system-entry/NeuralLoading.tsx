@@ -88,7 +88,7 @@ function NeuralParticleCanvas({
     const coreScatterFlow = new Float32Array(coreCount * 3);
 
     const coreGeo = new THREE.BufferGeometry();
-    const torusKnot = new THREE.TorusKnotGeometry(1.0, 0.35, 200, 32);
+    const torusKnot = new THREE.TorusKnotGeometry(0.85, 0.3, 200, 32);
 
     const coreHues = [
       { h: 152 / 360, s: 0.7, lMin: 0.35, lMax: 0.6, w: 0.45 },
