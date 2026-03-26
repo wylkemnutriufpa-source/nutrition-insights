@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   Layers, Search, Dumbbell, Copy, Target, Zap, Heart,
-  Flame, Sparkles, ArrowRight, Edit3, Stretch
+  Flame, Sparkles, ArrowRight, Edit3
 } from "lucide-react";
 import {
   BUILT_IN_TEMPLATES,
