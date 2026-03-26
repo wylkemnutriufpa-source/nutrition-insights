@@ -511,7 +511,7 @@ async function syncPriorityQueue(supabase: any, userId: string, priorities: Prio
     // No priorities = resolve all
     await supabase.from("ifj_priority_queue")
       .update({ is_resolved: true, updated_at: now })
-      .eq("owner_user_id", userId).eq("is_resolved", false).catch(() => {});
+      .eq("owner_user_id", userId).eq("is_resolved", false).then(() => {});
   }
 }
 
