@@ -70,6 +70,10 @@ export default function IntelligenceSettingsPanel() {
             </TabsTrigger>
           </TabsList>
 
+          <TabsContent value="core">
+            <IFJCorePanel />
+          </TabsContent>
+
           <TabsContent value="command">
             <IFJCommandCenter />
           </TabsContent>
