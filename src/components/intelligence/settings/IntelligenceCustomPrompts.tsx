@@ -26,7 +26,6 @@ const DAYS_OF_WEEK = [
 ];
 
 const HOUR_OPTIONS = Array.from({ length: 16 }, (_, i) => i + 6); // 6h - 21h
-import { motion, AnimatePresence } from "framer-motion";
 
 interface CustomPrompt {
   id: string;
