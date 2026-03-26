@@ -393,6 +393,9 @@ export default function PersonalWorkouts() {
             <AnamnesisTab students={students} onSelectStudent={setAnamnesisStudent} />
           </TabsContent>
 
+          <TabsContent value="ifj" className="mt-4">
+            <IFJCommandCenter role="personal" />
+          </TabsContent>
           <TabsContent value="preplan" className="mt-4">
             <PrePlanTab students={students} prePlanStudent={prePlanStudent} setPrePlanStudent={setPrePlanStudent} handleUseTemplate={handleUseTemplate} />
           </TabsContent>
