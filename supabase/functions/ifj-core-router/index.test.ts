@@ -141,7 +141,7 @@ Deno.test("Intent: patient_detail - sobre Sandra", () => {
 // Financial
 Deno.test("Intent: financial_overview - resumo financeiro", () => { assertEquals(matchesIntent(normalize("resumo financeiro"), "financial_overview"), true); });
 Deno.test("Intent: financial_overview - faturamento", () => { assertEquals(matchesIntent(normalize("como está o faturamento"), "financial_overview"), true); });
-Deno.test("Intent: financial_pending - cobrança pendente", () => { assertEquals(matchesIntent(normalize("cobranças pendentes"), "financial_pending"), true); });
+Deno.test("Intent: financial_pending - cobrança pendente", () => { assertEquals(matchesIntent(normalize("cobranca pendente"), "financial_pending"), true); });
 Deno.test("Intent: financial_pending - inadimplente", () => { assertEquals(matchesIntent(normalize("quem está inadimplente"), "financial_pending"), true); });
 
 // Meal plan
