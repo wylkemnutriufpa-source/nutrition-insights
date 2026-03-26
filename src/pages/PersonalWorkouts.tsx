@@ -303,6 +303,65 @@ export default function PersonalWorkouts() {
               )}
             </div>
           </TabsContent>
+
+          {/* Pré-Plano IA */}
+          <TabsContent value="preplan" className="mt-4">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary" />
+                <h2 className="text-lg font-bold">Pré-Plano Automático</h2>
+                <Badge variant="secondary" className="text-xs">Baseado na anamnese</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Selecione um aluno para gerar automaticamente um plano de treino baseado na anamnese dele. Você pode editar, ajustar e aprovar antes de publicar.
+              </p>
+              {students.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Sparkles className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                  <p>Nenhum aluno vinculado</p>
+                </div>
+              ) : prePlanStudent ? (
+                <WorkoutPrePlanGenerator
+                  studentId={prePlanStudent.id}
+                  studentName={prePlanStudent.name}
+                  onApproveAndPublish={(template) => {
+                    handleUseTemplate(template);
+                    setPrePlanStudent(null);
+                  }}
+                  onEditPlan={(template) => {
+                    handleUseTemplate(template);
+                    setPrePlanStudent(null);
+                  }}
+                />
+              ) : (
+                <div className="grid gap-2">
+                  {students.map(s => (
+                    <Card key={s.student_id} className="hover:border-primary/20 transition-all cursor-pointer" onClick={() => setPrePlanStudent({ id: s.student_id, name: s.full_name })}>
+                      <CardContent className="p-3 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Sparkles className="w-4 h-4 text-primary" />
+                          </div>
+                          <div>
+                            <span className="font-medium text-sm">{s.full_name}</span>
+                            <p className="text-[11px] text-muted-foreground">Clique para gerar pré-plano</p>
+                          </div>
+                        </div>
+                        <Button variant="outline" size="sm" className="gap-1">
+                          <Sparkles className="w-3 h-3" /> Gerar
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+              {prePlanStudent && (
+                <Button variant="ghost" size="sm" onClick={() => setPrePlanStudent(null)}>
+                  ← Voltar à lista de alunos
+                </Button>
+              )}
+            </div>
+          </TabsContent>
         </Tabs>
 
         {anamnesisStudent && (
