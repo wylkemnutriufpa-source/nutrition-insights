@@ -13804,6 +13804,68 @@ export type Database = {
           },
         ]
       }
+      workout_exercise_substitutions: {
+        Row: {
+          approved_exercise: string | null
+          created_at: string | null
+          feedback_id: string | null
+          id: string
+          original_exercise: string
+          original_muscle_group: string | null
+          pain_area: string | null
+          personal_id: string
+          personal_notes: string | null
+          reason: string
+          resolved_at: string | null
+          severity: string | null
+          status: string | null
+          student_id: string
+          suggested_exercises: Json
+        }
+        Insert: {
+          approved_exercise?: string | null
+          created_at?: string | null
+          feedback_id?: string | null
+          id?: string
+          original_exercise: string
+          original_muscle_group?: string | null
+          pain_area?: string | null
+          personal_id: string
+          personal_notes?: string | null
+          reason: string
+          resolved_at?: string | null
+          severity?: string | null
+          status?: string | null
+          student_id: string
+          suggested_exercises?: Json
+        }
+        Update: {
+          approved_exercise?: string | null
+          created_at?: string | null
+          feedback_id?: string | null
+          id?: string
+          original_exercise?: string
+          original_muscle_group?: string | null
+          pain_area?: string | null
+          personal_id?: string
+          personal_notes?: string | null
+          reason?: string
+          resolved_at?: string | null
+          severity?: string | null
+          status?: string | null
+          student_id?: string
+          suggested_exercises?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_exercise_substitutions_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "workout_session_feedback"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workout_exercises: {
         Row: {
           cadence: string | null
@@ -14089,6 +14151,128 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      workout_session_feedback: {
+        Row: {
+          completion_id: string | null
+          created_at: string | null
+          discomfort_exercises: Json | null
+          fatigue_level: number | null
+          feedback_date: string
+          id: string
+          motivation_level: number | null
+          notes: string | null
+          overall_feeling: string | null
+          pain_areas: Json | null
+          plan_id: string | null
+          processed: boolean | null
+          routine_id: string | null
+          sleep_quality: number | null
+          student_id: string
+        }
+        Insert: {
+          completion_id?: string | null
+          created_at?: string | null
+          discomfort_exercises?: Json | null
+          fatigue_level?: number | null
+          feedback_date?: string
+          id?: string
+          motivation_level?: number | null
+          notes?: string | null
+          overall_feeling?: string | null
+          pain_areas?: Json | null
+          plan_id?: string | null
+          processed?: boolean | null
+          routine_id?: string | null
+          sleep_quality?: number | null
+          student_id: string
+        }
+        Update: {
+          completion_id?: string | null
+          created_at?: string | null
+          discomfort_exercises?: Json | null
+          fatigue_level?: number | null
+          feedback_date?: string
+          id?: string
+          motivation_level?: number | null
+          notes?: string | null
+          overall_feeling?: string | null
+          pain_areas?: Json | null
+          plan_id?: string | null
+          processed?: boolean | null
+          routine_id?: string | null
+          sleep_quality?: number | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_session_feedback_completion_id_fkey"
+            columns: ["completion_id"]
+            isOneToOne: false
+            referencedRelation: "workout_completions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workout_student_learning_profile: {
+        Row: {
+          avg_completion_rate: number | null
+          avg_effort: number | null
+          avoided_exercises: Json | null
+          created_at: string | null
+          fatigue_patterns: Json | null
+          id: string
+          ifj_notes: Json | null
+          is_also_patient: boolean | null
+          last_feedback_at: string | null
+          motivation_trend: string | null
+          pain_history: Json | null
+          personal_id: string | null
+          preferred_exercises: Json | null
+          risk_level: string | null
+          student_id: string
+          total_sessions: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          avg_completion_rate?: number | null
+          avg_effort?: number | null
+          avoided_exercises?: Json | null
+          created_at?: string | null
+          fatigue_patterns?: Json | null
+          id?: string
+          ifj_notes?: Json | null
+          is_also_patient?: boolean | null
+          last_feedback_at?: string | null
+          motivation_trend?: string | null
+          pain_history?: Json | null
+          personal_id?: string | null
+          preferred_exercises?: Json | null
+          risk_level?: string | null
+          student_id: string
+          total_sessions?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          avg_completion_rate?: number | null
+          avg_effort?: number | null
+          avoided_exercises?: Json | null
+          created_at?: string | null
+          fatigue_patterns?: Json | null
+          id?: string
+          ifj_notes?: Json | null
+          is_also_patient?: boolean | null
+          last_feedback_at?: string | null
+          motivation_trend?: string | null
+          pain_history?: Json | null
+          personal_id?: string | null
+          preferred_exercises?: Json | null
+          risk_level?: string | null
+          student_id?: string
+          total_sessions?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       workout_templates: {
         Row: {
