@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import confetti from "@/lib/confetti";
+import PostWorkoutFeedback from "./PostWorkoutFeedback";
 import {
   Dumbbell, CheckCircle2, Clock, Flame, AlertTriangle, Trophy,
   Play, Zap, Timer, ChevronRight, Video, Layers, X
@@ -32,6 +33,10 @@ export default function PatientWorkoutView() {
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [videoModal, setVideoModal] = useState<string | null>(null);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [lastCompletionId, setLastCompletionId] = useState<string | null>(null);
+  const [lastRoutineIdForFeedback, setLastRoutineIdForFeedback] = useState<string | null>(null);
+  const [lastPlanIdForFeedback, setLastPlanIdForFeedback] = useState<string | null>(null);
 
   // Workout execution state
   const [completedExIds, setCompletedExIds] = useState<Set<string>>(new Set());
@@ -191,6 +196,13 @@ export default function PatientWorkoutView() {
       setShowReward(true);
       confetti();
       setTimeout(() => setShowReward(false), 3000);
+
+      // Open feedback modal after a brief delay
+      const activePlan = plans.find(p => p.workout_routines?.some((r: any) => r.id === selectedRoutine.id));
+      setLastCompletionId(completion.id);
+      setLastRoutineIdForFeedback(selectedRoutine.id);
+      setLastPlanIdForFeedback(activePlan?.id || null);
+      setTimeout(() => setFeedbackOpen(true), 3500);
 
       const { data: historyData } = await supabase
         .from("workout_completions")
@@ -622,6 +634,18 @@ export default function PatientWorkoutView() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Post-Workout Feedback Modal */}
+      {feedbackOpen && lastCompletionId && (
+        <PostWorkoutFeedback
+          open={feedbackOpen}
+          onClose={() => setFeedbackOpen(false)}
+          completionId={lastCompletionId}
+          routineId={lastRoutineIdForFeedback || ""}
+          planId={lastPlanIdForFeedback || ""}
+          exercises={exercises}
+        />
+      )}
     </div>
   );
 }

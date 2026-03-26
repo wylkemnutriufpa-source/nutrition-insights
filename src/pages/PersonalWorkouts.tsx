@@ -24,6 +24,8 @@ import CardioPrescription from "@/components/workout/CardioPrescription";
 import PersonalRecords from "@/components/workout/PersonalRecords";
 import CrossProfessionalAlerts from "@/components/workout/CrossProfessionalAlerts";
 import WorkoutPrePlanGenerator from "@/components/workout/WorkoutPrePlanGenerator";
+import WorkoutFeedbackAlerts from "@/components/workout/WorkoutFeedbackAlerts";
+import WorkoutIFJInsights from "@/components/workout/WorkoutIFJInsights";
 
 export default function PersonalWorkouts() {
   const { user } = useAuth();
@@ -162,7 +164,9 @@ export default function PersonalWorkouts() {
 
           {/* Dashboard */}
           <TabsContent value="dashboard" className="mt-4 space-y-4">
+            <WorkoutFeedbackAlerts />
             <CrossProfessionalAlerts />
+            <WorkoutIFJInsights students={students} />
             <PersonalDashboardStats />
           </TabsContent>
 
