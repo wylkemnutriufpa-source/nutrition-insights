@@ -1012,7 +1012,7 @@ serve(async (req) => {
         response = await runBehavioralEngine(supabase, intent, user.id, ctx, patients, today);
       }
       else if (intent.module === "financial_engine") {
-        response = await runFinancialEngine(supabase, intent, user.id, ctx, patients);
+        response = await runFinancialEngine(supabase, intent, user.id, ctx, patients, role);
       }
       else if (intent.module === "training_engine") {
         response = await runTrainingEngine(supabase, intent, user.id, ctx);
