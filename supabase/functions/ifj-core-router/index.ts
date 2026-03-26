@@ -216,10 +216,16 @@ function detectIntent(n: string, ctx: SessionCtx): IFJIntent {
 
   if (matchesIntent(n, "patient_detail")) {
     const nameMatch = n.match(/(?:paciente|sobre|como esta|como vai|ficha d[aeo]|perfil d[aeo]|dados d[aeo])\s+(.+)/);
-    if (nameMatch)
-      return { ...base, intent: "patient_detail", target_entity: "patient", target_name: nameMatch[1], module: "clinical_engine", confidence: 0.92, response_mode: "detail" };
-    if (ctx.last_patient_id)
+    if (nameMatch) {
+      const candidateName = nameMatch[1];
+      // Guard: if the "name" contains food/nutrition words, it's a nutrition question, not a patient lookup
+      const foodWords = /(?:comer|substituir|trocar|lugar|comida|alimento|receita|ingrediente|lanche|saudavel|engorda|emagrec|caloria|proteina|carboidrato|gordura|fibra|vitamina|nutriente|cafe|almoco|janta|dieta|refeic)/;
+      if (!foodWords.test(candidateName)) {
+        return { ...base, intent: "patient_detail", target_entity: "patient", target_name: candidateName, module: "clinical_engine", confidence: 0.92, response_mode: "detail" };
+      }
+    } else if (ctx.last_patient_id) {
       return { ...base, intent: "patient_detail", target_entity: "patient", target_id: ctx.last_patient_id, target_name: ctx.last_patient_name || null, module: "clinical_engine", confidence: 0.85, response_mode: "detail" };
+    }
   }
 
   if (matchesIntent(n, "student_detail")) {
@@ -732,6 +738,66 @@ async function runActionEngine(supabaseAdmin: any, supabase: any, intent: IFJInt
 }
 
 // ═══════════════════════════════════════════════════════════════
+// AI FALLBACK ENGINE — Handles free-form nutrition questions via LLM
+// ═══════════════════════════════════════════════════════════════
+async function runAIFallbackEngine(intent: IFJIntent, inputText: string, ctx: SessionCtx, patientName?: string): Promise<IFJResponse> {
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  if (!LOVABLE_API_KEY) {
+    return fmt("IA indisponível", "⚠️", "error", "Chave de IA não configurada.", "A funcionalidade de IA não está disponível no momento.", [], intent, "ai_fallback", ctx);
+  }
+
+  try {
+    const systemPrompt = `Você é um assistente nutricional inteligente integrado ao sistema FitJourney.
+Responda perguntas sobre alimentação, nutrição, substituições alimentares, receitas e dicas de saúde de forma clara e profissional em português brasileiro.
+Use markdown para formatar a resposta. Seja conciso mas completo.
+Se a pergunta não for sobre nutrição/alimentação/saúde, diga educadamente que você é especializado em nutrição e sugira comandos do sistema.
+NUNCA dê diagnósticos médicos. Sempre recomende consultar o nutricionista para orientações personalizadas.`;
+
+    const userContext = patientName ? `Contexto: último paciente consultado foi ${patientName}.\n\n` : "";
+
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `${userContext}${inputText}` },
+        ],
+        max_tokens: 1000,
+        temperature: 0.4,
+      }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        return fmt("Limite atingido", "⏳", "error", "Muitas requisições. Aguarde.", "Limite de IA excedido. Tente novamente em alguns instantes.", [], intent, "ai_fallback", ctx);
+      }
+      if (response.status === 402) {
+        return fmt("Créditos insuficientes", "💳", "error", "Créditos de IA esgotados.", "Adicione créditos para continuar usando a assistência nutricional por IA.", [], intent, "ai_fallback", ctx);
+      }
+      const errorText = await response.text();
+      console.error("AI fallback error:", response.status, errorText);
+      return fmt("Erro na IA", "❌", "error", "Falha ao consultar IA.", "Tente novamente ou use comandos como *\"ajuda\"*.", [], intent, "ai_fallback", ctx);
+    }
+
+    const aiData = await response.json();
+    const aiText = aiData.choices?.[0]?.message?.content || "Sem resposta da IA.";
+
+    return fmt("🤖 Assistente Nutricional", "🧠", "ai_response", "Resposta gerada por IA",
+      `${aiText}\n\n---\n*🤖 Resposta gerada por IA — consulte seu nutricionista para orientação personalizada.*`,
+      [], intent, "ai_fallback", ctx);
+
+  } catch (e) {
+    console.error("AI fallback exception:", e);
+    return fmt("Erro na IA", "❌", "error", "Falha ao processar.", "Ocorreu um erro. Tente novamente.", [], intent, "ai_fallback", ctx);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
 // DOMAIN ENGINES (same as v3 — clinical, behavioral, financial, training, journey)
 // ═══════════════════════════════════════════════════════════════
 
@@ -1120,10 +1186,12 @@ serve(async (req) => {
       else if (intent.module === "journey_engine") {
         response = await runJourneyEngine(supabaseAdmin, intent, user.id, ctx, patients, today, role);
       }
+      else if (intent.module === "ai_fallback") {
+        response = await runAIFallbackEngine(intent, inputText, ctx, ctx.last_patient_name);
+      }
       else {
-        response = fmt("Não entendi", "❓", "error", "Comando não reconhecido.",
-          `Não entendi. Tente:\n- *"O que preciso resolver hoje?"*\n- *"Quem precisa de atenção?"*\n- *"Libere onboarding da [nome]"*\n- *"Quem está sem dieta?"*\n- *"Ajuda"*`,
-          [], intent, "general", ctx);
+        // Unknown intent → try AI fallback as last resort
+        response = await runAIFallbackEngine(intent, inputText, ctx, ctx.last_patient_name);
       }
     } catch (engineError) {
       console.error("Engine error:", engineError);
