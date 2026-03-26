@@ -963,7 +963,7 @@ serve(async (req) => {
 
     // 4. Fetch patients ONCE (shared across engines)
     const needsPatients = !["navigation", "general"].includes(intent.module) && intent.module !== "training_engine";
-    const patients = needsPatients ? await getPatients(supabase, user.id) : [];
+    const patients = needsPatients ? await getPatients(supabase, user.id, role) : [];
 
     let response: IFJResponse;
 
