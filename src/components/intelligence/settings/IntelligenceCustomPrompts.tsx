@@ -74,7 +74,7 @@ export default function IntelligenceCustomPrompts() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<CustomPrompt | null>(null);
-  const [form, setForm] = useState({ title: "", body: "", emoji: "💬", tone: "gentle", escalation_level: 0 });
+  const [form, setForm] = useState({ title: "", body: "", emoji: "💬", tone: "gentle", escalation_level: 0, schedule_hours: [] as number[], schedule_days: [] as string[] });
   const [saving, setSaving] = useState(false);
 
   const load = async () => {
