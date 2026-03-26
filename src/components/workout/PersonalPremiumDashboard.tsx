@@ -165,8 +165,41 @@ interface Props {
 }
 
 export default function PersonalPremiumDashboard({ onNavigate, studentsCount, plansCount }: Props) {
+  // Separate IFJ from other modules
+  const ifjModule = modules.find(m => m.id === "ifj")!;
+  const otherModules = modules.filter(m => m.id !== "ifj");
+
   return (
     <div className="space-y-6">
+      {/* IFJ Hero Card — Featured */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        onClick={() => onNavigate("ifj")}
+        className="group relative overflow-hidden rounded-2xl border border-amber-500/20 bg-card cursor-pointer transition-all duration-300 hover:border-amber-500/40 hover:shadow-xl hover:shadow-amber-500/10"
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 via-yellow-500/5 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 premium-shimmer pointer-events-none opacity-40" />
+        <div className="relative p-6 flex items-center gap-5">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-500/10 flex items-center justify-center border border-amber-500/20 group-hover:scale-110 transition-transform duration-300">
+            <Command className="w-7 h-7 text-amber-400" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <h2 className="text-lg font-bold group-hover:text-amber-400 transition-colors">Painel IFJ — Inteligência FitJourney</h2>
+              <Badge className="bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-400 border-amber-500/30 text-[10px]">
+                Premium
+              </Badge>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Copiloto inteligente, briefing preditivo, prioridades em tempo real e insights da sua carteira
+            </p>
+          </div>
+          <ArrowRight className="w-5 h-5 text-amber-400/50 group-hover:text-amber-400 group-hover:translate-x-1 transition-all duration-300" />
+        </div>
+      </motion.div>
+
       {/* Hero Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
@@ -202,7 +235,7 @@ export default function PersonalPremiumDashboard({ onNavigate, studentsCount, pl
           Módulos & Ferramentas
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {modules.map((mod, i) => (
+          {otherModules.map((mod, i) => (
             <motion.div
               key={mod.id}
               initial={{ opacity: 0, y: 16 }}
