@@ -35,6 +35,7 @@ import PTStudentChat from "@/components/workout/PTStudentChat";
 import PTChallenges from "@/components/workout/PTChallenges";
 import WorkoutRestTimer from "@/components/workout/WorkoutRestTimer";
 import IFJCommandCenter from "@/components/intelligence/modules/IFJCommandCenter";
+import PersonalPremiumDashboard from "@/components/workout/PersonalPremiumDashboard";
 
 // --- Plans Tab Component ---
 function PlansTab({ plans, loading, students, onToggleStatus, onExpandPlan, expandedPlan, planDetails }: any) {
@@ -330,10 +331,13 @@ export default function PersonalWorkouts() {
           </TabsList>
 
           <TabsContent value="dashboard" className="mt-4 space-y-4">
+            <PersonalPremiumDashboard
+              onNavigate={setActiveTab}
+              studentsCount={students.length}
+              plansCount={plans.length}
+            />
             <WorkoutFeedbackAlerts />
             <CrossProfessionalAlerts />
-            <WorkoutIFJInsights students={students} />
-            <PersonalDashboardStats />
             <WorkoutRestTimer />
           </TabsContent>
 
