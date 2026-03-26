@@ -11,7 +11,8 @@ import { toast } from "sonner";
 import {
   Dumbbell, Plus, Search, ChevronDown, Pause, Play,
   BookOpen, Layers, ClipboardList, Sparkles,
-  TrendingUp, Heart, Ruler, Trophy, ArrowRightLeft, BarChart3
+  TrendingUp, Heart, Ruler, Trophy, ArrowRightLeft, BarChart3,
+  CalendarDays, MessageCircle, FileText, Zap, Timer
 } from "lucide-react";
 import WorkoutEditor from "@/components/workout/WorkoutEditor";
 import ExerciseLibrary from "@/components/workout/ExerciseLibrary";
@@ -26,14 +27,204 @@ import CrossProfessionalAlerts from "@/components/workout/CrossProfessionalAlert
 import WorkoutPrePlanGenerator from "@/components/workout/WorkoutPrePlanGenerator";
 import WorkoutFeedbackAlerts from "@/components/workout/WorkoutFeedbackAlerts";
 import WorkoutIFJInsights from "@/components/workout/WorkoutIFJInsights";
+import WorkoutLoadHistory from "@/components/workout/WorkoutLoadHistory";
+import WorkoutCalendar from "@/components/workout/WorkoutCalendar";
+import AssessmentComparison from "@/components/workout/AssessmentComparison";
+import WorkoutPDFExport from "@/components/workout/WorkoutPDFExport";
+import PTStudentChat from "@/components/workout/PTStudentChat";
+import PTChallenges from "@/components/workout/PTChallenges";
+import WorkoutRestTimer from "@/components/workout/WorkoutRestTimer";
 
+// --- Plans Tab Component ---
+function PlansTab({ plans, loading, students, onToggleStatus, onExpandPlan, expandedPlan, planDetails }: any) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+
+  const GROUP_COLORS: Record<string, string> = {
+    biset: "border-l-blue-500",
+    triset: "border-l-purple-500",
+    circuit: "border-l-amber-500",
+  };
+
+  const filteredPlans = plans.filter((p: any) => {
+    const matchSearch = !searchTerm || p.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchStatus = filterStatus === "all" || p.status === filterStatus;
+    return matchSearch && matchStatus;
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input placeholder="Buscar plano..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 h-9" />
+        </div>
+        <div className="flex gap-1">
+          {["all", "active", "paused"].map((s) => (
+            <button key={s} onClick={() => setFilterStatus(s)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${filterStatus === s ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+              {s === "all" ? "Todos" : s === "active" ? "Ativos" : "Pausados"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {filteredPlans.map((plan: any) => (
+        <Card key={plan.id} className="group hover:border-primary/20 transition-all">
+          <CardHeader className="pb-2 cursor-pointer" onClick={() => onExpandPlan(plan.id)}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Dumbbell className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">{plan.title}</CardTitle>
+                  <p className="text-xs text-muted-foreground">
+                    {plan.objective} • {new Date(plan.created_at).toLocaleDateString("pt-BR")}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant={plan.status === "active" ? "default" : "secondary"}>
+                  {plan.status === "active" ? "Ativo" : "Pausado"}
+                </Badge>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); onToggleStatus(plan.id, plan.status); }}>
+                  {plan.status === "active" ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                </Button>
+                <ChevronDown className={`w-4 h-4 transition-transform ${expandedPlan === plan.id ? "rotate-180" : ""}`} />
+              </div>
+            </div>
+          </CardHeader>
+          {expandedPlan === plan.id && planDetails[plan.id] && (
+            <CardContent className="pt-0 space-y-3">
+              {planDetails[plan.id].map((routine: any) => (
+                <div key={routine.id} className="bg-muted/30 rounded-lg p-3">
+                  <p className="text-sm font-semibold mb-2">{routine.name}</p>
+                  <div className="space-y-1">
+                    {(routine.workout_exercises || []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((ex: any) => (
+                      <div key={ex.id} className={`flex items-center gap-2 text-xs p-1.5 rounded ${ex.group_type && ex.group_type !== "single" ? `border-l-2 ${GROUP_COLORS[ex.group_type] || ""} pl-3` : ""}`}>
+                        {ex.group_type && ex.group_type !== "single" && ex.group_order === 0 && (
+                          <Badge className="text-[9px] py-0 px-1">{ex.group_type.toUpperCase()}</Badge>
+                        )}
+                        <span className="font-medium flex-1">{ex.name}</span>
+                        <span className="text-muted-foreground">{ex.sets}×{ex.reps}</span>
+                        {ex.load_kg && <span className="text-muted-foreground">{ex.load_kg}kg</span>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          )}
+        </Card>
+      ))}
+
+      {filteredPlans.length === 0 && !loading && (
+        <div className="text-center py-12 text-muted-foreground">
+          <Dumbbell className="w-12 h-12 mx-auto mb-3 opacity-30" />
+          <p className="font-medium">Nenhum plano encontrado</p>
+          <p className="text-sm mt-1">Clique em "Novo Plano" para começar</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// --- Anamnesis Tab ---
+function AnamnesisTab({ students, onSelectStudent }: any) {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <ClipboardList className="w-5 h-5 text-primary" />
+        <h2 className="text-lg font-bold">Anamnese dos Alunos</h2>
+      </div>
+      {students.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <ClipboardList className="w-12 h-12 mx-auto mb-3 opacity-30" />
+          <p>Nenhum aluno vinculado</p>
+        </div>
+      ) : (
+        <div className="grid gap-2">
+          {students.map((s: any) => (
+            <Card key={s.student_id} className="hover:border-primary/20 transition-all cursor-pointer" onClick={() => onSelectStudent({ id: s.student_id, name: s.full_name })}>
+              <CardContent className="p-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                    <ClipboardList className="w-4 h-4 text-primary" />
+                  </div>
+                  <span className="font-medium text-sm">{s.full_name}</span>
+                </div>
+                <Button variant="outline" size="sm">Avaliar</Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// --- PrePlan Tab ---
+function PrePlanTab({ students, prePlanStudent, setPrePlanStudent, handleUseTemplate }: any) {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Sparkles className="w-5 h-5 text-primary" />
+        <h2 className="text-lg font-bold">Pré-Plano Automático</h2>
+        <Badge variant="secondary" className="text-xs">Baseado na anamnese</Badge>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Selecione um aluno para gerar automaticamente um plano de treino baseado na anamnese dele.
+      </p>
+      {students.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <Sparkles className="w-12 h-12 mx-auto mb-3 opacity-30" />
+          <p>Nenhum aluno vinculado</p>
+        </div>
+      ) : prePlanStudent ? (
+        <WorkoutPrePlanGenerator
+          studentId={prePlanStudent.id}
+          studentName={prePlanStudent.name}
+          onApproveAndPublish={(template: any) => { handleUseTemplate(template); setPrePlanStudent(null); }}
+          onEditPlan={(template: any) => { handleUseTemplate(template); setPrePlanStudent(null); }}
+        />
+      ) : (
+        <div className="grid gap-2">
+          {students.map((s: any) => (
+            <Card key={s.student_id} className="hover:border-primary/20 transition-all cursor-pointer" onClick={() => setPrePlanStudent({ id: s.student_id, name: s.full_name })}>
+              <CardContent className="p-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <span className="font-medium text-sm">{s.full_name}</span>
+                    <p className="text-[11px] text-muted-foreground">Clique para gerar pré-plano</p>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" className="gap-1">
+                  <Sparkles className="w-3 h-3" /> Gerar
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+      {prePlanStudent && (
+        <Button variant="ghost" size="sm" onClick={() => setPrePlanStudent(null)}>
+          ← Voltar à lista de alunos
+        </Button>
+      )}
+    </div>
+  );
+}
+
+// --- Main Component ---
 export default function PersonalWorkouts() {
   const { user } = useAuth();
   const [plans, setPlans] = useState<any[]>([]);
   const [students, setStudents] = useState<{ student_id: string; full_name: string }[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
   const [activeTab, setActiveTab] = useState("dashboard");
   const [creating, setCreating] = useState(false);
   const [expandedPlan, setExpandedPlan] = useState<string | null>(null);
@@ -76,22 +267,10 @@ export default function PersonalWorkouts() {
     setExpandedPlan(planId);
   };
 
-  const filteredPlans = plans.filter((p) => {
-    const matchSearch = !searchTerm || p.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchStatus = filterStatus === "all" || p.status === filterStatus;
-    return matchSearch && matchStatus;
-  });
-
-  const GROUP_COLORS: Record<string, string> = {
-    biset: "border-l-blue-500",
-    triset: "border-l-purple-500",
-    circuit: "border-l-amber-500",
-  };
-
   const handleUseTemplate = (template: any) => {
     setCreating(true);
     setActiveTab("plans");
-    toast.info(`Template "${template.name}" carregado! Selecione o aluno e salve.`);
+    toast.info(`Template "${template.name}" carregado!`);
   };
 
   if (creating) {
@@ -130,241 +309,90 @@ export default function PersonalWorkouts() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="bg-card border border-border flex-wrap h-auto gap-0.5 p-1">
-            <TabsTrigger value="dashboard" className="gap-1.5 text-xs">
-              <BarChart3 className="w-3.5 h-3.5" /> Dashboard
-            </TabsTrigger>
-            <TabsTrigger value="plans" className="gap-1.5 text-xs">
-              <Layers className="w-3.5 h-3.5" /> Planos
-            </TabsTrigger>
-            <TabsTrigger value="periodization" className="gap-1.5 text-xs">
-              <TrendingUp className="w-3.5 h-3.5" /> Periodização
-            </TabsTrigger>
-            <TabsTrigger value="cardio" className="gap-1.5 text-xs">
-              <Heart className="w-3.5 h-3.5" /> Cardio
-            </TabsTrigger>
-            <TabsTrigger value="assessments" className="gap-1.5 text-xs">
-              <Ruler className="w-3.5 h-3.5" /> Avaliações
-            </TabsTrigger>
-            <TabsTrigger value="records" className="gap-1.5 text-xs">
-              <Trophy className="w-3.5 h-3.5" /> PRs
-            </TabsTrigger>
-            <TabsTrigger value="templates" className="gap-1.5 text-xs">
-              <Sparkles className="w-3.5 h-3.5" /> Templates
-            </TabsTrigger>
-            <TabsTrigger value="library" className="gap-1.5 text-xs">
-              <BookOpen className="w-3.5 h-3.5" /> Biblioteca
-            </TabsTrigger>
-            <TabsTrigger value="anamnesis" className="gap-1.5 text-xs">
-              <ClipboardList className="w-3.5 h-3.5" /> Anamnese
-            </TabsTrigger>
-            <TabsTrigger value="preplan" className="gap-1.5 text-xs">
-              <Sparkles className="w-3.5 h-3.5" /> Pré-Plano IA
-            </TabsTrigger>
+            <TabsTrigger value="dashboard" className="gap-1.5 text-xs"><BarChart3 className="w-3.5 h-3.5" /> Dashboard</TabsTrigger>
+            <TabsTrigger value="plans" className="gap-1.5 text-xs"><Layers className="w-3.5 h-3.5" /> Planos</TabsTrigger>
+            <TabsTrigger value="calendar" className="gap-1.5 text-xs"><CalendarDays className="w-3.5 h-3.5" /> Calendário</TabsTrigger>
+            <TabsTrigger value="evolution" className="gap-1.5 text-xs"><TrendingUp className="w-3.5 h-3.5" /> Evolução</TabsTrigger>
+            <TabsTrigger value="periodization" className="gap-1.5 text-xs"><TrendingUp className="w-3.5 h-3.5" /> Periodização</TabsTrigger>
+            <TabsTrigger value="cardio" className="gap-1.5 text-xs"><Heart className="w-3.5 h-3.5" /> Cardio</TabsTrigger>
+            <TabsTrigger value="assessments" className="gap-1.5 text-xs"><Ruler className="w-3.5 h-3.5" /> Avaliações</TabsTrigger>
+            <TabsTrigger value="comparison" className="gap-1.5 text-xs"><ArrowRightLeft className="w-3.5 h-3.5" /> Comparativo</TabsTrigger>
+            <TabsTrigger value="records" className="gap-1.5 text-xs"><Trophy className="w-3.5 h-3.5" /> PRs</TabsTrigger>
+            <TabsTrigger value="challenges" className="gap-1.5 text-xs"><Trophy className="w-3.5 h-3.5" /> Desafios</TabsTrigger>
+            <TabsTrigger value="chat" className="gap-1.5 text-xs"><MessageCircle className="w-3.5 h-3.5" /> Chat</TabsTrigger>
+            <TabsTrigger value="export" className="gap-1.5 text-xs"><FileText className="w-3.5 h-3.5" /> Exportar</TabsTrigger>
+            <TabsTrigger value="templates" className="gap-1.5 text-xs"><Sparkles className="w-3.5 h-3.5" /> Templates</TabsTrigger>
+            <TabsTrigger value="library" className="gap-1.5 text-xs"><BookOpen className="w-3.5 h-3.5" /> Biblioteca</TabsTrigger>
+            <TabsTrigger value="anamnesis" className="gap-1.5 text-xs"><ClipboardList className="w-3.5 h-3.5" /> Anamnese</TabsTrigger>
+            <TabsTrigger value="preplan" className="gap-1.5 text-xs"><Sparkles className="w-3.5 h-3.5" /> Pré-Plano IA</TabsTrigger>
           </TabsList>
 
-          {/* Dashboard */}
           <TabsContent value="dashboard" className="mt-4 space-y-4">
             <WorkoutFeedbackAlerts />
             <CrossProfessionalAlerts />
             <WorkoutIFJInsights students={students} />
             <PersonalDashboardStats />
+            <WorkoutRestTimer />
           </TabsContent>
 
-          {/* Plans */}
-          <TabsContent value="plans" className="mt-4 space-y-4">
-            <div className="flex gap-2 flex-wrap">
-              <div className="relative flex-1 min-w-[200px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input placeholder="Buscar plano..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 h-9" />
-              </div>
-              <div className="flex gap-1">
-                {["all", "active", "paused"].map((s) => (
-                  <button key={s} onClick={() => setFilterStatus(s)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${filterStatus === s ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-                    {s === "all" ? "Todos" : s === "active" ? "Ativos" : "Pausados"}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {filteredPlans.map((plan) => (
-              <Card key={plan.id} className="group hover:border-primary/20 transition-all">
-                <CardHeader className="pb-2 cursor-pointer" onClick={() => loadPlanDetails(plan.id)}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Dumbbell className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-base">{plan.title}</CardTitle>
-                        <p className="text-xs text-muted-foreground">
-                          {plan.objective} • {new Date(plan.created_at).toLocaleDateString("pt-BR")}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={plan.status === "active" ? "default" : "secondary"}>
-                        {plan.status === "active" ? "Ativo" : "Pausado"}
-                      </Badge>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); togglePlanStatus(plan.id, plan.status); }}>
-                        {plan.status === "active" ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                      </Button>
-                      <ChevronDown className={`w-4 h-4 transition-transform ${expandedPlan === plan.id ? "rotate-180" : ""}`} />
-                    </div>
-                  </div>
-                </CardHeader>
-                {expandedPlan === plan.id && planDetails[plan.id] && (
-                  <CardContent className="pt-0 space-y-3">
-                    {planDetails[plan.id].map((routine: any) => (
-                      <div key={routine.id} className="bg-muted/30 rounded-lg p-3">
-                        <p className="text-sm font-semibold mb-2">{routine.name}</p>
-                        <div className="space-y-1">
-                          {(routine.workout_exercises || []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((ex: any) => (
-                            <div key={ex.id} className={`flex items-center gap-2 text-xs p-1.5 rounded ${ex.group_type && ex.group_type !== "single" ? `border-l-2 ${GROUP_COLORS[ex.group_type] || ""} pl-3` : ""}`}>
-                              {ex.group_type && ex.group_type !== "single" && ex.group_order === 0 && (
-                                <Badge className="text-[9px] py-0 px-1">{ex.group_type.toUpperCase()}</Badge>
-                              )}
-                              <span className="font-medium flex-1">{ex.name}</span>
-                              <span className="text-muted-foreground">{ex.sets}×{ex.reps}</span>
-                              {ex.load_kg && <span className="text-muted-foreground">{ex.load_kg}kg</span>}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                )}
-              </Card>
-            ))}
-
-            {filteredPlans.length === 0 && !loading && (
-              <div className="text-center py-12 text-muted-foreground">
-                <Dumbbell className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                <p className="font-medium">Nenhum plano encontrado</p>
-                <p className="text-sm mt-1">Clique em "Novo Plano" para começar</p>
-              </div>
-            )}
+          <TabsContent value="plans" className="mt-4">
+            <PlansTab plans={plans} loading={loading} students={students} onToggleStatus={togglePlanStatus} onExpandPlan={loadPlanDetails} expandedPlan={expandedPlan} planDetails={planDetails} />
           </TabsContent>
 
-          {/* Periodization */}
+          <TabsContent value="calendar" className="mt-4">
+            <WorkoutCalendar students={students} />
+          </TabsContent>
+
+          <TabsContent value="evolution" className="mt-4">
+            <WorkoutLoadHistory students={students} />
+          </TabsContent>
+
           <TabsContent value="periodization" className="mt-4">
             <PeriodizationManager plans={plans} students={students} onRefresh={load} />
           </TabsContent>
 
-          {/* Cardio */}
           <TabsContent value="cardio" className="mt-4">
             <CardioPrescription students={students} plans={plans} />
           </TabsContent>
 
-          {/* Physical Assessments */}
           <TabsContent value="assessments" className="mt-4">
             <PhysicalAssessment students={students} />
           </TabsContent>
 
-          {/* Personal Records */}
+          <TabsContent value="comparison" className="mt-4">
+            <AssessmentComparison students={students} />
+          </TabsContent>
+
           <TabsContent value="records" className="mt-4">
             <PersonalRecords students={students} />
           </TabsContent>
 
-          {/* Templates */}
+          <TabsContent value="challenges" className="mt-4">
+            <PTChallenges students={students} />
+          </TabsContent>
+
+          <TabsContent value="chat" className="mt-4">
+            <PTStudentChat students={students} />
+          </TabsContent>
+
+          <TabsContent value="export" className="mt-4">
+            <WorkoutPDFExport plans={plans} students={students} />
+          </TabsContent>
+
           <TabsContent value="templates" className="mt-4">
             <WorkoutTemplates onUseTemplate={handleUseTemplate} />
           </TabsContent>
 
-          {/* Library */}
           <TabsContent value="library" className="mt-4">
             <ExerciseLibrary />
           </TabsContent>
 
-          {/* Anamnesis */}
           <TabsContent value="anamnesis" className="mt-4">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <ClipboardList className="w-5 h-5 text-primary" />
-                <h2 className="text-lg font-bold">Anamnese dos Alunos</h2>
-              </div>
-              {students.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <ClipboardList className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                  <p>Nenhum aluno vinculado</p>
-                </div>
-              ) : (
-                <div className="grid gap-2">
-                  {students.map(s => (
-                    <Card key={s.student_id} className="hover:border-primary/20 transition-all cursor-pointer" onClick={() => setAnamnesisStudent({ id: s.student_id, name: s.full_name })}>
-                      <CardContent className="p-3 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-                            <ClipboardList className="w-4 h-4 text-primary" />
-                          </div>
-                          <span className="font-medium text-sm">{s.full_name}</span>
-                        </div>
-                        <Button variant="outline" size="sm">Avaliar</Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </div>
+            <AnamnesisTab students={students} onSelectStudent={setAnamnesisStudent} />
           </TabsContent>
 
-          {/* Pré-Plano IA */}
           <TabsContent value="preplan" className="mt-4">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-primary" />
-                <h2 className="text-lg font-bold">Pré-Plano Automático</h2>
-                <Badge variant="secondary" className="text-xs">Baseado na anamnese</Badge>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Selecione um aluno para gerar automaticamente um plano de treino baseado na anamnese dele. Você pode editar, ajustar e aprovar antes de publicar.
-              </p>
-              {students.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Sparkles className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                  <p>Nenhum aluno vinculado</p>
-                </div>
-              ) : prePlanStudent ? (
-                <WorkoutPrePlanGenerator
-                  studentId={prePlanStudent.id}
-                  studentName={prePlanStudent.name}
-                  onApproveAndPublish={(template) => {
-                    handleUseTemplate(template);
-                    setPrePlanStudent(null);
-                  }}
-                  onEditPlan={(template) => {
-                    handleUseTemplate(template);
-                    setPrePlanStudent(null);
-                  }}
-                />
-              ) : (
-                <div className="grid gap-2">
-                  {students.map(s => (
-                    <Card key={s.student_id} className="hover:border-primary/20 transition-all cursor-pointer" onClick={() => setPrePlanStudent({ id: s.student_id, name: s.full_name })}>
-                      <CardContent className="p-3 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Sparkles className="w-4 h-4 text-primary" />
-                          </div>
-                          <div>
-                            <span className="font-medium text-sm">{s.full_name}</span>
-                            <p className="text-[11px] text-muted-foreground">Clique para gerar pré-plano</p>
-                          </div>
-                        </div>
-                        <Button variant="outline" size="sm" className="gap-1">
-                          <Sparkles className="w-3 h-3" /> Gerar
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-              {prePlanStudent && (
-                <Button variant="ghost" size="sm" onClick={() => setPrePlanStudent(null)}>
-                  ← Voltar à lista de alunos
-                </Button>
-              )}
-            </div>
+            <PrePlanTab students={students} prePlanStudent={prePlanStudent} setPrePlanStudent={setPrePlanStudent} handleUseTemplate={handleUseTemplate} />
           </TabsContent>
         </Tabs>
 
