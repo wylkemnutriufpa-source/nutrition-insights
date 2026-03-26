@@ -440,10 +440,10 @@ function NeuralParticleCanvas({
   return (
     <div
       ref={mountRef}
-      className="absolute left-1/2 top-1/2 h-[300vh] w-[300vw] -translate-x-1/2 -translate-y-1/2 overflow-visible pointer-events-none md:h-[250vh] md:w-[250vw]"
+      className="absolute left-1/2 top-1/2 h-[200vh] w-[200vw] -translate-x-1/2 -translate-y-1/2 overflow-visible pointer-events-none md:h-[250vh] md:w-[250vw]"
       style={{
-        WebkitMaskImage: "radial-gradient(circle at center, black 0%, black 60%, transparent 86%)",
-        maskImage: "radial-gradient(circle at center, black 0%, black 60%, transparent 86%)",
+        WebkitMaskImage: "radial-gradient(circle at center, black 0%, black 45%, transparent 72%)",
+        maskImage: "radial-gradient(circle at center, black 0%, black 45%, transparent 72%)",
       }}
     />
   );
