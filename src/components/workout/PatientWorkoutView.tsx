@@ -198,10 +198,10 @@ export default function PatientWorkoutView() {
       setTimeout(() => setShowReward(false), 3000);
 
       // Open feedback modal after a brief delay
-      const plan = plans.find(p => p.workout_routines?.some((r: any) => r.id === selectedRoutine.id));
+      const activePlan = plans.find(p => p.workout_routines?.some((r: any) => r.id === selectedRoutine.id));
       setLastCompletionId(completion.id);
       setLastRoutineIdForFeedback(selectedRoutine.id);
-      setLastPlanIdForFeedback(plan?.id || null);
+      setLastPlanIdForFeedback(activePlan?.id || null);
       setTimeout(() => setFeedbackOpen(true), 3500);
 
       const { data: historyData } = await supabase
