@@ -70,6 +70,7 @@ function NeuralParticleCanvas({
     const mouse = new THREE.Vector2(0, 0);
     const clock = new THREE.Clock();
     const isMobile = width < 500;
+    if (isMobile) camera.position.z = 8;
     const aspect = width / height;
     const visibleHeight = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov * 0.5)) * camera.position.z;
     const visibleWidth = visibleHeight * aspect;
