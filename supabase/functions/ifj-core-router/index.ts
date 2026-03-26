@@ -490,7 +490,7 @@ async function syncPriorityQueue(supabase: any, userId: string, priorities: Prio
       source_engine: "priority",
       is_resolved: false,
       updated_at: now,
-    }, { onConflict: "owner_user_id,entity_type,entity_id" }).catch(() => {})
+    }, { onConflict: "owner_user_id,entity_type,entity_id" }).then(() => {})
   );
   await Promise.all(upsertPromises);
 
@@ -504,14 +504,14 @@ async function syncPriorityQueue(supabase: any, userId: string, priorities: Prio
     const toResolve = (existing || []).filter((e: any) => !currentEntityIds.includes(e.entity_id));
     if (toResolve.length > 0) {
       await Promise.all(toResolve.map((e: any) =>
-        supabase.from("ifj_priority_queue").update({ is_resolved: true, updated_at: now }).eq("id", e.id).catch(() => {})
+        supabase.from("ifj_priority_queue").update({ is_resolved: true, updated_at: now }).eq("id", e.id).then(() => {})
       ));
     }
   } else {
     // No priorities = resolve all
     await supabase.from("ifj_priority_queue")
       .update({ is_resolved: true, updated_at: now })
-      .eq("owner_user_id", userId).eq("is_resolved", false).catch(() => {});
+      .eq("owner_user_id", userId).eq("is_resolved", false).then(() => {});
   }
 }
 
@@ -1024,7 +1024,7 @@ serve(async (req) => {
       _resource_type: "ifj_core",
       _resource_id: intent.intent,
       _metadata: { intent: intent.intent, confidence: intent.confidence, engine: response.meta.engine, response_time_ms: elapsed },
-    }).catch(() => {});
+    }).then(() => {});
 
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
