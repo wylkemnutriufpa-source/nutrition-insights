@@ -234,6 +234,10 @@ function detectIntent(n: string, ctx: SessionCtx): IFJIntent {
   if (matchesIntent(n, "portfolio_health"))
     return { ...base, intent: "portfolio_health", module: "clinical_engine", confidence: 0.91, response_mode: "overview" };
 
+  // Nutrition / food / substitution questions → AI fallback
+  if (/(?:comer|substituir|trocar|lugar de|no lugar|substituic|alimento|comida|pode comer|o que comer|receita|ingrediente|lanche|cafe da manha|almoco|janta|saudavel|engorda|emagrec|caloria|proteina|carboidrato|gordura|fibra|vitamina|mineral|nutriente)/.test(n))
+    return { ...base, intent: "nutrition_ai_question", module: "ai_fallback", confidence: 0.80, response_mode: "ai_text" };
+
   // Context-aware follow-ups
   if (ctx.last_patient_id) {
     if (n.includes("quando vence") || n.includes("plano del") || n.includes("dieta del"))
