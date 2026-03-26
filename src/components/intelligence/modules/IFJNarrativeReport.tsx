@@ -73,7 +73,7 @@ export default function IFJNarrativeReport() {
 
       const snapshots = snapshotRes.data || [];
       const anamnesis = anamnesisRes.data?.[0];
-      const activePlan = mealsRes.data?.[0];
+      const activePlan = mealsRes.data?.[0] as any;
       const alerts = alertsRes.data || [];
       const latest = snapshots[0];
 
