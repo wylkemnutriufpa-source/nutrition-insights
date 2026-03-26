@@ -11,7 +11,11 @@ serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("Missing auth");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Missing auth" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
