@@ -76,6 +76,7 @@ function NeuralParticleCanvas({
     const visibleWidth = visibleHeight * aspect;
 
     const coreGroup = new THREE.Group();
+    if (isMobile) coreGroup.position.y = -1.2;
     scene.add(coreGroup);
 
     // ─── 1. BRAIN CORE PARTICLES (TorusKnot shape) ───
