@@ -970,7 +970,7 @@ serve(async (req) => {
     // 5. Route to correct engine
     try {
       if (intent.intent === "greeting") {
-        const pts = patients.length || (await getPatients(supabase, user.id)).length;
+        const pts = patients.length || (await getPatients(supabase, user.id, role)).length;
         const hour = new Date().getHours();
         const period = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
         response = fmt(`${period}, ${userName}!`, "👋", "greeting", `${pts} pacientes ativos.`,
