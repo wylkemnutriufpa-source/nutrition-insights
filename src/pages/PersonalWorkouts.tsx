@@ -37,6 +37,7 @@ export default function PersonalWorkouts() {
   const [expandedPlan, setExpandedPlan] = useState<string | null>(null);
   const [planDetails, setPlanDetails] = useState<Record<string, any>>({});
   const [anamnesisStudent, setAnamnesisStudent] = useState<{ id: string; name: string } | null>(null);
+  const [prePlanStudent, setPrePlanStudent] = useState<{ id: string; name: string } | null>(null);
 
   const load = async () => {
     if (!user) return;
