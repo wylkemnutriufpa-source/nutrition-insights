@@ -7,12 +7,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { MessageSquare, Plus, Pencil, Trash2, Sparkles } from "lucide-react";
+import { MessageSquare, Plus, Pencil, Trash2, Sparkles, Clock, CalendarDays } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+
+const DAYS_OF_WEEK = [
+  { value: "mon", label: "Seg" },
+  { value: "tue", label: "Ter" },
+  { value: "wed", label: "Qua" },
+  { value: "thu", label: "Qui" },
+  { value: "fri", label: "Sex" },
+  { value: "sat", label: "Sáb" },
+  { value: "sun", label: "Dom" },
+];
+
+const HOUR_OPTIONS = Array.from({ length: 16 }, (_, i) => i + 6); // 6h - 21h
 
 interface CustomPrompt {
   id: string;
@@ -23,6 +36,8 @@ interface CustomPrompt {
   is_active: boolean;
   escalation_level: number;
   sort_order: number;
+  schedule_hours: number[] | null;
+  schedule_days: string[] | null;
 }
 
 const EMOJI_OPTIONS = ["💬", "💧", "💪", "🌙", "🩺", "✨", "🎯", "🔥", "❤️", "⚡", "🧠", "🌟"];
@@ -59,7 +74,7 @@ export default function IntelligenceCustomPrompts() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<CustomPrompt | null>(null);
-  const [form, setForm] = useState({ title: "", body: "", emoji: "💬", tone: "gentle", escalation_level: 0 });
+  const [form, setForm] = useState({ title: "", body: "", emoji: "💬", tone: "gentle", escalation_level: 0, schedule_hours: [] as number[], schedule_days: [] as string[] });
   const [saving, setSaving] = useState(false);
 
   const load = async () => {
@@ -96,13 +111,13 @@ export default function IntelligenceCustomPrompts() {
 
   const openNew = () => {
     setEditing(null);
-    setForm({ title: "", body: "", emoji: "💬", tone: "gentle", escalation_level: 0 });
+    setForm({ title: "", body: "", emoji: "💬", tone: "gentle", escalation_level: 0, schedule_hours: [], schedule_days: [] });
     setDialogOpen(true);
   };
 
   const openEdit = (p: CustomPrompt) => {
     setEditing(p);
-    setForm({ title: p.title, body: p.body, emoji: p.emoji, tone: p.tone, escalation_level: p.escalation_level });
+    setForm({ title: p.title, body: p.body, emoji: p.emoji, tone: p.tone, escalation_level: p.escalation_level, schedule_hours: p.schedule_hours ?? [], schedule_days: p.schedule_days ?? [] });
     setDialogOpen(true);
   };
 
@@ -113,10 +128,20 @@ export default function IntelligenceCustomPrompts() {
     }
     setSaving(true);
 
+    const payload = {
+      title: form.title,
+      body: form.body,
+      emoji: form.emoji,
+      tone: form.tone,
+      escalation_level: form.escalation_level,
+      schedule_hours: form.schedule_hours.length > 0 ? form.schedule_hours : null,
+      schedule_days: form.schedule_days.length > 0 ? form.schedule_days : null,
+    };
+
     if (editing) {
       await supabase
         .from("intelligence_custom_prompts")
-        .update({ ...form, updated_at: new Date().toISOString() })
+        .update({ ...payload, updated_at: new Date().toISOString() })
         .eq("id", editing.id);
       toast.success("Mensagem atualizada!");
     } else {
@@ -124,7 +149,7 @@ export default function IntelligenceCustomPrompts() {
         .from("intelligence_custom_prompts")
         .insert({
           nutritionist_id: user.id,
-          ...form,
+          ...payload,
           sort_order: prompts.length,
         });
       toast.success("Mensagem criada!");
@@ -208,6 +233,22 @@ export default function IntelligenceCustomPrompts() {
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{p.body}</p>
+                      {(p.schedule_days?.length || p.schedule_hours?.length) ? (
+                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                          {p.schedule_days && p.schedule_days.length > 0 && (
+                            <span className="text-[10px] text-amber-600 flex items-center gap-0.5">
+                              <CalendarDays className="w-3 h-3" />
+                              {p.schedule_days.map(d => DAYS_OF_WEEK.find(dw => dw.value === d)?.label || d).join(", ")}
+                            </span>
+                          )}
+                          {p.schedule_hours && p.schedule_hours.length > 0 && (
+                            <span className="text-[10px] text-amber-600 flex items-center gap-0.5">
+                              <Clock className="w-3 h-3" />
+                              {p.schedule_hours.map(h => `${h}h`).join(", ")}
+                            </span>
+                          )}
+                        </div>
+                      ) : null}
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <Switch checked={p.is_active} onCheckedChange={() => toggleActive(p)} />
@@ -292,6 +333,66 @@ export default function IntelligenceCustomPrompts() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            {/* Schedule: Days */}
+            <div className="space-y-2">
+              <Label className="text-xs flex items-center gap-1.5">
+                <CalendarDays className="w-3.5 h-3.5 text-amber-500" /> Dias da Semana
+              </Label>
+              <div className="flex flex-wrap gap-2">
+                {DAYS_OF_WEEK.map((day) => {
+                  const checked = form.schedule_days.includes(day.value);
+                  return (
+                    <label key={day.value} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border cursor-pointer text-xs transition-all ${checked ? "border-amber-500/50 bg-amber-500/10 text-amber-600" : "border-border/50 bg-muted/30 text-muted-foreground hover:bg-muted/50"}`}>
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={(v) => {
+                          setForm((f) => ({
+                            ...f,
+                            schedule_days: v
+                              ? [...f.schedule_days, day.value]
+                              : f.schedule_days.filter((d) => d !== day.value),
+                          }));
+                        }}
+                        className="h-3.5 w-3.5"
+                      />
+                      {day.label}
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="text-[10px] text-muted-foreground">Deixe vazio = todos os dias</p>
+            </div>
+
+            {/* Schedule: Hours */}
+            <div className="space-y-2">
+              <Label className="text-xs flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-amber-500" /> Horários de Disparo
+              </Label>
+              <div className="flex flex-wrap gap-1.5">
+                {HOUR_OPTIONS.map((h) => {
+                  const checked = form.schedule_hours.includes(h);
+                  return (
+                    <button
+                      key={h}
+                      type="button"
+                      onClick={() => {
+                        setForm((f) => ({
+                          ...f,
+                          schedule_hours: checked
+                            ? f.schedule_hours.filter((hr) => hr !== h)
+                            : [...f.schedule_hours, h].sort((a, b) => a - b),
+                        }));
+                      }}
+                      className={`px-2 py-1 rounded-md text-xs font-medium transition-all ${checked ? "bg-amber-500/20 text-amber-600 border border-amber-500/40" : "bg-muted/30 text-muted-foreground border border-border/50 hover:bg-muted/50"}`}
+                    >
+                      {h}h
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[10px] text-muted-foreground">Deixe vazio = qualquer horário válido</p>
             </div>
           </div>
           <DialogFooter>
