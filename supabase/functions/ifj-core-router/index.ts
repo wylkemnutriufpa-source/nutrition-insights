@@ -504,7 +504,7 @@ async function syncPriorityQueue(supabase: any, userId: string, priorities: Prio
     const toResolve = (existing || []).filter((e: any) => !currentEntityIds.includes(e.entity_id));
     if (toResolve.length > 0) {
       await Promise.all(toResolve.map((e: any) =>
-        supabase.from("ifj_priority_queue").update({ is_resolved: true, updated_at: now }).eq("id", e.id).catch(() => {})
+        supabase.from("ifj_priority_queue").update({ is_resolved: true, updated_at: now }).eq("id", e.id).then(() => {})
       ));
     }
   } else {
