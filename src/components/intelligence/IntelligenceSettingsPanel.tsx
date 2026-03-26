@@ -5,7 +5,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Brain, MessageSquare, HelpCircle, Settings2, Users, Play, Bot, BarChart3, FileText } from "lucide-react";
+import { Brain, MessageSquare, HelpCircle, Settings2, Users, Play, Bot, BarChart3, FileText, Command } from "lucide-react";
 import IntelligenceGoldenHeader from "./settings/IntelligenceGoldenHeader";
 import IntelligenceGeneralSettings from "./settings/IntelligenceGeneralSettings";
 import IntelligenceCustomPrompts from "./settings/IntelligenceCustomPrompts";
@@ -16,6 +16,7 @@ import IntelligenceActivationPreview from "./settings/IntelligenceActivationPrev
 import IFJConversationalCopilot from "./modules/IFJConversationalCopilot";
 import IFJPredictiveBriefing from "./modules/IFJPredictiveBriefing";
 import IFJNarrativeReport from "./modules/IFJNarrativeReport";
+import IFJCommandCenter from "./modules/IFJCommandCenter";
 
 export default function IntelligenceSettingsPanel() {
   const [activeTab, setActiveTab] = useState("general");
