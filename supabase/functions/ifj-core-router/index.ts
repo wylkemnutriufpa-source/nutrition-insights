@@ -880,7 +880,7 @@ async function runJourneyEngine(supabase: any, intent: IFJIntent, userId: string
 }
 
 // ── PRIORITY ENGINE (God Mode) ─────────────────────────────────
-async function runPriorityEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], today: string): Promise<IFJResponse> {
+async function runPriorityEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], today: string, role?: string): Promise<IFJResponse> {
   const patientIds = patients.map(p => p.id);
   const { snapshots, alerts, plans, transactions } = await getPortfolioInputs(supabase, userId, patientIds, today, role);
   const priorities = calculatePriorities(patients, snapshots, alerts, plans, transactions);
