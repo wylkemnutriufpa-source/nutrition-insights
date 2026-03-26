@@ -111,9 +111,8 @@ function NeuralParticleCanvas({
       coreOriginals[i * 3 + 1] = oy;
       coreOriginals[i * 3 + 2] = oz;
 
-      // Organic spawn lanes from left / right / bottom, outside the visible area.
-      // This avoids the dense square cloud and makes the neural core feel assembled
-      // from flowing streams instead of a filled block.
+      // Organic spawn lanes — use fixed radius relative to brain size (not viewport)
+      const spawnRadius = 4.5; // slightly beyond the outermost ring (~3.6 radius)
       const laneRoll = Math.random();
       const laneCenter =
         laneRoll < 0.34
@@ -123,14 +122,13 @@ function NeuralParticleCanvas({
             : -Math.PI / 2;
       const laneSpread = laneRoll < 0.68 ? Math.PI * 0.34 : Math.PI * 0.46;
       const angle = laneCenter + (Math.random() - 0.5) * laneSpread;
-      const radialPush = 0.55 + Math.random() * 0.5;
-      const ellipseX = Math.cos(angle) * visibleWidth * radialPush;
-      const ellipseY = Math.sin(angle) * visibleHeight * radialPush;
-      const verticalBias = laneRoll >= 0.68 ? -(0.3 + Math.random() * 1.4) : (Math.random() - 0.5) * 0.8;
-      const depth = (Math.random() - 0.5) * 10;
+      const radialDist = spawnRadius + Math.random() * 2.5;
+      const sx = Math.cos(angle) * radialDist;
+      const sy = Math.sin(angle) * radialDist;
+      const depth = (Math.random() - 0.5) * 6;
 
-      coreScattered[i * 3] = ellipseX;
-      coreScattered[i * 3 + 1] = ellipseY + verticalBias;
+      coreScattered[i * 3] = sx;
+      coreScattered[i * 3 + 1] = sy;
       coreScattered[i * 3 + 2] = depth;
 
       const tangentAngle = angle + (Math.random() > 0.5 ? Math.PI / 2 : -Math.PI / 2);
