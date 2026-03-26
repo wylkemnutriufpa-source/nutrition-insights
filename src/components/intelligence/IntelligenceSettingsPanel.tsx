@@ -19,7 +19,7 @@ import IFJNarrativeReport from "./modules/IFJNarrativeReport";
 import IFJCommandCenter from "./modules/IFJCommandCenter";
 
 export default function IntelligenceSettingsPanel() {
-  const [activeTab, setActiveTab] = useState("general");
+  const [activeTab, setActiveTab] = useState("command");
 
   return (
     <div className="relative space-y-6 pb-10">
