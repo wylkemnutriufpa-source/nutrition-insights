@@ -79,7 +79,7 @@ function NeuralParticleCanvas({
     scene.add(coreGroup);
 
     // ─── 1. BRAIN CORE PARTICLES (TorusKnot shape) ───
-    const coreCount = isMobile ? 3000 : 10000;
+    const coreCount = isMobile ? 2400 : 8000;
     const corePositions = new Float32Array(coreCount * 3);
     const coreOriginals = new Float32Array(coreCount * 3);
     const coreColors = new Float32Array(coreCount * 3);
