@@ -9,13 +9,20 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
-  Dumbbell, Plus, Search, ChevronDown, Pause, Play, CheckCircle2,
-  BookOpen, Layers, Target, ClipboardList, Sparkles
+  Dumbbell, Plus, Search, ChevronDown, Pause, Play,
+  BookOpen, Layers, ClipboardList, Sparkles,
+  TrendingUp, Heart, Ruler, Trophy, ArrowRightLeft, BarChart3
 } from "lucide-react";
 import WorkoutEditor from "@/components/workout/WorkoutEditor";
 import ExerciseLibrary from "@/components/workout/ExerciseLibrary";
 import WorkoutTemplates from "@/components/workout/WorkoutTemplates";
 import TrainerAnamnesis from "@/components/workout/TrainerAnamnesis";
+import PersonalDashboardStats from "@/components/workout/PersonalDashboardStats";
+import PhysicalAssessment from "@/components/workout/PhysicalAssessment";
+import PeriodizationManager from "@/components/workout/PeriodizationManager";
+import CardioPrescription from "@/components/workout/CardioPrescription";
+import PersonalRecords from "@/components/workout/PersonalRecords";
+import CrossProfessionalAlerts from "@/components/workout/CrossProfessionalAlerts";
 
 export default function PersonalWorkouts() {
   const { user } = useAuth();
@@ -24,7 +31,7 @@ export default function PersonalWorkouts() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [activeTab, setActiveTab] = useState("plans");
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [creating, setCreating] = useState(false);
   const [expandedPlan, setExpandedPlan] = useState<string | null>(null);
   const [planDetails, setPlanDetails] = useState<Record<string, any>>({});
@@ -78,7 +85,6 @@ export default function PersonalWorkouts() {
   };
 
   const handleUseTemplate = (template: any) => {
-    // Store template data and switch to creating mode
     setCreating(true);
     setActiveTab("plans");
     toast.info(`Template "${template.name}" carregado! Selecione o aluno e salve.`);
@@ -113,20 +119,30 @@ export default function PersonalWorkouts() {
               <p className="text-xs text-muted-foreground">{plans.length} planos • {students.length} alunos</p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setActiveTab("anamnesis")} className="gap-1.5">
-              <ClipboardList className="w-4 h-4" /> Avaliações
-            </Button>
-            <Button onClick={() => setCreating(true)} className="gap-1.5">
-              <Plus className="w-4 h-4" /> Novo Plano
-            </Button>
-          </div>
+          <Button onClick={() => { setCreating(true); setActiveTab("plans"); }} className="gap-1.5">
+            <Plus className="w-4 h-4" /> Novo Plano
+          </Button>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="bg-card border border-border">
+          <TabsList className="bg-card border border-border flex-wrap h-auto gap-0.5 p-1">
+            <TabsTrigger value="dashboard" className="gap-1.5 text-xs">
+              <BarChart3 className="w-3.5 h-3.5" /> Dashboard
+            </TabsTrigger>
             <TabsTrigger value="plans" className="gap-1.5 text-xs">
               <Layers className="w-3.5 h-3.5" /> Planos
+            </TabsTrigger>
+            <TabsTrigger value="periodization" className="gap-1.5 text-xs">
+              <TrendingUp className="w-3.5 h-3.5" /> Periodização
+            </TabsTrigger>
+            <TabsTrigger value="cardio" className="gap-1.5 text-xs">
+              <Heart className="w-3.5 h-3.5" /> Cardio
+            </TabsTrigger>
+            <TabsTrigger value="assessments" className="gap-1.5 text-xs">
+              <Ruler className="w-3.5 h-3.5" /> Avaliações
+            </TabsTrigger>
+            <TabsTrigger value="records" className="gap-1.5 text-xs">
+              <Trophy className="w-3.5 h-3.5" /> PRs
             </TabsTrigger>
             <TabsTrigger value="templates" className="gap-1.5 text-xs">
               <Sparkles className="w-3.5 h-3.5" /> Templates
@@ -135,12 +151,18 @@ export default function PersonalWorkouts() {
               <BookOpen className="w-3.5 h-3.5" /> Biblioteca
             </TabsTrigger>
             <TabsTrigger value="anamnesis" className="gap-1.5 text-xs">
-              <ClipboardList className="w-3.5 h-3.5" /> Avaliações
+              <ClipboardList className="w-3.5 h-3.5" /> Anamnese
             </TabsTrigger>
           </TabsList>
 
+          {/* Dashboard */}
+          <TabsContent value="dashboard" className="mt-4 space-y-4">
+            <CrossProfessionalAlerts />
+            <PersonalDashboardStats />
+          </TabsContent>
+
+          {/* Plans */}
           <TabsContent value="plans" className="mt-4 space-y-4">
-            {/* Filters */}
             <div className="flex gap-2 flex-wrap">
               <div className="relative flex-1 min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -156,7 +178,6 @@ export default function PersonalWorkouts() {
               </div>
             </div>
 
-            {/* Plans List */}
             {filteredPlans.map((plan) => (
               <Card key={plan.id} className="group hover:border-primary/20 transition-all">
                 <CardHeader className="pb-2 cursor-pointer" onClick={() => loadPlanDetails(plan.id)}>
@@ -216,19 +237,42 @@ export default function PersonalWorkouts() {
             )}
           </TabsContent>
 
+          {/* Periodization */}
+          <TabsContent value="periodization" className="mt-4">
+            <PeriodizationManager plans={plans} students={students} onRefresh={load} />
+          </TabsContent>
+
+          {/* Cardio */}
+          <TabsContent value="cardio" className="mt-4">
+            <CardioPrescription students={students} plans={plans} />
+          </TabsContent>
+
+          {/* Physical Assessments */}
+          <TabsContent value="assessments" className="mt-4">
+            <PhysicalAssessment students={students} />
+          </TabsContent>
+
+          {/* Personal Records */}
+          <TabsContent value="records" className="mt-4">
+            <PersonalRecords students={students} />
+          </TabsContent>
+
+          {/* Templates */}
           <TabsContent value="templates" className="mt-4">
             <WorkoutTemplates onUseTemplate={handleUseTemplate} />
           </TabsContent>
 
+          {/* Library */}
           <TabsContent value="library" className="mt-4">
             <ExerciseLibrary />
           </TabsContent>
 
+          {/* Anamnesis */}
           <TabsContent value="anamnesis" className="mt-4">
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <ClipboardList className="w-5 h-5 text-primary" />
-                <h2 className="text-lg font-bold">Avaliações dos Alunos</h2>
+                <h2 className="text-lg font-bold">Anamnese dos Alunos</h2>
               </div>
               {students.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
@@ -256,7 +300,6 @@ export default function PersonalWorkouts() {
           </TabsContent>
         </Tabs>
 
-        {/* Trainer Anamnesis Modal */}
         {anamnesisStudent && (
           <TrainerAnamnesis
             studentId={anamnesisStudent.id}
