@@ -711,7 +711,7 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
     }
 
     case "clinical_alerts": {
-      const alerts = await getActiveAlerts(supabase, userId);
+      const alerts = await getActiveAlerts(supabase, userId, role);
       if (!alerts.length) return fmt("Sem alertas", "✅", "info", "Nenhum alerta ativo.", "", [], intent, "clinical", ctx);
       const md = `| Paciente | Alerta | Severidade |\n|---|---|---|\n` +
         alerts.map((a: any) => {
