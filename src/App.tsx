@@ -341,6 +341,7 @@ const App = () => (
             <DarkModeInit />
             <NeuralScreensaver />
             <FitIntelligenceAssistant />
+            <IFJPatientCoach />
             <CommandPaletteProvider>
              <Routes>
               {/* Public landing pages */}
