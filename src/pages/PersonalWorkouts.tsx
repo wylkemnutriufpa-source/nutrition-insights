@@ -155,6 +155,9 @@ export default function PersonalWorkouts() {
             <TabsTrigger value="anamnesis" className="gap-1.5 text-xs">
               <ClipboardList className="w-3.5 h-3.5" /> Anamnese
             </TabsTrigger>
+            <TabsTrigger value="preplan" className="gap-1.5 text-xs">
+              <Sparkles className="w-3.5 h-3.5" /> Pré-Plano IA
+            </TabsTrigger>
           </TabsList>
 
           {/* Dashboard */}
