@@ -1003,7 +1003,7 @@ serve(async (req) => {
           : fmt("Destino não encontrado", "❓", "error", "Não encontrei essa tela.", "Tente: *abrir financeiro*, *ir para pacientes*", [], intent, "navigation", ctx);
       }
       else if (intent.module === "priority_engine") {
-        response = await runPriorityEngine(supabase, intent, user.id, ctx, patients, today);
+        response = await runPriorityEngine(supabase, intent, user.id, ctx, patients, today, role);
       }
       else if (intent.module === "clinical_engine") {
         response = await runClinicalEngine(supabase, intent, user.id, ctx, patients, today);
