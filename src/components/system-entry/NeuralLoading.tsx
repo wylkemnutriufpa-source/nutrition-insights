@@ -70,6 +70,7 @@ function NeuralParticleCanvas({
     const mouse = new THREE.Vector2(0, 0);
     const clock = new THREE.Clock();
     const isMobile = width < 500;
+    if (isMobile) camera.position.z = 10;
     const aspect = width / height;
     const visibleHeight = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov * 0.5)) * camera.position.z;
     const visibleWidth = visibleHeight * aspect;
@@ -88,7 +89,7 @@ function NeuralParticleCanvas({
     const coreScatterFlow = new Float32Array(coreCount * 3);
 
     const coreGeo = new THREE.BufferGeometry();
-    const torusKnot = new THREE.TorusKnotGeometry(0.85, 0.3, 200, 32);
+    const torusKnot = new THREE.TorusKnotGeometry(0.72, 0.25, 200, 32);
 
     const coreHues = [
       { h: 152 / 360, s: 0.7, lMin: 0.35, lMax: 0.6, w: 0.45 },
@@ -439,10 +440,10 @@ function NeuralParticleCanvas({
   return (
     <div
       ref={mountRef}
-      className="absolute left-1/2 top-1/2 h-[300vh] w-[300vw] -translate-x-1/2 -translate-y-1/2 overflow-visible pointer-events-none md:h-[250vh] md:w-[250vw]"
+      className="absolute left-1/2 top-1/2 h-[200vh] w-[200vw] -translate-x-1/2 -translate-y-1/2 overflow-visible pointer-events-none md:h-[250vh] md:w-[250vw]"
       style={{
-        WebkitMaskImage: "radial-gradient(circle at center, black 0%, black 60%, transparent 86%)",
-        maskImage: "radial-gradient(circle at center, black 0%, black 60%, transparent 86%)",
+        WebkitMaskImage: "radial-gradient(circle at center, black 0%, black 45%, transparent 72%)",
+        maskImage: "radial-gradient(circle at center, black 0%, black 45%, transparent 72%)",
       }}
     />
   );
