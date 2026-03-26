@@ -117,7 +117,7 @@ export default function IntelligenceCustomPrompts() {
 
   const openEdit = (p: CustomPrompt) => {
     setEditing(p);
-    setForm({ title: p.title, body: p.body, emoji: p.emoji, tone: p.tone, escalation_level: p.escalation_level });
+    setForm({ title: p.title, body: p.body, emoji: p.emoji, tone: p.tone, escalation_level: p.escalation_level, schedule_hours: p.schedule_hours ?? [], schedule_days: p.schedule_days ?? [] });
     setDialogOpen(true);
   };
 
