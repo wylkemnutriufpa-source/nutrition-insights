@@ -1180,10 +1180,12 @@ serve(async (req) => {
       else if (intent.module === "journey_engine") {
         response = await runJourneyEngine(supabaseAdmin, intent, user.id, ctx, patients, today, role);
       }
+      else if (intent.module === "ai_fallback") {
+        response = await runAIFallbackEngine(intent, inputText, ctx, ctx.last_patient_name);
+      }
       else {
-        response = fmt("Não entendi", "❓", "error", "Comando não reconhecido.",
-          `Não entendi. Tente:\n- *"O que preciso resolver hoje?"*\n- *"Quem precisa de atenção?"*\n- *"Libere onboarding da [nome]"*\n- *"Quem está sem dieta?"*\n- *"Ajuda"*`,
-          [], intent, "general", ctx);
+        // Unknown intent → try AI fallback as last resort
+        response = await runAIFallbackEngine(intent, inputText, ctx, ctx.last_patient_name);
       }
     } catch (engineError) {
       console.error("Engine error:", engineError);
