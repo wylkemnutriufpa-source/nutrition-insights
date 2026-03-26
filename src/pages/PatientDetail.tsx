@@ -1434,7 +1434,7 @@ export default function PatientDetail() {
               <Dialog open={openSection === "lab-exams"} onOpenChange={(v) => !v && setOpenSection(null)}>
                 <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Exames Laboratoriais</DialogTitle></DialogHeader>
-                  <PatientLabExams patientId={patientId!} patientGender={profile?.gender === "male" || profile?.gender === "female" ? profile.gender as "male" | "female" : undefined} />
+                  <PatientLabExams patientId={patientId!} />
                 </DialogContent>
                 <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Missões do Paciente</DialogTitle></DialogHeader>
