@@ -578,26 +578,30 @@ export function generatePrePlanFromAnamnesis(anamnesisData: {
 
   // Ajustar rotinas se houver restrições de dor
   if (painAreas.length > 0) {
-    selected.routines = selected.routines.map(r => ({
-      ...r,
-      exercises: r.exercises.map(e => {
-        const hasPainConflict = painAreas.some(area => {
-          const areaLower = area.toLowerCase();
-          const muscleLower = e.muscle_group.toLowerCase();
-          return (
-            (areaLower.includes("ombro") && muscleLower.includes("ombro")) ||
-            (areaLower.includes("joelho") && (muscleLower.includes("perna") || muscleLower.includes("quadr"))) ||
-            (areaLower.includes("lombar") && (muscleLower.includes("posterior") || e.name.toLowerCase().includes("terra"))) ||
-            (areaLower.includes("punho") && e.name.toLowerCase().includes("barra"))
-          );
-        });
-        if (hasPainConflict) {
-          return { ...e, notes: `⚠️ ATENÇÃO: área com dor reportada. ${e.notes || "Avaliar substituição."}` };
-        }
-        return e;
-      }),
-    }));
+    selected.routines = applyPainAlerts(selected.routines, painAreas);
   }
 
   return selected;
+}
+
+function applyPainAlerts(routines: TemplateRoutine[], painAreas: string[]): TemplateRoutine[] {
+  return routines.map(r => ({
+    ...r,
+    exercises: r.exercises.map(e => {
+      const hasPainConflict = painAreas.some(area => {
+        const areaLower = area.toLowerCase();
+        const muscleLower = e.muscle_group.toLowerCase();
+        return (
+          (areaLower.includes("ombro") && muscleLower.includes("ombro")) ||
+          (areaLower.includes("joelho") && (muscleLower.includes("perna") || muscleLower.includes("quadr"))) ||
+          (areaLower.includes("lombar") && (muscleLower.includes("posterior") || e.name.toLowerCase().includes("terra"))) ||
+          (areaLower.includes("punho") && e.name.toLowerCase().includes("barra"))
+        );
+      });
+      if (hasPainConflict) {
+        return { ...e, notes: `⚠️ ATENÇÃO: área com dor reportada. ${e.notes || "Avaliar substituição."}` };
+      }
+      return e;
+    }),
+  }));
 }
