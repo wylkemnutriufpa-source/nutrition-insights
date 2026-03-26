@@ -52,7 +52,7 @@ interface PriorityItem {
 const SMART_TEMPLATES = [
   { label: "Prioridades do dia", cmd: "O que preciso resolver hoje?", icon: Target, color: "border-red-500/30 text-red-400 hover:bg-red-500/10" },
   { label: "Quem precisa de atenção", cmd: "Quem precisa de atenção?", icon: AlertTriangle, color: "border-orange-500/30 text-orange-400 hover:bg-orange-500/10" },
-  { label: "Aguardando onboarding", cmd: "Quem está aguardando onboarding?", icon: UserCheck, color: "border-blue-500/30 text-blue-400 hover:bg-blue-500/10" },
+  { label: "Aguardando onboarding", cmd: "Quem está aguardando liberação de onboarding?", icon: UserCheck, color: "border-blue-500/30 text-blue-400 hover:bg-blue-500/10" },
   { label: "Aguardando pagamento", cmd: "Quem não pagou?", icon: CreditCard, color: "border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10" },
   { label: "Sem dieta", cmd: "Quem está sem dieta?", icon: UtensilsCrossed, color: "border-pink-500/30 text-pink-400 hover:bg-pink-500/10" },
   { label: "Aguardando aprovação", cmd: "Quem está aguardando aprovação?", icon: FileCheck, color: "border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10" },
@@ -62,6 +62,8 @@ const SMART_TEMPLATES = [
   { label: "Próximas consultas", cmd: "Consultas", icon: Calendar, color: "border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10" },
   { label: "Alertas clínicos", cmd: "Alertas clínicos", icon: Shield, color: "border-red-500/30 text-red-400 hover:bg-red-500/10" },
   { label: "Quem melhorou", cmd: "Quem melhorou?", icon: Sparkles, color: "border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10" },
+  { label: "Liberar onboarding", cmd: "Quem precisa liberar onboarding?", icon: Rocket, color: "border-violet-500/30 text-violet-400 hover:bg-violet-500/10" },
+  { label: "Comandos disponíveis", cmd: "Ajuda", icon: ClipboardList, color: "border-gray-500/30 text-gray-400 hover:bg-gray-500/10" },
 ];
 
 export default function IFJCorePanel() {
