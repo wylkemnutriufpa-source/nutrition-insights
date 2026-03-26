@@ -206,7 +206,7 @@ function NeuralParticleCanvas({
     }
 
     // ─── 3. ENERGY NODES ───
-    const nodeCount = isMobile ? 20 : 40;
+    const nodeCount = isMobile ? 12 : 25;
     const nodeGeo = new THREE.BufferGeometry();
     const nodePositions = new Float32Array(nodeCount * 3);
     const nodeColors = new Float32Array(nodeCount * 3);
