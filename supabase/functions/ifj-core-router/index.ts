@@ -1024,7 +1024,7 @@ serve(async (req) => {
       _resource_type: "ifj_core",
       _resource_id: intent.intent,
       _metadata: { intent: intent.intent, confidence: intent.confidence, engine: response.meta.engine, response_time_ms: elapsed },
-    }).catch(() => {});
+    }).then(() => {});
 
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
