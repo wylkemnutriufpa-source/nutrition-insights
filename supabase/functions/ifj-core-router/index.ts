@@ -1006,7 +1006,7 @@ serve(async (req) => {
         response = await runPriorityEngine(supabase, intent, user.id, ctx, patients, today, role);
       }
       else if (intent.module === "clinical_engine") {
-        response = await runClinicalEngine(supabase, intent, user.id, ctx, patients, today);
+        response = await runClinicalEngine(supabase, intent, user.id, ctx, patients, today, role);
       }
       else if (intent.module === "behavioral_engine") {
         response = await runBehavioralEngine(supabase, intent, user.id, ctx, patients, today);
