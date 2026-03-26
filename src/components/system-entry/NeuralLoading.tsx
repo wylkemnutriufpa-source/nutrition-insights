@@ -60,7 +60,7 @@ function NeuralParticleCanvas({
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
-    camera.position.z = 6;
+    camera.position.z = isMobile ? 8 : 6;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
