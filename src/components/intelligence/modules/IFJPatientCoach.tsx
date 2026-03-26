@@ -16,10 +16,10 @@ import ReactMarkdown from "react-markdown";
 type Message = { role: "user" | "assistant"; content: string };
 
 const QUICK_QUESTIONS = [
-  "O que posso comer agora?",
-  "Como substituir um alimento?",
-  "Dica para não furar a dieta",
-  "Preciso de motivação 💪",
+  "Como está minha dieta?",
+  "Quais tarefas hoje?",
+  "Meu progresso",
+  "Próxima consulta",
 ];
 
 export default function IFJPatientCoach() {
@@ -42,8 +42,6 @@ export default function IFJPatientCoach() {
     setInput("");
     setIsLoading(true);
 
-    let assistantSoFar = "";
-
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const resp = await fetch(
@@ -54,61 +52,19 @@ export default function IFJPatientCoach() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session?.access_token}`,
           },
-          body: JSON.stringify({
-            question: text.trim(),
-            conversationHistory: messages.slice(-8),
-          }),
+          body: JSON.stringify({ question: text.trim() }),
         }
       );
 
       if (!resp.ok) {
         if (resp.status === 429) toast.error("Muitas perguntas. Aguarde um momento.");
-        if (resp.status === 402) toast.error("Serviço temporariamente indisponível.");
         throw new Error(`Error: ${resp.status}`);
       }
 
-      const reader = resp.body?.getReader();
-      if (!reader) throw new Error("No stream");
-      const decoder = new TextDecoder();
-      let textBuffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        textBuffer += decoder.decode(value, { stream: true });
-
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":") || line.trim() === "") continue;
-          if (!line.startsWith("data: ")) continue;
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") break;
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) {
-              assistantSoFar += content;
-              setMessages(prev => {
-                const last = prev[prev.length - 1];
-                if (last?.role === "assistant") {
-                  return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantSoFar } : m);
-                }
-                return [...prev, { role: "assistant", content: assistantSoFar }];
-              });
-            }
-          } catch {
-            textBuffer = line + "\n" + textBuffer;
-            break;
-          }
-        }
-      }
-    } catch (e) {
-      if (!assistantSoFar) {
-        setMessages(prev => [...prev, { role: "assistant", content: "Desculpe, estou com dificuldade agora. Tente novamente em instantes 💙" }]);
-      }
+      const data = await resp.json();
+      setMessages(prev => [...prev, { role: "assistant", content: data.response || "Sem resposta." }]);
+    } catch {
+      setMessages(prev => [...prev, { role: "assistant", content: "Desculpe, estou com dificuldade agora. Tente novamente em instantes 💙" }]);
     }
     setIsLoading(false);
   };

@@ -259,7 +259,7 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
     toast.success(`Ação confirmada: ${confirmAction.label}`);
   }, [confirmAction, navigate, logAudit]);
 
-  /* ─── Send Message ─── */
+  /* ─── Send Message (Deterministic — JSON, no streaming) ─── */
   const sendMessage = async (text: string) => {
     if (!text.trim() || isLoading || !user) return;
 
@@ -269,8 +269,6 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
     setIsLoading(true);
 
     await logAudit("ifj_command_sent", { command: text.trim().substring(0, 200) });
-
-    let assistantSoFar = "";
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -282,72 +280,38 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
             "Content-Type": "application/json",
             Authorization: `Bearer ${session?.access_token}`,
           },
-          body: JSON.stringify({
-            command: text.trim(),
-            conversationHistory: messages.slice(-12).map(m => ({ role: m.role, content: m.content })),
-            isAdmin,
-          }),
+          body: JSON.stringify({ command: text.trim(), isAdmin }),
         }
       );
 
       if (!resp.ok) {
         if (resp.status === 429) { toast.error("Limite de requisições. Aguarde um momento."); throw new Error("rate"); }
-        if (resp.status === 402) { toast.error("Créditos de IA insuficientes."); throw new Error("credits"); }
+        if (resp.status === 402) { toast.error("Créditos insuficientes."); throw new Error("credits"); }
+        if (resp.status === 403) { toast.error("Sem permissão para esta ação."); throw new Error("forbidden"); }
         throw new Error(`Error: ${resp.status}`);
       }
 
-      const reader = resp.body?.getReader();
-      if (!reader) throw new Error("No stream");
-      const decoder = new TextDecoder();
-      let textBuffer = "";
+      const data = await resp.json();
+      const responseText = data.response || "Sem resposta.";
+      const serverActions: ActionButton[] = (data.actions || []).map((a: any) => ({
+        label: a.label,
+        route: a.route,
+        type: a.type || "navigate",
+        confirmMessage: a.confirmMessage,
+      }));
+      const actionLevel = (data.level || "consult") as Message["actionLevel"];
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        textBuffer += decoder.decode(value, { stream: true });
+      setMessages(prev => [
+        ...prev,
+        { role: "assistant", content: responseText, actions: serverActions, actionLevel },
+      ]);
 
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":") || line.trim() === "") continue;
-          if (!line.startsWith("data: ")) continue;
-
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") break;
-
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) {
-              assistantSoFar += content;
-              const { cleanText, actions, level } = parseActionsFromResponse(assistantSoFar);
-              setMessages(prev => {
-                const last = prev[prev.length - 1];
-                if (last?.role === "assistant") {
-                  return prev.map((m, i) =>
-                    i === prev.length - 1 ? { ...m, content: cleanText, actions, actionLevel: level } : m
-                  );
-                }
-                return [...prev, { role: "assistant", content: cleanText, actions, actionLevel: level }];
-              });
-            }
-          } catch {
-            textBuffer = line + "\n" + textBuffer;
-            break;
-          }
-        }
-      }
-
-      await logAudit("ifj_response_received", { responseLength: assistantSoFar.length });
+      await logAudit("ifj_response_received", { responseLength: responseText.length, intent: data.intent, dataSource: data.dataSource });
     } catch (e) {
-      if (!assistantSoFar) {
-        setMessages(prev => [
-          ...prev,
-          { role: "assistant", content: "Desculpe, tive um problema ao processar. Tente novamente." },
-        ]);
-      }
+      setMessages(prev => [
+        ...prev,
+        { role: "assistant", content: "Desculpe, tive um problema ao processar. Tente novamente." },
+      ]);
       await logAudit("ifj_error", { error: String(e) });
     }
     setIsLoading(false);
