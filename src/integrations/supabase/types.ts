@@ -3883,6 +3883,57 @@ export type Database = {
         }
         Relationships: []
       }
+      ifj_patient_permissions: {
+        Row: {
+          appointments: boolean
+          checklist: boolean
+          created_at: string
+          hydration: boolean
+          id: string
+          ifj_mode: string
+          meal_plan: boolean
+          messages: boolean
+          patient_id: string
+          progress: boolean
+          recipes: boolean
+          recommendations: boolean
+          substitutions: boolean
+          updated_at: string
+        }
+        Insert: {
+          appointments?: boolean
+          checklist?: boolean
+          created_at?: string
+          hydration?: boolean
+          id?: string
+          ifj_mode?: string
+          meal_plan?: boolean
+          messages?: boolean
+          patient_id: string
+          progress?: boolean
+          recipes?: boolean
+          recommendations?: boolean
+          substitutions?: boolean
+          updated_at?: string
+        }
+        Update: {
+          appointments?: boolean
+          checklist?: boolean
+          created_at?: string
+          hydration?: boolean
+          id?: string
+          ifj_mode?: string
+          meal_plan?: boolean
+          messages?: boolean
+          patient_id?: string
+          progress?: boolean
+          recipes?: boolean
+          recommendations?: boolean
+          substitutions?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ifj_priority_queue: {
         Row: {
           created_at: string
