@@ -233,6 +233,22 @@ export default function IntelligenceCustomPrompts() {
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{p.body}</p>
+                      {(p.schedule_days?.length || p.schedule_hours?.length) ? (
+                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                          {p.schedule_days && p.schedule_days.length > 0 && (
+                            <span className="text-[10px] text-amber-600 flex items-center gap-0.5">
+                              <CalendarDays className="w-3 h-3" />
+                              {p.schedule_days.map(d => DAYS_OF_WEEK.find(dw => dw.value === d)?.label || d).join(", ")}
+                            </span>
+                          )}
+                          {p.schedule_hours && p.schedule_hours.length > 0 && (
+                            <span className="text-[10px] text-amber-600 flex items-center gap-0.5">
+                              <Clock className="w-3 h-3" />
+                              {p.schedule_hours.map(h => `${h}h`).join(", ")}
+                            </span>
+                          )}
+                        </div>
+                      ) : null}
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <Switch checked={p.is_active} onCheckedChange={() => toggleActive(p)} />
