@@ -61,10 +61,10 @@ const ROLE_CONFIG: Record<IFJRole, {
   suggestions: string[];
 }> = {
   admin: {
-    label: "ADMIN — Acesso Total",
-    edgeFunction: "ifj-command-center",
+    label: "ADMIN — God Mode",
+    edgeFunction: "ifj-core-router",
     badge: "bg-destructive/10 text-destructive border-destructive/20",
-    subtitle: "Centro de Comando — Acesso completo ao sistema",
+    subtitle: "Centro de Comando — Visão global do sistema",
     suggestions: [
       "Quem precisa de atenção urgente?",
       "Como está meu financeiro?",
@@ -75,9 +75,9 @@ const ROLE_CONFIG: Record<IFJRole, {
   },
   nutritionist: {
     label: "Nutricionista",
-    edgeFunction: "ifj-command-center",
+    edgeFunction: "ifj-core-router",
     badge: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
-    subtitle: "Centro de Comando — Sua carteira clínica",
+    subtitle: "Mini God Mode — Sua carteira clínica",
     suggestions: [
       "Quem precisa de atenção hoje?",
       "Resuma minha carteira",
@@ -88,9 +88,9 @@ const ROLE_CONFIG: Record<IFJRole, {
   },
   personal: {
     label: "Personal Trainer",
-    edgeFunction: "ifj-command-center-personal",
+    edgeFunction: "ifj-core-router",
     badge: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-    subtitle: "Centro de Comando — Seus alunos e treinos",
+    subtitle: "Mini God Mode — Seus alunos e treinos",
     suggestions: [
       "Quais alunos treinaram hoje?",
       "Algum aluno reportou dor?",
@@ -100,9 +100,18 @@ const ROLE_CONFIG: Record<IFJRole, {
     ],
   },
   patient: {
-    label: "Paciente",
-    edgeFunction: "ifj-command-center-patient",
+    label: "Meu Assistente IFJ",
+    edgeFunction: "ifj-core-router",
     badge: "bg-violet-500/10 text-violet-500 border-violet-500/20",
+    subtitle: "Sua assistente pessoal de saúde",
+    suggestions: [
+      "Me passa uma opção prática de lanche",
+      "Qual minha próxima consulta?",
+      "Mostre meu progresso",
+      "Quais tarefas preciso fazer hoje?",
+      "Me ajude a entender meu plano alimentar",
+    ],
+  },
     subtitle: "Sua assistente pessoal de saúde",
     suggestions: [
       "Como está minha dieta hoje?",
