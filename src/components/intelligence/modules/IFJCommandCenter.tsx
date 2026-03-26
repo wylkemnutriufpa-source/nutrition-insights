@@ -1,6 +1,6 @@
 /**
- * IFJ Command Center — The ultimate omniscient AI copilot
- * Premium golden command panel with full system access
+ * IFJ Command Center — Role-scoped omniscient AI copilot
+ * Premium golden command panel. Each role only accesses their own data.
  */
 import { useState, useRef, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -29,6 +29,67 @@ type ActionButton = {
   icon?: string;
 };
 
+export type IFJRole = "admin" | "nutritionist" | "personal" | "patient";
+
+interface IFJCommandCenterProps {
+  role?: IFJRole;
+}
+
+const ROLE_CONFIG: Record<IFJRole, { label: string; edgeFunction: string; badge: string; badgeColor: string; suggestions: string[] }> = {
+  admin: {
+    label: "ADMIN — Acesso Total",
+    edgeFunction: "ifj-command-center",
+    badge: "bg-red-500/10 text-red-400 border-red-500/20",
+    badgeColor: "red",
+    suggestions: [
+      "Quem precisa de atenção urgente?",
+      "Como está meu financeiro?",
+      "Resuma minha carteira de pacientes",
+      "Quais planos vencem essa semana?",
+      "Algum paciente em risco de abandono?",
+    ],
+  },
+  nutritionist: {
+    label: "Nutricionista",
+    edgeFunction: "ifj-command-center",
+    badge: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+    badgeColor: "emerald",
+    suggestions: [
+      "Quem precisa de atenção hoje?",
+      "Resuma minha carteira",
+      "Quais pacientes estão em risco?",
+      "Algum plano vence essa semana?",
+      "Como está o financeiro dos pacientes?",
+    ],
+  },
+  personal: {
+    label: "Personal Trainer",
+    edgeFunction: "ifj-command-center-personal",
+    badge: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+    badgeColor: "blue",
+    suggestions: [
+      "Quais alunos treinaram hoje?",
+      "Algum aluno reportou dor?",
+      "Resuma meus alunos ativos",
+      "Quem precisa de ajuste no treino?",
+      "Mostre os feedbacks pendentes",
+    ],
+  },
+  patient: {
+    label: "Paciente",
+    edgeFunction: "ifj-command-center-patient",
+    badge: "bg-violet-500/10 text-violet-400 border-violet-500/20",
+    badgeColor: "violet",
+    suggestions: [
+      "Como está minha dieta hoje?",
+      "Qual minha próxima consulta?",
+      "Mostre meu progresso",
+      "Quais tarefas preciso fazer hoje?",
+      "Me ajude a entender meu plano alimentar",
+    ],
+  },
+};
+
 // Time-based greetings with variety
 function getGreeting(name: string): string {
   const hour = new Date().getHours();
@@ -38,22 +99,22 @@ function getGreeting(name: string): string {
     morning: [
       `Bom dia, ${name}! ☀️ No que posso te ajudar hoje?`,
       `Bom dia, ${name}! Pronto pra mais um dia produtivo? Me diga o que precisa!`,
-      `Olá ${name}, bom dia! Já analisei sua carteira — me pergunte qualquer coisa.`,
-      `Bom dia! ${name}, estou aqui e conectada a todo o sistema. O que vamos resolver hoje?`,
+      `Olá ${name}, bom dia! Já analisei tudo — me pergunte qualquer coisa.`,
+      `Bom dia! ${name}, estou aqui e conectada. O que vamos resolver hoje?`,
       `E aí ${name}, bom dia! ☕ Vamos trabalhar no quê hoje?`,
     ],
     afternoon: [
       `Boa tarde, ${name}! Como posso te ajudar agora?`,
       `E aí ${name}, boa tarde! No que trabalhamos?`,
       `Boa tarde! ${name}, estou monitorando tudo. Precisa de algo?`,
-      `Olá ${name}! Boa tarde. Já vi algumas coisas interessantes na sua carteira hoje. Me pergunte!`,
-      `Boa tarde, ${name}! Estou pronta — me dê um comando e resolvo pra você.`,
+      `Olá ${name}! Boa tarde. Me pergunte qualquer coisa!`,
+      `Boa tarde, ${name}! Estou pronta — me dê um comando.`,
     ],
     evening: [
       `Boa noite, ${name}! Ainda trabalhando? Me diga no que posso ajudar.`,
-      `Boa noite ${name}! Estou aqui caso precise revisar algo antes de encerrar o dia.`,
+      `Boa noite ${name}! Estou aqui caso precise de algo.`,
       `E aí ${name}, boa noite! Vamos finalizar alguma pendência?`,
-      `Boa noite! ${name}, o sistema está todo em dia. Precisa ajustar algo?`,
+      `Boa noite! ${name}, precisa ajustar algo?`,
       `Olá ${name}, boa noite! 🌙 Qualquer comando, estou pronta.`,
     ],
   };
@@ -62,14 +123,23 @@ function getGreeting(name: string): string {
   return options[Math.floor(Math.random() * options.length)];
 }
 
-export default function IFJCommandCenter() {
+export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterProps = {}) {
   const { user, profile, roles } = useAuth();
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const isAdmin = roles?.includes("admin");
+
+  // Auto-detect role if not provided
+  const detectedRole: IFJRole = roleProp || (
+    roles?.includes("admin") ? "admin" :
+    roles?.includes("personal") ? "personal" :
+    roles?.includes("patient") ? "patient" :
+    "nutritionist"
+  );
+  const config = ROLE_CONFIG[detectedRole];
+  const isAdmin = detectedRole === "admin";
 
   const greeting = useMemo(
     () => getGreeting(profile?.full_name?.split(" ")[0] || "Profissional"),
@@ -109,7 +179,7 @@ export default function IFJCommandCenter() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const resp = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ifj-command-center`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${config.edgeFunction}`,
         {
           method: "POST",
           headers: {
@@ -187,13 +257,7 @@ export default function IFJCommandCenter() {
     setIsLoading(false);
   };
 
-  const QUICK_COMMANDS = [
-    "Quem precisa de atenção urgente?",
-    "Como está meu financeiro?",
-    "Resuma minha carteira de pacientes",
-    "Quais planos vencem essa semana?",
-    "Algum paciente em risco de abandono?",
-  ];
+  const QUICK_COMMANDS = config.suggestions;
 
   return (
     <div className="relative">
@@ -244,11 +308,9 @@ export default function IFJCommandCenter() {
                   Meu Painel IFJ
                 </h2>
                 <Crown className="w-5 h-5 text-amber-500" />
-                {isAdmin && (
-                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 flex items-center gap-1">
-                    <Shield className="w-3 h-3" /> ADMIN — Acesso Total
-                  </span>
-                )}
+                <span className={`text-[9px] px-2 py-0.5 rounded-full border flex items-center gap-1 ${config.badge}`}>
+                  <Shield className="w-3 h-3" /> {config.label}
+                </span>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Centro de Comando Inteligente — Controle total do seu sistema

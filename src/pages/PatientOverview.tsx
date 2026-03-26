@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import IFJCommandCenter from "@/components/intelligence/modules/IFJCommandCenter";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -273,6 +274,15 @@ export default function PatientOverview() {
                   </Link>
                 ))}
               </div>
+            </motion.div>
+
+            {/* IFJ Command Center for Patient */}
+            <motion.div variants={item}>
+              <h2 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
+                <Zap className="w-4 h-4 text-amber-500" />
+                Minha Inteligência IFJ
+              </h2>
+              <IFJCommandCenter role="patient" />
             </motion.div>
           </motion.div>
         )}

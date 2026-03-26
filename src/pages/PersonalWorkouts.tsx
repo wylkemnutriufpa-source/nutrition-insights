@@ -12,7 +12,7 @@ import {
   Dumbbell, Plus, Search, ChevronDown, Pause, Play,
   BookOpen, Layers, ClipboardList, Sparkles,
   TrendingUp, Heart, Ruler, Trophy, ArrowRightLeft, BarChart3,
-  CalendarDays, MessageCircle, FileText, Zap, Timer
+  CalendarDays, MessageCircle, FileText, Zap, Timer, Command
 } from "lucide-react";
 import WorkoutEditor from "@/components/workout/WorkoutEditor";
 import ExerciseLibrary from "@/components/workout/ExerciseLibrary";
@@ -34,6 +34,7 @@ import WorkoutPDFExport from "@/components/workout/WorkoutPDFExport";
 import PTStudentChat from "@/components/workout/PTStudentChat";
 import PTChallenges from "@/components/workout/PTChallenges";
 import WorkoutRestTimer from "@/components/workout/WorkoutRestTimer";
+import IFJCommandCenter from "@/components/intelligence/modules/IFJCommandCenter";
 
 // --- Plans Tab Component ---
 function PlansTab({ plans, loading, students, onToggleStatus, onExpandPlan, expandedPlan, planDetails }: any) {
@@ -325,6 +326,7 @@ export default function PersonalWorkouts() {
             <TabsTrigger value="library" className="gap-1.5 text-xs"><BookOpen className="w-3.5 h-3.5" /> Biblioteca</TabsTrigger>
             <TabsTrigger value="anamnesis" className="gap-1.5 text-xs"><ClipboardList className="w-3.5 h-3.5" /> Anamnese</TabsTrigger>
             <TabsTrigger value="preplan" className="gap-1.5 text-xs"><Sparkles className="w-3.5 h-3.5" /> Pré-Plano IA</TabsTrigger>
+            <TabsTrigger value="ifj" className="gap-1.5 text-xs bg-gradient-to-r data-[state=active]:from-amber-500/20 data-[state=active]:to-yellow-500/10 data-[state=active]:text-amber-500"><Command className="w-3.5 h-3.5" /> Meu Painel IFJ</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard" className="mt-4 space-y-4">
@@ -391,6 +393,9 @@ export default function PersonalWorkouts() {
             <AnamnesisTab students={students} onSelectStudent={setAnamnesisStudent} />
           </TabsContent>
 
+          <TabsContent value="ifj" className="mt-4">
+            <IFJCommandCenter role="personal" />
+          </TabsContent>
           <TabsContent value="preplan" className="mt-4">
             <PrePlanTab students={students} prePlanStudent={prePlanStudent} setPrePlanStudent={setPrePlanStudent} handleUseTemplate={handleUseTemplate} />
           </TabsContent>
