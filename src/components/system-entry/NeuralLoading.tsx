@@ -70,13 +70,13 @@ function NeuralParticleCanvas({
     const mouse = new THREE.Vector2(0, 0);
     const clock = new THREE.Clock();
     const isMobile = width < 500;
-    if (isMobile) camera.position.z = 10;
+    if (isMobile) camera.position.z = 12;
     const aspect = width / height;
     const visibleHeight = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov * 0.5)) * camera.position.z;
     const visibleWidth = visibleHeight * aspect;
 
     const coreGroup = new THREE.Group();
-    if (isMobile) coreGroup.position.y = -1.2;
+    if (isMobile) coreGroup.position.y = -2.0;
     scene.add(coreGroup);
 
     // ─── 1. BRAIN CORE PARTICLES (TorusKnot shape) ───
