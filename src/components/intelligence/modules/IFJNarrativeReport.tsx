@@ -83,7 +83,7 @@ export default function IFJNarrativeReport() {
         avg_adherence: latest?.adherence_score,
         weight_delta: latest?.weight_change_7d,
         latest_risk_level: latest?.risk_level || "N/A",
-        active_plan: activePlan?.plan_name || "Nenhum",
+        active_plan: activePlan?.description || "Nenhum",
         active_alerts: alerts.length,
       };
       setClinicalData(data);
