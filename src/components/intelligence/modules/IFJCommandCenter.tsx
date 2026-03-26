@@ -257,13 +257,7 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
     setIsLoading(false);
   };
 
-  const QUICK_COMMANDS = [
-    "Quem precisa de atenção urgente?",
-    "Como está meu financeiro?",
-    "Resuma minha carteira de pacientes",
-    "Quais planos vencem essa semana?",
-    "Algum paciente em risco de abandono?",
-  ];
+  const QUICK_COMMANDS = config.suggestions;
 
   return (
     <div className="relative">
