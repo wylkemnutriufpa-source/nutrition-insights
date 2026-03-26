@@ -165,7 +165,7 @@ function NeuralParticleCanvas({
     coreGeo.setAttribute("color", new THREE.BufferAttribute(coreColors, 3));
 
     const coreMat = new THREE.PointsMaterial({
-      size: isMobile ? 0.02 : 0.015,
+      size: isMobile ? 0.028 : 0.02,
       vertexColors: true,
       blending: THREE.AdditiveBlending,
       transparent: true,
