@@ -6,39 +6,60 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+type Intent = "greeting" | "help" | "students_overview" | "trained_today" | "pain_reports" | "student_detail" | "workouts_overview" | "alerts" | "navigate" | "unknown";
+
+function normalize(t: string): string {
+  return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+}
+
+function detectIntent(cmd: string): { intent: Intent; studentName?: string; route?: string } {
+  const n = normalize(cmd);
+
+  if (/^(oi|ola|hey|bom dia|boa tarde|boa noite)/.test(n)) return { intent: "greeting" };
+  if (/^(ajuda|help|comandos)/.test(n)) return { intent: "help" };
+
+  const navMap: Record<string, string> = {
+    "dashboard": "/personal/dashboard", "alunos": "/personal/students", "treino": "/personal/workouts",
+  };
+  for (const [key, route] of Object.entries(navMap)) {
+    if (n.includes(key) && (n.includes("abr") || n.includes("ir ") || n.includes("mostr"))) {
+      return { intent: "navigate", route };
+    }
+  }
+
+  const nameMatch = n.match(/(?:aluno|sobre|dados d[aeo]|como esta)\s+(.+)/);
+  if (nameMatch) return { intent: "student_detail", studentName: nameMatch[1].trim() };
+
+  if (n.includes("treinou") || n.includes("treinaram") || n.includes("treino hoje")) return { intent: "trained_today" };
+  if (n.includes("dor") || n.includes("lesao") || n.includes("lesoes") || n.includes("pain")) return { intent: "pain_reports" };
+  if (n.includes("alerta")) return { intent: "alerts" };
+  if (n.includes("treino") || n.includes("plano")) return { intent: "workouts_overview" };
+  if (n.includes("aluno") || n.includes("carteira") || n.includes("resum")) return { intent: "students_overview" };
+
+  return { intent: "unknown" };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Missing auth" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (!authHeader) return new Response(JSON.stringify({ error: "Missing auth" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, { global: { headers: { Authorization: authHeader } } });
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (authError || !user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const { command, conversationHistory } = await req.json();
+    const { command } = await req.json();
 
-    // ── RUNTIME PERMISSION: Verify personal trainer role ──
     const { data: userRoles } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", user.id);
     const actualRoles = (userRoles || []).map((r: any) => r.role);
     if (!actualRoles.includes("personal") && !actualRoles.includes("admin")) {
-      return new Response(JSON.stringify({ error: "Permissão negada. Apenas Personal Trainers." }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(JSON.stringify({ error: "Permissão negada." }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // ── AUDIT LOG ──
     await supabaseAdmin.from("audit_logs").insert({
       user_id: user.id, action: "ifj_command_center_query",
       resource_type: "ifj_command_center", resource_id: "personal",
@@ -46,86 +67,145 @@ serve(async (req) => {
     });
 
     const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", user.id).single();
+    const userName = profile?.full_name?.split(" ")[0] || "Personal";
+    const today = new Date().toISOString().split("T")[0];
 
-    // ── SCOPED DATA: Only this trainer's students ──
-    const { data: students } = await supabase.from("personal_trainer_students").select("id, student_id, status, created_at").eq("personal_id", user.id).limit(100);
-    const studentIds = (students || []).map((s: any) => s.student_id);
+    const { intent, studentName, route } = detectIntent(command);
+
+    // Fetch students
+    const { data: students } = await supabase.from("personal_trainer_students")
+      .select("student_id, status").eq("personal_id", user.id);
+    const activeStudents = (students || []).filter((s: any) => s.status === "active");
+    const studentIds = activeStudents.map((s: any) => s.student_id);
     const safeIds = studentIds.length ? studentIds : ["00000000-0000-0000-0000-000000000000"];
 
-    const [profilesRes, plansRes, feedbacksRes, completionsRes, alertsRes] = await Promise.all([
-      supabase.from("profiles").select("user_id, full_name, phone").in("user_id", safeIds),
-      supabase.from("workout_plans").select("id, student_id, plan_name, is_active, created_at").eq("personal_id", user.id).limit(100),
-      supabase.from("workout_feedbacks").select("id, student_id, pain_areas, pain_level, fatigue_level, mood, created_at").in("student_id", safeIds).order("created_at", { ascending: false }).limit(50),
-      supabase.from("workout_completions").select("id, student_id, completed_at, duration_minutes").in("student_id", safeIds).order("completed_at", { ascending: false }).limit(100),
-      supabase.from("cross_professional_alerts").select("id, patient_id, alert_type, message, severity, is_read, created_at").eq("target_professional_id", user.id).eq("is_read", false).limit(20),
-    ]);
+    const { data: profiles } = await supabase.from("profiles")
+      .select("user_id, full_name, phone").in("user_id", safeIds);
 
-    const today = new Date().toISOString().split("T")[0];
-    const studentDetails = (students || []).filter((s: any) => s.status === "active").map((s: any) => {
-      const prof = (profilesRes.data || []).find((p: any) => p.user_id === s.student_id);
-      const stuPlans = (plansRes.data || []).filter((p: any) => p.student_id === s.student_id);
-      const stuFeedbacks = (feedbacksRes.data || []).filter((f: any) => f.student_id === s.student_id);
-      const stuCompletions = (completionsRes.data || []).filter((c: any) => c.student_id === s.student_id);
-      const lastFeedback = stuFeedbacks[0];
-      return {
-        id: s.student_id, name: prof?.full_name || "Aluno", phone: prof?.phone,
-        activePlans: stuPlans.filter((p: any) => p.is_active).length,
-        totalCompletions: stuCompletions.length,
-        trainedToday: stuCompletions.some((c: any) => c.completed_at?.startsWith(today)),
-        lastPainReport: lastFeedback?.pain_areas ? { areas: lastFeedback.pain_areas, level: lastFeedback.pain_level } : null,
-        lastMood: lastFeedback?.mood, lastFatigue: lastFeedback?.fatigue_level,
-      };
-    });
+    let responseText = "";
+    let actions: any[] = [];
+    const level = "consult";
 
-    const systemPrompt = `Você é a IFJ (Inteligência FitJourney) — Copiloto do Personal Trainer.
-ACESSO EXCLUSIVO aos dados deste personal trainer. NUNCA acesse dados de nutrição ou outros profissionais.
-
-PERSONAL TRAINER: ${profile?.full_name || "Personal"}
-
-SISTEMA DE CLASSIFICAÇÃO:
-[LEVEL:consult] → Consulta de dados
-[LEVEL:suggest] → Sugestão de ação
-[LEVEL:prepare] → Preparar operação (navegar)
-[LEVEL:execute] → Executar ação (requer confirmação)
-
-ROTAS:
-/personal/dashboard, /personal/students, /personal/workouts
-
-DADOS: ${studentDetails.length} alunos ativos | Treinaram hoje: ${studentDetails.filter(s => s.trainedToday).length} | Alertas: ${(alertsRes.data || []).length}
-ALUNOS: ${JSON.stringify(studentDetails, null, 2)}
-ALERTAS: ${JSON.stringify((alertsRes.data || []).map((a: any) => ({ aluno: studentDetails.find(s => s.id === a.patient_id)?.name, tipo: a.alert_type, msg: a.message, severidade: a.severity })), null, 2)}
-
-REGRAS:
-1. Português brasileiro sempre
-2. Dados reais, nunca inventar
-3. Incluir [LEVEL:...] em toda resposta
-4. [ACTION:...] para navegação, [CONFIRM:...] para ações sensíveis
-5. NUNCA acessar dados clínicos/nutricionais
-6. Destacar dores e alertas com urgência
-7. Ser conciso, usar markdown`;
-
-    const messages = [
-      { role: "system", content: systemPrompt },
-      ...(conversationHistory || []),
-      { role: "user", content: command },
-    ];
-
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: "google/gemini-2.5-flash", messages, stream: true }),
-    });
-
-    if (!response.ok) {
-      if (response.status === 429) return new Response(JSON.stringify({ error: "Rate limit" }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      if (response.status === 402) return new Response(JSON.stringify({ error: "Credits exhausted" }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      throw new Error(`AI gateway error: ${response.status}`);
+    if (intent === "greeting") {
+      const hour = new Date().getHours();
+      const period = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
+      responseText = `${period}, ${userName}! 💪\n\nVocê tem **${activeStudents.length} alunos ativos**. Me pergunte sobre treinos, dores ou progresso!`;
     }
 
-    return new Response(response.body, { headers: { ...corsHeaders, "Content-Type": "text/event-stream" } });
+    else if (intent === "help") {
+      responseText = `## 💡 Comandos\n\n| Comando | O que faz |\n|---------|----------|\n| "Resumo dos alunos" | Visão geral |\n| "Quem treinou hoje?" | Alunos que completaram treino |\n| "Algum aluno com dor?" | Relatórios de dor/lesão |\n| "Sobre [nome]" | Dados de um aluno |\n| "Treinos ativos" | Planos de treino |\n| "Alertas" | Alertas recebidos |`;
+    }
+
+    else if (intent === "navigate" && route) {
+      responseText = `Abrindo...`;
+      actions = [{ label: "Ir para a tela", route, type: "navigate" }];
+    }
+
+    else if (intent === "students_overview") {
+      const { data: plans } = await supabase.from("workout_plans")
+        .select("student_id, is_active").eq("personal_id", user.id);
+      const { data: completions } = await supabase.from("workout_completions")
+        .select("student_id, completed_at").in("student_id", safeIds)
+        .gte("completed_at", today + "T00:00:00").limit(100);
+
+      const trainedToday = new Set((completions || []).map((c: any) => c.student_id)).size;
+      const withActivePlan = new Set((plans || []).filter((p: any) => p.is_active).map((p: any) => p.student_id)).size;
+
+      responseText = `## 📊 Resumo dos Alunos\n\n| Indicador | Valor |\n|-----------|-------|\n| Alunos ativos | **${activeStudents.length}** |\n| Treinaram hoje | ${trainedToday} |\n| Com plano ativo | ${withActivePlan} |\n| Sem plano | ${activeStudents.length - withActivePlan} |\n\n### Lista:\n` +
+        activeStudents.map((s: any) => {
+          const p = (profiles || []).find((x: any) => x.user_id === s.student_id);
+          const trained = (completions || []).some((c: any) => c.student_id === s.student_id);
+          const hasPlan = (plans || []).some((x: any) => x.student_id === s.student_id && x.is_active);
+          return `- ${trained ? "✅" : "⬜"} **${p?.full_name || "?"}** ${hasPlan ? "" : "⚠️ sem plano"}`;
+        }).join("\n");
+      actions = [{ label: "Ver Alunos", route: "/personal/students", type: "navigate" }];
+    }
+
+    else if (intent === "trained_today") {
+      const { data: completions } = await supabase.from("workout_completions")
+        .select("student_id, duration_minutes, completed_at").in("student_id", safeIds)
+        .gte("completed_at", today + "T00:00:00");
+
+      const trained = [...new Set((completions || []).map((c: any) => c.student_id))];
+      const notTrained = activeStudents.filter((s: any) => !trained.includes(s.student_id));
+
+      responseText = `## 💪 Treinos de Hoje\n\n**Treinaram (${trained.length}):**\n` +
+        (trained.length > 0 ? trained.map(id => {
+          const p = (profiles || []).find((x: any) => x.user_id === id);
+          const c = (completions || []).find((x: any) => x.student_id === id);
+          return `- ✅ **${p?.full_name || "?"}** (${c?.duration_minutes || "?"}min)`;
+        }).join("\n") : "- Ninguém ainda") +
+        `\n\n**Não treinaram (${notTrained.length}):**\n` +
+        (notTrained.length > 0 ? notTrained.map((s: any) => {
+          const p = (profiles || []).find((x: any) => x.user_id === s.student_id);
+          return `- ⬜ ${p?.full_name || "?"}`;
+        }).join("\n") : "- Todos treinaram! 🎉");
+    }
+
+    else if (intent === "pain_reports") {
+      const { data: feedbacks } = await supabase.from("workout_feedbacks")
+        .select("student_id, pain_areas, pain_level, fatigue_level, mood, created_at")
+        .in("student_id", safeIds).order("created_at", { ascending: false }).limit(30);
+
+      const withPain = (feedbacks || []).filter((f: any) => f.pain_areas && f.pain_areas.length > 0 && f.pain_level > 2);
+
+      if (withPain.length === 0) {
+        responseText = `## ✅ Sem Relatos de Dor\n\nNenhum aluno reportou dor significativa recentemente.`;
+      } else {
+        responseText = `## ⚠️ Relatos de Dor (${withPain.length})\n\n` + withPain.slice(0, 10).map((f: any) => {
+          const p = (profiles || []).find((x: any) => x.user_id === f.student_id);
+          return `- **${p?.full_name || "?"}** — Dor nível ${f.pain_level}/10 em: ${JSON.stringify(f.pain_areas).replace(/[\[\]"]/g, "")} (${f.created_at?.split("T")[0]})`;
+        }).join("\n");
+      }
+    }
+
+    else if (intent === "student_detail" && studentName) {
+      const normalized = normalize(studentName);
+      const found = (profiles || []).find((p: any) => normalize(p.full_name).includes(normalized));
+
+      if (!found) {
+        responseText = `## ❌ Aluno não encontrado\n\nNão encontrei **"${studentName}"** entre seus alunos.`;
+      } else {
+        const { data: plans } = await supabase.from("workout_plans")
+          .select("plan_name, is_active, created_at").eq("student_id", found.user_id).eq("personal_id", user.id);
+        const { data: completions } = await supabase.from("workout_completions")
+          .select("completed_at, duration_minutes").eq("student_id", found.user_id).order("completed_at", { ascending: false }).limit(10);
+        const { data: feedbacks } = await supabase.from("workout_feedbacks")
+          .select("pain_areas, pain_level, fatigue_level, mood, created_at").eq("student_id", found.user_id).order("created_at", { ascending: false }).limit(5);
+
+        const activePlans = (plans || []).filter((p: any) => p.is_active);
+        const lastFb = (feedbacks as any)?.[0];
+
+        responseText = `## 👤 ${found.full_name}\n\n### Treinos\n| Indicador | Valor |\n|-----------|-------|\n| Planos ativos | ${activePlans.length} |\n| Treinos completados | ${(completions || []).length} (últimos) |\n| Último treino | ${(completions as any)?.[0]?.completed_at?.split("T")[0] || "N/A"} |`;
+
+        if (lastFb) {
+          responseText += `\n\n### Último Feedback\n- Dor: ${lastFb.pain_level || 0}/10 ${lastFb.pain_areas ? `(${JSON.stringify(lastFb.pain_areas).replace(/[\[\]"]/g, "")})` : ""}\n- Fadiga: ${lastFb.fatigue_level || "?"}/10\n- Humor: ${lastFb.mood || "?"}`;
+        }
+      }
+    }
+
+    else if (intent === "alerts") {
+      const { data: alerts } = await supabase.from("cross_professional_alerts")
+        .select("patient_id, alert_type, message, severity, created_at")
+        .eq("target_professional_id", user.id).eq("is_read", false).limit(20);
+
+      if (!alerts || alerts.length === 0) {
+        responseText = `## ✅ Sem Alertas\n\nNenhum alerta pendente.`;
+      } else {
+        responseText = `## 🔔 Alertas (${alerts.length})\n\n` + alerts.map((a: any) => {
+          const p = (profiles || []).find((x: any) => x.user_id === a.patient_id);
+          return `- **${p?.full_name || "?"}** — ${a.message} (${a.severity})`;
+        }).join("\n");
+      }
+    }
+
+    else {
+      responseText = `Não entendi **"${command}"**.\n\nTente:\n- *"Resumo dos alunos"*\n- *"Quem treinou hoje?"*\n- *"Algum aluno com dor?"*\n\nDigite **"ajuda"** para todos os comandos.`;
+    }
+
+    return new Response(JSON.stringify({
+      response: responseText, actions, level, intent, dataSource: "deterministic",
+    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("ifj-command-center-personal error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {

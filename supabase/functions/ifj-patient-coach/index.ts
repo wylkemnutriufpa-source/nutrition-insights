@@ -6,131 +6,156 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+/**
+ * IFJ Patient Coach — 100% Deterministic
+ * Queries real system data and returns structured responses.
+ * Zero LLM. Zero hallucination.
+ */
+
+function normalize(t: string): string {
+  return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+}
+
+type Intent = "greeting" | "diet" | "checklist" | "hydration" | "appointment" | "progress"
+  | "can_eat" | "plan_info" | "help" | "unknown";
+
+function detectIntent(cmd: string): { intent: Intent; food?: string } {
+  const n = normalize(cmd);
+  if (/^(oi|ola|bom dia|boa tarde|boa noite)/.test(n)) return { intent: "greeting" };
+  if (/^(ajuda|help|comandos)/.test(n)) return { intent: "help" };
+
+  const eatMatch = n.match(/(?:posso comer|posso tomar|pode comer|faz mal)\s+(.+)/);
+  if (eatMatch) return { intent: "can_eat", food: eatMatch[1].trim() };
+
+  if (n.includes("dieta") || n.includes("cardapio") || n.includes("refeicao") || n.includes("comer")) return { intent: "diet" };
+  if (n.includes("checklist") || n.includes("tarefa") || n.includes("fazer")) return { intent: "checklist" };
+  if (n.includes("agua") || n.includes("hidrat")) return { intent: "hydration" };
+  if (n.includes("consulta") || n.includes("agenda") || n.includes("proximo")) return { intent: "appointment" };
+  if (n.includes("peso") || n.includes("progresso") || n.includes("evoluc")) return { intent: "progress" };
+  if (n.includes("plano") || n.includes("meta") || n.includes("objetivo")) return { intent: "plan_info" };
+
+  return { intent: "unknown" };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("Missing auth");
+    if (!authHeader) return new Response(JSON.stringify({ error: "Missing auth" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
+    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, { global: { headers: { Authorization: authHeader } } });
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) throw new Error("Unauthorized");
+    if (authError || !user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const { question, conversationHistory } = await req.json();
+    const { question } = await req.json();
+    const today = new Date().toISOString().split("T")[0];
+    const { intent, food } = detectIntent(question);
 
-    // Fetch patient's context
-    const [profileRes, planRes, checklistRes, hydrationRes, behaviorRes] = await Promise.all([
-      supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle(),
-      supabase.from("patient_meal_plans").select("id, title, total_calories, status, created_at")
-        .eq("patient_id", user.id).eq("status", "published").order("created_at", { ascending: false }).limit(1),
-      supabase.from("checklist_tasks").select("title, category, completed, date")
-        .eq("patient_id", user.id).eq("date", new Date().toISOString().split("T")[0]),
-      supabase.from("fit_intelligence_hydration").select("*")
-        .eq("patient_id", user.id).eq("date", new Date().toISOString().split("T")[0]).maybeSingle(),
-      supabase.from("behavioral_profile").select("*").eq("patient_id", user.id).maybeSingle(),
-    ]);
+    const { data: profileData } = await supabase.from("profiles").select("full_name, goal, current_weight, target_weight").eq("user_id", user.id).single();
+    const profile = profileData as any;
+    const name = profile?.full_name?.split(" ")[0] || "Paciente";
 
-    const profile = profileRes.data as any;
-    const activePlan = (planRes.data as any)?.[0];
-    const todayTasks = checklistRes.data || [];
-    const hydration = hydrationRes.data as any;
-    const behavior = behaviorRes.data as any;
+    let response = "";
 
-    // Fetch active meal plan details if exists
-    let meals: any[] = [];
-    if (activePlan) {
-      const { data } = await supabase
-        .from("meal_plan_meals")
-        .select("meal_name, meal_time, foods, calories, protein, carbs, fat")
-        .eq("plan_id", activePlan.id)
-        .order("meal_time");
-      meals = data || [];
+    if (intent === "greeting") {
+      const hour = new Date().getHours();
+      const period = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
+
+      const { data: tasks } = await supabase.from("checklist_tasks")
+        .select("completed").eq("patient_id", user.id).eq("date", today);
+      const done = (tasks || []).filter((t: any) => t.completed).length;
+      const total = (tasks || []).length;
+
+      response = `${period}, ${name}! 😊\n\nHoje você completou **${done}/${total}** tarefas do checklist.\n\nMe pergunte sobre sua dieta, hidratação ou progresso!`;
     }
 
-    const completedTasks = todayTasks.filter((t: any) => t.completed).length;
-    const totalTasks = todayTasks.length;
-
-    const systemPrompt = `Você é a IFJ Coach — assistente pessoal de saúde e nutrição do paciente no app FitJourney.
-
-DADOS DO PACIENTE:
-- Nome: ${profile?.full_name || "Paciente"}
-- Objetivo: ${profile?.goal || "não definido"}
-- Peso atual: ${profile?.current_weight || "?"} kg
-- Peso meta: ${profile?.target_weight || "?"} kg
-
-PLANO ALIMENTAR ATIVO:
-${activePlan ? `- ${activePlan.title} (${activePlan.total_calories} kcal)
-- Refeições: ${meals.map((m: any) => `${m.meal_name} às ${m.meal_time} (${m.calories}kcal)`).join(", ")}` : "Nenhum plano ativo"}
-
-CHECKLIST DE HOJE:
-- Completadas: ${completedTasks}/${totalTasks}
-${todayTasks.map((t: any) => `- [${t.completed ? "✅" : "⬜"}] ${t.title}`).join("\n")}
-
-HIDRATAÇÃO HOJE:
-- ${hydration ? `${hydration.consumed_cups}/${hydration.target_cups} copos` : "Sem registro"}
-
-PERFIL COMPORTAMENTAL:
-- Estilo de motivação: ${behavior?.motivation_style || "padrão"}
-- Tom de mensagem preferido: ${behavior?.message_tone || "gentil"}
-- Horário compulsão: ${behavior?.craving_hours?.join(", ") || "não definido"}
-- Treina sozinho: ${behavior?.trains_alone ? "sim" : "não"}
-
-REGRAS CRÍTICAS:
-1. NUNCA sugira medicamentos, suplementos ou diagnósticos médicos
-2. Responda SEMPRE em português brasileiro
-3. Seja acolhedor e motivacional, respeitando o tom preferido do paciente
-4. Se perguntar sobre receitas, sugira com base no cardápio do plano ativo
-5. Nunca contradiga o plano do nutricionista
-6. Para dúvidas médicas, oriente a consultar o nutricionista
-7. Use emojis moderadamente para engajamento
-8. Máximo 200 palavras por resposta
-9. Se perguntar sobre troca de alimentos, sugira opções do mesmo grupo nutricional
-10. Celebre conquistas e progresso do paciente`;
-
-    const messages = [
-      { role: "system", content: systemPrompt },
-      ...(conversationHistory || []),
-      { role: "user", content: question },
-    ];
-
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
-        messages,
-        stream: true,
-      }),
-    });
-
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded" }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Credits exhausted" }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      throw new Error(`AI gateway error: ${response.status}`);
+    else if (intent === "help") {
+      response = `## O que posso fazer\n\n- *"Como está minha dieta?"*\n- *"Quais tarefas hoje?"*\n- *"Posso comer [alimento]?"*\n- *"Meu progresso"*\n- *"Próxima consulta"*\n- *"Hidratação"*`;
     }
 
-    return new Response(response.body, {
-      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+    else if (intent === "diet") {
+      const { data: plans } = await supabase.from("patient_meal_plans")
+        .select("id, title, total_calories").eq("patient_id", user.id).eq("status", "published").limit(1);
+      const plan = (plans as any)?.[0];
+
+      if (!plan) {
+        response = `Você ainda não tem um plano alimentar ativo. Converse com seu nutricionista! 🥗`;
+      } else {
+        const { data: meals } = await supabase.from("meal_plan_meals")
+          .select("meal_name, meal_time, calories, protein").eq("plan_id", plan.id).order("meal_time");
+        response = `## ${plan.title} (${plan.total_calories} kcal)\n\n` +
+          ((meals as any[]) || []).map((m: any) =>
+            `- **${m.meal_name}** (${m.meal_time || "?"}) — ${m.calories}kcal, ${m.protein}g proteína`
+          ).join("\n");
+      }
+    }
+
+    else if (intent === "checklist") {
+      const { data: tasks } = await supabase.from("checklist_tasks")
+        .select("title, completed, category").eq("patient_id", user.id).eq("date", today);
+      const done = (tasks || []).filter((t: any) => t.completed).length;
+      response = `## Checklist — ${done}/${(tasks || []).length}\n\n` +
+        (tasks || []).map((t: any) => `- ${t.completed ? "✅" : "⬜"} ${t.title}`).join("\n") ||
+        "Nenhuma tarefa hoje!";
+    }
+
+    else if (intent === "hydration") {
+      const { data: h } = await supabase.from("fit_intelligence_hydration")
+        .select("consumed_cups, target_cups").eq("patient_id", user.id).eq("date", today).maybeSingle();
+      if (!h) {
+        response = `Sem registro de hidratação hoje. Beba água! 💧`;
+      } else {
+        const hyd = h as any;
+        response = `## Hidratação — ${hyd.consumed_cups}/${hyd.target_cups} copos\n\n${hyd.consumed_cups >= hyd.target_cups ? "🎉 Meta atingida!" : `Faltam ${hyd.target_cups - hyd.consumed_cups} copos.`}`;
+      }
+    }
+
+    else if (intent === "appointment") {
+      const { data: appts } = await supabase.from("patient_appointments")
+        .select("appointment_date, appointment_time, appointment_type")
+        .eq("patient_id", user.id).gte("appointment_date", today).order("appointment_date").limit(1);
+      const a = (appts as any)?.[0];
+      response = a
+        ? `📅 Próxima consulta: **${a.appointment_date}** às ${a.appointment_time || "?"} (${a.appointment_type || "Consulta"})`
+        : `Nenhuma consulta agendada. Entre em contato com seu nutricionista!`;
+    }
+
+    else if (intent === "progress") {
+      const { data: checkins } = await supabase.from("patient_checkins")
+        .select("weight, mood, created_at").eq("patient_id", user.id)
+        .order("created_at", { ascending: false }).limit(5);
+
+      if (!checkins || checkins.length === 0) {
+        response = `Sem check-ins ainda. Faça seu primeiro para acompanhar sua evolução! 📈`;
+      } else {
+        const latest = (checkins as any[])[0];
+        response = `## Progresso\n\n- Peso atual: **${latest.weight || "?"}kg**\n- Meta: ${profile?.target_weight || "?"}kg\n- Último humor: ${latest.mood || "?"}\n\n### Histórico\n` +
+          (checkins as any[]).map((c: any) => `- ${c.created_at?.split("T")[0]} → ${c.weight || "?"}kg`).join("\n");
+      }
+    }
+
+    else if (intent === "can_eat" && food) {
+      const { data: anamnesis } = await supabase.from("patient_anamnesis")
+        .select("allergies, dietary_restrictions").eq("user_id", user.id).limit(1);
+      const a = (anamnesis as any)?.[0];
+      const restrictions = [...(a?.allergies || []), ...(a?.dietary_restrictions || [])].map((r: string) => normalize(r));
+      const nFood = normalize(food);
+      const blocked = restrictions.some(r => nFood.includes(r) || r.includes(nFood));
+
+      response = blocked
+        ? `⚠️ **"${food}"** pode estar nas suas restrições: ${restrictions.join(", ")}. Consulte seu nutricionista.`
+        : a
+          ? `✅ Não encontrei restrição para **"${food}"**. Verifique as porções no seu plano.`
+          : `Não tenho sua anamnese para verificar. Converse com seu nutricionista sobre restrições.`;
+    }
+
+    else {
+      response = `Não entendi. Tente: *"Minha dieta"*, *"Checklist"*, *"Posso comer X?"* ou *"Progresso"*.`;
+    }
+
+    return new Response(JSON.stringify({ response, intent, dataSource: "deterministic" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("ifj-patient-coach error:", e);
