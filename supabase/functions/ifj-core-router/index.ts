@@ -216,10 +216,16 @@ function detectIntent(n: string, ctx: SessionCtx): IFJIntent {
 
   if (matchesIntent(n, "patient_detail")) {
     const nameMatch = n.match(/(?:paciente|sobre|como esta|como vai|ficha d[aeo]|perfil d[aeo]|dados d[aeo])\s+(.+)/);
-    if (nameMatch)
-      return { ...base, intent: "patient_detail", target_entity: "patient", target_name: nameMatch[1], module: "clinical_engine", confidence: 0.92, response_mode: "detail" };
-    if (ctx.last_patient_id)
+    if (nameMatch) {
+      const candidateName = nameMatch[1];
+      // Guard: if the "name" contains food/nutrition words, it's a nutrition question, not a patient lookup
+      const foodWords = /(?:comer|substituir|trocar|lugar|comida|alimento|receita|ingrediente|lanche|saudavel|engorda|emagrec|caloria|proteina|carboidrato|gordura|fibra|vitamina|nutriente|cafe|almoco|janta|dieta|refeic)/;
+      if (!foodWords.test(candidateName)) {
+        return { ...base, intent: "patient_detail", target_entity: "patient", target_name: candidateName, module: "clinical_engine", confidence: 0.92, response_mode: "detail" };
+      }
+    } else if (ctx.last_patient_id) {
       return { ...base, intent: "patient_detail", target_entity: "patient", target_id: ctx.last_patient_id, target_name: ctx.last_patient_name || null, module: "clinical_engine", confidence: 0.85, response_mode: "detail" };
+    }
   }
 
   if (matchesIntent(n, "student_detail")) {
