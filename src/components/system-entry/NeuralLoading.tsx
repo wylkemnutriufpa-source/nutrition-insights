@@ -221,7 +221,7 @@ function NeuralParticleCanvas({
       nodePositions[i * 3 + 1] = Math.sin(angle) * radius;
       nodePositions[i * 3 + 2] = 0;
       const col = new THREE.Color();
-      col.setHSL(140 / 360 + Math.random() * 0.1, 0.8, 0.5 + Math.random() * 0.3);
+      col.setHSL(43 / 360 + Math.random() * 0.06, 0.85, 0.45 + Math.random() * 0.3);
       nodeColors[i * 3] = col.r;
       nodeColors[i * 3 + 1] = col.g;
       nodeColors[i * 3 + 2] = col.b;
