@@ -550,7 +550,14 @@ export function generatePrePlanFromAnamnesis(anamnesisData: {
   // Selecionar glúteo feminino se for mulher com foco em glúteos
   if (sex === "F" && (goal?.includes("glut") || goal?.includes("perna"))) {
     const gluteTemplate = BUILT_IN_TEMPLATES.find(t => t.id === "tpl-gluteo-fem");
-    if (gluteTemplate) return { ...gluteTemplate };
+    if (gluteTemplate) {
+      const selected = { ...gluteTemplate, routines: gluteTemplate.routines.map(r => ({ ...r, exercises: [...r.exercises] })) };
+      // Aplicar alertas de dor antes de retornar
+      if (painAreas.length > 0) {
+        selected.routines = applyPainAlerts(selected.routines, painAreas);
+      }
+      return selected;
+    }
   }
 
   // Buscar template mais adequado
@@ -571,26 +578,30 @@ export function generatePrePlanFromAnamnesis(anamnesisData: {
 
   // Ajustar rotinas se houver restrições de dor
   if (painAreas.length > 0) {
-    selected.routines = selected.routines.map(r => ({
-      ...r,
-      exercises: r.exercises.map(e => {
-        const hasPainConflict = painAreas.some(area => {
-          const areaLower = area.toLowerCase();
-          const muscleLower = e.muscle_group.toLowerCase();
-          return (
-            (areaLower.includes("ombro") && muscleLower.includes("ombro")) ||
-            (areaLower.includes("joelho") && (muscleLower.includes("perna") || muscleLower.includes("quadr"))) ||
-            (areaLower.includes("lombar") && (muscleLower.includes("posterior") || e.name.toLowerCase().includes("terra"))) ||
-            (areaLower.includes("punho") && e.name.toLowerCase().includes("barra"))
-          );
-        });
-        if (hasPainConflict) {
-          return { ...e, notes: `⚠️ ATENÇÃO: área com dor reportada. ${e.notes || "Avaliar substituição."}` };
-        }
-        return e;
-      }),
-    }));
+    selected.routines = applyPainAlerts(selected.routines, painAreas);
   }
 
   return selected;
+}
+
+function applyPainAlerts(routines: TemplateRoutine[], painAreas: string[]): TemplateRoutine[] {
+  return routines.map(r => ({
+    ...r,
+    exercises: r.exercises.map(e => {
+      const hasPainConflict = painAreas.some(area => {
+        const areaLower = area.toLowerCase();
+        const muscleLower = e.muscle_group.toLowerCase();
+        return (
+          (areaLower.includes("ombro") && muscleLower.includes("ombro")) ||
+          (areaLower.includes("joelho") && (muscleLower.includes("perna") || muscleLower.includes("quadr"))) ||
+          (areaLower.includes("lombar") && (muscleLower.includes("posterior") || e.name.toLowerCase().includes("terra"))) ||
+          (areaLower.includes("punho") && e.name.toLowerCase().includes("barra"))
+        );
+      });
+      if (hasPainConflict) {
+        return { ...e, notes: `⚠️ ATENÇÃO: área com dor reportada. ${e.notes || "Avaliar substituição."}` };
+      }
+      return e;
+    }),
+  }));
 }
