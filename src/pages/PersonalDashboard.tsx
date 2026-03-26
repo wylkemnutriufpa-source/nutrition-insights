@@ -270,6 +270,11 @@ export default function PersonalDashboard() {
             )}
           </CardContent>
         </Card>
+
+        {/* IFJ Command Center */}
+        <div className="mt-6">
+          <IFJCommandCenter role="personal" />
+        </div>
       </div>
     </DashboardLayout>
   );
