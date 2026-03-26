@@ -13,124 +13,88 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("Missing auth");
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
+    const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, { global: { headers: { Authorization: authHeader } } });
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) throw new Error("Unauthorized");
 
     const { command, conversationHistory } = await req.json();
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("full_name")
-      .eq("user_id", user.id)
-      .single();
+    // ── RUNTIME PERMISSION: Verify personal trainer role ──
+    const { data: userRoles } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", user.id);
+    const actualRoles = (userRoles || []).map((r: any) => r.role);
+    if (!actualRoles.includes("personal") && !actualRoles.includes("admin")) {
+      return new Response(JSON.stringify({ error: "Permissão negada. Apenas Personal Trainers." }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    // PERSONAL TRAINER SCOPED DATA ONLY
-    const { data: students } = await supabase
-      .from("personal_trainer_students")
-      .select("id, student_id, status, created_at")
-      .eq("personal_id", user.id)
-      .limit(100);
+    // ── AUDIT LOG ──
+    await supabaseAdmin.from("audit_logs").insert({
+      user_id: user.id, action: "ifj_command_center_query",
+      resource_type: "ifj_command_center", resource_id: "personal",
+      metadata: { command: command?.substring(0, 300), role: "personal" },
+    });
 
+    const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", user.id).single();
+
+    // ── SCOPED DATA: Only this trainer's students ──
+    const { data: students } = await supabase.from("personal_trainer_students").select("id, student_id, status, created_at").eq("personal_id", user.id).limit(100);
     const studentIds = (students || []).map((s: any) => s.student_id);
+    const safeIds = studentIds.length ? studentIds : ["00000000-0000-0000-0000-000000000000"];
 
-    const { data: studentProfiles } = await supabase
-      .from("profiles")
-      .select("user_id, full_name, phone")
-      .in("user_id", studentIds.length ? studentIds : ["none"]);
+    const [profilesRes, plansRes, feedbacksRes, completionsRes, alertsRes] = await Promise.all([
+      supabase.from("profiles").select("user_id, full_name, phone").in("user_id", safeIds),
+      supabase.from("workout_plans").select("id, student_id, plan_name, is_active, created_at").eq("personal_id", user.id).limit(100),
+      supabase.from("workout_feedbacks").select("id, student_id, pain_areas, pain_level, fatigue_level, mood, created_at").in("student_id", safeIds).order("created_at", { ascending: false }).limit(50),
+      supabase.from("workout_completions").select("id, student_id, completed_at, duration_minutes").in("student_id", safeIds).order("completed_at", { ascending: false }).limit(100),
+      supabase.from("cross_professional_alerts").select("id, patient_id, alert_type, message, severity, is_read, created_at").eq("target_professional_id", user.id).eq("is_read", false).limit(20),
+    ]);
 
-    const { data: workoutPlans } = await supabase
-      .from("workout_plans")
-      .select("id, student_id, plan_name, is_active, created_at")
-      .eq("personal_id", user.id)
-      .limit(100);
-
-    const { data: feedbacks } = await supabase
-      .from("workout_feedbacks")
-      .select("id, student_id, pain_areas, pain_level, fatigue_level, mood, created_at")
-      .in("student_id", studentIds.length ? studentIds : ["none"])
-      .order("created_at", { ascending: false })
-      .limit(50);
-
-    const { data: completions } = await supabase
-      .from("workout_completions")
-      .select("id, student_id, completed_at, duration_minutes")
-      .in("student_id", studentIds.length ? studentIds : ["none"])
-      .order("completed_at", { ascending: false })
-      .limit(100);
-
-    const { data: crossAlerts } = await supabase
-      .from("cross_professional_alerts")
-      .select("id, patient_id, alert_type, message, severity, is_read, created_at")
-      .eq("target_professional_id", user.id)
-      .eq("is_read", false)
-      .limit(20);
-
+    const today = new Date().toISOString().split("T")[0];
     const studentDetails = (students || []).filter((s: any) => s.status === "active").map((s: any) => {
-      const prof = (studentProfiles || []).find((p: any) => p.user_id === s.student_id);
-      const plans = (workoutPlans || []).filter((p: any) => p.student_id === s.student_id);
-      const stuFeedbacks = (feedbacks || []).filter((f: any) => f.student_id === s.student_id);
-      const stuCompletions = (completions || []).filter((c: any) => c.student_id === s.student_id);
+      const prof = (profilesRes.data || []).find((p: any) => p.user_id === s.student_id);
+      const stuPlans = (plansRes.data || []).filter((p: any) => p.student_id === s.student_id);
+      const stuFeedbacks = (feedbacksRes.data || []).filter((f: any) => f.student_id === s.student_id);
+      const stuCompletions = (completionsRes.data || []).filter((c: any) => c.student_id === s.student_id);
       const lastFeedback = stuFeedbacks[0];
-      const trainedToday = stuCompletions.some((c: any) => c.completed_at?.startsWith(new Date().toISOString().split("T")[0]));
-
       return {
-        id: s.student_id,
-        name: prof?.full_name || "Aluno",
-        phone: prof?.phone,
-        activePlans: plans.filter((p: any) => p.is_active).length,
+        id: s.student_id, name: prof?.full_name || "Aluno", phone: prof?.phone,
+        activePlans: stuPlans.filter((p: any) => p.is_active).length,
         totalCompletions: stuCompletions.length,
-        trainedToday,
+        trainedToday: stuCompletions.some((c: any) => c.completed_at?.startsWith(today)),
         lastPainReport: lastFeedback?.pain_areas ? { areas: lastFeedback.pain_areas, level: lastFeedback.pain_level } : null,
-        lastMood: lastFeedback?.mood,
-        lastFatigue: lastFeedback?.fatigue_level,
+        lastMood: lastFeedback?.mood, lastFatigue: lastFeedback?.fatigue_level,
       };
     });
 
     const systemPrompt = `Você é a IFJ (Inteligência FitJourney) — Copiloto do Personal Trainer.
-Você tem acesso EXCLUSIVO aos dados deste personal trainer. NÃO acesse dados de outros profissionais.
+ACESSO EXCLUSIVO aos dados deste personal trainer. NUNCA acesse dados de nutrição ou outros profissionais.
 
 PERSONAL TRAINER: ${profile?.full_name || "Personal"}
 
-ROTAS DISPONÍVEIS:
-- /personal/dashboard → Dashboard do Personal
-- /personal/students → Meus Alunos
-- /personal/workouts → Módulo de Treinos
-- /personal/workouts (tab: templates) → Templates de Treino
-- /personal/workouts (tab: anamnesis) → Anamnese do Aluno
-- /personal/workouts (tab: assessments) → Avaliações Físicas
-- /personal/workouts (tab: evolution) → Evolução de Carga
+SISTEMA DE CLASSIFICAÇÃO:
+[LEVEL:consult] → Consulta de dados
+[LEVEL:suggest] → Sugestão de ação
+[LEVEL:prepare] → Preparar operação (navegar)
+[LEVEL:execute] → Executar ação (requer confirmação)
 
-DADOS DOS ALUNOS:
-- Total alunos ativos: ${studentDetails.length}
-- Treinaram hoje: ${studentDetails.filter((s: any) => s.trainedToday).length}
-- Alertas cross-profissionais: ${(crossAlerts || []).length}
+ROTAS:
+/personal/dashboard, /personal/students, /personal/workouts
 
-DETALHES DOS ALUNOS:
-${JSON.stringify(studentDetails, null, 2)}
-
-ALERTAS MULTIPROFISSIONAIS PENDENTES:
-${JSON.stringify((crossAlerts || []).map((a: any) => ({
-  aluno: studentDetails.find((s: any) => s.id === a.patient_id)?.name,
-  tipo: a.alert_type,
-  mensagem: a.message,
-  severidade: a.severity,
-})), null, 2)}
+DADOS: ${studentDetails.length} alunos ativos | Treinaram hoje: ${studentDetails.filter(s => s.trainedToday).length} | Alertas: ${(alertsRes.data || []).length}
+ALUNOS: ${JSON.stringify(studentDetails, null, 2)}
+ALERTAS: ${JSON.stringify((alertsRes.data || []).map((a: any) => ({ aluno: studentDetails.find(s => s.id === a.patient_id)?.name, tipo: a.alert_type, msg: a.message, severidade: a.severity })), null, 2)}
 
 REGRAS:
-1. Responda SEMPRE em português brasileiro
-2. Use dados REAIS — nunca invente
-3. Quando pedirem para navegar, gere botões: [ACTION:Texto|/rota]
-4. NUNCA acesse dados de nutrição, planos alimentares ou dados clínicos — isso é do nutricionista
-5. Foque em: treinos, alunos, feedbacks, evolução, dores, avaliações físicas
-6. Se aluno reportou dor, destaque com urgência
-7. Sugira ações concretas com botões clicáveis
-8. Aja como assistente executivo do personal`;
+1. Português brasileiro sempre
+2. Dados reais, nunca inventar
+3. Incluir [LEVEL:...] em toda resposta
+4. [ACTION:...] para navegação, [CONFIRM:...] para ações sensíveis
+5. NUNCA acessar dados clínicos/nutricionais
+6. Destacar dores e alertas com urgência
+7. Ser conciso, usar markdown`;
 
     const messages = [
       { role: "system", content: systemPrompt },
@@ -143,15 +107,8 @@ REGRAS:
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages,
-        stream: true,
-      }),
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "google/gemini-2.5-flash", messages, stream: true }),
     });
 
     if (!response.ok) {

@@ -13,120 +13,81 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("Missing auth");
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
+    const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, { global: { headers: { Authorization: authHeader } } });
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) throw new Error("Unauthorized");
 
     const { command, conversationHistory } = await req.json();
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("full_name")
-      .eq("user_id", user.id)
-      .single();
+    // ── RUNTIME PERMISSION: Verify patient role ──
+    const { data: userRoles } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", user.id);
+    const actualRoles = (userRoles || []).map((r: any) => r.role);
+    if (!actualRoles.includes("patient") && !actualRoles.includes("admin")) {
+      return new Response(JSON.stringify({ error: "Permissão negada. Apenas pacientes." }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    // PATIENT SCOPED DATA ONLY — only their own data
-    const { data: checklist } = await supabase
-      .from("checklist_tasks")
-      .select("id, title, completed, category, date")
-      .eq("patient_id", user.id)
-      .eq("date", new Date().toISOString().split("T")[0]);
+    // ── AUDIT LOG ──
+    await supabaseAdmin.from("audit_logs").insert({
+      user_id: user.id, action: "ifj_command_center_query",
+      resource_type: "ifj_command_center", resource_id: "patient",
+      metadata: { command: command?.substring(0, 300), role: "patient" },
+    });
 
-    const { data: mealPlans } = await supabase
-      .from("meal_plans")
-      .select("id, plan_name, status, start_date, end_date, total_calories")
-      .eq("patient_id", user.id)
-      .eq("status", "active")
-      .limit(5);
+    const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", user.id).single();
+    const today = new Date().toISOString().split("T")[0];
 
-    const { data: appointments } = await supabase
-      .from("patient_appointments")
-      .select("id, appointment_date, appointment_time, appointment_type, status")
-      .eq("patient_id", user.id)
-      .gte("appointment_date", new Date().toISOString().split("T")[0])
-      .order("appointment_date", { ascending: true })
-      .limit(5);
+    // ── PATIENT SCOPED DATA ONLY ──
+    const [checklistRes, mealPlansRes, appointmentsRes, checkinsRes, achievementsRes, linkRes, workoutPlansRes] = await Promise.all([
+      supabase.from("checklist_tasks").select("id, title, completed, category, date").eq("patient_id", user.id).eq("date", today),
+      supabase.from("meal_plans").select("id, plan_name, status, start_date, end_date, total_calories").eq("patient_id", user.id).eq("status", "active").limit(5),
+      supabase.from("patient_appointments").select("id, appointment_date, appointment_time, appointment_type, status").eq("patient_id", user.id).gte("appointment_date", today).order("appointment_date", { ascending: true }).limit(5),
+      supabase.from("patient_checkins").select("id, weight, mood, energy_level, created_at").eq("patient_id", user.id).order("created_at", { ascending: false }).limit(10),
+      supabase.from("user_achievements").select("id, achievement_id, earned_at").eq("user_id", user.id).limit(20),
+      supabase.from("nutritionist_patients").select("nutritionist_id, status, journey_status").eq("patient_id", user.id).eq("status", "active").limit(1),
+      supabase.from("workout_plans").select("id, plan_name, is_active").eq("student_id", user.id).eq("is_active", true).limit(5),
+    ]);
 
-    const { data: checkins } = await supabase
-      .from("patient_checkins")
-      .select("id, weight, mood, energy_level, created_at")
-      .eq("patient_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(10);
+    const checklist = checklistRes.data || [];
+    const completedTasks = checklist.filter((t: any) => t.completed).length;
 
-    const { data: achievements } = await supabase
-      .from("user_achievements")
-      .select("id, achievement_id, earned_at")
-      .eq("user_id", user.id)
-      .limit(20);
-
-    const { data: nutritionistLink } = await supabase
-      .from("nutritionist_patients")
-      .select("nutritionist_id, status, journey_status")
-      .eq("patient_id", user.id)
-      .eq("status", "active")
-      .limit(1);
-
-    const { data: workoutPlans } = await supabase
-      .from("workout_plans")
-      .select("id, plan_name, is_active")
-      .eq("student_id", user.id)
-      .eq("is_active", true)
-      .limit(5);
-
-    const checklistItems = checklist || [];
-    const completedTasks = checklistItems.filter((t: any) => t.completed).length;
-
-    const systemPrompt = `Você é a IFJ (Inteligência FitJourney) — Assistente pessoal do paciente/aluno.
-Você tem acesso APENAS aos dados DESTE paciente. NUNCA acesse dados de outros pacientes ou profissionais.
+    const systemPrompt = `Você é a IFJ (Inteligência FitJourney) — Assistente pessoal do paciente.
+ACESSO APENAS aos dados DESTE paciente. NUNCA acesse dados de outros pacientes ou profissionais.
 
 PACIENTE: ${profile?.full_name || "Paciente"}
 
-ROTAS DISPONÍVEIS:
-- /patient-overview → Meu Painel
-- /checklist → Minhas Tarefas
-- /my-meals → Meu Plano Alimentar
-- /my-progress → Meu Progresso
-- /my-team → Meu Time (Profissionais)
-- /achievements → Conquistas
-- /settings → Configurações
+CLASSIFICAÇÃO DE AÇÕES:
+[LEVEL:consult] → Consulta de dados pessoais
+[LEVEL:suggest] → Sugestão de ação ao paciente
+[LEVEL:prepare] → Preparar navegação
 
-DADOS DO PACIENTE HOJE:
-- Tarefas hoje: ${completedTasks}/${checklistItems.length} completadas
-- Tarefas pendentes: ${checklistItems.filter((t: any) => !t.completed).map((t: any) => t.title).join(", ") || "Nenhuma"}
-- Plano alimentar ativo: ${(mealPlans || []).length > 0 ? "Sim" : "Não"}
-${(mealPlans || []).length > 0 ? `- Calorias do plano: ${mealPlans![0].total_calories} kcal` : ""}
-- Próxima consulta: ${(appointments || []).length > 0 ? `${appointments![0].appointment_date} às ${appointments![0].appointment_time}` : "Nenhuma agendada"}
-- Treinos ativos: ${(workoutPlans || []).length}
-- Conquistas: ${(achievements || []).length}
+ROTAS: /patient-overview, /checklist, /my-meals, /my-progress, /my-team, /achievements, /settings
 
-CHECK-INS RECENTES:
-${JSON.stringify((checkins || []).slice(0, 5).map((c: any) => ({
-  data: c.created_at?.split("T")[0],
-  peso: c.weight,
-  humor: c.mood,
-  energia: c.energy_level,
+DADOS HOJE:
+- Tarefas: ${completedTasks}/${checklist.length} | Pendentes: ${checklist.filter((t: any) => !t.completed).map((t: any) => t.title).join(", ") || "Nenhuma"}
+- Plano alimentar: ${(mealPlansRes.data || []).length > 0 ? `Sim (${mealPlansRes.data![0].total_calories} kcal)` : "Não"}
+- Próxima consulta: ${(appointmentsRes.data || []).length > 0 ? `${appointmentsRes.data![0].appointment_date} ${appointmentsRes.data![0].appointment_time}` : "Nenhuma"}
+- Treinos ativos: ${(workoutPlansRes.data || []).length}
+- Conquistas: ${(achievementsRes.data || []).length}
+- Status: ${(linkRes.data || [])[0]?.journey_status || "N/A"}
+
+CHECK-INS RECENTES: ${JSON.stringify((checkinsRes.data || []).slice(0, 5).map((c: any) => ({
+  data: c.created_at?.split("T")[0], peso: c.weight, humor: c.mood, energia: c.energy_level,
 })), null, 2)}
 
-JORNADA:
-- Status: ${(nutritionistLink || [])[0]?.journey_status || "N/A"}
-
 REGRAS:
-1. Responda SEMPRE em português brasileiro
-2. Use dados REAIS — nunca invente
-3. Quando pedirem para navegar, gere botões: [ACTION:Texto|/rota]
-4. NUNCA mostre dados de outros pacientes ou do profissional
-5. Seja motivacional, empático e acolhedor
-6. Ajude a entender o plano alimentar de forma simples
-7. Lembre de tarefas pendentes quando apropriado
-8. Celebre conquistas e progresso
-9. Se não souber algo, sugira falar com o profissional
-10. Aja como um coach pessoal amigável`;
+1. Português brasileiro, sempre
+2. Dados reais, nunca inventar
+3. Incluir [LEVEL:...] em toda resposta
+4. [ACTION:...] para navegação
+5. NUNCA mostrar dados de outros pacientes
+6. Ser motivacional, empático, acolhedor
+7. Celebrar conquistas e progresso
+8. Se não souber algo, sugerir falar com profissional
+9. Paciente NÃO tem acesso a ações destrutivas — nunca usar [CONFIRM:...]`;
 
     const messages = [
       { role: "system", content: systemPrompt },
@@ -139,15 +100,8 @@ REGRAS:
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages,
-        stream: true,
-      }),
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "google/gemini-2.5-flash", messages, stream: true }),
     });
 
     if (!response.ok) {

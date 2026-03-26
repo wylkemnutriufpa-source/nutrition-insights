@@ -1,32 +1,49 @@
 /**
- * IFJ Command Center — Role-scoped omniscient AI copilot
- * Premium golden command panel. Each role only accesses their own data.
+ * IFJ Command Center v2 — Hardened Role-scoped AI Copilot
+ * 
+ * Security model:
+ * - Action classification: CONSULT | SUGGEST | PREPARE | EXECUTE
+ * - Destructive/sensitive actions require explicit confirmation
+ * - Every interaction generates audit log
+ * - RLS-scoped data access per role
+ * - Admin gets full access but critical actions still need confirmation
  */
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useNavigate } from "react-router-dom";
 import {
-  Brain, Send, Loader2, Sparkles, Trash2, ExternalLink,
-  Crown, Zap, Shield, Command
+  Brain, Send, Loader2, Trash2, ExternalLink,
+  Crown, Zap, Shield, Command, AlertTriangle, Eye,
+  Lightbulb, Wrench, Play
 } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
+
+/* ─── Types ─── */
+type ActionType = "navigate" | "confirm";
+
+type ActionButton = {
+  label: string;
+  route: string;
+  type?: ActionType;
+  confirmMessage?: string;
+};
 
 type Message = {
   role: "user" | "assistant";
   content: string;
   actions?: ActionButton[];
-};
-
-type ActionButton = {
-  label: string;
-  route: string;
-  icon?: string;
+  actionLevel?: "consult" | "suggest" | "prepare" | "execute";
 };
 
 export type IFJRole = "admin" | "nutritionist" | "personal" | "patient";
@@ -35,12 +52,19 @@ interface IFJCommandCenterProps {
   role?: IFJRole;
 }
 
-const ROLE_CONFIG: Record<IFJRole, { label: string; edgeFunction: string; badge: string; badgeColor: string; suggestions: string[] }> = {
+/* ─── Role Config ─── */
+const ROLE_CONFIG: Record<IFJRole, {
+  label: string;
+  edgeFunction: string;
+  badge: string;
+  subtitle: string;
+  suggestions: string[];
+}> = {
   admin: {
     label: "ADMIN — Acesso Total",
     edgeFunction: "ifj-command-center",
-    badge: "bg-red-500/10 text-red-400 border-red-500/20",
-    badgeColor: "red",
+    badge: "bg-destructive/10 text-destructive border-destructive/20",
+    subtitle: "Centro de Comando — Acesso completo ao sistema",
     suggestions: [
       "Quem precisa de atenção urgente?",
       "Como está meu financeiro?",
@@ -52,8 +76,8 @@ const ROLE_CONFIG: Record<IFJRole, { label: string; edgeFunction: string; badge:
   nutritionist: {
     label: "Nutricionista",
     edgeFunction: "ifj-command-center",
-    badge: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-    badgeColor: "emerald",
+    badge: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+    subtitle: "Centro de Comando — Sua carteira clínica",
     suggestions: [
       "Quem precisa de atenção hoje?",
       "Resuma minha carteira",
@@ -65,8 +89,8 @@ const ROLE_CONFIG: Record<IFJRole, { label: string; edgeFunction: string; badge:
   personal: {
     label: "Personal Trainer",
     edgeFunction: "ifj-command-center-personal",
-    badge: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-    badgeColor: "blue",
+    badge: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+    subtitle: "Centro de Comando — Seus alunos e treinos",
     suggestions: [
       "Quais alunos treinaram hoje?",
       "Algum aluno reportou dor?",
@@ -78,8 +102,8 @@ const ROLE_CONFIG: Record<IFJRole, { label: string; edgeFunction: string; badge:
   patient: {
     label: "Paciente",
     edgeFunction: "ifj-command-center-patient",
-    badge: "bg-violet-500/10 text-violet-400 border-violet-500/20",
-    badgeColor: "violet",
+    badge: "bg-violet-500/10 text-violet-500 border-violet-500/20",
+    subtitle: "Sua assistente pessoal de saúde",
     suggestions: [
       "Como está minha dieta hoje?",
       "Qual minha próxima consulta?",
@@ -90,17 +114,31 @@ const ROLE_CONFIG: Record<IFJRole, { label: string; edgeFunction: string; badge:
   },
 };
 
-// Time-based greetings with variety
+/* ─── Action Level Icons ─── */
+const ACTION_LEVEL_ICON: Record<string, typeof Eye> = {
+  consult: Eye,
+  suggest: Lightbulb,
+  prepare: Wrench,
+  execute: Play,
+};
+
+const ACTION_LEVEL_LABEL: Record<string, string> = {
+  consult: "Consulta",
+  suggest: "Sugestão",
+  prepare: "Preparação",
+  execute: "Execução",
+};
+
+/* ─── Greeting Generator ─── */
 function getGreeting(name: string): string {
   const hour = new Date().getHours();
   const period = hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
-
   const greetings: Record<string, string[]> = {
     morning: [
       `Bom dia, ${name}! ☀️ No que posso te ajudar hoje?`,
-      `Bom dia, ${name}! Pronto pra mais um dia produtivo? Me diga o que precisa!`,
+      `Bom dia, ${name}! Pronto pra mais um dia produtivo?`,
       `Olá ${name}, bom dia! Já analisei tudo — me pergunte qualquer coisa.`,
-      `Bom dia! ${name}, estou aqui e conectada. O que vamos resolver hoje?`,
+      `Bom dia! ${name}, estou conectada ao sistema. O que vamos resolver?`,
       `E aí ${name}, bom dia! ☕ Vamos trabalhar no quê hoje?`,
     ],
     afternoon: [
@@ -111,27 +149,27 @@ function getGreeting(name: string): string {
       `Boa tarde, ${name}! Estou pronta — me dê um comando.`,
     ],
     evening: [
-      `Boa noite, ${name}! Ainda trabalhando? Me diga no que posso ajudar.`,
+      `Boa noite, ${name}! Ainda trabalhando? Me diga o que precisa.`,
       `Boa noite ${name}! Estou aqui caso precise de algo.`,
       `E aí ${name}, boa noite! Vamos finalizar alguma pendência?`,
       `Boa noite! ${name}, precisa ajustar algo?`,
       `Olá ${name}, boa noite! 🌙 Qualquer comando, estou pronta.`,
     ],
   };
-
   const options = greetings[period];
   return options[Math.floor(Math.random() * options.length)];
 }
 
+/* ─── Component ─── */
 export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterProps = {}) {
   const { user, profile, roles } = useAuth();
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<ActionButton | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Auto-detect role if not provided
   const detectedRole: IFJRole = roleProp || (
     roles?.includes("admin") ? "admin" :
     roles?.includes("personal") ? "personal" :
@@ -153,26 +191,84 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
     }
   }, [messages]);
 
-  const parseActionsFromResponse = (text: string): { cleanText: string; actions: ActionButton[] } => {
-    const actions: ActionButton[] = [];
-    const actionRegex = /\[ACTION:(.+?)\|(.+?)\]/g;
-    let match;
+  /* ─── Audit Logger ─── */
+  const logAudit = useCallback(async (action: string, metadata?: Record<string, unknown>) => {
+    if (!user) return;
+    try {
+      await supabase.from("audit_logs").insert({
+        user_id: user.id,
+        action,
+        resource_type: "ifj_command_center",
+        resource_id: detectedRole,
+        metadata: { ...metadata, role: detectedRole, timestamp: new Date().toISOString() },
+      });
+    } catch (e) {
+      console.error("IFJ audit log failed:", e);
+    }
+  }, [user, detectedRole]);
 
-    while ((match = actionRegex.exec(text)) !== null) {
-      actions.push({ label: match[1].trim(), route: match[2].trim() });
+  /* ─── Parse Actions from AI response ─── */
+  const parseActionsFromResponse = (text: string): { cleanText: string; actions: ActionButton[]; level: Message["actionLevel"] } => {
+    const actions: ActionButton[] = [];
+
+    // Parse navigate actions: [ACTION:Label|/route]
+    const navRegex = /\[ACTION:(.+?)\|(.+?)\]/g;
+    let match;
+    while ((match = navRegex.exec(text)) !== null) {
+      actions.push({ label: match[1].trim(), route: match[2].trim(), type: "navigate" });
     }
 
-    const cleanText = text.replace(actionRegex, "").trim();
-    return { cleanText, actions };
+    // Parse confirm actions: [CONFIRM:Label|/route|ConfirmMessage]
+    const confirmRegex = /\[CONFIRM:(.+?)\|(.+?)\|(.+?)\]/g;
+    while ((match = confirmRegex.exec(text)) !== null) {
+      actions.push({
+        label: match[1].trim(),
+        route: match[2].trim(),
+        type: "confirm",
+        confirmMessage: match[3].trim(),
+      });
+    }
+
+    const cleanText = text.replace(navRegex, "").replace(confirmRegex, "").trim();
+
+    // Detect action level from tags
+    let level: Message["actionLevel"] = "consult";
+    if (text.includes("[LEVEL:execute]")) level = "execute";
+    else if (text.includes("[LEVEL:prepare]")) level = "prepare";
+    else if (text.includes("[LEVEL:suggest]")) level = "suggest";
+    const finalClean = cleanText.replace(/\[LEVEL:\w+\]/g, "").trim();
+
+    return { cleanText: finalClean, actions, level };
   };
 
+  /* ─── Handle action button click ─── */
+  const handleAction = useCallback(async (action: ActionButton) => {
+    if (action.type === "confirm") {
+      setConfirmAction(action);
+      return;
+    }
+    await logAudit("ifj_navigate", { route: action.route, label: action.label });
+    navigate(action.route);
+  }, [navigate, logAudit]);
+
+  const handleConfirmAction = useCallback(async () => {
+    if (!confirmAction) return;
+    await logAudit("ifj_confirmed_action", { route: confirmAction.route, label: confirmAction.label });
+    navigate(confirmAction.route);
+    setConfirmAction(null);
+    toast.success(`Ação confirmada: ${confirmAction.label}`);
+  }, [confirmAction, navigate, logAudit]);
+
+  /* ─── Send Message ─── */
   const sendMessage = async (text: string) => {
     if (!text.trim() || isLoading || !user) return;
 
     const userMsg: Message = { role: "user", content: text.trim() };
-    setMessages((prev) => [...prev, userMsg]);
+    setMessages(prev => [...prev, userMsg]);
     setInput("");
     setIsLoading(true);
+
+    await logAudit("ifj_command_sent", { command: text.trim().substring(0, 200) });
 
     let assistantSoFar = "";
 
@@ -188,18 +284,15 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
           },
           body: JSON.stringify({
             command: text.trim(),
-            conversationHistory: messages.slice(-12).map((m) => ({
-              role: m.role,
-              content: m.content,
-            })),
+            conversationHistory: messages.slice(-12).map(m => ({ role: m.role, content: m.content })),
             isAdmin,
           }),
         }
       );
 
       if (!resp.ok) {
-        if (resp.status === 429) { toast.error("Limite de requisições. Aguarde."); throw new Error("rate"); }
-        if (resp.status === 402) { toast.error("Créditos insuficientes."); throw new Error("credits"); }
+        if (resp.status === 429) { toast.error("Limite de requisições. Aguarde um momento."); throw new Error("rate"); }
+        if (resp.status === 402) { toast.error("Créditos de IA insuficientes."); throw new Error("credits"); }
         throw new Error(`Error: ${resp.status}`);
       }
 
@@ -229,15 +322,15 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
             const content = parsed.choices?.[0]?.delta?.content;
             if (content) {
               assistantSoFar += content;
-              const { cleanText, actions } = parseActionsFromResponse(assistantSoFar);
-              setMessages((prev) => {
+              const { cleanText, actions, level } = parseActionsFromResponse(assistantSoFar);
+              setMessages(prev => {
                 const last = prev[prev.length - 1];
                 if (last?.role === "assistant") {
                   return prev.map((m, i) =>
-                    i === prev.length - 1 ? { ...m, content: cleanText, actions } : m
+                    i === prev.length - 1 ? { ...m, content: cleanText, actions, actionLevel: level } : m
                   );
                 }
-                return [...prev, { role: "assistant", content: cleanText, actions }];
+                return [...prev, { role: "assistant", content: cleanText, actions, actionLevel: level }];
               });
             }
           } catch {
@@ -246,41 +339,31 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
           }
         }
       }
+
+      await logAudit("ifj_response_received", { responseLength: assistantSoFar.length });
     } catch (e) {
       if (!assistantSoFar) {
-        setMessages((prev) => [
+        setMessages(prev => [
           ...prev,
           { role: "assistant", content: "Desculpe, tive um problema ao processar. Tente novamente." },
         ]);
       }
+      await logAudit("ifj_error", { error: String(e) });
     }
     setIsLoading(false);
   };
 
-  const QUICK_COMMANDS = config.suggestions;
-
   return (
     <div className="relative">
-      {/* Ambient golden particles */}
+      {/* Ambient particles — reduced on mobile */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-xl">
-        {[...Array(20)].map((_, i) => (
+        {[...Array(12)].map((_, i) => (
           <motion.div
             key={i}
             className="absolute w-1 h-1 rounded-full bg-amber-400/30"
-            initial={{
-              x: Math.random() * 100 + "%",
-              y: Math.random() * 100 + "%",
-              opacity: 0,
-            }}
-            animate={{
-              y: [Math.random() * 100 + "%", Math.random() * 100 + "%"],
-              opacity: [0, 0.6, 0],
-            }}
-            transition={{
-              duration: 4 + Math.random() * 4,
-              repeat: Infinity,
-              delay: Math.random() * 3,
-            }}
+            initial={{ x: `${Math.random() * 100}%`, y: `${Math.random() * 100}%`, opacity: 0 }}
+            animate={{ y: [`${Math.random() * 100}%`, `${Math.random() * 100}%`], opacity: [0, 0.5, 0] }}
+            transition={{ duration: 5 + Math.random() * 4, repeat: Infinity, delay: Math.random() * 3 }}
           />
         ))}
       </div>
@@ -291,89 +374,97 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
         animate={{ opacity: 1, scale: 1 }}
         className="relative border-2 border-amber-500/30 rounded-xl bg-gradient-to-br from-background via-background to-amber-950/5 overflow-hidden"
       >
-        {/* Premium Header */}
-        <div className="relative px-6 py-5 border-b border-amber-500/20 bg-gradient-to-r from-amber-500/5 via-amber-400/10 to-amber-500/5">
+        {/* Header — responsive */}
+        <div className="relative px-4 py-4 md:px-6 md:py-5 border-b border-amber-500/20 bg-gradient-to-r from-amber-500/5 via-amber-400/10 to-amber-500/5">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent" />
-          <div className="relative flex items-center gap-4">
+          <div className="relative flex items-center gap-3 md:gap-4">
             <motion.div
-              className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 via-amber-400 to-yellow-500 flex items-center justify-center shadow-lg shadow-amber-500/25"
-              animate={{ boxShadow: ["0 0 20px rgba(245,158,11,0.2)", "0 0 40px rgba(245,158,11,0.4)", "0 0 20px rgba(245,158,11,0.2)"] }}
+              className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-gradient-to-br from-amber-500 via-amber-400 to-yellow-500 flex items-center justify-center shadow-lg shadow-amber-500/25 shrink-0"
+              animate={{ boxShadow: ["0 0 20px rgba(245,158,11,0.2)", "0 0 35px rgba(245,158,11,0.35)", "0 0 20px rgba(245,158,11,0.2)"] }}
               transition={{ duration: 3, repeat: Infinity }}
             >
-              <Command className="w-7 h-7 text-white" />
+              <Command className="w-5 h-5 md:w-7 md:h-7 text-white" />
             </motion.div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 bg-clip-text text-transparent">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-base md:text-xl font-bold bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 bg-clip-text text-transparent whitespace-nowrap">
                   Meu Painel IFJ
                 </h2>
-                <Crown className="w-5 h-5 text-amber-500" />
-                <span className={`text-[9px] px-2 py-0.5 rounded-full border flex items-center gap-1 ${config.badge}`}>
-                  <Shield className="w-3 h-3" /> {config.label}
+                <Crown className="w-4 h-4 md:w-5 md:h-5 text-amber-500 shrink-0" />
+                <span className={`text-[8px] md:text-[9px] px-1.5 md:px-2 py-0.5 rounded-full border flex items-center gap-1 shrink-0 ${config.badge}`}>
+                  <Shield className="w-2.5 h-2.5 md:w-3 md:h-3" /> {config.label}
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Centro de Comando Inteligente — Controle total do seu sistema
+              <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5 truncate">
+                {config.subtitle}
               </p>
             </div>
             {messages.length > 0 && (
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 text-amber-500/70 hover:text-amber-500"
-                onClick={() => setMessages([])}
+                className="h-7 md:h-8 text-amber-500/70 hover:text-amber-500 shrink-0 text-[10px] md:text-xs px-2"
+                onClick={() => { setMessages([]); logAudit("ifj_conversation_cleared"); }}
               >
-                <Trash2 className="w-3.5 h-3.5 mr-1" /> Nova conversa
+                <Trash2 className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1" />
+                <span className="hidden sm:inline">Nova conversa</span>
               </Button>
             )}
           </div>
         </div>
 
         {/* Chat Area */}
-        <ScrollArea className="h-[480px]" ref={scrollRef as any}>
-          <div className="p-4 space-y-4">
-            {/* Welcome message */}
+        <ScrollArea className="h-[380px] md:h-[460px]" ref={scrollRef as any}>
+          <div className="p-3 md:p-4 space-y-3 md:space-y-4">
+            {/* Welcome */}
             {messages.length === 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-center py-6 space-y-5"
+                className="text-center py-4 md:py-6 space-y-4 md:space-y-5"
               >
                 <motion.div
-                  className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-500/20 via-amber-400/10 to-yellow-500/20 flex items-center justify-center mx-auto border border-amber-500/20"
-                  animate={{
-                    boxShadow: [
-                      "0 0 0px rgba(245,158,11,0.1)",
-                      "0 0 30px rgba(245,158,11,0.3)",
-                      "0 0 0px rgba(245,158,11,0.1)",
-                    ],
-                  }}
+                  className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-amber-500/20 via-amber-400/10 to-yellow-500/20 flex items-center justify-center mx-auto border border-amber-500/20"
+                  animate={{ boxShadow: ["0 0 0px rgba(245,158,11,0.1)", "0 0 25px rgba(245,158,11,0.25)", "0 0 0px rgba(245,158,11,0.1)"] }}
                   transition={{ duration: 3, repeat: Infinity }}
                 >
-                  <Brain className="w-10 h-10 text-amber-500/70" />
+                  <Brain className="w-8 h-8 md:w-10 md:h-10 text-amber-500/70" />
                 </motion.div>
 
-                <div className="max-w-md mx-auto">
-                  <p className="text-base font-medium bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">
+                <div className="max-w-sm md:max-w-md mx-auto px-2">
+                  <p className="text-sm md:text-base font-medium bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent leading-relaxed">
                     {greeting}
                   </p>
-                  <p className="text-[11px] text-muted-foreground/60 mt-2">
-                    Tenho acesso completo ao sistema. Posso navegar, analisar, enviar lembretes e resolver problemas.
+                  <p className="text-[10px] md:text-[11px] text-muted-foreground/60 mt-2 leading-relaxed">
+                    Posso consultar dados, sugerir ações, preparar operações e executar com sua confirmação.
                   </p>
                 </div>
 
-                <div className="flex flex-wrap gap-2 justify-center max-w-lg mx-auto">
-                  {QUICK_COMMANDS.map((cmd, i) => (
+                {/* Action level legend */}
+                <div className="flex flex-wrap justify-center gap-2 md:gap-3 px-2">
+                  {(["consult", "suggest", "prepare", "execute"] as const).map(level => {
+                    const Icon = ACTION_LEVEL_ICON[level];
+                    return (
+                      <div key={level} className="flex items-center gap-1 text-[9px] md:text-[10px] text-muted-foreground/50">
+                        <Icon className="w-3 h-3" />
+                        <span>{ACTION_LEVEL_LABEL[level]}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="flex flex-wrap gap-1.5 md:gap-2 justify-center max-w-lg mx-auto px-2">
+                  {config.suggestions.map((cmd, i) => (
                     <motion.button
                       key={i}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 * i }}
+                      transition={{ delay: 0.08 * i }}
                       onClick={() => sendMessage(cmd)}
-                      className="text-[11px] px-3 py-2 rounded-lg border border-amber-500/20 text-amber-500 hover:bg-amber-500/10 hover:border-amber-500/40 transition-all flex items-center gap-1.5"
+                      className="text-[10px] md:text-[11px] px-2.5 md:px-3 py-1.5 md:py-2 rounded-lg border border-amber-500/20 text-amber-500 hover:bg-amber-500/10 hover:border-amber-500/40 transition-all flex items-center gap-1 md:gap-1.5"
                     >
-                      <Zap className="w-3 h-3" />
-                      {cmd}
+                      <Zap className="w-2.5 h-2.5 md:w-3 md:h-3 shrink-0" />
+                      <span className="text-left">{cmd}</span>
                     </motion.button>
                   ))}
                 </div>
@@ -389,37 +480,51 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
                   animate={{ opacity: 1, y: 0 }}
                   className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 >
-                  <div className="max-w-[88%] space-y-2">
+                  <div className="max-w-[92%] md:max-w-[88%] space-y-2">
+                    {/* Action level badge for assistant */}
+                    {msg.role === "assistant" && msg.actionLevel && (
+                      <div className="flex items-center gap-1 mb-1">
+                        {(() => { const Icon = ACTION_LEVEL_ICON[msg.actionLevel]; return <Icon className="w-3 h-3 text-amber-500/50" />; })()}
+                        <span className="text-[9px] text-amber-500/50 font-medium">{ACTION_LEVEL_LABEL[msg.actionLevel]}</span>
+                      </div>
+                    )}
                     <div
-                      className={`rounded-xl px-4 py-3 text-sm ${
+                      className={`rounded-xl px-3 md:px-4 py-2.5 md:py-3 text-xs md:text-sm ${
                         msg.role === "user"
                           ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white"
                           : "bg-muted/30 border border-amber-500/10"
                       }`}
                     >
                       {msg.role === "assistant" ? (
-                        <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:mb-2 [&_ul]:mb-2 [&_li]:mb-0.5">
+                        <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:mb-2 [&_ul]:mb-2 [&_li]:mb-0.5 [&_p]:leading-relaxed [&_li]:leading-relaxed break-words">
                           <ReactMarkdown>{msg.content}</ReactMarkdown>
                         </div>
                       ) : (
-                        <p>{msg.content}</p>
+                        <p className="break-words leading-relaxed">{msg.content}</p>
                       )}
                     </div>
 
                     {/* Action Buttons */}
                     {msg.actions && msg.actions.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-1.5 md:gap-2">
                         {msg.actions.map((action, ai) => (
                           <motion.button
                             key={ai}
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: 0.1 * ai }}
-                            onClick={() => navigate(action.route)}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500/10 to-amber-600/10 border border-amber-500/30 text-amber-500 hover:from-amber-500/20 hover:to-amber-600/20 transition-all text-xs font-medium"
+                            onClick={() => handleAction(action)}
+                            className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-lg border transition-all text-[10px] md:text-xs font-medium ${
+                              action.type === "confirm"
+                                ? "bg-destructive/5 border-destructive/30 text-destructive hover:bg-destructive/10"
+                                : "bg-gradient-to-r from-amber-500/10 to-amber-600/10 border-amber-500/30 text-amber-500 hover:from-amber-500/20 hover:to-amber-600/20"
+                            }`}
                           >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                            {action.label}
+                            {action.type === "confirm"
+                              ? <AlertTriangle className="w-3 h-3 md:w-3.5 md:h-3.5 shrink-0" />
+                              : <ExternalLink className="w-3 h-3 md:w-3.5 md:h-3.5 shrink-0" />
+                            }
+                            <span className="truncate">{action.label}</span>
                           </motion.button>
                         ))}
                       </div>
@@ -431,9 +536,9 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
 
             {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
-                <div className="bg-muted/30 rounded-xl px-4 py-3 border border-amber-500/10">
-                  <div className="flex items-center gap-2 text-xs text-amber-500/70">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <div className="bg-muted/30 rounded-xl px-3 md:px-4 py-2.5 md:py-3 border border-amber-500/10">
+                  <div className="flex items-center gap-2 text-[10px] md:text-xs text-amber-500/70">
+                    <Loader2 className="w-3 h-3 md:w-3.5 md:h-3.5 animate-spin" />
                     Analisando o sistema...
                   </div>
                 </div>
@@ -443,29 +548,50 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
         </ScrollArea>
 
         {/* Input */}
-        <div className="p-4 border-t border-amber-500/20 bg-gradient-to-r from-amber-500/[0.02] to-transparent">
+        <div className="p-3 md:p-4 border-t border-amber-500/20 bg-gradient-to-r from-amber-500/[0.02] to-transparent">
           <form
-            onSubmit={(e) => { e.preventDefault(); sendMessage(input); }}
+            onSubmit={e => { e.preventDefault(); sendMessage(input); }}
             className="flex gap-2"
           >
             <Input
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Me dê um comando... Ex: 'Abra o financeiro', 'Como está a Maria?'"
+              onChange={e => setInput(e.target.value)}
+              placeholder={detectedRole === "patient" ? "Pergunte qualquer coisa..." : "Comando... Ex: 'Abra o financeiro'"}
               disabled={isLoading}
-              className="border-amber-500/20 focus-visible:ring-amber-500/30 bg-background/80"
+              className="border-amber-500/20 focus-visible:ring-amber-500/30 bg-background/80 text-xs md:text-sm"
             />
             <Button
               type="submit"
               disabled={isLoading || !input.trim()}
               size="sm"
-              className="shrink-0 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white"
+              className="shrink-0 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white h-9 md:h-10 px-3 md:px-4"
             >
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </Button>
           </form>
         </div>
       </motion.div>
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={!!confirmAction} onOpenChange={open => !open && setConfirmAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              Confirmação Necessária
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmAction?.confirmMessage || `Tem certeza que deseja executar: "${confirmAction?.label}"?`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmAction} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Confirmar Ação
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
