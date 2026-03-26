@@ -1018,7 +1018,7 @@ serve(async (req) => {
         response = await runTrainingEngine(supabase, intent, user.id, ctx);
       }
       else if (intent.module === "journey_engine") {
-        response = await runJourneyEngine(supabase, intent, user.id, ctx, patients, today);
+        response = await runJourneyEngine(supabase, intent, user.id, ctx, patients, today, role);
       }
       else {
         response = fmt("Não entendi", "❓", "error", "Comando não reconhecido.",
