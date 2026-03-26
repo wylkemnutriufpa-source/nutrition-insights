@@ -33,6 +33,10 @@ export default function PatientWorkoutView() {
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [videoModal, setVideoModal] = useState<string | null>(null);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [lastCompletionId, setLastCompletionId] = useState<string | null>(null);
+  const [lastRoutineIdForFeedback, setLastRoutineIdForFeedback] = useState<string | null>(null);
+  const [lastPlanIdForFeedback, setLastPlanIdForFeedback] = useState<string | null>(null);
 
   // Workout execution state
   const [completedExIds, setCompletedExIds] = useState<Set<string>>(new Set());
