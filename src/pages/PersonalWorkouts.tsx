@@ -298,15 +298,27 @@ export default function PersonalWorkouts() {
       <div className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-2">
+            {activeTab !== "dashboard" && (
+              <Button variant="ghost" size="icon" className="h-8 w-8 mr-1" onClick={() => setActiveTab("dashboard")}>
+                <ArrowRightLeft className="w-4 h-4 rotate-180" />
+              </Button>
+            )}
             <Dumbbell className="w-6 h-6 text-primary" />
             <div>
               <h1 className="text-xl font-bold">Módulo de Treinos</h1>
               <p className="text-xs text-muted-foreground">{plans.length} planos • {students.length} alunos</p>
             </div>
           </div>
-          <Button onClick={() => { setCreating(true); setActiveTab("plans"); }} className="gap-1.5">
-            <Plus className="w-4 h-4" /> Novo Plano
-          </Button>
+          <div className="flex gap-2">
+            {activeTab !== "dashboard" && (
+              <Button variant="outline" size="sm" onClick={() => setActiveTab("dashboard")} className="gap-1.5">
+                <BarChart3 className="w-3.5 h-3.5" /> Dashboard
+              </Button>
+            )}
+            <Button onClick={() => { setCreating(true); setActiveTab("plans"); }} className="gap-1.5">
+              <Plus className="w-4 h-4" /> Novo Plano
+            </Button>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
