@@ -141,6 +141,38 @@ export default function PatientWorkoutView() {
 
       if (logs.length > 0) {
         await supabase.from("workout_exercise_logs").insert(logs);
+
+        // Detect Personal Records (PRs)
+        try {
+          for (const log of logs) {
+            if (!log.load_kg || log.load_kg <= 0) continue;
+            const exercise = exercises.find((e: any) => e.id === log.exercise_id);
+            if (!exercise) continue;
+
+            // Check if this is a PR for this exercise
+            const { data: previousLogs } = await supabase
+              .from("workout_exercise_logs")
+              .select("load_kg")
+              .eq("exercise_id", log.exercise_id)
+              .not("id", "in", `(${logs.map(() => completion.id).join(",")})`)
+              .order("load_kg", { ascending: false })
+              .limit(1);
+
+            const previousBest = previousLogs?.[0]?.load_kg || 0;
+            if (log.load_kg > previousBest) {
+              await (supabase as any).from("workout_personal_records").insert({
+                student_id: user.id,
+                exercise_name: exercise.name,
+                exercise_library_id: exercise.exercise_library_id || null,
+                record_type: "load",
+                value: log.load_kg,
+                previous_value: previousBest || null,
+                completion_id: completion.id,
+              }).catch(() => {});
+              toast.success(`🏆 Novo PR em ${exercise.name}: ${log.load_kg}kg!`);
+            }
+          }
+        } catch {} // PR detection is non-blocking
       }
 
       // Submit pain feedback if any
