@@ -250,7 +250,7 @@ function NeuralParticleCanvas({
       dustPos[i * 3 + 1] = (Math.random() - 0.5) * 12;
       dustPos[i * 3 + 2] = (Math.random() - 0.5) * 6;
       const c = new THREE.Color();
-      c.setHSL(152 / 360, 0.3, 0.2 + Math.random() * 0.15);
+      c.setHSL(43 / 360, 0.4, 0.2 + Math.random() * 0.15);
       dustCol[i * 3] = c.r;
       dustCol[i * 3 + 1] = c.g;
       dustCol[i * 3 + 2] = c.b;
