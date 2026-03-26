@@ -331,10 +331,13 @@ export default function PersonalWorkouts() {
           </TabsList>
 
           <TabsContent value="dashboard" className="mt-4 space-y-4">
+            <PersonalPremiumDashboard
+              onNavigate={setActiveTab}
+              studentsCount={students.length}
+              plansCount={plans.length}
+            />
             <WorkoutFeedbackAlerts />
             <CrossProfessionalAlerts />
-            <WorkoutIFJInsights students={students} />
-            <PersonalDashboardStats />
             <WorkoutRestTimer />
           </TabsContent>
 
