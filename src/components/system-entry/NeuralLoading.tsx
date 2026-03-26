@@ -231,7 +231,7 @@ function NeuralParticleCanvas({
     nodeGeo.setAttribute("color", new THREE.BufferAttribute(nodeColors, 3));
 
     const nodeMat = new THREE.PointsMaterial({
-      size: isMobile ? 0.08 : 0.06,
+      size: isMobile ? 0.05 : 0.04,
       vertexColors: true,
       blending: THREE.AdditiveBlending,
       transparent: true,
