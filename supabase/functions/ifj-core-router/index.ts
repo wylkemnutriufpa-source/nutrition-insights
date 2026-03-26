@@ -225,38 +225,51 @@ async function getUserRole(supabase: any, userId: string): Promise<string> {
   return "unknown";
 }
 
-// Get patients for a nutritionist via nutritionist_patients + profiles join
-async function getPatients(supabase: any, userId: string): Promise<PatientRecord[]> {
-  const { data: links } = await supabase.from("nutritionist_patients")
-    .select("patient_id, status, journey_status")
-    .eq("nutritionist_id", userId).eq("status", "active").limit(200);
-  if (!links?.length) return [];
+// Get patients — admin sees ALL, nutritionist sees own portfolio
+async function getPatients(supabase: any, userId: string, role?: string): Promise<PatientRecord[]> {
+  let links: any[] = [];
 
-  const patientIds = links.map((l: any) => l.patient_id);
+  if (role === "admin") {
+    // Admin: fetch all active patient links across all nutritionists
+    const { data } = await supabase.from("nutritionist_patients")
+      .select("patient_id, status, journey_status, nutritionist_id")
+      .eq("status", "active").limit(500);
+    links = data || [];
+  } else {
+    const { data } = await supabase.from("nutritionist_patients")
+      .select("patient_id, status, journey_status")
+      .eq("nutritionist_id", userId).eq("status", "active").limit(200);
+    links = data || [];
+  }
+
+  if (!links.length) return [];
+
+  const patientIds = [...new Set(links.map((l: any) => l.patient_id))];
   const { data: profiles } = await supabase.from("profiles")
     .select("user_id, full_name, goal")
     .in("user_id", patientIds);
 
-  return links.map((link: any) => {
-    const profile = (profiles || []).find((p: any) => p.user_id === link.patient_id);
+  return patientIds.map((pid: string) => {
+    const profile = (profiles || []).find((p: any) => p.user_id === pid);
+    const link = links.find((l: any) => l.patient_id === pid);
     return {
-      id: link.patient_id,
+      id: pid,
       full_name: profile?.full_name || "Sem nome",
       goal: profile?.goal || null,
-      journey_status: link.journey_status,
-      status: link.status,
+      journey_status: link?.journey_status,
+      status: link?.status,
     };
   });
 }
 
 // Shared portfolio data fetch — used by priority engine AND clinical_summary
-async function getPortfolioInputs(supabase: any, userId: string, patientIds: string[], today: string) {
+async function getPortfolioInputs(supabase: any, userId: string, patientIds: string[], today: string, role?: string) {
   const safeIds = patientIds.length ? patientIds : ["00000000-0000-0000-0000-000000000000"];
   const [snapshots, alerts, plans, transactions] = await Promise.all([
     getSnapshots(supabase, safeIds, today),
-    getActiveAlerts(supabase, userId),
-    getMealPlans(supabase, userId),
-    getFinancialSummary(supabase, userId),
+    getActiveAlerts(supabase, userId, role),
+    getMealPlans(supabase, userId, role),
+    getFinancialSummary(supabase, userId, role),
   ]);
   return { snapshots, alerts, plans, transactions };
 }
@@ -292,17 +305,19 @@ async function getPatientLabSummary(supabase: any, patientId: string) {
 }
 
 // financial_transactions: nutritionist_id, no patient_id column
-async function getFinancialSummary(supabase: any, userId: string) {
-  const { data } = await supabase.from("financial_transactions")
-    .select("id, amount, status, type, date, description, category, created_at")
-    .eq("nutritionist_id", userId);
+async function getFinancialSummary(supabase: any, userId: string, role?: string) {
+  let query = supabase.from("financial_transactions")
+    .select("id, amount, status, type, date, description, category, created_at");
+  if (role !== "admin") query = query.eq("nutritionist_id", userId);
+  const { data } = await query.limit(500);
   return data || [];
 }
 
-async function getActiveAlerts(supabase: any, userId: string) {
-  const { data } = await supabase.from("clinical_alerts")
-    .select("id, patient_id, title, severity, alert_type, created_at")
-    .eq("nutritionist_id", userId).eq("is_active", true).order("created_at", { ascending: false }).limit(20);
+async function getActiveAlerts(supabase: any, userId: string, role?: string) {
+  let query = supabase.from("clinical_alerts")
+    .select("id, patient_id, title, severity, alert_type, created_at");
+  if (role !== "admin") query = query.eq("nutritionist_id", userId);
+  const { data } = await query.eq("is_active", true).order("created_at", { ascending: false }).limit(50);
   return data || [];
 }
 
@@ -341,10 +356,11 @@ async function getSnapshots(supabase: any, patientIds: string[], today: string) 
 }
 
 // meal_plans: nutritionist_id, is_active, plan_status (NOT status, NOT created_by)
-async function getMealPlans(supabase: any, userId: string) {
-  const { data } = await supabase.from("meal_plans")
-    .select("id, patient_id, title, plan_status, is_active, start_date, end_date")
-    .eq("nutritionist_id", userId).eq("is_active", true).limit(200);
+async function getMealPlans(supabase: any, userId: string, role?: string) {
+  let query = supabase.from("meal_plans")
+    .select("id, patient_id, title, plan_status, is_active, start_date, end_date");
+  if (role !== "admin") query = query.eq("nutritionist_id", userId);
+  const { data } = await query.eq("is_active", true).limit(500);
   return data || [];
 }
 
@@ -553,7 +569,7 @@ function resolveNavigation(n: string): { route: string; label: string } | null {
 // ═══════════════════════════════════════════════════════════════
 
 // ── CLINICAL ENGINE ────────────────────────────────────────────
-async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], today: string): Promise<IFJResponse> {
+async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], today: string, role?: string): Promise<IFJResponse> {
   const patientIds = patients.map(p => p.id);
   const safeIds = patientIds.length ? patientIds : ["00000000-0000-0000-0000-000000000000"];
 
@@ -695,7 +711,7 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
     }
 
     case "clinical_alerts": {
-      const alerts = await getActiveAlerts(supabase, userId);
+      const alerts = await getActiveAlerts(supabase, userId, role);
       if (!alerts.length) return fmt("Sem alertas", "✅", "info", "Nenhum alerta ativo.", "", [], intent, "clinical", ctx);
       const md = `| Paciente | Alerta | Severidade |\n|---|---|---|\n` +
         alerts.map((a: any) => {
@@ -707,7 +723,7 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
 
     case "clinical_summary":
     case "portfolio_health": {
-      const { snapshots, alerts, plans, transactions } = await getPortfolioInputs(supabase, userId, patientIds, today);
+      const { snapshots, alerts, plans, transactions } = await getPortfolioInputs(supabase, userId, patientIds, today, role);
       const priorities = calculatePriorities(patients, snapshots, alerts, plans, transactions);
       const critical = priorities.filter(p => p.level === "critical").length;
       const high = priorities.filter(p => p.level === "high").length;
@@ -763,9 +779,9 @@ async function runBehavioralEngine(supabase: any, intent: IFJIntent, userId: str
 }
 
 // ── FINANCIAL ENGINE ───────────────────────────────────────────
-async function runFinancialEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[]): Promise<IFJResponse> {
+async function runFinancialEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], role?: string): Promise<IFJResponse> {
   // financial_transactions: id, nutritionist_id, type, description, amount, date, category, status
-  const transactions = await getFinancialSummary(supabase, userId);
+  const transactions = await getFinancialSummary(supabase, userId, role);
 
   switch (intent.intent) {
     case "financial_overview": {
@@ -833,10 +849,13 @@ async function runTrainingEngine(supabase: any, intent: IFJIntent, userId: strin
 }
 
 // ── JOURNEY ENGINE ─────────────────────────────────────────────
-async function runJourneyEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], today: string): Promise<IFJResponse> {
+async function runJourneyEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], today: string, role?: string): Promise<IFJResponse> {
   switch (intent.intent) {
     case "appointments": {
-      const appts = await getAppointments(supabase, userId, today);
+      let query = supabase.from("patient_appointments")
+        .select("id, patient_id, appointment_date, appointment_time, status, appointment_type");
+      if (role !== "admin") query = query.eq("nutritionist_id", userId);
+      const { data: appts } = await query.gte("appointment_date", today).order("appointment_date", { ascending: true }).limit(10);
       if (!appts.length) return fmt("Sem consultas", "📅", "info", "Nenhuma consulta agendada.",
         "", [{ label: "Agendar", route: "/appointments", type: "navigate" }], intent, "journey", ctx);
       const md = `| Paciente | Data | Hora | Tipo | Status |\n|---|---|---|---|---|\n` +
@@ -861,9 +880,9 @@ async function runJourneyEngine(supabase: any, intent: IFJIntent, userId: string
 }
 
 // ── PRIORITY ENGINE (God Mode) ─────────────────────────────────
-async function runPriorityEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], today: string): Promise<IFJResponse> {
+async function runPriorityEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], today: string, role?: string): Promise<IFJResponse> {
   const patientIds = patients.map(p => p.id);
-  const { snapshots, alerts, plans, transactions } = await getPortfolioInputs(supabase, userId, patientIds, today);
+  const { snapshots, alerts, plans, transactions } = await getPortfolioInputs(supabase, userId, patientIds, today, role);
   const priorities = calculatePriorities(patients, snapshots, alerts, plans, transactions);
 
   // Sync priority queue (upsert + resolve stale)
@@ -950,14 +969,14 @@ serve(async (req) => {
 
     // 4. Fetch patients ONCE (shared across engines)
     const needsPatients = !["navigation", "general"].includes(intent.module) && intent.module !== "training_engine";
-    const patients = needsPatients ? await getPatients(supabase, user.id) : [];
+    const patients = needsPatients ? await getPatients(supabase, user.id, role) : [];
 
     let response: IFJResponse;
 
     // 5. Route to correct engine
     try {
       if (intent.intent === "greeting") {
-        const pts = patients.length || (await getPatients(supabase, user.id)).length;
+        const pts = patients.length || (await getPatients(supabase, user.id, role)).length;
         const hour = new Date().getHours();
         const period = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
         response = fmt(`${period}, ${userName}!`, "👋", "greeting", `${pts} pacientes ativos.`,
@@ -984,22 +1003,22 @@ serve(async (req) => {
           : fmt("Destino não encontrado", "❓", "error", "Não encontrei essa tela.", "Tente: *abrir financeiro*, *ir para pacientes*", [], intent, "navigation", ctx);
       }
       else if (intent.module === "priority_engine") {
-        response = await runPriorityEngine(supabase, intent, user.id, ctx, patients, today);
+        response = await runPriorityEngine(supabase, intent, user.id, ctx, patients, today, role);
       }
       else if (intent.module === "clinical_engine") {
-        response = await runClinicalEngine(supabase, intent, user.id, ctx, patients, today);
+        response = await runClinicalEngine(supabase, intent, user.id, ctx, patients, today, role);
       }
       else if (intent.module === "behavioral_engine") {
         response = await runBehavioralEngine(supabase, intent, user.id, ctx, patients, today);
       }
       else if (intent.module === "financial_engine") {
-        response = await runFinancialEngine(supabase, intent, user.id, ctx, patients);
+        response = await runFinancialEngine(supabase, intent, user.id, ctx, patients, role);
       }
       else if (intent.module === "training_engine") {
         response = await runTrainingEngine(supabase, intent, user.id, ctx);
       }
       else if (intent.module === "journey_engine") {
-        response = await runJourneyEngine(supabase, intent, user.id, ctx, patients, today);
+        response = await runJourneyEngine(supabase, intent, user.id, ctx, patients, today, role);
       }
       else {
         response = fmt("Não entendi", "❓", "error", "Comando não reconhecido.",
