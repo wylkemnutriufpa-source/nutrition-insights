@@ -3832,6 +3832,261 @@ export type Database = {
         }
         Relationships: []
       }
+      ifj_brand_rules: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          rule_group: string
+          rule_key: string
+          value_json: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          rule_group: string
+          rule_key: string
+          value_json?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          rule_group?: string
+          rule_key?: string
+          value_json?: Json | null
+        }
+        Relationships: []
+      }
+      ifj_executor_registry: {
+        Row: {
+          context_dependencies_json: Json | null
+          created_at: string | null
+          executor_key: string
+          function_name: string | null
+          id: string
+          intent_key: string
+          is_active: boolean | null
+          permission_dependencies_json: Json | null
+          query_dependencies_json: Json | null
+          route_name: string | null
+        }
+        Insert: {
+          context_dependencies_json?: Json | null
+          created_at?: string | null
+          executor_key: string
+          function_name?: string | null
+          id?: string
+          intent_key: string
+          is_active?: boolean | null
+          permission_dependencies_json?: Json | null
+          query_dependencies_json?: Json | null
+          route_name?: string | null
+        }
+        Update: {
+          context_dependencies_json?: Json | null
+          created_at?: string | null
+          executor_key?: string
+          function_name?: string | null
+          id?: string
+          intent_key?: string
+          is_active?: boolean | null
+          permission_dependencies_json?: Json | null
+          query_dependencies_json?: Json | null
+          route_name?: string | null
+        }
+        Relationships: []
+      }
+      ifj_food_database: {
+        Row: {
+          calories: number | null
+          carbs: number | null
+          category: string
+          created_at: string | null
+          fats: number | null
+          fiber: number | null
+          food_name: string
+          goal_tags_json: Json | null
+          id: string
+          is_active: boolean | null
+          meal_tags_json: Json | null
+          normalized_name: string
+          portion_reference: string | null
+          protein: number | null
+          restriction_tags_json: Json | null
+          subcategory: string | null
+          unit: string | null
+        }
+        Insert: {
+          calories?: number | null
+          carbs?: number | null
+          category: string
+          created_at?: string | null
+          fats?: number | null
+          fiber?: number | null
+          food_name: string
+          goal_tags_json?: Json | null
+          id?: string
+          is_active?: boolean | null
+          meal_tags_json?: Json | null
+          normalized_name: string
+          portion_reference?: string | null
+          protein?: number | null
+          restriction_tags_json?: Json | null
+          subcategory?: string | null
+          unit?: string | null
+        }
+        Update: {
+          calories?: number | null
+          carbs?: number | null
+          category?: string
+          created_at?: string | null
+          fats?: number | null
+          fiber?: number | null
+          food_name?: string
+          goal_tags_json?: Json | null
+          id?: string
+          is_active?: boolean | null
+          meal_tags_json?: Json | null
+          normalized_name?: string
+          portion_reference?: string | null
+          protein?: number | null
+          restriction_tags_json?: Json | null
+          subcategory?: string | null
+          unit?: string | null
+        }
+        Relationships: []
+      }
+      ifj_food_equivalents: {
+        Row: {
+          created_at: string | null
+          equivalence_type: string | null
+          id: string
+          is_active: boolean | null
+          is_preferred: boolean | null
+          meal_context: string | null
+          notes: string | null
+          similarity_score: number | null
+          source_food_id: string
+          target_food_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          equivalence_type?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_preferred?: boolean | null
+          meal_context?: string | null
+          notes?: string | null
+          similarity_score?: number | null
+          source_food_id: string
+          target_food_id: string
+        }
+        Update: {
+          created_at?: string | null
+          equivalence_type?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_preferred?: boolean | null
+          meal_context?: string | null
+          notes?: string | null
+          similarity_score?: number | null
+          source_food_id?: string
+          target_food_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ifj_food_equivalents_source_food_id_fkey"
+            columns: ["source_food_id"]
+            isOneToOne: false
+            referencedRelation: "ifj_food_database"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ifj_food_equivalents_target_food_id_fkey"
+            columns: ["target_food_id"]
+            isOneToOne: false
+            referencedRelation: "ifj_food_database"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ifj_goal_rules: {
+        Row: {
+          created_at: string | null
+          default_guidance: string | null
+          goal_key: string
+          id: string
+          is_active: boolean | null
+          label: string
+          macro_bias_json: Json | null
+          restriction_logic_json: Json | null
+          swap_priority_json: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          default_guidance?: string | null
+          goal_key: string
+          id?: string
+          is_active?: boolean | null
+          label: string
+          macro_bias_json?: Json | null
+          restriction_logic_json?: Json | null
+          swap_priority_json?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          default_guidance?: string | null
+          goal_key?: string
+          id?: string
+          is_active?: boolean | null
+          label?: string
+          macro_bias_json?: Json | null
+          restriction_logic_json?: Json | null
+          swap_priority_json?: Json | null
+        }
+        Relationships: []
+      }
+      ifj_guardrails: {
+        Row: {
+          condition_json: Json | null
+          created_at: string | null
+          guardrail_key: string
+          id: string
+          is_active: boolean | null
+          message_template: string | null
+          rule_type: string
+          scope: string | null
+          severity: string | null
+        }
+        Insert: {
+          condition_json?: Json | null
+          created_at?: string | null
+          guardrail_key: string
+          id?: string
+          is_active?: boolean | null
+          message_template?: string | null
+          rule_type: string
+          scope?: string | null
+          severity?: string | null
+        }
+        Update: {
+          condition_json?: Json | null
+          created_at?: string | null
+          guardrail_key?: string
+          id?: string
+          is_active?: boolean | null
+          message_template?: string | null
+          rule_type?: string
+          scope?: string | null
+          severity?: string | null
+        }
+        Relationships: []
+      }
       ifj_intent_logs: {
         Row: {
           confidence: number | null
@@ -3883,13 +4138,188 @@ export type Database = {
         }
         Relationships: []
       }
+      ifj_intent_phrases: {
+        Row: {
+          created_at: string | null
+          id: string
+          intent_id: string
+          is_active: boolean | null
+          language: string | null
+          phrase: string
+          phrase_type: string | null
+          weight: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          intent_id: string
+          is_active?: boolean | null
+          language?: string | null
+          phrase: string
+          phrase_type?: string | null
+          weight?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          intent_id?: string
+          is_active?: boolean | null
+          language?: string | null
+          phrase?: string
+          phrase_type?: string | null
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ifj_intent_phrases_intent_id_fkey"
+            columns: ["intent_id"]
+            isOneToOne: false
+            referencedRelation: "ifj_intent_registry"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ifj_intent_registry: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          description: string | null
+          executor_key: string | null
+          fallback_mode: string | null
+          id: string
+          intent_key: string
+          is_active: boolean | null
+          label: string
+          module: string
+          priority_order: number | null
+          requires_active_plan: boolean | null
+          requires_context: boolean | null
+          requires_patient_selected: boolean | null
+          requires_permission_key: string | null
+          scope: string
+        }
+        Insert: {
+          action_type?: string
+          created_at?: string | null
+          description?: string | null
+          executor_key?: string | null
+          fallback_mode?: string | null
+          id?: string
+          intent_key: string
+          is_active?: boolean | null
+          label: string
+          module?: string
+          priority_order?: number | null
+          requires_active_plan?: boolean | null
+          requires_context?: boolean | null
+          requires_patient_selected?: boolean | null
+          requires_permission_key?: string | null
+          scope?: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          description?: string | null
+          executor_key?: string | null
+          fallback_mode?: string | null
+          id?: string
+          intent_key?: string
+          is_active?: boolean | null
+          label?: string
+          module?: string
+          priority_order?: number | null
+          requires_active_plan?: boolean | null
+          requires_context?: boolean | null
+          requires_patient_selected?: boolean | null
+          requires_permission_key?: string | null
+          scope?: string
+        }
+        Relationships: []
+      }
+      ifj_knowledge_articles: {
+        Row: {
+          category: string | null
+          content_markdown: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          scope: string | null
+          slug: string
+          source_type: string | null
+          summary: string | null
+          tags_json: Json | null
+          title: string
+        }
+        Insert: {
+          category?: string | null
+          content_markdown?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          scope?: string | null
+          slug: string
+          source_type?: string | null
+          summary?: string | null
+          tags_json?: Json | null
+          title: string
+        }
+        Update: {
+          category?: string | null
+          content_markdown?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          scope?: string | null
+          slug?: string
+          source_type?: string | null
+          summary?: string | null
+          tags_json?: Json | null
+          title?: string
+        }
+        Relationships: []
+      }
+      ifj_meal_context_rules: {
+        Row: {
+          allowed_categories_json: Json | null
+          created_at: string | null
+          forbidden_combinations_json: Json | null
+          goal_adjustments_json: Json | null
+          id: string
+          is_active: boolean | null
+          meal_type: string
+          preferred_categories_json: Json | null
+        }
+        Insert: {
+          allowed_categories_json?: Json | null
+          created_at?: string | null
+          forbidden_combinations_json?: Json | null
+          goal_adjustments_json?: Json | null
+          id?: string
+          is_active?: boolean | null
+          meal_type: string
+          preferred_categories_json?: Json | null
+        }
+        Update: {
+          allowed_categories_json?: Json | null
+          created_at?: string | null
+          forbidden_combinations_json?: Json | null
+          goal_adjustments_json?: Json | null
+          id?: string
+          is_active?: boolean | null
+          meal_type?: string
+          preferred_categories_json?: Json | null
+        }
+        Relationships: []
+      }
       ifj_patient_permissions: {
         Row: {
+          allow_ai_last_resort: boolean | null
           appointments: boolean
           checklist: boolean
           created_at: string
           hydration: boolean
           id: string
+          ifj_enabled: boolean | null
           ifj_mode: string
           meal_plan: boolean
           messages: boolean
@@ -3897,15 +4327,20 @@ export type Database = {
           progress: boolean
           recipes: boolean
           recommendations: boolean
+          smart_meal_context: boolean | null
+          smart_recipe_help: boolean | null
+          smart_swap_suggestions: boolean | null
           substitutions: boolean
           updated_at: string
         }
         Insert: {
+          allow_ai_last_resort?: boolean | null
           appointments?: boolean
           checklist?: boolean
           created_at?: string
           hydration?: boolean
           id?: string
+          ifj_enabled?: boolean | null
           ifj_mode?: string
           meal_plan?: boolean
           messages?: boolean
@@ -3913,15 +4348,20 @@ export type Database = {
           progress?: boolean
           recipes?: boolean
           recommendations?: boolean
+          smart_meal_context?: boolean | null
+          smart_recipe_help?: boolean | null
+          smart_swap_suggestions?: boolean | null
           substitutions?: boolean
           updated_at?: string
         }
         Update: {
+          allow_ai_last_resort?: boolean | null
           appointments?: boolean
           checklist?: boolean
           created_at?: string
           hydration?: boolean
           id?: string
+          ifj_enabled?: boolean | null
           ifj_mode?: string
           meal_plan?: boolean
           messages?: boolean
@@ -3929,6 +4369,9 @@ export type Database = {
           progress?: boolean
           recipes?: boolean
           recommendations?: boolean
+          smart_meal_context?: boolean | null
+          smart_recipe_help?: boolean | null
+          smart_swap_suggestions?: boolean | null
           substitutions?: boolean
           updated_at?: string
         }
@@ -3982,6 +4425,48 @@ export type Database = {
           resolved_by?: string | null
           source_engine?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      ifj_response_templates: {
+        Row: {
+          body_template: string | null
+          created_at: string | null
+          footer_template: string | null
+          id: string
+          ifj_mode: string | null
+          intent_key: string
+          is_active: boolean | null
+          response_style: string | null
+          scope: string | null
+          template_type: string | null
+          title_template: string | null
+        }
+        Insert: {
+          body_template?: string | null
+          created_at?: string | null
+          footer_template?: string | null
+          id?: string
+          ifj_mode?: string | null
+          intent_key: string
+          is_active?: boolean | null
+          response_style?: string | null
+          scope?: string | null
+          template_type?: string | null
+          title_template?: string | null
+        }
+        Update: {
+          body_template?: string | null
+          created_at?: string | null
+          footer_template?: string | null
+          id?: string
+          ifj_mode?: string | null
+          intent_key?: string
+          is_active?: boolean | null
+          response_style?: string | null
+          scope?: string | null
+          template_type?: string | null
+          title_template?: string | null
         }
         Relationships: []
       }
