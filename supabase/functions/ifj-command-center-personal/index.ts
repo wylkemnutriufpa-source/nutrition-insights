@@ -6,37 +6,101 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-type Intent = "greeting" | "help" | "students_overview" | "trained_today" | "pain_reports" | "student_detail" | "workouts_overview" | "alerts" | "navigate" | "unknown";
+/**
+ * IFJ Command Center — Personal Trainer
+ * 100% Deterministic
+ * 
+ * VALIDATED TABLES:
+ * - profiles (user_id, full_name, phone)
+ * - personal_trainer_students (personal_id, student_id, status)
+ * - workout_plans (personal_id, student_id, plan_name, is_active)
+ * - workout_completions (student_id, completed_at, duration_minutes)
+ * - workout_session_feedback (student_id, pain_areas, fatigue_level, overall_feeling, feedback_date)
+ * - cross_professional_alerts (target_professional_id, patient_id, alert_type, message, severity, is_read)
+ */
+
+type Intent = "greeting" | "help" | "students_overview" | "trained_today" | "pain_reports"
+  | "student_detail" | "workouts_overview" | "alerts" | "navigate" | "unknown";
+
+interface SessionContext {
+  lastStudentId?: string;
+  lastStudentName?: string;
+  lastModule?: string;
+}
 
 function normalize(t: string): string {
   return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 
-function detectIntent(cmd: string): { intent: Intent; studentName?: string; route?: string } {
+const SYNONYMS: Record<string, string[]> = {
+  treino: ["treinou", "treinaram", "treino hoje", "treinamento", "exercicio", "malhou", "malharam"],
+  dor: ["dor", "lesao", "lesoes", "pain", "machuc", "desconforto", "incomo"],
+  alerta: ["alerta", "alertas", "notificac", "aviso"],
+  aluno: ["aluno", "alunos", "estudante", "carteira", "resum", "panorama", "visao geral"],
+  plano_treino: ["treino", "plano", "ficha", "rotina"],
+};
+
+function match(text: string, group: string): boolean {
+  return (SYNONYMS[group] || []).some(s => text.includes(s));
+}
+
+function findStudentByName(profiles: any[], searchName: string): { found: any | null; ambiguous: any[] } {
+  const normalized = normalize(searchName);
+  const exact = profiles.filter((p: any) => normalize(p.full_name) === normalized);
+  if (exact.length === 1) return { found: exact[0], ambiguous: [] };
+  const partial = profiles.filter((p: any) => normalize(p.full_name).includes(normalized));
+  if (partial.length === 1) return { found: partial[0], ambiguous: [] };
+  if (partial.length > 1) return { found: null, ambiguous: partial };
+  const firstName = profiles.filter((p: any) => normalize(p.full_name).split(" ")[0] === normalized);
+  if (firstName.length === 1) return { found: firstName[0], ambiguous: [] };
+  if (firstName.length > 1) return { found: null, ambiguous: firstName };
+  return { found: null, ambiguous: [] };
+}
+
+function detectIntent(cmd: string, ctx: SessionContext): { intent: Intent; studentName?: string; route?: string } {
   const n = normalize(cmd);
 
-  if (/^(oi|ola|hey|bom dia|boa tarde|boa noite)/.test(n)) return { intent: "greeting" };
-  if (/^(ajuda|help|comandos)/.test(n)) return { intent: "help" };
+  if (/^(oi|ola|hey|bom dia|boa tarde|boa noite|e ai|eai|salve|opa|fala)/.test(n)) return { intent: "greeting" };
+  if (/^(ajuda|help|comandos|menu|opcoes)/.test(n)) return { intent: "help" };
 
   const navMap: Record<string, string> = {
-    "dashboard": "/personal/dashboard", "alunos": "/personal/students", "treino": "/personal/workouts",
+    "dashboard": "/personal/dashboard", "alunos": "/personal/students",
+    "treino": "/personal/workouts", "ficha": "/personal/workouts",
   };
   for (const [key, route] of Object.entries(navMap)) {
-    if (n.includes(key) && (n.includes("abr") || n.includes("ir ") || n.includes("mostr"))) {
+    if (n.includes(key) && (n.includes("abr") || n.includes("ir ") || n.includes("mostr") || n.includes("acess") || n.includes("vai"))) {
       return { intent: "navigate", route };
     }
   }
 
-  const nameMatch = n.match(/(?:aluno|sobre|dados d[aeo]|como esta)\s+(.+)/);
-  if (nameMatch) return { intent: "student_detail", studentName: nameMatch[1].trim() };
+  // Student detail
+  const namePatterns = [
+    /(?:aluno|sobre|dados d[aeo]|como esta|como vai|detalhe[s]? d[aeo])\s+(.+)/,
+    /(?:me fala|fala|fale) (?:sobre|d[aeo])\s+(.+)/,
+  ];
+  for (const pattern of namePatterns) {
+    const m = n.match(pattern);
+    if (m) return { intent: "student_detail", studentName: m[1].trim() };
+  }
 
-  if (n.includes("treinou") || n.includes("treinaram") || n.includes("treino hoje")) return { intent: "trained_today" };
-  if (n.includes("dor") || n.includes("lesao") || n.includes("lesoes") || n.includes("pain")) return { intent: "pain_reports" };
-  if (n.includes("alerta")) return { intent: "alerts" };
-  if (n.includes("treino") || n.includes("plano")) return { intent: "workouts_overview" };
-  if (n.includes("aluno") || n.includes("carteira") || n.includes("resum")) return { intent: "students_overview" };
+  // Context: "como ele está?"
+  if ((n === "como esta" || n === "como ele esta" || n === "como ela esta" || n === "detalhes") && ctx.lastStudentName) {
+    return { intent: "student_detail", studentName: ctx.lastStudentName };
+  }
+
+  if (match(n, "treino") && !match(n, "plano_treino")) return { intent: "trained_today" };
+  if (match(n, "dor")) return { intent: "pain_reports" };
+  if (match(n, "alerta")) return { intent: "alerts" };
+  if (match(n, "plano_treino") && !match(n, "treino")) return { intent: "workouts_overview" };
+  if (match(n, "aluno")) return { intent: "students_overview" };
 
   return { intent: "unknown" };
+}
+
+function formatResponse(title: string, emoji: string, body: string, footer?: string): string {
+  let resp = `## ${emoji} ${title}\n\n${body}`;
+  if (footer) resp += `\n\n---\n> ${footer}`;
+  return resp;
 }
 
 serve(async (req) => {
@@ -52,7 +116,8 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const { command } = await req.json();
+    const { command, sessionContext } = await req.json();
+    const ctx: SessionContext = sessionContext || {};
 
     const { data: userRoles } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", user.id);
     const actualRoles = (userRoles || []).map((r: any) => r.role);
@@ -70,9 +135,8 @@ serve(async (req) => {
     const userName = profile?.full_name?.split(" ")[0] || "Personal";
     const today = new Date().toISOString().split("T")[0];
 
-    const { intent, studentName, route } = detectIntent(command);
+    const { intent, studentName, route } = detectIntent(command, ctx);
 
-    // Fetch students
     const { data: students } = await supabase.from("personal_trainer_students")
       .select("student_id, status").eq("personal_id", user.id);
     const activeStudents = (students || []).filter((s: any) => s.status === "active");
@@ -84,21 +148,27 @@ serve(async (req) => {
 
     let responseText = "";
     let actions: any[] = [];
-    const level = "consult";
+    const newContext: SessionContext = { ...ctx };
 
     if (intent === "greeting") {
       const hour = new Date().getHours();
       const period = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
-      responseText = `${period}, ${userName}! 💪\n\nVocê tem **${activeStudents.length} alunos ativos**. Me pergunte sobre treinos, dores ou progresso!`;
+      responseText = formatResponse("Bem-vindo", "💪",
+        `${period}, ${userName}!\n\n**${activeStudents.length} alunos ativos**. Me pergunte sobre treinos, dores ou progresso!`,
+        "Dados 100% reais"
+      );
     }
 
     else if (intent === "help") {
-      responseText = `## 💡 Comandos\n\n| Comando | O que faz |\n|---------|----------|\n| "Resumo dos alunos" | Visão geral |\n| "Quem treinou hoje?" | Alunos que completaram treino |\n| "Algum aluno com dor?" | Relatórios de dor/lesão |\n| "Sobre [nome]" | Dados de um aluno |\n| "Treinos ativos" | Planos de treino |\n| "Alertas" | Alertas recebidos |`;
+      responseText = formatResponse("Comandos", "💡",
+        `| Comando | O que faz |\n|---------|----------|\n| "Resumo dos alunos" | Visão geral |\n| "Quem treinou hoje?" | Completaram treino |\n| "Algum aluno com dor?" | Relatos de dor |\n| "Sobre [nome]" | Dados de um aluno |\n| "Alertas" | Alertas recebidos |`
+      );
     }
 
     else if (intent === "navigate" && route) {
       responseText = `Abrindo...`;
       actions = [{ label: "Ir para a tela", route, type: "navigate" }];
+      newContext.lastModule = route;
     }
 
     else if (intent === "students_overview") {
@@ -111,13 +181,15 @@ serve(async (req) => {
       const trainedToday = new Set((completions || []).map((c: any) => c.student_id)).size;
       const withActivePlan = new Set((plans || []).filter((p: any) => p.is_active).map((p: any) => p.student_id)).size;
 
-      responseText = `## 📊 Resumo dos Alunos\n\n| Indicador | Valor |\n|-----------|-------|\n| Alunos ativos | **${activeStudents.length}** |\n| Treinaram hoje | ${trainedToday} |\n| Com plano ativo | ${withActivePlan} |\n| Sem plano | ${activeStudents.length - withActivePlan} |\n\n### Lista:\n` +
+      responseText = formatResponse("Resumo dos Alunos", "📊",
+        `| Indicador | Valor |\n|-----------|-------|\n| Ativos | **${activeStudents.length}** |\n| Treinaram hoje | ${trainedToday} |\n| Com plano ativo | ${withActivePlan} |\n| Sem plano | ${activeStudents.length - withActivePlan} |\n\n### Lista\n` +
         activeStudents.map((s: any) => {
-          const p = (profiles || []).find((x: any) => x.user_id === s.student_id);
+          const pr = (profiles || []).find((x: any) => x.user_id === s.student_id);
           const trained = (completions || []).some((c: any) => c.student_id === s.student_id);
           const hasPlan = (plans || []).some((x: any) => x.student_id === s.student_id && x.is_active);
-          return `- ${trained ? "✅" : "⬜"} **${p?.full_name || "?"}** ${hasPlan ? "" : "⚠️ sem plano"}`;
-        }).join("\n");
+          return `- ${trained ? "✅" : "⬜"} **${pr?.full_name || "?"}** ${hasPlan ? "" : "⚠️ sem plano"}`;
+        }).join("\n")
+      );
       actions = [{ label: "Ver Alunos", route: "/personal/students", type: "navigate" }];
     }
 
@@ -129,58 +201,74 @@ serve(async (req) => {
       const trained = [...new Set((completions || []).map((c: any) => c.student_id))];
       const notTrained = activeStudents.filter((s: any) => !trained.includes(s.student_id));
 
-      responseText = `## 💪 Treinos de Hoje\n\n**Treinaram (${trained.length}):**\n` +
+      responseText = formatResponse("Treinos de Hoje", "💪",
+        `**Treinaram (${trained.length}):**\n` +
         (trained.length > 0 ? trained.map(id => {
-          const p = (profiles || []).find((x: any) => x.user_id === id);
+          const pr = (profiles || []).find((x: any) => x.user_id === id);
           const c = (completions || []).find((x: any) => x.student_id === id);
-          return `- ✅ **${p?.full_name || "?"}** (${c?.duration_minutes || "?"}min)`;
+          return `- ✅ **${pr?.full_name || "?"}** (${c?.duration_minutes || "?"}min)`;
         }).join("\n") : "- Ninguém ainda") +
         `\n\n**Não treinaram (${notTrained.length}):**\n` +
         (notTrained.length > 0 ? notTrained.map((s: any) => {
-          const p = (profiles || []).find((x: any) => x.user_id === s.student_id);
-          return `- ⬜ ${p?.full_name || "?"}`;
-        }).join("\n") : "- Todos treinaram! 🎉");
+          const pr = (profiles || []).find((x: any) => x.user_id === s.student_id);
+          return `- ⬜ ${pr?.full_name || "?"}`;
+        }).join("\n") : "- Todos treinaram! 🎉")
+      );
     }
 
     else if (intent === "pain_reports") {
-      const { data: feedbacks } = await supabase.from("workout_feedbacks")
-        .select("student_id, pain_areas, pain_level, fatigue_level, mood, created_at")
-        .in("student_id", safeIds).order("created_at", { ascending: false }).limit(30);
+      const { data: feedbacks } = await supabase.from("workout_session_feedback")
+        .select("student_id, pain_areas, fatigue_level, overall_feeling, feedback_date")
+        .in("student_id", safeIds).order("feedback_date", { ascending: false }).limit(30);
 
-      const withPain = (feedbacks || []).filter((f: any) => f.pain_areas && f.pain_areas.length > 0 && f.pain_level > 2);
+      const withPain = (feedbacks || []).filter((f: any) => f.pain_areas && (Array.isArray(f.pain_areas) ? f.pain_areas.length > 0 : Object.keys(f.pain_areas).length > 0));
 
       if (withPain.length === 0) {
-        responseText = `## ✅ Sem Relatos de Dor\n\nNenhum aluno reportou dor significativa recentemente.`;
+        responseText = formatResponse("Sem Relatos de Dor", "✅", "Nenhum aluno reportou dor recentemente.");
       } else {
-        responseText = `## ⚠️ Relatos de Dor (${withPain.length})\n\n` + withPain.slice(0, 10).map((f: any) => {
-          const p = (profiles || []).find((x: any) => x.user_id === f.student_id);
-          return `- **${p?.full_name || "?"}** — Dor nível ${f.pain_level}/10 em: ${JSON.stringify(f.pain_areas).replace(/[\[\]"]/g, "")} (${f.created_at?.split("T")[0]})`;
-        }).join("\n");
+        responseText = formatResponse(`Relatos de Dor (${withPain.length})`, "⚠️",
+          withPain.slice(0, 10).map((f: any) => {
+            const pr = (profiles || []).find((x: any) => x.user_id === f.student_id);
+            const areas = Array.isArray(f.pain_areas) ? f.pain_areas.join(", ") : JSON.stringify(f.pain_areas).replace(/[\{\}"]/g, "");
+            return `- **${pr?.full_name || "?"}** — Dor em: ${areas} | Fadiga: ${f.fatigue_level || "?"}/10 (${f.feedback_date})`;
+          }).join("\n")
+        );
       }
     }
 
     else if (intent === "student_detail" && studentName) {
-      const normalized = normalize(studentName);
-      const found = (profiles || []).find((p: any) => normalize(p.full_name).includes(normalized));
+      const { found, ambiguous } = findStudentByName(profiles || [], studentName);
 
-      if (!found) {
-        responseText = `## ❌ Aluno não encontrado\n\nNão encontrei **"${studentName}"** entre seus alunos.`;
+      if (ambiguous.length > 0) {
+        responseText = formatResponse("Múltiplos Alunos", "🔍",
+          `Encontrei **${ambiguous.length}** alunos com nome parecido:\n\n` +
+          ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}**`).join("\n") +
+          `\n\nSeja mais específico.`
+        );
+      } else if (!found) {
+        responseText = formatResponse("Aluno Não Encontrado", "❌", `Não encontrei **"${studentName}"** entre seus alunos.`);
       } else {
+        newContext.lastStudentId = found.user_id;
+        newContext.lastStudentName = found.full_name;
+
         const { data: plans } = await supabase.from("workout_plans")
           .select("plan_name, is_active, created_at").eq("student_id", found.user_id).eq("personal_id", user.id);
         const { data: completions } = await supabase.from("workout_completions")
           .select("completed_at, duration_minutes").eq("student_id", found.user_id).order("completed_at", { ascending: false }).limit(10);
-        const { data: feedbacks } = await supabase.from("workout_feedbacks")
-          .select("pain_areas, pain_level, fatigue_level, mood, created_at").eq("student_id", found.user_id).order("created_at", { ascending: false }).limit(5);
+        const { data: feedbacks } = await supabase.from("workout_session_feedback")
+          .select("pain_areas, fatigue_level, overall_feeling, feedback_date").eq("student_id", found.user_id).order("feedback_date", { ascending: false }).limit(5);
 
         const activePlans = (plans || []).filter((p: any) => p.is_active);
         const lastFb = (feedbacks as any)?.[0];
 
-        responseText = `## 👤 ${found.full_name}\n\n### Treinos\n| Indicador | Valor |\n|-----------|-------|\n| Planos ativos | ${activePlans.length} |\n| Treinos completados | ${(completions || []).length} (últimos) |\n| Último treino | ${(completions as any)?.[0]?.completed_at?.split("T")[0] || "N/A"} |`;
+        let body = `### Treinos\n| Indicador | Valor |\n|-----------|-------|\n| Planos ativos | ${activePlans.length} |\n| Treinos recentes | ${(completions || []).length} |\n| Último treino | ${(completions as any)?.[0]?.completed_at?.split("T")[0] || "N/A"} |`;
 
         if (lastFb) {
-          responseText += `\n\n### Último Feedback\n- Dor: ${lastFb.pain_level || 0}/10 ${lastFb.pain_areas ? `(${JSON.stringify(lastFb.pain_areas).replace(/[\[\]"]/g, "")})` : ""}\n- Fadiga: ${lastFb.fatigue_level || "?"}/10\n- Humor: ${lastFb.mood || "?"}`;
+          const areas = lastFb.pain_areas ? (Array.isArray(lastFb.pain_areas) ? lastFb.pain_areas.join(", ") : JSON.stringify(lastFb.pain_areas).replace(/[\{\}"]/g, "")) : "Nenhuma";
+          body += `\n\n### Último Feedback\n- Dor: ${areas}\n- Fadiga: ${lastFb.fatigue_level || "?"}/10\n- Sensação: ${lastFb.overall_feeling || "?"}`;
         }
+
+        responseText = formatResponse(found.full_name, "👤", body);
       }
     }
 
@@ -190,21 +278,26 @@ serve(async (req) => {
         .eq("target_professional_id", user.id).eq("is_read", false).limit(20);
 
       if (!alerts || alerts.length === 0) {
-        responseText = `## ✅ Sem Alertas\n\nNenhum alerta pendente.`;
+        responseText = formatResponse("Sem Alertas", "✅", "Nenhum alerta pendente.");
       } else {
-        responseText = `## 🔔 Alertas (${alerts.length})\n\n` + alerts.map((a: any) => {
-          const p = (profiles || []).find((x: any) => x.user_id === a.patient_id);
-          return `- **${p?.full_name || "?"}** — ${a.message} (${a.severity})`;
-        }).join("\n");
+        responseText = formatResponse(`Alertas (${alerts.length})`, "🔔",
+          alerts.map((a: any) => {
+            const pr = (profiles || []).find((x: any) => x.user_id === a.patient_id);
+            return `- **${pr?.full_name || "?"}** — ${a.message} (${a.severity})`;
+          }).join("\n")
+        );
       }
     }
 
     else {
-      responseText = `Não entendi **"${command}"**.\n\nTente:\n- *"Resumo dos alunos"*\n- *"Quem treinou hoje?"*\n- *"Algum aluno com dor?"*\n\nDigite **"ajuda"** para todos os comandos.`;
+      responseText = formatResponse("Não Entendi", "❓",
+        `Tente:\n- *"Resumo dos alunos"*\n- *"Quem treinou hoje?"*\n- *"Algum aluno com dor?"*\n\nDigite **"ajuda"** para todos os comandos.`
+      );
     }
 
     return new Response(JSON.stringify({
-      response: responseText, actions, level, intent, dataSource: "deterministic",
+      response: responseText, actions, level: "consult", intent,
+      sessionContext: newContext, dataSource: "deterministic",
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("ifj-command-center-personal error:", e);

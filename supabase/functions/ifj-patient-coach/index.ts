@@ -8,8 +8,9 @@ const corsHeaders = {
 
 /**
  * IFJ Patient Coach — 100% Deterministic
- * Queries real system data and returns structured responses.
- * Zero LLM. Zero hallucination.
+ * Same as command-center-patient but for conversational interface
+ * 
+ * VALIDATED TABLES: Same as ifj-command-center-patient
  */
 
 function normalize(t: string): string {
@@ -21,17 +22,22 @@ type Intent = "greeting" | "diet" | "checklist" | "hydration" | "appointment" | 
 
 function detectIntent(cmd: string): { intent: Intent; food?: string } {
   const n = normalize(cmd);
-  if (/^(oi|ola|bom dia|boa tarde|boa noite)/.test(n)) return { intent: "greeting" };
-  if (/^(ajuda|help|comandos)/.test(n)) return { intent: "help" };
+  if (/^(oi|ola|bom dia|boa tarde|boa noite|e ai|eai|salve|opa|fala|hey)/.test(n)) return { intent: "greeting" };
+  if (/^(ajuda|help|comandos|menu|opcoes)/.test(n)) return { intent: "help" };
 
-  const eatMatch = n.match(/(?:posso comer|posso tomar|pode comer|faz mal)\s+(.+)/);
-  if (eatMatch) return { intent: "can_eat", food: eatMatch[1].trim() };
+  const eatPatterns = [
+    /(?:posso comer|posso tomar|pode comer|pode tomar|faz mal|devo evitar|devo comer)\s+(.+)/,
+  ];
+  for (const p of eatPatterns) {
+    const m = n.match(p);
+    if (m) return { intent: "can_eat", food: m[1].trim() };
+  }
 
-  if (n.includes("dieta") || n.includes("cardapio") || n.includes("refeicao") || n.includes("comer")) return { intent: "diet" };
-  if (n.includes("checklist") || n.includes("tarefa") || n.includes("fazer")) return { intent: "checklist" };
-  if (n.includes("agua") || n.includes("hidrat")) return { intent: "hydration" };
-  if (n.includes("consulta") || n.includes("agenda") || n.includes("proximo")) return { intent: "appointment" };
-  if (n.includes("peso") || n.includes("progresso") || n.includes("evoluc")) return { intent: "progress" };
+  if (n.includes("dieta") || n.includes("cardapio") || n.includes("refeicao") || n.includes("comer") || n.includes("alimentac")) return { intent: "diet" };
+  if (n.includes("checklist") || n.includes("tarefa") || n.includes("fazer") || n.includes("pendente")) return { intent: "checklist" };
+  if (n.includes("agua") || n.includes("hidrat") || n.includes("beber") || n.includes("copo")) return { intent: "hydration" };
+  if (n.includes("consulta") || n.includes("agenda") || n.includes("proximo") || n.includes("horario")) return { intent: "appointment" };
+  if (n.includes("peso") || n.includes("progresso") || n.includes("evoluc") || n.includes("resultado") || n.includes("emagre")) return { intent: "progress" };
   if (n.includes("plano") || n.includes("meta") || n.includes("objetivo")) return { intent: "plan_info" };
 
   return { intent: "unknown" };
@@ -67,7 +73,7 @@ serve(async (req) => {
       const done = (tasks || []).filter((t: any) => t.completed).length;
       const total = (tasks || []).length;
 
-      response = `${period}, ${name}! 😊\n\nHoje você completou **${done}/${total}** tarefas do checklist.\n\nMe pergunte sobre sua dieta, hidratação ou progresso!`;
+      response = `${period}, ${name}! 😊\n\nHoje você completou **${done}/${total}** tarefas.\n\nMe pergunte sobre sua dieta, hidratação ou progresso!`;
     }
 
     else if (intent === "help") {
@@ -75,18 +81,21 @@ serve(async (req) => {
     }
 
     else if (intent === "diet") {
-      const { data: plans } = await supabase.from("patient_meal_plans")
-        .select("id, title, total_calories").eq("patient_id", user.id).eq("status", "published").limit(1);
+      const { data: plans } = await supabase.from("meal_plans")
+        .select("id, title, total_target_calories")
+        .eq("patient_id", user.id).or("plan_status.eq.published,plan_status.eq.active,is_active.eq.true")
+        .limit(1);
       const plan = (plans as any)?.[0];
 
       if (!plan) {
         response = `Você ainda não tem um plano alimentar ativo. Converse com seu nutricionista! 🥗`;
       } else {
-        const { data: meals } = await supabase.from("meal_plan_meals")
-          .select("meal_name, meal_time, calories, protein").eq("plan_id", plan.id).order("meal_time");
-        response = `## ${plan.title} (${plan.total_calories} kcal)\n\n` +
-          ((meals as any[]) || []).map((m: any) =>
-            `- **${m.meal_name}** (${m.meal_time || "?"}) — ${m.calories}kcal, ${m.protein}g proteína`
+        const { data: items } = await supabase.from("meal_plan_items")
+          .select("title, meal_type, calories_target, protein_target")
+          .eq("meal_plan_id", plan.id).order("meal_type");
+        response = `## ${plan.title} (${plan.total_target_calories || "?"} kcal)\n\n` +
+          ((items as any[]) || []).map((m: any) =>
+            `- **${m.title}** (${m.meal_type}) — ${m.calories_target || "?"}kcal, ${m.protein_target || "?"}g proteína`
           ).join("\n");
       }
     }
@@ -95,9 +104,12 @@ serve(async (req) => {
       const { data: tasks } = await supabase.from("checklist_tasks")
         .select("title, completed, category").eq("patient_id", user.id).eq("date", today);
       const done = (tasks || []).filter((t: any) => t.completed).length;
-      response = `## Checklist — ${done}/${(tasks || []).length}\n\n` +
-        (tasks || []).map((t: any) => `- ${t.completed ? "✅" : "⬜"} ${t.title}`).join("\n") ||
-        "Nenhuma tarefa hoje!";
+      if ((tasks || []).length === 0) {
+        response = `Nenhuma tarefa hoje! 🎉`;
+      } else {
+        response = `## Checklist — ${done}/${(tasks || []).length}\n\n` +
+          (tasks || []).map((t: any) => `- ${t.completed ? "✅" : "⬜"} ${t.title}`).join("\n");
+      }
     }
 
     else if (intent === "hydration") {
@@ -137,17 +149,17 @@ serve(async (req) => {
 
     else if (intent === "can_eat" && food) {
       const { data: anamnesis } = await supabase.from("patient_anamnesis")
-        .select("allergies, dietary_restrictions").eq("user_id", user.id).limit(1);
+        .select("allergies, dietary_restrictions").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1);
       const a = (anamnesis as any)?.[0];
       const restrictions = [...(a?.allergies || []), ...(a?.dietary_restrictions || [])].map((r: string) => normalize(r));
       const nFood = normalize(food);
       const blocked = restrictions.some(r => nFood.includes(r) || r.includes(nFood));
 
-      response = blocked
-        ? `⚠️ **"${food}"** pode estar nas suas restrições: ${restrictions.join(", ")}. Consulte seu nutricionista.`
-        : a
-          ? `✅ Não encontrei restrição para **"${food}"**. Verifique as porções no seu plano.`
-          : `Não tenho sua anamnese para verificar. Converse com seu nutricionista sobre restrições.`;
+      response = !a
+        ? `Não tenho sua anamnese para verificar. Converse com seu nutricionista.`
+        : blocked
+          ? `⚠️ **"${food}"** pode estar nas suas restrições: ${restrictions.join(", ")}. Consulte seu nutricionista.`
+          : `✅ Não encontrei restrição para **"${food}"**. Verifique as porções no seu plano.`;
     }
 
     else {
