@@ -79,7 +79,7 @@ const SYNONYM_MAP: Record<string, string[]> = {
   workout_pain: ["dor", "lesao", "desconforto", "incomodo", "machuc"],
   workout_progress: ["progresso treino", "carga", "evolucao treino", "volume"],
   student_detail: ["aluno", "estudante", "meu aluno"],
-  journey_status: ["jornada", "estagio", "fase", "etapa", "onboarding"],
+  journey_status: ["jornada", "estagio", "fase", "etapa"],
   priorities_today: ["prioridade", "resolver hoje", "o que fazer", "pendencia do dia", "agenda ifj", "fila"],
   next_best_action: ["proxima acao", "melhor acao", "o que fazer agora", "sugestao", "recomendac"],
   portfolio_health: ["saude da carteira", "portfolio", "score geral"],
@@ -87,12 +87,22 @@ const SYNONYM_MAP: Record<string, string[]> = {
   navigate: ["abrir", "ir para", "navegar", "mostrar tela", "abra"],
   greeting: ["oi", "ola", "bom dia", "boa tarde", "boa noite", "eai", "salve", "opa", "fala"],
   help: ["ajuda", "como usar", "comandos", "o que voce faz", "tutorial"],
-  // ACTION INTENTS
-  action_release_onboarding: ["libere onboarding", "liberar onboarding", "ative onboarding", "ativar onboarding"],
-  action_awaiting_onboarding: ["aguardando onboarding", "pendente onboarding", "quem precisa ativar onboarding", "sem onboarding"],
-  action_awaiting_payment: ["aguardando pagamento", "sem pagamento", "pendente pagamento", "quem nao pagou"],
-  action_no_diet: ["sem dieta", "sem plano alimentar", "quem esta sem dieta", "pacientes sem plano"],
-  action_awaiting_approval: ["aguardando aprovacao", "pendente aprovacao", "esperando aprovacao"],
+  // ACTION INTENTS — real operations
+  action_release_onboarding: ["libere onboarding", "liberar onboarding", "ative onboarding", "ativar onboarding", "libere o onboarding"],
+  action_awaiting_onboarding: [
+    "aguardando onboarding", "pendente onboarding", "quem precisa ativar onboarding",
+    "sem onboarding", "liberacao de onboarding", "liberar onboarding",
+    "aguardando liberacao", "pendente de liberacao", "esperando onboarding",
+    "quem precisa de onboarding", "quem esta esperando onboarding",
+    "quem precisa liberar", "aguardando aprovacao clinica",
+    "esperando eu liberar", "esperando liberar",
+  ],
+  action_awaiting_payment: ["aguardando pagamento", "sem pagamento", "pendente pagamento", "quem nao pagou", "nao pagou"],
+  action_no_diet: ["sem dieta", "sem plano alimentar", "quem esta sem dieta", "pacientes sem plano", "sem plano"],
+  action_awaiting_approval: ["aguardando aprovacao", "pendente aprovacao", "esperando aprovacao", "pendente de aprovacao"],
+  action_set_premium: ["coloque premium", "ative premium", "libere premium", "dar premium", "tornar premium", "premium para"],
+  action_enable_ifj: ["libere ifj", "ative ifj", "habilite ifj", "ligar ifj", "liberar ifj", "ativar ifj"],
+  action_compound: ["e libere", "e ative", "e coloque", "e habilite"],
 };
 
 function matchesIntent(n: string, intentKey: string): boolean {
