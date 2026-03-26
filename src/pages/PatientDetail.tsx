@@ -1430,7 +1430,12 @@ export default function PatientDetail() {
                 </DialogContent>
               </Dialog>
 
-              <Dialog open={openSection === "missions"} onOpenChange={(v) => !v && setOpenSection(null)}>
+              {/* Lab Exams Modal */}
+              <Dialog open={openSection === "lab-exams"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display">Exames Laboratoriais</DialogTitle></DialogHeader>
+                  <PatientLabExams patientId={patientId!} patientGender={anamnesis?.gender === "male" || anamnesis?.gender === "female" ? anamnesis.gender : undefined} />
+                </DialogContent>
                 <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Missões do Paciente</DialogTitle></DialogHeader>
                   <MissionCreator patientId={patientId!} patientName={profile?.full_name || undefined} />
