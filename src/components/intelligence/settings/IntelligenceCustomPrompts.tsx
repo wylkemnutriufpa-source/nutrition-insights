@@ -13,6 +13,7 @@ import { MessageSquare, Plus, Pencil, Trash2, Sparkles, Clock, CalendarDays } fr
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 
 const DAYS_OF_WEEK = [
   { value: "mon", label: "Seg" },
