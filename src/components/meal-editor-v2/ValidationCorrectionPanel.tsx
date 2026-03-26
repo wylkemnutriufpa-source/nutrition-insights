@@ -125,7 +125,7 @@ export function ValidationCorrectionPanel({ result, onClose, onCorrectionApplied
         }
       }
 
-      toast.success(`${suggestion.label}: ${updatedCount} itens ajustados. Salve e re-valide!`);
+      toast.success(`${suggestion.label}: ${updatedCount} itens ajustados automaticamente. Clique em Validar novamente!`);
       onCorrectionApplied();
     } catch (e: any) {
       toast.error("Erro ao aplicar correção: " + e.message);
