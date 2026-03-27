@@ -326,13 +326,14 @@ async function getUserRole(supabase: any, userId: string): Promise<string> {
 }
 
 async function checkPatientIFJAccess(supabase: any, patientId: string): Promise<{ hasAccess: boolean; perms: any }> {
+  // Use fresh query with no caching - critical for permission enforcement
   const { data, error } = await supabase.from("ifj_patient_permissions")
-    .select("*").eq("patient_id", patientId).maybeSingle();
-  console.log(`[IFJ-ACCESS] patient=${patientId} data=${JSON.stringify({ifj_enabled: data?.ifj_enabled, meal_plan: data?.meal_plan, substitutions: data?.substitutions, ifj_mode: data?.ifj_mode})} error=${error?.message || 'none'}`);
-  if (!data) { console.log("[IFJ-ACCESS] NO DATA -> blocked"); return { hasAccess: false, perms: null }; }
-  if (data.ifj_enabled === false) { console.log("[IFJ-ACCESS] ifj_enabled=false -> blocked"); return { hasAccess: false, perms: data }; }
-  if (data.meal_plan === false) { console.log("[IFJ-ACCESS] meal_plan=false -> blocked"); return { hasAccess: false, perms: data }; }
-  console.log("[IFJ-ACCESS] -> allowed");
+    .select("ifj_enabled, meal_plan, substitutions, ifj_mode, recipes, checklist, hydration, progress, appointments, messages, recommendations, smart_recipe_help, smart_swap_suggestions, smart_meal_context, allow_ai_last_resort")
+    .eq("patient_id", patientId).limit(1).single();
+  console.log(`[IFJ-ACCESS-v2] patient=${patientId} ifj_enabled=${data?.ifj_enabled} meal_plan=${data?.meal_plan} subs=${data?.substitutions} mode=${data?.ifj_mode} err=${error?.message || 'none'}`);
+  if (error || !data) { console.log("[IFJ-ACCESS-v2] NO DATA -> blocked"); return { hasAccess: false, perms: null }; }
+  if (data.ifj_enabled === false) { console.log("[IFJ-ACCESS-v2] BLOCKED: ifj_enabled=false"); return { hasAccess: false, perms: data }; }
+  if (data.meal_plan === false) { console.log("[IFJ-ACCESS-v2] BLOCKED: meal_plan=false"); return { hasAccess: false, perms: data }; }
   return { hasAccess: true, perms: data };
 }
 
