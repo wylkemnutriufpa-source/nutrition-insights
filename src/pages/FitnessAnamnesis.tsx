@@ -724,46 +724,70 @@ export default function FitnessAnamnesis() {
         {/* Question */}
         <AnimatePresence mode="wait">
           <motion.div key={q.id} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.3 }} className="space-y-6">
-            <div className="text-center mb-8">
-              <h2 className="font-display text-2xl font-bold mb-1">{q.title}</h2>
-              <p className="text-muted-foreground">{q.subtitle}</p>
-            </div>
 
             {q.type === "single" && q.options && (
-              <div className={`grid gap-3 ${q.options.length <= 3 ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2 sm:grid-cols-3"}`}>
-                {q.options.map((opt) => <OptionCard key={opt.value} opt={opt} selected={answers[q.id] === opt.value} onClick={() => setAnswer(opt.value)} />)}
-              </div>
+              <OrbitalSingleSelect
+                title={q.title}
+                subtitle={q.subtitle}
+                options={q.options}
+                value={answers[q.id]}
+                onChange={(v) => setAnswer(v)}
+              />
             )}
 
             {q.type === "multi" && q.options && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {q.options.map((opt) => <OptionCard key={opt.value} opt={opt} selected={(answers[q.id] || []).includes(opt.value)} onClick={() => toggleMulti(opt.value)} />)}
-              </div>
+              <OrbitalMultiSelect
+                title={q.title}
+                subtitle={q.subtitle}
+                options={q.options}
+                value={answers[q.id] || []}
+                onChange={(v) => setAnswer(v)}
+              />
             )}
 
             {q.type === "slider" && (
-              <SliderInput value={answers[q.id] ?? q.min ?? 1} onChange={(v) => setAnswer(v)} min={q.min || 0} max={q.max || 100} step={q.step || 1} unit={q.unit || ""} />
+              <OrbitalSlider
+                title={q.title}
+                subtitle={q.subtitle}
+                value={answers[q.id] ?? q.min ?? 1}
+                onChange={(v) => setAnswer(v)}
+                min={q.min || 0}
+                max={q.max || 100}
+                step={q.step || 1}
+                unit={q.unit || ""}
+              />
             )}
 
             {q.type === "number" && (
-              <div className="max-w-xs mx-auto space-y-2">
-                <div className="relative">
-                  <input type="number" value={answers[q.id] || ""} onChange={(e) => setAnswer(e.target.value)} placeholder={q.placeholder} min={q.min} max={q.max} className="w-full text-center text-4xl font-display font-bold bg-card border-2 border-border rounded-2xl px-6 py-4 focus:border-primary focus:outline-none transition-colors" />
-                  {q.unit && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">{q.unit}</span>}
-                </div>
-              </div>
+              <OrbitalNumberInput
+                title={q.title}
+                subtitle={q.subtitle}
+                value={answers[q.id] || ""}
+                onChange={(v) => setAnswer(v)}
+                min={q.min}
+                max={q.max}
+                unit={q.unit}
+                placeholder={q.placeholder}
+              />
             )}
 
             {q.type === "text" && (
-              <div className="max-w-md mx-auto">
-                <textarea value={answers[q.id] || ""} onChange={(e) => setAnswer(e.target.value)} placeholder={q.placeholder} rows={3} className="w-full bg-card border-2 border-border rounded-2xl px-4 py-3 focus:border-primary focus:outline-none transition-colors resize-none text-sm" />
-              </div>
+              <OrbitalTextInput
+                title={q.title}
+                subtitle={q.subtitle}
+                value={answers[q.id] || ""}
+                onChange={(v) => setAnswer(v)}
+                placeholder={q.placeholder}
+              />
             )}
 
             {q.type === "time" && (
-              <div className="max-w-xs mx-auto">
-                <input type="time" value={answers[q.id] || ""} onChange={(e) => setAnswer(e.target.value)} className="w-full text-center text-4xl font-display font-bold bg-card border-2 border-border rounded-2xl px-6 py-4 focus:border-primary focus:outline-none transition-colors" />
-              </div>
+              <OrbitalTimeInput
+                title={q.title}
+                subtitle={q.subtitle}
+                value={answers[q.id] || ""}
+                onChange={(v) => setAnswer(v)}
+              />
             )}
           </motion.div>
         </AnimatePresence>
