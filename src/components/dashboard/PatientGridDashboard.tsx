@@ -241,6 +241,7 @@ export default function PatientGridDashboard() {
                         {card.badge.text}
                       </Badge>
                     )}
+                    <NewFeatureBadge featureKey={card.key} variant="dot" />
                     <ArrowRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary transition-colors flex-shrink-0" />
                   </div>
                 </Card>
