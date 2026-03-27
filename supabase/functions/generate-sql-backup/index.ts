@@ -25,28 +25,20 @@ Deno.serve(async (req) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    const authClient = createClient(supabaseUrl, anonKey, {
-      global: {
-        headers: {
-          Authorization: authHeader,
-        },
-      },
-    });
-
     const adminClient = createClient(supabaseUrl, serviceKey);
     const token = authHeader.replace("Bearer ", "").trim();
-    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
+    const { data: { user }, error: userError } = await adminClient.auth.getUser(token);
 
-    if (claimsError || !claimsData?.claims?.sub) {
-      console.error("Auth error:", claimsError?.message || "Missing JWT claims");
+    if (userError || !user) {
+      console.error("Auth error:", userError?.message || "No user found");
       return new Response(JSON.stringify({ error: "Invalid token" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const userId = claimsData.claims.sub;
-    const userEmail = typeof claimsData.claims.email === "string" ? claimsData.claims.email : "unknown";
+    const userId = user.id;
+    const userEmail = user.email || "unknown";
 
     const { data: roles, error: rolesError } = await adminClient
       .from("user_roles")
