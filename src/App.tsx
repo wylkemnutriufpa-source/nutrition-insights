@@ -151,6 +151,7 @@ const OnboardingPaciente = lazy(() => import("./pages/OnboardingPaciente"));
 const MagicJourneyStory = lazy(() => import("./pages/MagicJourneyStory"));
 const BodyProjectionExperience = lazy(() => import("./pages/BodyProjectionExperience"));
 const AdminOperationalCosts = lazy(() => import("./pages/AdminOperationalCosts"));
+const AIUsageDashboard = lazy(() => import("./pages/admin/AIUsageDashboard"));
 const TeamManagement = lazy(() => import("./pages/TeamManagement"));
 const WhatsAppSettings = lazy(() => import("./pages/WhatsAppSettings"));
 const PhytotherapyProtocols = lazy(() => import("./pages/PhytotherapyProtocols"));
