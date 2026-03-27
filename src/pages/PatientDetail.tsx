@@ -149,6 +149,8 @@ export default function PatientDetail() {
       return;
     }
     setConfirmingPayment(true);
+    // ⚡ Optimistic UI
+    if (patientId) updatePatientJourneyInCache(queryClient, patientId, "awaiting_consent");
     try {
       const { data, error } = await supabase.rpc("confirm_patient_payment", {
         _patient_id: patientId,
