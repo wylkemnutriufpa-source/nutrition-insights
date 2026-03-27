@@ -410,9 +410,9 @@ const questions: Question[] = [
     subtitle: "Come algo antes de dormir?",
     type: "single",
     options: [
-      { label: "Sim, sempre", emoji: "✅", value: "always" },
-      { label: "Às vezes", emoji: "🤔", value: "sometimes" },
-      { label: "Não faço", emoji: "❌", value: "never" },
+      { label: "Sim, sempre", emoji: "✅", value: "always", description: "Sempre faz uma pequena refeição antes de dormir" },
+      { label: "Às vezes", emoji: "🤔", value: "sometimes", description: "Come antes de dormir em alguns dias da semana" },
+      { label: "Não faço", emoji: "❌", value: "never", description: "Não come nada após o jantar até a manhã seguinte" },
     ],
   },
   {
