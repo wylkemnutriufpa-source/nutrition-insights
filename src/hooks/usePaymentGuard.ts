@@ -24,71 +24,88 @@ export function usePaymentGuard(): PaymentGuardState {
     queryFn: async () => {
       if (!user) return { paid: false, reason: null };
 
-      // Check 1: patient_prestige with high-tier plan (display_order >= 3 = Pro/Premium/Biquini)
-      const { data: prestige } = await (supabase as any)
-        .from("patient_prestige")
-        .select("id, plan_id, prestige_plans(display_order, slug)")
-        .eq("patient_id", user.id)
-        .eq("is_active", true)
-        .limit(5);
+      // Check 1 (PRIORITY): journey_status — most reliable for manually released patients
+      try {
+        const { data: journey } = await supabase
+          .from("nutritionist_patients")
+          .select("journey_status")
+          .eq("patient_id", user.id)
+          .eq("status", "active")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-      const hasHighPrestige = prestige?.some(
-        (p: any) => p.prestige_plans && p.prestige_plans.display_order >= 3
-      );
-      if (hasHighPrestige) return { paid: true, reason: "prestige" };
-
-      // Check 2: payments table (direct payment)
-      const { data: directPayments } = await supabase
-        .from("payments")
-        .select("id")
-        .eq("user_id", user.id)
-        .in("status", ["paid", "succeeded"])
-        .limit(1);
-
-      if (directPayments && directPayments.length > 0) return { paid: true, reason: "payment" };
-
-      // Check 3: booking_payments by email
-      const email = user.email;
-      if (email) {
-        const { data: bookings } = await supabase
-          .from("booking_payments")
-          .select("id")
-          .eq("customer_email", email.toLowerCase())
-          .eq("status", "paid")
-          .limit(1);
-
-        if (bookings && bookings.length > 0) return { paid: true, reason: "booking" };
+        const releasedStatuses = [
+          "active",
+          "awaiting_consent",
+          "awaiting_onboarding_release",
+          "onboarding_active",
+          "onboarding_completed",
+          "draft_ready_for_review",
+          "plan_published",
+          "active_followup",
+          "clinical_followup_active",
+        ];
+        if (journey && releasedStatuses.includes(journey.journey_status)) {
+          return { paid: true, reason: "released" };
+        }
+      } catch (e) {
+        console.warn("[PaymentGuard] journey check failed:", e);
       }
 
-      // Check 4: journey_status already beyond awaiting_payment (manual release by nutritionist)
-      const { data: journey } = await (supabase as any)
-        .from("nutritionist_patients")
-        .select("journey_status")
-        .eq("patient_id", user.id)
-        .eq("status", "active")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      // Check 2: patient_prestige with high-tier plan
+      try {
+        const { data: prestige } = await (supabase as any)
+          .from("patient_prestige")
+          .select("id, plan_id, prestige_plans(display_order, slug)")
+          .eq("patient_id", user.id)
+          .eq("is_active", true)
+          .limit(5);
 
-      const releasedStatuses = [
-        "active",
-        "awaiting_consent",
-        "awaiting_onboarding_release",
-        "onboarding_active",
-        "onboarding_completed",
-        "draft_ready_for_review",
-        "plan_published",
-        "active_followup",
-        "clinical_followup_active",
-      ];
-      if (journey && releasedStatuses.includes(journey.journey_status)) {
-        return { paid: true, reason: "released" };
+        const hasHighPrestige = prestige?.some(
+          (p: any) => p.prestige_plans && p.prestige_plans.display_order >= 3
+        );
+        if (hasHighPrestige) return { paid: true, reason: "prestige" };
+      } catch (e) {
+        console.warn("[PaymentGuard] prestige check failed:", e);
+      }
+
+      // Check 3: payments table (direct payment)
+      try {
+        const { data: directPayments } = await supabase
+          .from("payments")
+          .select("id")
+          .eq("user_id", user.id)
+          .in("status", ["paid", "succeeded"])
+          .limit(1);
+
+        if (directPayments && directPayments.length > 0) return { paid: true, reason: "payment" };
+      } catch (e) {
+        console.warn("[PaymentGuard] payments check failed:", e);
+      }
+
+      // Check 4: booking_payments by email
+      try {
+        const email = user.email;
+        if (email) {
+          const { data: bookings } = await supabase
+            .from("booking_payments")
+            .select("id")
+            .eq("customer_email", email.toLowerCase())
+            .eq("status", "paid")
+            .limit(1);
+
+          if (bookings && bookings.length > 0) return { paid: true, reason: "booking" };
+        }
+      } catch (e) {
+        console.warn("[PaymentGuard] booking check failed:", e);
       }
 
       return { paid: false, reason: null };
     },
     enabled: !!user && isPatient,
     staleTime: 2 * 60 * 1000,
+    retry: 2,
   });
 
   if (!isPatient) {
