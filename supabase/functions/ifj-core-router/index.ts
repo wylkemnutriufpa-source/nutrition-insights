@@ -562,25 +562,112 @@ function fmt(title: string, icon: string, responseType: string, summary: string,
 
 const NAV_MAP: Record<string, { route: string; label: string }> = {
   "control tower": { route: "/control-tower", label: "Control Tower" },
+  "torre de controle": { route: "/control-tower", label: "Control Tower" },
   "pacientes": { route: "/patients", label: "Pacientes" },
   "financeiro": { route: "/financial", label: "Financeiro" },
   "consultas": { route: "/appointments", label: "Consultas" },
+  "agenda": { route: "/appointments", label: "Agenda" },
   "planos": { route: "/meal-plans", label: "Planos Alimentares" },
+  "plano alimentar": { route: "/meal-plans", label: "Planos Alimentares" },
   "treinos": { route: "/workouts", label: "Treinos" },
   "automac": { route: "/automation-center", label: "Automações" },
   "relatorios": { route: "/reports", label: "Relatórios" },
   "configurac": { route: "/settings", label: "Configurações" },
+  "ajustes": { route: "/settings", label: "Configurações" },
   "inteligencia": { route: "/intelligence-settings", label: "Inteligência FitJourney" },
+  "ifj": { route: "/intelligence-settings", label: "Inteligência FitJourney" },
   "dashboard": { route: "/", label: "Dashboard" },
   "workspace": { route: "/clinical-workspace", label: "Workspace Clínico" },
   "protocolos": { route: "/protocols", label: "Protocolos" },
   "programas": { route: "/programs", label: "Programas" },
   "pipeline": { route: "/onboarding-pipeline", label: "Pipeline" },
+  "onboarding": { route: "/onboarding-pipeline", label: "Pipeline de Onboarding" },
+  "anamnese": { route: "/anamnesis", label: "Anamnese" },
+  "anaminese": { route: "/anamnesis", label: "Anamnese" },
+  "receitas": { route: "/recipes", label: "Receitas" },
+  "biblioteca": { route: "/recipes", label: "Biblioteca de Receitas" },
+  "chat": { route: "/chat", label: "Chat" },
+  "mensagens": { route: "/chat", label: "Mensagens" },
+  "avaliacao": { route: "/body-assessment", label: "Avaliação Física" },
+  "avaliacoes": { route: "/body-assessment", label: "Avaliações Físicas" },
+  "perfil": { route: "/profile", label: "Perfil" },
+  "minha conta": { route: "/profile", label: "Minha Conta" },
+  "checklist": { route: "/checklist", label: "Checklist" },
+  "hidratacao": { route: "/hydration", label: "Hidratação" },
+  "notificac": { route: "/notifications", label: "Notificações" },
+  "afiliados": { route: "/affiliates", label: "Afiliados" },
+  "campanhas": { route: "/campaigns", label: "Campanhas" },
 };
 
 function resolveNavigation(n: string): { route: string; label: string } | null {
   for (const [key, val] of Object.entries(NAV_MAP)) { if (n.includes(key)) return val; }
   return null;
+}
+
+// ── SMART SUGGESTION ENGINE ───────────────────────────────────
+// When intent is unknown, extract keywords and suggest possible actions
+interface SmartSuggestion { label: string; example: string; }
+
+function generateSmartSuggestions(n: string, intents: DBIntentRow[], phraseMap: Map<string, DBPhraseRow[]>, role: string): SmartSuggestion[] {
+  const suggestions: SmartSuggestion[] = [];
+  const words = n.split(" ").filter(w => w.length > 2);
+
+  // Check if any word partially matches a NAV_MAP key
+  for (const word of words) {
+    for (const [key, val] of Object.entries(NAV_MAP)) {
+      if (key.includes(word) || word.includes(key.substring(0, Math.min(key.length, 5)))) {
+        suggestions.push({ label: `Abrir ${val.label}`, example: `abrir ${key}` });
+        break;
+      }
+    }
+  }
+
+  // Check if any word partially matches intent phrases
+  const seenIntents = new Set<string>();
+  for (const word of words) {
+    for (const intent of intents) {
+      if (seenIntents.has(intent.intent_key)) continue;
+      if (intent.scope === "admin" && role !== "admin") continue;
+      if (intent.scope === "professional" && !["admin", "nutritionist", "personal"].includes(role)) continue;
+      if (intent.scope === "patient" && role !== "patient" && role !== "admin") continue;
+
+      const iPhrases = phraseMap.get(intent.id) || [];
+      for (const phrase of iPhrases) {
+        if (phrase.phrase.includes(word) || word.includes(phrase.phrase.substring(0, Math.min(phrase.phrase.length, 4)))) {
+          const exampleMap: Record<string, string> = {
+            "anamnesis": "anamnese do [paciente]",
+            "patient_detail": "sobre [paciente]",
+            "meal_plan": "plano alimentar do [paciente]",
+            "food_substitution": "trocar [alimento]",
+            "action_release_onboarding": "libere onboarding da [nome]",
+            "action_enable_ifj": "libere IFJ para [nome]",
+            "priorities_today": "o que preciso resolver hoje?",
+            "patients_attention": "quem precisa de atenção?",
+            "clinical_alerts": "alertas clínicos",
+            "financial_overview": "resumo financeiro",
+            "appointments": "próximas consultas",
+            "checklist_status": "checklist do [paciente]",
+            "lab_exams": "exames do [paciente]",
+            "navigate": `abrir ${word}`,
+          };
+          suggestions.push({
+            label: intent.label,
+            example: exampleMap[intent.intent_key] || `${intent.label.toLowerCase()}`,
+          });
+          seenIntents.add(intent.intent_key);
+          break;
+        }
+      }
+    }
+  }
+
+  // Deduplicate by label
+  const seen = new Set<string>();
+  return suggestions.filter(s => {
+    if (seen.has(s.label)) return false;
+    seen.add(s.label);
+    return true;
+  }).slice(0, 5);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1235,9 +1322,30 @@ serve(async (req) => {
         response = await runNutritionEngine(supabaseAdmin, intent, user.id, role, ctx, inputText);
       }
       else {
-        response = fmt("Não entendi", "❓", "error", "Comando não reconhecido.",
-          "❓ Não entendi.\n\n💡 Tente:\n- *\"Quem precisa de atenção?\"*\n- *\"Sobre [paciente]\"*\n- *\"O que preciso resolver hoje?\"*\n- *\"Libere todos\"*\n- *\"Ajuda\"*",
-          [], intent, "general", ctx);
+        // Smart suggestion engine: detect partial keyword matches and suggest
+        const suggestions = generateSmartSuggestions(n, brain.intents, brain.phraseMap, role);
+        if (suggestions.length > 0) {
+          const sugMd = `🤔 Não entendi exatamente, mas talvez você queira:\n\n` +
+            suggestions.map(s => `- 💡 **${s.label}** → *"${s.example}"*`).join("\n") +
+            `\n\n---\nDiga *"ajuda"* para ver todos os comandos.`;
+          const sugActions = suggestions
+            .filter(s => {
+              // If suggestion maps to a nav route, add action button
+              const navKey = Object.keys(NAV_MAP).find(k => s.example.includes(k));
+              return !!navKey;
+            })
+            .map(s => {
+              const navKey = Object.keys(NAV_MAP).find(k => s.example.includes(k));
+              const nav = navKey ? NAV_MAP[navKey] : null;
+              return nav ? { label: `Abrir ${nav.label}`, route: nav.route, type: "navigate" } : null;
+            })
+            .filter(Boolean) as any[];
+          response = fmt("Você quis dizer...", "💡", "suggestions", "Sugestões baseadas na sua pergunta", sugMd, sugActions, intent, "suggestion_engine", ctx);
+        } else {
+          response = fmt("Não entendi", "❓", "error", "Comando não reconhecido.",
+            "❓ Não entendi.\n\n💡 Tente:\n- *\"Quem precisa de atenção?\"*\n- *\"Sobre [paciente]\"*\n- *\"O que preciso resolver hoje?\"*\n- *\"Libere todos\"*\n- *\"Ajuda\"*",
+            [], intent, "general", ctx);
+        }
       }
     } catch (engineError) {
       console.error("Engine error:", engineError);
