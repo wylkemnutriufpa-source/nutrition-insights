@@ -159,6 +159,8 @@ export default function PatientDetail() {
       if (error) throw error;
       const result = data as any;
       if (!result?.success) {
+        // Rollback optimistic update
+        updatePatientJourneyInCache(queryClient, patientId, "awaiting_payment");
         toast.error(result?.error || "Erro ao confirmar pagamento");
         releaseActionLock("confirm_payment", patientId);
         setConfirmingPayment(false);
@@ -167,6 +169,8 @@ export default function PatientDetail() {
       toast.success("✅ Pagamento confirmado! Onboarding liberado automaticamente.");
       invalidate();
     } catch (err: any) {
+      // Rollback optimistic update
+      updatePatientJourneyInCache(queryClient, patientId, "awaiting_payment");
       toast.error(err.message || "Erro ao confirmar pagamento");
       releaseActionLock("confirm_payment", patientId);
     }
