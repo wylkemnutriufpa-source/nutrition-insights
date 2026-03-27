@@ -373,10 +373,10 @@ const questions: Question[] = [
     subtitle: "Costuma comer algo entre o almoço e o jantar?",
     type: "single",
     options: [
-      { label: "Sim, 1 lanche", emoji: "1️⃣", value: "one" },
-      { label: "Sim, 2 lanches", emoji: "2️⃣", value: "two" },
-      { label: "Às vezes", emoji: "🤔", value: "sometimes" },
-      { label: "Não faço", emoji: "❌", value: "never" },
+      { label: "Sim, 1 lanche", emoji: "1️⃣", value: "one", description: "Faz um lanche entre o almoço e jantar" },
+      { label: "Sim, 2 lanches", emoji: "2️⃣", value: "two", description: "Faz dois lanches durante a tarde para manter energia" },
+      { label: "Às vezes", emoji: "🤔", value: "sometimes", description: "Lanche da tarde ocasional, sem rotina fixa" },
+      { label: "Não faço", emoji: "❌", value: "never", description: "Não come nada entre o almoço e o jantar" },
     ],
   },
   {
