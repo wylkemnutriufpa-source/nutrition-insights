@@ -14,6 +14,7 @@ import {
   Flame, ShoppingCart, Pin,
 } from "lucide-react";
 import { SmartMenuItem, MenuCategory, CATEGORY_COLORS } from "@/hooks/useSmartMenu";
+import NewFeatureBadge from "@/components/common/NewFeatureBadge";
 
 const ICON_MAP: Record<string, any> = {
   LayoutDashboard, Users, UtensilsCrossed, Trophy, Target, Brain,
