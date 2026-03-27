@@ -495,7 +495,7 @@ function MobileSelector({
                   background: "linear-gradient(135deg, hsl(var(--primary) / 0.25), hsl(var(--accent) / 0.1))",
                 } : undefined}
               >
-                <Icon className="w-6 h-6" />
+                <OrbitalIcon option={opt} className="w-6 h-6" />
               </div>
               <span
                 className={cn(
