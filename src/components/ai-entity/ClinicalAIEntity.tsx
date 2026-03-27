@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -19,10 +19,16 @@ interface AISignal {
   type: EntityState;
 }
 
+// Module-level cache to prevent re-fetch/re-animate on every route change
+let _cachedState: EntityState = "passive";
+let _cachedSignal: AISignal | null = null;
+let _lastFetchTime = 0;
+const CACHE_TTL_MS = 120_000; // 2 min — same as the old interval
+
 export default function ClinicalAIEntity() {
   const { user } = useAuth();
-  const [state, setState] = useState<EntityState>("passive");
-  const [signal, setSignal] = useState<AISignal | null>(null);
+  const [state, setState] = useState<EntityState>(_cachedState);
+  const [signal, setSignal] = useState<AISignal | null>(_cachedSignal);
   const [panelOpen, setPanelOpen] = useState(false);
   const [summary, setSummary] = useState<{
     focusPatients: number;
@@ -32,13 +38,19 @@ export default function ClinicalAIEntity() {
     engagementScore: number;
   } | null>(null);
   const [dismissed, setDismissed] = useState(false);
+  const mountedRef = useRef(true);
 
   // Load signals from real data
   useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
+  useEffect(() => {
     if (!user) return;
+
     async function checkSignals() {
       try {
-        // Check for critical alerts
         const { data: alerts } = await (supabase as any)
           .from("clinical_alerts")
           .select("id, title, severity, patient_id, description")
@@ -48,21 +60,26 @@ export default function ClinicalAIEntity() {
           .order("created_at", { ascending: false })
           .limit(1);
 
+        if (!mountedRef.current) return;
+
         if (alerts?.length) {
           const a = alerts[0];
           const { data: prof } = await supabase.from("profiles").select("full_name").eq("user_id", a.patient_id).single();
-          setSignal({
+          if (!mountedRef.current) return;
+          const newSignal: AISignal = {
             message: a.title,
             patientName: prof?.full_name ?? "Paciente",
             patientId: a.patient_id,
             reason: a.description?.substring(0, 80),
             type: "critical",
-          });
+          };
+          _cachedSignal = newSignal;
+          _cachedState = "critical";
+          setSignal(newSignal);
           setState("critical");
           return;
         }
 
-        // Check pending decisions
         const { data: decisions } = await (supabase as any)
           .from("clinical_decisions")
           .select("id, title, patient_id")
@@ -71,21 +88,27 @@ export default function ClinicalAIEntity() {
           .order("created_at", { ascending: false })
           .limit(1);
 
+        if (!mountedRef.current) return;
+
         if (decisions?.length) {
-          setSignal({
+          const newSignal: AISignal = {
             message: decisions[0].title || "Decisão clínica pendente",
             type: "detecting",
-          });
+          };
+          _cachedSignal = newSignal;
+          _cachedState = "detecting";
+          setSignal(newSignal);
           setState("detecting");
           return;
         }
 
-        // Default: check positive trends
         const { data: patients } = await supabase
           .from("nutritionist_patients")
           .select("patient_id")
           .eq("nutritionist_id", user!.id)
           .eq("status", "active");
+
+        if (!mountedRef.current) return;
 
         const ids = (patients ?? []).map(p => p.patient_id);
         if (ids.length) {
@@ -95,6 +118,8 @@ export default function ClinicalAIEntity() {
             .in("patient_id", ids)
             .order("snapshot_date", { ascending: false });
 
+          if (!mountedRef.current) return;
+
           const latest = new Map<string, any>();
           for (const s of (snapshots ?? [])) {
             if (!latest.has(s.patient_id)) latest.set(s.patient_id, s);
@@ -103,21 +128,34 @@ export default function ClinicalAIEntity() {
           const improving = all.filter(s => s.momentum_direction === "up").length;
 
           if (improving > all.length * 0.5) {
-            setSignal({ message: `${improving} pacientes com tendência positiva`, type: "positive" });
+            const newSignal: AISignal = { message: `${improving} pacientes com tendência positiva`, type: "positive" };
+            _cachedSignal = newSignal;
+            _cachedState = "positive";
+            setSignal(newSignal);
             setState("positive");
             return;
           }
         }
 
+        _cachedState = "passive";
+        _cachedSignal = null;
         setState("passive");
         setSignal(null);
       } catch (e) {
         console.error("AI entity error:", e);
         setState("passive");
+      } finally {
+        _lastFetchTime = Date.now();
       }
     }
-    checkSignals();
-    const interval = setInterval(checkSignals, 120000); // Refresh every 2 min
+
+    // Only fetch if cache is stale
+    const elapsed = Date.now() - _lastFetchTime;
+    if (elapsed >= CACHE_TTL_MS) {
+      checkSignals();
+    }
+
+    const interval = setInterval(checkSignals, CACHE_TTL_MS);
     return () => clearInterval(interval);
   }, [user]);
 
