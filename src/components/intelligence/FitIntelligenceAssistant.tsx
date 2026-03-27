@@ -83,8 +83,10 @@ async function incrementFrequencyCounter(patientId: string, field: FrequencyCoun
     .eq("patient_id", patientId)
     .maybeSingle();
 
+  const currentValue = (current as unknown as Record<FrequencyCounterField, number | null> | null)?.[field] || 0;
+
   await upsertFrequencyState(patientId, {
-    [field]: ((current as Record<string, number | null> | null)?.[field] || 0) + 1,
+    [field]: currentValue + 1,
   });
 }
 
