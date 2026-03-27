@@ -35,7 +35,7 @@ interface CheckIn {
 interface MealFeedback {
   id: string;
   meal_type: string;
-  rating: number | null;
+  rating: string | number | null;
   comment: string | null;
   created_at: string;
 }
