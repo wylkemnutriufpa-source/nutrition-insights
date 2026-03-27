@@ -180,6 +180,9 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
                               {t(item.label_key || label, label)}
                             </span>
                           )}
+                          {!collapsed && (
+                            <NewFeatureBadge featureKey={item.route || ""} variant="dot" />
+                          )}
                           {item.is_pinned && !collapsed && (
                             <Pin className="w-2.5 h-2.5 text-primary/50" />
                           )}

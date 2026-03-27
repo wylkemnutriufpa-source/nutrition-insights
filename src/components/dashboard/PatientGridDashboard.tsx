@@ -13,6 +13,7 @@ import {
   TrendingUp, Brain, Camera, Target,
   LayoutGrid, List, ArrowRight, Sparkles, Rocket, ChevronRight,
 } from "lucide-react";
+import NewFeatureBadge from "@/components/common/NewFeatureBadge";
 
 interface GridCard {
   key: string;
