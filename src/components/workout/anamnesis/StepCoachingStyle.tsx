@@ -1,6 +1,11 @@
+import { motion, useReducedMotion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
+import { Check } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { OrbitalHeader, OrbitalSingleSelect, OrbitalTextInput } from "@/components/onboarding/OrbitalAnamnesisInputs";
 import type { TrainerAnamnesisData } from "./types";
+
+const EASE_PREMIUM = [0.22, 1, 0.36, 1] as const;
 
 interface Props {
   data: TrainerAnamnesisData;
@@ -8,96 +13,80 @@ interface Props {
 }
 
 export default function StepCoachingStyle({ data, onChange }: Props) {
+  const reduced = useReducedMotion();
+
   return (
-    <div className="space-y-5">
-      {/* Coaching intensity */}
-      <div>
-        <label className="text-sm font-medium mb-3 block">Estilo de cobrança preferido</label>
-        <div className="grid grid-cols-3 gap-2">
-          {[
-            { value: "gentle", label: "Suave", emoji: "🌸", desc: "Lembretes gentis" },
-            { value: "moderate", label: "Moderado", emoji: "💬", desc: "Equilibrado" },
-            { value: "firm", label: "Firme", emoji: "🔥", desc: "Cobrança direta" },
-          ].map(s => (
-            <button
-              key={s.value}
-              onClick={() => onChange({ coaching_intensity: s.value })}
-              className={`p-4 rounded-xl text-center transition-all ${
-                data.coaching_intensity === s.value
-                  ? "bg-primary/15 border-2 border-primary text-primary"
-                  : "bg-muted/50 border border-transparent text-muted-foreground hover:border-border"
-              }`}
+    <div className="w-full max-w-lg mx-auto space-y-6">
+      <OrbitalHeader title="Estilo de Acompanhamento" subtitle="Como você prefere ser acompanhado?" />
+
+      <OrbitalSingleSelect
+        title="🎯 Estilo de cobrança preferido"
+        options={[
+          { value: "gentle", label: "Suave", emoji: "🌸" },
+          { value: "moderate", label: "Moderado", emoji: "💬" },
+          { value: "firm", label: "Firme", emoji: "🔥" },
+        ]}
+        value={data.coaching_intensity}
+        onChange={(v) => onChange({ coaching_intensity: v })}
+      />
+
+      <OrbitalSingleSelect
+        title="📋 Preferência de plano"
+        options={[
+          { value: "rigid", label: "Rígido", emoji: "📋" },
+          { value: "flexible", label: "Flexível", emoji: "🔄" },
+        ]}
+        value={data.plan_flexibility}
+        onChange={(v) => onChange({ plan_flexibility: v })}
+      />
+
+      {/* Toggle preferences with orbital styling */}
+      <div className="space-y-2.5">
+        {[
+          { key: "wants_reminders" as const, label: "Receber lembretes de treino", desc: "Notificações antes e após o horário programado", emoji: "🔔" },
+          { key: "wants_video_tutorials" as const, label: "Vídeos tutoriais nos exercícios", desc: "Ver demonstrações durante o treino", emoji: "🎬" },
+          { key: "wants_post_workout_feedback" as const, label: "Feedback pós-treino", desc: "Registrar esforço e sensações após cada treino", emoji: "📊" },
+        ].map((item, i) => {
+          const active = data[item.key];
+          return (
+            <motion.button
+              key={item.key}
+              onClick={() => onChange({ [item.key]: !active })}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.06, duration: 0.35, ease: EASE_PREMIUM }}
+              className={cn(
+                "w-full flex items-center gap-3 p-4 rounded-2xl text-left transition-all border-2",
+                active
+                  ? "border-primary/30 bg-primary/5"
+                  : "border-border bg-card/60 hover:border-primary/20"
+              )}
+              style={active ? { boxShadow: "0 0 16px hsl(var(--primary) / 0.1)" } : { boxShadow: "0 2px 6px hsl(0 0% 0% / 0.06)" }}
+              whileTap={{ scale: 0.98 }}
             >
-              <div className="text-2xl mb-1">{s.emoji}</div>
-              <div className="text-sm font-medium">{s.label}</div>
-              <div className="text-[10px] mt-0.5 opacity-70">{s.desc}</div>
-            </button>
-          ))}
-        </div>
+              <span className="text-xl shrink-0">{item.emoji}</span>
+              <div className="flex-1 min-w-0">
+                <div className={cn("text-sm font-semibold", active ? "text-primary" : "text-foreground")}>{item.label}</div>
+                <div className="text-xs text-muted-foreground">{item.desc}</div>
+              </div>
+              <div className={cn(
+                "w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border-2 transition-all",
+                active ? "bg-primary border-primary" : "border-border bg-card"
+              )}>
+                {active && <Check className="w-3.5 h-3.5 text-primary-foreground" />}
+              </div>
+            </motion.button>
+          );
+        })}
       </div>
 
-      {/* Plan flexibility */}
-      <div>
-        <label className="text-sm font-medium mb-3 block">Preferência de plano</label>
-        <div className="grid grid-cols-2 gap-2">
-          {[
-            { value: "rigid", label: "Rígido", emoji: "📋", desc: "Seguir exatamente o plano" },
-            { value: "flexible", label: "Flexível", emoji: "🔄", desc: "Permite adaptações" },
-          ].map(p => (
-            <button
-              key={p.value}
-              onClick={() => onChange({ plan_flexibility: p.value })}
-              className={`p-4 rounded-xl text-center transition-all ${
-                data.plan_flexibility === p.value
-                  ? "bg-primary/15 border-2 border-primary text-primary"
-                  : "bg-muted/50 border border-transparent text-muted-foreground hover:border-border"
-              }`}
-            >
-              <div className="text-2xl mb-1">{p.emoji}</div>
-              <div className="text-sm font-medium">{p.label}</div>
-              <div className="text-[10px] mt-0.5 opacity-70">{p.desc}</div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Toggle preferences */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
-          <Checkbox checked={data.wants_reminders} onCheckedChange={c => onChange({ wants_reminders: !!c })} />
-          <div>
-            <div className="text-sm font-medium">Receber lembretes de treino</div>
-            <div className="text-xs text-muted-foreground">Notificações antes e após o horário programado</div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
-          <Checkbox checked={data.wants_video_tutorials} onCheckedChange={c => onChange({ wants_video_tutorials: !!c })} />
-          <div>
-            <div className="text-sm font-medium">Vídeos tutoriais nos exercícios</div>
-            <div className="text-xs text-muted-foreground">Ver demonstrações durante o treino</div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
-          <Checkbox checked={data.wants_post_workout_feedback} onCheckedChange={c => onChange({ wants_post_workout_feedback: !!c })} />
-          <div>
-            <div className="text-sm font-medium">Feedback pós-treino</div>
-            <div className="text-xs text-muted-foreground">Registrar esforço e sensações após cada treino</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Final notes */}
-      <div>
-        <label className="text-sm font-medium mb-1 block">Observações gerais</label>
-        <Textarea
-          value={data.notes}
-          onChange={e => onChange({ notes: e.target.value })}
-          placeholder="Informações adicionais que o personal deve saber..."
-          rows={3}
-        />
-      </div>
+      <OrbitalTextInput
+        title="Observações gerais"
+        subtitle="Algo mais que o personal deve saber?"
+        value={data.notes}
+        onChange={(v) => onChange({ notes: v })}
+        placeholder="Informações adicionais que o personal deve saber..."
+      />
     </div>
   );
 }
