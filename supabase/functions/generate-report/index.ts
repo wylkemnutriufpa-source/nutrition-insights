@@ -6,11 +6,101 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ═══════════════════════════════════════════════════
+// DETERMINISTIC REPORT GENERATOR v1.0
+// No AI calls — template-based executive summary
+// ═══════════════════════════════════════════════════
+
+function classifyBMI(bmi: number): string {
+  if (bmi < 18.5) return "Abaixo do peso";
+  if (bmi < 25) return "Eutrófico";
+  if (bmi < 30) return "Sobrepeso";
+  if (bmi < 35) return "Obesidade I";
+  if (bmi < 40) return "Obesidade II";
+  return "Obesidade III";
+}
+
+function generateExecutiveSummary(
+  profile: any,
+  assessments: any[],
+  meals: any[],
+  mealPlan: any,
+  bodyAnalyses: any[],
+): string {
+  const lines: string[] = [];
+  const latest = assessments[0];
+
+  lines.push(`Paciente: ${profile?.full_name || "N/A"}`);
+  lines.push(`Data do relatório: ${new Date().toLocaleDateString("pt-BR")}\n`);
+
+  // Assessment summary
+  if (latest) {
+    lines.push(`📐 Última avaliação (${new Date(latest.assessment_date).toLocaleDateString("pt-BR")}):`);
+    if (latest.weight) lines.push(`  • Peso: ${latest.weight} kg`);
+    if (latest.bmi) lines.push(`  • IMC: ${latest.bmi} — ${classifyBMI(latest.bmi)}`);
+    if (latest.body_fat_percentage) lines.push(`  • Gordura corporal: ${latest.body_fat_percentage}%`);
+  } else {
+    lines.push("📐 Nenhuma avaliação física registrada.");
+  }
+
+  // Evolution
+  if (assessments.length >= 2) {
+    const first = assessments[assessments.length - 1];
+    const last = assessments[0];
+    if (first.weight && last.weight) {
+      const diff = last.weight - first.weight;
+      lines.push(`\n📈 Evolução de peso: ${first.weight}kg → ${last.weight}kg (${diff > 0 ? "+" : ""}${diff.toFixed(1)}kg)`);
+      if (diff < -1) lines.push("  ✅ Tendência de perda de peso observada.");
+      else if (diff > 1) lines.push("  ⚠️ Ganho de peso no período.");
+      else lines.push("  ➡️ Peso estável no período.");
+    }
+  }
+
+  // Meals
+  lines.push(`\n🍎 Refeições registradas: ${meals.length} (últimos 30 dias)`);
+  if (meals.length >= 10) {
+    lines.push("  ✅ Bom registro alimentar — dados suficientes para análise.");
+  } else if (meals.length > 0) {
+    lines.push("  ⚠️ Registro alimentar baixo — estimular adesão ao diário.");
+  } else {
+    lines.push("  🔴 Nenhuma refeição registrada — priorizar orientação de registro.");
+  }
+
+  // Meal plan
+  if (mealPlan) {
+    lines.push(`\n🍽️ Plano alimentar ativo: ${mealPlan.title}`);
+    lines.push(`  • Itens no plano: ${mealPlan.meal_plan_items?.length || 0}`);
+  } else {
+    lines.push("\n🍽️ Sem plano alimentar ativo.");
+  }
+
+  // Body analyses
+  if (bodyAnalyses.length > 0) {
+    lines.push(`\n📊 Análises corporais realizadas: ${bodyAnalyses.length}`);
+    const latestBody = bodyAnalyses[0];
+    if (latestBody.body_fat_estimate) lines.push(`  • Última %GC estimada: ${latestBody.body_fat_estimate}%`);
+    if (latestBody.body_type) lines.push(`  • Biotipo: ${latestBody.body_type}`);
+  }
+
+  // Clinical recommendation
+  lines.push("\n── Recomendação Geral ──");
+  const adherenceSignal = meals.length >= 15 ? "boa" : meals.length >= 5 ? "moderada" : "baixa";
+  lines.push(`Adesão ao registro alimentar: ${adherenceSignal}.`);
+  if (adherenceSignal === "baixa") {
+    lines.push("Priorizar estratégias de engajamento e simplificação do plano.");
+  } else if (adherenceSignal === "moderada") {
+    lines.push("Continuar acompanhamento com ajustes pontuais conforme evolução.");
+  } else {
+    lines.push("Manter protocolo atual e reavaliar metas na próxima consulta.");
+  }
+
+  return lines.join("\n");
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    // ── JWT Authentication ──
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -25,20 +115,17 @@ serve(async (req) => {
     const anonClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user }, error: userErr } = await anonClient.auth.getUser();
+    if (userErr || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const userId = claimsData.claims.sub as string;
 
-    const { patient_id, report_type, nutritionist_id } = await req.json();
+    const { patient_id, nutritionist_id } = await req.json();
     if (!patient_id || !nutritionist_id) throw new Error("patient_id and nutritionist_id required");
 
-    // ── Ownership: caller must match nutritionist_id ──
-    if (userId !== nutritionist_id) {
+    if (user.id !== nutritionist_id) {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -46,8 +133,8 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // ── Verify nutritionist-patient linkage ──
-    const { data: linkage, error: linkError } = await supabase
+    // Verify linkage
+    const { data: linkage } = await supabase
       .from("nutritionist_patients")
       .select("id")
       .eq("nutritionist_id", nutritionist_id)
@@ -55,15 +142,14 @@ serve(async (req) => {
       .eq("status", "active")
       .maybeSingle();
 
-    if (linkError || !linkage) {
+    if (!linkage) {
       return new Response(JSON.stringify({ error: "Forbidden: patient not linked" }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    // Rate limit
     const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-
-    // Database-backed rate limiting (3 req/60s per IP)
     const { data: allowed } = await supabase.rpc("check_rate_limit", {
       _function_name: "generate-report",
       _client_key: clientIP,
@@ -77,10 +163,9 @@ serve(async (req) => {
       );
     }
 
-    // Fetch patient data
-    const [profileRes, anamnesisRes, assessmentsRes, mealsRes, mealPlansRes, bodyRes] = await Promise.all([
+    // Fetch data
+    const [profileRes, assessmentsRes, mealsRes, mealPlansRes, bodyRes] = await Promise.all([
       supabase.from("profiles").select("*").eq("user_id", patient_id).single(),
-      supabase.from("patient_anamnesis").select("*").eq("user_id", patient_id).order("created_at", { ascending: false }).limit(1),
       supabase.from("physical_assessments").select("*").eq("patient_id", patient_id).order("assessment_date", { ascending: false }).limit(5),
       supabase.from("meals").select("*").eq("user_id", patient_id).order("logged_at", { ascending: false }).limit(30),
       supabase.from("meal_plans").select("*, meal_plan_items(*)").eq("patient_id", patient_id).eq("is_active", true).limit(1),
@@ -88,44 +173,14 @@ serve(async (req) => {
     ]);
 
     const profile = profileRes.data;
-    const anamnesis = anamnesisRes.data?.[0];
     const assessments = assessmentsRes.data || [];
     const meals = mealsRes.data || [];
     const mealPlan = mealPlansRes.data?.[0];
     const bodyAnalyses = bodyRes.data || [];
 
-    // Generate AI summary
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    let aiSummary = "";
+    // Deterministic summary (NO AI)
+    const executiveSummary = generateExecutiveSummary(profile, assessments, meals, mealPlan, bodyAnalyses);
 
-    if (LOVABLE_API_KEY) {
-      const summaryPrompt = `Gere um resumo executivo para o relatório do paciente ${profile?.full_name || ""}:
-- Avaliações físicas: ${assessments.length} registros. Último peso: ${assessments[0]?.weight || 'N/A'}kg, IMC: ${assessments[0]?.bmi || 'N/A'}
-- Refeições registradas: ${meals.length} nos últimos 30 dias
-- Plano alimentar ativo: ${mealPlan ? 'Sim' : 'Não'}
-- Análises corporais: ${bodyAnalyses.length}
-Faça um resumo profissional em português com destaques e recomendações.`;
-
-      try {
-        const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash-lite",
-            messages: [
-              { role: "system", content: "Você é um nutricionista criando relatórios profissionais. Responda em português." },
-              { role: "user", content: summaryPrompt },
-            ],
-          }),
-        });
-        if (aiRes.ok) {
-          const aiData = await aiRes.json();
-          aiSummary = aiData.choices?.[0]?.message?.content || "";
-        }
-      } catch { /* AI optional */ }
-    }
-
-    // Build HTML report
     const latestAssessment = assessments[0];
     const html = `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -158,7 +213,7 @@ Faça um resumo profissional em português com destaques e recomendações.`;
   <p><strong>${profile?.full_name || 'Paciente'}</strong> — Gerado em ${new Date().toLocaleDateString('pt-BR')}</p>
 </div>
 
-${aiSummary ? `<div class="section"><h2>📋 Resumo Executivo</h2><div class="summary">${aiSummary}</div></div>` : ''}
+<div class="section"><h2>📋 Resumo Executivo</h2><div class="summary">${executiveSummary}</div></div>
 
 ${latestAssessment ? `<div class="section">
   <h2>📐 Última Avaliação Física</h2>
@@ -195,7 +250,7 @@ ${mealPlan ? `<div class="section">
   ${meals.length > 0 ? `
   <p style="font-size:13px;color:#666;margin-bottom:10px;">Últimas ${Math.min(meals.length, 10)} refeições registradas</p>
   <table>
-    <tr><th>Data</th><th>Refeição</th><th>Kcal</th><th>Score IA</th></tr>
+    <tr><th>Data</th><th>Refeição</th><th>Kcal</th><th>Score</th></tr>
     ${meals.slice(0, 10).map(m => `<tr><td>${new Date(m.logged_at).toLocaleDateString('pt-BR')}</td><td>${m.title}</td><td>${m.calories || '-'}</td><td>${m.ai_score ? m.ai_score + '/100' : '-'}</td></tr>`).join('')}
   </table>` : '<p style="color:#666;">Nenhuma refeição registrada.</p>'}
 </div>
