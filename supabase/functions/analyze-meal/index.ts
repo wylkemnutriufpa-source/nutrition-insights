@@ -7,8 +7,8 @@ const corsHeaders = {
 };
 
 // ═══════════════════════════════════════════════════
-// ANALYZE-MEAL v3.0 — Hybrid Deterministic + AI Fallback
-// Priority: DB lookup → deterministic calc → AI only if needed
+// ANALYZE-MEAL v4.0 — Phase 3: Enhanced Matching + Cache
+// Priority: Cache → DB lookup → deterministic calc → AI fallback
 // ═══════════════════════════════════════════════════
 
 interface FoodMatch {
@@ -23,7 +23,19 @@ interface FoodMatch {
   matched: boolean;
 }
 
-// ─── Text Parsing ───
+interface FoodDbRow {
+  food_name: string;
+  normalized_name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+  fiber: number;
+  portion_reference: string;
+  synonyms: string[] | null;
+}
+
+// ─── Text Normalization ───
 function normalizeText(text: string): string {
   return text
     .toLowerCase()
@@ -32,9 +44,33 @@ function normalizeText(text: string): string {
     .trim();
 }
 
+// ─── Singularize simple Portuguese words ───
+function singularize(word: string): string {
+  if (word.endsWith("oes")) return word.slice(0, -3) + "ao";
+  if (word.endsWith("aes")) return word.slice(0, -3) + "ao";
+  if (word.endsWith("is") && word.length > 3) return word.slice(0, -2) + "l";
+  if (word.endsWith("ns")) return word.slice(0, -2) + "m";
+  if (word.endsWith("s") && !word.endsWith("ss")) return word.slice(0, -1);
+  return word;
+}
+
+function normalizePlural(text: string): string {
+  return text.split(/\s+/).map(singularize).join(" ");
+}
+
+// ─── Simple hash for cache key ───
+function simpleHash(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0;
+  }
+  return Math.abs(hash).toString(36);
+}
+
 function parseQuantity(token: string): { qty: number; unit: string; rest: string } {
-  // Match patterns like "2 ovos", "200g frango", "1 xicara arroz", "3 fatias pao"
-  const match = token.match(/^(\d+(?:[.,]\d+)?)\s*(g|kg|ml|l|un|unidade|unidades|fatia|fatias|colher|colheres|xicara|xicaras|copo|copos)?\s*(.*)$/i);
+  const match = token.match(/^(\d+(?:[.,]\d+)?)\s*(g|kg|ml|l|un|unidade|unidades|fatia|fatias|colher|colheres|xicara|xicaras|copo|copos|col|sopa|cha)?\s*(.*)$/i);
   if (match) {
     const qty = parseFloat(match[1].replace(",", "."));
     const unit = (match[2] || "").toLowerCase();
@@ -45,37 +81,56 @@ function parseQuantity(token: string): { qty: number; unit: string; rest: string
 }
 
 function splitDescription(description: string): string[] {
-  // Split by commas, "e", "com", newlines
   return description
     .split(/[,\n]+/)
     .map(s => s.trim())
     .filter(s => s.length > 0)
-    .flatMap(s => s.split(/\s+e\s+/))
+    .flatMap(s => s.split(/\s+(?:e|com)\s+/))
     .map(s => s.trim())
     .filter(s => s.length > 1);
 }
 
-// ─── DB Matching ───
-function findBestMatch(
-  normalizedItem: string,
-  foodDb: Array<{ food_name: string; normalized_name: string; calories: number; protein: number; carbs: number; fats: number; fiber: number; portion_reference: string }>
-): typeof foodDb[0] | null {
-  // Exact match
-  let match = foodDb.find(f => f.normalized_name === normalizedItem);
+// ─── Enhanced DB Matching with Synonyms ───
+function findBestMatch(normalizedItem: string, foodDb: FoodDbRow[]): FoodDbRow | null {
+  const singularItem = normalizePlural(normalizedItem);
+  
+  // 1. Exact match on normalized_name
+  let match = foodDb.find(f => f.normalized_name === normalizedItem || f.normalized_name === singularItem);
   if (match) return match;
 
-  // Contains match
+  // 2. Synonym match
+  match = foodDb.find(f => f.synonyms?.some(s => {
+    const ns = normalizeText(s);
+    return ns === normalizedItem || ns === singularItem || normalizedItem.includes(ns) || ns.includes(normalizedItem);
+  }));
+  if (match) return match;
+
+  // 3. Contains match
   match = foodDb.find(f => normalizedItem.includes(f.normalized_name) || f.normalized_name.includes(normalizedItem));
   if (match) return match;
+  
+  // 3b. Singular contains
+  match = foodDb.find(f => {
+    const singularFood = normalizePlural(f.normalized_name);
+    return singularItem.includes(singularFood) || singularFood.includes(singularItem);
+  });
+  if (match) return match;
 
-  // Word-level matching (at least 2 words in common)
-  const itemWords = normalizedItem.split(/\s+/).filter(w => w.length > 2);
+  // 4. Word-level scoring
+  const itemWords = singularItem.split(/\s+/).filter(w => w.length > 2);
   let bestScore = 0;
-  let bestMatch: typeof foodDb[0] | null = null;
+  let bestMatch: FoodDbRow | null = null;
 
   for (const food of foodDb) {
-    const foodWords = food.normalized_name.split(/\s+/).filter(w => w.length > 2);
-    const commonWords = itemWords.filter(w => foodWords.some(fw => fw.includes(w) || w.includes(fw)));
+    const foodWords = normalizePlural(food.normalized_name).split(/\s+/).filter(w => w.length > 2);
+    const allTerms = [...foodWords];
+    if (food.synonyms) {
+      for (const s of food.synonyms) {
+        allTerms.push(...normalizeText(s).split(/\s+/).filter(w => w.length > 2));
+      }
+    }
+    const uniqueTerms = [...new Set(allTerms)];
+    const commonWords = itemWords.filter(w => uniqueTerms.some(fw => fw.includes(w) || w.includes(fw)));
     const score = commonWords.length / Math.max(foodWords.length, 1);
     if (score > bestScore && commonWords.length >= 1) {
       bestScore = score;
@@ -83,68 +138,53 @@ function findBestMatch(
     }
   }
 
-  return bestScore >= 0.5 ? bestMatch : null;
+  return bestScore >= 0.4 ? bestMatch : null;
 }
 
 function estimatePortionMultiplier(qty: number, unit: string, portionRef: string): number {
-  // If user specified grams, scale relative to portion reference
   const refGrams = portionRef.match(/(\d+)\s*g/)?.[1];
-  if (unit === "g" && refGrams) {
-    return qty / parseFloat(refGrams);
-  }
+  if (unit === "g" && refGrams) return qty / parseFloat(refGrams);
   if (unit === "kg") {
     const refG = refGrams ? parseFloat(refGrams) : 100;
     return (qty * 1000) / refG;
   }
-  // For units like "fatia", "un" etc, just use the qty
-  if (["un", "unidade", "unidades", "fatia", "fatias"].includes(unit)) {
-    return qty;
+  if (["ml", "l"].includes(unit)) {
+    const refMl = portionRef.match(/(\d+)\s*ml/)?.[1];
+    if (unit === "l") return refMl ? (qty * 1000) / parseFloat(refMl) : qty;
+    if (refMl) return qty / parseFloat(refMl);
   }
-  // Default: treat as portion count
+  if (["un", "unidade", "unidades", "fatia", "fatias"].includes(unit)) return qty;
   return qty;
 }
 
 function computeScore(totals: { calories: number; protein: number; carbs: number; fat: number; fiber: number }): number {
-  let score = 50; // Base
-
-  // Protein quality (target: 20-40g per meal)
+  let score = 50;
   if (totals.protein >= 20 && totals.protein <= 40) score += 15;
   else if (totals.protein >= 10) score += 8;
   else score -= 5;
-
-  // Fiber presence
   if (totals.fiber >= 5) score += 10;
   else if (totals.fiber >= 2) score += 5;
-
-  // Calorie range (target: 300-700 per meal)
   if (totals.calories >= 300 && totals.calories <= 700) score += 15;
   else if (totals.calories >= 200 && totals.calories <= 900) score += 8;
   else score -= 5;
-
-  // Macro balance (protein should be 20-35% of calories)
   const proteinPct = (totals.protein * 4) / Math.max(totals.calories, 1) * 100;
   if (proteinPct >= 20 && proteinPct <= 35) score += 10;
   else if (proteinPct >= 15) score += 5;
-
   return Math.max(0, Math.min(100, score));
 }
 
 function generateFeedback(totals: { calories: number; protein: number; carbs: number; fat: number; fiber: number }, score: number, matchedCount: number, totalItems: number): string {
   const lines: string[] = [];
-
   if (score >= 75) lines.push("🎯 Excelente refeição! Boa composição nutricional.");
   else if (score >= 50) lines.push("👍 Refeição adequada, com espaço para otimização.");
   else lines.push("⚠️ Refeição precisa de ajustes para melhor equilíbrio nutricional.");
-
   if (totals.protein < 15) lines.push("💡 Dica: inclua uma fonte de proteína (frango, ovo, peixe) para melhorar saciedade.");
   if (totals.fiber < 3) lines.push("💡 Dica: adicione vegetais ou salada para aumentar fibras e micronutrientes.");
   if (totals.calories > 900) lines.push("⚡ Atenção: refeição com alto valor calórico. Considere reduzir porções.");
   if (totals.fat > 30 && totals.fat > totals.protein) lines.push("💡 Dica: a gordura está proporcionalmente alta. Prefira preparações grelhadas ou assadas.");
-
   if (matchedCount < totalItems) {
     lines.push(`\nℹ️ ${matchedCount} de ${totalItems} alimento(s) identificados na base TACO/IBGE. Valores podem ter margem de variação.`);
   }
-
   return lines.join("\n");
 }
 
@@ -154,7 +194,6 @@ serve(async (req) => {
   }
 
   try {
-    // ── Auth check ──
     const authHeader = req.headers.get("Authorization");
     const anonClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -169,11 +208,10 @@ serve(async (req) => {
     }
 
     const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || user.id;
-
-    // Rate limiting
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const sb = createClient(supabaseUrl, supabaseKey);
+
     const { data: allowed } = await sb.rpc("check_rate_limit", {
       _function_name: "analyze-meal",
       _client_key: clientIP,
@@ -189,7 +227,6 @@ serve(async (req) => {
 
     const { description, image_url } = await req.json();
 
-    // ── Input validation ──
     if (!description || typeof description !== "string" || description.trim().length === 0) {
       return new Response(JSON.stringify({ error: "Descrição é obrigatória." }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -210,14 +247,43 @@ serve(async (req) => {
 
     const sanitizedDescription = description.trim().replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, "");
 
+    // ═══ LAYER 0: Cache Check ═══
+    const descHash = simpleHash(normalizeText(sanitizedDescription) + (image_url ? "|img" : ""));
+    
+    const { data: cached } = await sb
+      .from("meal_analysis_cache")
+      .select("analysis_result, id, hit_count")
+      .eq("description_hash", descHash)
+      .gt("expires_at", new Date().toISOString())
+      .maybeSingle();
+
+    if (cached) {
+      // Update hit count (fire-and-forget)
+      sb.from("meal_analysis_cache")
+        .update({ hit_count: (cached.hit_count || 0) + 1 })
+        .eq("id", cached.id)
+        .then(() => {});
+
+      // Log cache hit
+      await sb.from("ai_usage_tracking").insert({
+        user_id: user.id,
+        feature_key: "analyze-meal",
+        metadata: { source: "cache_hit", cache_id: cached.id },
+      });
+
+      const result = cached.analysis_result as Record<string, unknown>;
+      return new Response(JSON.stringify({ ...result, source: "cache_hit" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // ═══ LAYER 1: Deterministic Analysis ═══
-    // Load food database
     const { data: foodDb } = await sb
       .from("ifj_food_database")
-      .select("food_name, normalized_name, calories, protein, carbs, fats, fiber, portion_reference")
+      .select("food_name, normalized_name, calories, protein, carbs, fats, fiber, portion_reference, synonyms")
       .eq("is_active", true);
 
-    const foods = foodDb || [];
+    const foods = (foodDb || []) as FoodDbRow[];
     const items = splitDescription(sanitizedDescription);
     const matchedFoods: FoodMatch[] = [];
     const unmatchedItems: string[] = [];
@@ -226,7 +292,7 @@ serve(async (req) => {
       const normalized = normalizeText(item);
       const { qty, unit, rest } = parseQuantity(normalized);
       const searchTerm = rest || normalized;
-      
+
       const dbMatch = findBestMatch(searchTerm, foods);
       if (dbMatch) {
         const multiplier = estimatePortionMultiplier(qty, unit, dbMatch.portion_reference || "100g");
@@ -249,11 +315,19 @@ serve(async (req) => {
     const matchRatio = items.length > 0 ? matchedFoods.length / items.length : 0;
     const needsAIFallback = (matchRatio < 0.5 && items.length > 0) || !!image_url;
 
+    // Log deterministic usage
+    if (!needsAIFallback) {
+      await sb.from("ai_usage_tracking").insert({
+        user_id: user.id,
+        feature_key: "analyze-meal",
+        metadata: { source: "deterministic", match_ratio: matchRatio, matched: matchedFoods.length, total: items.length },
+      });
+    }
+
     // ═══ LAYER 2: AI Fallback (only if needed) ═══
     if (needsAIFallback) {
       const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
       if (!LOVABLE_API_KEY) {
-        // No AI key — return best-effort deterministic result
         return returnDeterministicResult(matchedFoods, unmatchedItems, items.length);
       }
 
@@ -261,7 +335,7 @@ serve(async (req) => {
       await sb.from("ai_usage_tracking").insert({
         user_id: user.id,
         feature_key: "analyze-meal",
-        metadata: { reason: image_url ? "image_analysis" : "low_match_ratio", match_ratio: matchRatio, unmatched: unmatchedItems },
+        metadata: { source: "ai_fallback", reason: image_url ? "image_analysis" : "low_match_ratio", match_ratio: matchRatio, unmatched: unmatchedItems },
       });
 
       const systemPrompt = `Você é um nutricionista especialista. Analise a refeição e retorne dados estruturados via a ferramenta analyze_meal.
@@ -316,7 +390,20 @@ Feedback em português brasileiro, motivacional e com dicas práticas.`;
           const toolCall = aiResponse.choices?.[0]?.message?.tool_calls?.[0];
           if (toolCall) {
             const analysis = JSON.parse(toolCall.function.arguments);
-            return new Response(JSON.stringify({ ...analysis, source: "ai_fallback", ai_reason: image_url ? "image_analysis" : "unmatched_foods" }), {
+            const aiResult = { ...analysis, source: "ai_fallback", ai_reason: image_url ? "image_analysis" : "unmatched_foods" };
+            
+            // Cache the AI result for 30 days
+            await sb.from("meal_analysis_cache").upsert({
+              description_hash: descHash,
+              description_original: sanitizedDescription.slice(0, 500),
+              has_image: !!image_url,
+              analysis_result: aiResult,
+              source: "ai_fallback",
+              hit_count: 0,
+              expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            }, { onConflict: "description_hash" });
+
+            return new Response(JSON.stringify(aiResult), {
               headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
           }
