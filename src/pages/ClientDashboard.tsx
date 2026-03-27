@@ -422,6 +422,7 @@ export default function ClientDashboard() {
         <motion.div variants={item} className="flex flex-wrap gap-2">
           <SubscriptionCard />
           <PlanRequestButton />
+          <WorkoutRequestButton />
         </motion.div>
         <ProgramJoinRequest open={programJoinOpen} onOpenChange={setProgramJoinOpen} />
         <PhaseTransitionModal />
