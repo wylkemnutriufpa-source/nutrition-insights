@@ -136,8 +136,10 @@ export default function PatientDetail() {
 
   // Invalidation helper
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.patients.detail(patientId ?? "") });
-    queryClient.invalidateQueries({ queryKey: ["patients"] });
+    queryClient.invalidateQueries({ queryKey: queryKeys.patients.detail(patientId ?? ""), refetchType: "all" });
+    queryClient.invalidateQueries({ queryKey: ["patients"], refetchType: "all" });
+    queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    queryClient.invalidateQueries({ queryKey: ["lifecycle", patientId] });
   };
 
   // Confirm payment + auto-release onboarding

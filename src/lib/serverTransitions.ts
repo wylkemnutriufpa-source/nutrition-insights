@@ -41,7 +41,13 @@ export async function releaseOnboarding(
     return { success: false, error: error.message };
   }
 
-  return { success: true, data: data as Record<string, unknown> };
+  // Handle RPC returning error in the result object
+  const result = data as Record<string, unknown>;
+  if (result && result.success === false) {
+    return { success: false, error: (result.error as string) || "Erro ao liberar onboarding" };
+  }
+
+  return { success: true, data: result };
 }
 
 /**

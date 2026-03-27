@@ -62,8 +62,30 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
       .sort((a, b) => (a.profile?.full_name || "").localeCompare(b.profile?.full_name || ""));
   }, [patients, search, tab]);
 
+  // ⚡ INSTANT cache mutation — updates journey_status in cached data immediately
+  const updatePatientJourneyInCache = (patientId: string, newJourneyStatus: string) => {
+    queryClient.setQueriesData<any>({ queryKey: ["patients"] }, (oldData: any) => {
+      if (!oldData) return oldData;
+      if (oldData.patients) {
+        return {
+          ...oldData,
+          patients: oldData.patients.map((p: any) =>
+            p.patient_id === patientId ? { ...p, journey_status: newJourneyStatus } : p
+          ),
+        };
+      }
+      if (Array.isArray(oldData)) {
+        return oldData.map((p: any) =>
+          p.patient_id === patientId ? { ...p, journey_status: newJourneyStatus } : p
+        );
+      }
+      return oldData;
+    });
+  };
+
   const refreshAll = () => {
-    queryClient.invalidateQueries({ queryKey: ["patients"] });
+    queryClient.invalidateQueries({ queryKey: ["patients"], refetchType: "all" });
+    queryClient.invalidateQueries({ queryKey: ["dashboard"] });
   };
 
   const confirmPayment = async (patientId: string) => {
@@ -71,16 +93,17 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
       toast.info("Ação já em andamento...");
       return;
     }
-    // ⚡ Optimistic UI — hide button immediately
+    // ⚡ Optimistic UI — hide button + update status IMMEDIATELY
     setConfirmedPayments(prev => new Set(prev).add(patientId));
+    updatePatientJourneyInCache(patientId, "awaiting_consent");
     setProcessingId(patientId);
     try {
       const { data, error } = await supabase.rpc("confirm_patient_payment", { _patient_id: patientId, _nutritionist_id: user!.id });
       if (error) throw error;
       const result = data as any;
       if (!result?.success) {
-        // Rollback optimistic state
         setConfirmedPayments(prev => { const n = new Set(prev); n.delete(patientId); return n; });
+        updatePatientJourneyInCache(patientId, "awaiting_payment");
         releaseActionLock("confirm_payment", patientId);
         toast.error(result?.error || "Erro ao confirmar pagamento");
       } else {
@@ -89,7 +112,7 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
       }
     } catch {
       setConfirmedPayments(prev => { const n = new Set(prev); n.delete(patientId); return n; });
-      releaseActionLock("confirm_payment", patientId);
+      updatePatientJourneyInCache(patientId, "awaiting_payment");
       toast.error("Erro ao confirmar pagamento");
     }
     setProcessingId(null);
@@ -107,15 +130,24 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
       releaseActionLock("release_onboarding", patientId);
       return;
     }
-    // ⚡ Optimistic UI
+    // ⚡ Optimistic UI — update status IMMEDIATELY
     setReleasedOnboarding(prev => new Set(prev).add(patientId));
+    updatePatientJourneyInCache(patientId, "onboarding_active");
     setProcessingId(patientId);
     try {
-      await releaseOnboarding(patientId, user!.id);
-      toast.success("✅ Onboarding liberado! Paciente já pode preencher.");
-      refreshAll();
+      const result = await releaseOnboarding(patientId, user!.id);
+      if (!result.success) {
+        setReleasedOnboarding(prev => { const n = new Set(prev); n.delete(patientId); return n; });
+        updatePatientJourneyInCache(patientId, journey);
+        releaseActionLock("release_onboarding", patientId);
+        toast.error(result.error || "Erro ao liberar onboarding");
+      } else {
+        toast.success("✅ Onboarding liberado!");
+        refreshAll();
+      }
     } catch {
       setReleasedOnboarding(prev => { const n = new Set(prev); n.delete(patientId); return n; });
+      updatePatientJourneyInCache(patientId, journey);
       releaseActionLock("release_onboarding", patientId);
       toast.error("Erro ao liberar onboarding");
     }
