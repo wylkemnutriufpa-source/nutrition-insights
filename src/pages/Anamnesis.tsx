@@ -155,10 +155,10 @@ const questions: Question[] = [
     subtitle: "Intestino, gases, inchaço...",
     type: "single",
     options: [
-      { label: "Muito ruim", emoji: "😣", value: "very_bad" },
-      { label: "Irregular", emoji: "🔄", value: "irregular" },
-      { label: "Normal", emoji: "👍", value: "normal" },
-      { label: "Excelente", emoji: "✨", value: "excellent" },
+      { label: "Muito ruim", emoji: "😣", value: "very_bad", description: "Desconforto digestivo constante, constipação ou diarreia frequente" },
+      { label: "Irregular", emoji: "🔄", value: "irregular", description: "Intestino instável, alterna entre funcionamento normal e irregular" },
+      { label: "Normal", emoji: "👍", value: "normal", description: "Digestão funcional sem grandes queixas no dia a dia" },
+      { label: "Excelente", emoji: "✨", value: "excellent", description: "Intestino regular, sem gases, inchaço ou desconfortos" },
     ],
   },
   {
