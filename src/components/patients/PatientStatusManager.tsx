@@ -82,12 +82,12 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
       const result = data as any;
       if (!result?.success) {
         setConfirmedPayments(prev => { const n = new Set(prev); n.delete(patientId); return n; });
-        updatePatientJourneyInCache(patientId, "awaiting_payment");
+        updatePatientJourneyInCache(queryClient, patientId, "awaiting_payment");
         releaseActionLock("confirm_payment", patientId);
         toast.error(result?.error || "Erro ao confirmar pagamento");
       } else {
         toast.success("✅ Pagamento confirmado! Onboarding liberado automaticamente.");
-        refreshAll();
+        refreshAll(patientId);
       }
     } catch {
       setConfirmedPayments(prev => { const n = new Set(prev); n.delete(patientId); return n; });
