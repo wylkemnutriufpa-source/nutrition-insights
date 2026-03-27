@@ -306,10 +306,10 @@ const questions: Question[] = [
     subtitle: "Isso define a complexidade das receitas",
     type: "single",
     options: [
-      { label: "Praticidade total", emoji: "⚡", value: "quick" },
-      { label: "Caseira simples", emoji: "🏠", value: "homemade" },
-      { label: "Gourmet elaborada", emoji: "👨‍🍳", value: "gourmet" },
-      { label: "Tanto faz", emoji: "🤷", value: "any" },
+      { label: "Praticidade total", emoji: "⚡", value: "quick", description: "Refeições rápidas e simples, mínimo tempo na cozinha" },
+      { label: "Caseira simples", emoji: "🏠", value: "homemade", description: "Preparações caseiras fáceis com ingredientes acessíveis" },
+      { label: "Gourmet elaborada", emoji: "👨‍🍳", value: "gourmet", description: "Receitas elaboradas com técnicas e ingredientes sofisticados" },
+      { label: "Tanto faz", emoji: "🤷", value: "any", description: "Flexível para qualquer tipo de preparo e complexidade" },
     ],
   },
   {
