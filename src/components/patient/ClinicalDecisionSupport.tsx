@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,8 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
   Brain, AlertTriangle, TrendingDown, Zap, RefreshCw,
-  Loader2, Flame, Target, Shield, Activity, Heart,
-  ChevronDown, ChevronUp, Stethoscope, Lightbulb, FileText, Sparkles
+  Loader2, Target, Shield, Activity, Heart,
+  ChevronDown, ChevronUp, Stethoscope, Lightbulb, FileText, Sparkles, Cpu
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -23,6 +23,7 @@ interface ClinicalResult {
   suggestedAdjustments: string[];
   recommendedProtocols: { title: string; reason: string }[];
   alerts: { type: "abandonment" | "stagnation" | "low_adherence"; message: string; severity: "high" | "medium" | "low" }[];
+  copilot_used?: boolean;
 }
 
 export default function ClinicalDecisionSupport({ patientId, nutritionistId }: Props) {
@@ -34,7 +35,6 @@ export default function ClinicalDecisionSupport({ patientId, nutritionistId }: P
   const gatherAndAnalyze = useCallback(async () => {
     setLoading(true);
     try {
-      // Gather all patient data in parallel
       const [
         profileRes, anamnesisRes, checkinsRes, checklistRes,
         assessmentsRes, mealCompletionsRes, protocolsRes, availableProtocolsRes
@@ -57,54 +57,33 @@ export default function ClinicalDecisionSupport({ patientId, nutritionistId }: P
       const activeProtocols = (protocolsRes.data || []).filter((p: any) => p.status === "active");
       const availableProtocols = availableProtocolsRes.data || [];
 
-      // Compute aggregated metrics
       const totalChecklist = checklist.length;
       const completedChecklist = checklist.filter((t: any) => t.completed).length;
       const adherenceRate = totalChecklist > 0 ? Math.round((completedChecklist / totalChecklist) * 100) : 0;
-
       const totalMeals = mealCompletions.length;
       const followedMeals = mealCompletions.filter((m: any) => m.completed).length;
       const mealAdherence = totalMeals > 0 ? Math.round((followedMeals / totalMeals) * 100) : 0;
-
       const weights = assessments.filter((a: any) => a.weight).map((a: any) => ({ weight: a.weight, date: a.assessment_date }));
       const difficulties = checkins.filter((c: any) => c.difficulty).map((c: any) => c.difficulty);
       const feedbacks = checkins.filter((c: any) => c.feedback).map((c: any) => c.feedback);
-
       const lastCheckin = checkins[0];
-      const daysSinceLastCheckin = lastCheckin
-        ? Math.floor((Date.now() - new Date(lastCheckin.created_at).getTime()) / 86400000)
-        : 999;
-
+      const daysSinceLastCheckin = lastCheckin ? Math.floor((Date.now() - new Date(lastCheckin.created_at).getTime()) / 86400000) : 999;
       const answers = anamnesis?.answers as Record<string, any> | null;
+
       const patientData = {
         name: profileRes.data?.full_name || "Paciente",
         anamnesis: anamnesis ? {
-          goal: answers?.goal,
-          activityLevel: answers?.activity_level,
-          healthConditions: answers?.health_conditions,
-          feeling: answers?.feeling,
-          waterIntake: answers?.water_intake,
-          tmb: anamnesis.computed_tmb,
-          kcalTarget: anamnesis.computed_kcal_target,
-          protein: anamnesis.computed_protein,
-          carbs: anamnesis.computed_carbs,
-          fat: anamnesis.computed_fat,
+          goal: answers?.goal, activityLevel: answers?.activity_level, healthConditions: answers?.health_conditions,
+          feeling: answers?.feeling, waterIntake: answers?.water_intake, tmb: anamnesis.computed_tmb,
+          kcalTarget: anamnesis.computed_kcal_target, protein: anamnesis.computed_protein,
+          carbs: anamnesis.computed_carbs, fat: anamnesis.computed_fat,
         } : null,
         metrics: {
-          checklistAdherence: adherenceRate,
-          mealPlanAdherence: mealAdherence,
-          daysSinceLastCheckin,
-          totalCheckins: checkins.length,
-          weightHistory: weights,
-          difficulties: difficulties.slice(0, 5),
+          checklistAdherence: adherenceRate, mealPlanAdherence: mealAdherence, daysSinceLastCheckin,
+          totalCheckins: checkins.length, weightHistory: weights, difficulties: difficulties.slice(0, 5),
           recentFeedbacks: feedbacks.slice(0, 3),
         },
-        bodyData: assessments[0] ? {
-          bmi: assessments[0].bmi,
-          bodyFat: assessments[0].body_fat_percentage,
-          leanMass: assessments[0].lean_mass,
-          fatMass: assessments[0].fat_mass,
-        } : null,
+        bodyData: assessments[0] ? { bmi: assessments[0].bmi, bodyFat: assessments[0].body_fat_percentage, leanMass: assessments[0].lean_mass, fatMass: assessments[0].fat_mass } : null,
         activeProtocolCount: activeProtocols.length,
         availableProtocols: availableProtocols.map((p: any) => ({ title: p.title, category: p.category, description: p.description })),
       };
@@ -121,9 +100,7 @@ export default function ClinicalDecisionSupport({ patientId, nutritionistId }: P
     setLoading(false);
   }, [patientId, nutritionistId, useCopilot]);
 
-  const toggleSection = (key: string) => {
-    setExpandedSection(expandedSection === key ? null : key);
-  };
+  const toggleSection = (key: string) => setExpandedSection(expandedSection === key ? null : key);
 
   const alertIcon = (type: string) => {
     switch (type) {
@@ -142,6 +119,22 @@ export default function ClinicalDecisionSupport({ patientId, nutritionistId }: P
     }
   };
 
+  const SourceBadge = () => {
+    if (!result) return null;
+    if (result.copilot_used) {
+      return (
+        <Badge variant="default" className="gap-1 text-[10px] bg-primary/10 text-primary border-primary/20">
+          <Sparkles className="w-3 h-3" /> Copiloto IA
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="secondary" className="gap-1 text-[10px]">
+        <Cpu className="w-3 h-3" /> Motor Determinístico
+      </Badge>
+    );
+  };
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -149,6 +142,7 @@ export default function ClinicalDecisionSupport({ patientId, nutritionistId }: P
         <div className="flex items-center gap-2">
           <Stethoscope className="w-5 h-5 text-primary" />
           <h3 className="font-display font-semibold text-lg">Suporte à Decisão Clínica</h3>
+          {result && <SourceBadge />}
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
@@ -168,7 +162,10 @@ export default function ClinicalDecisionSupport({ patientId, nutritionistId }: P
         <div className="text-center py-10">
           <Brain className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
           <p className="text-sm text-muted-foreground">
-            Clique em "Gerar Análise" para a IA analisar os dados deste paciente e fornecer recomendações clínicas.
+            Clique em "Gerar Análise" para o motor clínico analisar os dados deste paciente.
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {useCopilot ? "Com Copiloto IA ativado (consome créditos)" : "Motor determinístico (sem custo de IA)"}
           </p>
         </div>
       )}
@@ -176,7 +173,9 @@ export default function ClinicalDecisionSupport({ patientId, nutritionistId }: P
       {loading && (
         <div className="text-center py-10">
           <Loader2 className="w-10 h-10 mx-auto text-primary animate-spin mb-4" />
-          <p className="text-sm text-muted-foreground">Analisando dados do paciente...</p>
+          <p className="text-sm text-muted-foreground">
+            {useCopilot ? "Analisando com Copiloto IA..." : "Processando com motor clínico..."}
+          </p>
         </div>
       )}
 
@@ -187,11 +186,7 @@ export default function ClinicalDecisionSupport({ patientId, nutritionistId }: P
             {result.alerts && result.alerts.length > 0 && (
               <div className="space-y-2">
                 {result.alerts.map((alert, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.1 }}
+                  <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }}
                     className={`flex items-start gap-3 p-3 rounded-lg border ${severityColor(alert.severity)}`}
                   >
                     {alertIcon(alert.type)}
@@ -208,10 +203,7 @@ export default function ClinicalDecisionSupport({ patientId, nutritionistId }: P
 
             {/* Clinical Analysis */}
             <div className="glass rounded-xl overflow-hidden">
-              <button
-                onClick={() => toggleSection("analysis")}
-                className="w-full flex items-center justify-between p-4 hover:bg-accent/5 transition-colors"
-              >
+              <button onClick={() => toggleSection("analysis")} className="w-full flex items-center justify-between p-4 hover:bg-accent/5 transition-colors">
                 <div className="flex items-center gap-2">
                   <Heart className="w-5 h-5 text-primary" />
                   <span className="font-display font-semibold">Análise Clínica</span>
@@ -219,24 +211,15 @@ export default function ClinicalDecisionSupport({ patientId, nutritionistId }: P
                 {expandedSection === "analysis" ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>
               {expandedSection === "analysis" && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  className="px-4 pb-4"
-                >
-                  <p className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
-                    {result.clinicalAnalysis}
-                  </p>
+                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} className="px-4 pb-4">
+                  <p className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed">{result.clinicalAnalysis}</p>
                 </motion.div>
               )}
             </div>
 
             {/* Suggested Adjustments */}
             <div className="glass rounded-xl overflow-hidden">
-              <button
-                onClick={() => toggleSection("adjustments")}
-                className="w-full flex items-center justify-between p-4 hover:bg-accent/5 transition-colors"
-              >
+              <button onClick={() => toggleSection("adjustments")} className="w-full flex items-center justify-between p-4 hover:bg-accent/5 transition-colors">
                 <div className="flex items-center gap-2">
                   <Lightbulb className="w-5 h-5 text-warning" />
                   <span className="font-display font-semibold">Ajustes Sugeridos</span>
@@ -245,11 +228,7 @@ export default function ClinicalDecisionSupport({ patientId, nutritionistId }: P
                 {expandedSection === "adjustments" ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>
               {expandedSection === "adjustments" && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  className="px-4 pb-4 space-y-2"
-                >
+                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} className="px-4 pb-4 space-y-2">
                   {result.suggestedAdjustments?.map((adj, i) => (
                     <div key={i} className="flex items-start gap-2 p-3 rounded-lg bg-card border border-border">
                       <Zap className="w-4 h-4 text-warning mt-0.5 shrink-0" />
@@ -262,10 +241,7 @@ export default function ClinicalDecisionSupport({ patientId, nutritionistId }: P
 
             {/* Recommended Protocols */}
             <div className="glass rounded-xl overflow-hidden">
-              <button
-                onClick={() => toggleSection("protocols")}
-                className="w-full flex items-center justify-between p-4 hover:bg-accent/5 transition-colors"
-              >
+              <button onClick={() => toggleSection("protocols")} className="w-full flex items-center justify-between p-4 hover:bg-accent/5 transition-colors">
                 <div className="flex items-center gap-2">
                   <FileText className="w-5 h-5 text-accent" />
                   <span className="font-display font-semibold">Protocolos Recomendados</span>
@@ -274,11 +250,7 @@ export default function ClinicalDecisionSupport({ patientId, nutritionistId }: P
                 {expandedSection === "protocols" ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>
               {expandedSection === "protocols" && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  className="px-4 pb-4 space-y-2"
-                >
+                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} className="px-4 pb-4 space-y-2">
                   {result.recommendedProtocols?.length === 0 && (
                     <p className="text-sm text-muted-foreground text-center py-3">Nenhum protocolo sugerido.</p>
                   )}
