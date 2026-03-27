@@ -65,6 +65,26 @@ export default function PlanRequestButton() {
         toast.error("Erro ao enviar solicitação");
       }
     } else {
+      // Send notification to nutritionist
+      if (nutriId) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("user_id", user.id)
+          .single();
+        const patientName = profile?.full_name || "Paciente";
+
+        await supabase.from("notifications").insert({
+          user_id: nutriId,
+          title: "🍽️ Paciente sem plano alimentar",
+          message: `${patientName} está sem plano alimentar e solicitou ativação.`,
+          type: "plan_request",
+          priority: "high",
+          target_route: "/clinical-workspace",
+          entity_type: "plan_request",
+          entity_id: user.id,
+        });
+      }
       toast.success("📋 Solicitação enviada! Seu nutricionista será notificado.");
     }
     setSending(false);
