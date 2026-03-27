@@ -199,7 +199,7 @@ export function usePatientLifecycleStateFor(patientId: string | null): PatientLi
   const { data, refetch } = useQuery({
     queryKey: ["lifecycle", patientId],
     enabled: !!patientId,
-    staleTime: 60 * 1000,
+    staleTime: 5 * 1000,
     queryFn: () => fetchLifecycleState(patientId!),
   });
 
