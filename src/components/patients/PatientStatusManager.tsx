@@ -91,7 +91,7 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
       }
     } catch {
       setConfirmedPayments(prev => { const n = new Set(prev); n.delete(patientId); return n; });
-      updatePatientJourneyInCache(patientId, "awaiting_payment");
+      updatePatientJourneyInCache(queryClient, patientId, "awaiting_payment");
       toast.error("Erro ao confirmar pagamento");
     }
     setProcessingId(null);
