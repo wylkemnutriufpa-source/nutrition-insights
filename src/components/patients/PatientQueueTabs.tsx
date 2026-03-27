@@ -121,6 +121,7 @@ export default function PatientQueueTabs() {
         return;
       }
       toast.success("✅ Pagamento confirmado! Onboarding liberado automaticamente.");
+      invalidateLifecycleQueries(queryClient, patientId);
       fetchCounts();
     } catch (err: any) {
       toast.error(err.message || "Erro ao confirmar pagamento");
