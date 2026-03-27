@@ -564,13 +564,6 @@ export default function FitnessAnamnesis() {
 
   const setAnswer = (value: any) => setAnswers((prev) => ({ ...prev, [q.id]: value }));
 
-  const toggleMulti = (value: string) => {
-    const current: string[] = answers[q.id] || [];
-    if (value === "none") { setAnswer(["none"]); return; }
-    const filtered = current.filter((v) => v !== "none");
-    if (filtered.includes(value)) setAnswer(filtered.filter((v) => v !== value));
-    else setAnswer([...filtered, value]);
-  };
 
   const canNext = () => {
     const val = answers[q.id];
