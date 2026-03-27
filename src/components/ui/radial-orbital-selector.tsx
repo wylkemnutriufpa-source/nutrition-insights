@@ -8,8 +8,20 @@ export interface OrbitalOption {
   id: string;
   label: string;
   description: string;
-  helperText: string;
-  icon: React.ElementType;
+  helperText?: string;
+  icon?: React.ElementType;
+  emoji?: string;
+}
+
+function OrbitalIcon({ option, className }: { option: OrbitalOption; className?: string }) {
+  if (option.icon) {
+    const Icon = option.icon;
+    return <Icon className={className} />;
+  }
+  if (option.emoji) {
+    return <span className="text-xl">{option.emoji}</span>;
+  }
+  return <Sparkles className={className} />;
 }
 
 interface RadialOrbitalSelectorProps {
