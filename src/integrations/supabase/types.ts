@@ -15417,11 +15417,72 @@ export type Database = {
           total_converted: number
         }[]
       }
+      get_backup_constraints: {
+        Args: never
+        Returns: {
+          constraint_name: string
+          constraint_type: string
+          create_statement: string
+          table_name: string
+        }[]
+      }
+      get_backup_enums: {
+        Args: never
+        Returns: {
+          create_statement: string
+          enum_name: string
+        }[]
+      }
+      get_backup_extensions: {
+        Args: never
+        Returns: {
+          create_statement: string
+          ext_name: string
+        }[]
+      }
+      get_backup_functions: {
+        Args: never
+        Returns: {
+          create_statement: string
+          func_name: string
+        }[]
+      }
+      get_backup_indexes: {
+        Args: never
+        Returns: {
+          create_statement: string
+          index_name: string
+          table_name: string
+        }[]
+      }
+      get_backup_rls_enabled: {
+        Args: never
+        Returns: {
+          rls_statement: string
+          table_name: string
+        }[]
+      }
+      get_backup_rls_policies: {
+        Args: never
+        Returns: {
+          create_statement: string
+          policy_name: string
+          table_name: string
+        }[]
+      }
       get_backup_tables: {
         Args: never
         Returns: {
           create_statement: string
           table_name: string
+        }[]
+      }
+      get_backup_triggers: {
+        Args: never
+        Returns: {
+          create_statement: string
+          table_name: string
+          trigger_name: string
         }[]
       }
       get_patient_active_protocol: {
