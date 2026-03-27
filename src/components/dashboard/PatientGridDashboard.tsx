@@ -193,6 +193,7 @@ export default function PatientGridDashboard() {
                                   {card.badge.text}
                                 </Badge>
                               )}
+                              <NewFeatureBadge featureKey={card.key} variant="badge" />
                             </div>
                             <div className="flex-1">
                               <h3 className="text-sm font-semibold text-foreground leading-tight">{card.label}</h3>
