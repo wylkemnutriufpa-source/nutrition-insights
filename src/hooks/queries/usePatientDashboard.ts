@@ -9,7 +9,7 @@ export function usePatientDashboard() {
   return useQuery({
     queryKey: queryKeys.dashboard.patient(user?.id ?? ""),
     enabled: !!user,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 5 * 1000, // 5s — fast refresh for lifecycle sync
     queryFn: async () => {
       const userId = user!.id;
       const today = new Date().toISOString().split("T")[0];
