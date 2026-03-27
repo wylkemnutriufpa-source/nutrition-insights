@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { acquireActionLock, releaseActionLock } from "@/lib/fitjourneyBible";
+import { updatePatientJourneyInCache, invalidateLifecycleQueries } from "@/lib/lifecycleCache";
 import { useQueryClient } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -135,12 +136,9 @@ export default function PatientDetail() {
     }
   }, [data?.currentPrestigePlanId]);
 
-  // Invalidation helper
+  // Invalidation helper — centralized
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.patients.detail(patientId ?? ""), refetchType: "all" });
-    queryClient.invalidateQueries({ queryKey: ["patients"], refetchType: "all" });
-    queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-    queryClient.invalidateQueries({ queryKey: ["lifecycle", patientId] });
+    invalidateLifecycleQueries(queryClient, patientId ?? undefined);
   };
 
   // Confirm payment + auto-release onboarding
@@ -151,6 +149,8 @@ export default function PatientDetail() {
       return;
     }
     setConfirmingPayment(true);
+    // ⚡ Optimistic UI
+    if (patientId) updatePatientJourneyInCache(queryClient, patientId, "awaiting_consent");
     try {
       const { data, error } = await supabase.rpc("confirm_patient_payment", {
         _patient_id: patientId,

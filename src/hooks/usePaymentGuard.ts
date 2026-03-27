@@ -104,7 +104,7 @@ export function usePaymentGuard(): PaymentGuardState {
       return { paid: false, reason: null };
     },
     enabled: !!user && isPatient,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 5 * 1000, // 5s — fast refresh after payment confirmation
     retry: 2,
   });
 

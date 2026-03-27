@@ -161,8 +161,8 @@ export function usePatientLifecycleState(): PatientLifecycle {
   const { data, refetch } = useQuery({
     queryKey: ["lifecycle", user?.id],
     enabled: !!user && isPatient,
-    staleTime: 60 * 1000, // 60s cache
-    refetchInterval: 5 * 60 * 1000, // auto-refresh every 5min
+    staleTime: 5 * 1000, // 5s — fast refresh for instant lifecycle sync
+    refetchInterval: 2 * 60 * 1000, // auto-refresh every 2min
     queryFn: () => fetchLifecycleState(user!.id),
   });
 
@@ -199,7 +199,7 @@ export function usePatientLifecycleStateFor(patientId: string | null): PatientLi
   const { data, refetch } = useQuery({
     queryKey: ["lifecycle", patientId],
     enabled: !!patientId,
-    staleTime: 60 * 1000,
+    staleTime: 5 * 1000,
     queryFn: () => fetchLifecycleState(patientId!),
   });
 

@@ -28,7 +28,8 @@ export function usePatientJourneyStatus() {
   useEffect(() => {
     if (!user || !isPatient) { setLoading(false); return; }
 
-    (async () => {
+    let cancelled = false;
+    const fetchStatus = async () => {
       const { data } = await supabase
         .from("nutritionist_patients")
         .select("journey_status")
@@ -38,9 +39,36 @@ export function usePatientJourneyStatus() {
         .limit(1)
         .maybeSingle();
 
-      setStatus((data as any)?.journey_status || "active");
-      setLoading(false);
-    })();
+      if (!cancelled) {
+        setStatus((data as any)?.journey_status || "active");
+        setLoading(false);
+      }
+    };
+
+    fetchStatus();
+
+    // Listen for realtime changes to journey_status
+    const channel = supabase
+      .channel(`journey-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "nutritionist_patients",
+          filter: `patient_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const newStatus = (payload.new as any)?.journey_status;
+          if (newStatus) setStatus(newStatus);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
   }, [user, isPatient]);
 
   const canAccessOnboarding = status === "awaiting_consent" || status === "onboarding_active" || status === "onboarding_completed" || status === "draft_ready_for_review" || status === "plan_published" || status === "active_followup" || status === "active" || status === "clinical_followup_active";

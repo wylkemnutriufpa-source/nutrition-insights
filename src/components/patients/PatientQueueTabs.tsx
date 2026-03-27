@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { releaseOnboarding } from "@/lib/serverTransitions";
 import { acquireActionLock, releaseActionLock } from "@/lib/fitjourneyBible";
+import { invalidateLifecycleQueries } from "@/lib/lifecycleCache";
+import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -35,6 +37,7 @@ const QUEUE_TABS = [
 export default function PatientQueueTabs() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [tab, setTab] = useState("awaiting_payment");
   const [patients, setPatients] = useState<QueuePatient[]>([]);
   const [loading, setLoading] = useState(false);
@@ -118,6 +121,7 @@ export default function PatientQueueTabs() {
         return;
       }
       toast.success("✅ Pagamento confirmado! Onboarding liberado automaticamente.");
+      invalidateLifecycleQueries(queryClient, patientId);
       fetchCounts();
     } catch (err: any) {
       toast.error(err.message || "Erro ao confirmar pagamento");
@@ -144,6 +148,7 @@ export default function PatientQueueTabs() {
       return;
     }
     toast.success("✅ Onboarding liberado! Paciente já pode preencher.");
+    invalidateLifecycleQueries(queryClient, patientId);
     fetchCounts();
   };
 

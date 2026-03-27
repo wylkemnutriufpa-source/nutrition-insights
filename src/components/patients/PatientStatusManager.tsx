@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { releaseOnboarding } from "@/lib/serverTransitions";
 import { acquireActionLock, releaseActionLock, isAtOrPast } from "@/lib/fitjourneyBible";
+import { updatePatientJourneyInCache, invalidateLifecycleQueries } from "@/lib/lifecycleCache";
 import type { PatientInfo } from "@/hooks/queries/usePatientsList";
 
 const JOURNEY_LABELS: Record<string, { label: string; color: string }> = {
@@ -62,30 +63,8 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
       .sort((a, b) => (a.profile?.full_name || "").localeCompare(b.profile?.full_name || ""));
   }, [patients, search, tab]);
 
-  // ⚡ INSTANT cache mutation — updates journey_status in cached data immediately
-  const updatePatientJourneyInCache = (patientId: string, newJourneyStatus: string) => {
-    queryClient.setQueriesData<any>({ queryKey: ["patients"] }, (oldData: any) => {
-      if (!oldData) return oldData;
-      if (oldData.patients) {
-        return {
-          ...oldData,
-          patients: oldData.patients.map((p: any) =>
-            p.patient_id === patientId ? { ...p, journey_status: newJourneyStatus } : p
-          ),
-        };
-      }
-      if (Array.isArray(oldData)) {
-        return oldData.map((p: any) =>
-          p.patient_id === patientId ? { ...p, journey_status: newJourneyStatus } : p
-        );
-      }
-      return oldData;
-    });
-  };
-
-  const refreshAll = () => {
-    queryClient.invalidateQueries({ queryKey: ["patients"], refetchType: "all" });
-    queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+  const refreshAll = (patientId?: string) => {
+    invalidateLifecycleQueries(queryClient, patientId);
   };
 
   const confirmPayment = async (patientId: string) => {
@@ -95,7 +74,7 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
     }
     // ⚡ Optimistic UI — hide button + update status IMMEDIATELY
     setConfirmedPayments(prev => new Set(prev).add(patientId));
-    updatePatientJourneyInCache(patientId, "awaiting_consent");
+    updatePatientJourneyInCache(queryClient, patientId, "awaiting_consent");
     setProcessingId(patientId);
     try {
       const { data, error } = await supabase.rpc("confirm_patient_payment", { _patient_id: patientId, _nutritionist_id: user!.id });
@@ -103,16 +82,16 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
       const result = data as any;
       if (!result?.success) {
         setConfirmedPayments(prev => { const n = new Set(prev); n.delete(patientId); return n; });
-        updatePatientJourneyInCache(patientId, "awaiting_payment");
+        updatePatientJourneyInCache(queryClient, patientId, "awaiting_payment");
         releaseActionLock("confirm_payment", patientId);
         toast.error(result?.error || "Erro ao confirmar pagamento");
       } else {
         toast.success("✅ Pagamento confirmado! Onboarding liberado automaticamente.");
-        refreshAll();
+        refreshAll(patientId);
       }
     } catch {
       setConfirmedPayments(prev => { const n = new Set(prev); n.delete(patientId); return n; });
-      updatePatientJourneyInCache(patientId, "awaiting_payment");
+      updatePatientJourneyInCache(queryClient, patientId, "awaiting_payment");
       toast.error("Erro ao confirmar pagamento");
     }
     setProcessingId(null);
@@ -132,22 +111,22 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
     }
     // ⚡ Optimistic UI — update status IMMEDIATELY
     setReleasedOnboarding(prev => new Set(prev).add(patientId));
-    updatePatientJourneyInCache(patientId, "onboarding_active");
+    updatePatientJourneyInCache(queryClient, patientId, "onboarding_active");
     setProcessingId(patientId);
     try {
       const result = await releaseOnboarding(patientId, user!.id);
       if (!result.success) {
         setReleasedOnboarding(prev => { const n = new Set(prev); n.delete(patientId); return n; });
-        updatePatientJourneyInCache(patientId, journey);
+        updatePatientJourneyInCache(queryClient, patientId, journey);
         releaseActionLock("release_onboarding", patientId);
         toast.error(result.error || "Erro ao liberar onboarding");
       } else {
         toast.success("✅ Onboarding liberado!");
-        refreshAll();
+        refreshAll(patientId);
       }
     } catch {
       setReleasedOnboarding(prev => { const n = new Set(prev); n.delete(patientId); return n; });
-      updatePatientJourneyInCache(patientId, journey);
+      updatePatientJourneyInCache(queryClient, patientId, journey);
       releaseActionLock("release_onboarding", patientId);
       toast.error("Erro ao liberar onboarding");
     }
