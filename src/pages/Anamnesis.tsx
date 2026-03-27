@@ -28,6 +28,7 @@ interface Option {
   label: string;
   emoji: string;
   value: string;
+  description?: string;
 }
 
 interface Question {
