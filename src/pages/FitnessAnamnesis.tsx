@@ -468,43 +468,7 @@ const questions: Question[] = [
   },
 ];
 
-// ──── Card components ────
-function OptionCard({ opt, selected, onClick }: { opt: Option; selected: boolean; onClick: () => void }) {
-  return (
-    <motion.button
-      whileHover={{ scale: 1.03 }}
-      whileTap={{ scale: 0.97 }}
-      onClick={onClick}
-      className={`relative flex flex-col items-center gap-2 p-5 rounded-2xl border-2 transition-all ${
-        selected ? "border-primary bg-primary/10 shadow-glow" : "border-border bg-card hover:border-primary/40"
-      }`}
-    >
-      {selected && (
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-          <Check className="w-3 h-3 text-primary-foreground" />
-        </motion.div>
-      )}
-      <span className="text-3xl">{opt.emoji}</span>
-      <span className="text-sm font-medium text-foreground">{opt.label}</span>
-    </motion.button>
-  );
-}
-
-function SliderInput({ value, onChange, min, max, step, unit }: { value: number; onChange: (v: number) => void; min: number; max: number; step: number; unit: string }) {
-  return (
-    <div className="w-full max-w-md mx-auto space-y-4">
-      <div className="text-center">
-        <span className="text-5xl font-display font-bold text-primary">{value}</span>
-        <span className="text-xl text-muted-foreground ml-2">{unit}</span>
-      </div>
-      <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} className="w-full h-3 rounded-full appearance-none cursor-pointer accent-primary bg-muted" />
-      <div className="flex justify-between text-xs text-muted-foreground">
-        <span>{min} {unit}</span>
-        <span>{max} {unit}</span>
-      </div>
-    </div>
-  );
-}
+// Old OptionCard and SliderInput removed — now using Orbital components from OrbitalAnamnesisInputs
 
 // ──── Main page ────
 export default function FitnessAnamnesis() {
