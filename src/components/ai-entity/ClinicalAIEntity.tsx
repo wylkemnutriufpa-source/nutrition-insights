@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -19,10 +19,16 @@ interface AISignal {
   type: EntityState;
 }
 
+// Module-level cache to prevent re-fetch/re-animate on every route change
+let _cachedState: EntityState = "passive";
+let _cachedSignal: AISignal | null = null;
+let _lastFetchTime = 0;
+const CACHE_TTL_MS = 120_000; // 2 min — same as the old interval
+
 export default function ClinicalAIEntity() {
   const { user } = useAuth();
-  const [state, setState] = useState<EntityState>("passive");
-  const [signal, setSignal] = useState<AISignal | null>(null);
+  const [state, setState] = useState<EntityState>(_cachedState);
+  const [signal, setSignal] = useState<AISignal | null>(_cachedSignal);
   const [panelOpen, setPanelOpen] = useState(false);
   const [summary, setSummary] = useState<{
     focusPatients: number;
@@ -32,6 +38,7 @@ export default function ClinicalAIEntity() {
     engagementScore: number;
   } | null>(null);
   const [dismissed, setDismissed] = useState(false);
+  const mountedRef = useRef(true);
 
   // Load signals from real data
   useEffect(() => {
