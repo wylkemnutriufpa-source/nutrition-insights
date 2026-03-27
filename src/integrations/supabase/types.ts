@@ -3919,6 +3919,7 @@ export type Database = {
           protein: number | null
           restriction_tags_json: Json | null
           subcategory: string | null
+          synonyms: string[] | null
           unit: string | null
         }
         Insert: {
@@ -3938,6 +3939,7 @@ export type Database = {
           protein?: number | null
           restriction_tags_json?: Json | null
           subcategory?: string | null
+          synonyms?: string[] | null
           unit?: string | null
         }
         Update: {
@@ -3957,6 +3959,7 @@ export type Database = {
           protein?: number | null
           restriction_tags_json?: Json | null
           subcategory?: string | null
+          synonyms?: string[] | null
           unit?: string | null
         }
         Relationships: []
@@ -4802,6 +4805,42 @@ export type Database = {
           repair_reason?: string | null
           repair_type?: string
           repaired_at?: string
+        }
+        Relationships: []
+      }
+      meal_analysis_cache: {
+        Row: {
+          analysis_result: Json
+          created_at: string | null
+          description_hash: string
+          description_original: string
+          expires_at: string | null
+          has_image: boolean | null
+          hit_count: number | null
+          id: string
+          source: string | null
+        }
+        Insert: {
+          analysis_result: Json
+          created_at?: string | null
+          description_hash: string
+          description_original: string
+          expires_at?: string | null
+          has_image?: boolean | null
+          hit_count?: number | null
+          id?: string
+          source?: string | null
+        }
+        Update: {
+          analysis_result?: Json
+          created_at?: string | null
+          description_hash?: string
+          description_original?: string
+          expires_at?: string | null
+          has_image?: boolean | null
+          hit_count?: number | null
+          id?: string
+          source?: string | null
         }
         Relationships: []
       }
