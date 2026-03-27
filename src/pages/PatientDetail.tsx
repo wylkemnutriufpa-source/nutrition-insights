@@ -57,6 +57,7 @@ import PatientBehavioralManager from "@/components/patient/PatientBehavioralMana
 import PatientEvolutionPDF from "@/components/patient/PatientEvolutionPDF";
 import FitIntelligenceToggle from "@/components/intelligence/FitIntelligenceToggle";
 import PatientLabExams from "@/components/patient/PatientLabExams";
+import PatientFeedbacksPanel from "@/components/patient/PatientFeedbacksPanel";
 
 export default function PatientDetail() {
   const { patientId } = useParams<{ patientId: string }>();
