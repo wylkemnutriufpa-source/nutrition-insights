@@ -590,7 +590,7 @@ function CenterPanel({
                 background: "linear-gradient(135deg, hsl(var(--primary) / 0.2), hsl(var(--accent) / 0.1))",
               }}
             >
-              <option.icon className="w-6 h-6 text-primary" />
+              <OrbitalIcon option={option} className="w-6 h-6 text-primary" />
             </div>
             <span className="text-sm font-bold text-foreground">{option.label}</span>
             <p className="text-[11px] text-muted-foreground leading-snug line-clamp-3">
