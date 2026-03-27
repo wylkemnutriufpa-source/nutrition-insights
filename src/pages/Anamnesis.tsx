@@ -553,19 +553,49 @@ export default function Anamnesis() {
   // Check if onboarding is released for patient (non-nutritionist mode)
   useEffect(() => {
     if (isNutritionistMode || !targetUserId) return;
-    supabase
-      .from("onboarding_pipelines")
-      .select("release_status")
-      .eq("patient_id", targetUserId)
-      .not("status", "in", '("completed","superseded_by_active_plan","superseded_by_published_plan")')
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data && (data as any).release_status !== "released") {
-          setOnboardingBlocked(true);
-        }
-      });
+
+    (async () => {
+      // First check journey_status — if onboarding_active or beyond, patient IS released
+      const { data: npData } = await supabase
+        .from("nutritionist_patients")
+        .select("journey_status")
+        .eq("patient_id", targetUserId)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const js = (npData as any)?.journey_status;
+      const releasedStatuses = [
+        "onboarding_active", "onboarding_completed", "draft_ready_for_review",
+        "plan_published", "active_followup", "clinical_followup_active", "active"
+      ];
+
+      if (js && releasedStatuses.includes(js)) {
+        // Journey says released — also fix pipeline if out of sync
+        setOnboardingBlocked(false);
+        supabase
+          .from("onboarding_pipelines" as any)
+          .update({ release_status: "released" } as any)
+          .eq("patient_id", targetUserId)
+          .neq("release_status", "released");
+        return;
+      }
+
+      // Fallback: check pipeline directly
+      const { data } = await supabase
+        .from("onboarding_pipelines")
+        .select("release_status")
+        .eq("patient_id", targetUserId)
+        .not("status", "in", '("completed","superseded_by_active_plan","superseded_by_published_plan")')
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (data && (data as any).release_status !== "released") {
+        setOnboardingBlocked(true);
+      }
+    })();
   }, [targetUserId, isNutritionistMode]);
 
   // Load existing draft on mount
