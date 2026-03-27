@@ -6,8 +6,17 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Check, Dumbbell, Loader2, UserCheck, Save } from "lucide-react";
+import { ChevronLeft, ChevronRight, Dumbbell, Loader2, UserCheck, Save } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import {
+  OrbitalSingleSelect,
+  OrbitalMultiSelect,
+  OrbitalSlider,
+  OrbitalNumberInput,
+  OrbitalTextInput,
+  OrbitalTimeInput,
+  OrbitalHeader,
+} from "@/components/onboarding/OrbitalAnamnesisInputs";
 
 // ──── Types ────
 interface Option {
@@ -459,43 +468,7 @@ const questions: Question[] = [
   },
 ];
 
-// ──── Card components ────
-function OptionCard({ opt, selected, onClick }: { opt: Option; selected: boolean; onClick: () => void }) {
-  return (
-    <motion.button
-      whileHover={{ scale: 1.03 }}
-      whileTap={{ scale: 0.97 }}
-      onClick={onClick}
-      className={`relative flex flex-col items-center gap-2 p-5 rounded-2xl border-2 transition-all ${
-        selected ? "border-primary bg-primary/10 shadow-glow" : "border-border bg-card hover:border-primary/40"
-      }`}
-    >
-      {selected && (
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-          <Check className="w-3 h-3 text-primary-foreground" />
-        </motion.div>
-      )}
-      <span className="text-3xl">{opt.emoji}</span>
-      <span className="text-sm font-medium text-foreground">{opt.label}</span>
-    </motion.button>
-  );
-}
-
-function SliderInput({ value, onChange, min, max, step, unit }: { value: number; onChange: (v: number) => void; min: number; max: number; step: number; unit: string }) {
-  return (
-    <div className="w-full max-w-md mx-auto space-y-4">
-      <div className="text-center">
-        <span className="text-5xl font-display font-bold text-primary">{value}</span>
-        <span className="text-xl text-muted-foreground ml-2">{unit}</span>
-      </div>
-      <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} className="w-full h-3 rounded-full appearance-none cursor-pointer accent-primary bg-muted" />
-      <div className="flex justify-between text-xs text-muted-foreground">
-        <span>{min} {unit}</span>
-        <span>{max} {unit}</span>
-      </div>
-    </div>
-  );
-}
+// Old OptionCard and SliderInput removed — now using Orbital components from OrbitalAnamnesisInputs
 
 // ──── Main page ────
 export default function FitnessAnamnesis() {
@@ -591,13 +564,6 @@ export default function FitnessAnamnesis() {
 
   const setAnswer = (value: any) => setAnswers((prev) => ({ ...prev, [q.id]: value }));
 
-  const toggleMulti = (value: string) => {
-    const current: string[] = answers[q.id] || [];
-    if (value === "none") { setAnswer(["none"]); return; }
-    const filtered = current.filter((v) => v !== "none");
-    if (filtered.includes(value)) setAnswer(filtered.filter((v) => v !== value));
-    else setAnswer([...filtered, value]);
-  };
 
   const canNext = () => {
     const val = answers[q.id];
@@ -715,46 +681,70 @@ export default function FitnessAnamnesis() {
         {/* Question */}
         <AnimatePresence mode="wait">
           <motion.div key={q.id} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.3 }} className="space-y-6">
-            <div className="text-center mb-8">
-              <h2 className="font-display text-2xl font-bold mb-1">{q.title}</h2>
-              <p className="text-muted-foreground">{q.subtitle}</p>
-            </div>
 
             {q.type === "single" && q.options && (
-              <div className={`grid gap-3 ${q.options.length <= 3 ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2 sm:grid-cols-3"}`}>
-                {q.options.map((opt) => <OptionCard key={opt.value} opt={opt} selected={answers[q.id] === opt.value} onClick={() => setAnswer(opt.value)} />)}
-              </div>
+              <OrbitalSingleSelect
+                title={q.title}
+                subtitle={q.subtitle}
+                options={q.options}
+                value={answers[q.id]}
+                onChange={(v) => setAnswer(v)}
+              />
             )}
 
             {q.type === "multi" && q.options && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {q.options.map((opt) => <OptionCard key={opt.value} opt={opt} selected={(answers[q.id] || []).includes(opt.value)} onClick={() => toggleMulti(opt.value)} />)}
-              </div>
+              <OrbitalMultiSelect
+                title={q.title}
+                subtitle={q.subtitle}
+                options={q.options}
+                value={answers[q.id] || []}
+                onChange={(v) => setAnswer(v)}
+              />
             )}
 
             {q.type === "slider" && (
-              <SliderInput value={answers[q.id] ?? q.min ?? 1} onChange={(v) => setAnswer(v)} min={q.min || 0} max={q.max || 100} step={q.step || 1} unit={q.unit || ""} />
+              <OrbitalSlider
+                title={q.title}
+                subtitle={q.subtitle}
+                value={answers[q.id] ?? q.min ?? 1}
+                onChange={(v) => setAnswer(v)}
+                min={q.min || 0}
+                max={q.max || 100}
+                step={q.step || 1}
+                unit={q.unit || ""}
+              />
             )}
 
             {q.type === "number" && (
-              <div className="max-w-xs mx-auto space-y-2">
-                <div className="relative">
-                  <input type="number" value={answers[q.id] || ""} onChange={(e) => setAnswer(e.target.value)} placeholder={q.placeholder} min={q.min} max={q.max} className="w-full text-center text-4xl font-display font-bold bg-card border-2 border-border rounded-2xl px-6 py-4 focus:border-primary focus:outline-none transition-colors" />
-                  {q.unit && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">{q.unit}</span>}
-                </div>
-              </div>
+              <OrbitalNumberInput
+                title={q.title}
+                subtitle={q.subtitle}
+                value={answers[q.id] || ""}
+                onChange={(v) => setAnswer(v)}
+                min={q.min}
+                max={q.max}
+                unit={q.unit}
+                placeholder={q.placeholder}
+              />
             )}
 
             {q.type === "text" && (
-              <div className="max-w-md mx-auto">
-                <textarea value={answers[q.id] || ""} onChange={(e) => setAnswer(e.target.value)} placeholder={q.placeholder} rows={3} className="w-full bg-card border-2 border-border rounded-2xl px-4 py-3 focus:border-primary focus:outline-none transition-colors resize-none text-sm" />
-              </div>
+              <OrbitalTextInput
+                title={q.title}
+                subtitle={q.subtitle}
+                value={answers[q.id] || ""}
+                onChange={(v) => setAnswer(v)}
+                placeholder={q.placeholder}
+              />
             )}
 
             {q.type === "time" && (
-              <div className="max-w-xs mx-auto">
-                <input type="time" value={answers[q.id] || ""} onChange={(e) => setAnswer(e.target.value)} className="w-full text-center text-4xl font-display font-bold bg-card border-2 border-border rounded-2xl px-6 py-4 focus:border-primary focus:outline-none transition-colors" />
-              </div>
+              <OrbitalTimeInput
+                title={q.title}
+                subtitle={q.subtitle}
+                value={answers[q.id] || ""}
+                onChange={(v) => setAnswer(v)}
+              />
             )}
           </motion.div>
         </AnimatePresence>
