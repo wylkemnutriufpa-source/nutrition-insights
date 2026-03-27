@@ -167,11 +167,11 @@ const questions: Question[] = [
     subtitle: "Episódios de comer demais sem controle",
     type: "single",
     options: [
-      { label: "Sempre", emoji: "🍕", value: "always" },
-      { label: "Frequente", emoji: "😰", value: "frequent" },
-      { label: "Às vezes", emoji: "🤔", value: "sometimes" },
-      { label: "Raramente", emoji: "😌", value: "rarely" },
-      { label: "Nunca", emoji: "✅", value: "never" },
+      { label: "Sempre", emoji: "🍕", value: "always", description: "Compulsão constante, dificuldade de parar de comer em todas as refeições" },
+      { label: "Frequente", emoji: "😰", value: "frequent", description: "Episódios frequentes de comer demais, especialmente em momentos de estresse" },
+      { label: "Às vezes", emoji: "🤔", value: "sometimes", description: "Acontece ocasionalmente, geralmente em situações específicas" },
+      { label: "Raramente", emoji: "😌", value: "rarely", description: "Controle alimentar na maioria das situações, episódios raros" },
+      { label: "Nunca", emoji: "✅", value: "never", description: "Controle total da saciedade e comportamento alimentar equilibrado" },
     ],
   },
   // ──── NEW: Symptoms ────
