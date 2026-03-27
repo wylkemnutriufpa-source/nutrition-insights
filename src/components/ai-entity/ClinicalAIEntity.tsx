@@ -321,8 +321,8 @@ export default function ClinicalAIEntity() {
                   <p className="text-[10px] text-white/30">Briefing Clínico</p>
                 </div>
               </div>
-              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-white/30 hover:text-white" onClick={() => setPanelOpen(false)}>
-                <X className="w-4 h-4" />
+              <Button variant="ghost" size="icon" className="h-10 w-10 min-h-[40px] min-w-[40px] p-0 text-white/30 hover:text-white hover:bg-white/10 rounded-full" onClick={() => setPanelOpen(false)}>
+                <X className="w-5 h-5" />
               </Button>
             </div>
 
