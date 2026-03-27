@@ -1,0 +1,1 @@
+ALTER TABLE public.ifj_food_database ADD CONSTRAINT ifj_food_database_normalized_name_key UNIQUE (normalized_name);

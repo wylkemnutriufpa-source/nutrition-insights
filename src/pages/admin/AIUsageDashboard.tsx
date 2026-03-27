@@ -5,7 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
-import { Brain, TrendingDown, Zap, DollarSign, Activity, Cpu, Database, RefreshCw } from "lucide-react";
+import { Brain, TrendingDown, Zap, DollarSign, Activity, Cpu, Database, RefreshCw, Target } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--warning))", "hsl(var(--destructive))", "#8884d8", "#82ca9d"];
 
@@ -155,18 +157,25 @@ export default function AIUsageDashboard() {
             <Brain className="w-6 h-6 text-primary" />
             Monitoramento de Custo IA
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">Controle de chamadas, cache e economia — Fase 3</p>
+          <p className="text-sm text-muted-foreground mt-1">Controle de chamadas, cache e economia — Fase 4</p>
         </div>
-        <Select value={period} onValueChange={setPeriod}>
-          <SelectTrigger className="w-[160px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="7">Últimos 7 dias</SelectItem>
-            <SelectItem value="30">Últimos 30 dias</SelectItem>
-            <SelectItem value="90">Últimos 90 dias</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Link to="/admin/meal-coverage">
+            <Button variant="outline" size="sm" className="gap-2">
+              <Target className="w-4 h-4" /> Cobertura Alimentar
+            </Button>
+          </Link>
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">Últimos 7 dias</SelectItem>
+              <SelectItem value="30">Últimos 30 dias</SelectItem>
+              <SelectItem value="90">Últimos 90 dias</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* KPI Cards */}
