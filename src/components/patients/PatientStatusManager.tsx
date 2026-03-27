@@ -130,15 +130,24 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
       releaseActionLock("release_onboarding", patientId);
       return;
     }
-    // ⚡ Optimistic UI
+    // ⚡ Optimistic UI — update status IMMEDIATELY
     setReleasedOnboarding(prev => new Set(prev).add(patientId));
+    updatePatientJourneyInCache(patientId, "onboarding_active");
     setProcessingId(patientId);
     try {
-      await releaseOnboarding(patientId, user!.id);
-      toast.success("✅ Onboarding liberado! Paciente já pode preencher.");
-      refreshAll();
+      const result = await releaseOnboarding(patientId, user!.id);
+      if (!result.success) {
+        setReleasedOnboarding(prev => { const n = new Set(prev); n.delete(patientId); return n; });
+        updatePatientJourneyInCache(patientId, journey);
+        releaseActionLock("release_onboarding", patientId);
+        toast.error(result.error || "Erro ao liberar onboarding");
+      } else {
+        toast.success("✅ Onboarding liberado!");
+        refreshAll();
+      }
     } catch {
       setReleasedOnboarding(prev => { const n = new Set(prev); n.delete(patientId); return n; });
+      updatePatientJourneyInCache(patientId, journey);
       releaseActionLock("release_onboarding", patientId);
       toast.error("Erro ao liberar onboarding");
     }
