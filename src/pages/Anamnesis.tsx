@@ -329,9 +329,9 @@ const questions: Question[] = [
     subtitle: "Sem contar lanches rápidos",
     type: "single",
     options: [
-      { label: "2-3 refeições", emoji: "2️⃣", value: "2-3" },
-      { label: "4-5 refeições", emoji: "4️⃣", value: "4-5" },
-      { label: "6+ refeições", emoji: "6️⃣", value: "6+" },
+      { label: "2-3 refeições", emoji: "2️⃣", value: "2-3", description: "Poucas refeições ao dia — pode indicar jejuns longos" },
+      { label: "4-5 refeições", emoji: "4️⃣", value: "4-5", description: "Frequência alimentar equilibrada com boa distribuição" },
+      { label: "6+ refeições", emoji: "6️⃣", value: "6+", description: "Alta frequência alimentar — comum em rotinas de treino" },
     ],
   },
   // ──── Meal Schedule / Timing ────
