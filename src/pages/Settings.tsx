@@ -297,9 +297,9 @@ function DatabaseBackupCard() {
         return;
       }
 
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/generate-sql-backup`,
+        `${supabaseUrl}/functions/v1/generate-sql-backup`,
         {
           headers: {
             Authorization: `Bearer ${session.access_token}`,
