@@ -433,7 +433,7 @@ function MobileSelector({
       <div className="grid grid-cols-2 gap-3">
         {options.map((opt, i) => {
           const isActive = opt.id === selected;
-          const Icon = opt.icon;
+          // Icon handled by OrbitalIcon helper
           return (
             <motion.button
               key={opt.id}
