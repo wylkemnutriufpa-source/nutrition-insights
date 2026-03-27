@@ -136,12 +136,9 @@ export default function PatientDetail() {
     }
   }, [data?.currentPrestigePlanId]);
 
-  // Invalidation helper
+  // Invalidation helper — centralized
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.patients.detail(patientId ?? ""), refetchType: "all" });
-    queryClient.invalidateQueries({ queryKey: ["patients"], refetchType: "all" });
-    queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-    queryClient.invalidateQueries({ queryKey: ["lifecycle", patientId] });
+    invalidateLifecycleQueries(queryClient, patientId ?? undefined);
   };
 
   // Confirm payment + auto-release onboarding
