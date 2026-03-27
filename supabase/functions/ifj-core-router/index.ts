@@ -1322,9 +1322,30 @@ serve(async (req) => {
         response = await runNutritionEngine(supabaseAdmin, intent, user.id, role, ctx, inputText);
       }
       else {
-        response = fmt("Não entendi", "❓", "error", "Comando não reconhecido.",
-          "❓ Não entendi.\n\n💡 Tente:\n- *\"Quem precisa de atenção?\"*\n- *\"Sobre [paciente]\"*\n- *\"O que preciso resolver hoje?\"*\n- *\"Libere todos\"*\n- *\"Ajuda\"*",
-          [], intent, "general", ctx);
+        // Smart suggestion engine: detect partial keyword matches and suggest
+        const suggestions = generateSmartSuggestions(n, brain.intents, brain.phraseMap, role);
+        if (suggestions.length > 0) {
+          const sugMd = `🤔 Não entendi exatamente, mas talvez você queira:\n\n` +
+            suggestions.map(s => `- 💡 **${s.label}** → *"${s.example}"*`).join("\n") +
+            `\n\n---\nDiga *"ajuda"* para ver todos os comandos.`;
+          const sugActions = suggestions
+            .filter(s => {
+              // If suggestion maps to a nav route, add action button
+              const navKey = Object.keys(NAV_MAP).find(k => s.example.includes(k));
+              return !!navKey;
+            })
+            .map(s => {
+              const navKey = Object.keys(NAV_MAP).find(k => s.example.includes(k));
+              const nav = navKey ? NAV_MAP[navKey] : null;
+              return nav ? { label: `Abrir ${nav.label}`, route: nav.route, type: "navigate" } : null;
+            })
+            .filter(Boolean) as any[];
+          response = fmt("Você quis dizer...", "💡", "suggestions", "Sugestões baseadas na sua pergunta", sugMd, sugActions, intent, "suggestion_engine", ctx);
+        } else {
+          response = fmt("Não entendi", "❓", "error", "Comando não reconhecido.",
+            "❓ Não entendi.\n\n💡 Tente:\n- *\"Quem precisa de atenção?\"*\n- *\"Sobre [paciente]\"*\n- *\"O que preciso resolver hoje?\"*\n- *\"Libere todos\"*\n- *\"Ajuda\"*",
+            [], intent, "general", ctx);
+        }
       }
     } catch (engineError) {
       console.error("Engine error:", engineError);
