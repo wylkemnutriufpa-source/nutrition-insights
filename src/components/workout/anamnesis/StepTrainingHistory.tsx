@@ -4,10 +4,10 @@ import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
 import {
   OrbitalHeader,
-  OrbitalSingleSelect,
   OrbitalNumberInput,
   OrbitalTextInput,
 } from "@/components/onboarding/OrbitalAnamnesisInputs";
+import { RadialOrbitalSelector } from "@/components/ui/radial-orbital-selector";
 import type { TrainerAnamnesisData } from "./types";
 import { MODALITIES } from "./types";
 
@@ -68,16 +68,17 @@ export default function StepTrainingHistory({ data, onChange }: Props) {
             placeholder="Ex: Jan-Mar 2025, há 6 meses..."
           />
 
-          <OrbitalSingleSelect
+          <RadialOrbitalSelector
             title="Nível percebido"
             subtitle="Como você se classifica?"
             options={[
-              { value: "beginner", label: "Iniciante", emoji: "🌱" },
-              { value: "intermediate", label: "Intermediário", emoji: "🔥" },
-              { value: "advanced", label: "Avançado", emoji: "💎" },
+              { id: "beginner", label: "Iniciante", emoji: "🌱", description: "Pouca ou nenhuma experiência com treinos estruturados" },
+              { id: "intermediate", label: "Intermediário", emoji: "🔥", description: "Já treina há algum tempo com certa regularidade e técnica" },
+              { id: "advanced", label: "Avançado", emoji: "💎", description: "Experiência sólida, boa técnica e consciência corporal" },
             ]}
             value={data.perceived_level}
             onChange={(v) => onChange({ perceived_level: v })}
+            showConfirmButton={false}
           />
 
           {/* Modalities with orbital chips */}

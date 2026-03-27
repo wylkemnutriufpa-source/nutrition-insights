@@ -2,7 +2,8 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { OrbitalHeader, OrbitalSingleSelect, OrbitalTextInput } from "@/components/onboarding/OrbitalAnamnesisInputs";
+import { OrbitalHeader, OrbitalTextInput } from "@/components/onboarding/OrbitalAnamnesisInputs";
+import { RadialOrbitalSelector } from "@/components/ui/radial-orbital-selector";
 import type { TrainerAnamnesisData } from "./types";
 
 const EASE_PREMIUM = [0.22, 1, 0.36, 1] as const;
@@ -19,25 +20,27 @@ export default function StepCoachingStyle({ data, onChange }: Props) {
     <div className="w-full max-w-lg mx-auto space-y-6">
       <OrbitalHeader title="Estilo de Acompanhamento" subtitle="Como você prefere ser acompanhado?" />
 
-      <OrbitalSingleSelect
+      <RadialOrbitalSelector
         title="🎯 Estilo de cobrança preferido"
         options={[
-          { value: "gentle", label: "Suave", emoji: "🌸" },
-          { value: "moderate", label: "Moderado", emoji: "💬" },
-          { value: "firm", label: "Firme", emoji: "🔥" },
+          { id: "gentle", label: "Suave", emoji: "🌸", description: "Acompanhamento leve, sem pressão, respeitando seu ritmo" },
+          { id: "moderate", label: "Moderado", emoji: "💬", description: "Equilíbrio entre incentivo e cobrança, com metas realistas" },
+          { id: "firm", label: "Firme", emoji: "🔥", description: "Cobrança direta e objetiva para máxima performance" },
         ]}
         value={data.coaching_intensity}
         onChange={(v) => onChange({ coaching_intensity: v })}
+        showConfirmButton={false}
       />
 
-      <OrbitalSingleSelect
+      <RadialOrbitalSelector
         title="📋 Preferência de plano"
         options={[
-          { value: "rigid", label: "Rígido", emoji: "📋" },
-          { value: "flexible", label: "Flexível", emoji: "🔄" },
+          { id: "rigid", label: "Rígido", emoji: "📋", description: "Plano fixo e estruturado, seguir exatamente como prescrito" },
+          { id: "flexible", label: "Flexível", emoji: "🔄", description: "Plano adaptável, com opções de troca e ajustes conforme o dia" },
         ]}
         value={data.plan_flexibility}
         onChange={(v) => onChange({ plan_flexibility: v })}
+        showConfirmButton={false}
       />
 
       {/* Toggle preferences with orbital styling */}
