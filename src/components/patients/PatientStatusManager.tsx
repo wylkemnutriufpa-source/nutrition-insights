@@ -102,8 +102,8 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
       if (error) throw error;
       const result = data as any;
       if (!result?.success) {
-        // Rollback optimistic state
         setConfirmedPayments(prev => { const n = new Set(prev); n.delete(patientId); return n; });
+        updatePatientJourneyInCache(patientId, "awaiting_payment");
         releaseActionLock("confirm_payment", patientId);
         toast.error(result?.error || "Erro ao confirmar pagamento");
       } else {
