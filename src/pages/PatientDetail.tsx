@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { acquireActionLock, releaseActionLock } from "@/lib/fitjourneyBible";
+import { updatePatientJourneyInCache, invalidateLifecycleQueries } from "@/lib/lifecycleCache";
 import { useQueryClient } from "@tanstack/react-query";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
