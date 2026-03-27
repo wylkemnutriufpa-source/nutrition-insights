@@ -4,7 +4,7 @@
  * Floating neural orb for patient experience.
  * Uses context builder + prompt engine for adaptive prompts.
  */
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import FitIntelligenceActivation from "./activation/FitIntelligenceActivation";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +24,69 @@ import FitIntelligenceWizard from "./FitIntelligenceWizard";
 import FitIntelligencePromptCard from "./FitIntelligencePromptCard";
 
 const CHECK_INTERVAL = 5 * 60_000; // 5 min
+
+type FrequencyCounterField = "engaged_count" | "ignored_count";
+
+type SessionPromptState = {
+  shownAt: number;
+  type: string;
+};
+
+const SESSION_PROMPT_KEY_PREFIX = "fit-intelligence:last-prompt:";
+const sessionPromptCache = new Map<string, SessionPromptState>();
+
+function getSessionPromptState(userId: string): SessionPromptState | null {
+  const cached = sessionPromptCache.get(userId);
+  if (cached) return cached;
+
+  if (typeof window === "undefined") return null;
+
+  try {
+    const raw = window.sessionStorage.getItem(`${SESSION_PROMPT_KEY_PREFIX}${userId}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as SessionPromptState;
+    if (!parsed?.shownAt || !parsed?.type) return null;
+    sessionPromptCache.set(userId, parsed);
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function setSessionPromptState(userId: string, state: SessionPromptState) {
+  sessionPromptCache.set(userId, state);
+
+  if (typeof window === "undefined") return;
+
+  try {
+    window.sessionStorage.setItem(`${SESSION_PROMPT_KEY_PREFIX}${userId}`, JSON.stringify(state));
+  } catch {
+    // Ignore session storage issues and keep the in-memory fallback.
+  }
+}
+
+async function upsertFrequencyState(patientId: string, payload: Record<string, unknown>) {
+  await supabase.from("fit_intelligence_frequency" as any).upsert(
+    {
+      patient_id: patientId,
+      updated_at: new Date().toISOString(),
+      ...payload,
+    } as any,
+    { onConflict: "patient_id" }
+  );
+}
+
+async function incrementFrequencyCounter(patientId: string, field: FrequencyCounterField) {
+  const { data: current } = await supabase
+    .from("fit_intelligence_frequency" as any)
+    .select(field)
+    .eq("patient_id", patientId)
+    .maybeSingle();
+
+  await upsertFrequencyState(patientId, {
+    [field]: ((current as Record<string, number | null> | null)?.[field] || 0) + 1,
+  });
+}
 
 export default function FitIntelligenceAssistant() {
   const { user, profile, roles } = useAuth();
@@ -45,6 +108,19 @@ export default function FitIntelligenceAssistant() {
   const expiresAt = (profile as any)?.fit_intelligence_expires_at;
   const isExpired = expiresAt && new Date(expiresAt) < new Date();
   const isActiveAccess = isEnabled && !isExpired;
+  const patientName = profile?.full_name || "";
+  const intelligenceProfile = useMemo(
+    () => ({
+      fit_intelligence_enabled: (profile as any)?.fit_intelligence_enabled,
+      fit_intelligence_onboarded: (profile as any)?.fit_intelligence_onboarded,
+      fit_intelligence_snoozed_until: (profile as any)?.fit_intelligence_snoozed_until,
+    }),
+    [
+      (profile as any)?.fit_intelligence_enabled,
+      (profile as any)?.fit_intelligence_onboarded,
+      (profile as any)?.fit_intelligence_snoozed_until,
+    ]
+  );
 
   // Show first-time activation experience
   useEffect(() => {
@@ -86,17 +162,22 @@ export default function FitIntelligenceAssistant() {
     try {
       const ctx = await buildIntelligenceContext(
         user.id,
-        profile?.full_name || "",
-        profile as any
+        patientName,
+        intelligenceProfile
       );
 
       if (!ctx) { checkingRef.current = false; return; }
+
+      const sessionPrompt = getSessionPromptState(user.id);
+      const sessionIsNewer = !!sessionPrompt && sessionPrompt.shownAt > (ctx.lastPromptAt?.getTime() || 0);
+      const effectiveLastPromptAt = sessionIsNewer ? new Date(sessionPrompt!.shownAt) : ctx.lastPromptAt;
+      const effectiveLastPromptType = sessionIsNewer ? sessionPrompt!.type : ctx.lastPromptType;
 
       // Check snooze
       if (isSnoozed(ctx.snoozedUntil)) { checkingRef.current = false; return; }
 
       // Check cooldown
-      if (!shouldShowPrompt(ctx.lastPromptAt, ctx.cooldownMinutes, ctx.ignoredCount, ctx.engagedCount)) {
+      if (!shouldShowPrompt(effectiveLastPromptAt, ctx.cooldownMinutes, ctx.ignoredCount, ctx.engagedCount)) {
         checkingRef.current = false;
         return;
       }
@@ -148,10 +229,13 @@ export default function FitIntelligenceAssistant() {
         workoutTime: ctx.workoutTime,
         workoutBlocker: ctx.workoutBlocker,
         cravingHours: ctx.cravingHours,
+        preferredReminderWindows: ctx.preferredReminderWindows,
         failureCount: ctx.failureCount7d,
         isWeekend: ctx.isWeekend,
         currentHour: ctx.currentHour,
         clinicalFlags: ctx.clinicalFlags,
+        lastPromptAt: effectiveLastPromptAt,
+        lastPromptType: effectiveLastPromptType,
         hasTrainer,
         daysSinceLastWorkout,
         weeklyWorkoutCount,
@@ -163,17 +247,15 @@ export default function FitIntelligenceAssistant() {
         setPrompt(newPrompt);
         setExpanded(true);
         setResponseText(null);
+        setSessionPromptState(user.id, {
+          shownAt: Date.now(),
+          type: newPrompt.type,
+        });
 
         // Update last prompt time + type
-        await supabase.from("fit_intelligence_frequency" as any).upsert(
-          {
-            patient_id: user.id,
-            last_prompt_at: new Date().toISOString(),
-            last_prompt_type: newPrompt.type,
-            updated_at: new Date().toISOString(),
-          } as any,
-          { onConflict: "patient_id" }
-        );
+        await upsertFrequencyState(user.id, {
+          last_prompt_at: new Date().toISOString(),
+        });
 
         // Log prompt shown
         await supabase.from("fit_intelligence_interactions" as any).insert({
@@ -195,7 +277,7 @@ export default function FitIntelligenceAssistant() {
     } finally {
       checkingRef.current = false;
     }
-  }, [user, isPatient, isActiveAccess, isOnboarded, profile, prompt]);
+  }, [user, isPatient, isActiveAccess, isOnboarded, patientName, intelligenceProfile, prompt]);
 
   // Periodic checks
   useEffect(() => {
@@ -245,7 +327,7 @@ export default function FitIntelligenceAssistant() {
         );
 
         setResponseText(
-          getHydrationResponse(newConsumed, target, profile?.full_name?.split(" ")[0] || "você")
+          getHydrationResponse(newConsumed, target, patientName.split(" ")[0] || "você")
         );
       }
 
@@ -261,18 +343,7 @@ export default function FitIntelligenceAssistant() {
 
       // Increment engaged count
       try {
-        const { data: curFreq } = await supabase
-          .from("fit_intelligence_frequency" as any)
-          .select("engaged_count")
-          .eq("patient_id", user.id)
-          .maybeSingle();
-        await supabase
-          .from("fit_intelligence_frequency" as any)
-          .update({
-            engaged_count: ((curFreq as any)?.engaged_count || 0) + 1,
-            updated_at: new Date().toISOString(),
-          } as any)
-          .eq("patient_id", user.id);
+        await incrementFrequencyCounter(user.id, "engaged_count");
       } catch {}
 
       // Auto-dismiss
@@ -300,18 +371,7 @@ export default function FitIntelligenceAssistant() {
       } as any);
 
       try {
-        const { data: curFreq } = await supabase
-          .from("fit_intelligence_frequency" as any)
-          .select("ignored_count")
-          .eq("patient_id", user.id)
-          .maybeSingle();
-        await supabase
-          .from("fit_intelligence_frequency" as any)
-          .update({
-            ignored_count: ((curFreq as any)?.ignored_count || 0) + 1,
-            updated_at: new Date().toISOString(),
-          } as any)
-          .eq("patient_id", user.id);
+        await incrementFrequencyCounter(user.id, "ignored_count");
       } catch {}
     }
     setExpanded(false);
