@@ -111,7 +111,7 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
     }
     // ⚡ Optimistic UI — update status IMMEDIATELY
     setReleasedOnboarding(prev => new Set(prev).add(patientId));
-    updatePatientJourneyInCache(patientId, "onboarding_active");
+    updatePatientJourneyInCache(queryClient, patientId, "onboarding_active");
     setProcessingId(patientId);
     try {
       const result = await releaseOnboarding(patientId, user!.id);
