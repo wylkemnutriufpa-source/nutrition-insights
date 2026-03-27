@@ -93,8 +93,9 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
       toast.info("Ação já em andamento...");
       return;
     }
-    // ⚡ Optimistic UI — hide button immediately
+    // ⚡ Optimistic UI — hide button + update status IMMEDIATELY
     setConfirmedPayments(prev => new Set(prev).add(patientId));
+    updatePatientJourneyInCache(patientId, "awaiting_consent");
     setProcessingId(patientId);
     try {
       const { data, error } = await supabase.rpc("confirm_patient_payment", { _patient_id: patientId, _nutritionist_id: user!.id });
