@@ -103,10 +103,10 @@ const questions: Question[] = [
     subtitle: "Pense na sua rotina semanal",
     type: "single",
     options: [
-      { label: "Sedentário", emoji: "🛋️", value: "sedentary" },
-      { label: "Leve (1-2x/sem)", emoji: "🚶", value: "light" },
-      { label: "Moderado (3-5x/sem)", emoji: "🏃", value: "moderate" },
-      { label: "Intenso (6-7x/sem)", emoji: "🏋️", value: "intense" },
+      { label: "Sedentário", emoji: "🛋️", value: "sedentary", description: "Pouca ou nenhuma atividade física, rotina predominantemente sentada" },
+      { label: "Leve (1-2x/sem)", emoji: "🚶", value: "light", description: "Caminhadas leves ou exercícios esporádicos durante a semana" },
+      { label: "Moderado (3-5x/sem)", emoji: "🏃", value: "moderate", description: "Treinos regulares com intensidade moderada ao longo da semana" },
+      { label: "Intenso (6-7x/sem)", emoji: "🏋️", value: "intense", description: "Treinos de alta intensidade quase todos os dias da semana" },
     ],
   },
   {
