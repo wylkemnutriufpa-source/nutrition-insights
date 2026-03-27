@@ -6,6 +6,98 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ═══════════════════════════════════════════════════
+// DETERMINISTIC PREDICTIVE BRIEFING v1.0
+// Replaces AI narrative with template-based briefing
+// ═══════════════════════════════════════════════════
+
+function generateDeterministicNarrative(
+  predictions: any[],
+  totalPatients: number,
+  portfolio: any,
+  milestonesCount: number,
+): string {
+  const now = new Date();
+  const weekday = now.toLocaleDateString("pt-BR", { weekday: "long" });
+  const dateStr = now.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+
+  const critical = predictions.filter(p => p.severity === "critical");
+  const warnings = predictions.filter(p => p.severity === "warning");
+  const dropoutRisks = predictions.filter(p => p.type === "dropout_risk");
+  const plateaus = predictions.filter(p => p.type === "plateau");
+  const adherenceDrops = predictions.filter(p => p.type === "adherence_drop");
+
+  const lines: string[] = [];
+
+  // Header
+  lines.push(`## 📊 Briefing Preditivo — ${weekday}, ${dateStr}\n`);
+
+  // Overview
+  lines.push(`**Carteira:** ${totalPatients} pacientes ativos`);
+  if (portfolio) {
+    if (portfolio.portfolio_health_score) lines.push(`**Saúde do portfólio:** ${portfolio.portfolio_health_score}/100`);
+    if (portfolio.avg_adherence) lines.push(`**Adesão média:** ${portfolio.avg_adherence.toFixed(0)}%`);
+  }
+  lines.push("");
+
+  // Critical alerts
+  if (critical.length > 0) {
+    lines.push(`### 🔴 Ações Críticas (${critical.length})\n`);
+    for (const c of critical) {
+      lines.push(`- **${c.patient_name}**: ${c.message}`);
+      if (c.action) lines.push(`  → _${c.action}_`);
+    }
+    lines.push("");
+  }
+
+  // Warnings
+  if (warnings.length > 0) {
+    lines.push(`### ⚠️ Atenção (${warnings.length})\n`);
+    for (const w of warnings.slice(0, 5)) {
+      lines.push(`- **${w.patient_name}**: ${w.message}`);
+    }
+    if (warnings.length > 5) lines.push(`- _...e mais ${warnings.length - 5} alertas._`);
+    lines.push("");
+  }
+
+  // Summary by type
+  if (dropoutRisks.length > 0 || plateaus.length > 0 || adherenceDrops.length > 0) {
+    lines.push("### 📋 Resumo por Categoria\n");
+    if (dropoutRisks.length > 0) lines.push(`- 🚪 **Risco de abandono:** ${dropoutRisks.length} paciente(s)`);
+    if (plateaus.length > 0) lines.push(`- 📉 **Platôs detectados:** ${plateaus.length} paciente(s)`);
+    if (adherenceDrops.length > 0) lines.push(`- 📊 **Queda de adesão:** ${adherenceDrops.length} paciente(s)`);
+    lines.push("");
+  }
+
+  // Milestones
+  if (milestonesCount > 0) {
+    lines.push(`### 🎯 Marcos Próximos\n`);
+    lines.push(`${milestonesCount} marco(s) nos próximos 7 dias. Verifique o calendário.\n`);
+  }
+
+  // Priorities
+  if (predictions.length > 0) {
+    lines.push("### 🎯 Prioridades do Dia\n");
+    const topPriorities = predictions.slice(0, 3);
+    for (let i = 0; i < topPriorities.length; i++) {
+      lines.push(`${i + 1}. Contatar **${topPriorities[i].patient_name}** — ${topPriorities[i].type === "dropout_risk" ? "risco de abandono" : topPriorities[i].type === "plateau" ? "platô" : "queda de adesão"}`);
+    }
+    lines.push("");
+  }
+
+  // No issues
+  if (predictions.length === 0) {
+    lines.push("### ✅ Sem Alertas\n");
+    lines.push("Nenhum alerta crítico detectado. Sua carteira está estável.");
+    lines.push("Aproveite para revisar planos e agendar consultas de acompanhamento.\n");
+  }
+
+  lines.push("---");
+  lines.push(`_Gerado automaticamente pelo Motor Preditivo IFJ • ${now.toLocaleTimeString("pt-BR")}_`);
+
+  return lines.join("\n");
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -22,14 +114,10 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) throw new Error("Unauthorized");
 
-    // Fetch comprehensive data for predictions
-    const [patientsRes, snapshotsRes, alertsRes, portfolioRes, milestonesRes] = await Promise.all([
+    // Fetch data
+    const [patientsRes, alertsRes, portfolioRes, milestonesRes] = await Promise.all([
       supabase.from("patients").select("id, full_name, goal, current_weight, target_weight, journey_status, created_at")
         .eq("nutritionist_id", user.id).eq("status", "active"),
-      supabase.from("clinical_daily_snapshots").select("*")
-        .in("patient_id", []) // Will be filled
-        .gte("snapshot_date", new Date(Date.now() - 14 * 86400000).toISOString().split("T")[0])
-        .order("snapshot_date", { ascending: false }),
       supabase.from("clinical_alerts").select("*")
         .eq("nutritionist_id", user.id).eq("is_active", true),
       supabase.from("clinic_portfolio_state").select("*")
@@ -43,7 +131,7 @@ serve(async (req) => {
     const patients = patientsRes.data || [];
     const patientIds = patients.map((p: any) => p.id);
 
-    // Re-fetch snapshots with actual patient IDs
+    // Fetch snapshots
     const { data: snapshots } = await supabase
       .from("clinical_daily_snapshots")
       .select("*")
@@ -51,13 +139,11 @@ serve(async (req) => {
       .gte("snapshot_date", new Date(Date.now() - 14 * 86400000).toISOString().split("T")[0])
       .order("snapshot_date", { ascending: false });
 
-    // Compute predictions deterministically
+    // Compute predictions (same deterministic logic)
     const predictions: any[] = [];
-    
+
     for (const patient of patients) {
       const patientSnapshots = (snapshots || []).filter((s: any) => s.patient_id === patient.id);
-      const patientAlerts = (alertsRes.data || []).filter((a: any) => a.patient_id === patient.id);
-      
       if (patientSnapshots.length < 2) continue;
 
       const latest = patientSnapshots[0];
@@ -66,7 +152,6 @@ serve(async (req) => {
         return daysDiff >= 6;
       });
 
-      // Dropout risk trend
       if (latest?.dropout_risk_score > 50) {
         const trend = weekAgo ? latest.dropout_risk_score - (weekAgo.dropout_risk_score || 0) : 0;
         predictions.push({
@@ -81,7 +166,6 @@ serve(async (req) => {
         });
       }
 
-      // Stagnation detection
       if (latest?.weight_trend === "stable" && patient.goal === "weight_loss") {
         const daysStable = patientSnapshots.filter((s: any) => s.weight_trend === "stable").length;
         if (daysStable >= 7) {
@@ -97,7 +181,6 @@ serve(async (req) => {
         }
       }
 
-      // Adherence drop
       if (latest?.adherence_score && weekAgo?.adherence_score) {
         const drop = weekAgo.adherence_score - latest.adherence_score;
         if (drop > 15) {
@@ -114,47 +197,18 @@ serve(async (req) => {
       }
     }
 
-    // Sort by severity
     predictions.sort((a, b) => {
       const sev = { critical: 0, warning: 1, info: 2 };
       return (sev[a.severity as keyof typeof sev] || 2) - (sev[b.severity as keyof typeof sev] || 2);
     });
 
-    // Generate AI narrative briefing
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    let narrative = "";
-
-    if (LOVABLE_API_KEY && predictions.length > 0) {
-      try {
-        const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash-lite",
-            messages: [
-              {
-                role: "system",
-                content: "Você é o motor de briefing da IFJ. Gere um resumo semanal conciso e acionável em português. Use markdown. Máximo 300 palavras."
-              },
-              {
-                role: "user",
-                content: `Gere um briefing semanal para o nutricionista com base nestas previsões:\n${JSON.stringify(predictions)}\n\nTotal de pacientes: ${patients.length}\nPortfólio: ${JSON.stringify(portfolioRes.data)}\nMilestones próximos: ${(milestonesRes.data || []).length}`
-              }
-            ],
-          }),
-        });
-
-        if (aiResponse.ok) {
-          const aiData = await aiResponse.json();
-          narrative = aiData.choices?.[0]?.message?.content || "";
-        }
-      } catch (e) {
-        console.warn("AI narrative failed:", e);
-      }
-    }
+    // DETERMINISTIC narrative (NO AI)
+    const narrative = generateDeterministicNarrative(
+      predictions,
+      patients.length,
+      portfolioRes.data,
+      (milestonesRes.data || []).length,
+    );
 
     return new Response(JSON.stringify({
       predictions,

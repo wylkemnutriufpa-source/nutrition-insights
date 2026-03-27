@@ -6,11 +6,139 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ═══════════════════════════════════════════════════
+// DETERMINISTIC BODY ANALYSIS ENGINE v1.0
+// Replaces AI gateway calls with clinical formulas
+// ═══════════════════════════════════════════════════
+
+interface BodyMetrics {
+  body_fat_estimate: number;
+  muscle_definition: number;
+  body_type: string;
+  fat_distribution: { pattern: string; areas: string[] };
+  summary: string;
+  recommendations: string[];
+  progress_highlights: string | null;
+}
+
+function classifyBMI(bmi: number): { label: string; risk: string } {
+  if (bmi < 18.5) return { label: "Abaixo do peso", risk: "Risco nutricional" };
+  if (bmi < 25) return { label: "Peso normal", risk: "Baixo risco" };
+  if (bmi < 30) return { label: "Sobrepeso", risk: "Risco moderado" };
+  if (bmi < 35) return { label: "Obesidade grau I", risk: "Risco elevado" };
+  if (bmi < 40) return { label: "Obesidade grau II", risk: "Risco alto" };
+  return { label: "Obesidade grau III", risk: "Risco muito alto" };
+}
+
+function estimateBodyFatFromBMI(bmi: number, age: number | null, sex: string | null): number {
+  // Deurenberg formula: %BF = 1.20 × BMI + 0.23 × Age − 10.8 × sex(1=M,0=F) − 5.4
+  const ageVal = age || 30;
+  const sexVal = (sex === "male" || sex === "masculino") ? 1 : 0;
+  const bf = 1.20 * bmi + 0.23 * ageVal - 10.8 * sexVal - 5.4;
+  return Math.max(5, Math.min(55, Math.round(bf * 10) / 10));
+}
+
+function classifyBodyType(bmi: number, bodyFat: number): string {
+  if (bmi < 20 && bodyFat < 15) return "ectomorfo";
+  if (bmi >= 20 && bmi <= 27 && bodyFat < 20) return "mesomorfo";
+  if (bmi > 27 && bodyFat > 25) return "endomorfo";
+  if (bmi < 23 && bodyFat < 18) return "ecto-mesomorfo";
+  return "endo-mesomorfo";
+}
+
+function estimateMuscleDefinition(bodyFat: number): number {
+  if (bodyFat <= 8) return 10;
+  if (bodyFat <= 12) return 8;
+  if (bodyFat <= 16) return 7;
+  if (bodyFat <= 20) return 5;
+  if (bodyFat <= 25) return 4;
+  if (bodyFat <= 30) return 3;
+  return 2;
+}
+
+function determineFatDistribution(bodyFat: number, sex: string | null): { pattern: string; areas: string[] } {
+  const isMale = sex === "male" || sex === "masculino";
+  if (bodyFat < 15) return { pattern: "Distribuição uniforme, baixa adiposidade", areas: [] };
+  if (isMale) {
+    return {
+      pattern: "Padrão andróide (central)",
+      areas: bodyFat > 25
+        ? ["abdômen", "tronco", "flancos", "peito"]
+        : ["abdômen", "tronco"],
+    };
+  }
+  return {
+    pattern: "Padrão ginóide (periférico)",
+    areas: bodyFat > 30
+      ? ["quadril", "coxas", "glúteos", "braços"]
+      : ["quadril", "coxas"],
+  };
+}
+
+function generateSummary(bmi: number, bmiClass: { label: string; risk: string }, bodyFat: number, bodyType: string, muscleDef: number): string {
+  return `Avaliação Corporal Determinística:
+• IMC: ${bmi.toFixed(1)} — ${bmiClass.label} (${bmiClass.risk})
+• Gordura corporal estimada: ${bodyFat}%
+• Biotipo: ${bodyType}
+• Definição muscular: ${muscleDef}/10
+${bmiClass.risk !== "Baixo risco" ? `\n⚠️ Classificação de risco: ${bmiClass.risk}. Monitoramento contínuo recomendado.` : "\n✅ Composição corporal dentro dos parâmetros saudáveis."}`;
+}
+
+function generateRecommendations(bmi: number, bodyFat: number, bodyType: string): string[] {
+  const recs: string[] = [];
+
+  if (bmi > 30) {
+    recs.push("Priorizar déficit calórico moderado (300-500 kcal/dia) com acompanhamento semanal.");
+    recs.push("Incluir exercício aeróbico de intensidade moderada 3-5x/semana.");
+  } else if (bmi > 25) {
+    recs.push("Ajuste calórico leve para redução gradual de peso.");
+    recs.push("Combinar treino de força com cardio para otimizar composição corporal.");
+  } else if (bmi < 18.5) {
+    recs.push("Aumentar ingestão calórica com foco em alimentos nutricionalmente densos.");
+    recs.push("Priorizar treino de hipertrofia para ganho de massa magra.");
+  }
+
+  if (bodyFat > 25) {
+    recs.push("Monitorar circunferência abdominal — risco metabólico aumentado.");
+  }
+
+  if (bodyType === "ectomorfo") {
+    recs.push("Aumentar frequência alimentar (5-6 refeições) com maior aporte proteico.");
+  }
+  if (bodyType === "endomorfo") {
+    recs.push("Controlar carboidratos refinados e priorizar fibras nas refeições principais.");
+  }
+
+  if (recs.length === 0) {
+    recs.push("Manter rotina atual de alimentação e exercícios.");
+    recs.push("Reavaliar composição corporal em 30-60 dias.");
+  }
+
+  return recs.slice(0, 5);
+}
+
+function generateProgressComparison(current: BodyMetrics, previous: any): string {
+  const lines: string[] = ["Comparação com avaliação anterior:"];
+
+  if (previous.body_fat_estimate) {
+    const diff = current.body_fat_estimate - previous.body_fat_estimate;
+    lines.push(`• Gordura corporal: ${previous.body_fat_estimate}% → ${current.body_fat_estimate}% (${diff > 0 ? "+" : ""}${diff.toFixed(1)}%)`);
+  }
+  if (previous.muscle_definition) {
+    const diff = current.muscle_definition - previous.muscle_definition;
+    lines.push(`• Definição muscular: ${previous.muscle_definition} → ${current.muscle_definition}/10 (${diff > 0 ? "+" : ""}${diff})`);
+  }
+  if (previous.body_type) {
+    lines.push(`• Biotipo: ${previous.body_type} → ${current.body_type}`);
+  }
+
+  return lines.join("\n");
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    // ── Auth check ──
     const authHeader = req.headers.get("Authorization");
     const anonClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -24,14 +152,15 @@ serve(async (req) => {
       });
     }
 
-    const { analysis_id, front_image_url, side_image_url, back_image_url, previous_analysis } = await req.json();
+    const { analysis_id, previous_analysis } = await req.json();
     if (!analysis_id) throw new Error("analysis_id required");
 
-    // Verify caller owns the analysis record
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
 
+    // Fetch analysis record
     const { data: analysisRecord, error: fetchErr } = await supabase
       .from("body_analyses")
       .select("assessor_id, patient_id")
@@ -44,100 +173,70 @@ serve(async (req) => {
       });
     }
 
-    // Only the assessor (nutritionist) who created the analysis can trigger AI
     if (analysisRecord.assessor_id !== user.id) {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    // Fetch patient profile for age/sex
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("birth_date, sex")
+      .eq("user_id", analysisRecord.patient_id)
+      .single();
 
-    const systemPrompt = `Você é um especialista em avaliação corporal e composição física.
-Analise as imagens corporais do paciente (frente, lateral, costas) e forneça:
-- Estimativa de percentual de gordura corporal
-- Classificação de biotipo (ectomorfo, mesomorfo, endomorfo ou misto)
-- Nível de definição muscular (1-10)
-- Distribuição de gordura
-- Resumo geral e recomendações
+    // Fetch latest physical assessment for weight/height
+    const { data: assessment } = await supabase
+      .from("physical_assessments")
+      .select("weight, height, bmi, body_fat_percentage")
+      .eq("patient_id", analysisRecord.patient_id)
+      .order("assessment_date", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-${previous_analysis ? `ANÁLISE ANTERIOR para comparação:
-- Data: ${previous_analysis.analysis_date}
-- % Gordura: ${previous_analysis.body_fat_estimate || 'N/A'}
-- Biotipo: ${previous_analysis.body_type || 'N/A'}
-- Definição: ${previous_analysis.muscle_definition || 'N/A'}
-Compare com a análise anterior e destaque mudanças.` : 'Esta é a primeira análise do paciente.'}
+    const weight = assessment?.weight;
+    const height = assessment?.height;
 
-Use a ferramenta analyze_body para retornar os dados estruturados.
-Responda em português brasileiro.`;
-
-    // Build user content with images
-    const userContent: any[] = [{ type: "text", text: "Analise as fotos corporais deste paciente:" }];
-    
-    if (front_image_url) userContent.push({ type: "image_url", image_url: { url: front_image_url } });
-    if (side_image_url) userContent.push({ type: "image_url", image_url: { url: side_image_url } });
-    if (back_image_url) userContent.push({ type: "image_url", image_url: { url: back_image_url } });
-
-    if (userContent.length === 1) {
-      // No images, just do text-based analysis
-      userContent[0].text = "Não há imagens disponíveis. Faça uma avaliação geral baseada nos dados disponíveis.";
+    if (!weight || !height) {
+      return new Response(JSON.stringify({
+        error: "Dados insuficientes. Cadastre peso e altura na avaliação física antes de analisar."
+      }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userContent },
-        ],
-        tools: [{
-          type: "function",
-          function: {
-            name: "analyze_body",
-            description: "Return structured body composition analysis",
-            parameters: {
-              type: "object",
-              properties: {
-                body_fat_estimate: { type: "number", description: "Estimated body fat %" },
-                muscle_definition: { type: "integer", description: "Muscle definition score 1-10" },
-                body_type: { type: "string", enum: ["ectomorfo", "mesomorfo", "endomorfo", "ecto-mesomorfo", "endo-mesomorfo"] },
-                fat_distribution: { type: "object", properties: {
-                  pattern: { type: "string" },
-                  areas: { type: "array", items: { type: "string" } },
-                }},
-                summary: { type: "string", description: "Detailed analysis summary in Portuguese" },
-                recommendations: { type: "array", items: { type: "string" }, description: "Actionable recommendations in Portuguese" },
-                progress_highlights: { type: "string", description: "Comparison with previous analysis if available" },
-              },
-              required: ["body_fat_estimate", "muscle_definition", "body_type", "fat_distribution", "summary", "recommendations"],
-              additionalProperties: false,
-            },
-          },
-        }],
-        tool_choice: { type: "function", function: { name: "analyze_body" } },
-      }),
-    });
+    const heightM = height > 3 ? height / 100 : height;
+    const bmi = weight / (heightM * heightM);
+    const bmiClass = classifyBMI(bmi);
 
-    if (!response.ok) {
-      if (response.status === 429) return new Response(JSON.stringify({ error: "Rate limit." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      if (response.status === 402) return new Response(JSON.stringify({ error: "Créditos insuficientes." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      throw new Error("AI gateway error: " + response.status);
-    }
+    const age = profile?.birth_date
+      ? Math.floor((Date.now() - new Date(profile.birth_date).getTime()) / (365.25 * 86400000))
+      : null;
+    const sex = profile?.sex || null;
 
-    const aiResp = await response.json();
-    const toolCall = aiResp.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall) throw new Error("No tool call in response");
+    // Use measured body fat if available, otherwise estimate
+    const bodyFat = assessment?.body_fat_percentage || estimateBodyFatFromBMI(bmi, age, sex);
+    const bodyType = classifyBodyType(bmi, bodyFat);
+    const muscleDef = estimateMuscleDefinition(bodyFat);
+    const fatDist = determineFatDistribution(bodyFat, sex);
+    const summary = generateSummary(bmi, bmiClass, bodyFat, bodyType, muscleDef);
+    const recommendations = generateRecommendations(bmi, bodyFat, bodyType);
 
-    const analysis = JSON.parse(toolCall.function.arguments);
+    const analysis: BodyMetrics = {
+      body_fat_estimate: bodyFat,
+      muscle_definition: muscleDef,
+      body_type: bodyType,
+      fat_distribution: fatDist,
+      summary,
+      recommendations,
+      progress_highlights: previous_analysis ? generateProgressComparison(
+        { body_fat_estimate: bodyFat, muscle_definition: muscleDef, body_type: bodyType } as BodyMetrics,
+        previous_analysis
+      ) : null,
+    };
 
-    // Update DB record (reuse supabase client from auth check above)
-
+    // Update DB
     const { error } = await supabase.from("body_analyses").update({
       body_fat_estimate: analysis.body_fat_estimate,
       muscle_definition: analysis.muscle_definition,

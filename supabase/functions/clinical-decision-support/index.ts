@@ -5,14 +5,17 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// ═══════════════════════════════════════════
-// ─── LAYER A: Deterministic Engine ────────
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+// CLINICAL DECISION SUPPORT v2.0
+// Deterministic engine as DEFAULT
+// AI copilot as OPTIONAL premium layer (feature flag)
+// ═══════════════════════════════════════════════════
+
+// ─── LAYER A: Deterministic Engine (always runs) ───
 
 function computeAlerts(metrics: any, bodyData: any): any[] {
   const alerts: any[] = [];
 
-  // Abandonment risk
   if (metrics.daysSinceLastCheckin >= 14) {
     alerts.push({
       type: "abandonment",
@@ -27,7 +30,6 @@ function computeAlerts(metrics: any, bodyData: any): any[] {
     });
   }
 
-  // Low adherence
   if (metrics.checklistAdherence < 30) {
     alerts.push({
       type: "low_adherence",
@@ -50,7 +52,6 @@ function computeAlerts(metrics: any, bodyData: any): any[] {
     });
   }
 
-  // Weight stagnation
   if (metrics.weightHistory?.length >= 3) {
     const weights = metrics.weightHistory.map((w: any) => w.weight || w);
     const recent = weights.slice(-3);
@@ -64,7 +65,6 @@ function computeAlerts(metrics: any, bodyData: any): any[] {
     }
   }
 
-  // BMI alert
   if (bodyData?.bmi) {
     if (bodyData.bmi > 35) {
       alerts.push({
@@ -90,30 +90,24 @@ function computeSuggestedAdjustments(metrics: any, anamnesis: any): string[] {
   if (metrics.checklistAdherence < 50) {
     adjustments.push("Reduzir checklist diário para 3-5 itens prioritários para aumentar adesão.");
   }
-
   if (metrics.mealPlanAdherence < 50) {
     adjustments.push("Simplificar plano alimentar com refeições mais práticas e rápidas.");
   }
-
   if (metrics.daysSinceLastCheckin >= 5) {
     adjustments.push("Implementar lembrete semanal automático para check-in.");
   }
 
-  // Difficulty-based adjustments
   const difficulties = metrics.difficulties || [];
   if (difficulties.includes("hard") || difficulties.includes("very_hard")) {
     adjustments.push("Paciente reporta dificuldade alta — considere protocolos mais graduais.");
   }
 
-  // Anamnesis-based
   if (anamnesis?.waterIntake && anamnesis.waterIntake < 1.5) {
     adjustments.push("Aumentar meta de hidratação — ingesta atual abaixo de 1.5L/dia.");
   }
-
   if (anamnesis?.activityLevel === "sedentary") {
     adjustments.push("Incluir meta de caminhada diária (15-30min) no protocolo.");
   }
-
   if (anamnesis?.kcalTarget && metrics.mealPlanAdherence < 40) {
     adjustments.push(`Reavaliar meta calórica de ${anamnesis.kcalTarget}kcal — pode estar irrealista para o momento.`);
   }
@@ -138,17 +132,13 @@ function computeRecommendedProtocols(
   for (const protocol of availableProtocols) {
     const titleLower = (protocol.title || "").toLowerCase();
     const categoryLower = (protocol.category || "").toLowerCase();
-    const descLower = (protocol.description || "").toLowerCase();
 
-    // Match by conditions
     if (metrics.checklistAdherence < 40 && (titleLower.includes("iniciante") || titleLower.includes("básico") || categoryLower.includes("beginner"))) {
       recommended.push({ title: protocol.title, reason: "Adesão baixa sugere necessidade de protocolo simplificado." });
     }
-
     if (metrics.daysSinceLastCheckin >= 7 && (titleLower.includes("reengaj") || titleLower.includes("motivaç"))) {
       recommended.push({ title: protocol.title, reason: "Paciente inativo — protocolo de reengajamento indicado." });
     }
-
     if (anamnesis?.goal && (
       (anamnesis.goal.includes("emagre") && (titleLower.includes("emagre") || titleLower.includes("perda"))) ||
       (anamnesis.goal.includes("massa") && (titleLower.includes("massa") || titleLower.includes("hipertrofia")))
@@ -164,16 +154,14 @@ function generateClinicalAnalysis(name: string, metrics: any, anamnesis: any, bo
   const lines: string[] = [];
 
   lines.push(`Análise clínica para ${name}:\n`);
-
-  // Adherence overview
   lines.push(`Adesão ao checklist: ${metrics.checklistAdherence}% | Plano alimentar: ${metrics.mealPlanAdherence}%`);
+
   if (metrics.totalCheckins > 0) {
     lines.push(`Realizou ${metrics.totalCheckins} check-in(s). Último há ${metrics.daysSinceLastCheckin} dia(s).`);
   } else {
     lines.push("Nenhum check-in registrado até o momento.");
   }
 
-  // Weight
   if (metrics.weightHistory?.length > 0) {
     const weights = metrics.weightHistory.map((w: any) => w.weight || w);
     const first = weights[0];
@@ -182,7 +170,6 @@ function generateClinicalAnalysis(name: string, metrics: any, anamnesis: any, bo
     lines.push(`\nHistórico de peso: ${first}kg → ${last}kg (${diff > 0 ? "+" : ""}${diff.toFixed(1)}kg).`);
   }
 
-  // Body data
   if (bodyData) {
     const parts = [];
     if (bodyData.bmi) parts.push(`IMC: ${bodyData.bmi}`);
@@ -191,15 +178,12 @@ function generateClinicalAnalysis(name: string, metrics: any, anamnesis: any, bo
     if (parts.length > 0) lines.push(parts.join(" | "));
   }
 
-  // Difficulties
   if (metrics.difficulties?.length > 0) {
     lines.push(`\nDificuldades relatadas: ${metrics.difficulties.join(", ")}.`);
   }
 
-  // Protocols
   lines.push(`\nProtocolos ativos: ${activeProtocolCount}.`);
 
-  // Assessment
   const overallAdherence = (metrics.checklistAdherence + metrics.mealPlanAdherence) / 2;
   if (overallAdherence >= 70) {
     lines.push("\n✅ Paciente com boa adesão. Manter acompanhamento regular e progressão gradual.");
@@ -212,9 +196,8 @@ function generateClinicalAnalysis(name: string, metrics: any, anamnesis: any, bo
   return lines.join("\n");
 }
 
-// ═══════════════════════════════════════════
-// ─── LAYER B: Optional AI Copilot ─────────
-// ═══════════════════════════════════════════
+// ─── LAYER B: Optional AI Copilot (PREMIUM ONLY) ───
+// Only runs when useCopilot=true AND feature flag is enabled
 
 async function generateAICopilotAnalysis(patientData: any, engineResult: any): Promise<string | null> {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -261,7 +244,7 @@ serve(async (req) => {
   try {
     const { patientData, useCopilot } = await req.json();
 
-    // ─── Engine Layer (always runs) ───
+    // ─── Engine Layer (ALWAYS runs — zero cost) ───
     const alerts = computeAlerts(patientData.metrics, patientData.bodyData);
     const suggestedAdjustments = computeSuggestedAdjustments(patientData.metrics, patientData.anamnesis);
     const recommendedProtocols = computeRecommendedProtocols(
@@ -278,13 +261,20 @@ serve(async (req) => {
       patientData.activeProtocolCount || 0
     );
 
-    const engineResult = { clinicalAnalysis, suggestedAdjustments, recommendedProtocols, alerts };
+    const engineResult: any = {
+      clinicalAnalysis,
+      suggestedAdjustments,
+      recommendedProtocols,
+      alerts,
+      copilot_used: false,
+    };
 
-    // ─── Copilot Layer (optional, if requested) ───
-    if (useCopilot) {
+    // ─── Copilot Layer (ONLY if explicitly requested — costs AI credits) ───
+    if (useCopilot === true) {
       const copilotText = await generateAICopilotAnalysis(patientData, engineResult);
       if (copilotText) {
         engineResult.clinicalAnalysis += "\n\n── Análise Expandida (Copiloto IA) ──\n" + copilotText;
+        engineResult.copilot_used = true;
       }
     }
 
