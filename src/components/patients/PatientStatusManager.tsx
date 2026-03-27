@@ -63,30 +63,8 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
       .sort((a, b) => (a.profile?.full_name || "").localeCompare(b.profile?.full_name || ""));
   }, [patients, search, tab]);
 
-  // ⚡ INSTANT cache mutation — updates journey_status in cached data immediately
-  const updatePatientJourneyInCache = (patientId: string, newJourneyStatus: string) => {
-    queryClient.setQueriesData<any>({ queryKey: ["patients"] }, (oldData: any) => {
-      if (!oldData) return oldData;
-      if (oldData.patients) {
-        return {
-          ...oldData,
-          patients: oldData.patients.map((p: any) =>
-            p.patient_id === patientId ? { ...p, journey_status: newJourneyStatus } : p
-          ),
-        };
-      }
-      if (Array.isArray(oldData)) {
-        return oldData.map((p: any) =>
-          p.patient_id === patientId ? { ...p, journey_status: newJourneyStatus } : p
-        );
-      }
-      return oldData;
-    });
-  };
-
-  const refreshAll = () => {
-    queryClient.invalidateQueries({ queryKey: ["patients"], refetchType: "all" });
-    queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+  const refreshAll = (patientId?: string) => {
+    invalidateLifecycleQueries(queryClient, patientId);
   };
 
   const confirmPayment = async (patientId: string) => {
