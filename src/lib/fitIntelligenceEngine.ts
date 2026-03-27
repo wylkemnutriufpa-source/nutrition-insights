@@ -339,44 +339,58 @@ export function generateCurrentPrompt(ctx: BehavioralContext): IntelligencePromp
   const reminderWindows = ctx.preferredReminderWindows?.length ? ctx.preferredReminderWindows : [9, 12, 15, 18];
   const inReminderWindow = reminderWindows.some((hour) => Math.abs(now - hour) <= 1);
 
+  // STRICT: Only fire prompts inside admin-configured reminder windows
+  if (!inReminderWindow) return null;
+
+  // Collect all eligible candidates, then filter out the last shown type
+  const candidates: IntelligencePrompt[] = [];
+
   // 1. Clinical warning — morning check (7-9)
   if (now >= 7 && now <= 9) {
     const clinical = getClinicalWarningPrompt(ctx);
-    if (clinical && !wasPromptShownRecently(ctx, clinical.type, 240)) return clinical;
+    if (clinical && !wasPromptShownRecently(ctx, clinical.type, 240)) candidates.push(clinical);
   }
 
   // 2. Weekend risk — morning window (8-10)
   if (ctx.isWeekend && now >= 8 && now <= 10) {
     const weekendPrompt = getWeekendRiskPrompt(ctx);
-    if (weekendPrompt && !wasPromptShownRecently(ctx, weekendPrompt.type, 360)) return weekendPrompt;
+    if (weekendPrompt && !wasPromptShownRecently(ctx, weekendPrompt.type, 360)) candidates.push(weekendPrompt);
   }
 
-  // 3. Trainer-aware prompts (workout absence, post-workout)
+  // 3. Trainer-aware prompts
   const trainerPrompt = getTrainerIntegrationPrompt(ctx);
-  if (trainerPrompt && !wasPromptShownRecently(ctx, trainerPrompt.type, 240)) return trainerPrompt;
+  if (trainerPrompt && !wasPromptShownRecently(ctx, trainerPrompt.type, 240)) candidates.push(trainerPrompt);
 
-  // 4. Workout reminder — near workout time
+  // 4. Workout reminder
   const workoutPrompt = getWorkoutPrompt(ctx);
-  if (workoutPrompt && !wasPromptShownRecently(ctx, workoutPrompt.type, 240)) return workoutPrompt;
+  if (workoutPrompt && !wasPromptShownRecently(ctx, workoutPrompt.type, 240)) candidates.push(workoutPrompt);
 
-  // 5. Hydration — only in configured windows, avoid repeating the same hydration prompt
-  if (inReminderWindow && !wasPromptShownRecently(ctx, "hydration_check", 180)) {
+  // 5. Hydration
+  if (!wasPromptShownRecently(ctx, "hydration_check", 180)) {
     const hydrationPrompt = getHydrationPrompt(ctx);
-    if (hydrationPrompt) return hydrationPrompt;
+    if (hydrationPrompt) candidates.push(hydrationPrompt);
   }
 
-  // 6. Evening non-adherence check (8pm-10pm)
+  // 6. Evening non-adherence (8pm-10pm)
   if (now >= 20 && now <= 22 && ctx.failureCount > 0) {
     const nonAdherencePrompt = getNonAdherenceResponse(ctx.failureCount, ctx.firstName, ctx.messageTone);
-    if (!wasPromptShownRecently(ctx, nonAdherencePrompt.type, 360)) return nonAdherencePrompt;
+    if (!wasPromptShownRecently(ctx, nonAdherencePrompt.type, 360)) candidates.push(nonAdherencePrompt);
   }
 
-  // 7. Fallback motivation in reminder windows when hydration was already shown recently
-  if (inReminderWindow && !wasPromptShownRecently(ctx, "motivation_nudge", 360)) {
-    return getMotivationNudge(ctx);
+  // 7. Motivation nudge (always available as fallback)
+  if (!wasPromptShownRecently(ctx, "motivation_nudge", 360)) {
+    candidates.push(getMotivationNudge(ctx));
   }
 
-  return null;
+  if (candidates.length === 0) return null;
+
+  // ROTATION: Filter out the last shown prompt type to guarantee variety
+  const lastType = ctx.lastPromptType;
+  const filtered = lastType ? candidates.filter((c) => c.type !== lastType) : candidates;
+
+  // Pick from filtered list if available, otherwise allow repeat as last resort
+  const pool = filtered.length > 0 ? filtered : candidates;
+  return pool[0];
 }
 
 // ─── Adaptive Frequency ───
