@@ -374,7 +374,7 @@ function DesktopOrbital({
                       background: "linear-gradient(135deg, hsl(var(--primary) / 0.25), hsl(var(--accent) / 0.1))",
                     } : undefined}
                   >
-                    <Icon className="w-5 h-5" />
+                    <OrbitalIcon option={opt} className="w-5 h-5" />
                   </div>
                   <span
                     className={cn(
