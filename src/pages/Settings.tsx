@@ -277,9 +277,7 @@ export default function Settings() {
         <ProtocolFitJourneyToggle />
 
         {/* Database Backup - only for professionals */}
-        {(profile?.role === "nutritionist" || profile?.role === "admin" || profile?.role === "personal") && (
-          <DatabaseBackupCard />
-        )}
+        <DatabaseBackupCard />
       </motion.div>
     </DashboardLayout>
   );
