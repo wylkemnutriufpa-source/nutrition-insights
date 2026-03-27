@@ -270,10 +270,10 @@ const questions: Question[] = [
     subtitle: "Selecione se aplicável",
     type: "single",
     options: [
-      { label: "Não se aplica", emoji: "➖", value: "not_applicable" },
-      { label: "Gestante", emoji: "🤰", value: "pregnant" },
-      { label: "Pós-parto (<6m)", emoji: "👶", value: "postpartum_recent" },
-      { label: "Pós-parto (6m+)", emoji: "🍼", value: "postpartum_late" },
+      { label: "Não se aplica", emoji: "➖", value: "not_applicable", description: "Não está em período gestacional ou pós-parto" },
+      { label: "Gestante", emoji: "🤰", value: "pregnant", description: "Atualmente grávida — o plano será adaptado para gestação" },
+      { label: "Pós-parto (<6m)", emoji: "👶", value: "postpartum_recent", description: "Até 6 meses após o parto — foco em recuperação e amamentação" },
+      { label: "Pós-parto (6m+)", emoji: "🍼", value: "postpartum_late", description: "Mais de 6 meses após o parto — retomada progressiva" },
     ],
   },
   {
