@@ -14,9 +14,8 @@ export default function WorkoutRequestButton() {
   useEffect(() => {
     if (!user?.id) return;
     const check = async () => {
-      // Check if patient has a personal trainer
-      const { data: link } = await supabase
-        .from("professional_patient_links")
+      const { data: link } = await (supabase as any)
+        .from("patient_professional_links")
         .select("professional_id")
         .eq("patient_id", user.id)
         .eq("professional_role", "trainer")
@@ -25,12 +24,11 @@ export default function WorkoutRequestButton() {
         .maybeSingle();
 
       if (!link) {
-        setHasPlans(true); // hide button if no trainer
+        setHasPlans(true);
         return;
       }
       setPersonalId(link.professional_id);
 
-      // Check if has active workout plans
       const { data: plans } = await supabase
         .from("workout_plans")
         .select("id")
@@ -43,14 +41,12 @@ export default function WorkoutRequestButton() {
     check();
   }, [user?.id]);
 
-  // Hide if loading, has plans, or no trainer
   if (hasPlans === null || hasPlans) return null;
 
   const handleRequest = async () => {
     if (!user || !personalId) return;
     setSending(true);
 
-    // Get patient name
     const { data: profile } = await supabase
       .from("profiles")
       .select("full_name")
@@ -58,7 +54,6 @@ export default function WorkoutRequestButton() {
       .single();
     const patientName = profile?.full_name || "Aluno";
 
-    // Send notification to personal trainer
     const { error } = await supabase.from("notifications").insert({
       user_id: personalId,
       title: "🏋️ Aluno sem treino",
@@ -74,7 +69,7 @@ export default function WorkoutRequestButton() {
       toast.error("Erro ao enviar solicitação");
     } else {
       toast.success("🏋️ Solicitação enviada! Seu personal será notificado.");
-      setHasPlans(true); // hide button after sending
+      setHasPlans(true);
     }
     setSending(false);
   };
@@ -85,7 +80,7 @@ export default function WorkoutRequestButton() {
       size="sm"
       onClick={handleRequest}
       disabled={sending}
-      className="gap-2 border-dashed border-orange-500/50 text-orange-500 hover:bg-orange-500/10"
+      className="gap-2 border-dashed border-primary/50 text-primary hover:bg-primary/10"
     >
       <Dumbbell className="w-4 h-4" />
       {sending ? "Enviando..." : "Estou sem Treino"}
