@@ -13,9 +13,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
 import { getActiveAdaptiveBlocks, extractClinicalFlags, type AdaptiveBlock } from "@/lib/adaptiveAnamnesisBlocks";
 import { processAnamnesisFlags } from "@/lib/clinicalFlags";
-import GoalOrbitalStep from "@/components/onboarding/GoalOrbitalStep";
+import { RadialOrbitalSelector, type OrbitalOption as RadialOption } from "@/components/ui/radial-orbital-selector";
 import {
-  OrbitalSingleSelect,
   OrbitalMultiSelect,
   OrbitalSlider,
   OrbitalNumberInput,
@@ -28,6 +27,7 @@ interface Option {
   label: string;
   emoji: string;
   value: string;
+  description?: string;
 }
 
 interface Question {
@@ -50,10 +50,10 @@ const questions: Question[] = [
     subtitle: "Escolha o que mais importa pra você agora",
     type: "single",
     options: [
-      { label: "Emagrecer", emoji: "🔥", value: "lose_weight" },
-      { label: "Ganhar massa", emoji: "💪", value: "gain_muscle" },
-      { label: "Manter peso", emoji: "⚖️", value: "maintain" },
-      { label: "Saúde geral", emoji: "🌿", value: "health" },
+      { label: "Emagrecer", emoji: "🔥", value: "lose_weight", description: "Redução de gordura corporal com preservação de massa magra e saúde metabólica" },
+      { label: "Ganhar massa", emoji: "💪", value: "gain_muscle", description: "Foco em hipertrofia muscular com aporte calórico e proteico estratégico" },
+      { label: "Manter peso", emoji: "⚖️", value: "maintain", description: "Equilíbrio e manutenção da composição corporal atual com bons hábitos" },
+      { label: "Saúde geral", emoji: "🌿", value: "health", description: "Bem-estar, energia e prevenção de problemas clínicos para qualidade de vida" },
     ],
   },
   {
@@ -62,8 +62,8 @@ const questions: Question[] = [
     subtitle: "Precisamos disso para calcular sua taxa metabólica",
     type: "single",
     options: [
-      { label: "Masculino", emoji: "♂️", value: "male" },
-      { label: "Feminino", emoji: "♀️", value: "female" },
+      { label: "Masculino", emoji: "♂️", value: "male", description: "Cálculos de TMB e necessidades calóricas baseados no perfil masculino" },
+      { label: "Feminino", emoji: "♀️", value: "female", description: "Cálculos adaptados ao perfil feminino, incluindo ciclo hormonal" },
     ],
   },
   {
@@ -102,10 +102,10 @@ const questions: Question[] = [
     subtitle: "Pense na sua rotina semanal",
     type: "single",
     options: [
-      { label: "Sedentário", emoji: "🛋️", value: "sedentary" },
-      { label: "Leve (1-2x/sem)", emoji: "🚶", value: "light" },
-      { label: "Moderado (3-5x/sem)", emoji: "🏃", value: "moderate" },
-      { label: "Intenso (6-7x/sem)", emoji: "🏋️", value: "intense" },
+      { label: "Sedentário", emoji: "🛋️", value: "sedentary", description: "Pouca ou nenhuma atividade física, rotina predominantemente sentada" },
+      { label: "Leve (1-2x/sem)", emoji: "🚶", value: "light", description: "Caminhadas leves ou exercícios esporádicos durante a semana" },
+      { label: "Moderado (3-5x/sem)", emoji: "🏃", value: "moderate", description: "Treinos regulares com intensidade moderada ao longo da semana" },
+      { label: "Intenso (6-7x/sem)", emoji: "🏋️", value: "intense", description: "Treinos de alta intensidade quase todos os dias da semana" },
     ],
   },
   {
@@ -129,10 +129,10 @@ const questions: Question[] = [
     subtitle: "No geral, como você se sente ao longo do dia",
     type: "single",
     options: [
-      { label: "Muito baixo", emoji: "😩", value: "very_low" },
-      { label: "Baixo", emoji: "😔", value: "low" },
-      { label: "Normal", emoji: "😊", value: "normal" },
-      { label: "Alto", emoji: "⚡", value: "high" },
+      { label: "Muito baixo", emoji: "😩", value: "very_low", description: "Cansaço constante, dificuldade para realizar atividades do dia a dia" },
+      { label: "Baixo", emoji: "😔", value: "low", description: "Sente fadiga frequente, especialmente à tarde ou após refeições" },
+      { label: "Normal", emoji: "😊", value: "normal", description: "Energia estável durante o dia, sem grandes oscilações" },
+      { label: "Alto", emoji: "⚡", value: "high", description: "Energia constante e disposição para atividades físicas e mentais" },
     ],
   },
   {
@@ -141,11 +141,11 @@ const questions: Question[] = [
     subtitle: "Pense nas últimas semanas",
     type: "single",
     options: [
-      { label: "Péssima", emoji: "😵", value: "terrible" },
-      { label: "Ruim", emoji: "😴", value: "bad" },
-      { label: "Regular", emoji: "😐", value: "regular" },
-      { label: "Boa", emoji: "😌", value: "good" },
-      { label: "Excelente", emoji: "💤", value: "excellent" },
+      { label: "Péssima", emoji: "😵", value: "terrible", description: "Insônia frequente, acordar várias vezes ou não descansar" },
+      { label: "Ruim", emoji: "😴", value: "bad", description: "Dificuldade para dormir ou acordar cansado(a) com frequência" },
+      { label: "Regular", emoji: "😐", value: "regular", description: "Consegue dormir, mas nem sempre acorda descansado(a)" },
+      { label: "Boa", emoji: "😌", value: "good", description: "Dorme bem na maioria das noites e acorda disposto(a)" },
+      { label: "Excelente", emoji: "💤", value: "excellent", description: "Sono profundo e reparador, acorda com energia total" },
     ],
   },
   {
@@ -154,10 +154,10 @@ const questions: Question[] = [
     subtitle: "Intestino, gases, inchaço...",
     type: "single",
     options: [
-      { label: "Muito ruim", emoji: "😣", value: "very_bad" },
-      { label: "Irregular", emoji: "🔄", value: "irregular" },
-      { label: "Normal", emoji: "👍", value: "normal" },
-      { label: "Excelente", emoji: "✨", value: "excellent" },
+      { label: "Muito ruim", emoji: "😣", value: "very_bad", description: "Desconforto digestivo constante, constipação ou diarreia frequente" },
+      { label: "Irregular", emoji: "🔄", value: "irregular", description: "Intestino instável, alterna entre funcionamento normal e irregular" },
+      { label: "Normal", emoji: "👍", value: "normal", description: "Digestão funcional sem grandes queixas no dia a dia" },
+      { label: "Excelente", emoji: "✨", value: "excellent", description: "Intestino regular, sem gases, inchaço ou desconfortos" },
     ],
   },
   {
@@ -166,11 +166,11 @@ const questions: Question[] = [
     subtitle: "Episódios de comer demais sem controle",
     type: "single",
     options: [
-      { label: "Sempre", emoji: "🍕", value: "always" },
-      { label: "Frequente", emoji: "😰", value: "frequent" },
-      { label: "Às vezes", emoji: "🤔", value: "sometimes" },
-      { label: "Raramente", emoji: "😌", value: "rarely" },
-      { label: "Nunca", emoji: "✅", value: "never" },
+      { label: "Sempre", emoji: "🍕", value: "always", description: "Compulsão constante, dificuldade de parar de comer em todas as refeições" },
+      { label: "Frequente", emoji: "😰", value: "frequent", description: "Episódios frequentes de comer demais, especialmente em momentos de estresse" },
+      { label: "Às vezes", emoji: "🤔", value: "sometimes", description: "Acontece ocasionalmente, geralmente em situações específicas" },
+      { label: "Raramente", emoji: "😌", value: "rarely", description: "Controle alimentar na maioria das situações, episódios raros" },
+      { label: "Nunca", emoji: "✅", value: "never", description: "Controle total da saciedade e comportamento alimentar equilibrado" },
     ],
   },
   // ──── NEW: Symptoms ────
@@ -269,10 +269,10 @@ const questions: Question[] = [
     subtitle: "Selecione se aplicável",
     type: "single",
     options: [
-      { label: "Não se aplica", emoji: "➖", value: "not_applicable" },
-      { label: "Gestante", emoji: "🤰", value: "pregnant" },
-      { label: "Pós-parto (<6m)", emoji: "👶", value: "postpartum_recent" },
-      { label: "Pós-parto (6m+)", emoji: "🍼", value: "postpartum_late" },
+      { label: "Não se aplica", emoji: "➖", value: "not_applicable", description: "Não está em período gestacional ou pós-parto" },
+      { label: "Gestante", emoji: "🤰", value: "pregnant", description: "Atualmente grávida — o plano será adaptado para gestação" },
+      { label: "Pós-parto (<6m)", emoji: "👶", value: "postpartum_recent", description: "Até 6 meses após o parto — foco em recuperação e amamentação" },
+      { label: "Pós-parto (6m+)", emoji: "🍼", value: "postpartum_late", description: "Mais de 6 meses após o parto — retomada progressiva" },
     ],
   },
   {
@@ -305,10 +305,10 @@ const questions: Question[] = [
     subtitle: "Isso define a complexidade das receitas",
     type: "single",
     options: [
-      { label: "Praticidade total", emoji: "⚡", value: "quick" },
-      { label: "Caseira simples", emoji: "🏠", value: "homemade" },
-      { label: "Gourmet elaborada", emoji: "👨‍🍳", value: "gourmet" },
-      { label: "Tanto faz", emoji: "🤷", value: "any" },
+      { label: "Praticidade total", emoji: "⚡", value: "quick", description: "Refeições rápidas e simples, mínimo tempo na cozinha" },
+      { label: "Caseira simples", emoji: "🏠", value: "homemade", description: "Preparações caseiras fáceis com ingredientes acessíveis" },
+      { label: "Gourmet elaborada", emoji: "👨‍🍳", value: "gourmet", description: "Receitas elaboradas com técnicas e ingredientes sofisticados" },
+      { label: "Tanto faz", emoji: "🤷", value: "any", description: "Flexível para qualquer tipo de preparo e complexidade" },
     ],
   },
   {
@@ -317,9 +317,9 @@ const questions: Question[] = [
     subtitle: "Isso ajuda a sugerir alimentos acessíveis",
     type: "single",
     options: [
-      { label: "Econômico", emoji: "💰", value: "low" },
-      { label: "Moderado", emoji: "💳", value: "medium" },
-      { label: "Sem limite", emoji: "💎", value: "high" },
+      { label: "Econômico", emoji: "💰", value: "low", description: "Prioridade em alimentos acessíveis e de bom custo-benefício" },
+      { label: "Moderado", emoji: "💳", value: "medium", description: "Equilíbrio entre qualidade e preço, com flexibilidade" },
+      { label: "Sem limite", emoji: "💎", value: "high", description: "Liberdade total para escolher os melhores ingredientes" },
     ],
   },
   {
@@ -328,9 +328,9 @@ const questions: Question[] = [
     subtitle: "Sem contar lanches rápidos",
     type: "single",
     options: [
-      { label: "2-3 refeições", emoji: "2️⃣", value: "2-3" },
-      { label: "4-5 refeições", emoji: "4️⃣", value: "4-5" },
-      { label: "6+ refeições", emoji: "6️⃣", value: "6+" },
+      { label: "2-3 refeições", emoji: "2️⃣", value: "2-3", description: "Poucas refeições ao dia — pode indicar jejuns longos" },
+      { label: "4-5 refeições", emoji: "4️⃣", value: "4-5", description: "Frequência alimentar equilibrada com boa distribuição" },
+      { label: "6+ refeições", emoji: "6️⃣", value: "6+", description: "Alta frequência alimentar — comum em rotinas de treino" },
     ],
   },
   // ──── Meal Schedule / Timing ────
@@ -347,9 +347,9 @@ const questions: Question[] = [
     subtitle: "Costuma comer algo entre o café e o almoço?",
     type: "single",
     options: [
-      { label: "Sim, sempre", emoji: "✅", value: "always" },
-      { label: "Às vezes", emoji: "🤔", value: "sometimes" },
-      { label: "Não faço", emoji: "❌", value: "never" },
+      { label: "Sim, sempre", emoji: "✅", value: "always", description: "Sempre faz um lanche entre o café da manhã e o almoço" },
+      { label: "Às vezes", emoji: "🤔", value: "sometimes", description: "Faz lanche da manhã em alguns dias, dependendo da rotina" },
+      { label: "Não faço", emoji: "❌", value: "never", description: "Não costuma comer nada entre o café e o almoço" },
     ],
   },
   {
@@ -372,10 +372,10 @@ const questions: Question[] = [
     subtitle: "Costuma comer algo entre o almoço e o jantar?",
     type: "single",
     options: [
-      { label: "Sim, 1 lanche", emoji: "1️⃣", value: "one" },
-      { label: "Sim, 2 lanches", emoji: "2️⃣", value: "two" },
-      { label: "Às vezes", emoji: "🤔", value: "sometimes" },
-      { label: "Não faço", emoji: "❌", value: "never" },
+      { label: "Sim, 1 lanche", emoji: "1️⃣", value: "one", description: "Faz um lanche entre o almoço e jantar" },
+      { label: "Sim, 2 lanches", emoji: "2️⃣", value: "two", description: "Faz dois lanches durante a tarde para manter energia" },
+      { label: "Às vezes", emoji: "🤔", value: "sometimes", description: "Lanche da tarde ocasional, sem rotina fixa" },
+      { label: "Não faço", emoji: "❌", value: "never", description: "Não come nada entre o almoço e o jantar" },
     ],
   },
   {
@@ -391,9 +391,9 @@ const questions: Question[] = [
     subtitle: "Costuma fazer uma refeição principal à noite?",
     type: "single",
     options: [
-      { label: "Sim, sempre", emoji: "✅", value: "always" },
-      { label: "Às vezes", emoji: "🤔", value: "sometimes" },
-      { label: "Não janto", emoji: "❌", value: "never" },
+      { label: "Sim, sempre", emoji: "✅", value: "always", description: "Janta todos os dias com uma refeição completa" },
+      { label: "Às vezes", emoji: "🤔", value: "sometimes", description: "Janta em alguns dias, dependendo do horário e fome" },
+      { label: "Não janto", emoji: "❌", value: "never", description: "Não costuma jantar — última refeição é o lanche da tarde" },
     ],
   },
   {
@@ -409,9 +409,9 @@ const questions: Question[] = [
     subtitle: "Come algo antes de dormir?",
     type: "single",
     options: [
-      { label: "Sim, sempre", emoji: "✅", value: "always" },
-      { label: "Às vezes", emoji: "🤔", value: "sometimes" },
-      { label: "Não faço", emoji: "❌", value: "never" },
+      { label: "Sim, sempre", emoji: "✅", value: "always", description: "Sempre faz uma pequena refeição antes de dormir" },
+      { label: "Às vezes", emoji: "🤔", value: "sometimes", description: "Come antes de dormir em alguns dias da semana" },
+      { label: "Não faço", emoji: "❌", value: "never", description: "Não come nada após o jantar até a manhã seguinte" },
     ],
   },
   {
@@ -441,11 +441,11 @@ const questions: Question[] = [
     subtitle: "Seja honesto(a), é só pra gente entender melhor",
     type: "single",
     options: [
-      { label: "Péssimo", emoji: "😢", value: "terrible" },
-      { label: "Ruim", emoji: "😕", value: "bad" },
-      { label: "Ok", emoji: "😐", value: "ok" },
-      { label: "Bem", emoji: "😊", value: "good" },
-      { label: "Ótimo", emoji: "🤩", value: "great" },
+      { label: "Péssimo", emoji: "😢", value: "terrible", description: "Insatisfação total com hábitos alimentares atuais" },
+      { label: "Ruim", emoji: "😕", value: "bad", description: "Sabe que precisa melhorar muito a alimentação" },
+      { label: "Ok", emoji: "😐", value: "ok", description: "Alimentação razoável, mas sente que pode evoluir" },
+      { label: "Bem", emoji: "😊", value: "good", description: "Satisfeito(a) com a maioria das escolhas alimentares" },
+      { label: "Ótimo", emoji: "🤩", value: "great", description: "Alimentação excelente, busca refinamento e otimização" },
     ],
   },
   {
@@ -454,10 +454,10 @@ const questions: Question[] = [
     subtitle: "Última pergunta! Escolha sua motivação principal",
     type: "single",
     options: [
-      { label: "Saúde", emoji: "❤️", value: "health" },
-      { label: "Estética", emoji: "✨", value: "aesthetics" },
-      { label: "Performance", emoji: "🏆", value: "performance" },
-      { label: "Autoestima", emoji: "🦸", value: "self_esteem" },
+      { label: "Saúde", emoji: "❤️", value: "health", description: "Prevenção de doenças e melhora de exames e indicadores" },
+      { label: "Estética", emoji: "✨", value: "aesthetics", description: "Melhorar aparência física e composição corporal" },
+      { label: "Performance", emoji: "🏆", value: "performance", description: "Maximizar rendimento em treinos e atividades físicas" },
+      { label: "Autoestima", emoji: "🦸", value: "self_esteem", description: "Sentir-se melhor consigo mesmo(a) e mais confiante" },
     ],
   },
 ];
@@ -1051,19 +1051,20 @@ export default function Anamnesis() {
         {/* Question — All orbital themed */}
         <NeuralStepTransition stepKey={q.id}>
           <div className="space-y-6">
-            {/* Goal: special full orbital selector */}
-            {q.id === "goal" && (
-              <GoalOrbitalStep value={answers[q.id]} onChange={(v) => setAnswer(v)} />
-            )}
-
-            {/* Single select: orbital cards */}
-            {q.type === "single" && q.options && q.id !== "goal" && (
-              <OrbitalSingleSelect
+            {/* Single select: RadialOrbitalSelector for ALL */}
+            {q.type === "single" && q.options && (
+              <RadialOrbitalSelector
                 title={q.title}
                 subtitle={q.subtitle}
-                options={q.options}
+                options={q.options.map(opt => ({
+                  id: opt.value,
+                  label: opt.label,
+                  description: opt.description || "",
+                  emoji: opt.emoji,
+                }))}
                 value={answers[q.id]}
                 onChange={(v) => setAnswer(v)}
+                showConfirmButton={false}
               />
             )}
 

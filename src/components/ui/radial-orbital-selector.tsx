@@ -8,8 +8,20 @@ export interface OrbitalOption {
   id: string;
   label: string;
   description: string;
-  helperText: string;
-  icon: React.ElementType;
+  helperText?: string;
+  icon?: React.ElementType;
+  emoji?: string;
+}
+
+function OrbitalIcon({ option, className }: { option: OrbitalOption; className?: string }) {
+  if (option.icon) {
+    const Icon = option.icon;
+    return <Icon className={className} />;
+  }
+  if (option.emoji) {
+    return <span className="text-xl">{option.emoji}</span>;
+  }
+  return <Sparkles className={className} />;
 }
 
 interface RadialOrbitalSelectorProps {
@@ -252,7 +264,7 @@ function DesktopOrbital({
             const x = Math.cos(rad) * radius;
             const y = Math.sin(rad) * radius;
             const isActive = opt.id === selected;
-            const Icon = opt.icon;
+            // Icon handled by OrbitalIcon helper
             const counterRotation = -targetRotation;
 
             return (
@@ -362,7 +374,7 @@ function DesktopOrbital({
                       background: "linear-gradient(135deg, hsl(var(--primary) / 0.25), hsl(var(--accent) / 0.1))",
                     } : undefined}
                   >
-                    <Icon className="w-5 h-5" />
+                    <OrbitalIcon option={opt} className="w-5 h-5" />
                   </div>
                   <span
                     className={cn(
@@ -421,7 +433,7 @@ function MobileSelector({
       <div className="grid grid-cols-2 gap-3">
         {options.map((opt, i) => {
           const isActive = opt.id === selected;
-          const Icon = opt.icon;
+          // Icon handled by OrbitalIcon helper
           return (
             <motion.button
               key={opt.id}
@@ -483,7 +495,7 @@ function MobileSelector({
                   background: "linear-gradient(135deg, hsl(var(--primary) / 0.25), hsl(var(--accent) / 0.1))",
                 } : undefined}
               >
-                <Icon className="w-6 h-6" />
+                <OrbitalIcon option={opt} className="w-6 h-6" />
               </div>
               <span
                 className={cn(
@@ -515,13 +527,15 @@ function MobileSelector({
               }}
             >
               <div className="flex items-center gap-2">
-                <activeOption.icon className="w-5 h-5 text-primary" />
+                <OrbitalIcon option={activeOption} className="w-5 h-5 text-primary" />
                 <span className="font-semibold text-foreground">{activeOption.label}</span>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">{activeOption.description}</p>
-              <p className="text-xs text-accent italic">
-                💡 {activeOption.helperText}
-              </p>
+              {activeOption.helperText && (
+                <p className="text-xs text-accent italic">
+                  💡 {activeOption.helperText}
+                </p>
+              )}
             </div>
           </motion.div>
         )}
@@ -576,7 +590,7 @@ function CenterPanel({
                 background: "linear-gradient(135deg, hsl(var(--primary) / 0.2), hsl(var(--accent) / 0.1))",
               }}
             >
-              <option.icon className="w-6 h-6 text-primary" />
+              <OrbitalIcon option={option} className="w-6 h-6 text-primary" />
             </div>
             <span className="text-sm font-bold text-foreground">{option.label}</span>
             <p className="text-[11px] text-muted-foreground leading-snug line-clamp-3">
