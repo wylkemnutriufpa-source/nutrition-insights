@@ -51,10 +51,10 @@ const questions: Question[] = [
     subtitle: "Escolha o que mais importa pra você agora",
     type: "single",
     options: [
-      { label: "Emagrecer", emoji: "🔥", value: "lose_weight" },
-      { label: "Ganhar massa", emoji: "💪", value: "gain_muscle" },
-      { label: "Manter peso", emoji: "⚖️", value: "maintain" },
-      { label: "Saúde geral", emoji: "🌿", value: "health" },
+      { label: "Emagrecer", emoji: "🔥", value: "lose_weight", description: "Redução de gordura corporal com preservação de massa magra e saúde metabólica" },
+      { label: "Ganhar massa", emoji: "💪", value: "gain_muscle", description: "Foco em hipertrofia muscular com aporte calórico e proteico estratégico" },
+      { label: "Manter peso", emoji: "⚖️", value: "maintain", description: "Equilíbrio e manutenção da composição corporal atual com bons hábitos" },
+      { label: "Saúde geral", emoji: "🌿", value: "health", description: "Bem-estar, energia e prevenção de problemas clínicos para qualidade de vida" },
     ],
   },
   {
