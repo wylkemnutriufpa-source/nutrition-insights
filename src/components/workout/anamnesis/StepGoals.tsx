@@ -2,6 +2,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Check, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { OrbitalHeader } from "@/components/onboarding/OrbitalAnamnesisInputs";
+import { RadialOrbitalSelector } from "@/components/ui/radial-orbital-selector";
 import type { TrainerAnamnesisData } from "./types";
 import { GOAL_OPTIONS } from "./types";
 
@@ -11,6 +12,17 @@ interface Props {
   data: TrainerAnamnesisData;
   onChange: (partial: Partial<TrainerAnamnesisData>) => void;
 }
+
+const GOAL_DESCRIPTIONS: Record<string, string> = {
+  fat_loss: "Redução de gordura com treinos focados em gasto calórico e preservação muscular",
+  hypertrophy: "Ganho de massa muscular com cargas progressivas e volume de treino",
+  conditioning: "Melhora da capacidade cardiovascular e resistência física geral",
+  mobility: "Amplitude de movimento, flexibilidade e prevenção de lesões",
+  rehab: "Recuperação de lesões com exercícios terapêuticos e corretivos",
+  performance: "Maximizar rendimento atlético com treinos especializados",
+  posture: "Correção postural e fortalecimento de músculos estabilizadores",
+  quality_of_life: "Bem-estar geral, disposição e saúde funcional no dia a dia",
+};
 
 export default function StepGoals({ data, onChange }: Props) {
   const reduced = useReducedMotion();
@@ -32,67 +44,21 @@ export default function StepGoals({ data, onChange }: Props) {
     <div className="w-full max-w-lg mx-auto space-y-6">
       <OrbitalHeader title="Objetivo do Treino" subtitle="Defina o foco principal e metas secundárias" />
 
-      {/* Primary goal — orbital grid */}
+      {/* Primary goal — RadialOrbitalSelector */}
       <div>
         <label className="text-sm font-semibold mb-3 block text-center">🎯 Objetivo Principal</label>
-        <div className="grid grid-cols-2 gap-3">
-          {GOAL_OPTIONS.map((g, i) => {
-            const isActive = data.primary_goal === g.key;
-            return (
-              <motion.button
-                key={g.key}
-                onClick={() => selectPrimary(g.key)}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{
-                  opacity: isActive ? 1 : data.primary_goal ? 0.65 : 1,
-                  y: 0,
-                  scale: isActive ? 1.02 : data.primary_goal ? 0.97 : 1,
-                }}
-                transition={{ delay: i * 0.05, duration: 0.4, ease: EASE_PREMIUM }}
-                whileHover={{ scale: isActive ? 1.04 : 1.03 }}
-                whileTap={{ scale: 0.96 }}
-                className={cn(
-                  "relative flex flex-col items-center gap-2.5 p-5 rounded-2xl border-2 transition-all",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-                  isActive
-                    ? "border-primary bg-primary/10"
-                    : "border-border bg-card/60 hover:border-primary/40 hover:bg-card/80"
-                )}
-                style={isActive ? {
-                  boxShadow: "0 0 24px hsl(var(--primary) / 0.2), 0 4px 16px hsl(0 0% 0% / 0.15)",
-                } : { boxShadow: "0 2px 8px hsl(0 0% 0% / 0.08)" }}
-              >
-                {isActive && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center"
-                    style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)))" }}
-                  >
-                    <Check className="w-3 h-3 text-primary-foreground" />
-                  </motion.div>
-                )}
-
-                {isActive && !reduced && (
-                  <motion.div
-                    className="absolute inset-0 rounded-2xl pointer-events-none"
-                    style={{ border: "1px solid hsl(var(--primary) / 0.3)" }}
-                    animate={{ opacity: [0.3, 0.7, 0.3], scale: [1, 1.02, 1] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                  />
-                )}
-
-                <span className="text-3xl">{g.icon}</span>
-                <span className={cn("text-sm font-semibold", isActive ? "text-primary" : "text-foreground/80")}>{g.label}</span>
-                {isActive && (
-                  <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[10px] font-bold text-primary">
-                    PRINCIPAL
-                  </motion.span>
-                )}
-              </motion.button>
-            );
-          })}
-        </div>
+        <RadialOrbitalSelector
+          title=""
+          options={GOAL_OPTIONS.map(g => ({
+            id: g.key,
+            label: g.label,
+            emoji: g.icon,
+            description: GOAL_DESCRIPTIONS[g.key] || "",
+          }))}
+          value={data.primary_goal}
+          onChange={selectPrimary}
+          showConfirmButton={false}
+        />
       </div>
 
       {/* Secondary goals — orbital chips */}

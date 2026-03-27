@@ -3,11 +3,11 @@ import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   OrbitalHeader,
-  OrbitalSingleSelect,
   OrbitalMultiSelect,
   OrbitalSlider,
   OrbitalTextInput,
 } from "@/components/onboarding/OrbitalAnamnesisInputs";
+import { RadialOrbitalSelector } from "@/components/ui/radial-orbital-selector";
 import type { TrainerAnamnesisData } from "./types";
 import { EQUIPMENT_OPTIONS, HOURS_OPTIONS } from "./types";
 
@@ -54,26 +54,28 @@ export default function StepAvailability({ data, onChange }: Props) {
         onChange={(v) => onChange({ available_hours: v })}
       />
 
-      <OrbitalSingleSelect
+      <RadialOrbitalSelector
         title="📍 Local de treino"
         options={[
-          { value: "gym", label: "Academia", emoji: "🏋️" },
-          { value: "home", label: "Casa", emoji: "🏠" },
-          { value: "hybrid", label: "Híbrido", emoji: "🔄" },
+          { id: "gym", label: "Academia", emoji: "🏋️", description: "Treino em academia com equipamentos completos" },
+          { id: "home", label: "Casa", emoji: "🏠", description: "Treino em casa com equipamentos limitados ou peso corporal" },
+          { id: "hybrid", label: "Híbrido", emoji: "🔄", description: "Alterna entre academia e casa conforme o dia" },
         ]}
         value={data.training_location}
         onChange={(v) => onChange({ training_location: v })}
+        showConfirmButton={false}
       />
 
-      <OrbitalSingleSelect
+      <RadialOrbitalSelector
         title="🤝 Modalidade de acompanhamento"
         options={[
-          { value: "presencial", label: "Presencial", emoji: "🤝" },
-          { value: "online", label: "Online", emoji: "💻" },
-          { value: "hibrido", label: "Híbrido", emoji: "📱" },
+          { id: "presencial", label: "Presencial", emoji: "🤝", description: "Acompanhamento presencial direto com o personal" },
+          { id: "online", label: "Online", emoji: "💻", description: "Treinos a distância com acompanhamento virtual" },
+          { id: "hibrido", label: "Híbrido", emoji: "📱", description: "Sessões presenciais e online combinadas" },
         ]}
         value={data.training_modality}
         onChange={(v) => onChange({ training_modality: v })}
+        showConfirmButton={false}
       />
 
       {/* Equipment as orbital chips */}
@@ -121,26 +123,28 @@ export default function StepAvailability({ data, onChange }: Props) {
         placeholder="Ex: CLT 8-18h, home office, flexível..."
       />
 
-      <OrbitalSingleSelect
+      <RadialOrbitalSelector
         title="😴 Qualidade do sono"
         options={[
-          { value: "good", label: "Bom", emoji: "😴" },
-          { value: "regular", label: "Regular", emoji: "😐" },
-          { value: "poor", label: "Ruim", emoji: "😵" },
+          { id: "good", label: "Bom", emoji: "😴", description: "Dorme bem, acorda descansado e com energia" },
+          { id: "regular", label: "Regular", emoji: "😐", description: "Sono irregular, nem sempre acorda disposto" },
+          { id: "poor", label: "Ruim", emoji: "😵", description: "Dificuldade para dormir, insônia ou sono fragmentado" },
         ]}
         value={data.sleep_quality}
         onChange={(v) => onChange({ sleep_quality: v })}
+        showConfirmButton={false}
       />
 
-      <OrbitalSingleSelect
+      <RadialOrbitalSelector
         title="⚡ Nível de energia"
         options={[
-          { value: "high", label: "Alto", emoji: "⚡" },
-          { value: "medium", label: "Médio", emoji: "🔋" },
-          { value: "low", label: "Baixo", emoji: "🪫" },
+          { id: "high", label: "Alto", emoji: "⚡", description: "Energia constante ao longo do dia, pronto para treinar" },
+          { id: "medium", label: "Médio", emoji: "🔋", description: "Energia ok, mas com quedas em alguns momentos do dia" },
+          { id: "low", label: "Baixo", emoji: "🪫", description: "Cansaço frequente, falta de disposição para atividades" },
         ]}
         value={data.energy_level}
         onChange={(v) => onChange({ energy_level: v })}
+        showConfirmButton={false}
       />
     </div>
   );
