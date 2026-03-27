@@ -13,9 +13,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
 import { getActiveAdaptiveBlocks, extractClinicalFlags, type AdaptiveBlock } from "@/lib/adaptiveAnamnesisBlocks";
 import { processAnamnesisFlags } from "@/lib/clinicalFlags";
-import GoalOrbitalStep from "@/components/onboarding/GoalOrbitalStep";
+import { RadialOrbitalSelector, type OrbitalOption as RadialOption } from "@/components/ui/radial-orbital-selector";
 import {
-  OrbitalSingleSelect,
   OrbitalMultiSelect,
   OrbitalSlider,
   OrbitalNumberInput,
