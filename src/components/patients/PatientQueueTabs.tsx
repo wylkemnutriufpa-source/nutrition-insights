@@ -151,6 +151,7 @@ export default function PatientQueueTabs() {
     toast.success("✅ Onboarding liberado! Paciente já pode preencher.");
     invalidateLifecycleQueries(queryClient, patientId);
     fetchCounts();
+    releaseActionLock("release_onboarding", patientId);
   };
 
   const totalPending = Object.values(counts).reduce((a, b) => a + b, 0);
