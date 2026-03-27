@@ -15417,6 +15417,13 @@ export type Database = {
           total_converted: number
         }[]
       }
+      get_backup_tables: {
+        Args: never
+        Returns: {
+          create_statement: string
+          table_name: string
+        }[]
+      }
       get_patient_active_protocol: {
         Args: { _patient_id: string }
         Returns: {

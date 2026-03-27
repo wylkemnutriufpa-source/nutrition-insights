@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { User, Lock, Save, Bell, BellOff, Trophy, Eye, Camera } from "lucide-react";
+import { User, Lock, Save, Bell, BellOff, Trophy, Eye, Camera, Database, Download, Loader2 } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import AvatarPicker from "@/components/profile/AvatarPicker";
 import ProtocolFitJourneyToggle from "@/components/admin/ProtocolFitJourneyToggle";
@@ -275,7 +275,88 @@ export default function Settings() {
 
         {/* Protocol FitJourney - only for professionals */}
         <ProtocolFitJourneyToggle />
+
+        {/* Database Backup - only for professionals */}
+        <DatabaseBackupCard />
       </motion.div>
     </DashboardLayout>
+  );
+}
+
+function DatabaseBackupCard() {
+  const [generating, setGenerating] = useState(false);
+
+  const handleBackup = async () => {
+    setGenerating(true);
+    toast.info("Gerando backup SQL... isso pode levar alguns segundos.");
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Você precisa estar logado.");
+        return;
+      }
+
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/generate-sql-backup`,
+        {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Erro desconhecido" }));
+        throw new Error(err.error || "Falha ao gerar backup");
+      }
+
+      const sql = await res.text();
+      const blob = new Blob([sql], { type: "application/sql" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `fitjourney_backup_${new Date().toISOString().slice(0, 10)}.sql`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast.success("Backup SQL gerado e baixado com sucesso!");
+    } catch (err: any) {
+      console.error("Backup error:", err);
+      toast.error("Erro ao gerar backup: " + (err.message || "Tente novamente."));
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  return (
+    <Card className="shadow-card border-primary/20">
+      <CardHeader>
+        <CardTitle className="font-display flex items-center gap-2">
+          <Database className="w-5 h-5 text-primary" /> Backup do Banco de Dados
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-sm text-muted-foreground">
+          Gere um arquivo SQL completo com toda a estrutura (schemas, tabelas) e registros da plataforma.
+        </p>
+        <Button
+          onClick={handleBackup}
+          disabled={generating}
+          className="gradient-primary gap-2 shadow-glow"
+        >
+          {generating ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Download className="w-4 h-4" />
+          )}
+          {generating ? "Gerando backup..." : "Gerar Backup SQL"}
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
