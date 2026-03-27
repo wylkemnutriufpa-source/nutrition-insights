@@ -37,6 +37,7 @@ const QUEUE_TABS = [
 export default function PatientQueueTabs() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [tab, setTab] = useState("awaiting_payment");
   const [patients, setPatients] = useState<QueuePatient[]>([]);
   const [loading, setLoading] = useState(false);
