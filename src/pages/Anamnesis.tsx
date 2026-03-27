@@ -318,9 +318,9 @@ const questions: Question[] = [
     subtitle: "Isso ajuda a sugerir alimentos acessíveis",
     type: "single",
     options: [
-      { label: "Econômico", emoji: "💰", value: "low" },
-      { label: "Moderado", emoji: "💳", value: "medium" },
-      { label: "Sem limite", emoji: "💎", value: "high" },
+      { label: "Econômico", emoji: "💰", value: "low", description: "Prioridade em alimentos acessíveis e de bom custo-benefício" },
+      { label: "Moderado", emoji: "💳", value: "medium", description: "Equilíbrio entre qualidade e preço, com flexibilidade" },
+      { label: "Sem limite", emoji: "💎", value: "high", description: "Liberdade total para escolher os melhores ingredientes" },
     ],
   },
   {
