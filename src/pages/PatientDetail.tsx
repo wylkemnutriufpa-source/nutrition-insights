@@ -57,6 +57,7 @@ import PatientBehavioralManager from "@/components/patient/PatientBehavioralMana
 import PatientEvolutionPDF from "@/components/patient/PatientEvolutionPDF";
 import FitIntelligenceToggle from "@/components/intelligence/FitIntelligenceToggle";
 import PatientLabExams from "@/components/patient/PatientLabExams";
+import PatientFeedbacksPanel from "@/components/patient/PatientFeedbacksPanel";
 
 export default function PatientDetail() {
   const { patientId } = useParams<{ patientId: string }>();
@@ -718,6 +719,7 @@ export default function PatientDetail() {
             { key: "onboarding", label: "Onboarding", icon: Zap, color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
             { key: "clinical-flags", label: "Flags Clínicas", icon: Shield, color: "from-emerald-500/20 to-emerald-500/5", iconColor: "text-emerald-500" },
             { key: "lab-exams", label: "Exames Lab.", icon: Search, color: "from-violet-500/20 to-violet-500/5", iconColor: "text-violet-500" },
+            { key: "feedbacks", label: "Feedbacks", icon: MessageSquare, color: "from-amber-500/20 to-orange-500/5", iconColor: "text-amber-500" },
             { key: "edit-profile", label: "Editar Cadastro", icon: Pencil, color: "from-info/20 to-info/5", iconColor: "text-info" },
             { key: "projects", label: "Projetos", icon: Rocket, color: "from-pink-500/20 to-pink-500/5", iconColor: "text-pink-500" },
           ];
@@ -1679,6 +1681,14 @@ export default function PatientDetail() {
                       </Button>
                     </div>
                   </form>
+                </DialogContent>
+              </Dialog>
+
+              {/* Feedbacks Modal */}
+              <Dialog open={openSection === "feedbacks"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display flex items-center gap-2"><MessageSquare className="w-5 h-5 text-amber-500" /> Feedbacks do Paciente</DialogTitle></DialogHeader>
+                  {patientId && <PatientFeedbacksPanel patientId={patientId} />}
                 </DialogContent>
               </Dialog>
 
