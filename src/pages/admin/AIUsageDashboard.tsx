@@ -157,8 +157,14 @@ export default function AIUsageDashboard() {
             <Brain className="w-6 h-6 text-primary" />
             Monitoramento de Custo IA
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">Controle de chamadas, cache e economia — Fase 3</p>
+          <p className="text-sm text-muted-foreground mt-1">Controle de chamadas, cache e economia — Fase 4</p>
         </div>
+        <div className="flex items-center gap-2">
+          <Link to="/admin/meal-coverage">
+            <Button variant="outline" size="sm" className="gap-2">
+              <Target className="w-4 h-4" /> Cobertura Alimentar
+            </Button>
+          </Link>
         <Select value={period} onValueChange={setPeriod}>
           <SelectTrigger className="w-[160px]">
             <SelectValue />
