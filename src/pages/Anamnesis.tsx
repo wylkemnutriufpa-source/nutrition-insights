@@ -130,10 +130,10 @@ const questions: Question[] = [
     subtitle: "No geral, como você se sente ao longo do dia",
     type: "single",
     options: [
-      { label: "Muito baixo", emoji: "😩", value: "very_low" },
-      { label: "Baixo", emoji: "😔", value: "low" },
-      { label: "Normal", emoji: "😊", value: "normal" },
-      { label: "Alto", emoji: "⚡", value: "high" },
+      { label: "Muito baixo", emoji: "😩", value: "very_low", description: "Cansaço constante, dificuldade para realizar atividades do dia a dia" },
+      { label: "Baixo", emoji: "😔", value: "low", description: "Sente fadiga frequente, especialmente à tarde ou após refeições" },
+      { label: "Normal", emoji: "😊", value: "normal", description: "Energia estável durante o dia, sem grandes oscilações" },
+      { label: "Alto", emoji: "⚡", value: "high", description: "Energia constante e disposição para atividades físicas e mentais" },
     ],
   },
   {
