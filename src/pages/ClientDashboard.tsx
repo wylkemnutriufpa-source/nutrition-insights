@@ -21,6 +21,7 @@ import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import PlanRequestButton from "@/components/patient/PlanRequestButton";
+import WorkoutRequestButton from "@/components/patient/WorkoutRequestButton";
 import NutritionistStatusBanner from "@/components/chat/NutritionistStatusBanner";
 import ProgramJoinRequest from "@/components/patient/ProgramJoinRequest";
 import SubscriptionCard from "@/components/patient/SubscriptionCard";
