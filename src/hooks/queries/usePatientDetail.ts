@@ -11,7 +11,7 @@ export function usePatientDetail(patientId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.patients.detail(patientId ?? ""),
     enabled: !!patientId && !!user,
-    staleTime: 60 * 1000,
+    staleTime: 10 * 1000, // 10s — fast refresh for lifecycle sync
     queryFn: async () => {
       const [profileRes, timelineRes, anamnesisRes, ppRes, protocolsRes, checkRes, subRes, plansRes, mealPlansRes, recipesRes, npRes, adherenceRes] = await Promise.all([
         supabase.from("profiles").select("full_name, avatar_url, phone, fit_intelligence_enabled, fit_intelligence_onboarded, fit_intelligence_access_mode, fit_intelligence_expires_at, fit_intelligence_first_experience_seen").eq("user_id", patientId!).maybeSingle(),

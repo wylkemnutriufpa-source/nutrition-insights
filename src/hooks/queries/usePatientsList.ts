@@ -116,7 +116,7 @@ export function usePatientsList(params: PatientsListParams = {}) {
   return useQuery<PatientsListResult>({
     queryKey: [...queryKeys.patients.all(user?.id ?? ""), page, pageSize, statusFilter, search],
     enabled: !!user,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 10 * 1000, // 10s — fast refresh for lifecycle sync
     placeholderData: keepPreviousData,
     queryFn: async () => {
       const userId = user!.id;

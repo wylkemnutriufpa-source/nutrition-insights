@@ -123,6 +123,7 @@ export default function PatientQueueTabs() {
       toast.success("✅ Pagamento confirmado! Onboarding liberado automaticamente.");
       invalidateLifecycleQueries(queryClient, patientId);
       fetchCounts();
+      releaseActionLock("confirm_payment", patientId);
     } catch (err: any) {
       toast.error(err.message || "Erro ao confirmar pagamento");
       fetchPatients(tab); // Rollback
@@ -150,6 +151,7 @@ export default function PatientQueueTabs() {
     toast.success("✅ Onboarding liberado! Paciente já pode preencher.");
     invalidateLifecycleQueries(queryClient, patientId);
     fetchCounts();
+    releaseActionLock("release_onboarding", patientId);
   };
 
   const totalPending = Object.values(counts).reduce((a, b) => a + b, 0);
