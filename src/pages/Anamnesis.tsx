@@ -63,8 +63,8 @@ const questions: Question[] = [
     subtitle: "Precisamos disso para calcular sua taxa metabólica",
     type: "single",
     options: [
-      { label: "Masculino", emoji: "♂️", value: "male" },
-      { label: "Feminino", emoji: "♀️", value: "female" },
+      { label: "Masculino", emoji: "♂️", value: "male", description: "Cálculos de TMB e necessidades calóricas baseados no perfil masculino" },
+      { label: "Feminino", emoji: "♀️", value: "female", description: "Cálculos adaptados ao perfil feminino, incluindo ciclo hormonal" },
     ],
   },
   {
