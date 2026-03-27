@@ -123,6 +123,7 @@ export default function PatientQueueTabs() {
       toast.success("✅ Pagamento confirmado! Onboarding liberado automaticamente.");
       invalidateLifecycleQueries(queryClient, patientId);
       fetchCounts();
+      releaseActionLock("confirm_payment", patientId);
     } catch (err: any) {
       toast.error(err.message || "Erro ao confirmar pagamento");
       fetchPatients(tab); // Rollback
