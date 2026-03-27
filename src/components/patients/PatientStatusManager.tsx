@@ -126,7 +126,7 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
       }
     } catch {
       setReleasedOnboarding(prev => { const n = new Set(prev); n.delete(patientId); return n; });
-      updatePatientJourneyInCache(patientId, journey);
+      updatePatientJourneyInCache(queryClient, patientId, journey);
       releaseActionLock("release_onboarding", patientId);
       toast.error("Erro ao liberar onboarding");
     }
