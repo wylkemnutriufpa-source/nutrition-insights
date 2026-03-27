@@ -1684,6 +1684,14 @@ export default function PatientDetail() {
                 </DialogContent>
               </Dialog>
 
+              {/* Feedbacks Modal */}
+              <Dialog open={openSection === "feedbacks"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle className="font-display flex items-center gap-2"><MessageSquare className="w-5 h-5 text-amber-500" /> Feedbacks do Paciente</DialogTitle></DialogHeader>
+                  {patientId && <PatientFeedbacksPanel patientId={patientId} />}
+                </DialogContent>
+              </Dialog>
+
               {/* Projects / Governance Modal */}
               <Dialog open={openSection === "projects"} onOpenChange={(v) => !v && setOpenSection(null)}>
                 <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
