@@ -38,15 +38,28 @@ export interface BehavioralContext {
   workoutTime: string;
   workoutBlocker: string | null;
   cravingHours: string[];
+  preferredReminderWindows: number[];
   failureCount: number;
   isWeekend: boolean;
   currentHour: number;
   clinicalFlags: string[];
+  lastPromptAt: Date | null;
+  lastPromptType: string | null;
   // Trainer integration
   hasTrainer: boolean;
   daysSinceLastWorkout: number | null;
   weeklyWorkoutCount: number;
   lastWorkoutEffort: number | null;
+}
+
+function wasPromptShownRecently(
+  ctx: BehavioralContext,
+  promptType: PromptType,
+  cooldownMinutes: number
+): boolean {
+  if (!ctx.lastPromptAt || ctx.lastPromptType !== promptType) return false;
+  const elapsed = (Date.now() - ctx.lastPromptAt.getTime()) / 60_000;
+  return elapsed < cooldownMinutes;
 }
 
 // ─── Hydration Templates ───
@@ -323,42 +336,44 @@ export function getTrainerIntegrationPrompt(ctx: BehavioralContext): Intelligenc
 // ─── Main Engine: Get Current Prompt ───
 export function generateCurrentPrompt(ctx: BehavioralContext): IntelligencePrompt | null {
   const now = ctx.currentHour;
+  const reminderWindows = ctx.preferredReminderWindows?.length ? ctx.preferredReminderWindows : [9, 12, 15, 18];
+  const inReminderWindow = reminderWindows.some((hour) => Math.abs(now - hour) <= 1);
 
   // 1. Clinical warning — morning check (7-9)
   if (now >= 7 && now <= 9) {
     const clinical = getClinicalWarningPrompt(ctx);
-    if (clinical) return clinical;
+    if (clinical && !wasPromptShownRecently(ctx, clinical.type, 240)) return clinical;
   }
 
   // 2. Weekend risk — morning window (8-10)
   if (ctx.isWeekend && now >= 8 && now <= 10) {
     const weekendPrompt = getWeekendRiskPrompt(ctx);
-    if (weekendPrompt) return weekendPrompt;
+    if (weekendPrompt && !wasPromptShownRecently(ctx, weekendPrompt.type, 360)) return weekendPrompt;
   }
 
   // 3. Trainer-aware prompts (workout absence, post-workout)
   const trainerPrompt = getTrainerIntegrationPrompt(ctx);
-  if (trainerPrompt) return trainerPrompt;
+  if (trainerPrompt && !wasPromptShownRecently(ctx, trainerPrompt.type, 240)) return trainerPrompt;
 
   // 4. Workout reminder — near workout time
   const workoutPrompt = getWorkoutPrompt(ctx);
-  if (workoutPrompt) return workoutPrompt;
+  if (workoutPrompt && !wasPromptShownRecently(ctx, workoutPrompt.type, 240)) return workoutPrompt;
 
-  // 5. Hydration — in windows around 10am, 2pm, 6pm (±1 hour)
-  const hydrationWindows = [
-    { start: 9, end: 11 },
-    { start: 13, end: 15 },
-    { start: 17, end: 19 },
-  ];
-  const inHydrationWindow = hydrationWindows.some((w) => now >= w.start && now <= w.end);
-  if (inHydrationWindow) {
+  // 5. Hydration — only in configured windows, avoid repeating the same hydration prompt
+  if (inReminderWindow && !wasPromptShownRecently(ctx, "hydration_check", 180)) {
     const hydrationPrompt = getHydrationPrompt(ctx);
     if (hydrationPrompt) return hydrationPrompt;
   }
 
   // 6. Evening non-adherence check (8pm-10pm)
   if (now >= 20 && now <= 22 && ctx.failureCount > 0) {
-    return getNonAdherenceResponse(ctx.failureCount, ctx.firstName, ctx.messageTone);
+    const nonAdherencePrompt = getNonAdherenceResponse(ctx.failureCount, ctx.firstName, ctx.messageTone);
+    if (!wasPromptShownRecently(ctx, nonAdherencePrompt.type, 360)) return nonAdherencePrompt;
+  }
+
+  // 7. Fallback motivation in reminder windows when hydration was already shown recently
+  if (inReminderWindow && !wasPromptShownRecently(ctx, "motivation_nudge", 360)) {
+    return getMotivationNudge(ctx);
   }
 
   return null;
