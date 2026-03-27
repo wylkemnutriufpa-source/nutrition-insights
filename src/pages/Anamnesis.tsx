@@ -1051,19 +1051,20 @@ export default function Anamnesis() {
         {/* Question — All orbital themed */}
         <NeuralStepTransition stepKey={q.id}>
           <div className="space-y-6">
-            {/* Goal: special full orbital selector */}
-            {q.id === "goal" && (
-              <GoalOrbitalStep value={answers[q.id]} onChange={(v) => setAnswer(v)} />
-            )}
-
-            {/* Single select: orbital cards */}
-            {q.type === "single" && q.options && q.id !== "goal" && (
-              <OrbitalSingleSelect
+            {/* Single select: RadialOrbitalSelector for ALL */}
+            {q.type === "single" && q.options && (
+              <RadialOrbitalSelector
                 title={q.title}
                 subtitle={q.subtitle}
-                options={q.options}
+                options={q.options.map(opt => ({
+                  id: opt.value,
+                  label: opt.label,
+                  description: opt.description || "",
+                  emoji: opt.emoji,
+                }))}
                 value={answers[q.id]}
                 onChange={(v) => setAnswer(v)}
+                showConfirmButton={false}
               />
             )}
 
