@@ -148,6 +148,7 @@ export default function PatientQueueTabs() {
       return;
     }
     toast.success("✅ Onboarding liberado! Paciente já pode preencher.");
+    invalidateLifecycleQueries(queryClient, patientId);
     fetchCounts();
   };
 
