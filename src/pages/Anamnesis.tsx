@@ -455,10 +455,10 @@ const questions: Question[] = [
     subtitle: "Última pergunta! Escolha sua motivação principal",
     type: "single",
     options: [
-      { label: "Saúde", emoji: "❤️", value: "health" },
-      { label: "Estética", emoji: "✨", value: "aesthetics" },
-      { label: "Performance", emoji: "🏆", value: "performance" },
-      { label: "Autoestima", emoji: "🦸", value: "self_esteem" },
+      { label: "Saúde", emoji: "❤️", value: "health", description: "Prevenção de doenças e melhora de exames e indicadores" },
+      { label: "Estética", emoji: "✨", value: "aesthetics", description: "Melhorar aparência física e composição corporal" },
+      { label: "Performance", emoji: "🏆", value: "performance", description: "Maximizar rendimento em treinos e atividades físicas" },
+      { label: "Autoestima", emoji: "🦸", value: "self_esteem", description: "Sentir-se melhor consigo mesmo(a) e mais confiante" },
     ],
   },
 ];
