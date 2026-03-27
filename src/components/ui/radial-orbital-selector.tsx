@@ -527,13 +527,15 @@ function MobileSelector({
               }}
             >
               <div className="flex items-center gap-2">
-                <activeOption.icon className="w-5 h-5 text-primary" />
+                <OrbitalIcon option={activeOption} className="w-5 h-5 text-primary" />
                 <span className="font-semibold text-foreground">{activeOption.label}</span>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">{activeOption.description}</p>
-              <p className="text-xs text-accent italic">
-                💡 {activeOption.helperText}
-              </p>
+              {activeOption.helperText && (
+                <p className="text-xs text-accent italic">
+                  💡 {activeOption.helperText}
+                </p>
+              )}
             </div>
           </motion.div>
         )}
