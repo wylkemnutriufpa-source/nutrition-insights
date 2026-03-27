@@ -14,6 +14,7 @@ import {
   Flame, ShoppingCart, Pin,
 } from "lucide-react";
 import { SmartMenuItem, MenuCategory, CATEGORY_COLORS } from "@/hooks/useSmartMenu";
+import NewFeatureBadge from "@/components/common/NewFeatureBadge";
 
 const ICON_MAP: Record<string, any> = {
   LayoutDashboard, Users, UtensilsCrossed, Trophy, Target, Brain,
@@ -178,6 +179,9 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
                             }`}>
                               {t(item.label_key || label, label)}
                             </span>
+                          )}
+                          {!collapsed && (
+                            <NewFeatureBadge featureKey={item.route || ""} variant="dot" />
                           )}
                           {item.is_pinned && !collapsed && (
                             <Pin className="w-2.5 h-2.5 text-primary/50" />

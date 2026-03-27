@@ -13,6 +13,7 @@ import {
   TrendingUp, Brain, Camera, Target,
   LayoutGrid, List, ArrowRight, Sparkles, Rocket, ChevronRight,
 } from "lucide-react";
+import NewFeatureBadge from "@/components/common/NewFeatureBadge";
 
 interface GridCard {
   key: string;
@@ -192,6 +193,7 @@ export default function PatientGridDashboard() {
                                   {card.badge.text}
                                 </Badge>
                               )}
+                              <NewFeatureBadge featureKey={card.key} variant="badge" />
                             </div>
                             <div className="flex-1">
                               <h3 className="text-sm font-semibold text-foreground leading-tight">{card.label}</h3>
@@ -239,6 +241,7 @@ export default function PatientGridDashboard() {
                         {card.badge.text}
                       </Badge>
                     )}
+                    <NewFeatureBadge featureKey={card.key} variant="dot" />
                     <ArrowRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary transition-colors flex-shrink-0" />
                   </div>
                 </Card>
