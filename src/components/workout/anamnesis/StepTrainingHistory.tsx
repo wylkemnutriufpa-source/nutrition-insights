@@ -1,9 +1,17 @@
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { Check } from "lucide-react";
+import {
+  OrbitalHeader,
+  OrbitalSingleSelect,
+  OrbitalNumberInput,
+  OrbitalTextInput,
+} from "@/components/onboarding/OrbitalAnamnesisInputs";
 import type { TrainerAnamnesisData } from "./types";
 import { MODALITIES } from "./types";
+
+const EASE_PREMIUM = [0.22, 1, 0.36, 1] as const;
 
 interface Props {
   data: TrainerAnamnesisData;
@@ -13,132 +21,122 @@ interface Props {
 export default function StepTrainingHistory({ data, onChange }: Props) {
   const toggleModality = (m: string) => {
     const list = data.modalities_practiced;
-    onChange({
-      modalities_practiced: list.includes(m) ? list.filter(i => i !== m) : [...list, m],
-    });
+    onChange({ modalities_practiced: list.includes(m) ? list.filter(i => i !== m) : [...list, m] });
   };
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center gap-2">
-        <Checkbox
-          checked={data.has_trained_before}
-          onCheckedChange={c => onChange({ has_trained_before: !!c })}
-        />
-        <label className="text-sm font-medium">Já treinou antes?</label>
-      </div>
+    <div className="w-full max-w-lg mx-auto space-y-6">
+      <OrbitalHeader title="Histórico de Treino" subtitle="Conte sobre sua experiência com exercícios" />
+
+      {/* Has trained toggle */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="p-4 rounded-2xl border-2 border-border bg-card/60 flex items-center gap-3"
+      >
+        <Checkbox checked={data.has_trained_before} onCheckedChange={c => onChange({ has_trained_before: !!c })} />
+        <label className="text-sm font-semibold">Já treinou antes?</label>
+      </motion.div>
 
       {data.has_trained_before && (
         <>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-sm font-medium mb-1 block">Anos de treino</label>
-              <Input
-                type="number"
-                value={data.training_years ?? ""}
-                onChange={e => onChange({ training_years: e.target.value ? parseInt(e.target.value) : null })}
-                placeholder="0"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Frequência anterior</label>
-              <Select
-                value={data.previous_frequency?.toString() || ""}
-                onValueChange={v => onChange({ previous_frequency: parseInt(v) })}
-              >
-                <SelectTrigger><SelectValue placeholder="x/semana" /></SelectTrigger>
-                <SelectContent>
-                  {[1,2,3,4,5,6,7].map(n => (
-                    <SelectItem key={n} value={n.toString()}>{n}x por semana</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium mb-1 block">Último período de treino</label>
-            <Input
-              value={data.last_training_period}
-              onChange={e => onChange({ last_training_period: e.target.value })}
-              placeholder="Ex: Jan-Mar 2025, há 6 meses..."
+          <div className="grid grid-cols-2 gap-4">
+            <OrbitalNumberInput
+              title="Anos de treino"
+              value={data.training_years?.toString() ?? ""}
+              onChange={(v) => onChange({ training_years: v ? parseInt(v) : null })}
+              placeholder="0"
+              min={0}
+              max={50}
+              unit="anos"
+            />
+            <OrbitalNumberInput
+              title="Frequência anterior"
+              value={data.previous_frequency?.toString() ?? ""}
+              onChange={(v) => onChange({ previous_frequency: v ? parseInt(v) : null })}
+              placeholder="0"
+              min={1}
+              max={7}
+              unit="x/sem"
             />
           </div>
 
-          <div>
-            <label className="text-sm font-medium mb-1 block">Nível percebido</label>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { value: "beginner", label: "Iniciante", emoji: "🌱" },
-                { value: "intermediate", label: "Intermediário", emoji: "🔥" },
-                { value: "advanced", label: "Avançado", emoji: "💎" },
-              ].map(l => (
-                <button
-                  key={l.value}
-                  onClick={() => onChange({ perceived_level: l.value })}
-                  className={`p-3 rounded-lg text-center text-sm font-medium transition-all ${
-                    data.perceived_level === l.value
-                      ? "bg-primary/15 text-primary border border-primary/30"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  }`}
-                >
-                  <div className="text-lg mb-1">{l.emoji}</div>
-                  {l.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          <OrbitalTextInput
+            title="Último período de treino"
+            value={data.last_training_period}
+            onChange={(v) => onChange({ last_training_period: v })}
+            placeholder="Ex: Jan-Mar 2025, há 6 meses..."
+          />
 
+          <OrbitalSingleSelect
+            title="Nível percebido"
+            subtitle="Como você se classifica?"
+            options={[
+              { value: "beginner", label: "Iniciante", emoji: "🌱" },
+              { value: "intermediate", label: "Intermediário", emoji: "🔥" },
+              { value: "advanced", label: "Avançado", emoji: "💎" },
+            ]}
+            value={data.perceived_level}
+            onChange={(v) => onChange({ perceived_level: v })}
+          />
+
+          {/* Modalities with orbital chips */}
           <div>
-            <label className="text-sm font-medium mb-2 block">Modalidades praticadas</label>
-            <div className="flex flex-wrap gap-1.5">
-              {MODALITIES.map(m => (
-                <button
-                  key={m}
-                  onClick={() => toggleModality(m)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    data.modalities_practiced.includes(m)
-                      ? "bg-primary/15 text-primary border border-primary/30"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {m}
-                </button>
-              ))}
+            <label className="text-sm font-semibold mb-3 block text-center">🏋️ Modalidades praticadas</label>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {MODALITIES.map((m, i) => {
+                const active = data.modalities_practiced.includes(m);
+                return (
+                  <motion.button
+                    key={m}
+                    onClick={() => toggleModality(m)}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.025, duration: 0.3, ease: EASE_PREMIUM }}
+                    className={cn(
+                      "relative px-3.5 py-2 rounded-full text-xs font-semibold transition-all border-2",
+                      active
+                        ? "bg-primary/10 text-primary border-primary/30"
+                        : "bg-card/60 text-muted-foreground border-border hover:border-primary/30"
+                    )}
+                    style={active ? { boxShadow: "0 0 12px hsl(var(--primary) / 0.15)" } : {}}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {active && (
+                      <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="inline-flex mr-1">
+                        <Check className="w-3 h-3 inline" />
+                      </motion.span>
+                    )}
+                    {m}
+                  </motion.button>
+                );
+              })}
             </div>
           </div>
         </>
       )}
 
-      <div>
-        <label className="text-sm font-medium mb-1 block">Exercícios que gosta</label>
-        <Textarea
-          value={data.liked_exercises}
-          onChange={e => onChange({ liked_exercises: e.target.value })}
-          placeholder="Ex: supino, agachamento, corrida..."
-          rows={2}
-        />
-      </div>
+      <OrbitalTextInput
+        title="Exercícios que gosta"
+        value={data.liked_exercises}
+        onChange={(v) => onChange({ liked_exercises: v })}
+        placeholder="Ex: supino, agachamento, corrida..."
+      />
 
-      <div>
-        <label className="text-sm font-medium mb-1 block">Exercícios que não gosta</label>
-        <Textarea
-          value={data.disliked_exercises}
-          onChange={e => onChange({ disliked_exercises: e.target.value })}
-          placeholder="Ex: burpee, prancha, abdominais..."
-          rows={2}
-        />
-      </div>
+      <OrbitalTextInput
+        title="Exercícios que não gosta"
+        value={data.disliked_exercises}
+        onChange={(v) => onChange({ disliked_exercises: v })}
+        placeholder="Ex: burpee, prancha, abdominais..."
+      />
 
-      <div>
-        <label className="text-sm font-medium mb-1 block">Principais dificuldades com treino</label>
-        <Textarea
-          value={data.training_difficulties}
-          onChange={e => onChange({ training_difficulties: e.target.value })}
-          placeholder="Falta de motivação, não saber executar, dor, falta de tempo..."
-          rows={2}
-        />
-      </div>
+      <OrbitalTextInput
+        title="Principais dificuldades com treino"
+        value={data.training_difficulties}
+        onChange={(v) => onChange({ training_difficulties: v })}
+        placeholder="Falta de motivação, não saber executar, dor, falta de tempo..."
+      />
     </div>
   );
 }

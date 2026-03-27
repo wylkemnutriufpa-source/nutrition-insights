@@ -1,7 +1,10 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { motion } from "framer-motion";
+import { User, Target, Ruler, Weight, Calendar, AlertTriangle, Users, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { User, Target, Ruler, Weight, Calendar, AlertTriangle, Users } from "lucide-react";
+import { OrbitalHeader } from "@/components/onboarding/OrbitalAnamnesisInputs";
 import type { TrainerAnamnesisData } from "./types";
+
+const EASE_PREMIUM = [0.22, 1, 0.36, 1] as const;
 
 interface Props {
   data: TrainerAnamnesisData;
@@ -20,73 +23,88 @@ export default function StepSyncedData({ data, professionals }: Props) {
   ].filter(i => i.value);
 
   return (
-    <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
-        Dados sincronizados automaticamente do perfil do paciente. Informações já cadastradas no sistema.
-      </p>
+    <div className="w-full max-w-lg mx-auto space-y-5">
+      <OrbitalHeader title="Dados Sincronizados" subtitle="Informações já cadastradas no perfil do paciente" />
 
       <div className="grid grid-cols-2 gap-3">
-        {infoItems.map(({ icon: Icon, label, value }) => (
-          <Card key={label} className="bg-muted/30 border-border/40">
-            <CardContent className="p-3 flex items-center gap-2.5">
-              <Icon className="w-4 h-4 text-primary shrink-0" />
+        {infoItems.map(({ icon: Icon, label, value }, i) => (
+          <motion.div
+            key={label}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.07, duration: 0.4, ease: EASE_PREMIUM }}
+            className="relative p-4 rounded-2xl border-2 border-border bg-card/60"
+            style={{ boxShadow: "0 2px 8px hsl(0 0% 0% / 0.08)" }}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-primary/10">
+                <Icon className="w-5 h-5 text-primary" />
+              </div>
               <div>
                 <div className="text-[11px] text-muted-foreground">{label}</div>
-                <div className="text-sm font-medium">{value}</div>
+                <div className="text-sm font-semibold text-foreground">{value}</div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </motion.div>
         ))}
       </div>
 
       {s.flags && s.flags.length > 0 && (
-        <div>
-          <div className="flex items-center gap-1.5 mb-2">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="p-4 rounded-2xl border-2 border-amber-500/30 bg-amber-500/5"
+        >
+          <div className="flex items-center gap-2 mb-2">
             <AlertTriangle className="w-4 h-4 text-amber-500" />
-            <span className="text-sm font-medium">Flags Clínicas</span>
+            <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">Flags Clínicas</span>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {s.flags.map(f => (
-              <Badge key={f} variant="outline" className="text-amber-600 border-amber-500/30 bg-amber-500/10 text-xs">
-                {f}
-              </Badge>
+              <Badge key={f} variant="outline" className="text-amber-600 border-amber-500/30 bg-amber-500/10 text-xs">{f}</Badge>
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
 
       {s.restrictions && s.restrictions.length > 0 && (
-        <div>
-          <div className="text-sm font-medium mb-1.5">Restrições registradas</div>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
+          <div className="text-sm font-semibold mb-2">Restrições registradas</div>
           <div className="flex flex-wrap gap-1.5">
             {s.restrictions.map(r => (
               <Badge key={r} variant="secondary" className="text-xs">{r}</Badge>
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
 
       {professionals && professionals.length > 0 && (
-        <div>
-          <div className="flex items-center gap-1.5 mb-2">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
+          <div className="flex items-center gap-2 mb-2">
             <Users className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium">Profissionais vinculados</span>
+            <span className="text-sm font-semibold">Profissionais vinculados</span>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {professionals.map((p, i) => (
-              <Badge key={i} variant="outline" className="text-xs">
-                {p.role}: {p.name}
-              </Badge>
+              <Badge key={i} variant="outline" className="text-xs">{p.role}: {p.name}</Badge>
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
 
-      <Card className="bg-primary/5 border-primary/20">
-        <CardContent className="p-3 text-sm text-primary">
-          ✨ Estes dados são sincronizados automaticamente. A anamnese do personal complementa as informações específicas de treino nas próximas etapas.
-        </CardContent>
-      </Card>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        className="p-4 rounded-2xl border-2 border-primary/20 bg-primary/5 flex items-center gap-3"
+        style={{ boxShadow: "0 0 20px hsl(var(--primary) / 0.08)" }}
+      >
+        <Sparkles className="w-5 h-5 text-primary shrink-0" />
+        <p className="text-sm text-primary">
+          Dados sincronizados automaticamente. As próximas etapas complementam informações específicas de treino.
+        </p>
+      </motion.div>
     </div>
   );
 }

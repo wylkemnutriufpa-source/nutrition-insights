@@ -1,7 +1,17 @@
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { motion } from "framer-motion";
+import { Check } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  OrbitalHeader,
+  OrbitalSingleSelect,
+  OrbitalMultiSelect,
+  OrbitalSlider,
+  OrbitalTextInput,
+} from "@/components/onboarding/OrbitalAnamnesisInputs";
 import type { TrainerAnamnesisData } from "./types";
 import { EQUIPMENT_OPTIONS, HOURS_OPTIONS } from "./types";
+
+const EASE_PREMIUM = [0.22, 1, 0.36, 1] as const;
 
 interface Props {
   data: TrainerAnamnesisData;
@@ -9,179 +19,129 @@ interface Props {
 }
 
 export default function StepAvailability({ data, onChange }: Props) {
-  const toggleArray = (field: "available_hours" | "available_equipment", item: string) => {
-    const current = data[field] as string[];
-    onChange({
-      [field]: current.includes(item) ? current.filter(i => i !== item) : [...current, item],
-    });
-  };
-
   return (
-    <div className="space-y-5">
-      {/* Weekly availability */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="text-sm font-medium mb-1 block">Dias por semana</label>
-          <Select value={data.weekly_availability.toString()} onValueChange={v => onChange({ weekly_availability: parseInt(v) })}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {[1,2,3,4,5,6,7].map(n => <SelectItem key={n} value={n.toString()}>{n}x</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <label className="text-sm font-medium mb-1 block">Duração da sessão</label>
-          <Select value={data.session_duration.toString()} onValueChange={v => onChange({ session_duration: parseInt(v) })}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {[30,45,60,75,90,120].map(n => <SelectItem key={n} value={n.toString()}>{n} min</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+    <div className="w-full max-w-lg mx-auto space-y-6">
+      <OrbitalHeader title="Disponibilidade e Estrutura" subtitle="Configure seu tempo, local e equipamentos" />
 
-      {/* Available hours */}
+      <OrbitalSlider
+        title="Dias por semana"
+        subtitle="Quantos dias consegue treinar?"
+        value={data.weekly_availability}
+        onChange={(v) => onChange({ weekly_availability: v })}
+        min={1}
+        max={7}
+        step={1}
+        unit="dias"
+      />
+
+      <OrbitalSlider
+        title="Duração da sessão"
+        subtitle="Tempo disponível por treino"
+        value={data.session_duration}
+        onChange={(v) => onChange({ session_duration: v })}
+        min={30}
+        max={120}
+        step={15}
+        unit="min"
+      />
+
+      {/* Available hours as orbital multi-select */}
+      <OrbitalMultiSelect
+        title="⏰ Horários disponíveis"
+        subtitle="Selecione os períodos que pode treinar"
+        options={HOURS_OPTIONS.map(h => ({ label: h, emoji: "🕐", value: h }))}
+        value={data.available_hours}
+        onChange={(v) => onChange({ available_hours: v })}
+      />
+
+      <OrbitalSingleSelect
+        title="📍 Local de treino"
+        options={[
+          { value: "gym", label: "Academia", emoji: "🏋️" },
+          { value: "home", label: "Casa", emoji: "🏠" },
+          { value: "hybrid", label: "Híbrido", emoji: "🔄" },
+        ]}
+        value={data.training_location}
+        onChange={(v) => onChange({ training_location: v })}
+      />
+
+      <OrbitalSingleSelect
+        title="🤝 Modalidade de acompanhamento"
+        options={[
+          { value: "presencial", label: "Presencial", emoji: "🤝" },
+          { value: "online", label: "Online", emoji: "💻" },
+          { value: "hibrido", label: "Híbrido", emoji: "📱" },
+        ]}
+        value={data.training_modality}
+        onChange={(v) => onChange({ training_modality: v })}
+      />
+
+      {/* Equipment as orbital chips */}
       <div>
-        <label className="text-sm font-medium mb-2 block">Horários disponíveis</label>
-        <div className="flex flex-wrap gap-1.5">
-          {HOURS_OPTIONS.map(h => (
-            <button
-              key={h}
-              onClick={() => toggleArray("available_hours", h)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                data.available_hours.includes(h)
-                  ? "bg-primary/15 text-primary border border-primary/30"
-                  : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {h}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Location */}
-      <div>
-        <label className="text-sm font-medium mb-2 block">Local de treino</label>
-        <div className="grid grid-cols-3 gap-2">
-          {[
-            { value: "gym", label: "Academia", emoji: "🏋️" },
-            { value: "home", label: "Casa", emoji: "🏠" },
-            { value: "hybrid", label: "Híbrido", emoji: "🔄" },
-          ].map(l => (
-            <button
-              key={l.value}
-              onClick={() => onChange({ training_location: l.value })}
-              className={`p-3 rounded-lg text-center text-sm font-medium transition-all ${
-                data.training_location === l.value
-                  ? "bg-primary/15 text-primary border border-primary/30"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
-            >
-              <div className="text-lg mb-1">{l.emoji}</div>
-              {l.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Modality */}
-      <div>
-        <label className="text-sm font-medium mb-2 block">Modalidade de acompanhamento</label>
-        <div className="grid grid-cols-3 gap-2">
-          {[
-            { value: "presencial", label: "Presencial", emoji: "🤝" },
-            { value: "online", label: "Online", emoji: "💻" },
-            { value: "hibrido", label: "Híbrido", emoji: "📱" },
-          ].map(l => (
-            <button
-              key={l.value}
-              onClick={() => onChange({ training_modality: l.value })}
-              className={`p-3 rounded-lg text-center text-sm font-medium transition-all ${
-                data.training_modality === l.value
-                  ? "bg-primary/15 text-primary border border-primary/30"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
-            >
-              <div className="text-lg mb-1">{l.emoji}</div>
-              {l.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Equipment */}
-      <div>
-        <label className="text-sm font-medium mb-2 block">Equipamentos disponíveis</label>
-        <div className="flex flex-wrap gap-1.5">
-          {EQUIPMENT_OPTIONS.map(e => (
-            <button
-              key={e}
-              onClick={() => toggleArray("available_equipment", e)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                data.available_equipment.includes(e)
-                  ? "bg-secondary text-secondary-foreground border border-border"
-                  : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {e}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Routine & energy */}
-      <div>
-        <label className="text-sm font-medium mb-1 block">Rotina de trabalho</label>
-        <Input value={data.work_routine} onChange={e => onChange({ work_routine: e.target.value })} placeholder="Ex: CLT 8-18h, home office, flexível..." />
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="text-sm font-medium mb-2 block">Qualidade do sono</label>
-          <div className="grid grid-cols-1 gap-1.5">
-            {[
-              { value: "good", label: "Bom 😴" },
-              { value: "regular", label: "Regular 😐" },
-              { value: "poor", label: "Ruim 😵" },
-            ].map(s => (
-              <button
-                key={s.value}
-                onClick={() => onChange({ sleep_quality: s.value })}
-                className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                  data.sleep_quality === s.value
-                    ? "bg-primary/15 text-primary border border-primary/30"
-                    : "bg-muted text-muted-foreground"
-                }`}
+        <label className="text-sm font-semibold mb-3 block text-center">🏋️ Equipamentos disponíveis</label>
+        <div className="flex flex-wrap gap-2 justify-center">
+          {EQUIPMENT_OPTIONS.map((e, i) => {
+            const active = data.available_equipment.includes(e);
+            return (
+              <motion.button
+                key={e}
+                onClick={() => {
+                  const current = data.available_equipment;
+                  onChange({ available_equipment: current.includes(e) ? current.filter(x => x !== e) : [...current, e] });
+                }}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: i * 0.025, duration: 0.3, ease: EASE_PREMIUM }}
+                className={cn(
+                  "relative px-3.5 py-2 rounded-full text-xs font-semibold transition-all border-2",
+                  active
+                    ? "bg-primary/10 text-primary border-primary/30"
+                    : "bg-card/60 text-muted-foreground border-border hover:border-primary/30"
+                )}
+                style={active ? { boxShadow: "0 0 12px hsl(var(--primary) / 0.15)" } : {}}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                {s.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div>
-          <label className="text-sm font-medium mb-2 block">Nível de energia</label>
-          <div className="grid grid-cols-1 gap-1.5">
-            {[
-              { value: "high", label: "Alto ⚡" },
-              { value: "medium", label: "Médio 🔋" },
-              { value: "low", label: "Baixo 🪫" },
-            ].map(e => (
-              <button
-                key={e.value}
-                onClick={() => onChange({ energy_level: e.value })}
-                className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                  data.energy_level === e.value
-                    ? "bg-primary/15 text-primary border border-primary/30"
-                    : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {e.label}
-              </button>
-            ))}
-          </div>
+                {active && (
+                  <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="inline-flex mr-1">
+                    <Check className="w-3 h-3 inline" />
+                  </motion.span>
+                )}
+                {e}
+              </motion.button>
+            );
+          })}
         </div>
       </div>
+
+      <OrbitalTextInput
+        title="Rotina de trabalho"
+        value={data.work_routine}
+        onChange={(v) => onChange({ work_routine: v })}
+        placeholder="Ex: CLT 8-18h, home office, flexível..."
+      />
+
+      <OrbitalSingleSelect
+        title="😴 Qualidade do sono"
+        options={[
+          { value: "good", label: "Bom", emoji: "😴" },
+          { value: "regular", label: "Regular", emoji: "😐" },
+          { value: "poor", label: "Ruim", emoji: "😵" },
+        ]}
+        value={data.sleep_quality}
+        onChange={(v) => onChange({ sleep_quality: v })}
+      />
+
+      <OrbitalSingleSelect
+        title="⚡ Nível de energia"
+        options={[
+          { value: "high", label: "Alto", emoji: "⚡" },
+          { value: "medium", label: "Médio", emoji: "🔋" },
+          { value: "low", label: "Baixo", emoji: "🪫" },
+        ]}
+        value={data.energy_level}
+        onChange={(v) => onChange({ energy_level: v })}
+      />
     </div>
   );
 }
