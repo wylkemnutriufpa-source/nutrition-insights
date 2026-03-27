@@ -142,11 +142,11 @@ const questions: Question[] = [
     subtitle: "Pense nas últimas semanas",
     type: "single",
     options: [
-      { label: "Péssima", emoji: "😵", value: "terrible" },
-      { label: "Ruim", emoji: "😴", value: "bad" },
-      { label: "Regular", emoji: "😐", value: "regular" },
-      { label: "Boa", emoji: "😌", value: "good" },
-      { label: "Excelente", emoji: "💤", value: "excellent" },
+      { label: "Péssima", emoji: "😵", value: "terrible", description: "Insônia frequente, acordar várias vezes ou não descansar" },
+      { label: "Ruim", emoji: "😴", value: "bad", description: "Dificuldade para dormir ou acordar cansado(a) com frequência" },
+      { label: "Regular", emoji: "😐", value: "regular", description: "Consegue dormir, mas nem sempre acorda descansado(a)" },
+      { label: "Boa", emoji: "😌", value: "good", description: "Dorme bem na maioria das noites e acorda disposto(a)" },
+      { label: "Excelente", emoji: "💤", value: "excellent", description: "Sono profundo e reparador, acorda com energia total" },
     ],
   },
   {
