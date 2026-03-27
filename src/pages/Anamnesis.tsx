@@ -392,9 +392,9 @@ const questions: Question[] = [
     subtitle: "Costuma fazer uma refeição principal à noite?",
     type: "single",
     options: [
-      { label: "Sim, sempre", emoji: "✅", value: "always" },
-      { label: "Às vezes", emoji: "🤔", value: "sometimes" },
-      { label: "Não janto", emoji: "❌", value: "never" },
+      { label: "Sim, sempre", emoji: "✅", value: "always", description: "Janta todos os dias com uma refeição completa" },
+      { label: "Às vezes", emoji: "🤔", value: "sometimes", description: "Janta em alguns dias, dependendo do horário e fome" },
+      { label: "Não janto", emoji: "❌", value: "never", description: "Não costuma jantar — última refeição é o lanche da tarde" },
     ],
   },
   {
