@@ -14,6 +14,14 @@ import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
 import { getActiveAdaptiveBlocks, extractClinicalFlags, type AdaptiveBlock } from "@/lib/adaptiveAnamnesisBlocks";
 import { processAnamnesisFlags } from "@/lib/clinicalFlags";
 import GoalOrbitalStep from "@/components/onboarding/GoalOrbitalStep";
+import {
+  OrbitalSingleSelect,
+  OrbitalMultiSelect,
+  OrbitalSlider,
+  OrbitalNumberInput,
+  OrbitalTextInput,
+  OrbitalTimeInput,
+} from "@/components/onboarding/OrbitalAnamnesisInputs";
 
 // ──── Question definitions ────
 interface Option {
