@@ -348,9 +348,9 @@ const questions: Question[] = [
     subtitle: "Costuma comer algo entre o café e o almoço?",
     type: "single",
     options: [
-      { label: "Sim, sempre", emoji: "✅", value: "always" },
-      { label: "Às vezes", emoji: "🤔", value: "sometimes" },
-      { label: "Não faço", emoji: "❌", value: "never" },
+      { label: "Sim, sempre", emoji: "✅", value: "always", description: "Sempre faz um lanche entre o café da manhã e o almoço" },
+      { label: "Às vezes", emoji: "🤔", value: "sometimes", description: "Faz lanche da manhã em alguns dias, dependendo da rotina" },
+      { label: "Não faço", emoji: "❌", value: "never", description: "Não costuma comer nada entre o café e o almoço" },
     ],
   },
   {
