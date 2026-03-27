@@ -442,11 +442,11 @@ const questions: Question[] = [
     subtitle: "Seja honesto(a), é só pra gente entender melhor",
     type: "single",
     options: [
-      { label: "Péssimo", emoji: "😢", value: "terrible" },
-      { label: "Ruim", emoji: "😕", value: "bad" },
-      { label: "Ok", emoji: "😐", value: "ok" },
-      { label: "Bem", emoji: "😊", value: "good" },
-      { label: "Ótimo", emoji: "🤩", value: "great" },
+      { label: "Péssimo", emoji: "😢", value: "terrible", description: "Insatisfação total com hábitos alimentares atuais" },
+      { label: "Ruim", emoji: "😕", value: "bad", description: "Sabe que precisa melhorar muito a alimentação" },
+      { label: "Ok", emoji: "😐", value: "ok", description: "Alimentação razoável, mas sente que pode evoluir" },
+      { label: "Bem", emoji: "😊", value: "good", description: "Satisfeito(a) com a maioria das escolhas alimentares" },
+      { label: "Ótimo", emoji: "🤩", value: "great", description: "Alimentação excelente, busca refinamento e otimização" },
     ],
   },
   {
