@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { releaseOnboarding } from "@/lib/serverTransitions";
 import { acquireActionLock, releaseActionLock } from "@/lib/fitjourneyBible";
+import { invalidateLifecycleQueries } from "@/lib/lifecycleCache";
+import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
