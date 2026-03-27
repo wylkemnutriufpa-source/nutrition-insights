@@ -264,7 +264,7 @@ function DesktopOrbital({
             const x = Math.cos(rad) * radius;
             const y = Math.sin(rad) * radius;
             const isActive = opt.id === selected;
-            const Icon = opt.icon;
+            // Icon handled by OrbitalIcon helper
             const counterRotation = -targetRotation;
 
             return (
