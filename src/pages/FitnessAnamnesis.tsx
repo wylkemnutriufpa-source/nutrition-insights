@@ -8,6 +8,15 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Check, Dumbbell, Loader2, UserCheck, Save } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import {
+  OrbitalSingleSelect,
+  OrbitalMultiSelect,
+  OrbitalSlider,
+  OrbitalNumberInput,
+  OrbitalTextInput,
+  OrbitalTimeInput,
+  OrbitalHeader,
+} from "@/components/onboarding/OrbitalAnamnesisInputs";
 
 // ──── Types ────
 interface Option {
