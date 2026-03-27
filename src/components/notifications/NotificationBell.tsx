@@ -48,11 +48,12 @@ export default function NotificationBell() {
 
   const unread = notifications.filter((n) => !n.is_read).length;
 
-  // Realtime subscription for instant bell updates + toast
+  // Realtime subscription — deduplicate toasts across remounts
   useEffect(() => {
     if (!user) return;
+    const channelName = "bell-" + user.id;
     const channel = supabase
-      .channel("bell-" + user.id)
+      .channel(channelName)
       .on(
         "postgres_changes",
         {
@@ -64,6 +65,11 @@ export default function NotificationBell() {
         (payload) => {
           const n = payload.new as SmartNotification;
           queryClient.invalidateQueries({ queryKey: ["notifications"] });
+
+          // Skip if already toasted this session
+          if (_toastedIds.has(n.id)) return;
+          _toastedIds.add(n.id);
+
           if (n.type === "alert") {
             toast.error(n.title, { description: n.message, duration: 8000 });
           } else if (n.type === "progress") {
