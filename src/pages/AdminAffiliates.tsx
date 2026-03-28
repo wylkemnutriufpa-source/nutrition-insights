@@ -26,6 +26,7 @@ function generateCode() {
 
 export default function AdminAffiliates() {
   const qc = useQueryClient();
+  const { tenantId } = useTenant();
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState({
     full_name: "", email: "", affiliate_type: "regular" as string,
@@ -39,9 +40,10 @@ export default function AdminAffiliates() {
   });
 
   const { data: affiliates = [] } = useQuery({
-    queryKey: ["admin-affiliates"],
+    queryKey: ["admin-affiliates", tenantId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("affiliates").select("*").order("created_at", { ascending: false });
+      const q = supabase.from("affiliates").select("*").order("created_at", { ascending: false });
+      const { data, error } = await withTenantFilter(q, tenantId);
       if (error) throw error;
       return data || [];
     },
