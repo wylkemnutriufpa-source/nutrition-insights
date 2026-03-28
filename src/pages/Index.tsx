@@ -323,7 +323,8 @@ function NutritionistDashboardContent() {
     setAiLoading(false);
   };
 
-  useEffect(() => { fetchDashboard(); }, [fetchDashboard]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchDashboard(); }, [user?.id, evolutionPeriod]);
 
   const quickActions = [
     { label: "Novo Paciente", icon: Users, to: "/patients", color: "bg-primary/10 text-primary hover:bg-primary/20" },
