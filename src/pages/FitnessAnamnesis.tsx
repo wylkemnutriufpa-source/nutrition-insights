@@ -584,7 +584,8 @@ export default function FitnessAnamnesis() {
       user_id: targetUserId,
       answers,
       status: "completed",
-    };
+      ...getTenantIdForInsert(tenantId),
+    } as any;
 
     let error;
     if (draftId) {

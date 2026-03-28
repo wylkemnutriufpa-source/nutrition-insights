@@ -797,7 +797,8 @@ export default function Anamnesis() {
       computed_carbs: carbs,
       computed_fat: fat,
       status: "completed",
-    };
+      ...getTenantIdForInsert(tenantId),
+    } as any;
 
     let anamData: any;
     if (draftId) {
