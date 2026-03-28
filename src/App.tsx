@@ -166,6 +166,7 @@ const ClinicalControlTower = lazy(() => import("./pages/ClinicalControlTower"));
 const ConsentRequired = lazy(() => import("./pages/ConsentRequired"));
 const PaymentRequired = lazy(() => import("./pages/PaymentRequired"));
 const SystemHealthLive = lazy(() => import("./pages/SystemHealthLive"));
+const OperationalDashboard = lazy(() => import("./pages/OperationalDashboard"));
 const PatientOverview = lazy(() => import("./pages/PatientOverview"));
 const ClinicalWorkspace = lazy(() => import("./pages/ClinicalWorkspace"));
 const InvitePatient = lazy(() => import("./pages/InvitePatient"));
