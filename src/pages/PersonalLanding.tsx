@@ -2,29 +2,24 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
-import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import {
   Dumbbell, Users, BarChart3, Trophy, Zap, ArrowRight, Sparkles,
   CheckCircle2, Shield, TrendingUp, Calendar, ClipboardCheck,
   Target, Flame, Crown, Star, ChevronRight, Brain, MessageSquare,
 } from "lucide-react";
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 40 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as const } },
-};
-const stagger = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.1 } },
-};
+import {
+  FloatingOrb, LandingNav, HeroBadge, FeatureCard,
+  TestimonialCard, StepCard, LandingFooter, AnimatedStat,
+  fadeUp, stagger,
+} from "@/components/landing/LandingShared";
 
 const features = [
-  { icon: Dumbbell, title: "Montagem de Treinos", desc: "Crie rotinas A/B/C/D com séries, reps, carga, descanso e notas. Organize treinos completos em minutos.", color: "from-orange-500 to-red-500" },
-  { icon: Users, title: "Gestão de Alunos", desc: "Vincule alunos, acompanhe adesão individual, visualize histórico de treinos e evolução de performance.", color: "from-blue-500 to-cyan-500" },
-  { icon: BarChart3, title: "Analytics de Adesão", desc: "Dashboards em tempo real com taxa de conclusão, frequência semanal, streaks e tendências de evolução.", color: "from-emerald-500 to-teal-500" },
-  { icon: Trophy, title: "Gamificação Integrada", desc: "Treinos concluídos geram XP, streaks e medalhas. Rankings que motivam seus alunos a performar mais.", color: "from-amber-500 to-yellow-500" },
-  { icon: MessageSquare, title: "Chat com Alunos", desc: "Comunicação direta e rápida com cada aluno. Envie feedbacks, ajustes e motivação em tempo real.", color: "from-violet-500 to-purple-500" },
-  { icon: Brain, title: "Inteligência de Performance", desc: "Alertas automáticos de alunos inativos, queda de adesão e oportunidades de intervenção estratégica.", color: "from-rose-500 to-pink-500" },
+  { icon: Dumbbell, title: "Montagem de Treinos", desc: "Crie rotinas A/B/C/D com séries, reps, carga, descanso e notas. Organize treinos completos em minutos.", color: "text-orange-400", bg: "bg-orange-500/10", gradient: "from-orange-500 to-red-500" },
+  { icon: Users, title: "Gestão de Alunos", desc: "Vincule alunos, acompanhe adesão individual, visualize histórico de treinos e evolução de performance.", color: "text-blue-400", bg: "bg-blue-500/10", gradient: "from-blue-500 to-cyan-500" },
+  { icon: BarChart3, title: "Analytics de Adesão", desc: "Dashboards em tempo real com taxa de conclusão, frequência semanal, streaks e tendências de evolução.", color: "text-emerald-400", bg: "bg-emerald-500/10", gradient: "from-emerald-500 to-teal-500" },
+  { icon: Trophy, title: "Gamificação Integrada", desc: "Treinos concluídos geram XP, streaks e medalhas. Rankings que motivam seus alunos a performar mais.", color: "text-amber-400", bg: "bg-amber-500/10", gradient: "from-amber-500 to-yellow-500" },
+  { icon: MessageSquare, title: "Chat com Alunos", desc: "Comunicação direta e rápida com cada aluno. Envie feedbacks, ajustes e motivação em tempo real.", color: "text-violet-400", bg: "bg-violet-500/10", gradient: "from-violet-500 to-purple-500" },
+  { icon: Brain, title: "Inteligência de Performance", desc: "Alertas automáticos de alunos inativos, queda de adesão e oportunidades de intervenção estratégica.", color: "text-rose-400", bg: "bg-rose-500/10", gradient: "from-rose-500 to-pink-500" },
 ];
 
 const benefits = [
@@ -51,19 +46,9 @@ const testimonials = [
   { name: "Rafael S.", role: "Personal & Nutricionista — MG", text: "Uso o FitJourney como personal e minha esposa como nutricionista. O paciente compartilhado é genial.", avatar: "RS" },
 ];
 
-function FloatingOrb({ className, delay = 0 }: { className: string; delay?: number }) {
-  return (
-    <motion.div
-      className={`absolute rounded-full pointer-events-none blur-[120px] ${className}`}
-      animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
-      transition={{ duration: 6, repeat: Infinity, delay, ease: "easeInOut" }}
-    />
-  );
-}
-
 export default function PersonalLanding() {
   return (
-    <div className="min-h-screen bg-[#060a10] text-white overflow-hidden">
+    <div className="min-h-screen text-white overflow-hidden mesh-gradient-bg">
       <Helmet>
         <title>FitJourney para Personal Trainers — Plataforma de Treinos e Performance</title>
         <meta name="description" content="Gerencie treinos, alunos, adesão e performance em uma plataforma premium com gamificação e inteligência integrada." />
@@ -71,35 +56,20 @@ export default function PersonalLanding() {
 
       {/* BG effects */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0d1117] via-[#060a10] to-[#1a0a00]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(222,30%,6%)] via-[hsl(222,30%,6%)] to-[hsl(15,30%,6%)]" />
         <FloatingOrb className="w-[700px] h-[700px] bg-orange-600/[0.07] top-[-200px] left-[-100px]" />
         <FloatingOrb className="w-[500px] h-[500px] bg-red-600/[0.05] bottom-[10%] right-[-100px]" delay={2} />
         <FloatingOrb className="w-[400px] h-[400px] bg-amber-500/[0.04] top-[50%] left-[30%]" delay={4} />
+        <div className="particle-field" />
       </div>
 
-      {/* Nav */}
-      <nav className="relative z-20 flex items-center justify-between px-6 md:px-12 py-5 border-b border-white/[0.05]">
-        <Link to="/">
-          <FitJourneyLogo size="sm" />
-        </Link>
-        <div className="flex items-center gap-3">
-          <Link to="/auth">
-            <Button variant="ghost" className="text-white/60 hover:text-white text-sm">Login</Button>
-          </Link>
-          <Link to="/auth">
-            <Button className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-semibold text-sm px-5 rounded-xl shadow-lg shadow-orange-600/20">
-              Começar grátis
-            </Button>
-          </Link>
-        </div>
-      </nav>
+      <LandingNav ctaLabel="Começar grátis" ctaClassName="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-semibold rounded-xl shadow-lg shadow-orange-600/20" />
 
       {/* Hero */}
       <section className="relative z-10 px-6 md:px-12 pt-20 pb-28 max-w-6xl mx-auto">
         <motion.div initial="hidden" animate="show" variants={stagger} className="text-center">
-          <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-orange-500/20 bg-orange-500/[0.08] text-orange-400 text-xs font-medium mb-8">
-            <Dumbbell className="w-3.5 h-3.5" />
-            Plataforma #1 para Personal Trainers
+          <motion.div variants={fadeUp} className="mb-8">
+            <HeroBadge icon={Dumbbell} label="Plataforma #1 para Personal Trainers" colorClass="bg-orange-500/10 border-orange-500/20 text-orange-400" />
           </motion.div>
 
           <motion.h1 variants={fadeUp} className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] mb-6 tracking-tight">
@@ -113,12 +83,12 @@ export default function PersonalLanding() {
           </motion.h1>
 
           <motion.p variants={fadeUp} className="text-white/45 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
-            O FitJourney é a plataforma completa para personal trainers que querem organizar treinos, monitorar adesão e gamificar a jornada dos seus alunos — tudo em um só lugar.
+            O FitJourney é a plataforma completa para personal trainers que querem organizar treinos, monitorar adesão e gamificar a jornada dos seus alunos.
           </motion.p>
 
           <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link to="/auth">
-              <Button size="lg" className="h-14 px-10 text-base font-bold rounded-xl bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white shadow-xl shadow-orange-600/25 hover:shadow-orange-500/35 transition-all duration-300 hover:scale-105">
+              <Button size="lg" className="h-14 px-10 text-base font-bold rounded-xl bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white shadow-xl shadow-orange-600/25 hover:scale-105 transition-all">
                 <Flame className="w-5 h-5 mr-2" />
                 Criar minha conta grátis
               </Button>
@@ -135,14 +105,11 @@ export default function PersonalLanding() {
 
       {/* Stats */}
       <section className="relative z-10 px-6 md:px-12 pb-20 max-w-5xl mx-auto">
-        <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={stagger} className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {stats.map((stat) => (
-            <motion.div key={stat.label} variants={fadeUp} className="text-center p-6 rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur">
-              <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent mb-1">{stat.value}</div>
-              <div className="text-white/35 text-xs">{stat.label}</div>
-            </motion.div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {stats.map((stat, i) => (
+            <AnimatedStat key={stat.label} value={stat.value} label={stat.label} gradientClass="from-orange-400 to-red-400" />
           ))}
-        </motion.div>
+        </div>
       </section>
 
       {/* Features */}
@@ -156,14 +123,8 @@ export default function PersonalLanding() {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((f) => (
-              <motion.div key={f.title} variants={fadeUp} className="group relative rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur p-8 hover:bg-white/[0.04] hover:border-white/[0.12] transition-all duration-500 hover:-translate-y-1">
-                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${f.color} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
-                  <f.icon className="w-7 h-7 text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-white mb-2">{f.title}</h3>
-                <p className="text-white/35 text-sm leading-relaxed">{f.desc}</p>
-              </motion.div>
+            {features.map((f, i) => (
+              <FeatureCard key={f.title} icon={f.icon} title={f.title} desc={f.desc} colorClass={f.color} bgClass={f.bg} delay={i * 0.08} />
             ))}
           </div>
         </motion.div>
@@ -180,7 +141,7 @@ export default function PersonalLanding() {
               Cada funcionalidade foi pensada para a rotina real de quem prescreve treinos e acompanha a evolução de alunos diariamente.
             </p>
             <Link to="/auth">
-              <Button className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-semibold rounded-xl px-6 shadow-lg shadow-orange-600/20">
+              <Button className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-semibold rounded-xl px-6 shadow-lg shadow-orange-600/20 hover:scale-105 transition-transform">
                 <Sparkles className="w-4 h-4 mr-2" />
                 Experimentar agora
               </Button>
@@ -189,11 +150,20 @@ export default function PersonalLanding() {
 
           <motion.div variants={fadeUp} className="space-y-3">
             {benefits.map((b, i) => (
-              <motion.div key={i} variants={fadeUp} className="flex items-center gap-3 p-3 rounded-xl border border-white/[0.05] bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
-                <div className="w-8 h-8 rounded-lg bg-orange-500/15 flex items-center justify-center flex-shrink-0">
-                  <CheckCircle2 className="w-4 h-4 text-orange-400" />
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+                className="flex items-center gap-3 p-3 rounded-xl border border-white/[0.05] bg-white/[0.02] hover:bg-white/[0.04] transition-colors card-3d"
+              >
+                <div className="card-3d-inner flex items-center gap-3 w-full">
+                  <div className="w-8 h-8 rounded-lg bg-orange-500/15 flex items-center justify-center flex-shrink-0">
+                    <CheckCircle2 className="w-4 h-4 text-orange-400" />
+                  </div>
+                  <span className="text-white/70 text-sm">{b}</span>
                 </div>
-                <span className="text-white/70 text-sm">{b}</span>
               </motion.div>
             ))}
           </motion.div>
@@ -203,9 +173,8 @@ export default function PersonalLanding() {
       {/* Shared patient model */}
       <section className="relative z-10 px-6 md:px-12 py-24 max-w-5xl mx-auto">
         <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={stagger} className="text-center">
-          <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/[0.08] text-emerald-400 text-xs font-medium mb-6">
-            <Shield className="w-3.5 h-3.5" />
-            Modelo Compartilhado
+          <motion.div variants={fadeUp} className="mb-6">
+            <HeroBadge icon={Shield} label="Modelo Compartilhado" colorClass="bg-emerald-500/10 border-emerald-500/20 text-emerald-400" />
           </motion.div>
           <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl font-bold mb-4">
             Nutricionista + Personal = <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">Resultado máximo</span>
@@ -219,12 +188,14 @@ export default function PersonalLanding() {
               { icon: Target, label: "Nutri vê alimentação", color: "text-violet-400 bg-violet-500/10" },
               { icon: Crown, label: "Aluno vê tudo junto", color: "text-amber-400 bg-amber-500/10" },
             ].map((item) => (
-              <div key={item.label} className="flex flex-col items-center gap-3 p-6 rounded-2xl border border-white/[0.06] bg-white/[0.02]">
-                <div className={`w-12 h-12 rounded-xl ${item.color} flex items-center justify-center`}>
-                  <item.icon className="w-6 h-6" />
+              <motion.div key={item.label} className="card-3d" whileHover={{ scale: 1.05 }}>
+                <div className="card-3d-inner flex flex-col items-center gap-3 p-6 rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm hover:bg-white/[0.04] transition-all">
+                  <div className={`w-12 h-12 rounded-xl ${item.color} flex items-center justify-center`}>
+                    <item.icon className="w-6 h-6" />
+                  </div>
+                  <span className="text-white/70 text-sm font-medium">{item.label}</span>
                 </div>
-                <span className="text-white/70 text-sm font-medium">{item.label}</span>
-              </div>
+              </motion.div>
             ))}
           </motion.div>
         </motion.div>
@@ -239,20 +210,8 @@ export default function PersonalLanding() {
             </h2>
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((t) => (
-              <motion.div key={t.name} variants={fadeUp} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur p-7">
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />)}
-                </div>
-                <p className="text-white/50 text-sm leading-relaxed mb-6">"{t.text}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white text-sm font-bold">{t.avatar}</div>
-                  <div>
-                    <div className="text-white text-sm font-semibold">{t.name}</div>
-                    <div className="text-white/30 text-xs">{t.role}</div>
-                  </div>
-                </div>
-              </motion.div>
+            {testimonials.map((t, i) => (
+              <TestimonialCard key={t.name} text={t.text} name={`${t.name} — ${t.role}`} avatar={t.avatar} gradientClass="from-orange-500 to-red-500" delay={i * 0.1} />
             ))}
           </div>
         </motion.div>
@@ -267,9 +226,9 @@ export default function PersonalLanding() {
           <motion.p variants={fadeUp} className="text-white/40 text-base md:text-lg max-w-xl mx-auto mb-10">
             Comece agora mesmo, sem cartão de crédito. Organize seus treinos, acompanhe seus alunos e escale seus resultados.
           </motion.p>
-          <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <motion.div variants={fadeUp}>
             <Link to="/auth">
-              <Button size="lg" className="h-16 px-12 text-lg font-bold rounded-2xl bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white shadow-2xl shadow-orange-600/30 hover:shadow-orange-500/40 transition-all duration-300 hover:scale-105">
+              <Button size="lg" className="h-16 px-12 text-lg font-bold rounded-2xl bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white shadow-2xl shadow-orange-600/30 hover:scale-105 transition-all glow-pulse-border">
                 <Flame className="w-6 h-6 mr-2" />
                 Começar grátis agora
               </Button>
@@ -278,12 +237,7 @@ export default function PersonalLanding() {
         </motion.div>
       </section>
 
-      {/* Footer */}
-      <footer className="relative z-10 border-t border-white/[0.05] px-6 md:px-12 py-8 text-center">
-        <p className="text-white/15 text-xs flex items-center justify-center gap-1">
-          <Sparkles className="w-3 h-3" /> Powered by FitJourney — Nutrição + Treino + Performance
-        </p>
-      </footer>
+      <LandingFooter label="Nutrição + Treino + Performance" />
     </div>
   );
 }
