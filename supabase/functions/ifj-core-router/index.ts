@@ -1200,9 +1200,7 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
       let pid = intent.target_id || ctx.last_patient_id;
       if (!pid && intent.target_name) {
         const { found, ambiguous } = findByName(patients, intent.target_name);
-        if (ambiguous.length > 0) {
-          const disambigActions = ambiguous.map((p: any) => ({ label: `Anamnese de ${p.full_name}`, route: `/patients/${p.id}`, type: "navigate" }));
-          return fmt("Qual paciente?", "🔍", "disambiguation", `${ambiguous.length} pacientes com esse nome`, ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}** (${p.goal || "?"})`).join("\n"), disambigActions, intent, "clinical", ctx);
+        if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, inputText || intent.target_name || "", ctx, "clinical");
         }
         if (found) { pid = found.id; ctx.last_patient_id = found.id; ctx.last_patient_name = found.full_name; }
       }
