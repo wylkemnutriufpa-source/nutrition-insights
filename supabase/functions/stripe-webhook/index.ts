@@ -94,6 +94,8 @@ serve(async (req) => {
             } catch (_) { /* ignore */ }
           }
 
+          const tenantId = await resolveTenantForUser(supabase, userId);
+
           // Create payment record
           await supabase.from("payments").insert({
             user_id: userId,
@@ -103,6 +105,7 @@ serve(async (req) => {
             currency: "BRL",
             status: "paid",
             paid_at: new Date().toISOString(),
+            tenant_id: tenantId,
             metadata: {
               plan_name: planName,
               subscription_id: subscriptionId,
@@ -120,6 +123,7 @@ serve(async (req) => {
             date: new Date().toISOString().split("T")[0],
             status: "paid",
             category: "assinatura",
+            tenant_id: tenantId,
           });
 
           log("Payment + financial transaction created", { userId, amount, planName });
