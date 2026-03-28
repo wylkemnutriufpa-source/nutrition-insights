@@ -3,15 +3,32 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import type { ExperienceMode } from "@/hooks/useExperienceMode";
 
+/**
+ * IFJ Experience Mode Recommendation Engine
+ * 
+ * Motor determinístico que analisa sinais reais de uso do produto
+ * para sugerir o nível de experiência ideal para o profissional.
+ * 
+ * Sinais avaliados:
+ *  - Pacientes ativos vinculados
+ *  - Planos alimentares criados/publicados
+ *  - Protocolos clínicos ativos
+ *  - Alertas clínicos revisados (resolvidos)
+ *  - Automações criadas
+ *  - Tempo desde cadastro (maturidade)
+ */
+
 export interface ModeRecommendation {
   suggested: ExperienceMode;
   reason: string;
   confidence: number; // 0-100
   factors: {
-    patientCount: number;
+    activePatients: number;
+    mealPlansCreated: number;
+    protocolsUsed: number;
+    alertsReviewed: number;
+    automationsCreated: number;
     daysSinceSignup: number;
-    featuresUsed: number;
-    recentSessionCount: number;
   };
   loading: boolean;
 }
@@ -25,7 +42,14 @@ export function useExperienceModeRecommendation(): ModeRecommendation {
     suggested: "pro",
     reason: "",
     confidence: 0,
-    factors: { patientCount: 0, daysSinceSignup: 0, featuresUsed: 0, recentSessionCount: 0 },
+    factors: {
+      activePatients: 0,
+      mealPlansCreated: 0,
+      protocolsUsed: 0,
+      alertsReviewed: 0,
+      automationsCreated: 0,
+      daysSinceSignup: 0,
+    },
     loading: true,
   });
 
@@ -47,7 +71,10 @@ export function useExperienceModeRecommendation(): ModeRecommendation {
     computeRecommendation(user.id).then((rec) => {
       setResult({ ...rec, loading: false });
       try {
-        localStorage.setItem(RECOMMENDATION_CACHE_KEY, JSON.stringify({ data: rec, ts: Date.now() }));
+        localStorage.setItem(
+          RECOMMENDATION_CACHE_KEY,
+          JSON.stringify({ data: rec, ts: Date.now() })
+        );
       } catch {}
     });
   }, [user]);
@@ -55,70 +82,140 @@ export function useExperienceModeRecommendation(): ModeRecommendation {
   return result;
 }
 
-async function computeRecommendation(userId: string): Promise<Omit<ModeRecommendation, "loading">> {
-  const [patientsRes, profileRes, aiUsageRes, automationRes] = await Promise.all([
-    supabase.from("nutritionist_patients").select("id", { count: "exact", head: true }).eq("nutritionist_id", userId),
-    supabase.from("profiles").select("created_at").eq("id", userId).single(),
-    supabase.from("ai_usage_tracking").select("id", { count: "exact", head: true }).eq("user_id", userId),
-    supabase.from("automation_rules").select("id", { count: "exact", head: true }).eq("nutritionist_id", userId),
+async function computeRecommendation(
+  userId: string
+): Promise<Omit<ModeRecommendation, "loading">> {
+  // Fetch real product signals in parallel
+  const [
+    patientsRes,
+    profileRes,
+    mealPlansRes,
+    protocolsRes,
+    alertsReviewedRes,
+    automationRes,
+  ] = await Promise.all([
+    // Pacientes ativos vinculados
+    supabase
+      .from("nutritionist_patients")
+      .select("id", { count: "exact", head: true })
+      .eq("nutritionist_id", userId),
+    // Profile — usar user_id (auth.uid() = profiles.user_id, NÃO profiles.id)
+    supabase
+      .from("profiles")
+      .select("created_at")
+      .eq("user_id", userId)
+      .single(),
+    // Planos alimentares criados
+    supabase
+      .from("meal_plans")
+      .select("id", { count: "exact", head: true })
+      .eq("nutritionist_id", userId),
+    // Protocolos clínicos usados (atribuídos a pacientes)
+    supabase
+      .from("patient_protocols")
+      .select("id", { count: "exact", head: true })
+      .eq("nutritionist_id", userId),
+    // Alertas clínicos revisados/resolvidos
+    supabase
+      .from("clinical_alerts")
+      .select("id", { count: "exact", head: true })
+      .eq("nutritionist_id", userId)
+      .eq("is_active", false),
+    // Automações criadas
+    supabase
+      .from("automation_rules")
+      .select("id", { count: "exact", head: true })
+      .eq("nutritionist_id", userId),
   ]);
 
-  const patientCount = patientsRes.count ?? 0;
+  const activePatients = patientsRes.count ?? 0;
+  const mealPlansCreated = mealPlansRes.count ?? 0;
+  const protocolsUsed = protocolsRes.count ?? 0;
+  const alertsReviewed = alertsReviewedRes.count ?? 0;
+  const automationsCreated = automationRes.count ?? 0;
   const daysSinceSignup = profileRes.data?.created_at
-    ? Math.floor((Date.now() - new Date(profileRes.data.created_at).getTime()) / (1000 * 60 * 60 * 24))
+    ? Math.floor(
+        (Date.now() - new Date(profileRes.data.created_at).getTime()) /
+          (1000 * 60 * 60 * 24)
+      )
     : 0;
-  const featuresUsed = (aiUsageRes.count ?? 0) + (automationRes.count ?? 0);
-  // Approximate session count from recent AI usage as proxy
-  const recentSessionCount = aiUsageRes.count ?? 0;
 
-  const factors = { patientCount, daysSinceSignup, featuresUsed, recentSessionCount };
+  const factors = {
+    activePatients,
+    mealPlansCreated,
+    protocolsUsed,
+    alertsReviewed,
+    automationsCreated,
+    daysSinceSignup,
+  };
 
-  // Scoring
+  // ── IFJ Scoring Engine ──
+  // Cada sinal contribui com peso proporcional à maturidade clínica
   let score = 0;
 
-  // Patient volume
-  if (patientCount >= 30) score += 40;
-  else if (patientCount >= 10) score += 25;
-  else if (patientCount >= 3) score += 10;
+  // 1. Volume de pacientes (peso máx: 30)
+  if (activePatients >= 30) score += 30;
+  else if (activePatients >= 15) score += 22;
+  else if (activePatients >= 5) score += 12;
+  else if (activePatients >= 1) score += 5;
 
-  // Platform tenure
-  if (daysSinceSignup >= 90) score += 20;
-  else if (daysSinceSignup >= 30) score += 12;
-  else if (daysSinceSignup >= 7) score += 5;
+  // 2. Planos alimentares criados (peso máx: 20)
+  if (mealPlansCreated >= 20) score += 20;
+  else if (mealPlansCreated >= 10) score += 14;
+  else if (mealPlansCreated >= 3) score += 8;
+  else if (mealPlansCreated >= 1) score += 3;
 
-  // Feature breadth
-  if (featuresUsed >= 20) score += 25;
-  else if (featuresUsed >= 5) score += 15;
-  else if (featuresUsed >= 1) score += 5;
+  // 3. Protocolos clínicos usados (peso máx: 15)
+  if (protocolsUsed >= 10) score += 15;
+  else if (protocolsUsed >= 3) score += 10;
+  else if (protocolsUsed >= 1) score += 5;
 
-  // Automation usage (strong advanced signal)
-  if ((automationRes.count ?? 0) >= 3) score += 15;
-  else if ((automationRes.count ?? 0) >= 1) score += 8;
+  // 4. Alertas clínicos revisados — sinal de engajamento com IFJ (peso máx: 10)
+  if (alertsReviewed >= 10) score += 10;
+  else if (alertsReviewed >= 3) score += 6;
+  else if (alertsReviewed >= 1) score += 3;
 
+  // 5. Automações — sinal forte de uso avançado (peso máx: 15)
+  if (automationsCreated >= 5) score += 15;
+  else if (automationsCreated >= 2) score += 10;
+  else if (automationsCreated >= 1) score += 5;
+
+  // 6. Maturidade na plataforma (peso máx: 10)
+  if (daysSinceSignup >= 90) score += 10;
+  else if (daysSinceSignup >= 30) score += 6;
+  else if (daysSinceSignup >= 7) score += 3;
+
+  // ── Classificação ──
   let suggested: ExperienceMode;
   let reason: string;
   let confidence: number;
 
-  if (score >= 70) {
+  if (score >= 65) {
     suggested = "advanced";
-    reason = "Você já usa automações e gerencia muitos pacientes — o modo Avançado libera todo o potencial do IFJ.";
+    reason =
+      "Você gerencia muitos pacientes, usa protocolos e automações — o modo Avançado libera todo o potencial da IFJ.";
     confidence = Math.min(score, 95);
   } else if (score >= 30) {
     suggested = "pro";
-    reason = "Com sua base de pacientes e uso atual, o modo Profissional equilibra simplicidade e poder clínico.";
+    reason =
+      "Com sua base de pacientes e planos criados, o modo Profissional equilibra simplicidade e inteligência clínica.";
     confidence = Math.min(score + 10, 85);
   } else {
     suggested = "basic";
-    reason = "O modo Básico mantém a interface limpa enquanto você conhece a plataforma.";
+    reason =
+      "O modo Básico mantém a interface limpa enquanto você conhece a plataforma.";
     confidence = Math.max(60, 100 - score);
   }
 
-  // Save for analytics (fire and forget)
-  supabase.from("ai_usage_tracking").insert({
-    user_id: userId,
-    feature_key: "experience_mode_recommendation",
-    metadata: { suggested, score, factors } as any,
-  }).then(() => {});
+  // Registrar evento IFJ (fire and forget) — nomenclatura IFJ, não genérica
+  supabase
+    .from("ai_usage_tracking")
+    .insert({
+      user_id: userId,
+      feature_key: "ifj_experience_mode_recommendation",
+      metadata: { suggested, score, factors } as any,
+    })
+    .then(() => {});
 
   return { suggested, reason, confidence, factors };
 }

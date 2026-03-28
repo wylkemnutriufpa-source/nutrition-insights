@@ -28,7 +28,7 @@ export default function ExperienceModeRecommendation() {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-foreground">
-          Recomendamos o modo {MODE_LABELS[suggested]} para você 🚀
+          IFJ recomenda o modo {MODE_LABELS[suggested]} para você 🚀
         </p>
         <p className="text-[11px] text-muted-foreground mt-0.5">{reason}</p>
         <div className="flex items-center gap-2 mt-2">
