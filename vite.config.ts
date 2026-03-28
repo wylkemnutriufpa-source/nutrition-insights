@@ -31,15 +31,28 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         importScripts: ["/sw-push.js"],
+        // Force clean precache on every deploy — no stale assets
+        cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
+            // Supabase API: ALWAYS network-first, very short cache for offline only
             urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/.*/i,
             handler: "NetworkFirst",
             options: {
               cacheName: "supabase-api-cache",
-              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 30 },
-              networkTimeoutSeconds: 5,
+              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 2 }, // 2min max (was 30min)
+              networkTimeoutSeconds: 3, // faster fallback (was 5s)
             },
+          },
+          {
+            // Supabase Edge Functions: NEVER cache
+            urlPattern: /^https:\/\/.*\.supabase\.co\/functions\/.*/i,
+            handler: "NetworkOnly",
+          },
+          {
+            // Supabase Auth: NEVER cache
+            urlPattern: /^https:\/\/.*\.supabase\.co\/auth\/.*/i,
+            handler: "NetworkOnly",
           },
           {
             urlPattern: /^https:\/\/.*\.supabase\.co\/storage\/v1\/.*/i,
