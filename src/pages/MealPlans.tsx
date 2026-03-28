@@ -121,7 +121,11 @@ export default function MealPlans() {
             <h1 className="font-display text-2xl font-bold flex items-center gap-2">
               <ClipboardList className="w-7 h-7 text-primary" /> Planos Alimentares
             </h1>
-            <p className="text-muted-foreground text-sm">{effectivePlansCount} planos ativos</p>
+            <p className="text-muted-foreground text-sm">
+              {showSimplifiedActions
+                ? `${effectivePlansCount} planos ativos`
+                : `${effectivePlansCount} planos ativos · Gerencie todos os planos alimentares`}
+            </p>
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
