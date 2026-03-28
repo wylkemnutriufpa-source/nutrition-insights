@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getStorageUrl } from "@/lib/storageUtils";
 
 interface UploadOptions {
   bucket: string;
@@ -10,7 +11,7 @@ interface UploadOptions {
 
 /**
  * Upload a file to storage with exponential backoff retry.
- * Returns the public URL on success, null on failure.
+ * Returns a signed URL (private buckets) or public URL on success, null on failure.
  */
 export async function uploadWithRetry({
   bucket,
@@ -28,8 +29,7 @@ export async function uploadWithRetry({
     const { error } = await supabase.storage.from(bucket).upload(filePath, file);
 
     if (!error) {
-      const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(filePath);
-      return urlData.publicUrl;
+      return getStorageUrl(bucket, filePath);
     }
 
     // Don't retry on auth or validation errors
