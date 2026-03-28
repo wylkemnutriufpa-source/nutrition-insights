@@ -148,7 +148,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
         message: "Seu nutricionista ativou o fluxo automático de onboarding. Complete as etapas para receber seu plano alimentar personalizado.",
         type: "success",
         action_url: "/onboarding",
-      });
+      } as any);
       fetchPipeline();
     }
     setCreating(false);
