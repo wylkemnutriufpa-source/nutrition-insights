@@ -447,18 +447,19 @@ export default function PlanBatchAudit() {
 
       const { data: newPlan, error: insertErr } = await supabase
         .from("meal_plans")
-        .insert({
+        .insert([{
           patient_id: originalPlan.patient_id,
           nutritionist_id: originalPlan.nutritionist_id,
           title: `${originalPlan.title} (Reformulado v3)`,
-          plan_status: "draft_auto_generated" as any,
+          plan_status: "draft_auto_generated",
+          start_date: new Date().toISOString().split("T")[0],
           total_target_calories: originalPlan.total_target_calories,
           total_target_protein: originalPlan.total_target_protein,
           total_target_carbs: originalPlan.total_target_carbs,
           total_target_fat: originalPlan.total_target_fat,
           template_id: originalPlan.template_id,
           tenant_id: originalPlan.tenant_id,
-        })
+        }])
         .select("id")
         .single();
 
