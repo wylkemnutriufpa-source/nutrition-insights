@@ -136,6 +136,7 @@ function getLevel(percentage: number): { level: number; title: string; color: st
 
 export default function SystemUsageCard() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [usedFeatures, setUsedFeatures] = useState<Set<string>>(new Set());
   const [featureStatuses, setFeatureStatuses] = useState<Record<string, FeatureStatus>>({});
   const [loading, setLoading] = useState(true);
