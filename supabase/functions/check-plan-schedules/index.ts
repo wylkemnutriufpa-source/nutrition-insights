@@ -30,6 +30,11 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
+    async function resolveTenantForUser(uid: string): Promise<string | null> {
+      const { data } = await supabase.from("user_tenants").select("tenant_id").eq("user_id", uid).limit(1).maybeSingle();
+      return data?.tenant_id || null;
+    }
+
     const today = new Date().toISOString().split("T")[0];
 
     // Get all scheduled plans that should be checked today
