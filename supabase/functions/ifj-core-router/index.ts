@@ -1113,7 +1113,16 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
     }
     case "lab_pending": return fmt("Exames pendentes", "🔬", "info", "Em desenvolvimento", "🔬 Consulte por paciente.", [], intent, "clinical", ctx);
     case "meal_plan": {
-      const pid = intent.target_id || ctx.last_patient_id;
+      let pid = intent.target_id || ctx.last_patient_id;
+      // Resolve patient by name if no ID
+      if (!pid && intent.target_name) {
+        const { found, ambiguous } = findByName(patients, intent.target_name);
+        if (ambiguous.length > 0) {
+          const disambigActions = ambiguous.map((p: any) => ({ label: `Plano de ${p.full_name}`, route: `/patients/${p.id}`, type: "navigate" }));
+          return fmt("Qual paciente?", "🔍", "disambiguation", `${ambiguous.length} pacientes com esse nome`, ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}** (${p.goal || "?"})`).join("\n"), disambigActions, intent, "clinical", ctx);
+        }
+        if (found) { pid = found.id; ctx.last_patient_id = found.id; ctx.last_patient_name = found.full_name; }
+      }
       if (!pid) return fmt("Quem?", "❓", "error", "Diga o nome.", "", [], intent, "clinical", ctx);
       const { data: plan } = await supabase.from("meal_plans").select("id, title, plan_status, is_active, start_date, end_date, total_target_calories").eq("patient_id", pid).eq("is_active", true).limit(1).maybeSingle();
       const p = patients.find(x => x.id === pid);
