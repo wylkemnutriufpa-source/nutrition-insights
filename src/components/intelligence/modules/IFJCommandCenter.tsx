@@ -202,7 +202,7 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
         resource_type: "ifj_command_center",
         resource_id: detectedRole,
         metadata: { ...metadata, role: detectedRole, timestamp: new Date().toISOString() },
-      });
+      } as any);
     } catch (e) {
       console.error("IFJ audit log failed:", e);
     }

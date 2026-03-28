@@ -340,7 +340,7 @@ function BrandingTab() {
       const { error } = await supabase.from("branding_settings").update(payload).eq("nutritionist_id", user.id);
       if (error) toast.error(error.message); else toast.success("Branding atualizado!");
     } else {
-      const { error } = await supabase.from("branding_settings").insert(payload);
+      const { error } = await supabase.from("branding_settings").insert(payload as any);
       if (error) toast.error(error.message); else toast.success("Branding salvo!");
     }
     setSaving(false);
