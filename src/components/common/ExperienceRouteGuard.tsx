@@ -1,21 +1,21 @@
-import { Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useExperienceMode } from "@/hooks/useExperienceMode";
 
-interface ExperienceRouteGuardProps {
-  children: React.ReactNode;
-}
-
 /**
- * Wraps a route to redirect to "/" if the current experience mode
- * does not allow accessing the current path.
+ * Automatically redirects to "/" if the current route is not allowed
+ * by the active experience mode. Place inside <BrowserRouter>.
  */
-export default function ExperienceRouteGuard({ children }: ExperienceRouteGuardProps) {
-  const { isRouteAllowed } = useExperienceMode();
-  const currentPath = window.location.pathname;
+export default function ExperienceRouteGuard() {
+  const { isRouteAllowed, mode } = useExperienceMode();
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  if (!isRouteAllowed(currentPath)) {
-    return <Navigate to="/" replace />;
-  }
+  useEffect(() => {
+    if (!isRouteAllowed(location.pathname)) {
+      navigate("/", { replace: true });
+    }
+  }, [location.pathname, mode, isRouteAllowed, navigate]);
 
-  return <>{children}</>;
+  return null;
 }
