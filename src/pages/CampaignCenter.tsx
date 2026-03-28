@@ -142,6 +142,7 @@ export default function CampaignCenter() {
           scheduled_at: form.scheduled_at || null,
           status,
           created_by: user.id,
+          ...getTenantIdForInsert(tenantId),
         });
         toast.success(status === "running" ? "🚀 Campanha enviada!" : "💾 Rascunho salvo");
       }

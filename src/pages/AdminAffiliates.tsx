@@ -101,6 +101,7 @@ export default function AdminAffiliates() {
         affiliate_type: form.affiliate_type as any,
         first_payment_commission_percent: parseFloat(form.first_payment_commission_percent),
         recurring_commission_percent: parseFloat(form.recurring_commission_percent),
+        ...getTenantIdForInsert(tenantId),
       }]);
       if (error) throw error;
     },

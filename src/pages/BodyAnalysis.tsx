@@ -132,6 +132,7 @@ export default function BodyAnalysis() {
       side_image_url: sideUrl,
       back_image_url: backUrl,
       notes: notes || null,
+      ...getTenantIdForInsert(tenantId),
     }).select().single();
 
     if (error) { toast.error(error.message); return; }

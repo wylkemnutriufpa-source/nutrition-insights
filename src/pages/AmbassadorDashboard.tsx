@@ -48,6 +48,7 @@ const MILESTONES = [
 
 export default function AmbassadorDashboard() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [copied, setCopied] = useState(false);
   const queryClient = useQueryClient();
 
@@ -61,9 +62,10 @@ export default function AmbassadorDashboard() {
   });
 
   const { data: affiliate, isLoading: loadingAffiliate } = useQuery({
-    queryKey: ["my-affiliate", user?.id],
+    queryKey: ["my-affiliate", user?.id, tenantId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("affiliates").select("*").eq("user_id", user!.id).eq("is_active", true).maybeSingle();
+      const q = supabase.from("affiliates").select("*").eq("user_id", user!.id).eq("is_active", true);
+      const { data, error } = await withTenantFilter(q, tenantId).maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -78,6 +80,7 @@ export default function AmbassadorDashboard() {
         user_id: user.id, email: user.email, full_name: profile?.full_name || user.email,
         referral_code: code, first_payment_commission_percent: 20, recurring_commission_percent: 5,
         affiliate_type: "regular" as any, is_active: true,
+        ...getTenantIdForInsert(tenantId),
       });
       if (error) throw error;
     },
