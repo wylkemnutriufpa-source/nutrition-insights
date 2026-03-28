@@ -8,13 +8,44 @@ const corsHeaders = {
 };
 
 // ── Clinical Tolerance Matrix ─────────────────────────────────────────────────
-// clinically justified: protein is stricter (preserves lean mass / avoids excess)
 const TOLERANCE = {
-    calories: 0.05,  // ±5%
-    protein: 0.05,  // ±5%  (most critical)
-    carbs: 0.10,  // ±10%
-    fat: 0.10,  // ±10%
+    calories: 0.05,
+    protein: 0.05,
+    carbs: 0.10,
+    fat: 0.10,
 };
+
+// ── Blocked Foods (must mirror mealPlanFoodRules.ts) ──────────────────────────
+const BLOCKED_FOODS = [
+    "salmão", "salmon", "atum fresco",
+    "kefir", "cottage", "ricota importada",
+    "quinoa", "quinua", "amaranto",
+    "castanha-do-pará", "castanha do pará", "macadâmia", "pistache",
+    "framboesa", "mirtilo", "blueberry", "cranberry", "açaí premium",
+    "tofu", "tempeh", "edamame",
+    "granola premium", "mix de nuts", "trail mix",
+    "azeite trufado", "vinagre balsâmico",
+    "pasta de amendoim importada", "manteiga de amêndoa",
+    "whey protein", "whey", "caseína", "creatina",
+    "wrap integral", "pão artesanal",
+    "leite de amêndoa", "leite de coco", "leite de aveia",
+    "abacate toast", "overnight oats",
+    "cream cheese", "philadelphia",
+    "iogurte grego importado", "iogurte grego",
+    "coalhada", "kombucha",
+    "semente de chia importada", "hemp seed",
+    "tahini", "tahine", "hummus",
+    "burrata", "brie", "camembert", "gorgonzola",
+];
+
+function normalize(text: string): string {
+    return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+}
+
+function findBlockedFoods(text: string): string[] {
+    const n = normalize(text);
+    return BLOCKED_FOODS.filter(blocked => n.includes(normalize(blocked)));
+}
 
 type MacroKey = keyof typeof TOLERANCE;
 
@@ -29,21 +60,14 @@ interface MacroResult {
     rule: string;
 }
 
-function checkMacro(
-    label: string,
-    unit: string,
-    target: number,
-    actual: number,
-    key: MacroKey
-): MacroResult {
+function checkMacro(label: string, unit: string, target: number, actual: number, key: MacroKey): MacroResult {
     if (!target || target === 0) {
         return { label, unit, target: 0, actual, diff_pct: 0, tolerance: TOLERANCE[key], passed: true, rule: "sem_meta" };
     }
     const diff_pct = ((actual - target) / target);
     const passed = Math.abs(diff_pct) <= TOLERANCE[key];
     return {
-        label,
-        unit,
+        label, unit,
         target: Math.round(target),
         actual: Math.round(actual),
         diff_pct: Math.round(diff_pct * 1000) / 10,
@@ -82,14 +106,13 @@ serve(async (req) => {
         if (itemsErr) throw itemsErr;
         if (!items || items.length === 0) {
             return new Response(JSON.stringify({
-                success: false,
-                status: "reprovado",
+                success: false, status: "reprovado", score: 0,
                 errors: [{ rule: "plano_vazio", message: "O plano não tem refeições cadastradas.", weight: 100 }],
-                macros: null, restrictions_violated: [], audit: null,
+                macros: null, restrictions_violated: [], blocked_foods_found: [], audit: null,
             }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
 
-        const days = new Set(items.map((i) => i.day_of_week));
+        const days = new Set(items.map((i: any) => i.day_of_week));
         const numDays = days.size || 1;
 
         let totalCals = 0, totalP = 0, totalC = 0, totalF = 0;
@@ -109,6 +132,28 @@ serve(async (req) => {
         const dailyC = totalC / numDays;
         const dailyF = totalF / numDays;
 
+        // ── Blocked Foods Audit ──────────────────────────────────────────────
+        const blockedFoodsFound: Array<{ food: string; found_in: string; day: number; meal_type: string }> = [];
+        
+        for (const item of items) {
+            const desc = item.description || "";
+            const found = findBlockedFoods(desc);
+            for (const food of found) {
+                blockedFoodsFound.push({
+                    food,
+                    found_in: item.title || item.meal_type,
+                    day: item.day_of_week,
+                    meal_type: item.meal_type,
+                });
+            }
+        }
+
+        // Deduplicate by food+day+meal_type
+        const uniqueBlocked = blockedFoodsFound.filter((item, idx, arr) =>
+            arr.findIndex(x => x.food === item.food && x.day === item.day && x.meal_type === item.meal_type) === idx
+        );
+
+        // ── Fetch targets ────────────────────────────────────────────────────
         const { data: assessment } = await supabase
             .from("physical_assessments")
             .select("calories_target, protein_target, carbs_target, fat_target")
@@ -145,7 +190,6 @@ serve(async (req) => {
                 checkMacro("Carboidrato", "g", targetC, dailyC, "carbs"),
                 checkMacro("Gordura", "g", targetF, dailyF, "fat"),
             ];
-
             for (const c of checks) {
                 macroResults.push(c);
                 if (c.rule !== "sem_meta" && !c.passed) {
@@ -158,6 +202,17 @@ serve(async (req) => {
             }
         }
 
+        // ── Blocked food errors ──────────────────────────────────────────────
+        if (uniqueBlocked.length > 0) {
+            const uniqueFoods = [...new Set(uniqueBlocked.map(b => b.food))];
+            errors.push({
+                rule: "alimentos_bloqueados",
+                message: `${uniqueBlocked.length} ocorrência(s) de alimentos inadequados: ${uniqueFoods.join(", ")}. Estes alimentos são caros, importados ou de baixa acessibilidade.`,
+                weight: Math.min(40, uniqueBlocked.length * 3),
+            });
+        }
+
+        // ── Restriction violations ───────────────────────────────────────────
         const restrictionsViolated: Array<{ restriction: string; keyword_found: string }> = [];
         const answers = (anamnesis?.answers as any) ?? {};
         const intoleranceMap: Record<string, string[]> = {
@@ -184,18 +239,24 @@ serve(async (req) => {
             errors.push({ rule: "restricao_alimentar", message: `Restrição violada: "${rv.restriction}" — ingrediente "${rv.keyword_found}" encontrado no plano.`, weight: 50 });
         }
 
+        // ── Score & result ───────────────────────────────────────────────────
         const scoreDeduction = errors.reduce((s, e) => s + e.weight, 0);
         const score = Math.max(0, 100 - scoreDeduction);
         const passed = errors.length === 0;
         const status = passed ? "aprovado" : "reprovado";
 
         const audit = {
-            engine: "validate-meal-plan@deterministic_v2",
+            engine: "validate-meal-plan@deterministic_v3",
             run_at: new Date().toISOString(),
             inputs: { meal_plan_id, patient_id: patientId, num_days: numDays, num_items: items.length, source: assessment ? "physical_assessment" : "anamnesis" },
             targets: { kcal: targetCals, protein: targetP, carbs: targetC, fat: targetF },
             actuals: { kcal: Math.round(dailyCals), protein: Math.round(dailyP), carbs: Math.round(dailyC), fat: Math.round(dailyF) },
             tolerance_matrix: TOLERANCE,
+            blocked_foods_audit: {
+                total_occurrences: uniqueBlocked.length,
+                unique_foods: [...new Set(uniqueBlocked.map(b => b.food))],
+                details: uniqueBlocked,
+            },
             score,
             rules_fired: errors.map((e) => e.rule),
         };
@@ -211,13 +272,19 @@ serve(async (req) => {
             await supabase.from("patient_timeline").insert({
                 patient_id: patientId, event_type: "meal_plan",
                 title: "Plano Reprovado pelo Motor Clínico ❌",
-                description: `Score: ${score}/100 — ${errors.length} divergência(s) encontrada(s). Corrija e re-audite.`,
+                description: `Score: ${score}/100 — ${errors.length} divergência(s) encontrada(s). ${uniqueBlocked.length > 0 ? `Alimentos bloqueados: ${[...new Set(uniqueBlocked.map(b => b.food))].join(", ")}.` : ""}`,
                 metadata: { type: "plan_validation_failed", meal_plan_id, score, errors, ...audit },
             });
         }
 
-        return new Response(JSON.stringify({ success: passed, status, score, macros: macroResults, restrictions_violated: restrictionsViolated, errors, audit }),
-            { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({
+            success: passed, status, score,
+            macros: macroResults,
+            restrictions_violated: restrictionsViolated,
+            blocked_foods_found: uniqueBlocked,
+            errors,
+            audit,
+        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     } catch (e: any) {
         console.error("validate-meal-plan error:", e);

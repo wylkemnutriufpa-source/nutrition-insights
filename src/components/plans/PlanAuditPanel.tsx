@@ -13,9 +13,11 @@ interface MacroResult {
 }
 interface ValidationError { rule: string; message: string; weight: number; }
 interface RestrictionViolation { restriction: string; keyword_found: string; }
+interface BlockedFoodFound { food: string; found_in: string; day: number; meal_type: string; }
 interface AuditResult {
     success: boolean; status: "aprovado" | "reprovado"; score: number;
     macros: MacroResult[] | null; restrictions_violated: RestrictionViolation[];
+    blocked_foods_found: BlockedFoodFound[];
     errors: ValidationError[]; audit: Record<string, any>;
 }
 interface Props { mealPlanId: string; onApproved?: () => void; }
@@ -127,6 +129,21 @@ export default function PlanAuditPanel({ mealPlanId, onApproved }: Props) {
                                 <div className="space-y-4">
                                     {result.macros.map((m) => <MacroBar key={m.label} m={m} />)}
                                 </div>
+                            </div>
+                        )}
+
+                        {result.blocked_foods_found && result.blocked_foods_found.length > 0 && (
+                            <div className="rounded-lg bg-orange-500/10 border border-orange-500/20 p-3 space-y-1.5">
+                                <h4 className="text-sm font-semibold text-orange-400 flex items-center gap-1.5">
+                                    <AlertTriangle className="w-4 h-4" /> Alimentos Inadequados ({result.blocked_foods_found.length})
+                                </h4>
+                                <p className="text-[10px] text-muted-foreground">Alimentos caros, importados ou de baixa acessibilidade detectados no plano.</p>
+                                {result.blocked_foods_found.map((bf, i) => (
+                                    <div key={i} className="text-xs text-orange-300">
+                                        <span className="font-medium capitalize">{bf.food}</span>{" "}
+                                        — encontrado em <code className="bg-orange-900/30 px-1 rounded">{bf.found_in}</code> (dia {bf.day + 1})
+                                    </div>
+                                ))}
                             </div>
                         )}
 
