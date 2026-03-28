@@ -66,6 +66,7 @@ export default function PatientDetail() {
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
   const queryClient = useQueryClient();
+  const expUI = useExperienceUI();
 
   // React Query hook
   const { data, isLoading, refetch } = usePatientDetail(patientId);
