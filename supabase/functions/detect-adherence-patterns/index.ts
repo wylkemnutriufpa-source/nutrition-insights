@@ -247,6 +247,7 @@ Deno.serve(async (req) => {
               title: "🧠 Padrão Comportamental Detectado",
               message: patternLabel,
               type: "automation",
+              tenant_id: patientTenant,
               metadata: {
                 patient_id: patientId,
                 rule_id: rule.id,
