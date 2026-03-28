@@ -18,13 +18,13 @@ const AlertsModule = lazy(() => import("@/components/workspace/WorkspaceAlerts")
 const OnboardingsModule = lazy(() => import("@/components/workspace/WorkspaceOnboardings"));
 
 const TABS = [
-  { key: "patients", label: "Pacientes", icon: Users },
-  { key: "meal-plans", label: "Planos", icon: UtensilsCrossed },
-  { key: "templates", label: "Templates", icon: BookOpen },
-  { key: "recipes", label: "Receitas", icon: ChefHat },
-  { key: "protocols", label: "Protocolos", icon: Zap },
-  { key: "alerts", label: "Alertas", icon: AlertTriangle },
-  { key: "onboardings", label: "Onboardings", icon: ClipboardCheck },
+  { key: "patients", label: "Pacientes", icon: Users, minMode: "basic" as const },
+  { key: "meal-plans", label: "Planos", icon: UtensilsCrossed, minMode: "basic" as const },
+  { key: "templates", label: "Templates", icon: BookOpen, minMode: "pro" as const },
+  { key: "recipes", label: "Receitas", icon: ChefHat, minMode: "basic" as const },
+  { key: "protocols", label: "Protocolos", icon: Zap, minMode: "pro" as const },
+  { key: "alerts", label: "Alertas", icon: AlertTriangle, minMode: "pro" as const },
+  { key: "onboardings", label: "Onboardings", icon: ClipboardCheck, minMode: "advanced" as const },
 ];
 
 function ModuleLoader() {
