@@ -166,6 +166,7 @@ const ClinicalControlTower = lazy(() => import("./pages/ClinicalControlTower"));
 const ConsentRequired = lazy(() => import("./pages/ConsentRequired"));
 const PaymentRequired = lazy(() => import("./pages/PaymentRequired"));
 const SystemHealthLive = lazy(() => import("./pages/SystemHealthLive"));
+const OperationalDashboard = lazy(() => import("./pages/OperationalDashboard"));
 const PatientOverview = lazy(() => import("./pages/PatientOverview"));
 const ClinicalWorkspace = lazy(() => import("./pages/ClinicalWorkspace"));
 const InvitePatient = lazy(() => import("./pages/InvitePatient"));
@@ -501,6 +502,7 @@ const App = () => (
               <Route path="/system-diagnostics/realtime" element={<AdminRoute><LP section="Realtime Debug"><RealtimeDebugCenter /></LP></AdminRoute>} />
               <Route path="/admin/personal-workouts" element={<AdminRoute><LP section="Personal Trainer"><PersonalWorkouts /></LP></AdminRoute>} />
               <Route path="/system-health-live" element={<AdminRoute><LP section="System Health"><SystemHealthLive /></LP></AdminRoute>} />
+              <Route path="/ops-center" element={<AdminRoute><LP section="Operations Center"><OperationalDashboard /></LP></AdminRoute>} />
               <Route path="/professional/crm" element={<NutritionistRoute><LP section="CRM"><ClinicalCRM /></LP></NutritionistRoute>} />
               <Route path="/clinical-brain" element={<NutritionistRoute><LP section="Clinical Brain"><ClinicalBrain /></LP></NutritionistRoute>} />
               <Route path="/intelligence-settings" element={<NutritionistRoute><LP section="Inteligência FitJourney"><IntelligenceSettings /></LP></NutritionistRoute>} />

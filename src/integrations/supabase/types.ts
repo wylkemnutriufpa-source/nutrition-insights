@@ -1320,6 +1320,36 @@ export type Database = {
         }
         Relationships: []
       }
+      checklist_daily_summary: {
+        Row: {
+          completed_tasks: number | null
+          completion_rate: number | null
+          created_at: string | null
+          id: string
+          patient_id: string
+          summary_date: string
+          total_tasks: number | null
+        }
+        Insert: {
+          completed_tasks?: number | null
+          completion_rate?: number | null
+          created_at?: string | null
+          id?: string
+          patient_id: string
+          summary_date?: string
+          total_tasks?: number | null
+        }
+        Update: {
+          completed_tasks?: number | null
+          completion_rate?: number | null
+          created_at?: string | null
+          id?: string
+          patient_id?: string
+          summary_date?: string
+          total_tasks?: number | null
+        }
+        Relationships: []
+      }
       checklist_tasks: {
         Row: {
           category: string
@@ -13077,6 +13107,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      system_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string | null
+          function_name: string | null
+          id: string
+          is_resolved: boolean | null
+          message: string
+          metadata: Json | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string | null
+          function_name?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          message: string
+          metadata?: Json | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string | null
+          function_name?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          message?: string
+          metadata?: Json | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+        }
+        Relationships: []
       }
       system_diagnostic_entries: {
         Row: {
