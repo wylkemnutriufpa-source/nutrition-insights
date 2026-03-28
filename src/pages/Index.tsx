@@ -815,17 +815,18 @@ function NutritionistDashboardContent() {
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
           {[
-            { to: "/protocols", icon: Shield, label: "Protocolos", color: "text-primary", bg: "bg-gradient-to-br from-primary/15 to-primary/5" },
-            { to: "/programs", icon: Rocket, label: "Programas", color: "text-accent", bg: "bg-gradient-to-br from-accent/15 to-accent/5" },
-            { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos", color: "text-success", bg: "bg-gradient-to-br from-success/15 to-success/5" },
-            { to: "/recipes", icon: ChefHat, label: "Receitas", color: "text-warning", bg: "bg-gradient-to-br from-warning/15 to-warning/5" },
-            { to: "/diet-templates", icon: FileText, label: "Templates", color: "text-info", bg: "bg-gradient-to-br from-info/15 to-info/5" },
-            { to: "/global-tips", icon: MessageSquare, label: "Dicas", color: "text-success", bg: "bg-gradient-to-br from-success/15 to-success/5" },
-            { to: "/automation", icon: Bot, label: "Automação", color: "text-info", bg: "bg-gradient-to-br from-info/15 to-info/5" },
-            { to: "/reports", icon: BarChart3, label: "Relatórios", color: "text-primary", bg: "bg-gradient-to-br from-primary/15 to-primary/5" },
-            { to: "/appointments", icon: Calendar, label: "Agenda", color: "text-accent", bg: "bg-gradient-to-br from-accent/15 to-accent/5" },
-            { to: "/supplements", icon: Pill, label: "Suplementos", color: "text-warning", bg: "bg-gradient-to-br from-warning/15 to-warning/5" },
-          ].map((mod, i) => (
+            { to: "/patients", icon: Users, label: "Pacientes", color: "text-primary", bg: "bg-gradient-to-br from-primary/15 to-primary/5", min: "basic" as const },
+            { to: "/appointments", icon: Calendar, label: "Agenda", color: "text-accent", bg: "bg-gradient-to-br from-accent/15 to-accent/5", min: "basic" as const },
+            { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos", color: "text-success", bg: "bg-gradient-to-br from-success/15 to-success/5", min: "basic" as const },
+            { to: "/recipes", icon: ChefHat, label: "Receitas", color: "text-warning", bg: "bg-gradient-to-br from-warning/15 to-warning/5", min: "basic" as const },
+            { to: "/protocols", icon: Shield, label: "Protocolos", color: "text-primary", bg: "bg-gradient-to-br from-primary/15 to-primary/5", min: "pro" as const },
+            { to: "/programs", icon: Rocket, label: "Programas", color: "text-accent", bg: "bg-gradient-to-br from-accent/15 to-accent/5", min: "pro" as const },
+            { to: "/reports", icon: BarChart3, label: "Relatórios", color: "text-primary", bg: "bg-gradient-to-br from-primary/15 to-primary/5", min: "pro" as const },
+            { to: "/supplements", icon: Pill, label: "Suplementos", color: "text-warning", bg: "bg-gradient-to-br from-warning/15 to-warning/5", min: "pro" as const },
+            { to: "/diet-templates", icon: FileText, label: "Templates", color: "text-info", bg: "bg-gradient-to-br from-info/15 to-info/5", min: "pro" as const },
+            { to: "/automation", icon: Bot, label: "Automação", color: "text-info", bg: "bg-gradient-to-br from-info/15 to-info/5", min: "advanced" as const },
+            { to: "/global-tips", icon: MessageSquare, label: "Dicas", color: "text-success", bg: "bg-gradient-to-br from-success/15 to-success/5", min: "basic" as const },
+          ].filter(mod => minMode(mod.min)).map((mod, i) => (
             <Link key={mod.to} to={mod.to}>
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
