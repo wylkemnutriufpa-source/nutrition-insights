@@ -55,6 +55,17 @@ export default function StorageImage({ src: pathOrUrl, bucket, fallback, ...imgP
       if (!cancelled) {
         setResolvedUrl(data?.signedUrl || null);
         setLoading(false);
+
+        // Log clinical file access (fire-and-forget)
+        if (data?.signedUrl) {
+          supabase.from("clinical_file_access_log" as any).insert({
+            user_id: (await supabase.auth.getUser()).data.user?.id,
+            bucket: resolvedBucket,
+            file_path: pathOrUrl,
+            access_type: "view",
+          }).then(() => {});
+        }
+
         // Auto-renew before expiry
         renewalTimer.current = setTimeout(resolve, (SIGNED_URL_DURATION - RENEWAL_BUFFER) * 1000);
       }
