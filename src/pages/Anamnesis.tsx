@@ -666,7 +666,7 @@ export default function Anamnesis() {
             answers: currentAnswers,
             status: "draft",
             ...getTenantIdForInsert(tenantId),
-          } as any)
+          })
           .select("id")
           .single();
         if (data) setDraftId(data.id);
@@ -798,7 +798,7 @@ export default function Anamnesis() {
       computed_fat: fat,
       status: "completed",
       ...getTenantIdForInsert(tenantId),
-    } as any;
+    };
 
     let anamData: any;
     if (draftId) {

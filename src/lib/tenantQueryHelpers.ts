@@ -28,14 +28,29 @@ export function withTenantFilter<T>(query: T, tenantId: string | null): T {
 }
 
 /**
- * Returns { tenant_id: tenantId } for insert/update payloads
- * when tenantId is available, or empty object when not.
- * Spread into your payload:
- *   const payload = { name, email, ...getTenantIdForInsert(tenantId) };
+ * Returns { tenant_id: tenantId } for insert/update payloads.
+ * Now that tenant_id is NOT NULL on critical tables, this helper
+ * returns a strongly-typed required field when tenantId is present,
+ * or an empty object during legacy/migration fallback.
+ *
+ * Overloaded signatures ensure callers with a known string get
+ * `{ tenant_id: string }` (no optional), eliminating `as any` casts.
  */
-export function getTenantIdForInsert(tenantId: string | null): { tenant_id?: string } {
+export function getTenantIdForInsert(tenantId: string): { tenant_id: string };
+export function getTenantIdForInsert(tenantId: null): Record<string, never>;
+export function getTenantIdForInsert(tenantId: string | null): { tenant_id: string } | Record<string, never>;
+export function getTenantIdForInsert(tenantId: string | null): { tenant_id: string } | Record<string, never> {
   if (!tenantId) return {};
   return { tenant_id: tenantId };
+}
+
+/**
+ * Requires a non-null tenant_id. Throws if tenantId is missing.
+ * Use in critical write paths where tenant isolation is mandatory.
+ */
+export function requireTenantId(tenantId: string | null): string {
+  if (!tenantId) throw new Error("tenant_id is required for this operation");
+  return tenantId;
 }
 
 /**
