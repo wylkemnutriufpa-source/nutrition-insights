@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import StorageImage from "@/components/common/StorageImage";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { useTenant } from "@/hooks/useTenant";
+import { useTenant } from "@/lib/tenantContext";
 import { withTenantFilter, getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import { uploadWithRetry } from "@/lib/uploadWithRetry";
 import { useFormDraft } from "@/hooks/useFormDraft";

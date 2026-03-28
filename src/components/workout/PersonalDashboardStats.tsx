@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { useTenant } from "@/hooks/useTenant";
+import { useTenant } from "@/lib/tenantContext";
 import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useTenant } from "@/hooks/useTenant";
+import { useTenant } from "@/lib/tenantContext";
 import { withTenantFilter, getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
