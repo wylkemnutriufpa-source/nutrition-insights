@@ -15,6 +15,7 @@ import { usePushNotifications } from "@/hooks/usePushNotifications";
 import AvatarPicker from "@/components/profile/AvatarPicker";
 import ProtocolFitJourneyToggle from "@/components/admin/ProtocolFitJourneyToggle";
 import { useTranslation } from "react-i18next";
+import ExperienceModeSwitcher from "@/components/settings/ExperienceModeSwitcher";
 
 export default function Settings() {
   const { t } = useTranslation();
@@ -95,6 +96,9 @@ export default function Settings() {
           <h1 className="font-display text-2xl font-bold">{t("settings.title")}</h1>
           <p className="text-muted-foreground text-sm">{t("settings.subtitle")}</p>
         </div>
+
+        {/* Experience Mode */}
+        <ExperienceModeSwitcher />
 
         {/* Profile */}
         <Card className="shadow-card">

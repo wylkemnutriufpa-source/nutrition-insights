@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useSidebarGroups } from "@/hooks/useLayoutPreference";
+import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { useWorkspace, type WorkspaceSection, type WorkspaceItem } from "@/hooks/useWorkspace";
 import {
   ChevronDown, Trophy, LayoutDashboard, Users, UtensilsCrossed,
@@ -85,6 +86,7 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
   const { t } = useTranslation();
   const { sections, getItemsForSection, loading } = useWorkspace();
   const { openGroups, toggleGroup } = useSidebarGroups();
+  const { isRouteAllowed } = useExperienceMode();
 
   if (loading) return null;
 
@@ -97,7 +99,7 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
   return (
     <div className="space-y-1">
       {visibleSections.map(section => {
-        const sectionItems = getItemsForSection(section.id).filter(i => i.is_visible);
+        const sectionItems = getItemsForSection(section.id).filter(i => i.is_visible && isRouteAllowed(i.route || "/"));
         const isOpen = openGroups.includes(section.section_name);
         const SectionIcon = ICON_MAP[section.section_icon] || LayoutDashboard;
         const hasActiveItem = sectionItems.some(item => location.pathname === item.route);
@@ -226,8 +228,9 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
   const location = useLocation();
   const { t } = useTranslation();
   const { openGroups, toggleGroup } = useSidebarGroups();
+  const { isRouteAllowed } = useExperienceMode();
 
-  const allItems = categories.flatMap((c) => c.items);
+  const allItems = categories.flatMap((c) => c.items).filter(item => isRouteAllowed(item.route));
   const fixedItems = allItems.filter((item) => FIXED_ROUTES.includes(item.route));
 
   const groupedMap = new Map<string, SmartMenuItem[]>();
