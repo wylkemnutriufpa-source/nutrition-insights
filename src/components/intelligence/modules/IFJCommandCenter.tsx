@@ -500,7 +500,7 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
 
                     {/* Action Buttons */}
                     {msg.actions && msg.actions.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 md:gap-2">
+                      <div className={`flex flex-wrap gap-1.5 md:gap-2 ${msg.actions.some(a => a.type === "disambiguate") ? "flex-col" : ""}`}>
                         {msg.actions.map((action, ai) => (
                           <motion.button
                             key={ai}
@@ -511,14 +511,23 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
                             className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-lg border transition-all text-[10px] md:text-xs font-medium ${
                               action.type === "confirm"
                                 ? "bg-destructive/5 border-destructive/30 text-destructive hover:bg-destructive/10"
-                                : "bg-gradient-to-r from-amber-500/10 to-amber-600/10 border-amber-500/30 text-amber-500 hover:from-amber-500/20 hover:to-amber-600/20"
+                                : action.type === "disambiguate"
+                                  ? "bg-gradient-to-r from-amber-500/5 to-amber-600/10 border-amber-500/25 text-foreground hover:from-amber-500/15 hover:to-amber-600/20 hover:border-amber-500/50 w-full justify-start"
+                                  : "bg-gradient-to-r from-amber-500/10 to-amber-600/10 border-amber-500/30 text-amber-500 hover:from-amber-500/20 hover:to-amber-600/20"
                             }`}
                           >
                             {action.type === "confirm"
                               ? <AlertTriangle className="w-3 h-3 md:w-3.5 md:h-3.5 shrink-0" />
-                              : <ExternalLink className="w-3 h-3 md:w-3.5 md:h-3.5 shrink-0" />
+                              : action.type === "disambiguate"
+                                ? <Play className="w-3 h-3 md:w-3.5 md:h-3.5 shrink-0 text-amber-500" />
+                                : <ExternalLink className="w-3 h-3 md:w-3.5 md:h-3.5 shrink-0" />
                             }
-                            <span className="truncate">{action.label}</span>
+                            <div className={`${action.type === "disambiguate" ? "flex flex-col items-start text-left" : ""}`}>
+                              <span className={`${action.type === "disambiguate" ? "font-semibold text-xs" : "truncate"}`}>{action.label}</span>
+                              {action.subtitle && (
+                                <span className="text-[9px] md:text-[10px] text-muted-foreground font-normal">{action.subtitle}</span>
+                              )}
+                            </div>
                           </motion.button>
                         ))}
                       </div>
