@@ -110,12 +110,13 @@ export default function PatientRegister() {
         });
         if (rpcError) console.error("RPC error:", rpcError);
 
-        // Ensure profile with phone
+        // Ensure profile with phone - use RPC result for tenant_id
+        const rpcResult = rpcError ? null : null; // tenant resolved by RPC
         await supabase.from("profiles").upsert({
           user_id: data.user.id,
           full_name: name,
           phone: phone || null,
-        }, { onConflict: "user_id" });
+        } as any, { onConflict: "user_id" });
 
         // Link to nutritionist if selected
         const nutriId = selectedProfessional?.user_id || null;

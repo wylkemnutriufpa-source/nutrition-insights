@@ -91,17 +91,12 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
     if (error) {
       toast.error(error.message);
     } else {
-      // Create profile + role for professional
+      // Create tenant + profile + role atomically via RPC
       if (data.user) {
-        await supabase.from("profiles").upsert({
-          id: data.user.id,
-          user_id: data.user.id,
-          full_name: fullName,
-        }, { onConflict: "user_id" });
-        await supabase.from("user_roles").upsert({
-          user_id: data.user.id,
-          role: "nutritionist" as any,
-        }, { onConflict: "user_id,role" });
+        await supabase.rpc("self_register_nutritionist" as any, {
+          _user_id: data.user.id,
+          _full_name: fullName,
+        });
       }
       setRegisterSuccess(true);
       toast.success("Conta criada! Verifique seu e-mail para confirmar.");
