@@ -126,7 +126,7 @@ export default function Checklist() {
       date,
       completed: false,
     }));
-    const { error } = await supabase.from("checklist_tasks").insert(inserts);
+    const { error } = await supabase.from("checklist_tasks").insert(inserts as any);
     if (!error) {
       toast.success(t("checklist.resetSuccess"));
     } else {
