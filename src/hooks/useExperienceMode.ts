@@ -50,16 +50,32 @@ export interface ExperienceModeContextValue {
   mode: ExperienceMode;
   setMode: (m: ExperienceMode) => void;
   isRouteAllowed: (route: string) => boolean;
+  isBasic: boolean;
+  isPro: boolean;
+  isAdvanced: boolean;
+  /** Show content only at given mode or above */
+  minMode: (min: ExperienceMode) => boolean;
 }
 
 export const ExperienceModeContext = createContext<ExperienceModeContextValue>({
   mode: "pro",
   setMode: () => {},
   isRouteAllowed: () => true,
+  isBasic: false,
+  isPro: true,
+  isAdvanced: false,
+  minMode: () => true,
 });
 
 export function useExperienceMode() {
   return useContext(ExperienceModeContext);
+}
+
+const MODE_LEVEL: Record<ExperienceMode, number> = { basic: 0, pro: 1, advanced: 2 };
+
+/** Helper: returns true if current mode >= min */
+export function checkMinMode(current: ExperienceMode, min: ExperienceMode): boolean {
+  return MODE_LEVEL[current] >= MODE_LEVEL[min];
 }
 
 /** Use this at the provider level */
