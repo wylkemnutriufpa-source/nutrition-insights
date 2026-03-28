@@ -1107,31 +1107,33 @@ export default function Index() {
     // Professional / Admin view with toggle
     return (
       <div className="space-y-6">
-        {/* View mode toggle */}
-        <div className="flex items-center justify-end">
-          <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
-            <Button
-              variant={proView === "clinical-list" ? "default" : "ghost"}
-              size="sm"
-              className="h-7 px-3 gap-1.5 text-xs"
-              onClick={() => setProView("clinical-list")}
-            >
-              <ListIcon className="w-3.5 h-3.5" />
-              Lista Clínica
-            </Button>
-            <Button
-              variant={proView === "strategic-dashboard" ? "default" : "ghost"}
-              size="sm"
-              className="h-7 px-3 gap-1.5 text-xs"
-              onClick={() => setProView("strategic-dashboard")}
-            >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              Dashboard
-            </Button>
+        {/* View mode toggle — PRO+ only */}
+        {minMode("pro") && (
+          <div className="flex items-center justify-end">
+            <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
+              <Button
+                variant={proView === "clinical-list" ? "default" : "ghost"}
+                size="sm"
+                className="h-7 px-3 gap-1.5 text-xs"
+                onClick={() => setProView("clinical-list")}
+              >
+                <ListIcon className="w-3.5 h-3.5" />
+                Lista Clínica
+              </Button>
+              <Button
+                variant={proView === "strategic-dashboard" ? "default" : "ghost"}
+                size="sm"
+                className="h-7 px-3 gap-1.5 text-xs"
+                onClick={() => setProView("strategic-dashboard")}
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                Dashboard
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
 
-        {proView === "strategic-dashboard" ? (
+        {minMode("pro") && proView === "strategic-dashboard" ? (
           <ProStrategicDashboard />
         ) : (
           <NutritionistDashboardContent />
