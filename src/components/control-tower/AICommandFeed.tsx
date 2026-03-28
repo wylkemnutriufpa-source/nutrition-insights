@@ -40,12 +40,12 @@ export default function AICommandFeed() {
         const feed: FeedEvent[] = [];
 
         // Get recent alerts
-        const { data: alerts } = await (supabase as any)
+        const { data: alerts } = await withTenantFilter((supabase as any)
           .from("clinical_alerts")
           .select("id, title, alert_type, severity, created_at")
           .eq("nutritionist_id", user!.id)
           .order("created_at", { ascending: false })
-          .limit(10);
+          .limit(10), tenantId);
 
         for (const a of (alerts ?? [])) {
           const cfg = a.severity === "critical" ? EVENT_ICONS.alert : EVENT_ICONS.behavioral_risk;
