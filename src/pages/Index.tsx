@@ -319,8 +319,8 @@ function NutritionistDashboardContent() {
 
    return (
     <div className="space-y-6">
-      {/* FitJourney Timeline — FIRST block */}
-      <FitJourneyTimeline maxHeight="500px" />
+      {/* FitJourney Timeline — PRO+ */}
+      {minMode("pro") && <FitJourneyTimeline maxHeight="500px" />}
 
       {/* Pending Approvals Modal */}
       <PendingApprovalsModal open={approvalsModalOpen} onOpenChange={handleApprovalsModalChange} />
