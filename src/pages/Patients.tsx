@@ -715,7 +715,6 @@ export default function Patients() {
                     <Settings2 className="w-3.5 h-3.5" /> Controle Rápido
                   </Button>
                 )}
-                </Button>
                 <Dialog open={open} onOpenChange={setOpen}>
                   <DialogTrigger asChild>
                     <Button className="gradient-primary gap-2 shadow-glow">
