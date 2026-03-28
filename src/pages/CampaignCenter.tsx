@@ -88,6 +88,7 @@ export default function CampaignCenter() {
         scheduled_at: form.scheduled_at || null,
         status: "draft",
         created_by: user.id,
+        ...getTenantIdForInsert(tenantId),
       }).select().single();
       if (error) throw error;
 
