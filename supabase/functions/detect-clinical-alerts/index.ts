@@ -797,6 +797,8 @@ async function createAlertIfNew(
 
   if ((count || 0) > 0) return false;
 
+  const tenantId = await resolveTenantForUser(supabase, nutritionistId);
+
   const { error: alertError } = await supabase
     .from("clinical_alerts")
     .insert({
@@ -807,6 +809,7 @@ async function createAlertIfNew(
       title: alertDef.title,
       description,
       trigger_source: alertDef.source,
+      tenant_id: tenantId,
       metadata: {
         ...metadata,
         engine_version: ALERT_ENGINE_VERSION,
