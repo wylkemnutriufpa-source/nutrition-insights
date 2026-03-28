@@ -73,11 +73,11 @@ export default function GlobalClinicalStatusBar() {
         }
         const all = Array.from(latest.values());
 
-        const { data: alerts } = await (supabase as any)
+        const { data: alerts } = await withTenantFilter((supabase as any)
           .from("clinical_alerts")
           .select("id")
           .eq("nutritionist_id", user!.id)
-          .eq("is_active", true);
+          .eq("is_active", true), tenantId);
 
         const { data: decisions } = await (supabase as any)
           .from("clinical_decisions")
