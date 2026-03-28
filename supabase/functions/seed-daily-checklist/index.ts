@@ -105,6 +105,7 @@ Deno.serve(async (req) => {
             .eq("protocol_id", pp.protocol_id);
 
           if (protocolTasks && protocolTasks.length > 0) {
+            const patientTenant = tenantMap.get(patientId) || null;
             const inserts = protocolTasks.map((task) => ({
               patient_id: patientId,
               protocol_task_id: task.id,
@@ -115,6 +116,7 @@ Deno.serve(async (req) => {
               category: task.category,
               date: today,
               completed: false,
+              tenant_id: patientTenant,
             }));
 
             const { error: insertError } = await supabase
