@@ -196,9 +196,9 @@ export default function ClinicalRiskDashboardContent() {
       const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
 
       const [alertsRes, profilesRes, checklistRes, sessionsRes, plansRes, assessRes, clinicalStateRes, suggestionsRes] = await Promise.all([
-        supabase.from("clinical_alerts").select("*").eq("nutritionist_id", userId).eq("is_active", true).order("created_at", { ascending: false }),
+        withTenantFilter(supabase.from("clinical_alerts").select("*").eq("nutritionist_id", userId).eq("is_active", true).order("created_at", { ascending: false }), tenantId),
         supabase.from("profiles").select("user_id, full_name, avatar_url, weight_trend_status, weight_velocity_kg_week, adherence_momentum, adherence_score_7d, adherence_score_prev_7d, engagement_index, engagement_level").in("user_id", patientIds),
-        supabase.from("checklist_tasks").select("patient_id, completed").in("patient_id", patientIds).gte("date", sevenDaysAgo.split("T")[0]),
+        withTenantFilter(supabase.from("checklist_tasks").select("patient_id, completed").in("patient_id", patientIds).gte("date", sevenDaysAgo.split("T")[0]), tenantId),
         supabase.from("user_sessions").select("user_id, last_seen_at").in("user_id", patientIds),
         supabase.from("meal_plans").select("patient_id, plan_status, generation_metadata, therapeutic_effectiveness_status").in("patient_id", patientIds).eq("is_active", true).order("created_at", { ascending: false }),
         supabase.from("physical_assessments").select("patient_id, weight, assessment_date").in("patient_id", patientIds).order("assessment_date", { ascending: false }).limit(patientIds.length * 3),
