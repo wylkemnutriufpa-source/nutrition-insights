@@ -163,7 +163,7 @@ export default function SystemUsageCard() {
 
       const checks = await Promise.all([
         supabase.from("nutritionist_patients").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id),
-        supabase.from("meal_plans").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id),
+        withTenantFilter(supabase.from("meal_plans").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id), tenantId),
         supabase.from("protocols").select("id", { count: "exact", head: true }).eq("created_by", user.id),
         supabase.from("programs").select("id", { count: "exact", head: true }).eq("created_by", user.id),
         supabase.from("physical_assessments").select("id", { count: "exact", head: true }).eq("assessor_id", user.id),

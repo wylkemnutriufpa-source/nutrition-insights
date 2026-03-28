@@ -115,6 +115,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 export default function DietTemplates() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const patientId = searchParams.get("patientId");
