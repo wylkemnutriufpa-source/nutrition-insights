@@ -305,7 +305,7 @@ export default function BodyAnalysis() {
                 <div className="grid grid-cols-3 gap-2">
                   {[selected.front_image_url, selected.side_image_url, selected.back_image_url].map((url, i) => (
                     <div key={i} className="aspect-[3/4] rounded-lg bg-muted overflow-hidden">
-                      {url && <img src={url} className="w-full h-full object-cover" alt="" />}
+                      {url && <StorageImage src={url} bucket="body-images" className="w-full h-full object-cover" alt="" />}
                     </div>
                   ))}
                 </div>
