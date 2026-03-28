@@ -75,8 +75,8 @@ export default function ProtocolBlockedModal() {
     const path = `${user!.id}/${enrollment!.id}/${position}-${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("enrollment-photos").upload(path, file, { upsert: true });
     if (error) throw error;
-    const { data } = supabase.storage.from("enrollment-photos").getPublicUrl(path);
-    return data.publicUrl;
+    const { data } = await supabase.storage.from("enrollment-photos").createSignedUrl(path, 3600);
+    return data?.signedUrl || "";
   };
 
   const handleSubmit = async () => {

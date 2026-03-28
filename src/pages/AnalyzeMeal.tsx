@@ -75,8 +75,8 @@ export default function AnalyzeMeal() {
           .from("meal-images")
           .upload(path, imageFile);
         if (uploadError) throw uploadError;
-        const { data: urlData } = supabase.storage.from("meal-images").getPublicUrl(uploadData.path);
-        imageUrl = urlData.publicUrl;
+        const { data: signedData } = await supabase.storage.from("meal-images").createSignedUrl(uploadData.path, 3600);
+        imageUrl = signedData?.signedUrl || null;
       }
 
       const { data, error } = await supabase.functions.invoke("analyze-meal", {
@@ -116,8 +116,8 @@ export default function AnalyzeMeal() {
       const path = `${user.id}/${Date.now()}.${ext}`;
       const { data: uploadData } = await supabase.storage.from("meal-images").upload(path, imageFile);
       if (uploadData) {
-        const { data: urlData } = supabase.storage.from("meal-images").getPublicUrl(uploadData.path);
-        imageUrl = urlData.publicUrl;
+        const { data: signedData } = await supabase.storage.from("meal-images").createSignedUrl(uploadData.path, 3600);
+        imageUrl = signedData?.signedUrl || null;
       }
     }
 

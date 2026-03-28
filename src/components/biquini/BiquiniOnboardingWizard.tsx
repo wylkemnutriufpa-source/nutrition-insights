@@ -130,8 +130,8 @@ export default function BiquiniOnboardingWizard({ programId, enrollmentId, onCom
     const path = `${user!.id}/${enrollmentId}/${position}.${ext}`;
     const { error } = await supabase.storage.from("enrollment-photos").upload(path, file, { upsert: true });
     if (error) throw error;
-    const { data } = supabase.storage.from("enrollment-photos").getPublicUrl(path);
-    return data.publicUrl;
+    const { data } = await supabase.storage.from("enrollment-photos").createSignedUrl(path, 3600);
+    return data?.signedUrl || "";
   };
 
   const finishOnboarding = async () => {

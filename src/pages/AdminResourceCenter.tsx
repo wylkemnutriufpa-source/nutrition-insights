@@ -321,8 +321,8 @@ function BrandingTab() {
       const path = `branding/${user.id}/logo-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage.from("body-images").upload(path, logoFile);
       if (upErr) { toast.error("Erro no upload do logo"); setSaving(false); return; }
-      const { data: urlData } = supabase.storage.from("body-images").getPublicUrl(path);
-      logoUrl = urlData.publicUrl;
+      const { data: signedData } = await supabase.storage.from("body-images").createSignedUrl(path, 3600);
+      logoUrl = signedData?.signedUrl || "";
     }
     const payload = { ...form, logo_url: logoUrl, nutritionist_id: user.id };
     const { data: existing } = await supabase.from("branding_settings").select("id").eq("nutritionist_id", user.id).maybeSingle();
