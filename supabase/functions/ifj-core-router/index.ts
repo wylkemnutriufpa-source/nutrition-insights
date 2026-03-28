@@ -944,7 +944,7 @@ async function runActionEngine(supabaseAdmin: any, supabase: any, intent: IFJInt
     case "action_enable_ifj": {
       if (!intent.target_name) return fmt("Quem?", "❓", "error", "Diga o nome.", "Ex: *libere IFJ para Maria*", [], intent, "action", ctx);
       const { found, ambiguous } = findByName(patients, intent.target_name);
-      if (ambiguous.length > 0) return fmt("Qual?", "🔍", "disambiguation", "Múltiplos", ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}**`).join("\n"), [], intent, "action", ctx);
+      if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, originalCommand, ctx, "action");
       if (!found) return fmt("Não encontrado", "❌", "error", "Paciente não encontrado.", "", [], intent, "action", ctx);
       const { error } = await supabaseAdmin.from("ifj_patient_permissions").upsert({
         patient_id: found.id, ifj_mode: "standard", ifj_enabled: true,
