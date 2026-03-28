@@ -2,6 +2,8 @@ import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { supabase } from "@/integrations/supabase/client";
 import { activateMealPlan } from "@/lib/serverTransitions";
 import DashboardLayout from "@/components/layout/DashboardLayout";
