@@ -25,6 +25,7 @@ function SectionHeader({ icon: Icon, title, subtitle, color }: { icon: React.Ele
 }
 
 export default function ClinicalControlTower() {
+  const { showAdvancedMetrics, showAutomation } = useExperienceUI();
   return (
     <DashboardLayout>
     <SubscriptionGuard requiredTier="premium" featureName="Clinical Control Tower">
