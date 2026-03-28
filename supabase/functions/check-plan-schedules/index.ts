@@ -222,6 +222,7 @@ Deno.serve(async (req) => {
             .update({ status: "expired" })
             .eq("id", schedule.id);
 
+          const expTenantId = await resolveTenantForUser(schedule.meal_plans.nutritionist_id);
           // Notify nutritionist
           await supabase.from("notifications").insert({
             user_id: schedule.meal_plans.nutritionist_id,
@@ -229,6 +230,7 @@ Deno.serve(async (req) => {
             message: `O agendamento para "${schedule.meal_plans.title}" expirou após ${maxExtensions} extensões. Considere ativar manualmente ou criar um novo agendamento.`,
             type: "warning",
             action_url: `/meal-plan/${schedule.meal_plan_id}`,
+            tenant_id: expTenantId,
           });
 
           results.push({ 
