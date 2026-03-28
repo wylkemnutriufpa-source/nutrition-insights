@@ -6,9 +6,7 @@ import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  define: {
-    __BUILD_TIMESTAMP__: JSON.stringify(Date.now().toString(36)),
-  },
+  // No custom defines needed — VitePWA handles versioning via precache manifest
   server: {
     host: "::",
     port: 8080,
