@@ -6336,7 +6336,7 @@ export type Database = {
           nutritionist_id: string
           patient_id: string
           status: string
-          tenant_id: string | null
+          tenant_id: string
         }
         Insert: {
           checkin_frequency?: string | null
@@ -6349,7 +6349,7 @@ export type Database = {
           nutritionist_id: string
           patient_id: string
           status?: string
-          tenant_id?: string | null
+          tenant_id: string
         }
         Update: {
           checkin_frequency?: string | null
@@ -6362,7 +6362,7 @@ export type Database = {
           nutritionist_id?: string
           patient_id?: string
           status?: string
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Relationships: [
           {
@@ -7233,7 +7233,7 @@ export type Database = {
           created_at: string
           id: string
           status: string
-          tenant_id: string | null
+          tenant_id: string
           updated_at: string
           user_id: string
         }
@@ -7249,7 +7249,7 @@ export type Database = {
           created_at?: string
           id?: string
           status?: string
-          tenant_id?: string | null
+          tenant_id: string
           updated_at?: string
           user_id: string
         }
@@ -7265,7 +7265,7 @@ export type Database = {
           created_at?: string
           id?: string
           status?: string
-          tenant_id?: string | null
+          tenant_id?: string
           updated_at?: string
           user_id?: string
         }
@@ -11832,7 +11832,7 @@ export type Database = {
           regain_probability: number | null
           search_vector: unknown
           show_in_ranking: boolean
-          tenant_id: string | null
+          tenant_id: string
           updated_at: string
           user_id: string
           weight_history_analyzed_at: string | null
@@ -11874,7 +11874,7 @@ export type Database = {
           regain_probability?: number | null
           search_vector?: unknown
           show_in_ranking?: boolean
-          tenant_id?: string | null
+          tenant_id: string
           updated_at?: string
           user_id: string
           weight_history_analyzed_at?: string | null
@@ -11916,7 +11916,7 @@ export type Database = {
           regain_probability?: number | null
           search_vector?: unknown
           show_in_ranking?: boolean
-          tenant_id?: string | null
+          tenant_id?: string
           updated_at?: string
           user_id?: string
           weight_history_analyzed_at?: string | null
