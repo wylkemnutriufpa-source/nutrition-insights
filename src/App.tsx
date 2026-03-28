@@ -528,6 +528,7 @@ const App = () => (
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
+      <UpdateBanner />
     </QueryClientProvider>
   </HelmetProvider>
 );
