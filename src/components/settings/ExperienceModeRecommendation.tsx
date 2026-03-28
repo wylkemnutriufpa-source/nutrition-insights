@@ -10,6 +10,8 @@ const MODE_LABELS: Record<ExperienceMode, string> = {
   advanced: "Avançado",
 };
 
+const MODE_ORDER: ExperienceMode[] = ["basic", "pro", "advanced"];
+
 export default function ExperienceModeRecommendation() {
   const { suggested, reason, confidence, loading, factors } = useExperienceModeRecommendation();
   const { mode, setMode } = useExperienceMode();
