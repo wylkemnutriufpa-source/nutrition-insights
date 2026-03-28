@@ -52,7 +52,8 @@ export default function ExperienceModeSwitcher() {
           Controle a complexidade da interface. Você pode mudar a qualquer momento.
         </p>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="space-y-3">
+        <ExperienceModeRecommendation />
         {MODES.map((m) => {
           const Icon = m.icon;
           const selected = mode === m.key;
