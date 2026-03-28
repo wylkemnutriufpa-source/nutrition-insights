@@ -11,6 +11,7 @@ interface Props { search: string; }
 
 export default function WorkspaceAlerts({ search }: Props) {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [alerts, setAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
