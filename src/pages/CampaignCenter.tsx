@@ -37,6 +37,7 @@ const CHANNELS = [
 
 export default function CampaignCenter() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [step, setStep] = useState(1);
@@ -50,9 +51,10 @@ export default function CampaignCenter() {
   const [preview, setPreview] = useState<any>(null);
 
   const { data: campaigns = [] } = useQuery({
-    queryKey: ["campaigns"],
+    queryKey: ["campaigns", tenantId],
     queryFn: async () => {
-      const { data } = await (supabase as any).from("campaigns").select("*").order("created_at", { ascending: false });
+      const q = (supabase as any).from("campaigns").select("*").order("created_at", { ascending: false });
+      const { data } = await withTenantFilter(q, tenantId);
       return data || [];
     },
   });
