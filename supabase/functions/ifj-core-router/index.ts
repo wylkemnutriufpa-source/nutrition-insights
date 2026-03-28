@@ -454,6 +454,51 @@ function findByName(list: any[], searchName: string, nameField = "full_name"): {
   return { found: null, ambiguous: [] };
 }
 
+// ── SMART DISAMBIGUATION BUILDER ──────────────────────────────
+function buildDisambiguation(
+  ambiguous: PatientRecord[],
+  intent: IFJIntent,
+  originalCommand: string,
+  ctx: SessionCtx,
+  engine: string,
+  actionLabelPrefix?: string,
+): IFJResponse {
+  // Sort by relevance: patients with goal first, then alphabetically
+  const sorted = [...ambiguous].sort((a, b) => {
+    if (a.goal && !b.goal) return -1;
+    if (!a.goal && b.goal) return 1;
+    return a.full_name.localeCompare(b.full_name);
+  });
+
+  const statusLabel = (p: PatientRecord) => {
+    const s = p.journey_status || p.status || "";
+    const map: Record<string, string> = {
+      active: "Ativo", onboarding_active: "Em onboarding", awaiting_payment: "Aguardando pgto",
+      invited: "Convidado", completed: "Completo", "": "—",
+    };
+    return map[s] || s;
+  };
+
+  const actions = sorted.map((p) => ({
+    label: p.full_name,
+    subtitle: `${p.goal || "Sem objetivo"} · ${statusLabel(p)}`,
+    route: `/patients/${p.id}`,
+    type: "disambiguate" as const,
+    patient_id: p.id,
+    original_command: originalCommand,
+  }));
+
+  const md = `## Qual ${intent.target_name}?\n\nEncontrei **${sorted.length}** pacientes:\n\n` +
+    sorted.map((p, i) => `${i + 1}. **${p.full_name}** — ${p.goal || "Sem objetivo"} · _${statusLabel(p)}_`).join("\n") +
+    `\n\n💡 Selecione abaixo para continuar a ação.`;
+
+  return fmt(
+    "Qual paciente?", "🔍", "disambiguation",
+    `${sorted.length} pacientes com nome similar`,
+    md, actions, intent, engine, ctx,
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════
 // CONNECTORS — Schema-validated data fetchers
 // ═══════════════════════════════════════════════════════════════
