@@ -475,6 +475,7 @@ const questions: Question[] = [
 // ──── Main page ────
 export default function FitnessAnamnesis() {
   const { user, isPersonal } = useAuth();
+  const { tenantId } = useTenant();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const forStudentId = searchParams.get("studentId");

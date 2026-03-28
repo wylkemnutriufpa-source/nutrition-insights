@@ -528,6 +528,7 @@ function SliderInput({
 // ──── Main page ────
 export default function Anamnesis() {
   const { user, isNutritionist } = useAuth();
+  const { tenantId } = useTenant();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const forPatientId = searchParams.get("patientId");
