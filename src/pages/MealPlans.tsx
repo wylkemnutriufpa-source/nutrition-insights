@@ -34,8 +34,9 @@ export default function MealPlans() {
 
   const fetchPlans = async () => {
     if (!user) return;
-    const { data } = await supabase.from("meal_plans").select("*")
+    let query = supabase.from("meal_plans").select("*")
       .eq("nutritionist_id", user.id).order("created_at", { ascending: false });
+    const { data } = await withTenantFilter(query, tenantId);
     if (data) {
       const enriched = await Promise.all(data.map(async (p) => {
         const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", p.patient_id).single();
