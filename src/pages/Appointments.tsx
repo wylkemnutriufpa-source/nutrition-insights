@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter, getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -54,6 +56,7 @@ const statusConfig: Record<string, { label: string; cls: string; icon: any }> = 
 
 export default function Appointments() {
   const { user, isNutritionist } = useAuth();
+  const { tenantId } = useTenant();
   const queryClient = useQueryClient();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
@@ -71,11 +74,11 @@ export default function Appointments() {
     queryKey: ["apt-patients", user?.id],
     queryFn: async () => {
       if (!user) return [];
-      const { data: links } = await supabase.from("nutritionist_patients")
-        .select("patient_id").eq("nutritionist_id", user.id).eq("status", "active");
+      const { data: links } = await withTenantFilter(supabase.from("nutritionist_patients")
+        .select("patient_id").eq("nutritionist_id", user.id).eq("status", "active"), tenantId);
       if (!links?.length) return [];
-      const { data: profiles } = await supabase.from("profiles")
-        .select("user_id, full_name").in("user_id", links.map(l => l.patient_id));
+      const { data: profiles } = await withTenantFilter(supabase.from("profiles")
+        .select("user_id, full_name").in("user_id", links.map(l => l.patient_id)), tenantId);
       return profiles || [];
     },
     enabled: !!user && isNutritionist,
@@ -89,14 +92,14 @@ export default function Appointments() {
       const start = startOfMonth(currentMonth).toISOString();
       const end = endOfMonth(currentMonth).toISOString();
       const col = isNutritionist ? "nutritionist_id" : "patient_id";
-      const { data } = await supabase.from("patient_appointments")
-        .select("*").eq(col, user.id)
+      const { data } = await withTenantFilter(supabase.from("patient_appointments")
+        .select("*").eq(col, user.id), tenantId)
         .gte("appointment_date", start).lte("appointment_date", end)
         .order("appointment_date");
       if (!data) return [];
 
       const ids = [...new Set(data.map(a => isNutritionist ? a.patient_id : a.nutritionist_id))];
-      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", ids);
+      const { data: profiles } = await withTenantFilter(supabase.from("profiles").select("user_id, full_name").in("user_id", ids), tenantId);
       const nameMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p.full_name]));
 
       return data.map(a => ({
@@ -122,6 +125,7 @@ export default function Appointments() {
         duration_minutes: Number(form.duration_minutes) || 60,
         appointment_type: form.appointment_type,
         color: form.color || null,
+        ...getTenantIdForInsert(tenantId),
       }).select("id").single();
       if (error) throw error;
 

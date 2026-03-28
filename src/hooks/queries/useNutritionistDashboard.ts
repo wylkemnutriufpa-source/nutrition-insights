@@ -1,13 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { queryKeys } from "./queryKeys";
 
 export function useNutritionistDashboard() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
 
   return useQuery({
-    queryKey: queryKeys.dashboard.nutritionist(user?.id ?? ""),
+    queryKey: [...queryKeys.dashboard.nutritionist(user?.id ?? ""), tenantId],
     enabled: !!user,
     staleTime: 3 * 60 * 1000,
     queryFn: async () => {
@@ -26,11 +29,11 @@ export function useNutritionistDashboard() {
       }
 
       // Fetch timeline + programs list (not in RPC — returns rows, not counts)
-      const patientIdsRes = await supabase
+      const patientIdsRes = await withTenantFilter(supabase
         .from("nutritionist_patients")
         .select("patient_id")
         .eq("nutritionist_id", userId)
-        .eq("status", "active");
+        .eq("status", "active"), tenantId);
 
       const patientIds = (patientIdsRes.data || []).map((p: any) => p.patient_id);
 
@@ -59,6 +62,7 @@ async function fetchTimeline(patientIds: string[]) {
   if (patientIds.length === 0) return [];
   const [timelineRes, profilesRes] = await Promise.all([
     supabase.from("patient_timeline").select("*").in("patient_id", patientIds).order("created_at", { ascending: false }).limit(15),
+    // Note: profiles tenant filter requires tenantId passed through — keeping legacy for fetchTimeline
     supabase.from("profiles").select("user_id, full_name").in("user_id", patientIds),
   ]);
   const nameMap: Record<string, string> = {};

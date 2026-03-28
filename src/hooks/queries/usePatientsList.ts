@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { queryKeys } from "./queryKeys";
 import { toast } from "sonner";
 import { logAudit } from "@/lib/auditLog";
@@ -108,13 +110,14 @@ export interface PatientsListParams {
 
 export function usePatientsList(params: PatientsListParams = {}) {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const page = params.page ?? 1;
   const pageSize = params.pageSize ?? DEFAULT_PAGE_SIZE;
   const statusFilter = params.statusFilter ?? "all";
   const search = params.search ?? "";
 
   return useQuery<PatientsListResult>({
-    queryKey: [...queryKeys.patients.all(user?.id ?? ""), page, pageSize, statusFilter, search],
+    queryKey: [...queryKeys.patients.all(user?.id ?? ""), page, pageSize, statusFilter, search, tenantId],
     enabled: !!user,
     staleTime: 10 * 1000, // 10s — fast refresh for lifecycle sync
     placeholderData: keepPreviousData,
@@ -124,20 +127,20 @@ export function usePatientsList(params: PatientsListParams = {}) {
 
       // 1. Get total counts by status (lightweight count queries)
       const [activeCountRes, inactiveCountRes] = await Promise.all([
-        supabase.from("nutritionist_patients").select("id", { count: "exact", head: true })
-          .eq("nutritionist_id", userId).neq("status", "inactive"),
-        supabase.from("nutritionist_patients").select("id", { count: "exact", head: true })
-          .eq("nutritionist_id", userId).eq("status", "inactive"),
+        withTenantFilter(supabase.from("nutritionist_patients").select("id", { count: "exact", head: true })
+          .eq("nutritionist_id", userId).neq("status", "inactive"), tenantId),
+        withTenantFilter(supabase.from("nutritionist_patients").select("id", { count: "exact", head: true })
+          .eq("nutritionist_id", userId).eq("status", "inactive"), tenantId),
       ]);
 
       const activeCount = activeCountRes.count || 0;
       const inactiveCount = inactiveCountRes.count || 0;
 
       // 2. Build the paginated query with filters
-      let query = supabase
+      let query = withTenantFilter(supabase
         .from("nutritionist_patients")
         .select("*", { count: "exact" })
-        .eq("nutritionist_id", userId)
+        .eq("nutritionist_id", userId), tenantId)
         .order("created_at", { ascending: false });
 
        if (statusFilter === "active") query = query.neq("status", "inactive");
@@ -224,9 +227,9 @@ export function usePatientsList(params: PatientsListParams = {}) {
 
       // BATCH queries (7 parallel)
       const [profilesRes, statsRes, checklistRes, enrollmentsRes, prestigeRes, pPlansRes, emailsRes, progsRes] = await Promise.all([
-        supabase.from("profiles").select("user_id, full_name, avatar_url").in("user_id", patientIds),
+        withTenantFilter(supabase.from("profiles").select("user_id, full_name, avatar_url").in("user_id", patientIds), tenantId),
         supabase.from("player_stats").select("user_id, last_meal_date, total_xp, current_streak").in("user_id", patientIds),
-        supabase.from("checklist_tasks").select("patient_id, id, completed").in("patient_id", patientIds).eq("date", today),
+        withTenantFilter(supabase.from("checklist_tasks").select("patient_id, id, completed").in("patient_id", patientIds).eq("date", today), tenantId),
         supabase.from("program_patients")
           .select("patient_id, program_id, programs(id, title)")
           .eq("status", "active")

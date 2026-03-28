@@ -1,13 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { queryKeys } from "./queryKeys";
 
 export function usePatientDashboard() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
 
   return useQuery({
-    queryKey: queryKeys.dashboard.patient(user?.id ?? ""),
+    queryKey: [...queryKeys.dashboard.patient(user?.id ?? ""), tenantId],
     enabled: !!user,
     staleTime: 5 * 1000,
     queryFn: async () => {
@@ -22,7 +25,7 @@ export function usePatientDashboard() {
 
       // Full data still needs row-level fetches for checklist items, meals, anamnesis
       const [checkRes, anamRes, mealsRes] = await Promise.all([
-        supabase.from("checklist_tasks").select("*").eq("patient_id", userId).eq("date", today).order("category"),
+        withTenantFilter(supabase.from("checklist_tasks").select("*").eq("patient_id", userId).eq("date", today), tenantId).order("category"),
         supabase.from("patient_anamnesis").select("*").eq("user_id", userId).eq("status", "completed").order("created_at", { ascending: false }).limit(1),
         supabase.from("meals").select("*").eq("user_id", userId).order("logged_at", { ascending: false }).limit(3),
       ]);
@@ -36,7 +39,7 @@ export function usePatientDashboard() {
       if (rpcError) {
         const [statsRes, aptRes, msgRes] = await Promise.all([
           supabase.from("player_stats").select("*").eq("user_id", userId).maybeSingle(),
-          supabase.from("patient_appointments").select("*").eq("patient_id", userId).gte("appointment_date", new Date().toISOString()).order("appointment_date").limit(1),
+          withTenantFilter(supabase.from("patient_appointments").select("*").eq("patient_id", userId).gte("appointment_date", new Date().toISOString()), tenantId).order("appointment_date").limit(1),
           supabase.from("chat_messages").select("id", { count: "exact", head: true }).eq("receiver_id", userId).eq("is_read", false),
         ]);
         return {
