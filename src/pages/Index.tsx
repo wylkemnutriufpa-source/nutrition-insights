@@ -391,8 +391,12 @@ function NutritionistDashboardContent() {
               >
                 {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
               </motion.p>
-              <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight">Dashboard Clínico</h1>
-              <p className="text-muted-foreground text-sm mt-0.5">Central de Comando · Inteligência Clínica</p>
+              <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight">
+                {isBasic ? "Meu Painel" : "Dashboard Clínico"}
+              </h1>
+              <p className="text-muted-foreground text-sm mt-0.5">
+                {isBasic ? "Visão geral dos seus pacientes" : "Central de Comando · Inteligência Clínica"}
+              </p>
             </div>
             <div className="flex items-center gap-3">
               {unreadChats > 0 && (
