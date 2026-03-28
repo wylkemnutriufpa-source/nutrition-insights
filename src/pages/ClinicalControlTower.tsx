@@ -91,7 +91,8 @@ export default function ClinicalControlTower() {
           </motion.section>
         </div>
 
-        {/* Bottom section: Matrix + Automation */}
+        {/* Bottom section: Matrix + Automation — ADVANCED only */}
+        {showAdvancedMetrics && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* 5️⃣ Patient Health Matrix */}
           <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
@@ -100,11 +101,14 @@ export default function ClinicalControlTower() {
           </motion.section>
 
           {/* 6️⃣ Automation Transparency Panel */}
+          {showAutomation && (
           <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45 }}>
             <SectionHeader icon={Shield} title="Transparência de Automação" subtitle="IA poderosa mas clinicamente responsável" color="from-emerald-500/30 to-violet-500/20" />
             <AutomationTransparencyPanel />
           </motion.section>
+          )}
         </div>
+        )}
 
         {/* Footer trust mark */}
         <motion.div
