@@ -3,12 +3,18 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 const BMI_LOW = 18.5;
 const BMI_HIGH = 30;
 const STAGNATION_WEEKS = 3;
+
+/** Resolve tenant_id for a given user via get_user_tenant RPC */
+async function resolveTenant(supabase: any, userId: string): Promise<string | null> {
+  const { data } = await supabase.rpc("get_user_tenant", { _user_id: userId });
+  return data || null;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -20,11 +26,9 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // Optional: scope to a single nutritionist
     const body = await req.json().catch(() => ({}));
     const nutritionistId = body.nutritionist_id;
 
-    // Get all active nutritionist-patient relationships
     let npQuery = supabase
       .from("nutritionist_patients")
       .select("nutritionist_id, patient_id")
@@ -41,7 +45,14 @@ Deno.serve(async (req) => {
     const patientIds = [...new Set(relationships.map((r) => r.patient_id))];
     const alertsCreated: any[] = [];
 
-    // Fetch latest 2 assessments per patient
+    // Pre-resolve tenant for nutritionists (cache to avoid repeated RPCs)
+    const tenantCache = new Map<string, string | null>();
+    for (const r of relationships) {
+      if (!tenantCache.has(r.nutritionist_id)) {
+        tenantCache.set(r.nutritionist_id, await resolveTenant(supabase, r.nutritionist_id));
+      }
+    }
+
     for (const patientId of patientIds) {
       const { data: assessments } = await supabase
         .from("physical_assessments")
@@ -57,6 +68,9 @@ Deno.serve(async (req) => {
         .filter((r) => r.patient_id === patientId)
         .map((r) => r.nutritionist_id);
 
+      // Resolve tenant from the first linked nutritionist
+      const tenantId = tenantCache.get(nutritionistIds[0]) || null;
+
       // --- BMI Alert ---
       if (latest.bmi !== null) {
         let bmiAlert: string | null = null;
@@ -67,9 +81,7 @@ Deno.serve(async (req) => {
         }
 
         if (bmiAlert) {
-          // Notify nutritionist(s)
           for (const nId of nutritionistIds) {
-            // Check if similar alert already exists in the last 7 days
             const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
             const { count } = await supabase
               .from("notifications")
@@ -92,6 +104,7 @@ Deno.serve(async (req) => {
                 type: "bmi_alert",
                 action_url: `/patients/${patientId}`,
                 metadata: { patient_id: patientId, bmi: latest.bmi },
+                ...(tenantId ? { tenant_id: tenantId } : {}),
               });
               alertsCreated.push({ type: "bmi", patient_id: patientId, target: nId });
             }
@@ -119,6 +132,7 @@ Deno.serve(async (req) => {
               type: "bmi_alert",
               action_url: "/journey",
               metadata: { bmi: latest.bmi },
+              ...(tenantId ? { tenant_id: tenantId } : {}),
             });
             alertsCreated.push({ type: "bmi_patient", patient_id: patientId });
           }
@@ -133,14 +147,12 @@ Deno.serve(async (req) => {
             new Date(prev.assessment_date).getTime()) /
           86400000;
 
-        // Check if weight hasn't changed significantly in STAGNATION_WEEKS
         if (daysBetween >= STAGNATION_WEEKS * 7) {
           const weightDiff = Math.abs((latest.weight || 0) - (prev.weight || 0));
           const bfDiff = Math.abs(
             (latest.body_fat_percentage || 0) - (prev.body_fat_percentage || 0)
           );
 
-          // Less than 0.5kg weight change AND less than 0.5% BF change = stagnation
           if (weightDiff < 0.5 && bfDiff < 0.5) {
             const weeksStagnant = Math.floor(daysBetween / 7);
 
@@ -167,6 +179,7 @@ Deno.serve(async (req) => {
                   type: "stagnation_alert",
                   action_url: `/patients/${patientId}`,
                   metadata: { patient_id: patientId, weeks: weeksStagnant },
+                  ...(tenantId ? { tenant_id: tenantId } : {}),
                 });
                 alertsCreated.push({ type: "stagnation", patient_id: patientId, target: nId });
               }
@@ -189,6 +202,7 @@ Deno.serve(async (req) => {
                 type: "stagnation_alert",
                 action_url: "/journey",
                 metadata: { weeks: weeksStagnant },
+                ...(tenantId ? { tenant_id: tenantId } : {}),
               });
               alertsCreated.push({ type: "stagnation_patient", patient_id: patientId });
             }

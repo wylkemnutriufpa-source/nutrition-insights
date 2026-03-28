@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 interface PaymentRequest {
@@ -39,6 +39,10 @@ serve(async (req) => {
     const body: PaymentRequest = await req.json();
     const { plan_id, plan_slug, gateway, billing_cycle, amount } = body;
 
+    // Resolve tenant_id for this user
+    const serviceSupabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { data: tenantId } = await serviceSupabase.rpc("get_user_tenant", { _user_id: user.id });
+
     // Buscar plano
     const { data: plan, error: planError } = await supabase
       .from("pricing_plans")
@@ -65,6 +69,7 @@ serve(async (req) => {
           billing_cycle,
           plan_name: plan.name,
         },
+        ...(tenantId ? { tenant_id: tenantId } : {}),
       })
       .select()
       .single();
@@ -79,7 +84,6 @@ serve(async (req) => {
 
     switch (gateway) {
       case "stripe": {
-        // Stripe integration - requer STRIPE_SECRET_KEY configurado
         const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
         if (!stripeKey) {
           result = {
@@ -88,7 +92,6 @@ serve(async (req) => {
             payment_id: payment.id,
           };
         } else {
-          // Criar sessão de checkout do Stripe
           const stripeResponse = await fetch("https://api.stripe.com/v1/checkout/sessions", {
             method: "POST",
             headers: {
@@ -138,7 +141,6 @@ serve(async (req) => {
             payment_id: payment.id,
           };
         } else {
-          // Criar preferência de pagamento no Mercado Pago
           const mpResponse = await fetch("https://api.mercadopago.com/checkout/preferences", {
             method: "POST",
             headers: {
@@ -196,7 +198,6 @@ serve(async (req) => {
             payment_id: payment.id,
           };
         } else {
-          // PagSeguro integration placeholder
           result = {
             status: "gateway_pending_integration",
             message: "PagSeguro será integrado em breve. Use PIX ou outro gateway por enquanto.",
@@ -207,11 +208,9 @@ serve(async (req) => {
       }
 
       case "pix": {
-        // PIX pode ser gerado via Mercado Pago, Stripe ou manualmente
         const mpAccessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
         
         if (mpAccessToken) {
-          // Gerar PIX via Mercado Pago
           const pixResponse = await fetch("https://api.mercadopago.com/v1/payments", {
             method: "POST",
             headers: {
@@ -258,12 +257,11 @@ serve(async (req) => {
             };
           }
         } else {
-          // PIX manual - retorna dados para pagamento via banco
           result = {
             status: "manual_pix",
             message: "Configure o Mercado Pago para PIX automático. Por enquanto, entre em contato para pagamento manual.",
             payment_id: payment.id,
-            pix_key: "contato@fitjourney.app", // Chave PIX manual
+            pix_key: "contato@fitjourney.app",
             amount: amount,
             plan_name: plan.name,
           };

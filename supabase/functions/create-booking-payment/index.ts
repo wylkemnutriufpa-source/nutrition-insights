@@ -31,6 +31,9 @@ Deno.serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
+    // Resolve tenant_id from nutritionist
+    const { data: tenantId } = await supabase.rpc("get_user_tenant", { _user_id: nutritionist_id });
+
     // Create booking payment record
     const { data: bookingPayment, error: dbError } = await supabase
       .from("booking_payments")
@@ -40,6 +43,7 @@ Deno.serve(async (req) => {
         customer_name,
         amount,
         status: "pending",
+        ...(tenantId ? { tenant_id: tenantId } : {}),
       })
       .select("id")
       .single();
