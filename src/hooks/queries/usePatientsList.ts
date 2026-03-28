@@ -127,10 +127,10 @@ export function usePatientsList(params: PatientsListParams = {}) {
 
       // 1. Get total counts by status (lightweight count queries)
       const [activeCountRes, inactiveCountRes] = await Promise.all([
-        supabase.from("nutritionist_patients").select("id", { count: "exact", head: true })
-          .eq("nutritionist_id", userId).neq("status", "inactive"),
-        supabase.from("nutritionist_patients").select("id", { count: "exact", head: true })
-          .eq("nutritionist_id", userId).eq("status", "inactive"),
+        withTenantFilter(supabase.from("nutritionist_patients").select("id", { count: "exact", head: true })
+          .eq("nutritionist_id", userId).neq("status", "inactive"), tenantId),
+        withTenantFilter(supabase.from("nutritionist_patients").select("id", { count: "exact", head: true })
+          .eq("nutritionist_id", userId).eq("status", "inactive"), tenantId),
       ]);
 
       const activeCount = activeCountRes.count || 0;
