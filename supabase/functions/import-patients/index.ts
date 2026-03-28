@@ -72,7 +72,7 @@ async function importOnePatient(
         .maybeSingle();
 
       if (!profile) {
-        await supabase.from("profiles").insert({ user_id: finalId, full_name: fullName });
+        await supabase.from("profiles").insert({ user_id: finalId, full_name: fullName, tenant_id: tenantId });
       }
     } else if (finalId) {
       // RPC succeeded — ensure role exists (belt & suspenders)
