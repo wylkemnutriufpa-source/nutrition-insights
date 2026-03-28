@@ -110,13 +110,14 @@ export interface PatientsListParams {
 
 export function usePatientsList(params: PatientsListParams = {}) {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const page = params.page ?? 1;
   const pageSize = params.pageSize ?? DEFAULT_PAGE_SIZE;
   const statusFilter = params.statusFilter ?? "all";
   const search = params.search ?? "";
 
   return useQuery<PatientsListResult>({
-    queryKey: [...queryKeys.patients.all(user?.id ?? ""), page, pageSize, statusFilter, search],
+    queryKey: [...queryKeys.patients.all(user?.id ?? ""), page, pageSize, statusFilter, search, tenantId],
     enabled: !!user,
     staleTime: 10 * 1000, // 10s — fast refresh for lifecycle sync
     placeholderData: keepPreviousData,
