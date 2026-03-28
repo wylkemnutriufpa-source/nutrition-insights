@@ -158,6 +158,42 @@ function detectIntentFromDB(
     if (ci) return { ...base, intent: ci.intent_key, target_entity: "patient", target_name: nameMatch?.[1] || null, module: ci.module, confidence: 0.97, response_mode: "action", action_type: ci.action_type, executor_key: ci.executor_key, scope: ci.scope };
   }
 
+  // ── COMPOUND INTENT REGEX (pre-score) ──────────────────────────
+  // "avaliar plano da Luana", "ver dieta do João", "checar cardapio da Maria"
+  const compoundMealPlan = n.match(/(?:avaliar|ver|abrir|mostrar|checar|revisar)\s+(?:o\s+)?(?:plano|dieta|cardapio)\s+(?:d[aeo]\s+|da\s+|do\s+)(.+)/);
+  if (compoundMealPlan && compoundMealPlan[1]?.trim()) {
+    const mp = intents.find(i => i.intent_key === "meal_plan");
+    if (mp) {
+      const cleaned = compoundMealPlan[1].trim().replace(/\s+(hoje|agora|atual|ativo)$/, "").trim();
+      return {
+        ...base, intent: "meal_plan", target_entity: "patient", target_name: cleaned,
+        module: mp.module, confidence: 0.92, response_mode: "detail",
+        requires_context: mp.requires_context, requires_active_plan: mp.requires_active_plan,
+        requires_permission_key: mp.requires_permission_key, action_type: mp.action_type,
+        executor_key: mp.executor_key, scope: mp.scope,
+      };
+    }
+  }
+
+  // "plano alimentar da Luana", "plano da Luana"
+  const simpleMealPlan = n.match(/(?:plano|dieta|cardapio)\s+(?:alimentar\s+)?(?:d[aeo]\s+|da\s+|do\s+)(.+)/);
+  if (simpleMealPlan && simpleMealPlan[1]?.trim()) {
+    const mp = intents.find(i => i.intent_key === "meal_plan");
+    if (mp) {
+      const cleaned = simpleMealPlan[1].trim().replace(/\s+(hoje|agora|atual|ativo)$/, "").trim();
+      const foodCheck = /(?:comer|substituir|trocar|receita|saudavel|engorda|emagrec|caloria)/;
+      if (!foodCheck.test(cleaned)) {
+        return {
+          ...base, intent: "meal_plan", target_entity: "patient", target_name: cleaned,
+          module: mp.module, confidence: 0.90, response_mode: "detail",
+          requires_context: mp.requires_context, requires_active_plan: mp.requires_active_plan,
+          requires_permission_key: mp.requires_permission_key, action_type: mp.action_type,
+          executor_key: mp.executor_key, scope: mp.scope,
+        };
+      }
+    }
+  }
+
   // Score-based matching from DB phrases
   const scores: { intent: DBIntentRow; score: number; bestWeight: number }[] = [];
 
@@ -1035,7 +1071,10 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
       if (intent.target_id) patient = patients.find(p => p.id === intent.target_id);
       else if (intent.target_name) {
         const { found, ambiguous } = findByName(patients, intent.target_name);
-        if (ambiguous.length > 0) return fmt("Múltiplos", "🔍", "disambiguation", `${ambiguous.length} similares`, ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}** (${p.goal || "?"})`).join("\n"), [], intent, "clinical", ctx);
+        if (ambiguous.length > 0) {
+          const disambigActions = ambiguous.map((p: any) => ({ label: p.full_name, route: `/patients/${p.id}`, type: "navigate" }));
+          return fmt("Múltiplos", "🔍", "disambiguation", `${ambiguous.length} similares`, ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}** (${p.goal || "?"})`).join("\n"), disambigActions, intent, "clinical", ctx);
+        }
         patient = found;
       }
       if (!patient) return fmt("Não encontrado", "❌", "error", "Nenhum paciente.", "Verifique a grafia.", [], intent, "clinical", ctx);
@@ -1074,7 +1113,17 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
     }
     case "lab_pending": return fmt("Exames pendentes", "🔬", "info", "Em desenvolvimento", "🔬 Consulte por paciente.", [], intent, "clinical", ctx);
     case "meal_plan": {
-      const pid = intent.target_id || ctx.last_patient_id;
+      let pid = intent.target_id || ctx.last_patient_id;
+      // Resolve patient by name if no ID
+      if (!pid && intent.target_name) {
+        const { found, ambiguous } = findByName(patients, intent.target_name);
+        if (ambiguous.length > 0) {
+          const disambigActions = ambiguous.map((p: any) => ({ label: `Plano de ${p.full_name}`, route: `/patients/${p.id}`, type: "navigate" }));
+          const disambigBody = ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}** (${p.goal || "?"})`).join("\n");
+          return fmt("Qual paciente?", "🔍", "disambiguation", `${ambiguous.length} pacientes com esse nome`, disambigBody, disambigActions, intent, "clinical", ctx);
+        }
+        if (found) { pid = found.id; ctx.last_patient_id = found.id; ctx.last_patient_name = found.full_name; }
+      }
       if (!pid) return fmt("Quem?", "❓", "error", "Diga o nome.", "", [], intent, "clinical", ctx);
       const { data: plan } = await supabase.from("meal_plans").select("id, title, plan_status, is_active, start_date, end_date, total_target_calories").eq("patient_id", pid).eq("is_active", true).limit(1).maybeSingle();
       const p = patients.find(x => x.id === pid);
