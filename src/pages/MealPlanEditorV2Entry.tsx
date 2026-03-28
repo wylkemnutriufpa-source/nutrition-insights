@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 export default function MealPlanEditorV2Entry() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { tenantId } = useTenant();
 
   useEffect(() => {
     if (!user?.id) return;
