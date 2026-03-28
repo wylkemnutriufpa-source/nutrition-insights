@@ -75,4 +75,15 @@ export const MIGRATED_QUERIES: Record<string, { batch: number; date: string; tab
   "IntelligenceModal": { batch: 3, date: "2026-03-28", tables: ["clinical_alerts"] },
   "IFJNarrativeReport": { batch: 3, date: "2026-03-28", tables: ["clinical_alerts", "patient_anamnesis", "meal_plans"] },
   "BehavioralDropoutPanel": { batch: 3, date: "2026-03-28", tables: ["behavioral_recovery_actions"] },
+  // Batch 4 — Billing, Payments, Campaigns, Secondary Modules
+  "AdminAffiliates": { batch: 4, date: "2026-03-28", tables: ["affiliates", "affiliate_commissions", "affiliate_risk_flags", "affiliate_referrals", "affiliate_payouts", "affiliate_metrics_cache"] },
+  "AmbassadorDashboard": { batch: 4, date: "2026-03-28", tables: ["affiliates", "affiliate_referrals", "affiliate_commissions", "affiliate_metrics_cache"] },
+  "CampaignCenter": { batch: 4, date: "2026-03-28", tables: ["campaigns"] },
+  "Branding": { batch: 4, date: "2026-03-28", tables: ["branding_settings"] },
+  "AdminResourceCenter/BrandingTab": { batch: 4, date: "2026-03-28", tables: ["branding_settings"] },
+  "BodyAnalysis": { batch: 4, date: "2026-03-28", tables: ["body_analyses"] },
+  "WorkoutEditor": { batch: 4, date: "2026-03-28", tables: ["workout_plans"] },
+  "CardioPrescription": { batch: 4, date: "2026-03-28", tables: ["cardio_prescriptions"] },
+  "PersonalDashboardStats": { batch: 4, date: "2026-03-28", tables: ["workout_plans"] },
+  "PersonalWorkouts": { batch: 4, date: "2026-03-28", tables: ["workout_plans"] },
 };

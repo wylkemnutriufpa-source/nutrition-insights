@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import { toast } from "sonner";
 import ExerciseLibrary from "./ExerciseLibrary";
 import {
@@ -103,6 +105,7 @@ const DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 export default function WorkoutEditor({ students, onSaved, onCancel }: WorkoutEditorProps) {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [objective, setObjective] = useState("general");
@@ -271,6 +274,7 @@ export default function WorkoutEditor({ students, onSaved, onCancel }: WorkoutEd
         start_date: startDate || new Date().toISOString().split("T")[0],
         end_date: endDate || null,
         status: "active",
+        ...getTenantIdForInsert(tenantId),
       }).select().single();
 
       if (planErr || !plan) throw planErr || new Error("Erro ao criar plano");

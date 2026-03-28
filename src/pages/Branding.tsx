@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter, getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,6 +52,7 @@ const fadeUp = {
 
 export default function Branding() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const navigate = useNavigate();
   const [form, setForm] = useState<BrandingData>(defaultBranding);
   const [saving, setSaving] = useState(false);
@@ -71,7 +74,6 @@ export default function Branding() {
             custom_css: data.custom_css,
           });
           if (data.logo_url) {
-            // If it's a path (not a URL), generate a signed URL for preview
             if (!data.logo_url.startsWith("http")) {
               const { data: signedData } = await supabase.storage.from("body-images").createSignedUrl(data.logo_url, 3600);
               setLogoPreview(signedData?.signedUrl || "");
@@ -106,11 +108,10 @@ export default function Branding() {
       const path = `branding/${user.id}/logo-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage.from("body-images").upload(path, logoFile);
       if (upErr) { toast.error("Erro no upload do logo"); setSaving(false); return; }
-      // Store the path, not a signed URL (signed URLs expire)
       logoUrl = path;
     }
 
-    const payload = { ...form, logo_url: logoUrl, nutritionist_id: user.id };
+    const payload = { ...form, logo_url: logoUrl, nutritionist_id: user.id, ...getTenantIdForInsert(tenantId) };
     const { data: existing } = await supabase.from("branding_settings").select("id").eq("nutritionist_id", user.id).maybeSingle();
 
     if (existing) {

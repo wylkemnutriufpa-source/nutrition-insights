@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -224,6 +226,7 @@ function PrePlanTab({ students, prePlanStudent, setPrePlanStudent, handleUseTemp
 // --- Main Component ---
 export default function PersonalWorkouts() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [plans, setPlans] = useState<any[]>([]);
   const [students, setStudents] = useState<{ student_id: string; full_name: string }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -237,7 +240,10 @@ export default function PersonalWorkouts() {
   const load = async () => {
     if (!user) return;
     const [plansRes, linksRes] = await Promise.all([
-      supabase.from("workout_plans").select("*").eq("personal_id", user.id).order("created_at", { ascending: false }),
+      withTenantFilter(
+        supabase.from("workout_plans").select("*").eq("personal_id", user.id).order("created_at", { ascending: false }),
+        tenantId
+      ),
       (supabase as any).from("patient_professional_links").select("patient_id").eq("professional_id", user.id).eq("professional_role", "trainer").eq("link_status", "active"),
     ]);
     setPlans(plansRes.data || []);

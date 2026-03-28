@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter, getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +42,7 @@ const HR_ZONES = [
 
 export default function CardioPrescription({ students, plans }: Props) {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [prescriptions, setPrescriptions] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<any>({
@@ -52,8 +55,9 @@ export default function CardioPrescription({ students, plans }: Props) {
 
   const load = async () => {
     if (!user) return;
-    const { data } = await (supabase as any).from("cardio_prescriptions")
+    const q = (supabase as any).from("cardio_prescriptions")
       .select("*").eq("personal_id", user.id).order("created_at", { ascending: false });
+    const { data } = await withTenantFilter(q, tenantId);
     setPrescriptions(data || []);
   };
 
@@ -62,7 +66,7 @@ export default function CardioPrescription({ students, plans }: Props) {
   const handleSave = async () => {
     if (!user || !form.student_id) { toast.error("Selecione um aluno"); return; }
     setSaving(true);
-    const payload = { ...form, personal_id: user.id };
+    const payload = { ...form, personal_id: user.id, ...getTenantIdForInsert(tenantId) };
     if (!payload.plan_id) delete payload.plan_id;
     if (!payload.distance_km) delete payload.distance_km;
     

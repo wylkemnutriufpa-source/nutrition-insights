@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import StorageImage from "@/components/common/StorageImage";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter, getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import { uploadWithRetry } from "@/lib/uploadWithRetry";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -41,6 +43,7 @@ interface BodyAnalysisRecord {
 
 export default function BodyAnalysis() {
   const { user, isNutritionist } = useAuth();
+  const { tenantId } = useTenant();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const patientId = searchParams.get("patientId") || user?.id;
@@ -79,9 +82,10 @@ export default function BodyAnalysis() {
 
   const fetchAnalyses = async () => {
     if (!patientId) return;
-    const { data } = await supabase.from("body_analyses")
+    const q = supabase.from("body_analyses")
       .select("*").eq("patient_id", patientId)
       .order("analysis_date", { ascending: false });
+    const { data } = await withTenantFilter(q, tenantId);
     setAnalyses(data || []);
     setLoading(false);
   };
@@ -128,6 +132,7 @@ export default function BodyAnalysis() {
       side_image_url: sideUrl,
       back_image_url: backUrl,
       notes: notes || null,
+      ...getTenantIdForInsert(tenantId),
     }).select().single();
 
     if (error) { toast.error(error.message); return; }

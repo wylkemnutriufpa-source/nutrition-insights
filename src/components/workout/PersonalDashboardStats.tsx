@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -23,6 +25,7 @@ interface StudentStats {
 
 export default function PersonalDashboardStats() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [stats, setStats] = useState<{
     totalStudents: number;
     activePlans: number;
@@ -47,8 +50,11 @@ export default function PersonalDashboardStats() {
         (supabase as any).from("patient_professional_links")
           .select("patient_id").eq("professional_id", user.id)
           .eq("professional_role", "trainer").eq("link_status", "active"),
-        supabase.from("workout_plans").select("id, student_id, status")
-          .eq("personal_id", user.id),
+        withTenantFilter(
+          supabase.from("workout_plans").select("id, student_id, status")
+            .eq("personal_id", user.id),
+          tenantId
+        ),
         supabase.from("workout_completions")
           .select("*, workout_routines(name)")
           .order("completed_at", { ascending: false }).limit(500),

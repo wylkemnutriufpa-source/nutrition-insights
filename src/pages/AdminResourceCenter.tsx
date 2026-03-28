@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { useTenant } from "@/lib/tenantContext";
+import { getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -279,6 +281,7 @@ function SiteEditorTab() {
 // ═══════════════════════════════════════════════
 function BrandingTab() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [form, setForm] = useState<BrandingData>(defaultBranding);
   const [saving, setSaving] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -331,7 +334,7 @@ function BrandingTab() {
       // Store the path, not a signed URL (signed URLs expire)
       logoUrl = path;
     }
-    const payload = { ...form, logo_url: logoUrl, nutritionist_id: user.id };
+    const payload = { ...form, logo_url: logoUrl, nutritionist_id: user.id, ...getTenantIdForInsert(tenantId) };
     const { data: existing } = await supabase.from("branding_settings").select("id").eq("nutritionist_id", user.id).maybeSingle();
     if (existing) {
       const { error } = await supabase.from("branding_settings").update(payload).eq("nutritionist_id", user.id);

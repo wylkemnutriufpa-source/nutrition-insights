@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter, getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +26,7 @@ function generateCode() {
 
 export default function AdminAffiliates() {
   const qc = useQueryClient();
+  const { tenantId } = useTenant();
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState({
     full_name: "", email: "", affiliate_type: "regular" as string,
@@ -37,9 +40,10 @@ export default function AdminAffiliates() {
   });
 
   const { data: affiliates = [] } = useQuery({
-    queryKey: ["admin-affiliates"],
+    queryKey: ["admin-affiliates", tenantId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("affiliates").select("*").order("created_at", { ascending: false });
+      const q = supabase.from("affiliates").select("*").order("created_at", { ascending: false });
+      const { data, error } = await withTenantFilter(q, tenantId);
       if (error) throw error;
       return data || [];
     },
@@ -97,6 +101,7 @@ export default function AdminAffiliates() {
         affiliate_type: form.affiliate_type as any,
         first_payment_commission_percent: parseFloat(form.first_payment_commission_percent),
         recurring_commission_percent: parseFloat(form.recurring_commission_percent),
+        ...getTenantIdForInsert(tenantId),
       }]);
       if (error) throw error;
     },

@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter, getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,6 +37,7 @@ const CHANNELS = [
 
 export default function CampaignCenter() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [step, setStep] = useState(1);
@@ -48,9 +51,10 @@ export default function CampaignCenter() {
   const [preview, setPreview] = useState<any>(null);
 
   const { data: campaigns = [] } = useQuery({
-    queryKey: ["campaigns"],
+    queryKey: ["campaigns", tenantId],
     queryFn: async () => {
-      const { data } = await (supabase as any).from("campaigns").select("*").order("created_at", { ascending: false });
+      const q = (supabase as any).from("campaigns").select("*").order("created_at", { ascending: false });
+      const { data } = await withTenantFilter(q, tenantId);
       return data || [];
     },
   });
@@ -84,6 +88,7 @@ export default function CampaignCenter() {
         scheduled_at: form.scheduled_at || null,
         status: "draft",
         created_by: user.id,
+        ...getTenantIdForInsert(tenantId),
       }).select().single();
       if (error) throw error;
 
@@ -137,6 +142,7 @@ export default function CampaignCenter() {
           scheduled_at: form.scheduled_at || null,
           status,
           created_by: user.id,
+          ...getTenantIdForInsert(tenantId),
         });
         toast.success(status === "running" ? "🚀 Campanha enviada!" : "💾 Rascunho salvo");
       }
