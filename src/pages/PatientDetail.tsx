@@ -706,28 +706,34 @@ export default function PatientDetail() {
 
         {/* Section Cards Grid */}
         {(() => {
-          const sections = [
-            { key: "checklist", label: "Checklist", icon: ListChecks, color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
-            { key: "overview", label: "Visão Geral", icon: AlertTriangle, color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
-            { key: "ai-insights", label: "IA Insights", icon: Brain, color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
-            { key: "assessment", label: "Avaliação Física", icon: Activity, color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
-            { key: "agenda", label: "Agenda", icon: CalendarDays, color: "from-info/20 to-info/5", iconColor: "text-info" },
-            { key: "calculators", label: "Calculadoras", icon: Calculator, color: "from-success/20 to-success/5", iconColor: "text-success" },
-            { key: "timeline", label: "Timeline", icon: Clock, color: "from-muted-foreground/20 to-muted-foreground/5", iconColor: "text-muted-foreground" },
-            { key: "plan", label: "Plano", icon: CreditCard, color: "from-primary/20 to-primary/5", iconColor: "text-primary" },
-            { key: "protocols", label: "Protocolos", icon: FileText, color: "from-accent/20 to-accent/5", iconColor: "text-accent" },
-            { key: "meal-plans", label: "Planos Alimentares", icon: UtensilsCrossed, color: "from-success/20 to-success/5", iconColor: "text-success" },
-            { key: "radar", label: "Radar Metabólico", icon: TrendingUp, color: "from-destructive/20 to-destructive/5", iconColor: "text-destructive" },
-            { key: "recipes", label: "Receitas", icon: ChefHat, color: "from-primary/20 to-accent/5", iconColor: "text-primary" },
-            { key: "clinical-decision", label: "Decisão Clínica", icon: Stethoscope, color: "from-destructive/20 to-primary/5", iconColor: "text-destructive" },
-            { key: "body-projection", label: "Projeção Corporal", icon: Sparkles, color: "from-purple-500/20 to-violet-500/5", iconColor: "text-purple-500" },
-            { key: "onboarding", label: "Onboarding", icon: Zap, color: "from-warning/20 to-warning/5", iconColor: "text-warning" },
-            { key: "clinical-flags", label: "Flags Clínicas", icon: Shield, color: "from-emerald-500/20 to-emerald-500/5", iconColor: "text-emerald-500" },
-            { key: "lab-exams", label: "Exames Lab.", icon: Search, color: "from-violet-500/20 to-violet-500/5", iconColor: "text-violet-500" },
-            { key: "feedbacks", label: "Feedbacks", icon: MessageSquare, color: "from-amber-500/20 to-orange-500/5", iconColor: "text-amber-500" },
-            { key: "edit-profile", label: "Editar Cadastro", icon: Pencil, color: "from-info/20 to-info/5", iconColor: "text-info" },
-            { key: "projects", label: "Projetos", icon: Rocket, color: "from-pink-500/20 to-pink-500/5", iconColor: "text-pink-500" },
+          const allSections = [
+            // BASIC: essentials
+            { key: "checklist", label: "Checklist", icon: ListChecks, color: "from-warning/20 to-warning/5", iconColor: "text-warning", minMode: "basic" as const },
+            { key: "meal-plans", label: "Planos Alimentares", icon: UtensilsCrossed, color: "from-success/20 to-success/5", iconColor: "text-success", minMode: "basic" as const },
+            { key: "assessment", label: "Avaliação Física", icon: Activity, color: "from-accent/20 to-accent/5", iconColor: "text-accent", minMode: "basic" as const },
+            { key: "agenda", label: "Agenda", icon: CalendarDays, color: "from-info/20 to-info/5", iconColor: "text-info", minMode: "basic" as const },
+            { key: "recipes", label: "Receitas", icon: ChefHat, color: "from-primary/20 to-accent/5", iconColor: "text-primary", minMode: "basic" as const },
+            { key: "edit-profile", label: "Editar Cadastro", icon: Pencil, color: "from-info/20 to-info/5", iconColor: "text-info", minMode: "basic" as const },
+            { key: "plan", label: "Plano", icon: CreditCard, color: "from-primary/20 to-primary/5", iconColor: "text-primary", minMode: "basic" as const },
+            { key: "onboarding", label: "Onboarding", icon: Zap, color: "from-warning/20 to-warning/5", iconColor: "text-warning", minMode: "basic" as const },
+            // PRO: clinical intelligence
+            { key: "overview", label: "Visão Geral", icon: AlertTriangle, color: "from-warning/20 to-warning/5", iconColor: "text-warning", minMode: "pro" as const },
+            { key: "ai-insights", label: "IFJ Insights", icon: Brain, color: "from-primary/20 to-primary/5", iconColor: "text-primary", minMode: "pro" as const },
+            { key: "timeline", label: "Timeline", icon: Clock, color: "from-muted-foreground/20 to-muted-foreground/5", iconColor: "text-muted-foreground", minMode: "pro" as const },
+            { key: "protocols", label: "Protocolos", icon: FileText, color: "from-accent/20 to-accent/5", iconColor: "text-accent", minMode: "pro" as const },
+            { key: "calculators", label: "Calculadoras", icon: Calculator, color: "from-success/20 to-success/5", iconColor: "text-success", minMode: "pro" as const },
+            { key: "feedbacks", label: "Feedbacks", icon: MessageSquare, color: "from-amber-500/20 to-orange-500/5", iconColor: "text-amber-500", minMode: "pro" as const },
+            { key: "lab-exams", label: "Exames Lab.", icon: Search, color: "from-violet-500/20 to-violet-500/5", iconColor: "text-violet-500", minMode: "pro" as const },
+            // ADVANCED: full IFJ engine
+            { key: "radar", label: "Radar Metabólico", icon: TrendingUp, color: "from-destructive/20 to-destructive/5", iconColor: "text-destructive", minMode: "advanced" as const },
+            { key: "clinical-decision", label: "Decisão Clínica", icon: Stethoscope, color: "from-destructive/20 to-primary/5", iconColor: "text-destructive", minMode: "advanced" as const },
+            { key: "body-projection", label: "Projeção Corporal", icon: Sparkles, color: "from-purple-500/20 to-violet-500/5", iconColor: "text-purple-500", minMode: "advanced" as const },
+            { key: "clinical-flags", label: "Flags Clínicas", icon: Shield, color: "from-emerald-500/20 to-emerald-500/5", iconColor: "text-emerald-500", minMode: "advanced" as const },
+            { key: "projects", label: "Projetos", icon: Rocket, color: "from-pink-500/20 to-pink-500/5", iconColor: "text-pink-500", minMode: "advanced" as const },
           ];
+
+          const expUI = useExperienceUI();
+          const sections = allSections.filter(s => expUI.minMode(s.minMode));
 
           return (
             <>
