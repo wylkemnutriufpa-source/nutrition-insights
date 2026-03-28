@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,6 +22,10 @@ Deno.serve(async (req) => {
     });
     const { data: { user: caller } } = await callerClient.auth.getUser();
     if (!caller) throw new Error("Invalid session");
+
+    // Rate limit: 10 requests per 15 minutes
+    const rl = await checkRateLimit("invite-patient", caller.id, 10, 15);
+    if (!rl.allowed) return rateLimitResponse();
 
     // Verify caller is a professional
     const { data: callerRoles } = await callerClient.from("user_roles").select("role").eq("user_id", caller.id);

@@ -180,6 +180,10 @@ serve(async (req) => {
       });
     }
 
+    // Rate limit: 10 requests per 5 minutes
+    const rl = await checkRateLimit("analyze-body", user.id, 10, 5);
+    if (!rl.allowed) return rateLimitResponse();
+
     // Fetch patient profile for age/sex
     const { data: profile } = await supabase
       .from("profiles")

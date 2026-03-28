@@ -395,6 +395,10 @@ serve(async (req) => {
     }
     const userId = authUser.id;
 
+    // Rate limit: 10 requests per 10 minutes
+    const rl = await checkRateLimit("generate-meal-plan", userId, 10, 10);
+    if (!rl.allowed) return rateLimitResponse();
+
     const body = await req.json();
     const patient_id = body.patient_id || body.patientId;
     const meal_plan_id = body.meal_plan_id;

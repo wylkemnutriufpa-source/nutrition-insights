@@ -136,6 +136,10 @@ Deno.serve(async (req) => {
       return json({ error: "Forbidden" }, 403);
     }
 
+    // Rate limit: 5 requests per 15 minutes
+    const rl = await checkRateLimit("import-patients", user.id, 5, 15);
+    if (!rl.allowed) return rateLimitResponse();
+
     let body: any;
     try {
       body = await req.json();

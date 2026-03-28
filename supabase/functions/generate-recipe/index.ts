@@ -14,6 +14,10 @@ serve(async (req) => {
     const { prompt, nutritionist_id } = await req.json();
     if (!prompt || !nutritionist_id) throw new Error("prompt and nutritionist_id required");
 
+    // Rate limit: 20 requests per 5 minutes
+    const rl = await checkRateLimit("generate-recipe", nutritionist_id, 20, 5);
+    if (!rl.allowed) return rateLimitResponse();
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 

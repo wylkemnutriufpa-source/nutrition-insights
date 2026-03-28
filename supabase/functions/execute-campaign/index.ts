@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireUser, requireRole } from "../_shared/auth-guard.ts";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,6 +14,10 @@ Deno.serve(async (req) => {
     // AUTH GUARD: only admin/nutritionist can execute campaigns
     const caller = await requireUser(req);
     requireRole(caller, "admin", "nutritionist");
+
+    // Rate limit: 3 requests per 5 minutes
+    const rl = await checkRateLimit("execute-campaign", caller.id, 3, 5);
+    if (!rl.allowed) return rateLimitResponse();
 
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
