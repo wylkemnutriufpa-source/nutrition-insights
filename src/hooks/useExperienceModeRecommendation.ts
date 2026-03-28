@@ -43,6 +43,29 @@ export interface RecommendationFactors {
 
 const CACHE_KEY = "fj_mode_recommendation";
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const DISMISS_KEY = "fj_mode_rec_dismissed";
+const DISMISS_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const APPLIED_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+export function dismissRecommendation() {
+  localStorage.setItem(DISMISS_KEY, JSON.stringify({ ts: Date.now(), type: "dismiss" }));
+}
+
+export function markRecommendationApplied() {
+  localStorage.setItem(DISMISS_KEY, JSON.stringify({ ts: Date.now(), type: "applied" }));
+}
+
+export function isRecommendationCoolingDown(): boolean {
+  try {
+    const raw = localStorage.getItem(DISMISS_KEY);
+    if (!raw) return false;
+    const { ts, type } = JSON.parse(raw);
+    const cooldown = type === "applied" ? APPLIED_COOLDOWN_MS : DISMISS_COOLDOWN_MS;
+    return Date.now() - ts < cooldown;
+  } catch {
+    return false;
+  }
+}
 
 export function useExperienceModeRecommendation(): ModeRecommendation {
   const { user } = useAuth();
