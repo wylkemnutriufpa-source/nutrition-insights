@@ -1533,7 +1533,7 @@ serve(async (req) => {
           : fmt("Não encontrado", "❓", "error", "Tela não encontrada.", "Tente: *abrir financeiro*, *ir para pacientes*", [], intent, "navigation", ctx);
       }
       else if (intent.module === "action_engine") {
-        response = await runActionEngine(supabaseAdmin, supabase, intent, user.id, ctx, patients, role);
+        response = await runActionEngine(supabaseAdmin, supabase, intent, user.id, ctx, patients, role, inputText);
       }
       else if (intent.module === "priority_engine") {
         response = await runPriorityEngine(supabaseAdmin, intent, user.id, ctx, patients, today, role);
