@@ -548,7 +548,7 @@ export default function FitnessAnamnesis() {
       if (draftId) {
         await supabase.from("patient_anamnesis").update({ answers: currentAnswers, updated_at: new Date().toISOString() }).eq("id", draftId);
       } else {
-        const { data } = await supabase.from("patient_anamnesis").insert({ user_id: targetUserId, answers: currentAnswers, status: "draft", ...getTenantIdForInsert(tenantId) } as any).select("id").single();
+        const { data } = await supabase.from("patient_anamnesis").insert({ user_id: targetUserId, answers: currentAnswers, status: "draft", ...getTenantIdForInsert(tenantId) }).select("id").single();
         if (data) setDraftId(data.id);
       }
       setAutoSaveStatus("saved");
