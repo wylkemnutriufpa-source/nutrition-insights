@@ -175,6 +175,70 @@ function detectIntentFromDB(
     }
   }
 
+  // "ver checklist da Luana", "checklist do João", "tarefas da Maria"
+  const compoundChecklist = n.match(/(?:ver|abrir|mostrar|checar)?\s*(?:o\s+)?(?:checklist|tarefas?|pendencias)\s+(?:d[aeo]\s+|da\s+|do\s+)(.+)/);
+  if (compoundChecklist && compoundChecklist[1]?.trim()) {
+    const ck = intents.find(i => i.intent_key === "checklist_status");
+    if (ck) {
+      const cleaned = compoundChecklist[1].trim().replace(/\s+(hoje|agora)$/, "").trim();
+      return {
+        ...base, intent: "checklist_status", target_entity: "patient", target_name: cleaned,
+        module: ck.module, confidence: 0.91, response_mode: "detail",
+        requires_context: ck.requires_context, requires_active_plan: ck.requires_active_plan,
+        requires_permission_key: ck.requires_permission_key, action_type: ck.action_type,
+        executor_key: ck.executor_key, scope: ck.scope,
+      };
+    }
+  }
+
+  // "evolução da Luana", "progresso do João", "como está a Luana"
+  const compoundEvolution = n.match(/(?:evolucao|progresso|resultado|como esta)\s+(?:d[aeo]\s+|da\s+|do\s+)(.+)/);
+  if (compoundEvolution && compoundEvolution[1]?.trim()) {
+    const pd = intents.find(i => i.intent_key === "patient_detail");
+    if (pd) {
+      const cleaned = compoundEvolution[1].trim().replace(/\s+(hoje|agora)$/, "").trim();
+      return {
+        ...base, intent: "patient_detail", target_entity: "patient", target_name: cleaned,
+        module: pd.module, confidence: 0.90, response_mode: "detail",
+        requires_context: pd.requires_context, requires_active_plan: pd.requires_active_plan,
+        requires_permission_key: pd.requires_permission_key, action_type: pd.action_type,
+        executor_key: pd.executor_key, scope: pd.scope,
+      };
+    }
+  }
+
+  // "anamnese da Luana", "ver anamnese do João"
+  const compoundAnamnesis = n.match(/(?:ver|abrir|mostrar)?\s*(?:a\s+)?anamnese\s+(?:d[aeo]\s+|da\s+|do\s+)(.+)/);
+  if (compoundAnamnesis && compoundAnamnesis[1]?.trim()) {
+    const an = intents.find(i => i.intent_key === "anamnesis");
+    if (an) {
+      const cleaned = compoundAnamnesis[1].trim();
+      return {
+        ...base, intent: "anamnesis", target_entity: "patient", target_name: cleaned,
+        module: an.module, confidence: 0.91, response_mode: "detail",
+        requires_context: an.requires_context, requires_active_plan: an.requires_active_plan,
+        requires_permission_key: an.requires_permission_key, action_type: an.action_type,
+        executor_key: an.executor_key, scope: an.scope,
+      };
+    }
+  }
+
+  // "exames da Luana", "ver exames do João"
+  const compoundLab = n.match(/(?:ver|abrir|mostrar)?\s*(?:os?\s+)?(?:exames?|lab|laboratorio)\s+(?:d[aeo]\s+|da\s+|do\s+)(.+)/);
+  if (compoundLab && compoundLab[1]?.trim()) {
+    const lb = intents.find(i => i.intent_key === "lab_exams");
+    if (lb) {
+      const cleaned = compoundLab[1].trim();
+      return {
+        ...base, intent: "lab_exams", target_entity: "patient", target_name: cleaned,
+        module: lb.module, confidence: 0.91, response_mode: "detail",
+        requires_context: lb.requires_context, requires_active_plan: lb.requires_active_plan,
+        requires_permission_key: lb.requires_permission_key, action_type: lb.action_type,
+        executor_key: lb.executor_key, scope: lb.scope,
+      };
+    }
+  }
+
   // "plano alimentar da Luana", "plano da Luana"
   const simpleMealPlan = n.match(/(?:plano|dieta|cardapio)\s+(?:alimentar\s+)?(?:d[aeo]\s+|da\s+|do\s+)(.+)/);
   if (simpleMealPlan && simpleMealPlan[1]?.trim()) {
@@ -194,7 +258,6 @@ function detectIntentFromDB(
     }
   }
 
-  // Score-based matching from DB phrases
   const scores: { intent: DBIntentRow; score: number; bestWeight: number }[] = [];
 
   for (const intent of intents) {
@@ -1091,25 +1154,41 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
       return fmt(`Ficha: ${patient.full_name}`, "👤", "detail", `Resumo de ${patient.full_name}`, md, actions, intent, "clinical", ctx);
     }
     case "anamnesis": {
-      const pid = intent.target_id || ctx.last_patient_id;
-      if (!pid) return fmt("Quem?", "❓", "error", "Diga o nome.", "", [], intent, "clinical", ctx);
+      let pid = intent.target_id || ctx.last_patient_id;
+      if (!pid && intent.target_name) {
+        const { found, ambiguous } = findByName(patients, intent.target_name);
+        if (ambiguous.length > 0) {
+          const disambigActions = ambiguous.map((p: any) => ({ label: `Anamnese de ${p.full_name}`, route: `/patients/${p.id}`, type: "navigate" }));
+          return fmt("Qual paciente?", "🔍", "disambiguation", `${ambiguous.length} pacientes com esse nome`, ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}** (${p.goal || "?"})`).join("\n"), disambigActions, intent, "clinical", ctx);
+        }
+        if (found) { pid = found.id; ctx.last_patient_id = found.id; ctx.last_patient_name = found.full_name; }
+      }
+      if (!pid) return fmt("Quem?", "❓", "error", "Diga o nome do paciente.", "Ex: *anamnese da Maria*", [], intent, "clinical", ctx);
       const anam = await getPatientAnamnesis(supabase, pid);
-      if (!anam) return fmt("Sem anamnese", "📋", "info", "Nenhuma encontrada.", "", [], intent, "clinical", ctx);
+      if (!anam) return fmt("Sem anamnese", "📋", "info", "Nenhuma encontrada.", "Ainda não há anamnese registrada.", [{ label: "Abrir ficha", route: `/patients/${pid}`, type: "navigate" }], intent, "clinical", ctx);
       const p = patients.find(x => x.id === pid);
       const answers = anam.answers || {};
       const md = `## Anamnese — ${p?.full_name}\n\n- **Status**: ${anam.status}\n- **Data**: ${new Date(anam.created_at).toLocaleDateString("pt-BR")}\n\n` +
         Object.entries(answers).slice(0, 15).map(([k, v]) => `- **${k}**: ${typeof v === "object" ? JSON.stringify(v) : v}`).join("\n");
-      return fmt(`Anamnese: ${p?.full_name}`, "📋", "detail", "Dados da anamnese", md, [], intent, "clinical", ctx);
+      return fmt(`Anamnese: ${p?.full_name}`, "📋", "detail", "Dados da anamnese", md, [{ label: "Abrir ficha", route: `/patients/${pid}`, type: "navigate" }], intent, "clinical", ctx);
     }
     case "lab_exams": {
-      const pid = intent.target_id || ctx.last_patient_id;
-      if (!pid) return fmt("Quem?", "❓", "error", "Diga o nome.", "", [], intent, "clinical", ctx);
+      let pid = intent.target_id || ctx.last_patient_id;
+      if (!pid && intent.target_name) {
+        const { found, ambiguous } = findByName(patients, intent.target_name);
+        if (ambiguous.length > 0) {
+          const disambigActions = ambiguous.map((p: any) => ({ label: `Exames de ${p.full_name}`, route: `/patients/${p.id}`, type: "navigate" }));
+          return fmt("Qual paciente?", "🔍", "disambiguation", `${ambiguous.length} pacientes com esse nome`, ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}** (${p.goal || "?"})`).join("\n"), disambigActions, intent, "clinical", ctx);
+        }
+        if (found) { pid = found.id; ctx.last_patient_id = found.id; ctx.last_patient_name = found.full_name; }
+      }
+      if (!pid) return fmt("Quem?", "❓", "error", "Diga o nome do paciente.", "Ex: *exames da Maria*", [], intent, "clinical", ctx);
       const labs = await getPatientLabSummary(supabase, pid);
-      if (!labs.length) return fmt("Sem exames", "🔬", "info", "Nenhum exame.", "", [], intent, "clinical", ctx);
+      if (!labs.length) return fmt("Sem exames", "🔬", "info", "Nenhum exame registrado.", "", [{ label: "Abrir ficha", route: `/patients/${pid}`, type: "navigate" }], intent, "clinical", ctx);
       const p = patients.find(x => x.id === pid);
       const md = `## Exames — ${p?.full_name}\n\n| Marcador | Valor | Ref | Status |\n|---|---|---|---|\n` +
         labs.map((l: any) => { const val = parseFloat(l.value); const low = l.reference_min != null ? parseFloat(l.reference_min) : null; const high = l.reference_max != null ? parseFloat(l.reference_max) : null; let status = "✅"; if (low != null && val < low) status = "⬇️"; if (high != null && val > high) status = "⬆️"; return `| ${l.marker_name} | ${l.value} ${l.unit || ""} | ${low || "—"}-${high || "—"} | ${status} |`; }).join("\n");
-      return fmt(`Exames: ${p?.full_name}`, "🔬", "detail", `${labs.length} marcadores`, md, [], intent, "clinical", ctx);
+      return fmt(`Exames: ${p?.full_name}`, "🔬", "detail", `${labs.length} marcadores`, md, [{ label: "Abrir ficha", route: `/patients/${pid}`, type: "navigate" }], intent, "clinical", ctx);
     }
     case "lab_pending": return fmt("Exames pendentes", "🔬", "info", "Em desenvolvimento", "🔬 Consulte por paciente.", [], intent, "clinical", ctx);
     case "meal_plan": {
@@ -1124,10 +1203,25 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
         }
         if (found) { pid = found.id; ctx.last_patient_id = found.id; ctx.last_patient_name = found.full_name; }
       }
-      if (!pid) return fmt("Quem?", "❓", "error", "Diga o nome.", "", [], intent, "clinical", ctx);
+      if (!pid) return fmt("Quem?", "❓", "error", "Diga o nome do paciente.", "Ex: *plano alimentar da Maria*", [], intent, "clinical", ctx);
       const { data: plan } = await supabase.from("meal_plans").select("id, title, plan_status, is_active, start_date, end_date, total_target_calories").eq("patient_id", pid).eq("is_active", true).limit(1).maybeSingle();
       const p = patients.find(x => x.id === pid);
-      if (!plan) return fmt("Sem plano", "🍽️", "info", `${p?.full_name} sem plano ativo.`, "", [{ label: "Criar", route: "/meal-plans", type: "navigate" }], intent, "clinical", ctx);
+      if (!plan) {
+        // Check for inactive/old plans
+        const { data: oldPlans } = await supabase.from("meal_plans").select("id, title, plan_status, end_date").eq("patient_id", pid).eq("is_active", false).order("end_date", { ascending: false }).limit(3);
+        const hasOldPlans = oldPlans && oldPlans.length > 0;
+        const oldPlansMd = hasOldPlans
+          ? `\n\n### Planos anteriores\n${oldPlans.map((op: any) => `- **${op.title}** — ${op.plan_status} (até ${op.end_date || "—"})`).join("\n")}`
+          : "";
+        const actions = [
+          { label: "Criar plano", route: "/meal-plans", type: "navigate" },
+          { label: "Abrir ficha", route: `/patients/${pid}`, type: "navigate" },
+        ];
+        if (hasOldPlans) actions.push({ label: "Ver planos antigos", route: `/patients/${pid}`, type: "navigate" });
+        return fmt("Sem plano ativo", "🍽️", "info", `${p?.full_name} não possui plano alimentar ativo.`,
+          `## ${p?.full_name} — Sem plano ativo\n\nEste paciente não possui um plano alimentar ativo no momento.\n\n💡 **Ações sugeridas:**\n- Criar um novo plano alimentar\n- Revisar planos anteriores${oldPlansMd}`,
+          actions, intent, "clinical", ctx);
+      }
       const daysLeft = plan.end_date ? Math.ceil((new Date(plan.end_date).getTime() - Date.now()) / 86400000) : null;
       const md = `## ${plan.title}\n\n- Status: ${plan.plan_status}\n- Início: ${plan.start_date || "—"}\n- Fim: ${plan.end_date || "—"}\n- Calorias: ${plan.total_target_calories || "—"} kcal` + (daysLeft != null ? `\n- **Vence em ${daysLeft}d**` : "");
       return fmt(`Plano: ${p?.full_name}`, "🍽️", "detail", plan.title, md, [{ label: "Editar", route: `/meal-plans/${plan.id}`, type: "navigate" }], intent, "clinical", ctx);
@@ -1165,17 +1259,27 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
 async function runBehavioralEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], today: string): Promise<IFJResponse> {
   switch (intent.intent) {
     case "checklist_status": {
-      const pid = ctx.last_patient_id;
+      let pid = intent.target_id || ctx.last_patient_id;
+      // Resolve patient by name if target_name is present
+      if (!pid && intent.target_name) {
+        const { found, ambiguous } = findByName(patients, intent.target_name);
+        if (ambiguous.length > 0) {
+          const disambigActions = ambiguous.map((p: any) => ({ label: `Checklist de ${p.full_name}`, route: `/patients/${p.id}`, type: "navigate" }));
+          return fmt("Qual paciente?", "🔍", "disambiguation", `${ambiguous.length} pacientes com esse nome`, ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}** (${p.goal || "?"})`).join("\n"), disambigActions, intent, "behavioral", ctx);
+        }
+        if (found) { pid = found.id; ctx.last_patient_id = found.id; ctx.last_patient_name = found.full_name; }
+      }
       if (pid) {
         const { data: tasks } = await supabase.from("checklist_tasks").select("id, title, completed, category").eq("patient_id", pid).eq("date", today);
         const total = (tasks || []).length; const done = (tasks || []).filter((t: any) => t.completed).length;
         const p = patients.find(x => x.id === pid);
         return fmt(`Checklist: ${p?.full_name}`, "✅", "detail", `${done}/${total}`,
-          `**${done}/${total}** tarefas\n\n` + (tasks || []).map((t: any) => `- ${t.completed ? "✅" : "⬜"} ${t.title}`).join("\n"), [], intent, "behavioral", ctx);
+          `**${done}/${total}** tarefas\n\n` + (tasks || []).map((t: any) => `- ${t.completed ? "✅" : "⬜"} ${t.title}`).join("\n"),
+          [{ label: "Abrir ficha", route: `/patients/${pid}`, type: "navigate" }], intent, "behavioral", ctx);
       }
       const snapshots = await getSnapshots(supabase, patients.map(p => p.id).length ? patients.map(p => p.id) : ["00000000-0000-0000-0000-000000000000"], today);
       const lowAdh = snapshots.filter((s: any) => s.checklist_completion_rate != null && s.checklist_completion_rate < 50);
-      if (!lowAdh.length) return fmt("Checklists OK", "✅", "info", "Boa adesão.", "", [], intent, "behavioral", ctx);
+      if (!lowAdh.length) return fmt("Checklists OK", "✅", "info", "Boa adesão geral.", "Todos os pacientes com checklist acima de 50%.", [], intent, "behavioral", ctx);
       const md = lowAdh.map((s: any) => { const p = patients.find(x => x.id === s.patient_id); return `- **${p?.full_name || "?"}** — ${s.checklist_completion_rate}%`; }).join("\n");
       return fmt("Checklist baixo", "📋", "list", `${lowAdh.length} < 50%`, md, [], intent, "behavioral", ctx);
     }
