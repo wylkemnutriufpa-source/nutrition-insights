@@ -158,6 +158,42 @@ function detectIntentFromDB(
     if (ci) return { ...base, intent: ci.intent_key, target_entity: "patient", target_name: nameMatch?.[1] || null, module: ci.module, confidence: 0.97, response_mode: "action", action_type: ci.action_type, executor_key: ci.executor_key, scope: ci.scope };
   }
 
+  // ── COMPOUND INTENT REGEX (pre-score) ──────────────────────────
+  // "avaliar plano da Luana", "ver dieta do João", "checar cardapio da Maria"
+  const compoundMealPlan = n.match(/(?:avaliar|ver|abrir|mostrar|checar|revisar)\s+(?:o\s+)?(?:plano|dieta|cardapio)\s+(?:d[aeo]\s+|da\s+|do\s+)(.+)/);
+  if (compoundMealPlan && compoundMealPlan[1]?.trim()) {
+    const mp = intents.find(i => i.intent_key === "meal_plan");
+    if (mp) {
+      const cleaned = compoundMealPlan[1].trim().replace(/\s+(hoje|agora|atual|ativo)$/, "").trim();
+      return {
+        ...base, intent: "meal_plan", target_entity: "patient", target_name: cleaned,
+        module: mp.module, confidence: 0.92, response_mode: "detail",
+        requires_context: mp.requires_context, requires_active_plan: mp.requires_active_plan,
+        requires_permission_key: mp.requires_permission_key, action_type: mp.action_type,
+        executor_key: mp.executor_key, scope: mp.scope,
+      };
+    }
+  }
+
+  // "plano alimentar da Luana", "plano da Luana"
+  const simpleMealPlan = n.match(/(?:plano|dieta|cardapio)\s+(?:alimentar\s+)?(?:d[aeo]\s+|da\s+|do\s+)(.+)/);
+  if (simpleMealPlan && simpleMealPlan[1]?.trim()) {
+    const mp = intents.find(i => i.intent_key === "meal_plan");
+    if (mp) {
+      const cleaned = simpleMealPlan[1].trim().replace(/\s+(hoje|agora|atual|ativo)$/, "").trim();
+      const foodCheck = /(?:comer|substituir|trocar|receita|saudavel|engorda|emagrec|caloria)/;
+      if (!foodCheck.test(cleaned)) {
+        return {
+          ...base, intent: "meal_plan", target_entity: "patient", target_name: cleaned,
+          module: mp.module, confidence: 0.90, response_mode: "detail",
+          requires_context: mp.requires_context, requires_active_plan: mp.requires_active_plan,
+          requires_permission_key: mp.requires_permission_key, action_type: mp.action_type,
+          executor_key: mp.executor_key, scope: mp.scope,
+        };
+      }
+    }
+  }
+
   // Score-based matching from DB phrases
   const scores: { intent: DBIntentRow; score: number; bestWeight: number }[] = [];
 
