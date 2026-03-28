@@ -104,10 +104,12 @@ Deno.serve(async (req) => {
         phone: phone || null,
       }).eq("user_id", patientId);
     } else {
+      const callerTenant = await resolveTenantForUser(adminClient, caller.id);
       await adminClient.from("profiles").insert({
         user_id: patientId,
         full_name: name,
         phone: phone || null,
+        tenant_id: callerTenant,
       });
     }
 
