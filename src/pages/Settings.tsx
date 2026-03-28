@@ -20,6 +20,7 @@ import ExperienceModeSwitcher from "@/components/settings/ExperienceModeSwitcher
 
 export default function Settings() {
   const { t } = useTranslation();
+  const { minMode } = useExperienceMode();
   const { user, profile, refreshProfile } = useAuth();
   const { permission, isSubscribed, isSupported, loading: pushLoading, subscribe, unsubscribe } = usePushNotifications();
   const [fullName, setFullName] = useState(profile?.full_name || "");
