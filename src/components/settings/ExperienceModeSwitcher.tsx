@@ -3,6 +3,7 @@ import { useExperienceMode, type ExperienceMode } from "@/hooks/useExperienceMod
 import { Zap, BarChart3, Rocket } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import ExperienceModeRecommendation from "./ExperienceModeRecommendation";
 
 const MODES: { key: ExperienceMode; label: string; desc: string; icon: typeof Zap; color: string; bgColor: string }[] = [
   {
