@@ -104,8 +104,8 @@ export interface AssistedGenerationResult {
 }
 
 // ── Constants ────────────────────────────────────────────────
-const SCALE_MIN = 0.4;
-const SCALE_MAX = 2.2;
+const SCALE_MIN = 0.5;
+const SCALE_MAX = 1.8; // Reduced from 2.2 to prevent absurd quantities
 
 const MEAL_CONFIGS: Record<number, { types: string[]; distribution: Record<string, number> }> = {
   3: {
