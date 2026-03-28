@@ -198,6 +198,7 @@ Deno.serve(async (req) => {
             })
             .eq("id", schedule.id);
 
+          const extTenantId = await resolveTenantForUser(schedule.meal_plans.nutritionist_id);
           // Notify patient about extension
           await supabase.from("notifications").insert({
             user_id: patientId,
@@ -205,6 +206,7 @@ Deno.serve(async (req) => {
             message: `Seu plano atual foi estendido por mais ${extensionDays} dias. Continue se esforçando para atingir os critérios!`,
             type: "warning",
             action_url: "/checklist",
+            tenant_id: extTenantId,
           });
 
           results.push({ 
