@@ -24,6 +24,10 @@ const CRITICAL_TABLES = [
   "patient_protocols",
   "patient_timeline",
   "engagement_signals",
+  "nutritionist_patients",
+  "ifj_patient_permissions",
+  "chat_messages",
+  "checklist_tasks",
 ] as const;
 
 // Map table → query keys to invalidate
@@ -33,10 +37,14 @@ const TABLE_QUERY_MAP: Record<string, string[][]> = {
   meal_plans: [["patients"], ["dashboard"], ["meal-plans"]],
   patient_checkins: [["patients"], ["dashboard"]],
   clinical_alerts: [["patients"], ["dashboard"], ["engagement"]],
-  patient_lifecycle_states: [["patients"], ["dashboard"]],
+  patient_lifecycle_states: [["patients"], ["dashboard"], ["lifecycle"], ["payment-guard"]],
   patient_protocols: [["patients"], ["protocols"], ["dashboard"]],
   patient_timeline: [["dashboard"]],
   engagement_signals: [["engagement"], ["dashboard"]],
+  nutritionist_patients: [["patients"], ["dashboard"], ["lifecycle"], ["payment-guard"], ["patient-detail"]],
+  ifj_patient_permissions: [["patients"], ["dashboard"], ["payment-guard"]],
+  chat_messages: [["chat"]],
+  checklist_tasks: [["checklist"], ["dashboard"]],
 };
 
 export function useRealtimeEventBus() {
