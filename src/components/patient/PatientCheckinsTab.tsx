@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import StorageImage from "@/components/common/StorageImage";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -342,7 +343,7 @@ export default function PatientCheckinsTab({ patientId }: PatientCheckinsTabProp
                               ].map((photo) => (
                                 <div key={photo.label} className="aspect-[3/4] rounded-lg bg-muted overflow-hidden">
                                   {photo.url ? (
-                                    <img src={photo.url} alt={photo.label} className="w-full h-full object-cover" />
+                                    <StorageImage src={photo.url} bucket="checkin-photos" alt={photo.label} className="w-full h-full object-cover" />
                                   ) : (
                                     <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
                                       {photo.label}

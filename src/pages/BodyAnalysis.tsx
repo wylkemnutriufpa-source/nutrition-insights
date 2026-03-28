@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import StorageImage from "@/components/common/StorageImage";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadWithRetry } from "@/lib/uploadWithRetry";
@@ -93,6 +94,7 @@ export default function BodyAnalysis() {
       path,
       file,
       maxRetries: 3,
+      returnPath: true, // Store path in DB, not signed URL
       onProgress: (attempt, max) => {
         if (attempt > 1) toast.info(`Retry upload (${attempt}/${max})...`);
       },
@@ -234,7 +236,7 @@ export default function BodyAnalysis() {
                     {[a.front_image_url, a.side_image_url, a.back_image_url].map((url, i) => (
                       <div key={i} className="aspect-[3/4] rounded-lg bg-muted overflow-hidden">
                         {url ? (
-                          <img src={url} className="w-full h-full object-cover" alt={["Frente", "Lateral", "Costas"][i]} />
+                          <StorageImage src={url} bucket="body-images" className="w-full h-full object-cover" alt={["Frente", "Lateral", "Costas"][i]} />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
                             {["Frente", "Lateral", "Costas"][i]}
@@ -303,7 +305,7 @@ export default function BodyAnalysis() {
                 <div className="grid grid-cols-3 gap-2">
                   {[selected.front_image_url, selected.side_image_url, selected.back_image_url].map((url, i) => (
                     <div key={i} className="aspect-[3/4] rounded-lg bg-muted overflow-hidden">
-                      {url && <img src={url} className="w-full h-full object-cover" alt="" />}
+                      {url && <StorageImage src={url} bucket="body-images" className="w-full h-full object-cover" alt="" />}
                     </div>
                   ))}
                 </div>

@@ -32,7 +32,7 @@ async function importOnePatient(
     let finalId = patientUserId;
 
     if (rpcError) {
-      console.log(`[import] RPC failed for ${email}: ${rpcError.message}, trying admin API`);
+      console.log(`[import] RPC failed: ${rpcError.message}, trying admin API`);
 
       // 2. Check if user exists
       const { data: foundId } = await supabase.rpc("find_patient_by_email", { _email: email });
