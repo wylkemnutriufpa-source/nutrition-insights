@@ -467,7 +467,7 @@ export default function PlanBatchAudit() {
       // Insert reformulated items
       const itemsToInsert = reform.newItems.map(item => ({
         meal_plan_id: newPlan.id,
-        meal_type: item.meal_type,
+        meal_type: item.meal_type as any,
         title: item.title,
         description: item.description,
         day_of_week: item.day_of_week,
