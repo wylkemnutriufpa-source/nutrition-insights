@@ -13488,6 +13488,42 @@ export type Database = {
         }
         Relationships: []
       }
+      tenants: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          owner_user_id: string
+          plan_type: Database["public"]["Enums"]["tenant_plan"]
+          settings: Json | null
+          slug: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          owner_user_id: string
+          plan_type?: Database["public"]["Enums"]["tenant_plan"]
+          settings?: Json | null
+          slug?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          owner_user_id?: string
+          plan_type?: Database["public"]["Enums"]["tenant_plan"]
+          settings?: Json | null
+          slug?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       testimonials: {
         Row: {
           avatar_url: string | null
@@ -14235,6 +14271,41 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_tenants: {
+        Row: {
+          id: string
+          is_active: boolean
+          joined_at: string
+          role: Database["public"]["Enums"]["tenant_role"]
+          tenant_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          is_active?: boolean
+          joined_at?: string
+          role?: Database["public"]["Enums"]["tenant_role"]
+          tenant_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          is_active?: boolean
+          joined_at?: string
+          role?: Database["public"]["Enums"]["tenant_role"]
+          tenant_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_tenants_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       wearable_devices: {
         Row: {
@@ -15705,9 +15776,18 @@ export type Database = {
       get_user_email_by_id: { Args: { _user_id: string }; Returns: string }
       get_user_id_by_email: { Args: { _email: string }; Returns: string }
       get_user_org_id: { Args: { _user_id: string }; Returns: string }
+      get_user_tenant_ids: { Args: { _user_id: string }; Returns: string[] }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      has_tenant_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["tenant_role"]
+          _tenant_id: string
           _user_id: string
         }
         Returns: boolean
@@ -15741,6 +15821,10 @@ export type Database = {
       }
       is_team_member_of: {
         Args: { _head_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_tenant_member: {
+        Args: { _tenant_id: string; _user_id: string }
         Returns: boolean
       }
       log_audit: {
@@ -16022,6 +16106,14 @@ export type Database = {
         | "completed"
         | "cancelled"
       referral_status: "lead" | "registered" | "paying" | "cancelled"
+      tenant_plan: "free" | "starter" | "professional" | "clinic" | "enterprise"
+      tenant_role:
+        | "owner"
+        | "admin"
+        | "nutritionist"
+        | "personal"
+        | "staff"
+        | "patient"
       usage_intensity: "low" | "medium" | "high"
     }
     CompositeTypes: {
@@ -16252,6 +16344,15 @@ export const Constants = {
         "cancelled",
       ],
       referral_status: ["lead", "registered", "paying", "cancelled"],
+      tenant_plan: ["free", "starter", "professional", "clinic", "enterprise"],
+      tenant_role: [
+        "owner",
+        "admin",
+        "nutritionist",
+        "personal",
+        "staff",
+        "patient",
+      ],
       usage_intensity: ["low", "medium", "high"],
     },
   },
