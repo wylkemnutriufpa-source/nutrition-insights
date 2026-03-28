@@ -284,8 +284,8 @@ function MetricsPanel() {
   const cards = [
     { label: "Erros (1h)", value: metrics?.errors1h ?? 0, icon: AlertTriangle, color: (metrics?.errors1h ?? 0) > 10 ? "text-destructive" : "text-primary" },
     { label: "Erros (24h)", value: metrics?.errors24h ?? 0, icon: TrendingUp, color: (metrics?.errors24h ?? 0) > 50 ? "text-destructive" : "text-foreground" },
-    { label: "Alertas Ativos", value: metrics?.activeAlerts ?? 0, icon: Zap, color: (metrics?.activeAlerts ?? 0) > 0 ? "text-orange-400" : "text-primary" },
-    { label: "Rate Limits (24h)", value: metrics?.rateLimits24h ?? 0, icon: Shield, color: (metrics?.rateLimits24h ?? 0) > 5 ? "text-orange-400" : "text-foreground" },
+    { label: "Alertas Ativos", value: metrics?.activeAlerts ?? 0, icon: Zap, color: (metrics?.activeAlerts ?? 0) > 0 ? "text-destructive" : "text-primary" },
+    { label: "Rate Limits (24h)", value: metrics?.rateLimits24h ?? 0, icon: Shield, color: (metrics?.rateLimits24h ?? 0) > 5 ? "text-destructive" : "text-foreground" },
   ];
 
   return (
