@@ -666,7 +666,7 @@ export default function Anamnesis() {
             answers: currentAnswers,
             status: "draft",
             ...getTenantIdForInsert(tenantId),
-          } as any)
+          })
           .select("id")
           .single();
         if (data) setDraftId(data.id);
