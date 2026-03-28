@@ -1492,6 +1492,12 @@ serve(async (req) => {
     const n = normalize(inputText);
     const intent = detectIntentFromDB(n, ctx, brain.intents, brain.phraseMap, role);
 
+    // 5b. Override target_id if disambiguation re-execution
+    if (forceTargetId) {
+      intent.target_id = forceTargetId;
+      intent.needs_disambiguation = false;
+    }
+
     // 6. Apply Guardrails
     const guardResult = applyGuardrails(intent, role, brain.guardrails, patientPerms, ctx);
     if (guardResult.blocked) {
