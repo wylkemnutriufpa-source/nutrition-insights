@@ -106,9 +106,10 @@ export default function PatientLabExams({ patientId, patientGender }: Props) {
       const path = `lab-exams/${patientId}/${Date.now()}.${ext}`;
       const { error } = await supabase.storage.from("patient-documents").upload(path, file);
       if (error) throw error;
-      const { data: urlData } = supabase.storage.from("patient-documents").getPublicUrl(path);
+      // Bucket is private — use signed URL
+      const { data: signedData } = await supabase.storage.from("patient-documents").createSignedUrl(path, 3600);
       setFileUploading(false);
-      return { url: urlData.publicUrl, name: file.name };
+      return { url: signedData?.signedUrl || path, name: file.name };
     } catch (e: any) {
       toast.error("Erro no upload: " + e.message);
       setFileUploading(false);
