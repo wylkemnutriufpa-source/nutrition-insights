@@ -255,12 +255,14 @@ serve(async (req) => {
           const planName = PRODUCT_TIERS[productId] || "Premium";
 
           // Create notification for user about plan change
+          const tenantIdNotif = await resolveTenantForUser(supabase, userId);
           await supabase.from("notifications").insert({
             user_id: userId,
             title: "📋 Plano atualizado",
             message: `Seu plano foi atualizado para ${planName}. Status: ${subscription.status}.`,
             type: "subscription",
             action_url: "/settings",
+            tenant_id: tenantIdNotif,
           });
 
           log("User notified of plan update", { userId, planName });
