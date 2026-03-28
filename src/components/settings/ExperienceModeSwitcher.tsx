@@ -65,7 +65,7 @@ export default function ExperienceModeSwitcher() {
                   ? `${m.bgColor} ring-1 ring-offset-1 ring-offset-background`
                   : "border-border hover:bg-muted/50"
               }`}
-              style={selected ? { ringColor: "hsl(var(--primary))" } : {}}
+              
             >
               <div className="flex items-center gap-3">
                 <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${selected ? m.bgColor : "bg-muted"}`}>
