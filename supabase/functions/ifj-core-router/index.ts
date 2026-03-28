@@ -1124,10 +1124,25 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
         }
         if (found) { pid = found.id; ctx.last_patient_id = found.id; ctx.last_patient_name = found.full_name; }
       }
-      if (!pid) return fmt("Quem?", "❓", "error", "Diga o nome.", "", [], intent, "clinical", ctx);
+      if (!pid) return fmt("Quem?", "❓", "error", "Diga o nome do paciente.", "Ex: *plano alimentar da Maria*", [], intent, "clinical", ctx);
       const { data: plan } = await supabase.from("meal_plans").select("id, title, plan_status, is_active, start_date, end_date, total_target_calories").eq("patient_id", pid).eq("is_active", true).limit(1).maybeSingle();
       const p = patients.find(x => x.id === pid);
-      if (!plan) return fmt("Sem plano", "🍽️", "info", `${p?.full_name} sem plano ativo.`, "", [{ label: "Criar", route: "/meal-plans", type: "navigate" }], intent, "clinical", ctx);
+      if (!plan) {
+        // Check for inactive/old plans
+        const { data: oldPlans } = await supabase.from("meal_plans").select("id, title, plan_status, end_date").eq("patient_id", pid).eq("is_active", false).order("end_date", { ascending: false }).limit(3);
+        const hasOldPlans = oldPlans && oldPlans.length > 0;
+        const oldPlansMd = hasOldPlans
+          ? `\n\n### Planos anteriores\n${oldPlans.map((op: any) => `- **${op.title}** — ${op.plan_status} (até ${op.end_date || "—"})`).join("\n")}`
+          : "";
+        const actions = [
+          { label: "Criar plano", route: "/meal-plans", type: "navigate" },
+          { label: "Abrir ficha", route: `/patients/${pid}`, type: "navigate" },
+        ];
+        if (hasOldPlans) actions.push({ label: "Ver planos antigos", route: `/patients/${pid}`, type: "navigate" });
+        return fmt("Sem plano ativo", "🍽️", "info", `${p?.full_name} não possui plano alimentar ativo.`,
+          `## ${p?.full_name} — Sem plano ativo\n\nEste paciente não possui um plano alimentar ativo no momento.\n\n💡 **Ações sugeridas:**\n- Criar um novo plano alimentar\n- Revisar planos anteriores${oldPlansMd}`,
+          actions, intent, "clinical", ctx);
+      }
       const daysLeft = plan.end_date ? Math.ceil((new Date(plan.end_date).getTime() - Date.now()) / 86400000) : null;
       const md = `## ${plan.title}\n\n- Status: ${plan.plan_status}\n- Início: ${plan.start_date || "—"}\n- Fim: ${plan.end_date || "—"}\n- Calorias: ${plan.total_target_calories || "—"} kcal` + (daysLeft != null ? `\n- **Vence em ${daysLeft}d**` : "");
       return fmt(`Plano: ${p?.full_name}`, "🍽️", "detail", plan.title, md, [{ label: "Editar", route: `/meal-plans/${plan.id}`, type: "navigate" }], intent, "clinical", ctx);
