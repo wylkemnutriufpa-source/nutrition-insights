@@ -95,6 +95,11 @@ serve(async (req) => {
     const { anamnesis_id } = await req.json();
     if (!anamnesis_id) return new Response(JSON.stringify({ error: "anamnesis_id required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     const serviceClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+    // Resolve tenant
+    const { data: callerTenantData } = await serviceClient.from("user_tenants").select("tenant_id").eq("user_id", user.id).limit(1).maybeSingle();
+    const tenantId = callerTenantData?.tenant_id || null;
+
     const { data: anamnesis, error: fetchErr } = await serviceClient.from("patient_anamnesis").select("*").eq("id", anamnesis_id).single();
     if (fetchErr || !anamnesis) return new Response(JSON.stringify({ error: "Anamnese não encontrada" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     const answers = anamnesis.answers as Record<string, any>;
