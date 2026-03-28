@@ -110,6 +110,10 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Resolve tenant
+    const { data: callerTenantData } = await supabaseAdmin.from("user_tenants").select("tenant_id").eq("user_id", user.id).limit(1).maybeSingle();
+    const callerTenant = callerTenantData?.tenant_id || null;
+
     // Insert team member
     const { data: member, error: insertError } = await supabaseAdmin
       .from("team_members")
@@ -119,6 +123,7 @@ Deno.serve(async (req) => {
         display_name: display_name || targetUser.user_metadata?.full_name || email,
         role: "employee_clinical",
         status: "active",
+        tenant_id: callerTenant,
       })
       .select()
       .single();
