@@ -7,9 +7,10 @@ import { queryKeys } from "./queryKeys";
 
 export function usePatientDashboard() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
 
   return useQuery({
-    queryKey: queryKeys.dashboard.patient(user?.id ?? ""),
+    queryKey: [...queryKeys.dashboard.patient(user?.id ?? ""), tenantId],
     enabled: !!user,
     staleTime: 5 * 1000,
     queryFn: async () => {
