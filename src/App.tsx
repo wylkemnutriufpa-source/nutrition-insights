@@ -330,6 +330,11 @@ function LP({ children, section }: { children: React.ReactNode; section?: string
   );
 }
 
+function ExperienceModeProvider({ children }: { children: React.ReactNode }) {
+  const value = useExperienceModeState();
+  return <ExperienceModeContext.Provider value={value}>{children}</ExperienceModeContext.Provider>;
+}
+
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
