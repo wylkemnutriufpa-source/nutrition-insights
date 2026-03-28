@@ -428,20 +428,26 @@ function NutritionistDashboardContent() {
         <SetupWizard />
       </motion.div>
 
-      {/* ── FitJourney Intelligence ── */}
-      <motion.div variants={item}>
-        <FitJourneyIntelligencePanel />
-      </motion.div>
+      {/* ── FitJourney Intelligence — PRO+ ── */}
+      {minMode("pro") && (
+        <motion.div variants={item}>
+          <FitJourneyIntelligencePanel />
+        </motion.div>
+      )}
 
-      {/* ── Premium Control Tower Banner ── */}
-      <motion.div variants={item}>
-        <PremiumControlTowerBanner />
-      </motion.div>
+      {/* ── Premium Control Tower Banner — ADVANCED ── */}
+      {minMode("advanced") && (
+        <motion.div variants={item}>
+          <PremiumControlTowerBanner />
+        </motion.div>
+      )}
 
-      {/* ── Portfolio Intelligence ── */}
-      <motion.div variants={item}>
-        <PortfolioIntelligencePanel />
-      </motion.div>
+      {/* ── Portfolio Intelligence — PRO+ ── */}
+      {minMode("pro") && (
+        <motion.div variants={item}>
+          <PortfolioIntelligencePanel />
+        </motion.div>
+      )}
 
       {/* ── 1️⃣ Daily Overview Cards ── */}
       <motion.div variants={item} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
