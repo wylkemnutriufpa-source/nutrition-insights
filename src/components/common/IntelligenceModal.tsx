@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import {
   Zap, Activity, Users, TrendingUp, CheckCircle2,
   UtensilsCrossed, MessageSquare, Trophy, Wifi,
