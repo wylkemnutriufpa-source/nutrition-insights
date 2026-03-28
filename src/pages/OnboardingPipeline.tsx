@@ -225,7 +225,7 @@ export default function OnboardingPipeline() {
         message: `${patientName} completou o onboarding. ${planCountMsg} de ${data.explainability?.calculation?.final_kcal || ''}kcal gerado(s) via Protocolo FitJourney.`,
         type: "warning",
         action_url: `/patients/${user.id}?tab=onboarding`,
-      });
+      } as any);
 
       // Transition lifecycle: onboarding_active → draft_ready_for_review
       await supabase.rpc("complete_patient_onboarding_by_patient" as any, {

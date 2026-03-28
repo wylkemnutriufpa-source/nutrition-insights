@@ -204,7 +204,7 @@ export default function Planner() {
           title: `📅 Novo evento: ${form.title}`,
           message: `Seu nutricionista adicionou "${form.title}" ao seu planejador para ${format(eventDate, "dd/MM/yyyy")}`,
           type: "planner",
-        });
+        } as any);
       }
     }
 

@@ -71,7 +71,7 @@ export default function MealPlans() {
       nutritionist_id: user.id, patient_id: form.patient_id,
       title: form.title, description: form.description || null, start_date: form.start_date,
       ...getTenantIdForInsert(tenantId),
-    });
+    } as any);
     if (error) { toast.error("Erro: " + error.message); }
     else {
       toast.success("Plano criado!");

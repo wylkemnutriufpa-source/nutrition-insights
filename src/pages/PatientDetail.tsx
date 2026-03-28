@@ -429,7 +429,7 @@ export default function PatientDetail() {
       type: "feedback",
       action_url: "/feedbacks",
       metadata: { scheduled_by: user.id, scheduled_for: scheduledDate.toISOString() },
-    });
+    } as any);
     if (error) { toast.error(error.message); return; }
     await supabase.from("patient_timeline").insert({
       patient_id: patientId,
