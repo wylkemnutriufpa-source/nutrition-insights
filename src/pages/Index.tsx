@@ -1062,6 +1062,7 @@ function generateLocalInsights(patients: any[]) {
 
 export default function Index() {
   const { isNutritionist, isPersonal, isAdmin, loading } = useAuth();
+  const { minMode } = useExperienceMode();
   const [showTour, setShowTour] = useState(false);
   const { proView, setProView } = useLayoutPreference();
 
