@@ -208,12 +208,15 @@ Deno.serve(async (req) => {
                   category: "motivation",
                 };
 
+            const patientTenant = await resolveTenantForUser(nutri.nutritionist_id);
+
             // Create notification
             await supabase.from("notifications").insert({
               user_id: patientId,
               title: tip.title,
               message: tip.tip,
               type: "automation",
+              tenant_id: patientTenant,
               metadata: {
                 rule_id: rule.id,
                 pattern: rule.trigger_type,
