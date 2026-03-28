@@ -334,7 +334,7 @@ function BrandingTab() {
       // Store the path, not a signed URL (signed URLs expire)
       logoUrl = path;
     }
-    const payload = { ...form, logo_url: logoUrl, nutritionist_id: user.id };
+    const payload = { ...form, logo_url: logoUrl, nutritionist_id: user.id, ...getTenantIdForInsert(tenantId) };
     const { data: existing } = await supabase.from("branding_settings").select("id").eq("nutritionist_id", user.id).maybeSingle();
     if (existing) {
       const { error } = await supabase.from("branding_settings").update(payload).eq("nutritionist_id", user.id);
