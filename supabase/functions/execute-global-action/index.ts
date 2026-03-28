@@ -197,11 +197,13 @@ Deno.serve(async (req) => {
         if (patients && payload.title && payload.message) {
           for (const p of patients) {
             try {
+              const pTenant = (await supabase.from("user_tenants").select("tenant_id").eq("user_id", p.patient_id).limit(1).maybeSingle()).data?.tenant_id || null;
               await supabase.from("notifications").insert({
                 user_id: p.patient_id,
                 title: payload.title,
                 message: payload.message,
                 type: "system",
+                tenant_id: pTenant,
               });
               successCount++;
             } catch { errorCount++; }
