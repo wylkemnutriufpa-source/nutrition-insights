@@ -39,7 +39,7 @@ export function usePatientDashboard() {
       if (rpcError) {
         const [statsRes, aptRes, msgRes] = await Promise.all([
           supabase.from("player_stats").select("*").eq("user_id", userId).maybeSingle(),
-          supabase.from("patient_appointments").select("*").eq("patient_id", userId).gte("appointment_date", new Date().toISOString()).order("appointment_date").limit(1),
+          withTenantFilter(supabase.from("patient_appointments").select("*").eq("patient_id", userId).gte("appointment_date", new Date().toISOString()), tenantId).order("appointment_date").limit(1),
           supabase.from("chat_messages").select("id", { count: "exact", head: true }).eq("receiver_id", userId).eq("is_read", false),
         ]);
         return {

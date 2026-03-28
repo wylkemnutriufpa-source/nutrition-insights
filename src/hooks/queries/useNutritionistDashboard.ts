@@ -62,6 +62,7 @@ async function fetchTimeline(patientIds: string[]) {
   if (patientIds.length === 0) return [];
   const [timelineRes, profilesRes] = await Promise.all([
     supabase.from("patient_timeline").select("*").in("patient_id", patientIds).order("created_at", { ascending: false }).limit(15),
+    // Note: profiles tenant filter requires tenantId passed through — keeping legacy for fetchTimeline
     supabase.from("profiles").select("user_id, full_name").in("user_id", patientIds),
   ]);
   const nameMap: Record<string, string> = {};

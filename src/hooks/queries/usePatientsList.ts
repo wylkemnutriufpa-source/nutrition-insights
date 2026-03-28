@@ -227,9 +227,9 @@ export function usePatientsList(params: PatientsListParams = {}) {
 
       // BATCH queries (7 parallel)
       const [profilesRes, statsRes, checklistRes, enrollmentsRes, prestigeRes, pPlansRes, emailsRes, progsRes] = await Promise.all([
-        supabase.from("profiles").select("user_id, full_name, avatar_url").in("user_id", patientIds),
+        withTenantFilter(supabase.from("profiles").select("user_id, full_name, avatar_url").in("user_id", patientIds), tenantId),
         supabase.from("player_stats").select("user_id, last_meal_date, total_xp, current_streak").in("user_id", patientIds),
-        supabase.from("checklist_tasks").select("patient_id, id, completed").in("patient_id", patientIds).eq("date", today),
+        withTenantFilter(supabase.from("checklist_tasks").select("patient_id, id, completed").in("patient_id", patientIds).eq("date", today), tenantId),
         supabase.from("program_patients")
           .select("patient_id, program_id, programs(id, title)")
           .eq("status", "active")
