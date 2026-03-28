@@ -345,7 +345,8 @@ function NutritionistDashboardContent() {
         </motion.div>
       )}
 
-      {/* ── Quick Access: Other Views ── */}
+      {/* ── Quick Access: Other Views — PRO+ ── */}
+      {minMode("pro") && (
       <div className="flex flex-wrap items-center gap-2">
         {[
           { key: "analytics", icon: BarChart3, label: "Analytics", desc: "Visão estratégica" },
@@ -366,12 +367,13 @@ function NutritionistDashboardContent() {
           </button>
         ))}
       </div>
+      )}
 
-      {activeTab === "analytics" ? (
+      {minMode("pro") && activeTab === "analytics" ? (
         <AnalyticsDashboard />
-      ) : activeTab === "strategy" ? (
+      ) : minMode("pro") && activeTab === "strategy" ? (
         <AIStrategyCenter />
-      ) : activeTab === "risk" ? (
+      ) : minMode("pro") && activeTab === "risk" ? (
         <ClinicalRiskDashboardContent />
       ) : null}
 
