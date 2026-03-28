@@ -690,8 +690,8 @@ export default function Patients() {
         />
       ) : (
       <div className="space-y-6">
-        {/* Patient Queue */}
-        <PatientQueueTabs />
+        {/* Patient Queue — PRO+ */}
+        {minMode("pro") && <PatientQueueTabs />}
         {/* Premium Header */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
