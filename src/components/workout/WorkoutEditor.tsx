@@ -273,6 +273,7 @@ export default function WorkoutEditor({ students, onSaved, onCancel }: WorkoutEd
         start_date: startDate || new Date().toISOString().split("T")[0],
         end_date: endDate || null,
         status: "active",
+        ...getTenantIdForInsert(tenantId),
       }).select().single();
 
       if (planErr || !plan) throw planErr || new Error("Erro ao criar plano");

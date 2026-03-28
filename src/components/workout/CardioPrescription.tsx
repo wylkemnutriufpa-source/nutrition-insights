@@ -66,7 +66,7 @@ export default function CardioPrescription({ students, plans }: Props) {
   const handleSave = async () => {
     if (!user || !form.student_id) { toast.error("Selecione um aluno"); return; }
     setSaving(true);
-    const payload = { ...form, personal_id: user.id };
+    const payload = { ...form, personal_id: user.id, ...getTenantIdForInsert(tenantId) };
     if (!payload.plan_id) delete payload.plan_id;
     if (!payload.distance_km) delete payload.distance_km;
     

@@ -50,8 +50,11 @@ export default function PersonalDashboardStats() {
         (supabase as any).from("patient_professional_links")
           .select("patient_id").eq("professional_id", user.id)
           .eq("professional_role", "trainer").eq("link_status", "active"),
-        supabase.from("workout_plans").select("id, student_id, status")
-          .eq("personal_id", user.id),
+        withTenantFilter(
+          supabase.from("workout_plans").select("id, student_id, status")
+            .eq("personal_id", user.id),
+          tenantId
+        ),
         supabase.from("workout_completions")
           .select("*, workout_routines(name)")
           .order("completed_at", { ascending: false }).limit(500),
