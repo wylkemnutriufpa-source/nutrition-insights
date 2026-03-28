@@ -3,6 +3,7 @@ import { useExperienceMode, type ExperienceMode } from "@/hooks/useExperienceMod
 import { Zap, BarChart3, Rocket } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import ExperienceModeRecommendation from "./ExperienceModeRecommendation";
 
 const MODES: { key: ExperienceMode; label: string; desc: string; icon: typeof Zap; color: string; bgColor: string }[] = [
   {
@@ -51,7 +52,8 @@ export default function ExperienceModeSwitcher() {
           Controle a complexidade da interface. Você pode mudar a qualquer momento.
         </p>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="space-y-3">
+        <ExperienceModeRecommendation />
         {MODES.map((m) => {
           const Icon = m.icon;
           const selected = mode === m.key;
