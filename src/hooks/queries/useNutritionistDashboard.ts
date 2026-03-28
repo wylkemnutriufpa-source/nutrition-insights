@@ -29,11 +29,11 @@ export function useNutritionistDashboard() {
       }
 
       // Fetch timeline + programs list (not in RPC — returns rows, not counts)
-      const patientIdsRes = await supabase
+      const patientIdsRes = await withTenantFilter(supabase
         .from("nutritionist_patients")
         .select("patient_id")
         .eq("nutritionist_id", userId)
-        .eq("status", "active");
+        .eq("status", "active"), tenantId);
 
       const patientIds = (patientIdsRes.data || []).map((p: any) => p.patient_id);
 
