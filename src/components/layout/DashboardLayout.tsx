@@ -450,6 +450,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(() => isTablet);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Mount realtime subscriptions and refetch-on-focus ONCE at layout level
+  useRealtimeEventBus();
+  usePatientRealtime();
+  useNutritionistRealtime();
+  useRefetchOnFocus();
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [location.pathname]);
