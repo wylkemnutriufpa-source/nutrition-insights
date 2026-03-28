@@ -1179,7 +1179,7 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
       if (intent.target_id) patient = patients.find(p => p.id === intent.target_id);
       else if (intent.target_name) {
         const { found, ambiguous } = findByName(patients, intent.target_name);
-        if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, inputText || intent.target_name || "", ctx, "clinical");
+        if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, originalCommand || intent.target_name || "", ctx, "clinical");
         }
         patient = found;
       }
@@ -1200,7 +1200,7 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
       let pid = intent.target_id || ctx.last_patient_id;
       if (!pid && intent.target_name) {
         const { found, ambiguous } = findByName(patients, intent.target_name);
-        if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, inputText || intent.target_name || "", ctx, "clinical");
+        if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, originalCommand || intent.target_name || "", ctx, "clinical");
         }
         if (found) { pid = found.id; ctx.last_patient_id = found.id; ctx.last_patient_name = found.full_name; }
       }
@@ -1217,7 +1217,7 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
       let pid = intent.target_id || ctx.last_patient_id;
       if (!pid && intent.target_name) {
         const { found, ambiguous } = findByName(patients, intent.target_name);
-        if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, inputText || intent.target_name || "", ctx, "clinical");
+        if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, originalCommand || intent.target_name || "", ctx, "clinical");
         if (found) { pid = found.id; ctx.last_patient_id = found.id; ctx.last_patient_name = found.full_name; }
       }
       if (!pid) return fmt("Quem?", "❓", "error", "Diga o nome do paciente.", "Ex: *exames da Maria*", [], intent, "clinical", ctx);
@@ -1234,7 +1234,7 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
       // Resolve patient by name if no ID
       if (!pid && intent.target_name) {
         const { found, ambiguous } = findByName(patients, intent.target_name);
-        if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, inputText || intent.target_name || "", ctx, "clinical");
+        if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, originalCommand || intent.target_name || "", ctx, "clinical");
         if (found) { pid = found.id; ctx.last_patient_id = found.id; ctx.last_patient_name = found.full_name; }
       }
       if (!pid) return fmt("Quem?", "❓", "error", "Diga o nome do paciente.", "Ex: *plano alimentar da Maria*", [], intent, "clinical", ctx);
@@ -1297,7 +1297,7 @@ async function runBehavioralEngine(supabase: any, intent: IFJIntent, userId: str
       // Resolve patient by name if target_name is present
       if (!pid && intent.target_name) {
         const { found, ambiguous } = findByName(patients, intent.target_name);
-        if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, inputText || intent.target_name || "", ctx, "behavioral");
+        if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, originalCommand || intent.target_name || "", ctx, "behavioral");
         if (found) { pid = found.id; ctx.last_patient_id = found.id; ctx.last_patient_name = found.full_name; }
       }
       if (pid) {
