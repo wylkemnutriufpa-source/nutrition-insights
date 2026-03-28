@@ -577,8 +577,7 @@ function NutritionistDashboardContent() {
             <PatientRevenueSimulator />
           </ExpandablePanel>
         </motion.div>
-
-
+      )}
 
       {/* ── 5️⃣ Activity Feed + 7️⃣ Program Performance ── */}
       <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
