@@ -16828,6 +16828,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      self_register_nutritionist: {
+        Args: { _full_name: string; _user_id: string }
+        Returns: Json
+      }
       self_register_patient: {
         Args: { _referral_code?: string; _user_id: string }
         Returns: Json
