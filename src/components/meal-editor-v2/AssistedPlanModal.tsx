@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { useTenant } from "@/lib/tenantContext";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
