@@ -131,6 +131,10 @@ serve(async (req) => {
         });
       }
 
+      // Resolve tenant_id from affiliate's tenant or user
+      const affiliateTenantId = affiliate.tenant_id || null;
+      const tenantSpread = affiliateTenantId ? { tenant_id: affiliateTenantId } : {};
+
       // ─── ANTI-FRAUD CHECKS ───
 
       // 1. Self-referral check (same user_id)
