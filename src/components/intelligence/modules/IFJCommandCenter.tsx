@@ -270,18 +270,23 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
   }, [confirmAction, navigate, logAudit]);
 
   /* ─── Send Message (Deterministic — JSON, no streaming) ─── */
-  const sendMessage = async (text: string) => {
+  const sendMessage = async (text: string, targetId?: string) => {
     if (!text.trim() || isLoading || !user) return;
 
     const userMsg: Message = { role: "user", content: text.trim() };
-    setMessages(prev => [...prev, userMsg]);
-    setInput("");
+    if (!targetId) {
+      setMessages(prev => [...prev, userMsg]);
+      setInput("");
+    }
     setIsLoading(true);
 
-    await logAudit("ifj_command_sent", { command: text.trim().substring(0, 200) });
+    await logAudit("ifj_command_sent", { command: text.trim().substring(0, 200), target_id: targetId });
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
+      const payload: Record<string, unknown> = { command: text.trim(), isAdmin };
+      if (targetId) payload.target_id = targetId;
+
       const resp = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${config.edgeFunction}`,
         {
@@ -290,7 +295,7 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
             "Content-Type": "application/json",
             Authorization: `Bearer ${session?.access_token}`,
           },
-          body: JSON.stringify({ command: text.trim(), isAdmin }),
+          body: JSON.stringify(payload),
         }
       );
 
@@ -309,6 +314,9 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
         route: a.route,
         type: a.type || "navigate",
         confirmMessage: a.confirmMessage,
+        patient_id: a.patient_id,
+        original_command: a.original_command,
+        subtitle: a.subtitle,
       }));
       // Action level from meta.intent action_type or response_type
       const metaIntent = data.meta?.intent || "";
@@ -333,6 +341,10 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
       await logAudit("ifj_error", { error: String(e) });
     }
     setIsLoading(false);
+  };
+
+  const sendMessageWithTargetId = (text: string, targetId: string) => {
+    sendMessage(text, targetId);
   };
 
   return (
