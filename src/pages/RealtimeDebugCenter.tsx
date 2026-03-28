@@ -143,7 +143,7 @@ export default function RealtimeDebugCenter() {
   };
 
   return (
-    <DashboardLayout title="Realtime Debug Center" subtitle="Observabilidade do fluxo DB → Realtime → Invalidate → UI">
+    <DashboardLayout>
       <div className="space-y-4">
         {/* ── Alerts ── */}
         {alerts.length > 0 && enabled && (
