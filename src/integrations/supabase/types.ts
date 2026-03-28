@@ -553,7 +553,7 @@ export type Database = {
           metadata: Json | null
           resource_id: string | null
           resource_type: string
-          tenant_id: string | null
+          tenant_id: string
           user_id: string
         }
         Insert: {
@@ -564,7 +564,7 @@ export type Database = {
           metadata?: Json | null
           resource_id?: string | null
           resource_type: string
-          tenant_id?: string | null
+          tenant_id: string
           user_id: string
         }
         Update: {
@@ -575,7 +575,7 @@ export type Database = {
           metadata?: Json | null
           resource_id?: string | null
           resource_type?: string
-          tenant_id?: string | null
+          tenant_id?: string
           user_id?: string
         }
         Relationships: [
@@ -1112,7 +1112,7 @@ export type Database = {
           nutritionist_id: string
           primary_color: string | null
           secondary_color: string | null
-          tenant_id: string | null
+          tenant_id: string
           updated_at: string
         }
         Insert: {
@@ -1125,7 +1125,7 @@ export type Database = {
           nutritionist_id: string
           primary_color?: string | null
           secondary_color?: string | null
-          tenant_id?: string | null
+          tenant_id: string
           updated_at?: string
         }
         Update: {
@@ -1138,7 +1138,7 @@ export type Database = {
           nutritionist_id?: string
           primary_color?: string | null
           secondary_color?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           updated_at?: string
         }
         Relationships: [
@@ -1250,7 +1250,7 @@ export type Database = {
           scheduled_at: string | null
           scheduling_type: string | null
           status: string | null
-          tenant_id: string | null
+          tenant_id: string
           title: string
           updated_at: string | null
         }
@@ -1269,7 +1269,7 @@ export type Database = {
           scheduled_at?: string | null
           scheduling_type?: string | null
           status?: string | null
-          tenant_id?: string | null
+          tenant_id: string
           title: string
           updated_at?: string | null
         }
@@ -1288,7 +1288,7 @@ export type Database = {
           scheduled_at?: string | null
           scheduling_type?: string | null
           status?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           title?: string
           updated_at?: string | null
         }
