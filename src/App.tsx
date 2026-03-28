@@ -351,6 +351,7 @@ const App = () => (
           <AuthProvider>
             <TenantProvider>
             <ExperienceModeProvider>
+            <ExperienceRouteGuard />
             <CelebrationProvider>
             <DarkModeInit />
             <NeuralScreensaver />
