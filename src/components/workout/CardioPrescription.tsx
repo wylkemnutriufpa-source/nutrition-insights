@@ -55,8 +55,9 @@ export default function CardioPrescription({ students, plans }: Props) {
 
   const load = async () => {
     if (!user) return;
-    const { data } = await (supabase as any).from("cardio_prescriptions")
+    const q = (supabase as any).from("cardio_prescriptions")
       .select("*").eq("personal_id", user.id).order("created_at", { ascending: false });
+    const { data } = await withTenantFilter(q, tenantId);
     setPrescriptions(data || []);
   };
 
