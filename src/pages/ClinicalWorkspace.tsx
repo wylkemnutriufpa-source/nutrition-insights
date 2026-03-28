@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useExperienceUI } from "@/hooks/useExperienceUI";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -47,6 +47,14 @@ export default function ClinicalWorkspace() {
   const visibleTabs = TABS.filter(t => expUI.minMode(t.minMode));
   const [activeTab, setActiveTab] = useState(visibleTabs[0]?.key || "patients");
   const [search, setSearch] = useState("");
+
+  // Reset active tab when mode changes and current tab is no longer visible
+  useEffect(() => {
+    const isCurrentTabVisible = visibleTabs.some(t => t.key === activeTab);
+    if (!isCurrentTabVisible && visibleTabs.length > 0) {
+      setActiveTab(visibleTabs[0].key);
+    }
+  }, [expUI.mode, visibleTabs, activeTab]);
 
   return (
     <SubscriptionGuard featureName="Workspace Clínico">
