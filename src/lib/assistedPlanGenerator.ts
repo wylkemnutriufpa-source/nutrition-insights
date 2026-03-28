@@ -717,11 +717,13 @@ function scoreMealForTier(
 
   const foodCount = Array.isArray(item.foods) ? item.foods.length : 0;
   if (tier === "easy") {
-    score += foodCount <= 3 ? 10 : foodCount <= 5 ? 5 : 0;
+    // v3: strongly prefer simple meals for "easy" tier
+    score += foodCount <= 3 ? 15 : foodCount <= 5 ? 5 : -10;
   } else if (tier === "elaborate") {
     score += foodCount >= 5 ? 10 : foodCount >= 3 ? 5 : 0;
   } else {
-    score += Math.min(8, foodCount * 2);
+    // balanced: prefer moderate complexity
+    score += foodCount <= 5 ? 8 : foodCount <= 3 ? 5 : 0;
   }
 
   score += config.diversityBonus;
