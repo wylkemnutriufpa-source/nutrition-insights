@@ -137,10 +137,10 @@ export function usePatientsList(params: PatientsListParams = {}) {
       const inactiveCount = inactiveCountRes.count || 0;
 
       // 2. Build the paginated query with filters
-      let query = supabase
+      let query = withTenantFilter(supabase
         .from("nutritionist_patients")
         .select("*", { count: "exact" })
-        .eq("nutritionist_id", userId)
+        .eq("nutritionist_id", userId), tenantId)
         .order("created_at", { ascending: false });
 
        if (statusFilter === "active") query = query.neq("status", "inactive");
