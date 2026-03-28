@@ -92,8 +92,8 @@ export default function Appointments() {
       const start = startOfMonth(currentMonth).toISOString();
       const end = endOfMonth(currentMonth).toISOString();
       const col = isNutritionist ? "nutritionist_id" : "patient_id";
-      const { data } = await supabase.from("patient_appointments")
-        .select("*").eq(col, user.id)
+      const { data } = await withTenantFilter(supabase.from("patient_appointments")
+        .select("*").eq(col, user.id), tenantId)
         .gte("appointment_date", start).lte("appointment_date", end)
         .order("appointment_date");
       if (!data) return [];
