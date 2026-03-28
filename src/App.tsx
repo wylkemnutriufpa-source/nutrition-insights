@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { TenantProvider } from "@/lib/tenantContext";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
@@ -342,6 +343,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
+            <TenantProvider>
             <CelebrationProvider>
             <DarkModeInit />
             <NeuralScreensaver />
@@ -529,6 +531,7 @@ const App = () => (
             </Routes>
             </CommandPaletteProvider>
             </CelebrationProvider>
+            </TenantProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
