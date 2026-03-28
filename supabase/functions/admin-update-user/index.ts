@@ -41,6 +41,10 @@ Deno.serve(async (req) => {
     const auditMeta: Record<string, unknown> = { action, target_user_id, performed_by: caller.id };
     let result: Record<string, unknown> = {};
 
+    // Resolve tenant for caller
+    const { data: callerTenantData } = await adminClient.from("user_tenants").select("tenant_id").eq("user_id", caller.id).limit(1).maybeSingle();
+    const callerTenant = callerTenantData?.tenant_id || null;
+
     switch (action) {
       case "update_name": {
         if (!payload?.name) throw new Error("name required");
