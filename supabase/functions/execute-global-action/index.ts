@@ -1,16 +1,21 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireUser, requireRole } from "../_shared/auth-guard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-
   try {
+    // AUTH GUARD: only admin can execute global actions
+    const caller = await requireUser(req);
+    requireRole(caller, "admin");
+
+    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
     const { action_code, filters = {}, payload = {}, executed_by, mode = "execute" } = await req.json();
 
     if (!action_code) throw new Error("action_code required");
