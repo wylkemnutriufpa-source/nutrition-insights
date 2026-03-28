@@ -51,10 +51,16 @@ Deno.serve(async (req) => {
     // Get all active patients (those linked to a nutritionist)
     const { data: activePatients, error: patientsError } = await supabase
       .from("nutritionist_patients")
-      .select("patient_id")
+      .select("patient_id, tenant_id")
       .eq("status", "active");
 
     if (patientsError) throw patientsError;
+
+    // Build tenant map from nutritionist_patients
+    const tenantMap = new Map<string, string | null>();
+    for (const p of activePatients || []) {
+      if (!tenantMap.has(p.patient_id)) tenantMap.set(p.patient_id, p.tenant_id);
+    }
 
     if (!activePatients || activePatients.length === 0) {
       return new Response(
