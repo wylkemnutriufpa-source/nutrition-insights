@@ -43,6 +43,13 @@ export async function checkRateLimit(
   if (existing) {
     const newCount = existing.request_count + 1;
     if (newCount > maxRequests) {
+      // Log abuse event
+      await client.from("security_events").insert({
+        event_type: "rate_limit_exceeded",
+        user_id: clientKey.length === 36 ? clientKey : null,
+        function_name: functionName,
+        metadata: { request_count: newCount, window_minutes: windowMinutes },
+      }).then(() => {});
       return { allowed: false, remaining: 0 };
     }
     await client
