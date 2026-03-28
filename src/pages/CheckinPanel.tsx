@@ -362,7 +362,7 @@ export default function CheckinPanel() {
                                 ].map((photo) => (
                                   <div key={photo.label} className="aspect-[3/4] rounded-lg bg-muted overflow-hidden">
                                     {photo.url ? (
-                                      <img src={photo.url} alt={photo.label} className="w-full h-full object-cover" />
+                                      <StorageImage src={photo.url} bucket="checkin-photos" alt={photo.label} className="w-full h-full object-cover" />
                                     ) : (
                                       <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
                                         {photo.label}

@@ -253,8 +253,9 @@ export default function PatientFeedbacksPanel({ patientId }: Props) {
                                 onClick={() => setLightboxUrl(photo.url)}
                                 className="relative group rounded-lg overflow-hidden border border-border aspect-[3/4] bg-muted"
                               >
-                                <img
+                                <StorageImage
                                   src={photo.url!}
+                                  bucket="checkin-photos"
                                   alt={photo.label}
                                   className="w-full h-full object-cover transition-transform group-hover:scale-105"
                                 />

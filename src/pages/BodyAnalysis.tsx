@@ -236,7 +236,7 @@ export default function BodyAnalysis() {
                     {[a.front_image_url, a.side_image_url, a.back_image_url].map((url, i) => (
                       <div key={i} className="aspect-[3/4] rounded-lg bg-muted overflow-hidden">
                         {url ? (
-                          <img src={url} className="w-full h-full object-cover" alt={["Frente", "Lateral", "Costas"][i]} />
+                          <StorageImage src={url} bucket="body-images" className="w-full h-full object-cover" alt={["Frente", "Lateral", "Costas"][i]} />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
                             {["Frente", "Lateral", "Costas"][i]}
