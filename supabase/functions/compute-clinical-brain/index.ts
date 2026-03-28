@@ -188,6 +188,7 @@ Deno.serve(async (req) => {
           urgency: "high", confidence: 70,
           expected_impact: "Retomada da perda de peso em 2-3 semanas",
           status: "pending",
+          ...tenantSpread,
         });
       }
 
@@ -199,6 +200,7 @@ Deno.serve(async (req) => {
           urgency: "critical", confidence: 85,
           expected_impact: "Prevenção de abandono com intervenção proativa",
           status: "pending",
+          ...tenantSpread,
         });
       }
 
@@ -211,6 +213,7 @@ Deno.serve(async (req) => {
           urgency: "medium", confidence: 80,
           expected_impact: "Melhora metabólica e disposição com hidratação adequada",
           status: "pending",
+          ...tenantSpread,
         });
       }
     }
