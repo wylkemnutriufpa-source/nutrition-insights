@@ -86,6 +86,7 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
   const { t } = useTranslation();
   const { sections, getItemsForSection, loading } = useWorkspace();
   const { openGroups, toggleGroup } = useSidebarGroups();
+  const { isRouteAllowed } = useExperienceMode();
 
   if (loading) return null;
 
@@ -98,7 +99,7 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
   return (
     <div className="space-y-1">
       {visibleSections.map(section => {
-        const sectionItems = getItemsForSection(section.id).filter(i => i.is_visible);
+        const sectionItems = getItemsForSection(section.id).filter(i => i.is_visible && isRouteAllowed(i.route || "/"));
         const isOpen = openGroups.includes(section.section_name);
         const SectionIcon = ICON_MAP[section.section_icon] || LayoutDashboard;
         const hasActiveItem = sectionItems.some(item => location.pathname === item.route);
