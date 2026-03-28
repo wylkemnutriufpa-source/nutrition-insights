@@ -280,6 +280,7 @@ Deno.serve(async (req) => {
                 category: task.category,
                 date: todayStr,
                 completed: false,
+                tenant_id: patientTenant,
               });
             }
             actionsExecuted.push("create_task");
