@@ -120,162 +120,187 @@ function NutritionistDashboardContent() {
   // Program performance
   const [programPerformance, setProgramPerformance] = useState<{ id: string; title: string; patientCount: number; avgAdherence: number }[]>([]);
 
+  const fetchingRef = useRef(false);
+  const userIdRef = useRef(user?.id);
+  userIdRef.current = user?.id;
+
   const fetchDashboard = useCallback(async () => {
-    if (!user) return;
+    const userId = userIdRef.current;
+    if (!userId) return;
+    if (fetchingRef.current) return; // prevent concurrent/loop calls
+    fetchingRef.current = true;
 
-    const today = new Date().toISOString().split("T")[0];
-    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
-    const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
+    try {
+      const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+      const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
 
-    const [patientsRes, protocolsRes, programsRes, plansRes, aptsRes, chatsRes, pendingRes, programsListRes] = await Promise.all([
-      supabase.from("nutritionist_patients").select("id, patient_id", { count: "exact" }).eq("nutritionist_id", user.id).eq("status", "active"),
-      supabase.from("protocols").select("id", { count: "exact" }).eq("created_by", user.id),
-      supabase.from("programs").select("id", { count: "exact" }).eq("created_by", user.id).eq("is_active", true),
-      supabase.from("meal_plans").select("id", { count: "exact" }).eq("nutritionist_id", user.id).eq("is_active", true),
-      supabase.from("patient_appointments").select("id", { count: "exact" }).eq("nutritionist_id", user.id).gte("appointment_date", todayStart.toISOString()).lte("appointment_date", todayEnd.toISOString()),
-      supabase.from("chat_messages").select("id", { count: "exact", head: true }).eq("receiver_id", user.id).eq("is_read", false),
-      supabase.from("patient_checkins").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id).eq("status", "pending"),
-      supabase.from("programs").select("id, title").eq("created_by", user.id).eq("is_active", true).limit(5),
-    ]);
-
-    setPatientCount(patientsRes.count || 0);
-    setProtocolCount(protocolsRes.count || 0);
-    setProgramCount(programsRes.count || 0);
-    setMealPlanCount(plansRes.count || 0);
-    setAppointmentsToday(aptsRes.count || 0);
-    setUnreadChats(chatsRes.count || 0);
-    setPendingCheckins(pendingRes.count || 0);
-
-    // Fetch timeline filtered by nutritionist's patients with patient names
-    const patientIds = (patientsRes.data || []).map((p: any) => p.patient_id);
-    if (patientIds.length > 0) {
-      const [timelineRes, profilesRes] = await Promise.all([
-        supabase.from("patient_timeline").select("*").in("patient_id", patientIds).order("created_at", { ascending: false }).limit(15),
-        supabase.from("profiles").select("user_id, full_name").in("user_id", patientIds),
+      const [patientsRes, protocolsRes, programsRes, plansRes, aptsRes, chatsRes, pendingRes, programsListRes] = await Promise.all([
+        supabase.from("nutritionist_patients").select("id, patient_id", { count: "exact" }).eq("nutritionist_id", userId).eq("status", "active"),
+        supabase.from("protocols").select("id", { count: "exact" }).eq("created_by", userId),
+        supabase.from("programs").select("id", { count: "exact" }).eq("created_by", userId).eq("is_active", true),
+        supabase.from("meal_plans").select("id", { count: "exact" }).eq("nutritionist_id", userId).eq("is_active", true),
+        supabase.from("patient_appointments").select("id", { count: "exact" }).eq("nutritionist_id", userId).gte("appointment_date", todayStart.toISOString()).lte("appointment_date", todayEnd.toISOString()),
+        supabase.from("chat_messages").select("id", { count: "exact", head: true }).eq("receiver_id", userId).eq("is_read", false),
+        supabase.from("patient_checkins").select("id", { count: "exact", head: true }).eq("nutritionist_id", userId).eq("status", "pending"),
+        supabase.from("programs").select("id, title").eq("created_by", userId).eq("is_active", true).limit(5),
       ]);
-      const nameMap: Record<string, string> = {};
-      (profilesRes.data || []).forEach((p: any) => { nameMap[p.user_id] = p.full_name; });
-      const enriched = (timelineRes.data || []).map((ev: any) => ({
-        ...ev,
-        patient_name: nameMap[ev.patient_id] || "Paciente",
-      }));
-      setRecentTimeline(enriched);
-    } else {
-      setRecentTimeline([]);
-    }
 
-    // Program performance
-    if (programsListRes.data && programsListRes.data.length > 0) {
-      const perfList: typeof programPerformance = [];
-      for (const prog of programsListRes.data) {
-        const { count } = await supabase.from("program_patients").select("id", { count: "exact", head: true }).eq("program_id", prog.id).eq("status", "active");
-        const { data: progressData } = await supabase.from("program_patient_progress").select("adherence_score").eq("program_id", prog.id);
-        const scores = (progressData || []).filter(p => p.adherence_score != null).map(p => p.adherence_score as number);
-        const avgAdh = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
-        perfList.push({ id: prog.id, title: prog.title, patientCount: count || 0, avgAdherence: avgAdh });
+      setPatientCount(patientsRes.count || 0);
+      setProtocolCount(protocolsRes.count || 0);
+      setProgramCount(programsRes.count || 0);
+      setMealPlanCount(plansRes.count || 0);
+      setAppointmentsToday(aptsRes.count || 0);
+      setUnreadChats(chatsRes.count || 0);
+      setPendingCheckins(pendingRes.count || 0);
+
+      // Fetch timeline filtered by nutritionist's patients with patient names
+      const patientIds = (patientsRes.data || []).map((p: any) => p.patient_id);
+      if (patientIds.length > 0) {
+        const [timelineRes, profilesRes] = await Promise.all([
+          supabase.from("patient_timeline").select("*").in("patient_id", patientIds).order("created_at", { ascending: false }).limit(15),
+          supabase.from("profiles").select("user_id, full_name").in("user_id", patientIds),
+        ]);
+        const nameMap: Record<string, string> = {};
+        (profilesRes.data || []).forEach((p: any) => { nameMap[p.user_id] = p.full_name; });
+        const enriched = (timelineRes.data || []).map((ev: any) => ({
+          ...ev,
+          patient_name: nameMap[ev.patient_id] || "Paciente",
+        }));
+        setRecentTimeline(enriched);
+      } else {
+        setRecentTimeline([]);
       }
-      setProgramPerformance(perfList);
-    }
 
-    // Process patients for health scores & risk panel
-    const patientIds2 = patientsRes.data?.map(p => p.patient_id) || [];
-    if (patientIds2.length > 0) {
-      const patientDataForAI: any[] = [];
-      const riskList: typeof riskPatients = [];
-      let totalScore = 0;
-      let totalWeight = 0;
-      let weightCount = 0;
-      let totalCheckins = 0;
-      let totalAdherence = 0;
-      let adherenceCount = 0;
+      // Program performance
+      if (programsListRes.data && programsListRes.data.length > 0) {
+        const perfList: typeof programPerformance = [];
+        for (const prog of programsListRes.data) {
+          const { count } = await supabase.from("program_patients").select("id", { count: "exact", head: true }).eq("program_id", prog.id).eq("status", "active");
+          const { data: progressData } = await supabase.from("program_patient_progress").select("adherence_score").eq("program_id", prog.id);
+          const scores = (progressData || []).filter(p => p.adherence_score != null).map(p => p.adherence_score as number);
+          const avgAdh = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+          perfList.push({ id: prog.id, title: prog.title, patientCount: count || 0, avgAdherence: avgAdh });
+        }
+        setProgramPerformance(perfList);
+      }
 
-      const periodDate = new Date(Date.now() - evolutionPeriod * 86400000).toISOString();
+      // Process patients for health scores & risk panel — batch queries instead of per-patient loop
+      const patientIds2 = patientsRes.data?.map(p => p.patient_id) || [];
+      const limitedIds = patientIds2.slice(0, 30);
+      if (limitedIds.length > 0) {
+        const periodDate = new Date(Date.now() - evolutionPeriod * 86400000).toISOString();
 
-      for (const pid of patientIds2.slice(0, 30)) {
-        const [profileRes, anamRes, statsRes, checkRes, mealsRes, assessRes] = await Promise.all([
-          supabase.from("profiles").select("full_name").eq("user_id", pid).maybeSingle(),
-          supabase.from("patient_anamnesis").select("answers, status").eq("user_id", pid).order("created_at", { ascending: false }).limit(1),
-          supabase.from("player_stats").select("*").eq("user_id", pid).maybeSingle(),
-          supabase.from("checklist_tasks").select("id, completed").eq("patient_id", pid).gte("date", periodDate.split("T")[0]),
-          supabase.from("meals").select("id, logged_at").eq("user_id", pid).gte("logged_at", periodDate),
-          supabase.from("physical_assessments").select("weight, assessment_date").eq("patient_id", pid).order("assessment_date", { ascending: false }).limit(1),
+        // Batch all patient data in parallel (6 bulk queries instead of 30×6 individual)
+        const [allProfiles, allAnamnesis, allStats, allChecks, allMeals, allAssess] = await Promise.all([
+          supabase.from("profiles").select("user_id, full_name").in("user_id", limitedIds),
+          supabase.from("patient_anamnesis").select("user_id, answers, status").in("user_id", limitedIds).order("created_at", { ascending: false }),
+          supabase.from("player_stats").select("user_id, current_streak, meals_logged, level").in("user_id", limitedIds),
+          supabase.from("checklist_tasks").select("patient_id, completed").in("patient_id", limitedIds).gte("date", periodDate.split("T")[0]),
+          supabase.from("meals").select("user_id, logged_at").in("user_id", limitedIds).gte("logged_at", periodDate),
+          supabase.from("physical_assessments").select("patient_id, weight, assessment_date").in("patient_id", limitedIds).order("assessment_date", { ascending: false }),
         ]);
 
-        const name = profileRes.data?.full_name?.trim();
-        // Skip patients without a name — they have no usable data
-        if (!name) continue;
-        const anam = anamRes.data?.[0];
-        const stats = statsRes.data;
-        const checkTotal = checkRes.data?.length || 0;
-        const checkCompleted = checkRes.data?.filter((t: any) => t.completed).length || 0;
-        const checkCompletion = checkTotal > 0 ? Math.round((checkCompleted / checkTotal) * 100) : 0;
-        const mealCount = mealsRes.data?.length || 0;
-        const weight = assessRes.data?.[0]?.weight;
-        const lastMeal = mealsRes.data?.[0]?.logged_at;
-        const lastAssess = assessRes.data?.[0]?.assessment_date;
-
-        const score = calculateHealthScore({
-          hasAnamnesis: anam?.status === "completed",
-          checklistCompletion: checkCompletion,
-          mealsLogged: mealCount,
-          weightEntries: weight ? 1 : 0,
-          currentStreak: stats?.current_streak || 0,
-          daysAsPatient: 30,
+        // Index data by patient
+        const profileMap: Record<string, string> = {};
+        (allProfiles.data || []).forEach((p: any) => { profileMap[p.user_id] = p.full_name; });
+        const anamMap: Record<string, any> = {};
+        (allAnamnesis.data || []).forEach((a: any) => { if (!anamMap[a.user_id]) anamMap[a.user_id] = a; }); // first = latest
+        const statsMap: Record<string, any> = {};
+        (allStats.data || []).forEach((s: any) => { statsMap[s.user_id] = s; });
+        const checkMap: Record<string, { total: number; completed: number }> = {};
+        (allChecks.data || []).forEach((c: any) => {
+          if (!checkMap[c.patient_id]) checkMap[c.patient_id] = { total: 0, completed: 0 };
+          checkMap[c.patient_id].total++;
+          if (c.completed) checkMap[c.patient_id].completed++;
         });
+        const mealMap: Record<string, { count: number; last?: string }> = {};
+        (allMeals.data || []).forEach((m: any) => {
+          if (!mealMap[m.user_id]) mealMap[m.user_id] = { count: 0 };
+          mealMap[m.user_id].count++;
+          if (!mealMap[m.user_id].last || m.logged_at > mealMap[m.user_id].last!) mealMap[m.user_id].last = m.logged_at;
+        });
+        const assessMap: Record<string, { weight: number; date: string }> = {};
+        (allAssess.data || []).forEach((a: any) => { if (!assessMap[a.patient_id]) assessMap[a.patient_id] = { weight: a.weight, date: a.assessment_date }; });
 
-        totalScore += score;
-        totalCheckins += mealCount + checkCompleted;
-        if (checkTotal > 0) { totalAdherence += checkCompletion; adherenceCount++; }
-        if (weight) { totalWeight += Number(weight); weightCount++; }
+        const patientDataForAI: any[] = [];
+        const riskList: typeof riskPatients = [];
+        let totalScore = 0, totalWeight = 0, weightCount = 0, totalCheckins = 0, totalAdherence = 0, adherenceCount = 0;
 
-        const risks: string[] = [];
-        if (anam?.answers) {
-          const a = anam.answers as Record<string, any>;
-          if (a.health_conditions?.some((c: string) => c !== "none")) risks.push("Condição de saúde");
-          if (a.activity_level === "sedentary") risks.push("Sedentário");
-          if (a.feeling === "terrible" || a.feeling === "bad") risks.push("Insatisfeito");
-          if (a.sleep_quality === "bad" || a.sleep_quality === "terrible") risks.push("Sono ruim");
+        for (const pid of limitedIds) {
+          const name = profileMap[pid]?.trim();
+          if (!name) continue;
+          const anam = anamMap[pid];
+          const stats = statsMap[pid];
+          const checks = checkMap[pid] || { total: 0, completed: 0 };
+          const checkCompletion = checks.total > 0 ? Math.round((checks.completed / checks.total) * 100) : 0;
+          const meals = mealMap[pid] || { count: 0 };
+          const assess = assessMap[pid];
+
+          const score = calculateHealthScore({
+            hasAnamnesis: anam?.status === "completed",
+            checklistCompletion: checkCompletion,
+            mealsLogged: meals.count,
+            weightEntries: assess ? 1 : 0,
+            currentStreak: stats?.current_streak || 0,
+            daysAsPatient: 30,
+          });
+
+          totalScore += score;
+          totalCheckins += meals.count + checks.completed;
+          if (checks.total > 0) { totalAdherence += checkCompletion; adherenceCount++; }
+          if (assess?.weight) { totalWeight += Number(assess.weight); weightCount++; }
+
+          const risks: string[] = [];
+          if (anam?.answers) {
+            const a = anam.answers as Record<string, any>;
+            if (a.health_conditions?.some((c: string) => c !== "none")) risks.push("Condição de saúde");
+            if (a.activity_level === "sedentary") risks.push("Sedentário");
+            if (a.feeling === "terrible" || a.feeling === "bad") risks.push("Insatisfeito");
+            if (a.sleep_quality === "bad" || a.sleep_quality === "terrible") risks.push("Sono ruim");
+          }
+          if (checkCompletion < 30 && checks.total > 0) risks.push("Baixa adesão");
+          if (meals.count === 0) risks.push("Sem registros");
+          if (stats?.current_streak === 0 && stats?.meals_logged > 5) risks.push("Perdeu streak");
+
+          const lastActivity = meals.last || assess?.date || undefined;
+          riskList.push({ id: pid, name, score, risks, lastActivity });
+
+          patientDataForAI.push({
+            patient_id: pid, name, score,
+            anamnesis_status: anam?.status || "pending",
+            anamnesis_answers: anam?.answers ? {
+              activity_level: (anam.answers as any).activity_level,
+              feeling: (anam.answers as any).feeling,
+              sleep_quality: (anam.answers as any).sleep_quality,
+              health_conditions: (anam.answers as any).health_conditions,
+              goal: (anam.answers as any).goal,
+            } : null,
+            checklist_completion: checkCompletion,
+            meals_last_period: meals.count,
+            streak: stats?.current_streak || 0,
+            level: stats?.level || 1,
+            risks,
+          });
         }
-        if (checkCompletion < 30 && checkTotal > 0) risks.push("Baixa adesão");
-        if (mealCount === 0) risks.push("Sem registros");
-        if (stats?.current_streak === 0 && stats?.meals_logged > 5) risks.push("Perdeu streak");
 
-        const lastActivity = lastMeal || lastAssess || undefined;
-        riskList.push({ id: pid, name, score, risks, lastActivity });
+        riskList.sort((a, b) => a.score - b.score);
+        setRiskPatients(riskList);
 
-        patientDataForAI.push({
-          patient_id: pid, name, score,
-          anamnesis_status: anam?.status || "pending",
-          anamnesis_answers: anam?.answers ? {
-            activity_level: (anam.answers as any).activity_level,
-            feeling: (anam.answers as any).feeling,
-            sleep_quality: (anam.answers as any).sleep_quality,
-            health_conditions: (anam.answers as any).health_conditions,
-            goal: (anam.answers as any).goal,
-          } : null,
-          checklist_completion: checkCompletion,
-          meals_last_period: mealCount,
-          streak: stats?.current_streak || 0,
-          level: stats?.level || 1,
-          risks,
+        setEvolutionData({
+          avgWeight: weightCount > 0 ? totalWeight / weightCount : null,
+          avgAdherence: adherenceCount > 0 ? Math.round(totalAdherence / adherenceCount) : 0,
+          totalCheckins,
+          avgScore: limitedIds.length > 0 ? Math.round(totalScore / limitedIds.length) : 0,
         });
+
+        if (patientDataForAI.length > 0) {
+          fetchAIInsights(patientDataForAI);
+        }
       }
-
-      riskList.sort((a, b) => a.score - b.score);
-      setRiskPatients(riskList);
-
-      setEvolutionData({
-        avgWeight: weightCount > 0 ? totalWeight / weightCount : null,
-        avgAdherence: adherenceCount > 0 ? Math.round(totalAdherence / adherenceCount) : 0,
-        totalCheckins,
-        avgScore: patientIds2.length > 0 ? Math.round(totalScore / Math.min(patientIds2.length, 30)) : 0,
-      });
-
-      if (patientDataForAI.length > 0) {
-        fetchAIInsights(patientDataForAI);
-      }
+    } finally {
+      fetchingRef.current = false;
     }
-  }, [user, evolutionPeriod]);
+  }, [evolutionPeriod]); // stable — uses ref for userId
 
   const fetchAIInsights = async (patientData: any[]) => {
     setAiLoading(true);
