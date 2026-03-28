@@ -132,7 +132,8 @@ async function fetchCounts(userId: string) {
     supabase
       .from("nutritionist_patients")
       .select("id", { count: "exact", head: true })
-      .eq("nutritionist_id", userId),
+      .eq("nutritionist_id", userId)
+      .eq("status", "active"),
     supabase
       .from("profiles")
       .select("created_at")
