@@ -286,6 +286,7 @@ serve(async (req) => {
           message: `Você ganhou R$ ${commissionAmount.toFixed(2)} de comissão (${commissionType === "first_payment" ? "1ª venda" : "recorrente"}).`,
           type: "commission",
           action_url: "/ambassador",
+          ...tenantSpread,
         });
       }
 
