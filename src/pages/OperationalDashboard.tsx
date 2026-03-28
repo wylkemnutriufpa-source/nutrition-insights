@@ -321,6 +321,306 @@ function MetricsPanel() {
   );
 }
 
+// ========== DR Simulation Panel ==========
+function DRSimulationPanel() {
+  const [results, setResults] = useState<Array<{
+    scenario: string;
+    status: "pending" | "running" | "ok" | "failed";
+    timeMs?: number;
+    detail?: string;
+  }>>([]);
+  const [running, setRunning] = useState(false);
+
+  const scenarios = [
+    {
+      name: "Edge Function — Resposta",
+      icon: Server,
+      test: async () => {
+        const start = Date.now();
+        try {
+          const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+          const res = await fetch(
+            `https://${projectId}.supabase.co/functions/v1/system-monitor`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+              },
+              body: JSON.stringify({ source: "dr-test" }),
+            }
+          );
+          const elapsed = Date.now() - start;
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return { status: "ok" as const, timeMs: elapsed, detail: `Respondeu em ${elapsed}ms` };
+        } catch (e: any) {
+          return { status: "failed" as const, timeMs: Date.now() - start, detail: e.message };
+        }
+      },
+    },
+    {
+      name: "Realtime — Canal de Teste",
+      icon: Wifi,
+      test: async () => {
+        const start = Date.now();
+        return new Promise<{ status: "ok" | "failed"; timeMs: number; detail: string }>((resolve) => {
+          const timeout = setTimeout(() => {
+            supabase.removeChannel(ch);
+            resolve({ status: "failed", timeMs: Date.now() - start, detail: "Timeout (5s)" });
+          }, 5000);
+
+          const ch = supabase
+            .channel("dr-test-" + Date.now())
+            .on("presence", { event: "sync" }, () => {
+              clearTimeout(timeout);
+              supabase.removeChannel(ch);
+              resolve({ status: "ok", timeMs: Date.now() - start, detail: "Canal conectado" });
+            })
+            .subscribe((status) => {
+              if (status === "SUBSCRIBED") {
+                clearTimeout(timeout);
+                supabase.removeChannel(ch);
+                resolve({ status: "ok", timeMs: Date.now() - start, detail: "Subscription OK" });
+              }
+            });
+        });
+      },
+    },
+    {
+      name: "Database — Query Crítica",
+      icon: Database,
+      test: async () => {
+        const start = Date.now();
+        try {
+          const { error } = await (supabase as any)
+            .from("profiles")
+            .select("id", { count: "exact", head: true });
+          const elapsed = Date.now() - start;
+          if (error) throw error;
+          return { status: "ok" as const, timeMs: elapsed, detail: `Query em ${elapsed}ms` };
+        } catch (e: any) {
+          return { status: "failed" as const, timeMs: Date.now() - start, detail: e.message };
+        }
+      },
+    },
+    {
+      name: "Storage — Acesso a Bucket",
+      icon: HardDrive,
+      test: async () => {
+        const start = Date.now();
+        try {
+          const { error } = await supabase.storage.from("avatars").list("", { limit: 1 });
+          const elapsed = Date.now() - start;
+          if (error) throw error;
+          return { status: "ok" as const, timeMs: elapsed, detail: `Storage em ${elapsed}ms` };
+        } catch (e: any) {
+          return { status: "failed" as const, timeMs: Date.now() - start, detail: e.message };
+        }
+      },
+    },
+    {
+      name: "Auth — Sessão Ativa",
+      icon: Shield,
+      test: async () => {
+        const start = Date.now();
+        try {
+          const { data, error } = await supabase.auth.getSession();
+          const elapsed = Date.now() - start;
+          if (error) throw error;
+          const hasSession = !!data?.session;
+          return {
+            status: "ok" as const,
+            timeMs: elapsed,
+            detail: hasSession ? `Sessão válida (${elapsed}ms)` : `Sem sessão ativa (${elapsed}ms)`,
+          };
+        } catch (e: any) {
+          return { status: "failed" as const, timeMs: Date.now() - start, detail: e.message };
+        }
+      },
+    },
+  ];
+
+  const runAll = async () => {
+    setRunning(true);
+    const newResults = scenarios.map((s) => ({
+      scenario: s.name,
+      status: "pending" as const,
+    }));
+    setResults(newResults);
+
+    for (let i = 0; i < scenarios.length; i++) {
+      setResults((prev) =>
+        prev.map((r, idx) => (idx === i ? { ...r, status: "running" as const } : r))
+      );
+      const result = await scenarios[i].test();
+      setResults((prev) =>
+        prev.map((r, idx) =>
+          idx === i ? { scenario: r.scenario, ...result } : r
+        )
+      );
+    }
+    setRunning(false);
+  };
+
+  const statusIcon = (s: string) => {
+    switch (s) {
+      case "ok": return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case "failed": return <XCircle className="h-4 w-4 text-destructive" />;
+      case "running": return <RefreshCw className="h-4 w-4 text-primary animate-spin" />;
+      default: return <Clock className="h-4 w-4 text-muted-foreground" />;
+    }
+  };
+
+  const allPassed = results.length > 0 && results.every((r) => r.status === "ok");
+  const totalTime = results.reduce((sum, r) => sum + (r.timeMs ?? 0), 0);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <PlayCircle className="h-5 w-5 text-primary" />
+            DR Simulation — Teste de Recuperação
+          </span>
+          <Button size="sm" onClick={runAll} disabled={running}>
+            <PlayCircle className="h-4 w-4 mr-1" />
+            {running ? "Executando..." : "Executar DR"}
+          </Button>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {results.length === 0 ? (
+          <div className="text-center py-8">
+            <Server className="h-12 w-12 text-primary/30 mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm">
+              Clique "Executar DR" para simular falhas e validar recuperação
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {results.map((r, i) => {
+              const ScenarioIcon = scenarios[i]?.icon || Server;
+              return (
+                <motion.div
+                  key={r.scenario}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="flex items-center justify-between p-3 rounded-lg border"
+                >
+                  <div className="flex items-center gap-3">
+                    {statusIcon(r.status)}
+                    <ScenarioIcon className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{r.scenario}</p>
+                      {r.detail && (
+                        <p className="text-xs text-muted-foreground">{r.detail}</p>
+                      )}
+                    </div>
+                  </div>
+                  {r.timeMs !== undefined && (
+                    <Badge variant="outline" className="text-xs">
+                      {r.timeMs}ms
+                    </Badge>
+                  )}
+                </motion.div>
+              );
+            })}
+
+            {!running && results.length > 0 && (
+              <div className={`mt-4 p-4 rounded-lg border-2 text-center ${
+                allPassed
+                  ? "border-green-500/30 bg-green-500/5"
+                  : "border-destructive/30 bg-destructive/5"
+              }`}>
+                {allPassed ? (
+                  <>
+                    <CheckCircle className="h-8 w-8 text-green-500 mx-auto mb-2" />
+                    <p className="text-sm font-semibold text-foreground">
+                      ✅ Todos os cenários passaram — Tempo total: {totalTime}ms
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Sistema recuperável e operacional
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="h-8 w-8 text-destructive mx-auto mb-2" />
+                    <p className="text-sm font-semibold text-foreground">
+                      ⚠️ {results.filter((r) => r.status === "failed").length} cenário(s) falharam
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Verifique os runbooks para ações corretivas
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ========== Monitor Status Panel ==========
+function MonitorStatusPanel() {
+  const { data: lastRuns = [] } = useQuery({
+    queryKey: ["monitor-last-runs"],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("system_diagnostic_logs")
+        .select("*")
+        .eq("test_type", "system-monitor")
+        .order("created_at", { ascending: false })
+        .limit(10);
+      return data || [];
+    },
+    refetchInterval: 60000,
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Activity className="h-5 w-5 text-primary" />
+          Monitor Automático — Últimas Execuções
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {lastRuns.length === 0 ? (
+          <p className="text-muted-foreground text-sm text-center py-4">
+            Nenhuma execução do monitor ainda. O cron roda a cada 5 minutos.
+          </p>
+        ) : (
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {lastRuns.map((run: any) => (
+              <div key={run.id} className="flex items-center justify-between p-2 rounded border">
+                <div className="flex items-center gap-2">
+                  {run.critical_count === 0 ? (
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <AlertTriangle className="h-4 w-4 text-destructive" />
+                  )}
+                  <span className="text-xs text-foreground">
+                    Score: {run.health_score}/100
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    OK: {run.ok_count} | Warn: {run.warning_count} | Crit: {run.critical_count}
+                  </span>
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {new Date(run.created_at).toLocaleString("pt-BR")}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // ========== Main Dashboard ==========
 export default function OperationalDashboard() {
   const queryClient = useQueryClient();
