@@ -251,6 +251,12 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
       setConfirmAction(action);
       return;
     }
+    if (action.type === "disambiguate" && action.patient_id && action.original_command) {
+      // Re-send the original command with the selected patient ID
+      await logAudit("ifj_disambiguate_select", { patient_id: action.patient_id, label: action.label, command: action.original_command });
+      sendMessageWithTargetId(action.original_command, action.patient_id);
+      return;
+    }
     await logAudit("ifj_navigate", { route: action.route, label: action.label });
     navigate(action.route);
   }, [navigate, logAudit]);
