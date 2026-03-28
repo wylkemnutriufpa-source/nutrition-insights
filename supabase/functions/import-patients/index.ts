@@ -18,7 +18,8 @@ async function importOnePatient(
   supabase: any,
   email: string,
   fullName: string,
-  nutritionistId: string
+  nutritionistId: string,
+  tenantId: string | null
 ): Promise<{ ok: boolean; error?: string }> {
   try {
     // Standard temporary password - patient changes on first login
