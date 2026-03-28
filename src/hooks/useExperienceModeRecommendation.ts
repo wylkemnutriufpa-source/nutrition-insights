@@ -43,6 +43,29 @@ export interface RecommendationFactors {
 
 const CACHE_KEY = "fj_mode_recommendation";
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const DISMISS_KEY = "fj_mode_rec_dismissed";
+const DISMISS_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const APPLIED_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+export function dismissRecommendation() {
+  localStorage.setItem(DISMISS_KEY, JSON.stringify({ ts: Date.now(), type: "dismiss" }));
+}
+
+export function markRecommendationApplied() {
+  localStorage.setItem(DISMISS_KEY, JSON.stringify({ ts: Date.now(), type: "applied" }));
+}
+
+export function isRecommendationCoolingDown(): boolean {
+  try {
+    const raw = localStorage.getItem(DISMISS_KEY);
+    if (!raw) return false;
+    const { ts, type } = JSON.parse(raw);
+    const cooldown = type === "applied" ? APPLIED_COOLDOWN_MS : DISMISS_COOLDOWN_MS;
+    return Date.now() - ts < cooldown;
+  } catch {
+    return false;
+  }
+}
 
 export function useExperienceModeRecommendation(): ModeRecommendation {
   const { user } = useAuth();
@@ -109,7 +132,8 @@ async function fetchCounts(userId: string) {
     supabase
       .from("nutritionist_patients")
       .select("id", { count: "exact", head: true })
-      .eq("nutritionist_id", userId),
+      .eq("nutritionist_id", userId)
+      .eq("status", "active"),
     supabase
       .from("profiles")
       .select("created_at")
@@ -118,7 +142,8 @@ async function fetchCounts(userId: string) {
     supabase
       .from("meal_plans")
       .select("id", { count: "exact", head: true })
-      .eq("nutritionist_id", userId),
+      .eq("nutritionist_id", userId)
+      .in("plan_status", ["published", "active", "approved"]),
     supabase
       .from("patient_protocols")
       .select("id", { count: "exact", head: true })
@@ -139,11 +164,12 @@ async function fetchCounts(userId: string) {
       .eq("user_id", userId)
       .gte("created_at", sevenDaysAgo)
       .limit(200),
-    // Uso do IFJ: decisões clínicas geradas
+    // Uso do IFJ: decisões clínicas aplicadas/revisadas
     supabase
       .from("clinical_decisions")
       .select("id", { count: "exact", head: true })
-      .eq("nutritionist_id", userId),
+      .eq("nutritionist_id", userId)
+      .not("acted_at", "is", null),
   ]);
 
   // Calcular dias únicos com atividade nos últimos 7
