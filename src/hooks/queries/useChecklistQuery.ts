@@ -83,7 +83,7 @@ export function useToggleChecklistTask() {
     },
     onMutate: async ({ task, date }) => {
       // Optimistic update
-      const key = queryKeys.checklist.tasks(user?.id ?? "", date);
+      const key = queryKeys.checklist.tasks(user?.id ?? "", date, tenantId);
       await queryClient.cancelQueries({ queryKey: key });
       const previous = queryClient.getQueryData<ChecklistTask[]>(key);
       queryClient.setQueryData<ChecklistTask[]>(key, (old) =>
