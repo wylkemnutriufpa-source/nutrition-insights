@@ -164,11 +164,12 @@ async function fetchCounts(userId: string) {
       .eq("user_id", userId)
       .gte("created_at", sevenDaysAgo)
       .limit(200),
-    // Uso do IFJ: decisões clínicas geradas
+    // Uso do IFJ: decisões clínicas aplicadas/revisadas
     supabase
       .from("clinical_decisions")
       .select("id", { count: "exact", head: true })
-      .eq("nutritionist_id", userId),
+      .eq("nutritionist_id", userId)
+      .not("acted_at", "is", null),
   ]);
 
   // Calcular dias únicos com atividade nos últimos 7
