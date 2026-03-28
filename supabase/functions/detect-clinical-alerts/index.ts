@@ -95,6 +95,11 @@ Deno.serve(async (req) => {
 
   const startTime = Date.now();
 
+  async function resolveTenantForUser(sb: any, uid: string): Promise<string | null> {
+    const { data } = await sb.from("user_tenants").select("tenant_id").eq("user_id", uid).limit(1).maybeSingle();
+    return data?.tenant_id || null;
+  }
+
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
