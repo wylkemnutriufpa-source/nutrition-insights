@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import StorageImage from "@/components/common/StorageImage";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
