@@ -25,6 +25,7 @@ interface StudentStats {
 
 export default function PersonalDashboardStats() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [stats, setStats] = useState<{
     totalStudents: number;
     activePlans: number;
