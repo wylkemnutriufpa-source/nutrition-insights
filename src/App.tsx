@@ -531,6 +531,7 @@ const App = () => (
             </Routes>
             </CommandPaletteProvider>
             </CelebrationProvider>
+            </TenantProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
