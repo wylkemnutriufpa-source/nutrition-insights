@@ -13,9 +13,11 @@ interface MacroResult {
 }
 interface ValidationError { rule: string; message: string; weight: number; }
 interface RestrictionViolation { restriction: string; keyword_found: string; }
+interface BlockedFoodFound { food: string; found_in: string; day: number; meal_type: string; }
 interface AuditResult {
     success: boolean; status: "aprovado" | "reprovado"; score: number;
     macros: MacroResult[] | null; restrictions_violated: RestrictionViolation[];
+    blocked_foods_found: BlockedFoodFound[];
     errors: ValidationError[]; audit: Record<string, any>;
 }
 interface Props { mealPlanId: string; onApproved?: () => void; }
