@@ -732,8 +732,8 @@ export default function PhysicalAssessment() {
                               const path = `${patientId}/${view}_${Date.now()}.${ext}`;
                               const { error } = await supabase.storage.from("checkin-photos").upload(path, file);
                               if (error) { toast.error("Erro no upload: " + error.message); return; }
-                              const { data: urlData } = await supabase.storage.from("checkin-photos").createSignedUrl(path, 3600);
-                              set(fieldKey, urlData?.signedUrl || "");
+                              // Store path in form, not signed URL
+                              set(fieldKey, path);
                               toast.success(`Foto ${labels[view]} enviada!`);
                             }}
                           />

@@ -93,6 +93,7 @@ export default function BodyAnalysis() {
       path,
       file,
       maxRetries: 3,
+      returnPath: true, // Store path in DB, not signed URL
       onProgress: (attempt, max) => {
         if (attempt > 1) toast.info(`Retry upload (${attempt}/${max})...`);
       },

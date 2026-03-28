@@ -115,8 +115,8 @@ export default function Checkin() {
     const path = `${user.id}/${Date.now()}-${type}.${ext}`;
     const { error } = await supabase.storage.from("checkin-photos").upload(path, file);
     if (error) { console.error(error); return null; }
-    const { data } = await supabase.storage.from("checkin-photos").createSignedUrl(path, 3600);
-    return data?.signedUrl || null;
+    // Return path for DB storage, not signed URL
+    return path;
   };
 
   const handleSubmit = async () => {
