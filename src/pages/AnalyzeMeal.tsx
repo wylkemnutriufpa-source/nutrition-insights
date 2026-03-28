@@ -116,8 +116,8 @@ export default function AnalyzeMeal() {
       const path = `${user.id}/${Date.now()}.${ext}`;
       const { data: uploadData } = await supabase.storage.from("meal-images").upload(path, imageFile);
       if (uploadData) {
-        const { data: signedData } = await supabase.storage.from("meal-images").createSignedUrl(uploadData.path, 3600);
-        imageUrl = signedData?.signedUrl || null;
+        // Store the path, not a signed URL (signed URLs expire)
+        imageUrl = uploadData.path;
       }
     }
 

@@ -73,11 +73,7 @@ export default function DocumentUpload({
 
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage
-        .from("patient-documents")
-        .getPublicUrl(path);
-
-      // Since bucket is private, we'll store the path and generate signed URLs
+      // Bucket is private — store the path only, use signed URLs for access
       const { error: dbError } = await supabase.from("patient_documents" as any).insert({
         patient_id: patientId,
         nutritionist_id: nutritionistId,

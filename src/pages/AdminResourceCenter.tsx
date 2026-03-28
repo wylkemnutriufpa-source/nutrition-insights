@@ -288,7 +288,7 @@ function BrandingTab() {
   useEffect(() => {
     if (!user) return;
     supabase.from("branding_settings").select("*").eq("nutritionist_id", user.id).maybeSingle()
-      .then(({ data }) => {
+      .then(async ({ data }) => {
         if (data) {
           setForm({
             brand_name: data.brand_name || "", logo_url: data.logo_url,
@@ -297,7 +297,14 @@ function BrandingTab() {
             accent_color: data.accent_color || "#f59e0b",
             custom_css: data.custom_css,
           });
-          if (data.logo_url) setLogoPreview(data.logo_url);
+          if (data.logo_url) {
+            if (!data.logo_url.startsWith("http")) {
+              const { data: signedData } = await supabase.storage.from("body-images").createSignedUrl(data.logo_url, 3600);
+              setLogoPreview(signedData?.signedUrl || "");
+            } else {
+              setLogoPreview(data.logo_url);
+            }
+          }
         }
       });
   }, [user]);
@@ -321,8 +328,8 @@ function BrandingTab() {
       const path = `branding/${user.id}/logo-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage.from("body-images").upload(path, logoFile);
       if (upErr) { toast.error("Erro no upload do logo"); setSaving(false); return; }
-      const { data: signedData } = await supabase.storage.from("body-images").createSignedUrl(path, 3600);
-      logoUrl = signedData?.signedUrl || "";
+      // Store the path, not a signed URL (signed URLs expire)
+      logoUrl = path;
     }
     const payload = { ...form, logo_url: logoUrl, nutritionist_id: user.id };
     const { data: existing } = await supabase.from("branding_settings").select("id").eq("nutritionist_id", user.id).maybeSingle();
