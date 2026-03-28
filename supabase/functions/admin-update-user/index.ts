@@ -111,6 +111,7 @@ Deno.serve(async (req) => {
           message: "Seu acesso foi reenviado pelo profissional. Verifique seu email.",
           type: "info",
           target_route: "/",
+          tenant_id: callerTenant,
         });
 
         auditMeta.resend = true;
