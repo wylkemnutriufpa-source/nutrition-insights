@@ -60,12 +60,12 @@ export default function AICommandFeed() {
         }
 
         // Get recent automation runs
-        const { data: runs } = await (supabase as any)
+        const { data: runs } = await withTenantFilter((supabase as any)
           .from("automation_runs")
           .select("id, status, executed_at, trigger_data")
           .eq("nutritionist_id", user!.id)
           .order("executed_at", { ascending: false })
-          .limit(8);
+          .limit(8), tenantId);
 
         for (const r of (runs ?? [])) {
           feed.push({
