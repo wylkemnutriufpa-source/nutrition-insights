@@ -828,6 +828,7 @@ async function createAlertIfNew(
       message: description,
       type: "clinical_alert",
       action_url: `/patients/${patientId}`,
+      tenant_id: tenantId,
       metadata: {
         alert_type: alertDef.type,
         severity: alertDef.severity,
