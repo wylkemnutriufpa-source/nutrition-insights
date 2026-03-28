@@ -187,6 +187,7 @@ Deno.serve(async (req) => {
     // Process patients in parallel groups of 5 for speed + safety
     const PARALLEL = 5;
     const results = { created: 0, skipped: 0, errors: [] as string[] };
+    const callerTenant = await resolveTenantForUser(user.id);
 
     for (let i = 0; i < patients.length; i += PARALLEL) {
       const chunk = patients.slice(i, i + PARALLEL);
@@ -198,7 +199,7 @@ Deno.serve(async (req) => {
           results.skipped++;
           return Promise.resolve(null);
         }
-        return importOnePatient(supabase, email, fullName, user.id);
+        return importOnePatient(supabase, email, fullName, user.id, callerTenant);
       });
 
       const chunkResults = await Promise.all(promises);
