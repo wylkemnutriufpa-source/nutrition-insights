@@ -111,6 +111,7 @@ function CustomTooltip({ active, payload, label }: any) {
 
 export default function ClinicalIntelligence() {
   const { user, isAdmin } = useAuth();
+  const { tenantId } = useTenant();
   const [filters, setFilters] = useState<Filters>({
     dateRange: "30",
     sex: "all",

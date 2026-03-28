@@ -40,6 +40,7 @@ function guessCategory(name: string): string {
 
 export default function ShoppingList() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [items, setItems] = useState<ShoppingItem[]>([]);
   const [newItem, setNewItem] = useState("");
   const [generating, setGenerating] = useState(false);

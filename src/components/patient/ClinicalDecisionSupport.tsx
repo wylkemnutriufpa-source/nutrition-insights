@@ -32,6 +32,7 @@ export default function ClinicalDecisionSupport({ patientId, nutritionistId }: P
   const [result, setResult] = useState<ClinicalResult | null>(null);
   const [expandedSection, setExpandedSection] = useState<string | null>("analysis");
   const [useCopilot, setUseCopilot] = useState(false);
+  const { tenantId } = (await import("@/lib/tenantContext")).useTenant();
 
   const gatherAndAnalyze = useCallback(async () => {
     setLoading(true);
