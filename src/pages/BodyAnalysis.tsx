@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import StorageImage from "@/components/common/StorageImage";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadWithRetry } from "@/lib/uploadWithRetry";
