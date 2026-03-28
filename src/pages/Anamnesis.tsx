@@ -863,19 +863,19 @@ export default function Anamnesis() {
     setAnalyzing(false);
     setCompleted(true);
 
-    // Update onboarding pipeline if active
-    const isPipelineMode = searchParams.get("pipeline") === "true";
-    if (isPipelineMode) {
-      await supabase
-        .from("onboarding_pipelines" as any)
-        .update({
-          anamnesis_completed: true,
-          status: "pending_body_data",
-          weight: weight,
-          height: height,
-        } as any)
-        .eq("patient_id", targetUserId);
-    }
+    // Sync onboarding pipeline whenever this patient has a pending anamnesis step.
+    // This keeps imported/manual patients in the correct flow even if they reached
+    // the anamnesis screen outside /onboarding?pipeline=true.
+    await supabase
+      .from("onboarding_pipelines" as any)
+      .update({
+        anamnesis_completed: true,
+        status: "pending_body_data",
+        weight: weight,
+        height: height,
+      } as any)
+      .eq("patient_id", targetUserId)
+      .eq("status", "pending_anamnesis");
   };
 
   // Blocked state — onboarding not released
