@@ -63,6 +63,7 @@ const item = {
 // ──── Nutritionist Dashboard 3.0 — Clinical Command Center ────
 function NutritionistDashboardContent() {
   const { user } = useAuth();
+  const { minMode, isBasic } = useExperienceMode();
   const navigate = useNavigate();
   const [patientCount, setPatientCount] = useState(0);
   const [protocolCount, setProtocolCount] = useState(0);
