@@ -12716,6 +12716,36 @@ export type Database = {
           },
         ]
       }
+      security_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          function_name: string | null
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          function_name?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          function_name?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       shopping_list_items: {
         Row: {
           category: string | null
@@ -15600,10 +15630,12 @@ export type Database = {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
+      is_patient: { Args: { _user_id: string }; Returns: boolean }
       is_patient_enrolled_in_program: {
         Args: { _program_id: string; _user_id: string }
         Returns: boolean
       }
+      is_personal: { Args: { _user_id: string }; Returns: boolean }
       is_program_owner: {
         Args: { _program_id: string; _user_id: string }
         Returns: boolean
