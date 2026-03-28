@@ -813,8 +813,8 @@ export default function Patients() {
               </div>
             </div>
 
-            {/* Prestige Filter Buttons */}
-            {prestigePlansList.length > 0 && (
+            {/* Prestige Filter Buttons — PRO+ */}
+            {minMode("pro") && prestigePlansList.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setPrestigeFilter("all")}
