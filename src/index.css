@@ -327,4 +327,113 @@
   .spotlight:hover::before {
     opacity: 1;
   }
+
+  /* ─── Landing Premium Utilities ─── */
+
+  /* Animated mesh gradient background */
+  @keyframes mesh-shift {
+    0%, 100% { background-position: 0% 50%; }
+    25% { background-position: 100% 0%; }
+    50% { background-position: 50% 100%; }
+    75% { background-position: 0% 0%; }
+  }
+  .mesh-gradient-bg {
+    background: linear-gradient(
+      -45deg,
+      hsl(222 30% 6%),
+      hsl(152 30% 8%),
+      hsl(222 30% 6%),
+      hsl(200 30% 8%),
+      hsl(222 30% 6%)
+    );
+    background-size: 400% 400%;
+    animation: mesh-shift 20s ease infinite;
+  }
+
+  /* Text shimmer effect for headlines */
+  @keyframes text-shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+  .text-shimmer {
+    background: linear-gradient(
+      110deg,
+      hsl(var(--primary)) 0%,
+      hsl(var(--primary)) 35%,
+      hsl(0 0% 100% / 0.9) 50%,
+      hsl(var(--primary)) 65%,
+      hsl(var(--primary)) 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: text-shimmer 4s linear infinite;
+  }
+
+  /* Perspective 3D card tilt on hover */
+  .card-3d {
+    perspective: 1000px;
+    transform-style: preserve-3d;
+  }
+  .card-3d-inner {
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    transform-style: preserve-3d;
+  }
+  .card-3d:hover .card-3d-inner {
+    transform: rotateY(-2deg) rotateX(2deg) translateZ(10px);
+  }
+
+  /* Glowing border pulse */
+  @keyframes glow-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0); }
+    50% { box-shadow: 0 0 20px 2px hsl(var(--primary) / 0.15); }
+  }
+  .glow-pulse-border {
+    animation: glow-pulse 3s ease-in-out infinite;
+  }
+
+  /* Floating animation */
+  @keyframes float-gentle {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+  }
+  .float-gentle {
+    animation: float-gentle 4s ease-in-out infinite;
+  }
+
+  /* Staggered reveal for sections */
+  @keyframes reveal-up {
+    from { opacity: 0; transform: translateY(30px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Landing hero particle field */
+  .particle-field {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .particle-field::before,
+  .particle-field::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+  }
+  .particle-field::before {
+    width: 300px;
+    height: 300px;
+    top: 20%;
+    left: 10%;
+    background: radial-gradient(circle, hsl(var(--primary) / 0.06), transparent 70%);
+    animation: float-gentle 6s ease-in-out infinite;
+  }
+  .particle-field::after {
+    width: 200px;
+    height: 200px;
+    bottom: 30%;
+    right: 15%;
+    background: radial-gradient(circle, hsl(var(--accent) / 0.05), transparent 70%);
+    animation: float-gentle 8s ease-in-out infinite 2s;
+  }
 }
