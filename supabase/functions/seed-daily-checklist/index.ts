@@ -130,6 +130,7 @@ Deno.serve(async (req) => {
 
       // If no protocol tasks were created, seed default tasks
       if (tasksCreated === 0) {
+        const patientTenantDefault = tenantMap.get(patientId) || null;
         const inserts = DEFAULT_TASKS.map((t) => ({
           patient_id: patientId,
           title: t.title,
@@ -138,6 +139,7 @@ Deno.serve(async (req) => {
           description: t.description,
           date: today,
           completed: false,
+          tenant_id: patientTenantDefault,
         }));
 
         const { error: insertError } = await supabase
