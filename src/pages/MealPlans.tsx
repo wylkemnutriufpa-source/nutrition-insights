@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useExperienceUI } from "@/hooks/useExperienceUI";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { useTenant } from "@/lib/tenantContext";
@@ -22,6 +23,7 @@ export default function MealPlans() {
   const { user } = useAuth();
   const { tenantId } = useTenant();
   const navigate = useNavigate();
+  const { showSimplifiedActions, showProtocols } = useExperienceUI();
   const [plans, setPlans] = useState<(MealPlan & { patient_name?: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -119,7 +121,11 @@ export default function MealPlans() {
             <h1 className="font-display text-2xl font-bold flex items-center gap-2">
               <ClipboardList className="w-7 h-7 text-primary" /> Planos Alimentares
             </h1>
-            <p className="text-muted-foreground text-sm">{effectivePlansCount} planos ativos</p>
+            <p className="text-muted-foreground text-sm">
+              {showSimplifiedActions
+                ? `${effectivePlansCount} planos ativos`
+                : `${effectivePlansCount} planos ativos · Gerencie todos os planos alimentares`}
+            </p>
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>

@@ -1,4 +1,5 @@
 import { useState, lazy, Suspense } from "react";
+import { useExperienceUI } from "@/hooks/useExperienceUI";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -17,13 +18,13 @@ const AlertsModule = lazy(() => import("@/components/workspace/WorkspaceAlerts")
 const OnboardingsModule = lazy(() => import("@/components/workspace/WorkspaceOnboardings"));
 
 const TABS = [
-  { key: "patients", label: "Pacientes", icon: Users },
-  { key: "meal-plans", label: "Planos", icon: UtensilsCrossed },
-  { key: "templates", label: "Templates", icon: BookOpen },
-  { key: "recipes", label: "Receitas", icon: ChefHat },
-  { key: "protocols", label: "Protocolos", icon: Zap },
-  { key: "alerts", label: "Alertas", icon: AlertTriangle },
-  { key: "onboardings", label: "Onboardings", icon: ClipboardCheck },
+  { key: "patients", label: "Pacientes", icon: Users, minMode: "basic" as const },
+  { key: "meal-plans", label: "Planos", icon: UtensilsCrossed, minMode: "basic" as const },
+  { key: "templates", label: "Templates", icon: BookOpen, minMode: "pro" as const },
+  { key: "recipes", label: "Receitas", icon: ChefHat, minMode: "basic" as const },
+  { key: "protocols", label: "Protocolos", icon: Zap, minMode: "pro" as const },
+  { key: "alerts", label: "Alertas", icon: AlertTriangle, minMode: "pro" as const },
+  { key: "onboardings", label: "Onboardings", icon: ClipboardCheck, minMode: "advanced" as const },
 ];
 
 function ModuleLoader() {
@@ -42,7 +43,9 @@ function ModuleLoader() {
 }
 
 export default function ClinicalWorkspace() {
-  const [activeTab, setActiveTab] = useState("patients");
+  const expUI = useExperienceUI();
+  const visibleTabs = TABS.filter(t => expUI.minMode(t.minMode));
+  const [activeTab, setActiveTab] = useState(visibleTabs[0]?.key || "patients");
   const [search, setSearch] = useState("");
 
   return (
@@ -80,7 +83,7 @@ export default function ClinicalWorkspace() {
         {/* Tab system */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full justify-start overflow-x-auto bg-card border border-border rounded-xl p-1 h-auto flex-wrap">
-            {TABS.map((tab) => {
+            {visibleTabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <TabsTrigger
