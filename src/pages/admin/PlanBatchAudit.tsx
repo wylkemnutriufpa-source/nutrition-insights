@@ -1,24 +1,20 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
   ShieldCheck, Loader2, AlertTriangle, CheckCircle2, XCircle,
-  RefreshCw, ArrowRight, ChevronDown, ChevronUp, Filter
+  RefreshCw, ArrowRight, ChevronDown, ChevronUp, Filter,
+  ExternalLink, Square, CheckSquare, Zap, Eye
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  BLOCKED_FOODS,
-  SUBSTITUTION_GROUPS,
-  ALLOWED_PROTEINS,
-  ALLOWED_CARBS,
-  ALLOWED_DAIRY,
-  ALLOWED_FRUITS,
-} from "@/lib/mealPlanFoodRules";
+import { Checkbox } from "@/components/ui/checkbox";
+import { BLOCKED_FOODS } from "@/lib/mealPlanFoodRules";
 
 // ── Types ──
 interface AuditedPlan {
@@ -31,6 +27,8 @@ interface AuditedPlan {
   blocked_count: number;
   blocked_foods: string[];
   items: PlanItem[];
+  priority: number;
+  severity: "critical" | "high" | "medium" | "ok";
 }
 
 interface PlanItem {
@@ -62,6 +60,7 @@ interface Reformulation {
   substitutions: SubstitutionRecord[];
   oldScore: number;
   newScore: number;
+  savedPlanId?: string;
 }
 
 interface ReformulatedItem extends PlanItem {
@@ -87,86 +86,78 @@ function findBlockedInText(text: string): string[] {
 }
 
 const SUBSTITUTION_MAP: Record<string, string> = {
-  "salmão": "tilápia grelhada",
-  "salmon": "tilápia grelhada",
-  "atum fresco": "sardinha",
-  "kefir": "iogurte natural",
-  "cottage": "queijo minas",
-  "ricota importada": "queijo minas",
-  "quinoa": "arroz integral",
-  "quinua": "arroz integral",
-  "amaranto": "aveia",
-  "castanha-do-pará": "amendoim torrado",
-  "castanha do pará": "amendoim torrado",
-  "macadâmia": "castanha de caju",
-  "pistache": "amendoim torrado",
-  "framboesa": "morango",
-  "mirtilo": "morango",
-  "blueberry": "morango",
-  "cranberry": "morango",
-  "açaí premium": "açaí",
-  "tofu": "ovo cozido",
-  "tempeh": "ovo cozido",
-  "edamame": "feijão verde",
-  "granola premium": "granola simples",
-  "mix de nuts": "amendoim torrado",
-  "trail mix": "amendoim torrado",
-  "azeite trufado": "azeite de oliva",
-  "vinagre balsâmico": "limão",
-  "pasta de amendoim importada": "pasta de amendoim",
+  "salmão": "tilápia grelhada", "salmon": "tilápia grelhada", "atum fresco": "sardinha",
+  "kefir": "iogurte natural", "cottage": "queijo minas", "ricota importada": "queijo minas",
+  "quinoa": "arroz integral", "quinua": "arroz integral", "amaranto": "aveia",
+  "castanha-do-pará": "amendoim torrado", "castanha do pará": "amendoim torrado",
+  "macadâmia": "castanha de caju", "pistache": "amendoim torrado",
+  "framboesa": "morango", "mirtilo": "morango", "blueberry": "morango",
+  "cranberry": "morango", "açaí premium": "açaí",
+  "tofu": "ovo cozido", "tempeh": "ovo cozido", "edamame": "feijão verde",
+  "granola premium": "granola simples", "mix de nuts": "amendoim torrado",
+  "trail mix": "amendoim torrado", "azeite trufado": "azeite de oliva",
+  "vinagre balsâmico": "limão", "pasta de amendoim importada": "pasta de amendoim",
   "manteiga de amêndoa": "pasta de amendoim",
-  "whey protein": "ovo cozido",
-  "whey": "iogurte natural",
-  "caseína": "leite desnatado",
-  "creatina": "",
-  "wrap integral": "tapioca",
-  "pão artesanal": "pão integral",
-  "leite de amêndoa": "leite desnatado",
-  "leite de coco": "leite desnatado",
-  "leite de aveia": "leite desnatado",
-  "abacate toast": "pão com ovo",
+  "whey protein": "ovo cozido", "whey": "iogurte natural",
+  "caseína": "leite desnatado", "creatina": "",
+  "wrap integral": "tapioca", "pão artesanal": "pão integral",
+  "leite de amêndoa": "leite desnatado", "leite de coco": "leite desnatado",
+  "leite de aveia": "leite desnatado", "abacate toast": "pão com ovo",
   "overnight oats": "aveia com banana",
-  "cream cheese": "requeijão",
-  "philadelphia": "requeijão",
-  "iogurte grego importado": "iogurte natural",
-  "iogurte grego": "iogurte natural",
-  "coalhada": "iogurte natural",
-  "kombucha": "chá",
-  "semente de chia importada": "chia",
-  "hemp seed": "linhaça",
-  "tahini": "pasta de amendoim",
-  "tahine": "pasta de amendoim",
-  "hummus": "feijão",
-  "burrata": "queijo minas",
-  "brie": "queijo minas",
-  "camembert": "queijo minas",
-  "gorgonzola": "queijo muçarela",
+  "cream cheese": "requeijão", "philadelphia": "requeijão",
+  "iogurte grego importado": "iogurte natural", "iogurte grego": "iogurte natural",
+  "coalhada": "iogurte natural", "kombucha": "chá",
+  "semente de chia importada": "chia", "hemp seed": "linhaça",
+  "tahini": "pasta de amendoim", "tahine": "pasta de amendoim", "hummus": "feijão",
+  "burrata": "queijo minas", "brie": "queijo minas",
+  "camembert": "queijo minas", "gorgonzola": "queijo muçarela",
 };
 
 function reformulateDescription(desc: string): { newDesc: string; subs: { original: string; replacement: string }[] } {
   let result = desc;
   const subs: { original: string; replacement: string }[] = [];
   const blocked = findBlockedInText(desc);
-
   for (const food of blocked) {
     const replacement = SUBSTITUTION_MAP[food.toLowerCase()] || "";
     if (replacement) {
-      // Case-insensitive replace preserving context
       const regex = new RegExp(food.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "gi");
       result = result.replace(regex, replacement);
       subs.push({ original: food, replacement });
     } else {
-      // Remove the food entirely
       const regex = new RegExp(`[•\\-]?\\s*[^•\\n]*${food.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^•\\n]*`, "gi");
       result = result.replace(regex, "");
       subs.push({ original: food, replacement: "(removido)" });
     }
   }
-
   return { newDesc: result.replace(/\n{3,}/g, "\n\n").trim(), subs };
 }
 
-// ── Components ──
+function getSeverity(score: number): "critical" | "high" | "medium" | "ok" {
+  if (score < 70) return "critical";
+  if (score < 80) return "high";
+  if (score < 90) return "medium";
+  return "ok";
+}
+
+function getPriorityScore(plan: { plan_status: string; score: number; blocked_count: number }): number {
+  let p = 0;
+  // Active/published plans are highest priority
+  if (["published_to_patient", "published", "approved"].includes(plan.plan_status)) p += 100;
+  // Lower score = higher priority
+  p += (100 - plan.score);
+  // More blocked foods = higher priority
+  p += plan.blocked_count * 2;
+  return p;
+}
+
+const SEVERITY_CONFIG = {
+  critical: { label: "CRÍTICO", dotClass: "bg-destructive", badgeClass: "border-destructive/30 bg-destructive/10 text-destructive", rowClass: "border-destructive/30 bg-destructive/5" },
+  high: { label: "ALTO", dotClass: "bg-orange-500", badgeClass: "border-orange-500/30 bg-orange-500/10 text-orange-500", rowClass: "border-orange-500/30 bg-orange-500/5" },
+  medium: { label: "MÉDIO", dotClass: "bg-amber-500", badgeClass: "border-amber-500/30 bg-amber-500/10 text-amber-500", rowClass: "border-amber-500/30 bg-amber-500/5" },
+  ok: { label: "OK", dotClass: "bg-emerald-500", badgeClass: "border-emerald-500/30 bg-emerald-500/10 text-emerald-500", rowClass: "border-emerald-500/30 bg-emerald-500/5" },
+};
+
+// ── Sub-components ──
 function StatCard({ label, value, color = "text-foreground", sub }: { label: string; value: string | number; color?: string; sub?: string }) {
   return (
     <Card className="glass border-border/50">
@@ -196,7 +187,7 @@ function BlockedFoodRanking({ items }: { items: [string, number][] }) {
   );
 }
 
-function ComparisonView({ reform }: { reform: Reformulation }) {
+function ComparisonView({ reform, onOpenDraft }: { reform: Reformulation; onOpenDraft: (id: string) => void }) {
   const [expanded, setExpanded] = useState(false);
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
@@ -206,49 +197,48 @@ function ComparisonView({ reform }: { reform: Reformulation }) {
         onClick={() => setExpanded(!expanded)}>
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <Badge className="bg-red-500/10 text-red-400 border-red-500/20 text-[10px]">{reform.oldScore}</Badge>
+            <Badge variant="outline" className={SEVERITY_CONFIG[reform.original.severity].badgeClass + " text-[10px]"}>{reform.oldScore}</Badge>
             <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
-            <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px]">{reform.newScore}</Badge>
+            <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-500 text-[10px]">{reform.newScore}</Badge>
           </div>
           <span className="text-sm font-medium truncate">{reform.original.title}</span>
-          <span className="text-xs text-muted-foreground">({reform.original.patient_name || reform.original.patient_id.slice(0, 8)})</span>
+          <span className="text-xs text-muted-foreground">({reform.original.patient_name})</span>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Badge variant="outline" className="text-[10px]">{reform.substitutions.length} subs</Badge>
+          {reform.savedPlanId && (
+            <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={e => { e.stopPropagation(); onOpenDraft(reform.savedPlanId!); }}>
+              <ExternalLink className="w-3.5 h-3.5 text-primary" />
+            </Button>
+          )}
           {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </div>
       </div>
-
       <AnimatePresence>
         {expanded && (
           <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} className="overflow-hidden">
             <div className="p-4 space-y-4">
-              {/* Substitutions */}
               <div>
                 <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Substituições Aplicadas</h5>
                 <div className="space-y-1">
                   {reform.substitutions.map((s, i) => (
                     <div key={i} className="flex items-center gap-2 text-xs">
-                      <span className="text-red-400 line-through">{s.original}</span>
+                      <span className="text-destructive line-through">{s.original}</span>
                       <ArrowRight className="w-3 h-3 text-muted-foreground shrink-0" />
-                      <span className="text-emerald-400">{s.replacement}</span>
+                      <span className="text-emerald-500">{s.replacement}</span>
                       <span className="text-muted-foreground ml-auto">dia {s.day + 1} • {s.meal}</span>
                     </div>
                   ))}
                 </div>
               </div>
-
-              {/* Removed foods */}
               <div>
                 <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Alimentos Removidos</h5>
                 <div className="flex flex-wrap gap-1">
                   {reform.removedFoods.map(f => (
-                    <Badge key={f} variant="outline" className="text-[10px] border-red-500/20 text-red-400 capitalize">{f}</Badge>
+                    <Badge key={f} variant="outline" className="text-[10px] border-destructive/20 text-destructive capitalize">{f}</Badge>
                   ))}
                 </div>
               </div>
-
-              {/* Modified items */}
               <div>
                 <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                   Itens Modificados ({reform.newItems.filter(i => i.wasModified).length})
@@ -261,9 +251,9 @@ function ComparisonView({ reform }: { reform: Reformulation }) {
                         <span className="font-medium">{item.title || item.meal_type}</span>
                       </div>
                       {item.originalDescription && (
-                        <p className="text-red-400/60 line-through text-[10px] mb-1">{item.originalDescription.slice(0, 120)}...</p>
+                        <p className="text-destructive/60 line-through text-[10px] mb-1">{item.originalDescription.slice(0, 120)}...</p>
                       )}
-                      <p className="text-emerald-400/80 text-[10px]">{item.description.slice(0, 120)}...</p>
+                      <p className="text-emerald-500/80 text-[10px]">{item.description.slice(0, 120)}...</p>
                     </div>
                   ))}
                 </div>
@@ -278,36 +268,50 @@ function ComparisonView({ reform }: { reform: Reformulation }) {
 
 // ── Main Page ──
 export default function PlanBatchAudit() {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<BatchReport | null>(null);
   const [reformulations, setReformulations] = useState<Reformulation[]>([]);
   const [reformulating, setReformulating] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "rejected" | "active">("all");
+  const [savingBatch, setSavingBatch] = useState(false);
+  const [filter, setFilter] = useState<"all" | "rejected" | "active" | "critical" | "high">("all");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const toggleSelect = (id: string) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const selectAllFiltered = () => {
+    const ids = filteredPlans.filter(p => p.blocked_count > 0).map(p => p.plan_id);
+    setSelected(prev => {
+      const allSelected = ids.every(id => prev.has(id));
+      if (allSelected) return new Set();
+      return new Set(ids);
+    });
+  };
 
   const runBatchAudit = useCallback(async () => {
     setLoading(true);
+    setSelected(new Set());
+    setReformulations([]);
     try {
-      // Fetch all plans with items
       const { data: plans, error: plansErr } = await supabase
         .from("meal_plans")
         .select("id, title, plan_status, patient_id")
         .order("created_at", { ascending: false });
-
       if (plansErr) throw plansErr;
 
-      const auditedPlans: AuditedPlan[] = [];
-      const blockedFreq: Record<string, number> = {};
-      const patientSet = new Set<string>();
-
-      // Batch fetch items (max 1000)
       const planIds = (plans || []).map(p => p.id);
       const { data: allItems } = await supabase
         .from("meal_plan_items")
         .select("id, meal_plan_id, description, title, meal_type, day_of_week, calories_target, protein_target, carbs_target, fat_target")
         .in("meal_plan_id", planIds.slice(0, 100));
 
-      // Fetch patient names
       const patientIds = [...new Set((plans || []).map(p => p.patient_id))];
       const { data: profiles } = await supabase
         .from("profiles")
@@ -323,14 +327,17 @@ export default function PlanBatchAudit() {
         itemsByPlan[item.meal_plan_id].push(item as any);
       });
 
+      const auditedPlans: AuditedPlan[] = [];
+      const blockedFreq: Record<string, number> = {};
+      const patientSet = new Set<string>();
+
       for (const plan of (plans || [])) {
         const items = itemsByPlan[plan.id] || [];
         if (items.length === 0) continue;
 
         const allBlocked: string[] = [];
         for (const item of items) {
-          const found = findBlockedInText(item.description || "");
-          found.forEach(f => {
+          findBlockedInText(item.description || "").forEach(f => {
             allBlocked.push(f);
             blockedFreq[f] = (blockedFreq[f] || 0) + 1;
           });
@@ -339,6 +346,8 @@ export default function PlanBatchAudit() {
         const uniqueBlocked = [...new Set(allBlocked)];
         const penalty = Math.min(40, allBlocked.length * 3);
         const score = uniqueBlocked.length > 0 ? Math.max(0, 100 - penalty) : 100;
+        const severity = getSeverity(score);
+        const priority = uniqueBlocked.length > 0 ? getPriorityScore({ plan_status: plan.plan_status || "", score, blocked_count: allBlocked.length }) : 0;
 
         if (uniqueBlocked.length > 0) patientSet.add(plan.patient_id);
 
@@ -348,28 +357,27 @@ export default function PlanBatchAudit() {
           plan_status: plan.plan_status || "draft",
           patient_id: plan.patient_id,
           patient_name: nameMap[plan.patient_id] || plan.patient_id.slice(0, 8),
-          score,
-          blocked_count: allBlocked.length,
-          blocked_foods: uniqueBlocked,
-          items,
+          score, blocked_count: allBlocked.length, blocked_foods: uniqueBlocked,
+          items, priority, severity,
         });
       }
+
+      // Sort by priority descending
+      auditedPlans.sort((a, b) => b.priority - a.priority);
 
       const rejectedCount = auditedPlans.filter(p => p.blocked_count > 0).length;
       const avgScore = auditedPlans.length > 0
         ? Math.round(auditedPlans.reduce((s, p) => s + p.score, 0) / auditedPlans.length)
         : 0;
-      const topBlocked = Object.entries(blockedFreq).sort((a, b) => b[1] - a[1]);
 
       setReport({
         total: auditedPlans.length,
         rejected: rejectedCount,
         avgScore,
-        topBlocked,
+        topBlocked: Object.entries(blockedFreq).sort((a, b) => b[1] - a[1]),
         patientsImpacted: patientSet.size,
         plans: auditedPlans,
       });
-
       toast.success(`Auditoria concluída: ${auditedPlans.length} planos analisados`);
     } catch (e: any) {
       toast.error("Erro na auditoria: " + e.message);
@@ -377,14 +385,27 @@ export default function PlanBatchAudit() {
     setLoading(false);
   }, []);
 
-  const reformulateAll = useCallback(async () => {
+  const filteredPlans = useMemo(() => {
+    if (!report) return [];
+    return report.plans.filter(p => {
+      if (filter === "rejected") return p.blocked_count > 0;
+      if (filter === "active") return ["approved", "published", "published_to_patient"].includes(p.plan_status);
+      if (filter === "critical") return p.severity === "critical";
+      if (filter === "high") return p.severity === "high";
+      return true;
+    });
+  }, [report, filter]);
+
+  const reformulateSelected = useCallback(async () => {
     if (!report) return;
     setReformulating(true);
 
-    const rejected = report.plans.filter(p => p.blocked_count > 0);
-    const results: Reformulation[] = [];
+    const targets = selected.size > 0
+      ? report.plans.filter(p => selected.has(p.plan_id) && p.blocked_count > 0)
+      : report.plans.filter(p => p.blocked_count > 0);
 
-    for (const plan of rejected) {
+    const results: Reformulation[] = [];
+    for (const plan of targets) {
       const newItems: ReformulatedItem[] = [];
       const allSubs: SubstitutionRecord[] = [];
       const allRemoved = new Set<string>();
@@ -395,54 +416,34 @@ export default function PlanBatchAudit() {
           newItems.push({ ...item, wasModified: false });
           continue;
         }
-
         const { newDesc, subs } = reformulateDescription(item.description || "");
         subs.forEach(s => {
           allSubs.push({ original: s.original, replacement: s.replacement, meal: item.title || item.meal_type, day: item.day_of_week });
           allRemoved.add(s.original);
         });
-
-        newItems.push({
-          ...item,
-          description: newDesc,
-          wasModified: true,
-          originalDescription: item.description,
-        });
+        newItems.push({ ...item, description: newDesc, wasModified: true, originalDescription: item.description });
       }
 
-      // Recalc score
       let remainingBlocked = 0;
-      for (const ni of newItems) {
-        remainingBlocked += findBlockedInText(ni.description).length;
-      }
+      for (const ni of newItems) remainingBlocked += findBlockedInText(ni.description).length;
       const newScore = remainingBlocked === 0 ? 100 : Math.max(0, 100 - remainingBlocked * 3);
 
       results.push({
-        planId: plan.plan_id,
-        original: plan,
-        newItems,
-        removedFoods: [...allRemoved],
-        substitutions: allSubs,
-        oldScore: plan.score,
-        newScore,
+        planId: plan.plan_id, original: plan, newItems,
+        removedFoods: [...allRemoved], substitutions: allSubs,
+        oldScore: plan.score, newScore,
       });
     }
 
     setReformulations(results);
     setReformulating(false);
     toast.success(`${results.length} planos reformulados. Revise e salve.`);
-  }, [report]);
+  }, [report, selected]);
 
-  const saveReformulation = useCallback(async (reform: Reformulation) => {
-    setSaving(reform.planId);
+  const saveReformulation = useCallback(async (reform: Reformulation): Promise<string | null> => {
     try {
-      // Create a new plan as draft copy
       const { data: originalPlan } = await supabase
-        .from("meal_plans")
-        .select("*")
-        .eq("id", reform.planId)
-        .single();
-
+        .from("meal_plans").select("*").eq("id", reform.planId).single();
       if (!originalPlan) throw new Error("Plano original não encontrado");
 
       const { data: newPlan, error: insertErr } = await supabase
@@ -460,12 +461,9 @@ export default function PlanBatchAudit() {
           template_id: originalPlan.template_id,
           tenant_id: originalPlan.tenant_id,
         }])
-        .select("id")
-        .single();
-
+        .select("id").single();
       if (insertErr || !newPlan) throw insertErr || new Error("Erro ao criar plano");
 
-      // Insert reformulated items
       const itemsToInsert = reform.newItems.map(item => ({
         meal_plan_id: newPlan.id,
         meal_type: item.meal_type as any,
@@ -477,25 +475,47 @@ export default function PlanBatchAudit() {
         carbs_target: item.carbs_target,
         fat_target: item.fat_target,
       }));
-
-      const { error: itemsErr } = await supabase
-        .from("meal_plan_items")
-        .insert(itemsToInsert);
-
+      const { error: itemsErr } = await supabase.from("meal_plan_items").insert(itemsToInsert);
       if (itemsErr) throw itemsErr;
 
-      toast.success(`Plano reformulado salvo como draft: "${originalPlan.title} (Reformulado v3)"`);
+      return newPlan.id;
     } catch (e: any) {
       toast.error("Erro ao salvar: " + e.message);
+      return null;
     }
-    setSaving(null);
   }, []);
 
-  const filteredPlans = report?.plans.filter(p => {
-    if (filter === "rejected") return p.blocked_count > 0;
-    if (filter === "active") return ["approved", "published", "published_to_patient"].includes(p.plan_status);
-    return true;
-  }) || [];
+  const saveSingle = useCallback(async (reform: Reformulation) => {
+    setSaving(reform.planId);
+    const newId = await saveReformulation(reform);
+    if (newId) {
+      setReformulations(prev => prev.map(r => r.planId === reform.planId ? { ...r, savedPlanId: newId } : r));
+      toast.success(`Draft salvo! Abra no editor para revisar.`);
+    }
+    setSaving(null);
+  }, [saveReformulation]);
+
+  const saveBatch = useCallback(async () => {
+    setSavingBatch(true);
+    let saved = 0;
+    const updated: Reformulation[] = [...reformulations];
+    for (let i = 0; i < updated.length; i++) {
+      if (updated[i].savedPlanId) continue;
+      const newId = await saveReformulation(updated[i]);
+      if (newId) {
+        updated[i] = { ...updated[i], savedPlanId: newId };
+        saved++;
+      }
+    }
+    setReformulations(updated);
+    setSavingBatch(false);
+    toast.success(`${saved} planos salvos como draft!`);
+  }, [reformulations, saveReformulation]);
+
+  const openDraft = (planId: string) => navigate(`/meal-plans/${planId}`);
+
+  const selectedCount = selected.size;
+  const rejectedInFilter = filteredPlans.filter(p => p.blocked_count > 0).length;
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8 space-y-6">
@@ -507,7 +527,7 @@ export default function PlanBatchAudit() {
             Auditoria em Lote — Motor v3.0
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Audite, identifique e corrija planos com alimentos inadequados
+            Audite, priorize e corrija planos com alimentos inadequados
           </p>
         </div>
         <Button onClick={runBatchAudit} disabled={loading} className="gap-2">
@@ -527,27 +547,45 @@ export default function PlanBatchAudit() {
             )}
           </TabsList>
 
-          {/* Overview Tab */}
+          {/* Overview */}
           <TabsContent value="overview" className="space-y-4">
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
               <StatCard label="Total Auditados" value={report.total} />
-              <StatCard label="Reprovados" value={report.rejected} color="text-red-400" sub={`${Math.round((report.rejected / report.total) * 100)}%`} />
-              <StatCard label="Score Médio" value={report.avgScore} color={report.avgScore >= 80 ? "text-emerald-400" : "text-orange-400"} />
-              <StatCard label="Pacientes" value={report.patientsImpacted} color="text-amber-400" />
-              <StatCard label="Alim. Únicos" value={report.topBlocked.length} color="text-orange-400" />
+              <StatCard label="Reprovados" value={report.rejected} color="text-destructive" sub={`${Math.round((report.rejected / report.total) * 100)}%`} />
+              <StatCard label="Score Médio" value={report.avgScore} color={report.avgScore >= 80 ? "text-emerald-500" : "text-orange-500"} />
+              <StatCard label="Pacientes" value={report.patientsImpacted} color="text-amber-500" />
+              <StatCard label="Alim. Únicos" value={report.topBlocked.length} color="text-orange-500" />
+            </div>
+
+            {/* Severity breakdown */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {(["critical", "high", "medium", "ok"] as const).map(sev => {
+                const count = report.plans.filter(p => p.severity === sev).length;
+                const cfg = SEVERITY_CONFIG[sev];
+                return (
+                  <Card key={sev} className={`glass border ${cfg.rowClass} cursor-pointer hover:opacity-80 transition-opacity`}
+                    onClick={() => setFilter(sev === "ok" ? "all" : sev === "medium" ? "rejected" : sev)}>
+                    <CardContent className="p-3 flex items-center gap-3">
+                      <div className={`w-3 h-3 rounded-full ${cfg.dotClass}`} />
+                      <div>
+                        <p className="text-xs font-semibold">{cfg.label}</p>
+                        <p className="text-lg font-bold">{count}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
 
             <div className="grid md:grid-cols-2 gap-4">
               <Card className="glass border-border/50">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-orange-400" />
+                    <AlertTriangle className="w-4 h-4 text-orange-500" />
                     Top Alimentos Problemáticos
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <BlockedFoodRanking items={report.topBlocked} />
-                </CardContent>
+                <CardContent><BlockedFoodRanking items={report.topBlocked} /></CardContent>
               </Card>
 
               <Card className="glass border-border/50">
@@ -556,10 +594,10 @@ export default function PlanBatchAudit() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {[
-                    { label: "Score 90-100 (Aprovado)", range: [90, 100], color: "bg-emerald-500" },
-                    { label: "Score 70-89 (Marginal)", range: [70, 89], color: "bg-amber-500" },
-                    { label: "Score 50-69 (Reprovado)", range: [50, 69], color: "bg-orange-500" },
-                    { label: "Score 0-49 (Crítico)", range: [0, 49], color: "bg-red-500" },
+                    { label: "Score 90-100 (Aprovado)", range: [90, 100], cls: "[&>div]:bg-emerald-500" },
+                    { label: "Score 80-89 (Médio)", range: [80, 89], cls: "[&>div]:bg-amber-500" },
+                    { label: "Score 70-79 (Alto)", range: [70, 79], cls: "[&>div]:bg-orange-500" },
+                    { label: "Score 0-69 (Crítico)", range: [0, 69], cls: "[&>div]:bg-destructive" },
                   ].map(tier => {
                     const count = report.plans.filter(p => p.score >= tier.range[0] && p.score <= tier.range[1]).length;
                     const pct = report.total > 0 ? (count / report.total) * 100 : 0;
@@ -569,7 +607,7 @@ export default function PlanBatchAudit() {
                           <span>{tier.label}</span>
                           <span className="text-muted-foreground">{count} ({Math.round(pct)}%)</span>
                         </div>
-                        <Progress value={pct} className={`h-1.5 [&>div]:${tier.color}`} />
+                        <Progress value={pct} className={`h-1.5 ${tier.cls}`} />
                       </div>
                     );
                   })}
@@ -578,51 +616,81 @@ export default function PlanBatchAudit() {
             </div>
           </TabsContent>
 
-          {/* Plans Tab */}
+          {/* Plans with multi-select */}
           <TabsContent value="plans" className="space-y-3">
-            <div className="flex gap-2">
-              {(["all", "rejected", "active"] as const).map(f => (
-                <Button key={f} size="sm" variant={filter === f ? "default" : "outline"}
-                  onClick={() => setFilter(f)} className="text-xs gap-1">
-                  <Filter className="w-3 h-3" />
-                  {f === "all" ? "Todos" : f === "rejected" ? "Reprovados" : "Ativos"}
-                </Button>
-              ))}
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex gap-2 flex-wrap">
+                {(["all", "critical", "high", "rejected", "active"] as const).map(f => (
+                  <Button key={f} size="sm" variant={filter === f ? "default" : "outline"}
+                    onClick={() => { setFilter(f); setSelected(new Set()); }} className="text-xs gap-1">
+                    {f === "critical" && <div className="w-2 h-2 rounded-full bg-destructive" />}
+                    {f === "high" && <div className="w-2 h-2 rounded-full bg-orange-500" />}
+                    {f === "all" ? "Todos" : f === "critical" ? "Crítico" : f === "high" ? "Alto" : f === "rejected" ? "Reprovados" : "Publicados"}
+                  </Button>
+                ))}
+              </div>
+              <div className="flex items-center gap-2">
+                {rejectedInFilter > 0 && (
+                  <Button size="sm" variant="ghost" onClick={selectAllFiltered} className="text-xs gap-1">
+                    {selectedCount > 0 && selectedCount === rejectedInFilter ? <CheckSquare className="w-3.5 h-3.5" /> : <Square className="w-3.5 h-3.5" />}
+                    {selectedCount > 0 ? `${selectedCount} selecionados` : "Selecionar todos"}
+                  </Button>
+                )}
+                {selectedCount > 0 && (
+                  <Button size="sm" onClick={reformulateSelected} className="text-xs gap-1.5">
+                    <Zap className="w-3.5 h-3.5" />
+                    Reformular {selectedCount}
+                  </Button>
+                )}
+              </div>
             </div>
-            <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-              {filteredPlans.map(plan => (
-                <div key={plan.plan_id}
-                  className={`flex items-center gap-3 p-3 rounded-lg border ${plan.blocked_count > 0 ? "border-red-500/20 bg-red-500/5" : "border-emerald-500/20 bg-emerald-500/5"}`}
-                >
-                  {plan.blocked_count > 0
-                    ? <XCircle className="w-4 h-4 text-red-400 shrink-0" />
-                    : <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  }
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{plan.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {plan.patient_name} • {plan.plan_status}
-                    </p>
-                  </div>
-                  <Badge className={`text-[10px] ${plan.score >= 90 ? "bg-emerald-500/10 text-emerald-400" : plan.score >= 70 ? "bg-amber-500/10 text-amber-400" : "bg-red-500/10 text-red-400"}`} variant="outline">
-                    {plan.score}
-                  </Badge>
-                  {plan.blocked_count > 0 && (
-                    <div className="hidden sm:flex gap-1">
-                      {plan.blocked_foods.slice(0, 3).map(f => (
-                        <Badge key={f} variant="outline" className="text-[9px] border-orange-500/20 text-orange-400 capitalize">{f}</Badge>
-                      ))}
-                      {plan.blocked_foods.length > 3 && (
-                        <Badge variant="outline" className="text-[9px]">+{plan.blocked_foods.length - 3}</Badge>
-                      )}
+            <div className="space-y-1.5 max-h-[60vh] overflow-y-auto">
+              {filteredPlans.map(plan => {
+                const cfg = SEVERITY_CONFIG[plan.severity];
+                const isSelected = selected.has(plan.plan_id);
+                return (
+                  <div key={plan.plan_id}
+                    className={`flex items-center gap-2.5 p-2.5 rounded-lg border transition-colors ${plan.blocked_count > 0 ? cfg.rowClass : "border-emerald-500/20 bg-emerald-500/5"} ${isSelected ? "ring-1 ring-primary/40" : ""}`}
+                  >
+                    {plan.blocked_count > 0 && (
+                      <Checkbox checked={isSelected} onCheckedChange={() => toggleSelect(plan.plan_id)} className="shrink-0" />
+                    )}
+                    <div className={`w-2 h-2 rounded-full shrink-0 ${cfg.dotClass}`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium truncate">{plan.title}</p>
+                        {["published_to_patient", "published", "approved"].includes(plan.plan_status) && (
+                          <Badge variant="outline" className="text-[9px] border-primary/30 text-primary shrink-0">ATIVO</Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">{plan.patient_name} • {plan.plan_status}</p>
                     </div>
-                  )}
-                </div>
-              ))}
+                    {plan.blocked_count > 0 && (
+                      <Badge variant="outline" className={`${cfg.badgeClass} text-[9px] shrink-0`}>{cfg.label}</Badge>
+                    )}
+                    <Badge variant="outline" className={`text-[10px] shrink-0 ${plan.score >= 90 ? "text-emerald-500" : plan.score >= 70 ? "text-amber-500" : "text-destructive"}`}>
+                      {plan.score}
+                    </Badge>
+                    {plan.blocked_count > 0 && (
+                      <div className="hidden lg:flex gap-1">
+                        {plan.blocked_foods.slice(0, 2).map(f => (
+                          <Badge key={f} variant="outline" className="text-[9px] border-orange-500/20 text-orange-500 capitalize">{f}</Badge>
+                        ))}
+                        {plan.blocked_foods.length > 2 && (
+                          <Badge variant="outline" className="text-[9px]">+{plan.blocked_foods.length - 2}</Badge>
+                        )}
+                      </div>
+                    )}
+                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0 shrink-0" onClick={() => navigate(`/meal-plans/${plan.plan_id}`)}>
+                      <Eye className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                );
+              })}
             </div>
           </TabsContent>
 
-          {/* Reformulate Tab */}
+          {/* Reformulate */}
           <TabsContent value="reformulate" className="space-y-4">
             <Card className="glass border-border/50">
               <CardContent className="p-5 space-y-3">
@@ -631,17 +699,25 @@ export default function PlanBatchAudit() {
                   Reformulação Automática
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  Processa todos os planos reprovados, substituindo alimentos bloqueados por equivalentes populares.
-                  Cada plano reformulado é salvo como <strong>nova versão draft</strong>, preservando o original.
+                  {selectedCount > 0
+                    ? `${selectedCount} plano(s) selecionado(s) para reformulação.`
+                    : `Processa todos os ${report.rejected} planos reprovados.`}
+                  {" "}Cada plano reformulado é salvo como <strong>nova versão draft</strong>.
                 </p>
-                <div className="flex gap-3">
-                  <Button onClick={reformulateAll} disabled={reformulating || report.rejected === 0} className="gap-2">
-                    {reformulating ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                    {reformulating ? "Reformulando..." : `Reformular ${report.rejected} plano(s)`}
+                <div className="flex gap-3 flex-wrap">
+                  <Button onClick={reformulateSelected} disabled={reformulating || report.rejected === 0} className="gap-2">
+                    {reformulating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                    {reformulating ? "Reformulando..." : `Reformular ${selectedCount > 0 ? selectedCount : report.rejected} plano(s)`}
                   </Button>
+                  {reformulations.length > 0 && reformulations.some(r => !r.savedPlanId) && (
+                    <Button onClick={saveBatch} disabled={savingBatch} variant="outline" className="gap-2">
+                      {savingBatch ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                      Salvar Todos como Draft
+                    </Button>
+                  )}
                 </div>
                 {report.rejected === 0 && (
-                  <p className="text-xs text-emerald-400">✅ Nenhum plano precisa de reformulação!</p>
+                  <p className="text-xs text-emerald-500">✅ Nenhum plano precisa de reformulação!</p>
                 )}
               </CardContent>
             </Card>
@@ -650,39 +726,44 @@ export default function PlanBatchAudit() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-semibold">{reformulations.length} planos reformulados</h4>
-                  <div className="flex gap-2">
-                    <Badge variant="outline" className="text-[10px]">
-                      Score médio: {Math.round(reformulations.reduce((s, r) => s + r.oldScore, 0) / reformulations.length)} → {Math.round(reformulations.reduce((s, r) => s + r.newScore, 0) / reformulations.length)}
-                    </Badge>
-                  </div>
+                  <Badge variant="outline" className="text-[10px]">
+                    Score: {Math.round(reformulations.reduce((s, r) => s + r.oldScore, 0) / reformulations.length)} → {Math.round(reformulations.reduce((s, r) => s + r.newScore, 0) / reformulations.length)}
+                  </Badge>
                 </div>
                 {reformulations.map(r => (
                   <div key={r.planId} className="flex items-center gap-3 p-3 rounded-lg border border-primary/20 bg-primary/5">
                     <div className="flex items-center gap-2">
-                      <Badge className="bg-red-500/10 text-red-400 border-red-500/20 text-[10px]">{r.oldScore}</Badge>
+                      <Badge variant="outline" className={SEVERITY_CONFIG[r.original.severity].badgeClass + " text-[10px]"}>{r.oldScore}</Badge>
                       <ArrowRight className="w-3 h-3 text-muted-foreground" />
-                      <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px]">{r.newScore}</Badge>
+                      <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-500 text-[10px]">{r.newScore}</Badge>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{r.original.title}</p>
-                      <p className="text-xs text-muted-foreground">{r.substitutions.length} substituições</p>
+                      <p className="text-xs text-muted-foreground">{r.original.patient_name} • {r.substitutions.length} substituições</p>
                     </div>
-                    <Button size="sm" variant="outline" className="gap-1.5 shrink-0"
-                      onClick={() => saveReformulation(r)} disabled={saving !== null}>
-                      {saving === r.planId ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                      Salvar Draft
-                    </Button>
+                    <div className="flex gap-1.5 shrink-0">
+                      {r.savedPlanId ? (
+                        <Button size="sm" variant="outline" className="gap-1.5 border-primary/30" onClick={() => openDraft(r.savedPlanId!)}>
+                          <ExternalLink className="w-3.5 h-3.5" /> Abrir Draft
+                        </Button>
+                      ) : (
+                        <Button size="sm" variant="outline" className="gap-1.5" onClick={() => saveSingle(r)} disabled={saving !== null}>
+                          {saving === r.planId ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                          Salvar Draft
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
             )}
           </TabsContent>
 
-          {/* Comparison Tab */}
+          {/* Comparison */}
           {reformulations.length > 0 && (
             <TabsContent value="comparison" className="space-y-3">
               <h3 className="text-sm font-semibold">Comparação Antes × Depois</h3>
-              {reformulations.map(r => <ComparisonView key={r.planId} reform={r} />)}
+              {reformulations.map(r => <ComparisonView key={r.planId} reform={r} onOpenDraft={openDraft} />)}
             </TabsContent>
           )}
         </Tabs>
@@ -696,7 +777,7 @@ export default function PlanBatchAudit() {
             <h3 className="font-semibold text-lg mb-2">Auditoria em Lote</h3>
             <p className="text-sm text-muted-foreground max-w-md mx-auto">
               Clique em <strong>Executar Auditoria</strong> para escanear todos os planos alimentares,
-              identificar alimentos inadequados e gerar relatório completo.
+              identificar alimentos inadequados e gerar relatório priorizado.
             </p>
           </CardContent>
         </Card>
