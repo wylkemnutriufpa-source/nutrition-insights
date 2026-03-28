@@ -74,11 +74,11 @@ export default function Appointments() {
     queryKey: ["apt-patients", user?.id],
     queryFn: async () => {
       if (!user) return [];
-      const { data: links } = await supabase.from("nutritionist_patients")
-        .select("patient_id").eq("nutritionist_id", user.id).eq("status", "active");
+      const { data: links } = await withTenantFilter(supabase.from("nutritionist_patients")
+        .select("patient_id").eq("nutritionist_id", user.id).eq("status", "active"), tenantId);
       if (!links?.length) return [];
-      const { data: profiles } = await supabase.from("profiles")
-        .select("user_id, full_name").in("user_id", links.map(l => l.patient_id));
+      const { data: profiles } = await withTenantFilter(supabase.from("profiles")
+        .select("user_id, full_name").in("user_id", links.map(l => l.patient_id)), tenantId);
       return profiles || [];
     },
     enabled: !!user && isNutritionist,
