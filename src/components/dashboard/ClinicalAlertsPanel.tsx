@@ -47,24 +47,28 @@ const alertTypeIcons: Record<string, any> = {
 
 export default function ClinicalAlertsPanel() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [expanded, setExpanded] = useState(true);
   const [filterSeverity, setFilterSeverity] = useState<string | null>(null);
 
   const { data: alerts = [], isLoading } = useQuery({
-    queryKey: ["clinical-alerts", user?.id],
+    queryKey: ["clinical-alerts", user?.id, tenantId],
     enabled: !!user,
     staleTime: 2 * 60 * 1000,
     queryFn: async () => {
       // Fetch alerts
-      const { data: alertsData, error } = await supabase
-        .from("clinical_alerts")
-        .select("*")
-        .eq("nutritionist_id", user!.id)
-        .eq("is_active", true)
-        .order("created_at", { ascending: false })
-        .limit(50);
+      const { data: alertsData, error } = await withTenantFilter(
+        supabase
+          .from("clinical_alerts")
+          .select("*")
+          .eq("nutritionist_id", user!.id)
+          .eq("is_active", true)
+          .order("created_at", { ascending: false })
+          .limit(50),
+        tenantId
+      );
 
       if (error) throw error;
       if (!alertsData || alertsData.length === 0) return [];

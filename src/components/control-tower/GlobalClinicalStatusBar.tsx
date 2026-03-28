@@ -41,6 +41,7 @@ function AnimatedCounter({ value }: { value: number }) {
 
 export default function GlobalClinicalStatusBar() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [metrics, setMetrics] = useState<StatusMetric[]>([]);
   const [loaded, setLoaded] = useState(false);
 

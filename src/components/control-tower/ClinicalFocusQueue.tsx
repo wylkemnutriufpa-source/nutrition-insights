@@ -30,6 +30,7 @@ const URGENCY_COLORS = {
 
 export default function ClinicalFocusQueue() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [items, setItems] = useState<QueueItem[]>([]);
   const [loading, setLoading] = useState(true);
 

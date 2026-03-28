@@ -171,6 +171,7 @@ function getRowBg(score: number): string {
 
 export default function ClinicalRiskDashboardContent() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const navigate = useNavigate();
   const [selectedPatient, setSelectedPatient] = useState<PatientRisk | null>(null);
   const [search, setSearch] = useState("");

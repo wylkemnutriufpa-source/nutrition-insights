@@ -364,6 +364,7 @@ function MetricsGrid({ metrics }: { metrics: IntelligenceMetric[] }) {
 /* ─── Hook dedicado para dados de inteligência ─── */
 function useIntelligenceData(open: boolean) {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [loading, setLoading] = useState(false);
   const [engineStatus, setEngineStatus] = useState<ClinicalEngineStatus | null>(null);
   const [metrics, setMetrics] = useState<IntelligenceMetric[]>([]);

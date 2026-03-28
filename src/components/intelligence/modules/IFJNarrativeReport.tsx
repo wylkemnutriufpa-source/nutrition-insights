@@ -20,6 +20,7 @@ import ReactMarkdown from "react-markdown";
 
 export default function IFJNarrativeReport() {
   const { user, roles } = useAuth();
+  const { tenantId } = useTenant();
   const [selectedPatient, setSelectedPatient] = useState("");
   const [report, setReport] = useState<string | null>(null);
   const [clinicalData, setClinicalData] = useState<any>(null);

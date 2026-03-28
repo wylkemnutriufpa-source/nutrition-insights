@@ -62,6 +62,7 @@ const clusterLabels: Record<string, string> = {
 
 export default function BehavioralDropoutPanel() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [applying, setApplying] = useState<string | null>(null);

@@ -30,6 +30,7 @@ const EVENT_ICONS: Record<string, { icon: React.ElementType; color: string }> = 
 
 export default function AICommandFeed() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [events, setEvents] = useState<FeedEvent[]>([]);
   const [loading, setLoading] = useState(true);
 

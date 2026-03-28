@@ -41,6 +41,7 @@ export default function ClinicalAIEntity() {
   } | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const mountedRef = useRef(true);
+  const { tenantId } = useTenant();
 
   // Load signals from real data
   useEffect(() => {

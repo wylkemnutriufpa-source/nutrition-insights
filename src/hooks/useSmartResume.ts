@@ -125,6 +125,7 @@ const RESUME_SHOWN_KEY = "fitjourney_resume_shown";
 
 export function useSmartResume() {
   const { user, profile, roles } = useAuth();
+  const { tenantId } = useTenant();
   const [data, setData] = useState<SmartResumeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [dismissed, setDismissed] = useState(false);
