@@ -1,12 +1,15 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import {
   Award, DollarSign, TrendingUp, Users, Share2, ArrowRight,
   Sparkles, BarChart3, Crown, Shield
 } from "lucide-react";
 import { useSiteSettings, getSetting } from "@/hooks/useSiteSettings";
+import {
+  FloatingOrb, LandingNav, HeroBadge, FeatureCard,
+  StepCard, LandingFooter, AnimatedStat, fadeUp, stagger,
+} from "@/components/landing/LandingShared";
 
 const benefits = [
   { icon: DollarSign, title: "20% na 1ª Venda", desc: "Comece ganhando 20% de comissão no primeiro pagamento de cada indicação.", color: "text-amber-400", bg: "bg-amber-500/10" },
@@ -42,141 +45,142 @@ export default function AffiliateLanding() {
   const ctaSubtitle = getSetting(map, "affiliate_cta_final_subtitle", "Junte-se ao programa de embaixadores e comece a ganhar comissões hoje.");
 
   return (
-    <div className="min-h-screen bg-[#0a0a14] text-white overflow-hidden">
-      <nav className="relative z-50 flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
-        <Link to="/"><FitJourneyLogo collapsed={false} size="md" /></Link>
-        <div className="flex gap-3">
-          <Link to="/"><Button variant="ghost" size="sm" className="text-white/60 hover:text-white">Voltar</Button></Link>
-          <Link to="/auth"><Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-black font-bold">Quero Ser Embaixador</Button></Link>
-        </div>
-      </nav>
+    <div className="min-h-screen text-white overflow-hidden mesh-gradient-bg">
+      {/* BG effects */}
+      <div className="fixed inset-0 pointer-events-none">
+        <FloatingOrb className="w-[700px] h-[700px] bg-amber-600/[0.06] top-[-200px] right-[-100px]" />
+        <FloatingOrb className="w-[500px] h-[500px] bg-orange-600/[0.05] bottom-[10%] left-[-100px]" delay={2} />
+        <FloatingOrb className="w-[400px] h-[400px] bg-yellow-500/[0.04] top-[50%] right-[30%]" delay={4} />
+        <div className="particle-field" />
+      </div>
+
+      <LandingNav ctaLabel="Quero Ser Embaixador" ctaClassName="bg-amber-500 hover:bg-amber-600 text-black font-bold rounded-xl shadow-lg shadow-amber-500/20" />
 
       {/* Hero */}
-      <section className="relative px-6 pt-16 pb-24 max-w-6xl mx-auto text-center">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-amber-500/8 blur-[150px] rounded-full" />
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm mb-6">
-            <Award className="w-4 h-4" /> Programa de Embaixadores FitJourney
-          </div>
-          <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6">
+      <section className="relative z-10 px-6 pt-20 pb-24 max-w-6xl mx-auto text-center">
+        <motion.div initial="hidden" animate="show" variants={stagger}>
+          <motion.div variants={fadeUp} className="mb-8">
+            <HeroBadge icon={Award} label="Programa de Embaixadores FitJourney" colorClass="bg-amber-500/10 border-amber-500/20 text-amber-400" />
+          </motion.div>
+          <motion.h1 variants={fadeUp} className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6">
             <span className="bg-gradient-to-r from-amber-400 via-yellow-300 to-orange-400 bg-clip-text text-transparent">{heroTitle}</span>
-          </h1>
-          <p className="text-white/50 text-lg md:text-xl max-w-2xl mx-auto mb-6">{heroSubtitle}</p>
+          </motion.h1>
+          <motion.p variants={fadeUp} className="text-white/45 text-lg md:text-xl max-w-2xl mx-auto mb-8">{heroSubtitle}</motion.p>
 
-          <div className="flex flex-wrap justify-center gap-8 mb-10">
-            <div className="text-center">
-              <p className="text-4xl font-black bg-gradient-to-b from-amber-400 to-amber-600 bg-clip-text text-transparent">20%</p>
-              <p className="text-white/40 text-sm">1ª Venda (início)</p>
-            </div>
-            <div className="text-center">
-              <p className="text-4xl font-black bg-gradient-to-b from-emerald-400 to-emerald-600 bg-clip-text text-transparent">até 40%</p>
-              <p className="text-white/40 text-sm">1ª Venda (Premium)</p>
-            </div>
-            <div className="text-center">
-              <p className="text-4xl font-black bg-gradient-to-b from-violet-400 to-violet-600 bg-clip-text text-transparent">até 10%</p>
-              <p className="text-white/40 text-sm">Recorrente (Premium)</p>
-            </div>
-          </div>
+          {/* Animated stats */}
+          <motion.div variants={fadeUp} className="grid grid-cols-3 gap-6 max-w-lg mx-auto mb-10">
+            <AnimatedStat value="20%" label="1ª Venda (início)" gradientClass="from-amber-400 to-amber-600" />
+            <AnimatedStat value="até 40%" label="1ª Venda (Premium)" gradientClass="from-emerald-400 to-emerald-600" />
+            <AnimatedStat value="até 10%" label="Recorrente (Premium)" gradientClass="from-violet-400 to-violet-600" />
+          </motion.div>
 
-          <Link to="/auth">
-            <Button size="lg" className="bg-gradient-to-r from-amber-500 to-orange-600 text-black font-bold px-10 text-lg hover:opacity-90 shadow-lg shadow-amber-500/20">
-              Começar Agora <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-          </Link>
+          <motion.div variants={fadeUp}>
+            <Link to="/auth">
+              <Button size="lg" className="h-14 px-10 bg-gradient-to-r from-amber-500 to-orange-600 text-black font-bold text-lg rounded-xl shadow-xl shadow-amber-500/25 hover:scale-105 transition-transform">
+                Começar Agora <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </Link>
+          </motion.div>
         </motion.div>
       </section>
 
       {/* Benefits */}
-      <section className="px-6 py-20 max-w-7xl mx-auto">
-        <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Por que ser um <span className="text-amber-400">Embaixador</span>?</h2>
-          <p className="text-white/40 max-w-xl mx-auto">Comissões progressivas, plano de carreira e pagamento garantido.</p>
+      <section className="relative z-10 px-6 py-24 max-w-7xl mx-auto">
+        <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={stagger} className="text-center mb-16">
+          <motion.h2 variants={fadeUp} className="text-3xl md:text-5xl font-bold mb-4">Por que ser um <span className="text-amber-400">Embaixador</span>?</motion.h2>
+          <motion.p variants={fadeUp} className="text-white/40 max-w-xl mx-auto">Comissões progressivas, plano de carreira e pagamento garantido.</motion.p>
         </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {benefits.map((b, i) => (
-            <motion.div key={b.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
-              className="group rounded-xl border border-white/[0.06] bg-white/[0.02] p-6 hover:bg-white/[0.04] hover:border-white/10 transition-all duration-300">
-              <div className={`w-10 h-10 rounded-lg ${b.bg} flex items-center justify-center mb-4`}>
-                <b.icon className={`w-5 h-5 ${b.color}`} />
-              </div>
-              <h3 className="font-semibold text-white mb-1">{b.title}</h3>
-              <p className="text-white/40 text-sm leading-relaxed">{b.desc}</p>
-            </motion.div>
+            <FeatureCard key={b.title} icon={b.icon} title={b.title} desc={b.desc} colorClass={b.color} bgClass={b.bg} delay={i * 0.05} />
           ))}
         </div>
       </section>
 
       {/* How it Works */}
-      <section className="px-6 py-20 max-w-5xl mx-auto">
-        <h2 className="text-3xl font-bold text-center mb-16">Como funciona?</h2>
+      <section className="relative z-10 px-6 py-24 max-w-5xl mx-auto">
+        <h2 className="text-3xl font-bold text-center mb-16 text-white">Como funciona?</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {steps.map((s, i) => (
-            <motion.div key={s.step} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }} className="text-center">
-              <div className="text-5xl font-black bg-gradient-to-b from-amber-400 to-amber-600 bg-clip-text text-transparent mb-4">{s.step}</div>
-              <h3 className="text-lg font-bold mb-2">{s.title}</h3>
-              <p className="text-white/40 text-sm">{s.desc}</p>
-            </motion.div>
+            <StepCard key={s.step} step={s.step} title={s.title} desc={s.desc} gradientClass="from-amber-400 to-amber-600" delay={i * 0.15} />
           ))}
         </div>
       </section>
 
       {/* Career Tiers */}
-      <section className="px-6 py-20 max-w-6xl mx-auto">
-        <h2 className="text-3xl font-bold text-center mb-4">Plano de <span className="text-amber-400">Carreira</span></h2>
-        <p className="text-white/40 text-center mb-4 max-w-lg mx-auto">Quanto mais você indica, mais sobe de nível. Comissões maiores automaticamente!</p>
-        <p className="text-white/30 text-center mb-12 text-sm max-w-md mx-auto">Indicou 100 pessoas? Vira <span className="text-amber-400 font-bold">Premium</span> para sempre: 40% na 1ª venda + 10% recorrente.</p>
+      <section className="relative z-10 px-6 py-24 max-w-6xl mx-auto">
+        <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={stagger} className="text-center mb-12">
+          <motion.h2 variants={fadeUp} className="text-3xl font-bold mb-4">Plano de <span className="text-amber-400">Carreira</span></motion.h2>
+          <motion.p variants={fadeUp} className="text-white/40 max-w-lg mx-auto mb-2">Quanto mais você indica, mais sobe de nível. Comissões maiores automaticamente!</motion.p>
+          <motion.p variants={fadeUp} className="text-white/30 text-sm max-w-md mx-auto">Indicou 100 pessoas? Vira <span className="text-amber-400 font-bold">Premium</span> para sempre: 40% na 1ª venda + 10% recorrente.</motion.p>
+        </motion.div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {careerTiers.map((t, i) => (
-            <motion.div key={t.name} initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}
-              className={`rounded-xl border ${t.color} bg-white/[0.02] p-6 text-center ${t.level === 6 ? "ring-1 ring-amber-500/30 bg-amber-500/[0.03]" : ""}`}>
-              <span className="text-3xl mb-2 block">{t.badge}</span>
-              <h3 className="font-bold text-lg mb-1">{t.name}</h3>
-              <p className="text-white/30 text-xs mb-4">{t.range} indicações convertidas</p>
-              <div className="space-y-2 text-sm">
-                <p className="text-white/60">1ª Venda: <span className="text-amber-400 font-bold">{t.first}</span></p>
-                <p className="text-white/60">Recorrente: <span className="text-emerald-400 font-bold">{t.recurring}</span></p>
-              </div>
-              {t.level === 6 && (
-                <div className="mt-4 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold inline-block">
-                  🔥 Nível Máximo
+            <motion.div
+              key={t.name}
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              whileInView={{ opacity: 1, scale: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08 }}
+              className="card-3d"
+            >
+              <div className={`card-3d-inner rounded-2xl border ${t.color} bg-white/[0.02] backdrop-blur-sm p-6 text-center hover:bg-white/[0.04] transition-all duration-300 ${t.level === 6 ? "ring-1 ring-amber-500/30 bg-amber-500/[0.03] glow-pulse-border" : ""}`}>
+                <span className="text-3xl mb-2 block">{t.badge}</span>
+                <h3 className="font-bold text-lg mb-1 text-white">{t.name}</h3>
+                <p className="text-white/30 text-xs mb-4">{t.range} indicações convertidas</p>
+                <div className="space-y-2 text-sm">
+                  <p className="text-white/60">1ª Venda: <span className="text-amber-400 font-bold">{t.first}</span></p>
+                  <p className="text-white/60">Recorrente: <span className="text-emerald-400 font-bold">{t.recurring}</span></p>
                 </div>
-              )}
+                {t.level === 6 && (
+                  <div className="mt-4 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold inline-block">
+                    🔥 Nível Máximo
+                  </div>
+                )}
+              </div>
             </motion.div>
           ))}
         </div>
       </section>
 
       {/* Payment Info */}
-      <section className="px-6 py-16 max-w-3xl mx-auto">
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-8 text-center">
-          <Shield className="w-10 h-10 text-blue-400 mx-auto mb-4" />
-          <h3 className="text-xl font-bold mb-3">Pagamento Seguro no Mês Seguinte</h3>
-          <p className="text-white/40 text-sm leading-relaxed max-w-lg mx-auto">
-            Todas as comissões são verificadas e pagas no mês seguinte à compra. Isso garante que 
-            somente vendas reais (não canceladas ou reembolsadas) gerem comissão, protegendo você e o sistema contra fraudes.
-          </p>
-        </div>
+      <section className="relative z-10 px-6 py-16 max-w-3xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="card-3d"
+        >
+          <div className="card-3d-inner rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-sm p-8 text-center">
+            <Shield className="w-10 h-10 text-blue-400 mx-auto mb-4" />
+            <h3 className="text-xl font-bold mb-3 text-white">Pagamento Seguro no Mês Seguinte</h3>
+            <p className="text-white/40 text-sm leading-relaxed max-w-lg mx-auto">
+              Todas as comissões são verificadas e pagas no mês seguinte à compra. Isso garante que 
+              somente vendas reais (não canceladas ou reembolsadas) gerem comissão, protegendo você e o sistema contra fraudes.
+            </p>
+          </div>
+        </motion.div>
       </section>
 
       {/* CTA Final */}
-      <section className="px-6 py-24 text-center">
-        <div className="max-w-2xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+      <section className="relative z-10 px-6 py-28 text-center">
+        <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={stagger} className="max-w-2xl mx-auto">
+          <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl font-bold mb-4">
             <span className="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">{ctaTitle}</span>
-          </h2>
-          <p className="text-white/40 mb-8">{ctaSubtitle}</p>
-          <Link to="/auth">
-            <Button size="lg" className="bg-gradient-to-r from-amber-500 to-orange-600 text-black font-bold px-10 text-lg">
-              Quero Ser Embaixador <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-          </Link>
-        </div>
+          </motion.h2>
+          <motion.p variants={fadeUp} className="text-white/40 mb-8">{ctaSubtitle}</motion.p>
+          <motion.div variants={fadeUp}>
+            <Link to="/auth">
+              <Button size="lg" className="h-14 px-10 bg-gradient-to-r from-amber-500 to-orange-600 text-black font-bold text-lg rounded-xl shadow-xl shadow-amber-500/20 hover:scale-105 transition-transform">
+                Quero Ser Embaixador <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </Link>
+          </motion.div>
+        </motion.div>
       </section>
 
-      <footer className="border-t border-white/[0.06] px-6 py-8 text-center text-white/20 text-sm">
-        © {new Date().getFullYear()} FitJourney — Programa de Embaixadores
-      </footer>
+      <LandingFooter label="Programa de Embaixadores" />
     </div>
   );
 }
