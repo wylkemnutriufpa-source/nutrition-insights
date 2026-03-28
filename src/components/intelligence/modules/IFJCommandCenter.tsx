@@ -293,21 +293,29 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
       }
 
       const data = await resp.json();
-      const responseText = data.response || "Sem resposta.";
+      // ifj-core-router returns body_markdown (not response)
+      const responseText = data.body_markdown || data.response || "Sem resposta.";
       const serverActions: ActionButton[] = (data.actions || []).map((a: any) => ({
         label: a.label,
         route: a.route,
         type: a.type || "navigate",
         confirmMessage: a.confirmMessage,
       }));
-      const actionLevel = (data.level || "consult") as Message["actionLevel"];
+      // Action level from meta.intent action_type or response_type
+      const metaIntent = data.meta?.intent || "";
+      const actionLevel = (
+        data.response_type === "action" ? "execute" :
+        data.response_type === "navigate" ? "prepare" :
+        data.response_type === "suggestions" ? "suggest" :
+        "consult"
+      ) as Message["actionLevel"];
 
       setMessages(prev => [
         ...prev,
         { role: "assistant", content: responseText, actions: serverActions, actionLevel },
       ]);
 
-      await logAudit("ifj_response_received", { responseLength: responseText.length, intent: data.intent, dataSource: data.dataSource });
+      await logAudit("ifj_response_received", { responseLength: responseText.length, intent: metaIntent, dataSource: data.meta?.data_source, engine: data.meta?.engine });
     } catch (e) {
       setMessages(prev => [
         ...prev,

@@ -48,14 +48,14 @@ export default function IFJConversationalCopilot() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const resp = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ifj-conversational`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ifj-core-router`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session?.access_token}`,
           },
-          body: JSON.stringify({ question: text.trim() }),
+          body: JSON.stringify({ command: text.trim(), isAdmin: false }),
         }
       );
 
@@ -65,7 +65,7 @@ export default function IFJConversationalCopilot() {
       }
 
       const data = await resp.json();
-      setMessages(prev => [...prev, { role: "assistant", content: data.response || "Sem resposta." }]);
+      setMessages(prev => [...prev, { role: "assistant", content: data.body_markdown || data.response || "Sem resposta." }]);
     } catch {
       setMessages(prev => [...prev, { role: "assistant", content: "Desculpe, não consegui processar sua pergunta. Tente novamente." }]);
     }
