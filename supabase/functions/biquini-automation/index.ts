@@ -2,8 +2,14 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+/** Resolve tenant_id for a given user */
+async function resolveTenant(supabase: any, userId: string): Promise<string | null> {
+  const { data } = await supabase.rpc("get_user_tenant", { _user_id: userId });
+  return data || null;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
