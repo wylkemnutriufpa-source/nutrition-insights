@@ -49,8 +49,9 @@ export default function MealPlans() {
 
   const fetchPatients = async () => {
     if (!user) return;
-    const { data } = await supabase.from("nutritionist_patients").select("patient_id")
+    let npQuery = supabase.from("nutritionist_patients").select("patient_id")
       .eq("nutritionist_id", user.id).eq("status", "active");
+    const { data } = await withTenantFilter(npQuery, tenantId);
     if (data) {
       const pts = await Promise.all(data.map(async (d) => {
         const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", d.patient_id).single();
