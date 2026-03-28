@@ -577,8 +577,8 @@ function NutritionistDashboardContent() {
             <PatientRevenueSimulator />
           </ExpandablePanel>
         </motion.div>
-      )}
-          patients={riskPatients.map(p => ({
+
+
             id: p.id,
             name: p.name,
             score: p.score,
