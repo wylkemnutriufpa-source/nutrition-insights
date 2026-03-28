@@ -59,6 +59,11 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
+    async function resolveTenantForUser(uid: string): Promise<string | null> {
+      const { data } = await supabase.from("user_tenants").select("tenant_id").eq("user_id", uid).limit(1).maybeSingle();
+      return data?.tenant_id || null;
+    }
+
     const body = await req.json().catch(() => ({}));
     const nutritionistId = body.nutritionist_id;
 
