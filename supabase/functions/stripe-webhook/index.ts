@@ -11,6 +11,11 @@ const log = (step: string, details?: any) => {
   console.log(`[STRIPE-WEBHOOK] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
 };
 
+async function resolveTenantForUser(supabase: any, userId: string): Promise<string | null> {
+  const { data } = await supabase.from("user_tenants").select("tenant_id").eq("user_id", userId).limit(1).maybeSingle();
+  return data?.tenant_id || null;
+}
+
 const PRODUCT_TIERS: Record<string, string> = {
   "prod_U7pdgNHCagBgbj": "Basic",
   "prod_U7pdcyM7zmUSwe": "Profissional",
