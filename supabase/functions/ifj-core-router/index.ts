@@ -1071,7 +1071,10 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
       if (intent.target_id) patient = patients.find(p => p.id === intent.target_id);
       else if (intent.target_name) {
         const { found, ambiguous } = findByName(patients, intent.target_name);
-        if (ambiguous.length > 0) return fmt("Múltiplos", "🔍", "disambiguation", `${ambiguous.length} similares`, ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}** (${p.goal || "?"})`).join("\n"), [], intent, "clinical", ctx);
+        if (ambiguous.length > 0) {
+          const disambigActions = ambiguous.map((p: any) => ({ label: p.full_name, route: `/patients/${p.id}`, type: "navigate" }));
+          return fmt("Múltiplos", "🔍", "disambiguation", `${ambiguous.length} similares`, ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}** (${p.goal || "?"})`).join("\n"), disambigActions, intent, "clinical", ctx);
+        }
         patient = found;
       }
       if (!patient) return fmt("Não encontrado", "❌", "error", "Nenhum paciente.", "Verifique a grafia.", [], intent, "clinical", ctx);
