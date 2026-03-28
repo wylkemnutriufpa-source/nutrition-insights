@@ -241,9 +241,31 @@ function detectIntentFromDB(
       if (m) { targetName = m[1]; targetEntity = "student"; }
     }
 
-    // meal_plan uses context patient
-    if (ik === "meal_plan" && ctx.last_patient_id && !targetName) {
-      return { ...base, intent: ik, target_entity: "patient", target_id: ctx.last_patient_id, target_name: ctx.last_patient_name || null, module: best.intent.module, confidence: 0.88, response_mode: "detail", requires_context: best.intent.requires_context, requires_active_plan: best.intent.requires_active_plan, requires_permission_key: best.intent.requires_permission_key, action_type: best.intent.action_type, executor_key: best.intent.executor_key, scope: best.intent.scope };
+    // meal_plan: extract patient name from compound commands like "avaliar plano da Luana"
+    if (ik === "meal_plan") {
+      if (!targetName) {
+        const mealNamePatterns = [
+          /(?:plano|dieta|cardapio|meal plan)\s+(?:d[aeo]\s+|da\s+|do\s+)(.+)/,
+          /(?:avaliar|ver|abrir|mostrar|checar)\s+(?:o\s+)?(?:plano|dieta)\s+(?:d[aeo]\s+|da\s+|do\s+)(.+)/,
+        ];
+        for (const pat of mealNamePatterns) {
+          const m = n.match(pat);
+          if (m && m[1]?.trim()) {
+            // Remove trailing noise words
+            const cleaned = m[1].trim().replace(/\s+(hoje|agora|atual|ativo)$/, "").trim();
+            if (cleaned && !/(?:comer|substituir|trocar|receita|saudavel)/.test(cleaned)) {
+              targetName = cleaned;
+              targetEntity = "patient";
+              break;
+            }
+          }
+        }
+      }
+      // Fallback to context patient if no name extracted
+      if (!targetName && ctx.last_patient_id) {
+        return { ...base, intent: ik, target_entity: "patient", target_id: ctx.last_patient_id, target_name: ctx.last_patient_name || null, module: best.intent.module, confidence: 0.88, response_mode: "detail", requires_context: best.intent.requires_context, requires_active_plan: best.intent.requires_active_plan, requires_permission_key: best.intent.requires_permission_key, action_type: best.intent.action_type, executor_key: best.intent.executor_key, scope: best.intent.scope };
+      }
+      if (targetName) targetEntity = "patient";
     }
 
     return {
