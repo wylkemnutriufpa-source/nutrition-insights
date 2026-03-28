@@ -1542,7 +1542,7 @@ serve(async (req) => {
         response = await runClinicalEngine(supabaseAdmin, intent, user.id, ctx, patients, today, role, inputText);
       }
       else if (intent.module === "behavioral_engine") {
-        response = await runBehavioralEngine(supabaseAdmin, intent, user.id, ctx, patients, today);
+        response = await runBehavioralEngine(supabaseAdmin, intent, user.id, ctx, patients, today, inputText);
       }
       else if (intent.module === "financial_engine") {
         response = await runFinancialEngine(supabaseAdmin, intent, user.id, ctx, patients, role);
