@@ -167,6 +167,8 @@ serve(async (req) => {
               .maybeSingle();
 
             if (!existing) {
+              const tenantIdRecurring = await resolveTenantForUser(supabase, userId);
+
               await supabase.from("payments").insert({
                 user_id: userId,
                 gateway: "stripe",
@@ -175,6 +177,7 @@ serve(async (req) => {
                 currency: "BRL",
                 status: "paid",
                 paid_at: new Date().toISOString(),
+                tenant_id: tenantIdRecurring,
                 metadata: {
                   plan_name: planName,
                   subscription_id: subscriptionId,
@@ -190,6 +193,7 @@ serve(async (req) => {
                 date: new Date().toISOString().split("T")[0],
                 status: "paid",
                 category: "assinatura",
+                tenant_id: tenantIdRecurring,
               });
 
               log("Recurring payment recorded", { userId, amount, planName });
