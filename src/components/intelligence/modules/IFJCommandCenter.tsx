@@ -30,13 +30,16 @@ import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 
 /* ─── Types ─── */
-type ActionType = "navigate" | "confirm";
+type ActionType = "navigate" | "confirm" | "disambiguate";
 
 type ActionButton = {
   label: string;
   route: string;
   type?: ActionType;
   confirmMessage?: string;
+  patient_id?: string;
+  original_command?: string;
+  subtitle?: string;
 };
 
 type Message = {
