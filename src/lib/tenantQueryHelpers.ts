@@ -50,4 +50,15 @@ export const MIGRATED_QUERIES: Record<string, { batch: number; date: string; tab
   "usePatientDashboard": { batch: 1, date: "2026-03-28", tables: ["patient_appointments"] },
   "Appointments": { batch: 1, date: "2026-03-28", tables: ["patient_appointments"] },
   "auth/fetchProfile": { batch: 1, date: "2026-03-28", tables: ["profiles"] },
+  // Batch 2 — Meal Plans, Anamnesis, Checklist
+  "MealPlans": { batch: 2, date: "2026-03-28", tables: ["meal_plans", "nutritionist_patients"] },
+  "useChecklistTasks": { batch: 2, date: "2026-03-28", tables: ["checklist_tasks"] },
+  "MealPlanEditorV2Entry": { batch: 2, date: "2026-03-28", tables: ["meal_plans"] },
+  "ShoppingList": { batch: 2, date: "2026-03-28", tables: ["meal_plans"] },
+  "NextMealWidget": { batch: 2, date: "2026-03-28", tables: ["meal_plans"] },
+  "SystemUsageCard": { batch: 2, date: "2026-03-28", tables: ["meal_plans"] },
+  "DietTemplates": { batch: 2, date: "2026-03-28", tables: ["patient_anamnesis"] },
+  "ClinicalDecisionSupport": { batch: 2, date: "2026-03-28", tables: ["patient_anamnesis", "checklist_tasks"] },
+  "ClinicalIntelligence": { batch: 2, date: "2026-03-28", tables: ["patient_anamnesis", "checklist_tasks"] },
+  "assistedPlanGenerator": { batch: 2, date: "2026-03-28", tables: ["patient_anamnesis"] },
 };

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { FEATURE_REGISTRY, type FeatureDefinition } from "@/lib/featureRegistry";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -134,6 +136,7 @@ function getLevel(percentage: number): { level: number; title: string; color: st
 
 export default function SystemUsageCard() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [usedFeatures, setUsedFeatures] = useState<Set<string>>(new Set());
   const [featureStatuses, setFeatureStatuses] = useState<Record<string, FeatureStatus>>({});
   const [loading, setLoading] = useState(true);
@@ -160,7 +163,7 @@ export default function SystemUsageCard() {
 
       const checks = await Promise.all([
         supabase.from("nutritionist_patients").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id),
-        supabase.from("meal_plans").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id),
+        withTenantFilter(supabase.from("meal_plans").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id), tenantId),
         supabase.from("protocols").select("id", { count: "exact", head: true }).eq("created_by", user.id),
         supabase.from("programs").select("id", { count: "exact", head: true }).eq("created_by", user.id),
         supabase.from("physical_assessments").select("id", { count: "exact", head: true }).eq("assessor_id", user.id),

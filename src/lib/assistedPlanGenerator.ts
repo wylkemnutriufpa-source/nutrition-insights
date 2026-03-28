@@ -10,6 +10,7 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import type { MealLibraryItem, GeneratedMealSlot } from "./mealPlanAutoGenerator";
 
 // ── Types ────────────────────────────────────────────────────
@@ -165,16 +166,18 @@ const TIER_CONFIG: Record<ComplexityTier, { maxFoodsPerMeal: number; diversityBo
 const SUB_TOLERANCE = { kcalPct: 0.10, proteinPct: 0.15, carbsPct: 0.15, fatPct: 0.15 };
 
 // ── Load Patient Context ─────────────────────────────────────
-export async function loadPatientContext(patientId: string): Promise<PatientContext> {
+export async function loadPatientContext(patientId: string, tenantId?: string | null): Promise<PatientContext> {
   const [anamnesisRes, flagsRes, patientRes, protocolRes] = await Promise.all([
-    supabase
-      .from("patient_anamnesis")
-      .select("answers, computed_kcal_target, computed_protein, computed_carbs, computed_fat")
-      .eq("user_id", patientId)
-      .eq("status", "completed")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
+    withTenantFilter(
+      supabase
+        .from("patient_anamnesis")
+        .select("answers, computed_kcal_target, computed_protein, computed_carbs, computed_fat")
+        .eq("user_id", patientId)
+        .eq("status", "completed")
+        .order("created_at", { ascending: false })
+        .limit(1),
+      tenantId ?? null
+    ).maybeSingle(),
     loadPatientFlags(patientId),
     supabase
       .from("profiles")

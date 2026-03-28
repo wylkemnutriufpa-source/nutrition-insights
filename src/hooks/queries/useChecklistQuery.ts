@@ -2,6 +2,8 @@ import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { queryKeys } from "./queryKeys";
 import { toast } from "sonner";
 import { offlineQueue } from "@/lib/offlineSync";
@@ -19,19 +21,23 @@ export interface ChecklistTask {
 
 export function useChecklistTasks(date: string) {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
 
   return useQuery({
-    queryKey: queryKeys.checklist.tasks(user?.id ?? "", date),
+    queryKey: queryKeys.checklist.tasks(user?.id ?? "", date, tenantId),
     enabled: !!user,
     staleTime: 60 * 1000,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("checklist_tasks")
-        .select("*")
-        .eq("patient_id", user!.id)
-        .eq("date", date)
-        .order("category")
-        .order("created_at");
+      const { data } = await withTenantFilter(
+        supabase
+          .from("checklist_tasks")
+          .select("*")
+          .eq("patient_id", user!.id)
+          .eq("date", date)
+          .order("category")
+          .order("created_at"),
+        tenantId
+      );
       return (data || []) as ChecklistTask[];
     },
   });
@@ -40,6 +46,7 @@ export function useChecklistTasks(date: string) {
 export function useToggleChecklistTask() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const inflightRef = React.useRef<Set<string>>(new Set());
 
   return useMutation({
@@ -76,7 +83,7 @@ export function useToggleChecklistTask() {
     },
     onMutate: async ({ task, date }) => {
       // Optimistic update
-      const key = queryKeys.checklist.tasks(user?.id ?? "", date);
+      const key = queryKeys.checklist.tasks(user?.id ?? "", date, tenantId);
       await queryClient.cancelQueries({ queryKey: key });
       const previous = queryClient.getQueryData<ChecklistTask[]>(key);
       queryClient.setQueryData<ChecklistTask[]>(key, (old) =>

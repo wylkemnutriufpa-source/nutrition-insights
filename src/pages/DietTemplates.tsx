@@ -2,6 +2,8 @@ import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { supabase } from "@/integrations/supabase/client";
 import { activateMealPlan } from "@/lib/serverTransitions";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -113,6 +115,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 export default function DietTemplates() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const patientId = searchParams.get("patientId");
@@ -183,14 +186,16 @@ export default function DietTemplates() {
   const fetchAnamnesis = async () => {
     if (!patientId) return;
     try {
-      const { data } = await supabase
-        .from("patient_anamnesis")
-        .select("computed_kcal_target, computed_protein, computed_carbs, computed_fat, answers")
-        .eq("user_id", patientId)
-        .eq("status", "completed")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const { data } = await withTenantFilter(
+        supabase
+          .from("patient_anamnesis")
+          .select("computed_kcal_target, computed_protein, computed_carbs, computed_fat, answers")
+          .eq("user_id", patientId)
+          .eq("status", "completed")
+          .order("created_at", { ascending: false })
+          .limit(1),
+        tenantId
+      ).maybeSingle();
       if (data) setAnamnesis(data as any);
     } catch (e) {
       console.warn("[DietTemplates] fetchAnamnesis error:", e);

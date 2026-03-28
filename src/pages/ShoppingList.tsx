@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,6 +40,7 @@ function guessCategory(name: string): string {
 
 export default function ShoppingList() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [items, setItems] = useState<ShoppingItem[]>([]);
   const [newItem, setNewItem] = useState("");
   const [generating, setGenerating] = useState(false);
@@ -80,14 +83,17 @@ export default function ShoppingList() {
     setGenerating(true);
     try {
       // 1. Find delivered plan only
-      const { data: plans } = await supabase
-        .from("meal_plans")
-        .select("id, title, plan_status")
-        .eq("patient_id", user.id)
-        .eq("is_active", true)
-        .eq("plan_status", "published_to_patient")
-        .order("updated_at", { ascending: false })
-        .limit(1);
+      const { data: plans } = await withTenantFilter(
+        supabase
+          .from("meal_plans")
+          .select("id, title, plan_status")
+          .eq("patient_id", user.id)
+          .eq("is_active", true)
+          .eq("plan_status", "published_to_patient")
+          .order("updated_at", { ascending: false })
+          .limit(1),
+        tenantId
+      );
 
       if (!plans?.[0]) {
         toast.error("Nenhum plano alimentar ativo encontrado. Peça ao seu nutricionista para aprovar/publicar seu plano.");

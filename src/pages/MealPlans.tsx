@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter, getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import { supabase } from "@/integrations/supabase/client";
 import { activateMealPlan, deactivateMealPlan, resolvePlanState } from "@/lib/serverTransitions";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -18,6 +20,7 @@ type MealPlan = Tables<"meal_plans">;
 
 export default function MealPlans() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const navigate = useNavigate();
   const [plans, setPlans] = useState<(MealPlan & { patient_name?: string })[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,8 +34,9 @@ export default function MealPlans() {
 
   const fetchPlans = async () => {
     if (!user) return;
-    const { data } = await supabase.from("meal_plans").select("*")
+    let query = supabase.from("meal_plans").select("*")
       .eq("nutritionist_id", user.id).order("created_at", { ascending: false });
+    const { data } = await withTenantFilter(query, tenantId);
     if (data) {
       const enriched = await Promise.all(data.map(async (p) => {
         const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", p.patient_id).single();
@@ -45,8 +49,9 @@ export default function MealPlans() {
 
   const fetchPatients = async () => {
     if (!user) return;
-    const { data } = await supabase.from("nutritionist_patients").select("patient_id")
+    let npQuery = supabase.from("nutritionist_patients").select("patient_id")
       .eq("nutritionist_id", user.id).eq("status", "active");
+    const { data } = await withTenantFilter(npQuery, tenantId);
     if (data) {
       const pts = await Promise.all(data.map(async (d) => {
         const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", d.patient_id).single();
@@ -65,6 +70,7 @@ export default function MealPlans() {
     const { error } = await supabase.from("meal_plans").insert({
       nutritionist_id: user.id, patient_id: form.patient_id,
       title: form.title, description: form.description || null, start_date: form.start_date,
+      ...getTenantIdForInsert(tenantId),
     });
     if (error) { toast.error("Erro: " + error.message); }
     else {

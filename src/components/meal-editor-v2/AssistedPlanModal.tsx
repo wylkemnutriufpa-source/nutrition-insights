@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { useTenant } from "@/lib/tenantContext";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
@@ -67,6 +68,7 @@ const DAY_LABELS = ["", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
 export function AssistedPlanModal({ open, onOpenChange }: Props) {
   const { plan, planId, items: currentItems } = useMealPlanEditorV2Store();
+  const { tenantId } = useTenant();
   const [step, setStep] = useState<Step>("params");
   const [context, setContext] = useState<PatientContext | null>(null);
   const [loadingCtx, setLoadingCtx] = useState(false);
@@ -89,7 +91,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
   useEffect(() => {
     if (open && plan?.patient_id && !context) {
       setLoadingCtx(true);
-      loadPatientContext(plan.patient_id).then(ctx => {
+      loadPatientContext(plan.patient_id, tenantId).then(ctx => {
         setContext(ctx);
         if (ctx.computedKcal) setTargetKcal(ctx.computedKcal);
         const goalMap: Record<string, string> = {

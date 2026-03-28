@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { supabase } from "@/integrations/supabase/client";
 import { UtensilsCrossed, Clock, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -35,6 +37,7 @@ const MEAL_TIMES: Record<string, string> = {
 
 export default function NextMealWidget() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [nextMeal, setNextMeal] = useState<MealSlot | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -45,14 +48,16 @@ export default function NextMealWidget() {
 
   const loadNextMeal = async (userId: string) => {
     try {
-      const { data: plan } = await supabase
-        .from("meal_plans")
-        .select("id")
-        .eq("patient_id", userId)
-        .eq("is_active", true)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const { data: plan } = await withTenantFilter(
+        supabase
+          .from("meal_plans")
+          .select("id")
+          .eq("patient_id", userId)
+          .eq("is_active", true)
+          .order("created_at", { ascending: false })
+          .limit(1),
+        tenantId
+      ).maybeSingle();
 
       if (!plan) { setLoading(false); return; }
 
