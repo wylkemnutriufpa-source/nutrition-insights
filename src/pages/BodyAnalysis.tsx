@@ -43,6 +43,7 @@ interface BodyAnalysisRecord {
 
 export default function BodyAnalysis() {
   const { user, isNutritionist } = useAuth();
+  const { tenantId } = useTenant();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const patientId = searchParams.get("patientId") || user?.id;
