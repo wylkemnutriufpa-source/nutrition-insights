@@ -148,7 +148,8 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* Ranking Privacy */}
+        {/* Ranking Privacy — PRO+ */}
+        {minMode("pro") && (
         <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="font-display flex items-center gap-2">
