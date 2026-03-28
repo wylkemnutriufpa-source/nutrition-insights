@@ -63,7 +63,7 @@ export default function WorkoutRequestButton() {
       target_route: "/personal-workouts",
       entity_type: "workout_request",
       entity_id: user.id,
-    });
+    } as any);
 
     if (error) {
       toast.error("Erro ao enviar solicitação");

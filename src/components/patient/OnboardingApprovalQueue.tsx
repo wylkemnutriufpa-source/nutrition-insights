@@ -256,7 +256,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
       message: `Seu plano não foi aprovado: ${rejectReason}. Ajuste seus dados e gere um novo.`,
       type: "warning",
       action_url: "/onboarding",
-    });
+    } as any);
 
     toast.success("Plano rejeitado. Paciente foi notificado.");
     setRejectDialog(false);

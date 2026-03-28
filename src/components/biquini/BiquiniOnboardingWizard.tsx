@@ -199,7 +199,7 @@ export default function BiquiniOnboardingWizard({ programId, enrollmentId, onCom
         message: `Seu Protocolo 1 — Reset Metabólico foi ativado com sucesso. Próxima atualização de peso em 15 dias. Avaliação completa em 30 dias.`,
         type: "program",
         action_url: "/client/dashboard",
-      });
+      } as any);
 
       toast.success("Onboarding completo! Protocolo 1 ativado! 🎉");
       onComplete();

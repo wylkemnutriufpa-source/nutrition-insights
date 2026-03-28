@@ -109,7 +109,7 @@ export default function ProgramJoinRequest({ open, onOpenChange }: ProgramJoinRe
           message: `${profile?.full_name || "Um paciente"} solicitou participar do programa "${selectedProgram?.title || ""}".`,
           type: "program_join_request",
           action_url: `/programs/${selected}`,
-        });
+        } as any);
       }
 
       toast.success("🚀 Solicitação enviada! Aguarde a aprovação.");

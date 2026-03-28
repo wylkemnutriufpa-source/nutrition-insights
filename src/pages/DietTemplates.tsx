@@ -318,7 +318,7 @@ export default function DietTemplates() {
             description: `Baseado no modelo "${template.name}". ${anamnesis ? "Ajustado conforme anamnese do paciente." : ""}`,
             start_date: new Date().toISOString().split("T")[0],
             is_active: true,
-          })
+          } as any)
           .select("id")
           .single();
 

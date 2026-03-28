@@ -167,7 +167,7 @@ export default function TherapeuticSuggestionsPanel() {
           entity_type: "intervention",
           entity_id: id,
           target_route: `/patients/${intervention.patient_id}`,
-        });
+        } as any);
       }
 
       return intervention;
