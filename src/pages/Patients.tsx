@@ -710,8 +710,11 @@ export default function Patients() {
                 </p>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <Button variant="outline" size="sm" onClick={() => setStatusManagerMode(true)} className="gap-1.5 text-xs">
-                  <Settings2 className="w-3.5 h-3.5" /> Controle Rápido
+                {minMode("advanced") && (
+                  <Button variant="outline" size="sm" onClick={() => setStatusManagerMode(true)} className="gap-1.5 text-xs">
+                    <Settings2 className="w-3.5 h-3.5" /> Controle Rápido
+                  </Button>
+                )}
                 </Button>
                 <Dialog open={open} onOpenChange={setOpen}>
                   <DialogTrigger asChild>
