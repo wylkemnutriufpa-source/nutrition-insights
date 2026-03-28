@@ -296,6 +296,28 @@ function detectIntentFromDB(
     }
   }
 
+  // ── BARE-NAME FALLBACK ──────────────────────────────────────
+  // If input is 1-3 words and no intent was detected, treat as patient name search
+  const wordCount = n.split(/\s+/).length;
+  if (wordCount <= 3 && role !== "patient") {
+    // Only if it doesn't look like a navigation or food word
+    const skipWords = /^(ajuda|help|oi|ola|menu|sair|voltar|cancelar|sim|nao|ok|obrigad|valeu)$/;
+    const foodCheck = /(?:comer|receita|saudavel|engorda|emagrec|caloria|proteina|carboidrato|substituir|trocar)/;
+    if (!skipWords.test(n) && !foodCheck.test(n)) {
+      const pd = intents.find(i => i.intent_key === "patient_detail");
+      if (pd) {
+        return {
+          ...base, intent: "patient_detail", target_entity: "patient", target_name: n,
+          module: pd.module, confidence: 0.65, response_mode: "detail",
+          requires_context: pd.requires_context, requires_active_plan: pd.requires_active_plan,
+          requires_patient_selected: pd.requires_patient_selected,
+          requires_permission_key: pd.requires_permission_key,
+          action_type: pd.action_type, executor_key: pd.executor_key, scope: pd.scope,
+        };
+      }
+    }
+  }
+
   return base;
 }
 
