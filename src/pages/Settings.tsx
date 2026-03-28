@@ -279,11 +279,11 @@ export default function Settings() {
           </Card>
         )}
 
-        {/* Protocol FitJourney - only for professionals */}
-        <ProtocolFitJourneyToggle />
+        {/* Protocol FitJourney - PRO+ */}
+        {minMode("pro") && <ProtocolFitJourneyToggle />}
 
-        {/* Database Backup - only for professionals */}
-        <DatabaseBackupCard />
+        {/* Database Backup - ADVANCED only */}
+        {minMode("advanced") && <DatabaseBackupCard />}
       </motion.div>
     </DashboardLayout>
   );
