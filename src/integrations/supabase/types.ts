@@ -1428,7 +1428,7 @@ export type Database = {
           message: string
           receiver_id: string
           sender_id: string
-          tenant_id: string | null
+          tenant_id: string
         }
         Insert: {
           created_at?: string
@@ -1438,7 +1438,7 @@ export type Database = {
           message: string
           receiver_id: string
           sender_id: string
-          tenant_id?: string | null
+          tenant_id: string
         }
         Update: {
           created_at?: string
@@ -1448,7 +1448,7 @@ export type Database = {
           message?: string
           receiver_id?: string
           sender_id?: string
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Relationships: [
           {
@@ -1514,7 +1514,7 @@ export type Database = {
           patient_id: string
           patient_protocol_id: string | null
           protocol_task_id: string | null
-          tenant_id: string | null
+          tenant_id: string
           title: string
         }
         Insert: {
@@ -1529,7 +1529,7 @@ export type Database = {
           patient_id: string
           patient_protocol_id?: string | null
           protocol_task_id?: string | null
-          tenant_id?: string | null
+          tenant_id: string
           title: string
         }
         Update: {
@@ -1544,7 +1544,7 @@ export type Database = {
           patient_id?: string
           patient_protocol_id?: string | null
           protocol_task_id?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           title?: string
         }
         Relationships: [
@@ -5569,7 +5569,7 @@ export type Database = {
           template_id: string | null
           template_slug: string | null
           template_version: number | null
-          tenant_id: string | null
+          tenant_id: string
           therapeutic_effectiveness_status: string | null
           therapeutic_efficacy_score: number | null
           title: string
@@ -5599,7 +5599,7 @@ export type Database = {
           template_id?: string | null
           template_slug?: string | null
           template_version?: number | null
-          tenant_id?: string | null
+          tenant_id: string
           therapeutic_effectiveness_status?: string | null
           therapeutic_efficacy_score?: number | null
           title: string
@@ -5629,7 +5629,7 @@ export type Database = {
           template_id?: string | null
           template_slug?: string | null
           template_version?: number | null
-          tenant_id?: string | null
+          tenant_id?: string
           therapeutic_effectiveness_status?: string | null
           therapeutic_efficacy_score?: number | null
           title?: string
@@ -5984,7 +5984,7 @@ export type Database = {
           metadata: Json | null
           priority: string | null
           target_route: string | null
-          tenant_id: string | null
+          tenant_id: string
           title: string
           type: string
           user_id: string
@@ -6000,7 +6000,7 @@ export type Database = {
           metadata?: Json | null
           priority?: string | null
           target_route?: string | null
-          tenant_id?: string | null
+          tenant_id: string
           title: string
           type?: string
           user_id: string
@@ -6016,7 +6016,7 @@ export type Database = {
           metadata?: Json | null
           priority?: string | null
           target_route?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           title?: string
           type?: string
           user_id?: string
