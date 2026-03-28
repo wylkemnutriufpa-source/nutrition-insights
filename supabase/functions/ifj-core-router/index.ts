@@ -1154,7 +1154,7 @@ CONTEXTO:
 // DOMAIN ENGINES (clinical, behavioral, financial, training, journey)
 // ═══════════════════════════════════════════════════════════════
 
-async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], today: string, role?: string): Promise<IFJResponse> {
+async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], today: string, role?: string, originalCommand = ""): Promise<IFJResponse> {
   const patientIds = patients.map(p => p.id);
   const safeIds = patientIds.length ? patientIds : ["00000000-0000-0000-0000-000000000000"];
 
