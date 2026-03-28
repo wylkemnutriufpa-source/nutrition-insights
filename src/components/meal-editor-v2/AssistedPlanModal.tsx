@@ -91,7 +91,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
   useEffect(() => {
     if (open && plan?.patient_id && !context) {
       setLoadingCtx(true);
-      loadPatientContext(plan.patient_id).then(ctx => {
+      loadPatientContext(plan.patient_id, tenantId).then(ctx => {
         setContext(ctx);
         if (ctx.computedKcal) setTargetKcal(ctx.computedKcal);
         const goalMap: Record<string, string> = {
