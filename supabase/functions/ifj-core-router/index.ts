@@ -932,7 +932,7 @@ async function runActionEngine(supabaseAdmin: any, supabase: any, intent: IFJInt
     case "action_set_premium": {
       if (!intent.target_name) return fmt("Quem?", "❓", "error", "Diga o nome.", "Ex: *coloque premium para Maria*", [], intent, "action", ctx);
       const { found, ambiguous } = findByName(patients, intent.target_name);
-      if (ambiguous.length > 0) return fmt("Qual?", "🔍", "disambiguation", "Múltiplos", ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}**`).join("\n"), [], intent, "action", ctx);
+      if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, originalCommand, ctx, "action");
       if (!found) return fmt("Não encontrado", "❌", "error", "Paciente não encontrado.", "", [], intent, "action", ctx);
       const { error } = await supabaseAdmin.from("user_subscriptions").upsert({ user_id: found.id, plan_type: "premium", is_active: true, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
       if (error) return fmt("Erro", "❌", "error", "Erro ao ativar.", error.message, [], intent, "action", ctx);
