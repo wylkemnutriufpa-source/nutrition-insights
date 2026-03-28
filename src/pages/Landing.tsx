@@ -96,7 +96,7 @@ const defaultPlans = [
     cta: "Testar Grátis por 7 dias",
   },
   {
-    name: "Profissional", price: "R$ 49,90", period: "/mês", popular: true,
+    name: "Profissional", price: "R$ 74,90", period: "/mês", popular: true,
     features: ["Pacientes ilimitados", "IA completa (análise, receitas, planos)", "Avaliação física + corporal", "Gamificação avançada", "Relatórios semanais", "Suplementação", "Suporte prioritário"],
     cta: "Testar Grátis por 7 dias",
   },
