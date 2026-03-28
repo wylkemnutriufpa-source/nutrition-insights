@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     if (createError) {
       // If user already exists, find them and link
       if (createError.message?.includes("already been registered") || (createError as any).code === "email_exists") {
-        console.log(`[invite-patient] User ${normalizedEmail} already exists, linking...`);
+        console.log(`[invite-patient] User already exists, linking...`);
         
         // Find user by email using admin API
         const { data: userList } = await adminClient.auth.admin.listUsers({ perPage: 1, page: 1 });
