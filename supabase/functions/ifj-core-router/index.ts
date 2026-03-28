@@ -35,7 +35,7 @@ interface IFJResponse {
   response_type: string;
   summary: string;
   body_markdown: string;
-  actions: Array<{ label: string; route: string; type: string }>;
+  actions: Array<{ label: string; route: string; type: string; patient_id?: string; original_command?: string; subtitle?: string }>;
   meta: { intent: string; confidence: number; data_source: string; engine: string; used_context: boolean };
   sessionContext: Record<string, any>;
 }
