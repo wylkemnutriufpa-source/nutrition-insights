@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useSidebarGroups } from "@/hooks/useLayoutPreference";
+import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { useWorkspace, type WorkspaceSection, type WorkspaceItem } from "@/hooks/useWorkspace";
 import {
   ChevronDown, Trophy, LayoutDashboard, Users, UtensilsCrossed,
