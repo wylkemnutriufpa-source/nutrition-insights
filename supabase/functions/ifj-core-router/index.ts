@@ -1539,7 +1539,7 @@ serve(async (req) => {
         response = await runPriorityEngine(supabaseAdmin, intent, user.id, ctx, patients, today, role);
       }
       else if (intent.module === "clinical_engine") {
-        response = await runClinicalEngine(supabaseAdmin, intent, user.id, ctx, patients, today, role);
+        response = await runClinicalEngine(supabaseAdmin, intent, user.id, ctx, patients, today, role, inputText);
       }
       else if (intent.module === "behavioral_engine") {
         response = await runBehavioralEngine(supabaseAdmin, intent, user.id, ctx, patients, today);
