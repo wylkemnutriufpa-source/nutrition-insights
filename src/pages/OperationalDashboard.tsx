@@ -2,13 +2,14 @@
  * FitJourney — Operational Health Dashboard (Sprint 4)
  * Painel consolidado: alertas, métricas, runbooks, kill switch.
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import {
   AlertTriangle, Activity, Shield, Zap, BookOpen, Power,
-  CheckCircle, XCircle, Clock, RefreshCw, TrendingUp
+  CheckCircle, XCircle, Clock, RefreshCw, TrendingUp,
+  PlayCircle, Server, Wifi, Database, HardDrive
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
