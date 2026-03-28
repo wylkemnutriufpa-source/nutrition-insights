@@ -82,9 +82,10 @@ export default function BodyAnalysis() {
 
   const fetchAnalyses = async () => {
     if (!patientId) return;
-    const { data } = await supabase.from("body_analyses")
+    const q = supabase.from("body_analyses")
       .select("*").eq("patient_id", patientId)
       .order("analysis_date", { ascending: false });
+    const { data } = await withTenantFilter(q, tenantId);
     setAnalyses(data || []);
     setLoading(false);
   };
