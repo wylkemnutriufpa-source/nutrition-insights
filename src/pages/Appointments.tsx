@@ -144,7 +144,7 @@ export default function Appointments() {
         entity_type: "appointment",
         entity_id: apt?.id,
         target_route: "/appointments",
-      });
+      } as any);
     },
     onSuccess: () => {
       toast.success("Consulta agendada!");
