@@ -733,7 +733,6 @@ export default function PatientDetail() {
             { key: "projects", label: "Projetos", icon: Rocket, color: "from-pink-500/20 to-pink-500/5", iconColor: "text-pink-500", minMode: "advanced" as const },
           ];
 
-          const expUI = useExperienceUI();
           const sections = allSections.filter(s => expUI.minMode(s.minMode));
 
           return (
