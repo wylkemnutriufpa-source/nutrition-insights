@@ -157,6 +157,7 @@ const BodyProjectionExperience = lazy(() => import("./pages/BodyProjectionExperi
 const AdminOperationalCosts = lazy(() => import("./pages/AdminOperationalCosts"));
 const AIUsageDashboard = lazy(() => import("./pages/admin/AIUsageDashboard"));
 const MealCoverageDashboard = lazy(() => import("./pages/admin/MealCoverageDashboard"));
+const PlanBatchAudit = lazy(() => import("./pages/admin/PlanBatchAudit"));
 const TeamManagement = lazy(() => import("./pages/TeamManagement"));
 const WhatsAppSettings = lazy(() => import("./pages/WhatsAppSettings"));
 const PhytotherapyProtocols = lazy(() => import("./pages/PhytotherapyProtocols"));
@@ -507,6 +508,7 @@ const App = () => (
               <Route path="/admin-operational-costs" element={<AdminRoute><LP section="Admin"><AdminOperationalCosts /></LP></AdminRoute>} />
               <Route path="/admin/ai-usage" element={<AdminRoute><LP section="Admin"><AIUsageDashboard /></LP></AdminRoute>} />
               <Route path="/admin/meal-coverage" element={<AdminRoute><LP section="Admin"><MealCoverageDashboard /></LP></AdminRoute>} />
+              <Route path="/admin/plan-audit" element={<AdminRoute><LP section="Auditoria de Planos"><PlanBatchAudit /></LP></AdminRoute>} />
               <Route path="/admin/mission-control" element={<AdminRoute><LP section="Mission Control"><MissionControl /></LP></AdminRoute>} />
               <Route path="/admin/campaigns" element={<AdminRoute><LP section="Campanhas"><CampaignCenter /></LP></AdminRoute>} />
               <Route path="/system-diagnostics" element={<AdminRoute><LP section="System Diagnostics"><SystemDiagnostics /></LP></AdminRoute>} />
