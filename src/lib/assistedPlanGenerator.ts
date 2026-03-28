@@ -305,14 +305,32 @@ export async function generateAssistedPlan(
     .select("*")
     .eq("is_active", true);
 
-  const allItems = (rawItems || []) as unknown as MealLibraryItem[];
+  let allItems = (rawItems || []) as unknown as MealLibraryItem[];
+  
+  // FILTER: Remove items with blocked foods (kefir, salmão, cottage, etc.)
+  allItems = allItems.filter(item => {
+    if (!Array.isArray(item.foods)) return true;
+    return !item.foods.some((f: any) => isBlockedFood(f.name || ""));
+  });
+
+  // FILTER: Remove items with excessive fruits (max 2 per meal)
+  allItems = allItems.filter(item => {
+    if (!Array.isArray(item.foods)) return true;
+    const fruitNames = ["banana", "maçã", "mamão", "laranja", "goiaba", "morango", "tangerina", "manga", "melancia", "abacaxi", "uva", "melão"];
+    const fruitCount = item.foods.filter((f: any) => {
+      const n = (f.name || "").toLowerCase();
+      return fruitNames.some(fn => n.includes(fn));
+    }).length;
+    return fruitCount <= MEAL_LIMITS.maxFruitsPerMeal;
+  });
+
   if (allItems.length === 0) {
     return {
       success: false,
       options: [],
       patientContext: context,
       kcalSuggestion: checkKcalCoherence(params.targetKcal, context),
-      warnings: ["Nenhum item na biblioteca de refeições."],
+      warnings: ["Nenhum item na biblioteca de refeições após filtros de qualidade."],
       generatedAt: new Date().toISOString(),
     };
   }
