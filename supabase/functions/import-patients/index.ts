@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -134,6 +135,10 @@ Deno.serve(async (req) => {
     if (!userRoles.includes("nutritionist") && !userRoles.includes("admin")) {
       return json({ error: "Forbidden" }, 403);
     }
+
+    // Rate limit: 5 requests per 15 minutes
+    const rl = await checkRateLimit("import-patients", user.id, 5, 15);
+    if (!rl.allowed) return rateLimitResponse();
 
     let body: any;
     try {
