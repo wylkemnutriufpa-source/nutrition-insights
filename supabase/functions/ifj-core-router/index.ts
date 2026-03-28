@@ -1154,25 +1154,41 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
       return fmt(`Ficha: ${patient.full_name}`, "👤", "detail", `Resumo de ${patient.full_name}`, md, actions, intent, "clinical", ctx);
     }
     case "anamnesis": {
-      const pid = intent.target_id || ctx.last_patient_id;
-      if (!pid) return fmt("Quem?", "❓", "error", "Diga o nome.", "", [], intent, "clinical", ctx);
+      let pid = intent.target_id || ctx.last_patient_id;
+      if (!pid && intent.target_name) {
+        const { found, ambiguous } = findByName(patients, intent.target_name);
+        if (ambiguous.length > 0) {
+          const disambigActions = ambiguous.map((p: any) => ({ label: `Anamnese de ${p.full_name}`, route: `/patients/${p.id}`, type: "navigate" }));
+          return fmt("Qual paciente?", "🔍", "disambiguation", `${ambiguous.length} pacientes com esse nome`, ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}** (${p.goal || "?"})`).join("\n"), disambigActions, intent, "clinical", ctx);
+        }
+        if (found) { pid = found.id; ctx.last_patient_id = found.id; ctx.last_patient_name = found.full_name; }
+      }
+      if (!pid) return fmt("Quem?", "❓", "error", "Diga o nome do paciente.", "Ex: *anamnese da Maria*", [], intent, "clinical", ctx);
       const anam = await getPatientAnamnesis(supabase, pid);
-      if (!anam) return fmt("Sem anamnese", "📋", "info", "Nenhuma encontrada.", "", [], intent, "clinical", ctx);
+      if (!anam) return fmt("Sem anamnese", "📋", "info", "Nenhuma encontrada.", "Ainda não há anamnese registrada.", [{ label: "Abrir ficha", route: `/patients/${pid}`, type: "navigate" }], intent, "clinical", ctx);
       const p = patients.find(x => x.id === pid);
       const answers = anam.answers || {};
       const md = `## Anamnese — ${p?.full_name}\n\n- **Status**: ${anam.status}\n- **Data**: ${new Date(anam.created_at).toLocaleDateString("pt-BR")}\n\n` +
         Object.entries(answers).slice(0, 15).map(([k, v]) => `- **${k}**: ${typeof v === "object" ? JSON.stringify(v) : v}`).join("\n");
-      return fmt(`Anamnese: ${p?.full_name}`, "📋", "detail", "Dados da anamnese", md, [], intent, "clinical", ctx);
+      return fmt(`Anamnese: ${p?.full_name}`, "📋", "detail", "Dados da anamnese", md, [{ label: "Abrir ficha", route: `/patients/${pid}`, type: "navigate" }], intent, "clinical", ctx);
     }
     case "lab_exams": {
-      const pid = intent.target_id || ctx.last_patient_id;
-      if (!pid) return fmt("Quem?", "❓", "error", "Diga o nome.", "", [], intent, "clinical", ctx);
+      let pid = intent.target_id || ctx.last_patient_id;
+      if (!pid && intent.target_name) {
+        const { found, ambiguous } = findByName(patients, intent.target_name);
+        if (ambiguous.length > 0) {
+          const disambigActions = ambiguous.map((p: any) => ({ label: `Exames de ${p.full_name}`, route: `/patients/${p.id}`, type: "navigate" }));
+          return fmt("Qual paciente?", "🔍", "disambiguation", `${ambiguous.length} pacientes com esse nome`, ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}** (${p.goal || "?"})`).join("\n"), disambigActions, intent, "clinical", ctx);
+        }
+        if (found) { pid = found.id; ctx.last_patient_id = found.id; ctx.last_patient_name = found.full_name; }
+      }
+      if (!pid) return fmt("Quem?", "❓", "error", "Diga o nome do paciente.", "Ex: *exames da Maria*", [], intent, "clinical", ctx);
       const labs = await getPatientLabSummary(supabase, pid);
-      if (!labs.length) return fmt("Sem exames", "🔬", "info", "Nenhum exame.", "", [], intent, "clinical", ctx);
+      if (!labs.length) return fmt("Sem exames", "🔬", "info", "Nenhum exame registrado.", "", [{ label: "Abrir ficha", route: `/patients/${pid}`, type: "navigate" }], intent, "clinical", ctx);
       const p = patients.find(x => x.id === pid);
       const md = `## Exames — ${p?.full_name}\n\n| Marcador | Valor | Ref | Status |\n|---|---|---|---|\n` +
         labs.map((l: any) => { const val = parseFloat(l.value); const low = l.reference_min != null ? parseFloat(l.reference_min) : null; const high = l.reference_max != null ? parseFloat(l.reference_max) : null; let status = "✅"; if (low != null && val < low) status = "⬇️"; if (high != null && val > high) status = "⬆️"; return `| ${l.marker_name} | ${l.value} ${l.unit || ""} | ${low || "—"}-${high || "—"} | ${status} |`; }).join("\n");
-      return fmt(`Exames: ${p?.full_name}`, "🔬", "detail", `${labs.length} marcadores`, md, [], intent, "clinical", ctx);
+      return fmt(`Exames: ${p?.full_name}`, "🔬", "detail", `${labs.length} marcadores`, md, [{ label: "Abrir ficha", route: `/patients/${pid}`, type: "navigate" }], intent, "clinical", ctx);
     }
     case "lab_pending": return fmt("Exames pendentes", "🔬", "info", "Em desenvolvimento", "🔬 Consulte por paciente.", [], intent, "clinical", ctx);
     case "meal_plan": {
