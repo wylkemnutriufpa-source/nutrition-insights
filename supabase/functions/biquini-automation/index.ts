@@ -2,8 +2,14 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+/** Resolve tenant_id for a given user */
+async function resolveTenant(supabase: any, userId: string): Promise<string | null> {
+  const { data } = await supabase.rpc("get_user_tenant", { _user_id: userId });
+  return data || null;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -35,6 +41,10 @@ Deno.serve(async (req) => {
     for (const enrollment of enrollments) {
       results.checked++;
 
+      // Resolve tenant_id for this enrollment's patient
+      const tenantId = await resolveTenant(supabase, enrollment.patient_id);
+      const tenantSpread = tenantId ? { tenant_id: tenantId } : {};
+
       // ─── WEIGHT DEADLINE CHECK (15 days) ───
       // Day 14: warning → Day 16+: block
       const activePhaseStatuses = [
@@ -53,6 +63,7 @@ Deno.serve(async (req) => {
         // 1 day BEFORE deadline: send warning
         if (daysUntilDue >= 0 && daysUntilDue <= 1) {
           await supabase.from("notifications").insert({
+            ...tenantSpread,
             user_id: enrollment.patient_id,
             title: "⚠️ Prazo de peso amanhã!",
             message: "Você tem até amanhã para enviar seu peso atualizado. Caso contrário, seu protocolo será bloqueado.",
@@ -73,6 +84,7 @@ Deno.serve(async (req) => {
             .eq("id", enrollment.id);
 
           await supabase.from("notifications").insert({
+            ...tenantSpread,
             user_id: enrollment.patient_id,
             title: "🔒 Protocolo bloqueado — peso não enviado",
             message: "Seu protocolo foi bloqueado por falta de atualização de peso. Envie agora para continuar.",
@@ -95,6 +107,7 @@ Deno.serve(async (req) => {
         // 1 day BEFORE deadline: send warning
         if (daysUntilReview >= 0 && daysUntilReview <= 1) {
           await supabase.from("notifications").insert({
+            ...tenantSpread,
             user_id: enrollment.patient_id,
             title: "⚠️ Reavaliação completa amanhã!",
             message: "Amanhã é o último dia para enviar peso e fotos corporais. Se não enviar, seu protocolo será bloqueado.",
@@ -116,6 +129,7 @@ Deno.serve(async (req) => {
               .eq("id", enrollment.id);
 
             await supabase.from("notifications").insert({
+            ...tenantSpread,
               user_id: enrollment.patient_id,
               title: "🔒 Protocolo bloqueado — reavaliação pendente",
               message: "Envie seu peso e fotos corporais para desbloquear o protocolo.",
@@ -139,6 +153,7 @@ Deno.serve(async (req) => {
               .eq("id", enrollment.id);
 
             await supabase.from("notifications").insert({
+            ...tenantSpread,
               user_id: enrollment.patient_id,
               title: "🔒 Protocolo totalmente bloqueado",
               message: "Seu protocolo foi pausado por falta de reavaliação. Envie seus dados agora.",
@@ -147,6 +162,7 @@ Deno.serve(async (req) => {
             });
 
             await supabase.from("notifications").insert({
+            ...tenantSpread,
               user_id: enrollment.professional_id,
               title: "⚠️ Paciente com protocolo bloqueado",
               message: "Protocolo bloqueado por falta de reavaliação. Verifique o status no programa.",
@@ -244,6 +260,7 @@ Deno.serve(async (req) => {
 
         // Notify patient
         await supabase.from("notifications").insert({
+            ...tenantSpread,
           user_id: enrollment.patient_id,
           title: notificationTitle,
           message: notificationMessage,
@@ -253,6 +270,7 @@ Deno.serve(async (req) => {
 
         // Notify professional
         await supabase.from("notifications").insert({
+            ...tenantSpread,
           user_id: enrollment.professional_id,
           title: `📊 Paciente avançou para Fase ${targetPhase}`,
           message: `Paciente avançou automaticamente para ${protocolName}. Revise os ajustes do protocolo.`,
@@ -442,6 +460,7 @@ Deno.serve(async (req) => {
 
               // Notify patient
               await supabase.from("notifications").insert({
+            ...tenantSpread,
                 user_id: enrollment.patient_id,
                 title: "🎓 Projeto Biquíni Branco Concluído!",
                 message:
@@ -452,6 +471,7 @@ Deno.serve(async (req) => {
 
               // Notify professional
               await supabase.from("notifications").insert({
+            ...tenantSpread,
                 user_id: enrollment.professional_id,
                 title: "🎓 Paciente concluiu o Projeto Biquíni Branco",
                 message:

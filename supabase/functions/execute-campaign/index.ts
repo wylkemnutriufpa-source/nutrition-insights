@@ -21,6 +21,9 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
+    // Resolve tenant_id for this caller
+    const { data: tenantId } = await supabase.rpc("get_user_tenant", { _user_id: caller.id });
+
     const { campaign_id, mode = "execute" } = await req.json();
 
     if (!campaign_id) throw new Error("campaign_id required");
@@ -40,7 +43,7 @@ Deno.serve(async (req) => {
       let q = supabase.from("nutritionist_patients").select("patient_id");
       if (filters.status === "active") q = q.eq("status", "active");
       else if (filters.status === "inactive") q = q.eq("status", "inactive");
-      else q = q.eq("status", "active"); // default to active
+      else q = q.eq("status", "active");
       const { data } = await q.limit(1000);
       if (data) recipients.push(...data.map((d: any) => ({ id: d.patient_id, type: "patient" })));
     }
@@ -75,7 +78,7 @@ Deno.serve(async (req) => {
     for (const recipient of recipients) {
       for (const channel of channels) {
         try {
-          // Create delivery record
+          // Create delivery record with tenant_id
           await (supabase as any).from("campaign_deliveries").insert({
             campaign_id,
             recipient_id: recipient.id,
@@ -85,13 +88,14 @@ Deno.serve(async (req) => {
             sent_at: new Date().toISOString(),
           });
 
-          // Send notification
+          // Send notification with tenant_id
           if (channel === "notification") {
             await supabase.from("notifications").insert({
               user_id: recipient.id,
               title: campaign.title,
               message: campaign.message_body,
               type: "campaign",
+              ...(tenantId ? { tenant_id: tenantId } : {}),
             });
           }
 
@@ -126,7 +130,7 @@ Deno.serve(async (req) => {
 
     // Update campaign status
     await (supabase as any).from("campaigns").update({
-      status: errorCount === 0 ? "completed" : "completed",
+      status: "completed",
     }).eq("id", campaign_id);
 
     return new Response(JSON.stringify({

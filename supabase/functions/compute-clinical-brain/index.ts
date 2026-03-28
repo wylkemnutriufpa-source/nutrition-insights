@@ -2,8 +2,14 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+/** Resolve tenant_id for a given user */
+async function resolveTenant(supabase: any, userId: string): Promise<string | null> {
+  const { data } = await supabase.rpc("get_user_tenant", { _user_id: userId });
+  return data || null;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -138,6 +144,9 @@ Deno.serve(async (req) => {
       else if (compositeScore >= 60) zone = "accelerated_evolution";
       else zone = "metabolic_adaptation";
 
+      // Resolve tenant from nutritionist
+      const tenantId = await resolveTenant(supabase, nid);
+
       states.push({
         patient_id: pid,
         zone,
@@ -148,10 +157,15 @@ Deno.serve(async (req) => {
         engagement_score: engagementScore,
         risk_score: riskScore,
         updated_at: new Date().toISOString(),
+        ...(tenantId ? { tenant_id: tenantId } : {}),
       });
 
       // DECISION GENERATION
       const existingSnapshot = snapshotMap.get(pid);
+
+      // Resolve tenant for decisions
+      const decTenantId = await resolveTenant(supabase, nid);
+      const tenantSpread = decTenantId ? { tenant_id: decTenantId } : {};
 
       if (adherenceScore < 40) {
         decisions.push({
@@ -162,6 +176,7 @@ Deno.serve(async (req) => {
           confidence: Math.min(95, 60 + (40 - adherenceScore)),
           expected_impact: "Aumento de adesão em 15-25% com simplificação",
           status: "pending",
+          ...tenantSpread,
         });
       }
 
@@ -173,6 +188,7 @@ Deno.serve(async (req) => {
           urgency: "high", confidence: 70,
           expected_impact: "Retomada da perda de peso em 2-3 semanas",
           status: "pending",
+          ...tenantSpread,
         });
       }
 
@@ -184,6 +200,7 @@ Deno.serve(async (req) => {
           urgency: "critical", confidence: 85,
           expected_impact: "Prevenção de abandono com intervenção proativa",
           status: "pending",
+          ...tenantSpread,
         });
       }
 
@@ -196,6 +213,7 @@ Deno.serve(async (req) => {
           urgency: "medium", confidence: 80,
           expected_impact: "Melhora metabólica e disposição com hidratação adequada",
           status: "pending",
+          ...tenantSpread,
         });
       }
     }

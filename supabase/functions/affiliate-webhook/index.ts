@@ -131,6 +131,10 @@ serve(async (req) => {
         });
       }
 
+      // Resolve tenant_id from affiliate's tenant or user
+      const affiliateTenantId = affiliate.tenant_id || null;
+      const tenantSpread = affiliateTenantId ? { tenant_id: affiliateTenantId } : {};
+
       // ─── ANTI-FRAUD CHECKS ───
 
       // 1. Self-referral check (same user_id)
@@ -282,6 +286,7 @@ serve(async (req) => {
           message: `Você ganhou R$ ${commissionAmount.toFixed(2)} de comissão (${commissionType === "first_payment" ? "1ª venda" : "recorrente"}).`,
           type: "commission",
           action_url: "/ambassador",
+          ...tenantSpread,
         });
       }
 
