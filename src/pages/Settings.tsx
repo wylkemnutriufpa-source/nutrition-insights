@@ -197,6 +197,7 @@ export default function Settings() {
             </div>
           </CardContent>
         </Card>
+        )}
 
         {/* Change Password */}
         <Card className="shadow-card">
