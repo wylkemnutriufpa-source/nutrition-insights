@@ -1180,17 +1180,27 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
 async function runBehavioralEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], today: string): Promise<IFJResponse> {
   switch (intent.intent) {
     case "checklist_status": {
-      const pid = ctx.last_patient_id;
+      let pid = intent.target_id || ctx.last_patient_id;
+      // Resolve patient by name if target_name is present
+      if (!pid && intent.target_name) {
+        const { found, ambiguous } = findByName(patients, intent.target_name);
+        if (ambiguous.length > 0) {
+          const disambigActions = ambiguous.map((p: any) => ({ label: `Checklist de ${p.full_name}`, route: `/patients/${p.id}`, type: "navigate" }));
+          return fmt("Qual paciente?", "🔍", "disambiguation", `${ambiguous.length} pacientes com esse nome`, ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}** (${p.goal || "?"})`).join("\n"), disambigActions, intent, "behavioral", ctx);
+        }
+        if (found) { pid = found.id; ctx.last_patient_id = found.id; ctx.last_patient_name = found.full_name; }
+      }
       if (pid) {
         const { data: tasks } = await supabase.from("checklist_tasks").select("id, title, completed, category").eq("patient_id", pid).eq("date", today);
         const total = (tasks || []).length; const done = (tasks || []).filter((t: any) => t.completed).length;
         const p = patients.find(x => x.id === pid);
         return fmt(`Checklist: ${p?.full_name}`, "✅", "detail", `${done}/${total}`,
-          `**${done}/${total}** tarefas\n\n` + (tasks || []).map((t: any) => `- ${t.completed ? "✅" : "⬜"} ${t.title}`).join("\n"), [], intent, "behavioral", ctx);
+          `**${done}/${total}** tarefas\n\n` + (tasks || []).map((t: any) => `- ${t.completed ? "✅" : "⬜"} ${t.title}`).join("\n"),
+          [{ label: "Abrir ficha", route: `/patients/${pid}`, type: "navigate" }], intent, "behavioral", ctx);
       }
       const snapshots = await getSnapshots(supabase, patients.map(p => p.id).length ? patients.map(p => p.id) : ["00000000-0000-0000-0000-000000000000"], today);
       const lowAdh = snapshots.filter((s: any) => s.checklist_completion_rate != null && s.checklist_completion_rate < 50);
-      if (!lowAdh.length) return fmt("Checklists OK", "✅", "info", "Boa adesão.", "", [], intent, "behavioral", ctx);
+      if (!lowAdh.length) return fmt("Checklists OK", "✅", "info", "Boa adesão geral.", "Todos os pacientes com checklist acima de 50%.", [], intent, "behavioral", ctx);
       const md = lowAdh.map((s: any) => { const p = patients.find(x => x.id === s.patient_id); return `- **${p?.full_name || "?"}** — ${s.checklist_completion_rate}%`; }).join("\n");
       return fmt("Checklist baixo", "📋", "list", `${lowAdh.length} < 50%`, md, [], intent, "behavioral", ctx);
     }
