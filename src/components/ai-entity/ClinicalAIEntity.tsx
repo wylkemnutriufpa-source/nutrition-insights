@@ -53,14 +53,14 @@ export default function ClinicalAIEntity() {
 
     async function checkSignals() {
       try {
-        const { data: alerts } = await (supabase as any)
+        const { data: alerts } = await withTenantFilter((supabase as any)
           .from("clinical_alerts")
           .select("id, title, severity, patient_id, description")
           .eq("nutritionist_id", user!.id)
           .eq("is_active", true)
           .eq("severity", "critical")
           .order("created_at", { ascending: false })
-          .limit(1);
+          .limit(1), tenantId);
 
         if (!mountedRef.current) return;
 
