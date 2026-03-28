@@ -130,6 +130,7 @@ Deno.serve(async (req) => {
       resource_type: "user",
       resource_id: target_user_id,
       metadata: auditMeta,
+      tenant_id: callerTenant,
     });
 
     return new Response(JSON.stringify({ success: true, ...result }), {
