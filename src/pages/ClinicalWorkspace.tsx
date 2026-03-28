@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useExperienceUI } from "@/hooks/useExperienceUI";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
