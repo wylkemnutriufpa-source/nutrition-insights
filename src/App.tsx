@@ -343,6 +343,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
+            <TenantProvider>
             <CelebrationProvider>
             <DarkModeInit />
             <NeuralScreensaver />
