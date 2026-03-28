@@ -228,8 +228,9 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
   const location = useLocation();
   const { t } = useTranslation();
   const { openGroups, toggleGroup } = useSidebarGroups();
+  const { isRouteAllowed } = useExperienceMode();
 
-  const allItems = categories.flatMap((c) => c.items);
+  const allItems = categories.flatMap((c) => c.items).filter(item => isRouteAllowed(item.route));
   const fixedItems = allItems.filter((item) => FIXED_ROUTES.includes(item.route));
 
   const groupedMap = new Map<string, SmartMenuItem[]>();

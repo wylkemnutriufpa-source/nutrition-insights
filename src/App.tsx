@@ -538,6 +538,7 @@ const App = () => (
             </Routes>
             </CommandPaletteProvider>
             </CelebrationProvider>
+            </ExperienceModeProvider>
             </TenantProvider>
           </AuthProvider>
         </BrowserRouter>

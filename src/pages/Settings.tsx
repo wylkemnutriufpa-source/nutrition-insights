@@ -97,6 +97,9 @@ export default function Settings() {
           <p className="text-muted-foreground text-sm">{t("settings.subtitle")}</p>
         </div>
 
+        {/* Experience Mode */}
+        <ExperienceModeSwitcher />
+
         {/* Profile */}
         <Card className="shadow-card">
           <CardHeader>
