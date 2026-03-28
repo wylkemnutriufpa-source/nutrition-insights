@@ -869,7 +869,7 @@ async function runActionEngine(supabaseAdmin: any, supabase: any, intent: IFJInt
     case "action_release_onboarding": {
       if (!intent.target_name) return fmt("Quem?", "❓", "error", "Diga o nome do paciente.", "Ex: *libere onboarding da Maria*", [], intent, "action", ctx);
       const { found, ambiguous } = findByName(patients, intent.target_name);
-      if (ambiguous.length > 0) return fmt("Qual paciente?", "🔍", "disambiguation", "Múltiplos encontrados", ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}**`).join("\n"), [], intent, "action", ctx);
+      if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, originalCommand, ctx, "action");
       if (!found) return fmt("Não encontrado", "❌", "error", "Paciente não encontrado.", "", [], intent, "action", ctx);
       const { error } = await supabaseAdmin.from("nutritionist_patients").update({ journey_status: "onboarding_active" }).eq("patient_id", found.id).eq("status", "active");
       if (error) return fmt("Erro", "❌", "error", "Erro ao liberar.", error.message, [], intent, "action", ctx);
