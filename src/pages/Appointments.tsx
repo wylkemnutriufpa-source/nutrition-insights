@@ -99,7 +99,7 @@ export default function Appointments() {
       if (!data) return [];
 
       const ids = [...new Set(data.map(a => isNutritionist ? a.patient_id : a.nutritionist_id))];
-      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", ids);
+      const { data: profiles } = await withTenantFilter(supabase.from("profiles").select("user_id, full_name").in("user_id", ids), tenantId);
       const nameMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p.full_name]));
 
       return data.map(a => ({
