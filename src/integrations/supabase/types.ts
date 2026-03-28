@@ -599,7 +599,7 @@ export type Database = {
           is_active: boolean
           name: string
           nutritionist_id: string
-          tenant_id: string | null
+          tenant_id: string
           trigger_type: string
           updated_at: string
         }
@@ -613,7 +613,7 @@ export type Database = {
           is_active?: boolean
           name: string
           nutritionist_id: string
-          tenant_id?: string | null
+          tenant_id: string
           trigger_type?: string
           updated_at?: string
         }
@@ -627,7 +627,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           nutritionist_id?: string
-          tenant_id?: string | null
+          tenant_id?: string
           trigger_type?: string
           updated_at?: string
         }
@@ -651,7 +651,7 @@ export type Database = {
           patient_id: string | null
           rule_id: string | null
           status: string
-          tenant_id: string | null
+          tenant_id: string
           trigger_data: Json | null
         }
         Insert: {
@@ -663,7 +663,7 @@ export type Database = {
           patient_id?: string | null
           rule_id?: string | null
           status?: string
-          tenant_id?: string | null
+          tenant_id: string
           trigger_data?: Json | null
         }
         Update: {
@@ -675,7 +675,7 @@ export type Database = {
           patient_id?: string | null
           rule_id?: string | null
           status?: string
-          tenant_id?: string | null
+          tenant_id?: string
           trigger_data?: Json | null
         }
         Relationships: [
@@ -779,7 +779,7 @@ export type Database = {
           priority: number
           status: string
           suggested_strategy: string
-          tenant_id: string | null
+          tenant_id: string
         }
         Insert: {
           adherence_at_moment?: number | null
@@ -799,7 +799,7 @@ export type Database = {
           priority?: number
           status?: string
           suggested_strategy: string
-          tenant_id?: string | null
+          tenant_id: string
         }
         Update: {
           adherence_at_moment?: number | null
@@ -819,7 +819,7 @@ export type Database = {
           priority?: number
           status?: string
           suggested_strategy?: string
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Relationships: [
           {
@@ -1781,7 +1781,7 @@ export type Database = {
           resolved_at: string | null
           resolved_by: string | null
           severity: string
-          tenant_id: string | null
+          tenant_id: string
           title: string
           trigger_source: string
         }
@@ -1797,7 +1797,7 @@ export type Database = {
           resolved_at?: string | null
           resolved_by?: string | null
           severity?: string
-          tenant_id?: string | null
+          tenant_id: string
           title: string
           trigger_source?: string
         }
@@ -1813,7 +1813,7 @@ export type Database = {
           resolved_at?: string | null
           resolved_by?: string | null
           severity?: string
-          tenant_id?: string | null
+          tenant_id?: string
           title?: string
           trigger_source?: string
         }
