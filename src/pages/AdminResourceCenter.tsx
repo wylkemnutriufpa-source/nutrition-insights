@@ -281,6 +281,7 @@ function SiteEditorTab() {
 // ═══════════════════════════════════════════════
 function BrandingTab() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [form, setForm] = useState<BrandingData>(defaultBranding);
   const [saving, setSaving] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
