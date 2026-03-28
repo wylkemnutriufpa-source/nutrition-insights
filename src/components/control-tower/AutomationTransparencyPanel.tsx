@@ -16,6 +16,7 @@ interface AutoStats {
 
 export default function AutomationTransparencyPanel() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [stats, setStats] = useState<AutoStats | null>(null);
   const [loading, setLoading] = useState(true);
 
