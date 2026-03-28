@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +20,7 @@ import ExperienceModeSwitcher from "@/components/settings/ExperienceModeSwitcher
 
 export default function Settings() {
   const { t } = useTranslation();
+  const { minMode } = useExperienceMode();
   const { user, profile, refreshProfile } = useAuth();
   const { permission, isSubscribed, isSupported, loading: pushLoading, subscribe, unsubscribe } = usePushNotifications();
   const [fullName, setFullName] = useState(profile?.full_name || "");
@@ -146,7 +148,8 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* Ranking Privacy */}
+        {/* Ranking Privacy — PRO+ */}
+        {minMode("pro") && (
         <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="font-display flex items-center gap-2">
@@ -194,6 +197,7 @@ export default function Settings() {
             </div>
           </CardContent>
         </Card>
+        )}
 
         {/* Change Password */}
         <Card className="shadow-card">
@@ -277,11 +281,11 @@ export default function Settings() {
           </Card>
         )}
 
-        {/* Protocol FitJourney - only for professionals */}
-        <ProtocolFitJourneyToggle />
+        {/* Protocol FitJourney - PRO+ */}
+        {minMode("pro") && <ProtocolFitJourneyToggle />}
 
-        {/* Database Backup - only for professionals */}
-        <DatabaseBackupCard />
+        {/* Database Backup - ADVANCED only */}
+        {minMode("advanced") && <DatabaseBackupCard />}
       </motion.div>
     </DashboardLayout>
   );

@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import { useExperienceMode } from "@/hooks/useExperienceMode";
 import GuidedTour, { PROFESSIONAL_TOUR_STEPS, PATIENT_TOUR_STEPS } from "@/components/common/GuidedTour";
 import { motion, AnimatePresence } from "framer-motion";
 import PatientGridDashboard from "@/components/dashboard/PatientGridDashboard";
@@ -62,6 +63,7 @@ const item = {
 // ──── Nutritionist Dashboard 3.0 — Clinical Command Center ────
 function NutritionistDashboardContent() {
   const { user } = useAuth();
+  const { minMode, isBasic } = useExperienceMode();
   const navigate = useNavigate();
   const [patientCount, setPatientCount] = useState(0);
   const [protocolCount, setProtocolCount] = useState(0);
@@ -317,8 +319,8 @@ function NutritionistDashboardContent() {
 
    return (
     <div className="space-y-6">
-      {/* FitJourney Timeline — FIRST block */}
-      <FitJourneyTimeline maxHeight="500px" />
+      {/* FitJourney Timeline — PRO+ */}
+      {minMode("pro") && <FitJourneyTimeline maxHeight="500px" />}
 
       {/* Pending Approvals Modal */}
       <PendingApprovalsModal open={approvalsModalOpen} onOpenChange={handleApprovalsModalChange} />
@@ -343,7 +345,8 @@ function NutritionistDashboardContent() {
         </motion.div>
       )}
 
-      {/* ── Quick Access: Other Views ── */}
+      {/* ── Quick Access: Other Views — PRO+ ── */}
+      {minMode("pro") && (
       <div className="flex flex-wrap items-center gap-2">
         {[
           { key: "analytics", icon: BarChart3, label: "Analytics", desc: "Visão estratégica" },
@@ -364,12 +367,13 @@ function NutritionistDashboardContent() {
           </button>
         ))}
       </div>
+      )}
 
-      {activeTab === "analytics" ? (
+      {minMode("pro") && activeTab === "analytics" ? (
         <AnalyticsDashboard />
-      ) : activeTab === "strategy" ? (
+      ) : minMode("pro") && activeTab === "strategy" ? (
         <AIStrategyCenter />
-      ) : activeTab === "risk" ? (
+      ) : minMode("pro") && activeTab === "risk" ? (
         <ClinicalRiskDashboardContent />
       ) : null}
 
@@ -387,8 +391,12 @@ function NutritionistDashboardContent() {
               >
                 {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
               </motion.p>
-              <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight">Dashboard Clínico</h1>
-              <p className="text-muted-foreground text-sm mt-0.5">Central de Comando · Inteligência Clínica</p>
+              <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight">
+                {isBasic ? "Meu Painel" : "Dashboard Clínico"}
+              </h1>
+              <p className="text-muted-foreground text-sm mt-0.5">
+                {isBasic ? "Visão geral dos seus pacientes" : "Central de Comando · Inteligência Clínica"}
+              </p>
             </div>
             <div className="flex items-center gap-3">
               {unreadChats > 0 && (
@@ -420,92 +428,57 @@ function NutritionistDashboardContent() {
         <SetupWizard />
       </motion.div>
 
-      {/* ── FitJourney Intelligence ── */}
-      <motion.div variants={item}>
-        <FitJourneyIntelligencePanel />
-      </motion.div>
+      {/* ── FitJourney Intelligence — PRO+ ── */}
+      {minMode("pro") && (
+        <motion.div variants={item}>
+          <FitJourneyIntelligencePanel />
+        </motion.div>
+      )}
 
-      {/* ── Premium Control Tower Banner ── */}
-      <motion.div variants={item}>
-        <PremiumControlTowerBanner />
-      </motion.div>
+      {/* ── Premium Control Tower Banner — ADVANCED ── */}
+      {minMode("advanced") && (
+        <motion.div variants={item}>
+          <PremiumControlTowerBanner />
+        </motion.div>
+      )}
 
-      {/* ── Portfolio Intelligence ── */}
-      <motion.div variants={item}>
-        <PortfolioIntelligencePanel />
-      </motion.div>
+      {/* ── Portfolio Intelligence — PRO+ ── */}
+      {minMode("pro") && (
+        <motion.div variants={item}>
+          <PortfolioIntelligencePanel />
+        </motion.div>
+      )}
 
       {/* ── 1️⃣ Daily Overview Cards ── */}
-      <motion.div variants={item} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <motion.div variants={item} className={`grid grid-cols-2 sm:grid-cols-3 ${isBasic ? "lg:grid-cols-4" : "lg:grid-cols-6"} gap-3`}>
         <DailyMetricCard label="Pacientes" value={patientCount} icon={Users} color="primary" onClick={() => navigate("/patients")} />
         <DailyMetricCard label="Consultas Hoje" value={appointmentsToday} icon={Calendar} color="info" onClick={() => navigate("/appointments")} />
-        <DailyMetricCard label="Programas Ativos" value={programCount} icon={Rocket} color="accent" onClick={() => navigate("/programs")} />
-        <DailyMetricCard label="Protocolos" value={protocolCount} icon={FileText} color="warning" onClick={() => navigate("/protocols")} />
+        {minMode("pro") && <DailyMetricCard label="Programas Ativos" value={programCount} icon={Rocket} color="accent" onClick={() => navigate("/programs")} />}
+        {minMode("pro") && <DailyMetricCard label="Protocolos" value={protocolCount} icon={FileText} color="warning" onClick={() => navigate("/protocols")} />}
         <DailyMetricCard label="Check-ins Pendentes" value={pendingCheckins} icon={ClipboardList} color="destructive" pulse={pendingCheckins > 0} onClick={() => navigate("/checkin-panel")} />
-        <OnlinePatientsWidget variant="card" showPremiumTag={true} />
+        {minMode("pro") && <OnlinePatientsWidget variant="card" showPremiumTag={true} />}
         <ChatDashboardWidget />
       </motion.div>
 
-      {/* ── 3️⃣ AI Daily Briefing (expandable) ── */}
-      <motion.div variants={item}>
-        <BriefingExpandable
-          aiSummary={aiSummary}
-          aiLoading={aiLoading}
-          aiInsights={aiInsights}
-          attentionPatients={attentionPatients}
-          pendingCheckins={pendingCheckins}
-          appointmentsToday={appointmentsToday}
-          riskPatients={riskPatients}
-        />
-      </motion.div>
+      {/* ── 3️⃣ AI Daily Briefing — PRO+ ── */}
+      {minMode("pro") && (
+        <motion.div variants={item}>
+          <BriefingExpandable
+            aiSummary={aiSummary}
+            aiLoading={aiLoading}
+            aiInsights={aiInsights}
+            attentionPatients={attentionPatients}
+            pendingCheckins={pendingCheckins}
+            appointmentsToday={appointmentsToday}
+            riskPatients={riskPatients}
+          />
+        </motion.div>
+      )}
 
-      {/* ── Nutrition Copilot ── */}
-      <motion.div variants={item}>
-        <NutritionCopilot
-          patients={riskPatients.map(p => ({
-            id: p.id,
-            name: p.name,
-            score: p.score,
-            risks: p.risks,
-            lastActivity: p.lastActivity,
-          }))}
-          attentionPatients={attentionPatients}
-          aiInsights={aiInsights}
-          aiSummary={aiSummary}
-          aiLoading={aiLoading}
-          appointmentsToday={appointmentsToday}
-          pendingCheckins={pendingCheckins}
-          patientCount={patientCount}
-          evolutionData={evolutionData}
-        />
-      </motion.div>
-
-
-      {/* ── Main Grid: Attention + Insights + Risk ── */}
-      <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <ExpandablePanel title="Precisam de Atenção"><AttentionPatientsPanel patients={attentionPatients} loading={aiLoading} /></ExpandablePanel>
-        <ExpandablePanel title="Insights da IA"><AIInsightsPanel insights={aiInsights} loading={aiLoading} /></ExpandablePanel>
-        <ExpandablePanel title="Painel de Risco"><RiskPanel patients={riskPatients} /></ExpandablePanel>
-      </motion.div>
-
-      {/* ── Momentum dos Pacientes ── */}
-      <motion.div variants={item}>
-        <ExpandablePanel title="Momentum dos Pacientes">
-          <PatientMomentumSummary />
-        </ExpandablePanel>
-      </motion.div>
-
-
-      <motion.div variants={item}>
-        <ExpandablePanel title="Insights Comportamentais">
-          <TreatmentInsightsPanel />
-        </ExpandablePanel>
-      </motion.div>
-
-      {/* ── Patient Retention Risk (Churn Prediction) ── */}
-      <motion.div variants={item}>
-        <ExpandablePanel title="Risco de Abandono">
-          <ChurnRiskPanel
+      {/* ── Nutrition Copilot — PRO+ ── */}
+      {minMode("pro") && (
+        <motion.div variants={item}>
+          <NutritionCopilot
             patients={riskPatients.map(p => ({
               id: p.id,
               name: p.name,
@@ -513,40 +486,98 @@ function NutritionistDashboardContent() {
               risks: p.risks,
               lastActivity: p.lastActivity,
             }))}
-            loading={aiLoading}
+            attentionPatients={attentionPatients}
+            aiInsights={aiInsights}
+            aiSummary={aiSummary}
+            aiLoading={aiLoading}
+            appointmentsToday={appointmentsToday}
+            pendingCheckins={pendingCheckins}
+            patientCount={patientCount}
+            evolutionData={evolutionData}
           />
-        </ExpandablePanel>
-      </motion.div>
+        </motion.div>
+      )}
 
-      {/* ── Stagnation Alerts (Predictive) ── */}
-      <motion.div variants={item}>
-        <ExpandablePanel title="Alertas de Estagnação">
-          <StagnationAlerts />
-        </ExpandablePanel>
-      </motion.div>
+      {/* ── Main Grid: Attention + Insights + Risk — PRO+ ── */}
+      {minMode("pro") && (
+        <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <ExpandablePanel title="Precisam de Atenção"><AttentionPatientsPanel patients={attentionPatients} loading={aiLoading} /></ExpandablePanel>
+          <ExpandablePanel title="Insights da IA"><AIInsightsPanel insights={aiInsights} loading={aiLoading} /></ExpandablePanel>
+          <ExpandablePanel title="Painel de Risco"><RiskPanel patients={riskPatients} /></ExpandablePanel>
+        </motion.div>
+      )}
 
-      {/* ── Patient Progress Simulation ── */}
-      <motion.div variants={item}>
-        <ExpandablePanel title="Simulação de Progresso">
-          <PatientProgressSimulation
-            patients={riskPatients.map(p => ({
-              id: p.id,
-              name: p.name,
-              currentWeight: evolutionData.avgWeight,
-              adherence: p.score,
-              streak: 0,
-            }))}
-            loading={aiLoading}
-          />
-        </ExpandablePanel>
-      </motion.div>
+      {/* ── Momentum dos Pacientes — PRO+ ── */}
+      {minMode("pro") && (
+        <motion.div variants={item}>
+          <ExpandablePanel title="Momentum dos Pacientes">
+            <PatientMomentumSummary />
+          </ExpandablePanel>
+        </motion.div>
+      )}
 
-      {/* ── Simulador de Faturamento Afiliados ── */}
-      <motion.div variants={item}>
-        <ExpandablePanel title="Simulador de Faturamento — Pacientes">
-          <PatientRevenueSimulator />
-        </ExpandablePanel>
-      </motion.div>
+      {/* ── Insights Comportamentais — PRO+ ── */}
+      {minMode("pro") && (
+        <motion.div variants={item}>
+          <ExpandablePanel title="Insights Comportamentais">
+            <TreatmentInsightsPanel />
+          </ExpandablePanel>
+        </motion.div>
+      )}
+
+      {/* ── Patient Retention Risk — ADVANCED ── */}
+      {minMode("advanced") && (
+        <motion.div variants={item}>
+          <ExpandablePanel title="Risco de Abandono">
+            <ChurnRiskPanel
+              patients={riskPatients.map(p => ({
+                id: p.id,
+                name: p.name,
+                score: p.score,
+                risks: p.risks,
+                lastActivity: p.lastActivity,
+              }))}
+              loading={aiLoading}
+            />
+          </ExpandablePanel>
+        </motion.div>
+      )}
+
+      {/* ── Stagnation Alerts — ADVANCED ── */}
+      {minMode("advanced") && (
+        <motion.div variants={item}>
+          <ExpandablePanel title="Alertas de Estagnação">
+            <StagnationAlerts />
+          </ExpandablePanel>
+        </motion.div>
+      )}
+
+      {/* ── Patient Progress Simulation — ADVANCED ── */}
+      {minMode("advanced") && (
+        <motion.div variants={item}>
+          <ExpandablePanel title="Simulação de Progresso">
+            <PatientProgressSimulation
+              patients={riskPatients.map(p => ({
+                id: p.id,
+                name: p.name,
+                currentWeight: evolutionData.avgWeight,
+                adherence: p.score,
+                streak: 0,
+              }))}
+              loading={aiLoading}
+            />
+          </ExpandablePanel>
+        </motion.div>
+      )}
+
+      {/* ── Simulador de Faturamento — ADVANCED ── */}
+      {minMode("advanced") && (
+        <motion.div variants={item}>
+          <ExpandablePanel title="Simulador de Faturamento — Pacientes">
+            <PatientRevenueSimulator />
+          </ExpandablePanel>
+        </motion.div>
+      )}
 
       {/* ── 5️⃣ Activity Feed + 7️⃣ Program Performance ── */}
       <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -695,42 +726,48 @@ function NutritionistDashboardContent() {
         </div>
       </motion.div>
 
-      {/* ── 6️⃣ Evolution Analytics ── */}
-      <motion.div variants={item}>
-        <ExpandablePanel title="Evolução Geral">
-          <PatientEvolutionCharts
-            data={evolutionData}
-            activePeriod={evolutionPeriod}
-            onPeriodChange={(days) => setEvolutionPeriod(days)}
-          />
-        </ExpandablePanel>
-      </motion.div>
+      {/* ── 6️⃣ Evolution Analytics — PRO+ ── */}
+      {minMode("pro") && (
+        <motion.div variants={item}>
+          <ExpandablePanel title="Evolução Geral">
+            <PatientEvolutionCharts
+              data={evolutionData}
+              activePeriod={evolutionPeriod}
+              onPeriodChange={(days) => setEvolutionPeriod(days)}
+            />
+          </ExpandablePanel>
+        </motion.div>
+      )}
 
-      {/* ── Adherence Analytics ── */}
-      <motion.div variants={item}>
-        <ExpandablePanel title="Análise de Adesão">
-          <AdherenceAnalytics
-            patientCount={patientCount}
-            riskPatients={riskPatients}
-            evolutionData={evolutionData}
-          />
-        </ExpandablePanel>
-      </motion.div>
+      {/* ── Adherence Analytics — PRO+ ── */}
+      {minMode("pro") && (
+        <motion.div variants={item}>
+          <ExpandablePanel title="Análise de Adesão">
+            <AdherenceAnalytics
+              patientCount={patientCount}
+              riskPatients={riskPatients}
+              evolutionData={evolutionData}
+            />
+          </ExpandablePanel>
+        </motion.div>
+      )}
 
-      {/* ── Advanced Analytics Charts ── */}
-      <motion.div variants={item}>
-        <ExpandablePanel title="Analytics Avançados">
-          <DashboardAdvancedCharts
-            riskPatients={riskPatients}
-            evolutionData={evolutionData}
-            programPerformance={programPerformance}
-            patientCount={patientCount}
-          />
-        </ExpandablePanel>
-      </motion.div>
+      {/* ── Advanced Analytics Charts — ADVANCED ── */}
+      {minMode("advanced") && (
+        <motion.div variants={item}>
+          <ExpandablePanel title="Analytics Avançados">
+            <DashboardAdvancedCharts
+              riskPatients={riskPatients}
+              evolutionData={evolutionData}
+              programPerformance={programPerformance}
+              patientCount={patientCount}
+            />
+          </ExpandablePanel>
+        </motion.div>
+      )}
 
-
-      {riskPatients.length > 0 && (
+      {/* ── Health Score — PRO+ ── */}
+      {minMode("pro") && riskPatients.length > 0 && (
         <motion.div variants={item}>
           <ExpandablePanel title="Health Score dos Pacientes">
             <div className="glass-premium rounded-xl p-5 shimmer-sweep">
@@ -763,10 +800,12 @@ function NutritionistDashboardContent() {
         </motion.div>
       )}
 
-      {/* ── System Usage Gamification ── */}
-      <motion.div variants={item}>
-        <SystemUsageCard />
-      </motion.div>
+      {/* ── System Usage Gamification — ADVANCED ── */}
+      {minMode("advanced") && (
+        <motion.div variants={item}>
+          <SystemUsageCard />
+        </motion.div>
+      )}
 
       {/* ── 9️⃣ Module Shortcut Grid (Premium) ── */}
       <motion.div variants={item}>
@@ -776,17 +815,18 @@ function NutritionistDashboardContent() {
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
           {[
-            { to: "/protocols", icon: Shield, label: "Protocolos", color: "text-primary", bg: "bg-gradient-to-br from-primary/15 to-primary/5" },
-            { to: "/programs", icon: Rocket, label: "Programas", color: "text-accent", bg: "bg-gradient-to-br from-accent/15 to-accent/5" },
-            { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos", color: "text-success", bg: "bg-gradient-to-br from-success/15 to-success/5" },
-            { to: "/recipes", icon: ChefHat, label: "Receitas", color: "text-warning", bg: "bg-gradient-to-br from-warning/15 to-warning/5" },
-            { to: "/diet-templates", icon: FileText, label: "Templates", color: "text-info", bg: "bg-gradient-to-br from-info/15 to-info/5" },
-            { to: "/global-tips", icon: MessageSquare, label: "Dicas", color: "text-success", bg: "bg-gradient-to-br from-success/15 to-success/5" },
-            { to: "/automation", icon: Bot, label: "Automação", color: "text-info", bg: "bg-gradient-to-br from-info/15 to-info/5" },
-            { to: "/reports", icon: BarChart3, label: "Relatórios", color: "text-primary", bg: "bg-gradient-to-br from-primary/15 to-primary/5" },
-            { to: "/appointments", icon: Calendar, label: "Agenda", color: "text-accent", bg: "bg-gradient-to-br from-accent/15 to-accent/5" },
-            { to: "/supplements", icon: Pill, label: "Suplementos", color: "text-warning", bg: "bg-gradient-to-br from-warning/15 to-warning/5" },
-          ].map((mod, i) => (
+            { to: "/patients", icon: Users, label: "Pacientes", color: "text-primary", bg: "bg-gradient-to-br from-primary/15 to-primary/5", min: "basic" as const },
+            { to: "/appointments", icon: Calendar, label: "Agenda", color: "text-accent", bg: "bg-gradient-to-br from-accent/15 to-accent/5", min: "basic" as const },
+            { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos", color: "text-success", bg: "bg-gradient-to-br from-success/15 to-success/5", min: "basic" as const },
+            { to: "/recipes", icon: ChefHat, label: "Receitas", color: "text-warning", bg: "bg-gradient-to-br from-warning/15 to-warning/5", min: "basic" as const },
+            { to: "/protocols", icon: Shield, label: "Protocolos", color: "text-primary", bg: "bg-gradient-to-br from-primary/15 to-primary/5", min: "pro" as const },
+            { to: "/programs", icon: Rocket, label: "Programas", color: "text-accent", bg: "bg-gradient-to-br from-accent/15 to-accent/5", min: "pro" as const },
+            { to: "/reports", icon: BarChart3, label: "Relatórios", color: "text-primary", bg: "bg-gradient-to-br from-primary/15 to-primary/5", min: "pro" as const },
+            { to: "/supplements", icon: Pill, label: "Suplementos", color: "text-warning", bg: "bg-gradient-to-br from-warning/15 to-warning/5", min: "pro" as const },
+            { to: "/diet-templates", icon: FileText, label: "Templates", color: "text-info", bg: "bg-gradient-to-br from-info/15 to-info/5", min: "pro" as const },
+            { to: "/automation", icon: Bot, label: "Automação", color: "text-info", bg: "bg-gradient-to-br from-info/15 to-info/5", min: "advanced" as const },
+            { to: "/global-tips", icon: MessageSquare, label: "Dicas", color: "text-success", bg: "bg-gradient-to-br from-success/15 to-success/5", min: "basic" as const },
+          ].filter(mod => minMode(mod.min)).map((mod, i) => (
             <Link key={mod.to} to={mod.to}>
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -1022,6 +1062,7 @@ function generateLocalInsights(patients: any[]) {
 
 export default function Index() {
   const { isNutritionist, isPersonal, isAdmin, loading } = useAuth();
+  const { minMode } = useExperienceMode();
   const [showTour, setShowTour] = useState(false);
   const { proView, setProView } = useLayoutPreference();
 
@@ -1066,31 +1107,33 @@ export default function Index() {
     // Professional / Admin view with toggle
     return (
       <div className="space-y-6">
-        {/* View mode toggle */}
-        <div className="flex items-center justify-end">
-          <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
-            <Button
-              variant={proView === "clinical-list" ? "default" : "ghost"}
-              size="sm"
-              className="h-7 px-3 gap-1.5 text-xs"
-              onClick={() => setProView("clinical-list")}
-            >
-              <ListIcon className="w-3.5 h-3.5" />
-              Lista Clínica
-            </Button>
-            <Button
-              variant={proView === "strategic-dashboard" ? "default" : "ghost"}
-              size="sm"
-              className="h-7 px-3 gap-1.5 text-xs"
-              onClick={() => setProView("strategic-dashboard")}
-            >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              Dashboard
-            </Button>
+        {/* View mode toggle — PRO+ only */}
+        {minMode("pro") && (
+          <div className="flex items-center justify-end">
+            <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
+              <Button
+                variant={proView === "clinical-list" ? "default" : "ghost"}
+                size="sm"
+                className="h-7 px-3 gap-1.5 text-xs"
+                onClick={() => setProView("clinical-list")}
+              >
+                <ListIcon className="w-3.5 h-3.5" />
+                Lista Clínica
+              </Button>
+              <Button
+                variant={proView === "strategic-dashboard" ? "default" : "ghost"}
+                size="sm"
+                className="h-7 px-3 gap-1.5 text-xs"
+                onClick={() => setProView("strategic-dashboard")}
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                Dashboard
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
 
-        {proView === "strategic-dashboard" ? (
+        {minMode("pro") && proView === "strategic-dashboard" ? (
           <ProStrategicDashboard />
         ) : (
           <NutritionistDashboardContent />

@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
+import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -471,6 +472,7 @@ function PatientsListSkeleton() {
 
 export default function Patients() {
   const { user } = useAuth();
+  const { minMode, isBasic } = useExperienceMode();
   const nav = useNavigate();
   const navigateToPatient = useCallback((patientId: string) => {
     trackPatientView(patientId);
@@ -688,8 +690,8 @@ export default function Patients() {
         />
       ) : (
       <div className="space-y-6">
-        {/* Patient Queue */}
-        <PatientQueueTabs />
+        {/* Patient Queue — PRO+ */}
+        {minMode("pro") && <PatientQueueTabs />}
         {/* Premium Header */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -708,9 +710,11 @@ export default function Patients() {
                 </p>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <Button variant="outline" size="sm" onClick={() => setStatusManagerMode(true)} className="gap-1.5 text-xs">
-                  <Settings2 className="w-3.5 h-3.5" /> Controle Rápido
-                </Button>
+                {minMode("advanced") && (
+                  <Button variant="outline" size="sm" onClick={() => setStatusManagerMode(true)} className="gap-1.5 text-xs">
+                    <Settings2 className="w-3.5 h-3.5" /> Controle Rápido
+                  </Button>
+                )}
                 <Dialog open={open} onOpenChange={setOpen}>
                   <DialogTrigger asChild>
                     <Button className="gradient-primary gap-2 shadow-glow">
@@ -756,37 +760,41 @@ export default function Patients() {
           </div>
         ) : (
           <>
-            {/* Summary cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {filterButtons.map(fb => (
-                <button
-                  key={fb.key}
-                  onClick={() => setFilter(fb.key)}
-                  className={`glass-premium rounded-xl p-4 text-left transition-all border-2 metric-glow ${filter === fb.key ? "border-primary shadow-glow" : "border-transparent"}`}
-                >
-                  <p className="text-2xl font-display font-bold">{scoreCounts[fb.key]}</p>
-                  <p className="text-sm text-muted-foreground mt-0.5">{fb.label}</p>
-                </button>
-              ))}
-            </div>
+            {/* Summary cards — PRO+ */}
+            {minMode("pro") && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {filterButtons.map(fb => (
+                  <button
+                    key={fb.key}
+                    onClick={() => setFilter(fb.key)}
+                    className={`glass-premium rounded-xl p-4 text-left transition-all border-2 metric-glow ${filter === fb.key ? "border-primary shadow-glow" : "border-transparent"}`}
+                  >
+                    <p className="text-2xl font-display font-bold">{scoreCounts[fb.key]}</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">{fb.label}</p>
+                  </button>
+                ))}
+              </div>
+            )}
 
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input placeholder="Buscar paciente..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
               </div>
-              <button
-                onClick={() => setOnlineFilter(!onlineFilter)}
-                className={`inline-flex items-center gap-1.5 px-3 rounded-lg text-xs font-medium transition-all border ${
-                  onlineFilter
-                    ? "border-success bg-success/10 text-success"
-                    : "border-border bg-card text-muted-foreground hover:text-foreground"
-                }`}
-                title="Filtrar online"
-              >
-                <span className={`w-2 h-2 rounded-full ${onlineFilter ? 'bg-success animate-pulse' : 'bg-muted-foreground'}`} />
-                Online ({onlineSet.size})
-              </button>
+              {minMode("pro") && (
+                <button
+                  onClick={() => setOnlineFilter(!onlineFilter)}
+                  className={`inline-flex items-center gap-1.5 px-3 rounded-lg text-xs font-medium transition-all border ${
+                    onlineFilter
+                      ? "border-success bg-success/10 text-success"
+                      : "border-border bg-card text-muted-foreground hover:text-foreground"
+                  }`}
+                  title="Filtrar online"
+                >
+                  <span className={`w-2 h-2 rounded-full ${onlineFilter ? 'bg-success animate-pulse' : 'bg-muted-foreground'}`} />
+                  Online ({onlineSet.size})
+                </button>
+              )}
               <div className="flex rounded-lg border border-border overflow-hidden">
                 <button
                   onClick={() => setLayout("grid")}
@@ -805,8 +813,8 @@ export default function Patients() {
               </div>
             </div>
 
-            {/* Prestige Filter Buttons */}
-            {prestigePlansList.length > 0 && (
+            {/* Prestige Filter Buttons — PRO+ */}
+            {minMode("pro") && prestigePlansList.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setPrestigeFilter("all")}
