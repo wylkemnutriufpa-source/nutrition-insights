@@ -10,6 +10,7 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import type { MealLibraryItem, GeneratedMealSlot } from "./mealPlanAutoGenerator";
 
 // ── Types ────────────────────────────────────────────────────
