@@ -1,10 +1,12 @@
 /**
- * Gerador Assistido de Plano Alimentar — FitJourney Clinical Engine v2.1
+ * Gerador Assistido de Plano Alimentar — FitJourney Clinical Engine v3.0
  * 
  * Gera 3 opções diferenciadas (Fácil, Equilibrada, Elaborada) com:
+ * - Refeições realistas com comida brasileira popular
+ * - Bloqueio de alimentos caros/importados
+ * - Limite de frutas (max 2 por refeição)
  * - Substituições reais por refeição com equivalência macro
- * - Ajuste inteligente de proteína por composição (não escala bruta)
- * - Aplicação segura (insert-first, delete-after)
+ * - Ajuste inteligente de proteína por composição
  * 
  * 100% determinístico. Sem IA generativa.
  */
@@ -12,6 +14,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import type { MealLibraryItem, GeneratedMealSlot } from "./mealPlanAutoGenerator";
+import { isBlockedFood, MEAL_LIMITS } from "./mealPlanFoodRules";
 
 // ── Types ────────────────────────────────────────────────────
 export type ComplexityTier = "easy" | "balanced" | "elaborate";
