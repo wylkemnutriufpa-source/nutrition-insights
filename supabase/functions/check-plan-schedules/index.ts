@@ -149,6 +149,8 @@ Deno.serve(async (req) => {
             .neq("plan_status", "approved");
         }
 
+        const tenantId = await resolveTenantForUser(schedule.meal_plans.nutritionist_id);
+
         // Send notification
         await supabase.from("notifications").insert({
           user_id: patientId,
@@ -156,6 +158,7 @@ Deno.serve(async (req) => {
           message: `Parabéns! Você cumpriu todos os critérios e seu novo plano "${schedule.meal_plans.title}" foi ativado.`,
           type: "success",
           action_url: "/my-diet",
+          tenant_id: tenantId,
         });
 
         // Also notify nutritionist
@@ -165,6 +168,7 @@ Deno.serve(async (req) => {
           message: `O plano "${schedule.meal_plans.title}" foi ativado - paciente cumpriu todos os critérios.`,
           type: "info",
           action_url: `/meal-plan/${schedule.meal_plan_id}`,
+          tenant_id: tenantId,
         });
 
         results.push({ 
