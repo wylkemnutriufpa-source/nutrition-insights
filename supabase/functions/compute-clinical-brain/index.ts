@@ -163,6 +163,10 @@ Deno.serve(async (req) => {
       // DECISION GENERATION
       const existingSnapshot = snapshotMap.get(pid);
 
+      // Resolve tenant for decisions
+      const decTenantId = await resolveTenant(supabase, nid);
+      const tenantSpread = decTenantId ? { tenant_id: decTenantId } : {};
+
       if (adherenceScore < 40) {
         decisions.push({
           patient_id: pid, nutritionist_id: nid,
@@ -172,6 +176,7 @@ Deno.serve(async (req) => {
           confidence: Math.min(95, 60 + (40 - adherenceScore)),
           expected_impact: "Aumento de adesão em 15-25% com simplificação",
           status: "pending",
+          ...tenantSpread,
         });
       }
 
