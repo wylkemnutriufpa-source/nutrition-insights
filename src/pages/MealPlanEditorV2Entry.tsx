@@ -24,14 +24,16 @@ export default function MealPlanEditorV2Entry() {
     let cancelled = false;
 
     const openLatestPlanInV2 = async () => {
-      const { data, error } = await supabase
-        .from("meal_plans")
-        .select("id")
-        .eq("nutritionist_id", user.id)
-        .order("is_active", { ascending: false })
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const { data, error } = await withTenantFilter(
+        supabase
+          .from("meal_plans")
+          .select("id")
+          .eq("nutritionist_id", user.id)
+          .order("is_active", { ascending: false })
+          .order("created_at", { ascending: false })
+          .limit(1),
+        tenantId
+      ).maybeSingle();
 
       if (cancelled) return;
 

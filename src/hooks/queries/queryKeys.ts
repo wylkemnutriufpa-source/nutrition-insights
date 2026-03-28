@@ -17,7 +17,7 @@ export const queryKeys = {
 
   // Checklist
   checklist: {
-    tasks: (userId: string, date: string) => ["checklist", userId, date] as const,
+    tasks: (userId: string, date: string, tenantId?: string | null) => ["checklist", userId, date, tenantId ?? "default"] as const,
   },
 
   // Chat

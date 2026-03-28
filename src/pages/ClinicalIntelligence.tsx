@@ -150,10 +150,10 @@ export default function ClinicalIntelligence() {
           supabase.from("profiles").select("user_id, full_name").eq("user_id", id).maybeSingle()
         )),
         Promise.all(patientIds.map(id =>
-          supabase.from("patient_anamnesis").select("answers").eq("user_id", id).order("created_at", { ascending: false }).limit(1).maybeSingle()
+          withTenantFilter(supabase.from("patient_anamnesis").select("answers").eq("user_id", id).order("created_at", { ascending: false }).limit(1), tenantId).maybeSingle()
         )),
         Promise.all(patientIds.map(id =>
-          supabase.from("checklist_tasks").select("id, completed").eq("patient_id", id).gte("created_at", cutoffStr)
+          withTenantFilter(supabase.from("checklist_tasks").select("id, completed").eq("patient_id", id).gte("created_at", cutoffStr), tenantId)
         )),
         Promise.all(patientIds.map(id =>
           supabase.from("patient_checkins").select("id, difficulty").eq("patient_id", id).gte("created_at", cutoffStr)

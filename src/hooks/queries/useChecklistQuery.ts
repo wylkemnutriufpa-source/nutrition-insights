@@ -21,19 +21,23 @@ export interface ChecklistTask {
 
 export function useChecklistTasks(date: string) {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
 
   return useQuery({
-    queryKey: queryKeys.checklist.tasks(user?.id ?? "", date),
+    queryKey: queryKeys.checklist.tasks(user?.id ?? "", date, tenantId),
     enabled: !!user,
     staleTime: 60 * 1000,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("checklist_tasks")
-        .select("*")
-        .eq("patient_id", user!.id)
-        .eq("date", date)
-        .order("category")
-        .order("created_at");
+      const { data } = await withTenantFilter(
+        supabase
+          .from("checklist_tasks")
+          .select("*")
+          .eq("patient_id", user!.id)
+          .eq("date", date)
+          .order("category")
+          .order("created_at"),
+        tenantId
+      );
       return (data || []) as ChecklistTask[];
     },
   });

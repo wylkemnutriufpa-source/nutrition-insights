@@ -41,9 +41,9 @@ export default function ClinicalDecisionSupport({ patientId, nutritionistId }: P
         assessmentsRes, mealCompletionsRes, protocolsRes, availableProtocolsRes
       ] = await Promise.all([
         supabase.from("profiles").select("full_name").eq("user_id", patientId).maybeSingle(),
-        supabase.from("patient_anamnesis").select("answers, computed_tmb, computed_kcal_target, computed_protein, computed_carbs, computed_fat, status").eq("user_id", patientId).order("created_at", { ascending: false }).limit(1),
+        withTenantFilter(supabase.from("patient_anamnesis").select("answers, computed_tmb, computed_kcal_target, computed_protein, computed_carbs, computed_fat, status").eq("user_id", patientId).order("created_at", { ascending: false }), tenantId).limit(1),
         supabase.from("patient_checkins").select("weight, difficulty, feedback, status, created_at").eq("patient_id", patientId).order("created_at", { ascending: false }).limit(20),
-        supabase.from("checklist_tasks").select("completed, date, category").eq("patient_id", patientId).order("date", { ascending: false }).limit(90),
+        withTenantFilter(supabase.from("checklist_tasks").select("completed, date, category").eq("patient_id", patientId).order("date", { ascending: false }), tenantId).limit(90),
         supabase.from("physical_assessments").select("weight, body_fat_percentage, lean_mass, fat_mass, bmi, assessment_date").eq("patient_id", patientId).order("assessment_date", { ascending: false }).limit(5),
         supabase.from("meal_item_completions").select("completed, adherence_status, date").eq("patient_id", patientId).order("date", { ascending: false }).limit(60),
         supabase.from("patient_protocols").select("protocol_id, status, start_date, end_date").eq("patient_id", patientId).eq("nutritionist_id", nutritionistId),

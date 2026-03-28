@@ -185,14 +185,16 @@ export default function DietTemplates() {
   const fetchAnamnesis = async () => {
     if (!patientId) return;
     try {
-      const { data } = await supabase
-        .from("patient_anamnesis")
-        .select("computed_kcal_target, computed_protein, computed_carbs, computed_fat, answers")
-        .eq("user_id", patientId)
-        .eq("status", "completed")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const { data } = await withTenantFilter(
+        supabase
+          .from("patient_anamnesis")
+          .select("computed_kcal_target, computed_protein, computed_carbs, computed_fat, answers")
+          .eq("user_id", patientId)
+          .eq("status", "completed")
+          .order("created_at", { ascending: false })
+          .limit(1),
+        tenantId
+      ).maybeSingle();
       if (data) setAnamnesis(data as any);
     } catch (e) {
       console.warn("[DietTemplates] fetchAnamnesis error:", e);
