@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Users, AlertTriangle, ShieldAlert, TrendingUp, Zap, Clock, Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { cn } from "@/lib/utils";
 
 interface StatusMetric {
