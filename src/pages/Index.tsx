@@ -460,22 +460,124 @@ function NutritionistDashboardContent() {
         <ChatDashboardWidget />
       </motion.div>
 
-      {/* ── 3️⃣ AI Daily Briefing (expandable) ── */}
-      <motion.div variants={item}>
-        <BriefingExpandable
-          aiSummary={aiSummary}
-          aiLoading={aiLoading}
-          aiInsights={aiInsights}
-          attentionPatients={attentionPatients}
-          pendingCheckins={pendingCheckins}
-          appointmentsToday={appointmentsToday}
-          riskPatients={riskPatients}
-        />
-      </motion.div>
+      {/* ── 3️⃣ AI Daily Briefing — PRO+ ── */}
+      {minMode("pro") && (
+        <motion.div variants={item}>
+          <BriefingExpandable
+            aiSummary={aiSummary}
+            aiLoading={aiLoading}
+            aiInsights={aiInsights}
+            attentionPatients={attentionPatients}
+            pendingCheckins={pendingCheckins}
+            appointmentsToday={appointmentsToday}
+            riskPatients={riskPatients}
+          />
+        </motion.div>
+      )}
 
-      {/* ── Nutrition Copilot ── */}
-      <motion.div variants={item}>
-        <NutritionCopilot
+      {/* ── Nutrition Copilot — PRO+ ── */}
+      {minMode("pro") && (
+        <motion.div variants={item}>
+          <NutritionCopilot
+            patients={riskPatients.map(p => ({
+              id: p.id,
+              name: p.name,
+              score: p.score,
+              risks: p.risks,
+              lastActivity: p.lastActivity,
+            }))}
+            attentionPatients={attentionPatients}
+            aiInsights={aiInsights}
+            aiSummary={aiSummary}
+            aiLoading={aiLoading}
+            appointmentsToday={appointmentsToday}
+            pendingCheckins={pendingCheckins}
+            patientCount={patientCount}
+            evolutionData={evolutionData}
+          />
+        </motion.div>
+      )}
+
+      {/* ── Main Grid: Attention + Insights + Risk — PRO+ ── */}
+      {minMode("pro") && (
+        <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <ExpandablePanel title="Precisam de Atenção"><AttentionPatientsPanel patients={attentionPatients} loading={aiLoading} /></ExpandablePanel>
+          <ExpandablePanel title="Insights da IA"><AIInsightsPanel insights={aiInsights} loading={aiLoading} /></ExpandablePanel>
+          <ExpandablePanel title="Painel de Risco"><RiskPanel patients={riskPatients} /></ExpandablePanel>
+        </motion.div>
+      )}
+
+      {/* ── Momentum dos Pacientes — PRO+ ── */}
+      {minMode("pro") && (
+        <motion.div variants={item}>
+          <ExpandablePanel title="Momentum dos Pacientes">
+            <PatientMomentumSummary />
+          </ExpandablePanel>
+        </motion.div>
+      )}
+
+      {/* ── Insights Comportamentais — PRO+ ── */}
+      {minMode("pro") && (
+        <motion.div variants={item}>
+          <ExpandablePanel title="Insights Comportamentais">
+            <TreatmentInsightsPanel />
+          </ExpandablePanel>
+        </motion.div>
+      )}
+
+      {/* ── Patient Retention Risk — ADVANCED ── */}
+      {minMode("advanced") && (
+        <motion.div variants={item}>
+          <ExpandablePanel title="Risco de Abandono">
+            <ChurnRiskPanel
+              patients={riskPatients.map(p => ({
+                id: p.id,
+                name: p.name,
+                score: p.score,
+                risks: p.risks,
+                lastActivity: p.lastActivity,
+              }))}
+              loading={aiLoading}
+            />
+          </ExpandablePanel>
+        </motion.div>
+      )}
+
+      {/* ── Stagnation Alerts — ADVANCED ── */}
+      {minMode("advanced") && (
+        <motion.div variants={item}>
+          <ExpandablePanel title="Alertas de Estagnação">
+            <StagnationAlerts />
+          </ExpandablePanel>
+        </motion.div>
+      )}
+
+      {/* ── Patient Progress Simulation — ADVANCED ── */}
+      {minMode("advanced") && (
+        <motion.div variants={item}>
+          <ExpandablePanel title="Simulação de Progresso">
+            <PatientProgressSimulation
+              patients={riskPatients.map(p => ({
+                id: p.id,
+                name: p.name,
+                currentWeight: evolutionData.avgWeight,
+                adherence: p.score,
+                streak: 0,
+              }))}
+              loading={aiLoading}
+            />
+          </ExpandablePanel>
+        </motion.div>
+      )}
+
+      {/* ── Simulador de Faturamento — ADVANCED ── */}
+      {minMode("advanced") && (
+        <motion.div variants={item}>
+          <ExpandablePanel title="Simulador de Faturamento — Pacientes">
+            <PatientRevenueSimulator />
+          </ExpandablePanel>
+        </motion.div>
+      )}
           patients={riskPatients.map(p => ({
             id: p.id,
             name: p.name,
