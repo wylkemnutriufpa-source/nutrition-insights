@@ -94,9 +94,17 @@ async function importOnePatient(
 
     // Link to nutritionist
     await supabase.from("nutritionist_patients").upsert(
-      { nutritionist_id: nutritionistId, patient_id: finalId, status: "active", journey_status: "awaiting_payment" },
+      { nutritionist_id: nutritionistId, patient_id: finalId, status: "active", journey_status: "awaiting_payment", tenant_id: tenantId },
       { onConflict: "nutritionist_id,patient_id" }
     );
+
+    // Ensure patient is in same tenant
+    if (tenantId) {
+      await supabase.from("user_tenants").upsert(
+        { user_id: finalId, tenant_id: tenantId, role: "patient" },
+        { onConflict: "user_id,tenant_id" }
+      ).then(() => {});
+    }
 
     return { ok: true };
   } catch (err: any) {
