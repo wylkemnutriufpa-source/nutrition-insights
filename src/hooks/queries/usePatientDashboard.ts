@@ -25,7 +25,7 @@ export function usePatientDashboard() {
 
       // Full data still needs row-level fetches for checklist items, meals, anamnesis
       const [checkRes, anamRes, mealsRes] = await Promise.all([
-        supabase.from("checklist_tasks").select("*").eq("patient_id", userId).eq("date", today).order("category"),
+        withTenantFilter(supabase.from("checklist_tasks").select("*").eq("patient_id", userId).eq("date", today), tenantId).order("category"),
         supabase.from("patient_anamnesis").select("*").eq("user_id", userId).eq("status", "completed").order("created_at", { ascending: false }).limit(1),
         supabase.from("meals").select("*").eq("user_id", userId).order("logged_at", { ascending: false }).limit(3),
       ]);
