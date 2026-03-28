@@ -175,6 +175,70 @@ function detectIntentFromDB(
     }
   }
 
+  // "ver checklist da Luana", "checklist do João", "tarefas da Maria"
+  const compoundChecklist = n.match(/(?:ver|abrir|mostrar|checar)?\s*(?:o\s+)?(?:checklist|tarefas?|pendencias)\s+(?:d[aeo]\s+|da\s+|do\s+)(.+)/);
+  if (compoundChecklist && compoundChecklist[1]?.trim()) {
+    const ck = intents.find(i => i.intent_key === "checklist_status");
+    if (ck) {
+      const cleaned = compoundChecklist[1].trim().replace(/\s+(hoje|agora)$/, "").trim();
+      return {
+        ...base, intent: "checklist_status", target_entity: "patient", target_name: cleaned,
+        module: ck.module, confidence: 0.91, response_mode: "detail",
+        requires_context: ck.requires_context, requires_active_plan: ck.requires_active_plan,
+        requires_permission_key: ck.requires_permission_key, action_type: ck.action_type,
+        executor_key: ck.executor_key, scope: ck.scope,
+      };
+    }
+  }
+
+  // "evolução da Luana", "progresso do João", "como está a Luana"
+  const compoundEvolution = n.match(/(?:evolucao|progresso|resultado|como esta)\s+(?:d[aeo]\s+|da\s+|do\s+)(.+)/);
+  if (compoundEvolution && compoundEvolution[1]?.trim()) {
+    const pd = intents.find(i => i.intent_key === "patient_detail");
+    if (pd) {
+      const cleaned = compoundEvolution[1].trim().replace(/\s+(hoje|agora)$/, "").trim();
+      return {
+        ...base, intent: "patient_detail", target_entity: "patient", target_name: cleaned,
+        module: pd.module, confidence: 0.90, response_mode: "detail",
+        requires_context: pd.requires_context, requires_active_plan: pd.requires_active_plan,
+        requires_permission_key: pd.requires_permission_key, action_type: pd.action_type,
+        executor_key: pd.executor_key, scope: pd.scope,
+      };
+    }
+  }
+
+  // "anamnese da Luana", "ver anamnese do João"
+  const compoundAnamnesis = n.match(/(?:ver|abrir|mostrar)?\s*(?:a\s+)?anamnese\s+(?:d[aeo]\s+|da\s+|do\s+)(.+)/);
+  if (compoundAnamnesis && compoundAnamnesis[1]?.trim()) {
+    const an = intents.find(i => i.intent_key === "anamnesis");
+    if (an) {
+      const cleaned = compoundAnamnesis[1].trim();
+      return {
+        ...base, intent: "anamnesis", target_entity: "patient", target_name: cleaned,
+        module: an.module, confidence: 0.91, response_mode: "detail",
+        requires_context: an.requires_context, requires_active_plan: an.requires_active_plan,
+        requires_permission_key: an.requires_permission_key, action_type: an.action_type,
+        executor_key: an.executor_key, scope: an.scope,
+      };
+    }
+  }
+
+  // "exames da Luana", "ver exames do João"
+  const compoundLab = n.match(/(?:ver|abrir|mostrar)?\s*(?:os?\s+)?(?:exames?|lab|laboratorio)\s+(?:d[aeo]\s+|da\s+|do\s+)(.+)/);
+  if (compoundLab && compoundLab[1]?.trim()) {
+    const lb = intents.find(i => i.intent_key === "lab_exams");
+    if (lb) {
+      const cleaned = compoundLab[1].trim();
+      return {
+        ...base, intent: "lab_exams", target_entity: "patient", target_name: cleaned,
+        module: lb.module, confidence: 0.91, response_mode: "detail",
+        requires_context: lb.requires_context, requires_active_plan: lb.requires_active_plan,
+        requires_permission_key: lb.requires_permission_key, action_type: lb.action_type,
+        executor_key: lb.executor_key, scope: lb.scope,
+      };
+    }
+  }
+
   // "plano alimentar da Luana", "plano da Luana"
   const simpleMealPlan = n.match(/(?:plano|dieta|cardapio)\s+(?:alimentar\s+)?(?:d[aeo]\s+|da\s+|do\s+)(.+)/);
   if (simpleMealPlan && simpleMealPlan[1]?.trim()) {
@@ -194,7 +258,6 @@ function detectIntentFromDB(
     }
   }
 
-  // Score-based matching from DB phrases
   const scores: { intent: DBIntentRow; score: number; bestWeight: number }[] = [];
 
   for (const intent of intents) {
