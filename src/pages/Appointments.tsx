@@ -125,6 +125,7 @@ export default function Appointments() {
         duration_minutes: Number(form.duration_minutes) || 60,
         appointment_type: form.appointment_type,
         color: form.color || null,
+        ...getTenantIdForInsert(tenantId),
       }).select("id").single();
       if (error) throw error;
 
