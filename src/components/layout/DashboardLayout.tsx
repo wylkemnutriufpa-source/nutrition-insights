@@ -19,6 +19,10 @@ import IntelligenceModal from "@/components/common/IntelligenceModal";
 import IntelligenceShowcaseModal from "@/components/intelligence/IntelligenceShowcaseModal";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import ClinicalAIEntity from "@/components/ai-entity/ClinicalAIEntity";
+import { usePatientRealtime } from "@/hooks/usePatientRealtime";
+import { useNutritionistRealtime } from "@/hooks/useNutritionistRealtime";
+import { useRefetchOnFocus } from "@/hooks/useRefetchOnFocus";
+import { useRealtimeEventBus } from "@/hooks/useRealtimeEventBus";
 
 function LayoutFallbackCard({
   title,
@@ -445,6 +449,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
   const [collapsed, setCollapsed] = useState(() => isTablet);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Mount realtime subscriptions and refetch-on-focus ONCE at layout level
+  useRealtimeEventBus();
+  usePatientRealtime();
+  useNutritionistRealtime();
+  useRefetchOnFocus();
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
