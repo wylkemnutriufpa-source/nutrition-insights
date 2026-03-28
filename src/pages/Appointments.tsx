@@ -56,6 +56,7 @@ const statusConfig: Record<string, { label: string; cls: string; icon: any }> = 
 
 export default function Appointments() {
   const { user, isNutritionist } = useAuth();
+  const { tenantId } = useTenant();
   const queryClient = useQueryClient();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
