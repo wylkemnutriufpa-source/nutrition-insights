@@ -94,7 +94,15 @@ export function useExperienceModeState() {
     return isRouteVisible(route, mode);
   }, [mode]);
 
-  const value = useMemo(() => ({ mode, setMode, isRouteAllowed }), [mode, setMode, isRouteAllowed]);
+  const isBasic = mode === "basic";
+  const isPro = mode === "pro";
+  const isAdvanced = mode === "advanced";
+  const minMode = useCallback((min: ExperienceMode) => checkMinMode(mode, min), [mode]);
+
+  const value = useMemo<ExperienceModeContextValue>(
+    () => ({ mode, setMode, isRouteAllowed, isBasic, isPro, isAdvanced, minMode }),
+    [mode, setMode, isRouteAllowed, isBasic, isPro, isAdvanced, minMode]
+  );
 
   return value;
 }
