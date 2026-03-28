@@ -861,7 +861,7 @@ function generateSmartSuggestions(n: string, intents: DBIntentRow[], phraseMap: 
 // ═══════════════════════════════════════════════════════════════
 // ACTION ENGINE — Execute real operations
 // ═══════════════════════════════════════════════════════════════
-async function runActionEngine(supabaseAdmin: any, supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], role: string): Promise<IFJResponse> {
+async function runActionEngine(supabaseAdmin: any, supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], role: string, originalCommand = ""): Promise<IFJResponse> {
   if (role === "patient" || role === "unknown")
     return fmt("Sem permissão", "🚫", "error", "Pacientes não podem executar ações.", "", [], intent, "action", ctx);
 
