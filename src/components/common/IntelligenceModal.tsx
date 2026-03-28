@@ -390,7 +390,7 @@ function useIntelligenceData(open: boolean) {
         supabase.from("player_stats").select("total_xp, level, current_streak, meals_logged").eq("user_id", user.id).maybeSingle(),
         supabase.from("clinic_portfolio_state").select("*").eq("nutritionist_id", user.id).maybeSingle(),
         supabase.from("pipeline_runs").select("status, completed_at, total_patients_processed, steps_completed").order("created_at", { ascending: false }).limit(1).maybeSingle(),
-        supabase.from("clinical_alerts").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id).eq("is_active", true),
+        withTenantFilter(supabase.from("clinical_alerts").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id).eq("is_active", true), tenantId),
         supabase.from("clinical_daily_snapshots").select("id", { count: "exact", head: true }).gte("snapshot_date", weekAgo),
         supabase.from("clinic_clinical_evolution_metrics").select("*").eq("nutritionist_id", user.id).maybeSingle(),
         // Weekly trend data

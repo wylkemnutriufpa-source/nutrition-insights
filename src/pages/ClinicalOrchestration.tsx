@@ -114,18 +114,22 @@ function useActionGroups() {
 
 function useActionRecommendations() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   return useQuery({
-    queryKey: ["action-recommendations", user?.id],
+    queryKey: ["action-recommendations", user?.id, tenantId],
     enabled: !!user,
     staleTime: 2 * 60_000,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("clinical_action_recommendations")
-        .select("*")
-        .eq("nutritionist_id", user!.id)
-        .eq("status", "pending")
-        .order("created_at", { ascending: false })
-        .limit(20);
+      const { data, error } = await withTenantFilter(
+        supabase
+          .from("clinical_action_recommendations")
+          .select("*")
+          .eq("nutritionist_id", user!.id)
+          .eq("status", "pending")
+          .order("created_at", { ascending: false })
+          .limit(20),
+        tenantId
+      );
       if (error) throw error;
       return data || [];
     },

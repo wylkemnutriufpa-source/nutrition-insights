@@ -84,13 +84,13 @@ export default function BehavioralDropoutPanel() {
 
       // Get recovery actions + profiles
       const [actionsRes, profilesRes] = await Promise.all([
-        (supabase as any)
+        withTenantFilter((supabase as any)
           .from("behavioral_recovery_actions")
           .select("*")
           .in("patient_id", pids)
           .eq("status", "pending")
           .order("priority", { ascending: true })
-          .order("dropout_risk_score", { ascending: false }),
+          .order("dropout_risk_score", { ascending: false }), tenantId),
         supabase
           .from("profiles")
           .select("user_id, full_name")

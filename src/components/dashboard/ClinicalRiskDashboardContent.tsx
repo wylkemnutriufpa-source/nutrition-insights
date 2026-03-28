@@ -200,7 +200,7 @@ export default function ClinicalRiskDashboardContent() {
         supabase.from("profiles").select("user_id, full_name, avatar_url, weight_trend_status, weight_velocity_kg_week, adherence_momentum, adherence_score_7d, adherence_score_prev_7d, engagement_index, engagement_level").in("user_id", patientIds),
         withTenantFilter(supabase.from("checklist_tasks").select("patient_id, completed").in("patient_id", patientIds).gte("date", sevenDaysAgo.split("T")[0]), tenantId),
         supabase.from("user_sessions").select("user_id, last_seen_at").in("user_id", patientIds),
-        supabase.from("meal_plans").select("patient_id, plan_status, generation_metadata, therapeutic_effectiveness_status").in("patient_id", patientIds).eq("is_active", true).order("created_at", { ascending: false }),
+        withTenantFilter(supabase.from("meal_plans").select("patient_id, plan_status, generation_metadata, therapeutic_effectiveness_status").in("patient_id", patientIds).eq("is_active", true).order("created_at", { ascending: false }), tenantId),
         supabase.from("physical_assessments").select("patient_id, weight, assessment_date").in("patient_id", patientIds).order("assessment_date", { ascending: false }).limit(patientIds.length * 3),
         (supabase as any).from("patient_clinical_state").select("patient_id, caloric_response_status, stagnation_risk_level, metabolic_cluster, metabolic_cluster_confidence, cluster_strategy, metabolic_feature_vector").in("patient_id", patientIds),
         (supabase as any).from("meal_plan_adjustment_suggestions").select("*").in("patient_id", patientIds).eq("status", "pending").order("created_at", { ascending: false }),

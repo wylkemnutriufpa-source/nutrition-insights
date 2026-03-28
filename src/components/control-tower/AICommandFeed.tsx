@@ -79,11 +79,11 @@ export default function AICommandFeed() {
         }
 
         // Get recent behavioral recovery actions
-        const { data: recoveries } = await (supabase as any)
+        const { data: recoveries } = await withTenantFilter((supabase as any)
           .from("behavioral_recovery_actions")
           .select("id, clinical_reason, created_at")
           .order("created_at", { ascending: false })
-          .limit(5);
+          .limit(5), tenantId);
 
         for (const rec of (recoveries ?? [])) {
           feed.push({

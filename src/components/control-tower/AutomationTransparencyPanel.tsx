@@ -28,11 +28,11 @@ export default function AutomationTransparencyPanel() {
         todayStart.setHours(0, 0, 0, 0);
 
         const [{ data: runs }, { data: decisions }, { data: guardrails }] = await Promise.all([
-          (supabase as any)
+          withTenantFilter((supabase as any)
             .from("automation_runs")
             .select("id, status")
             .eq("nutritionist_id", user!.id)
-            .gte("executed_at", todayStart.toISOString()),
+            .gte("executed_at", todayStart.toISOString()), tenantId),
           (supabase as any)
             .from("clinical_decisions")
             .select("id, confidence")

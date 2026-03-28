@@ -103,13 +103,13 @@ export default function ClinicalFocusQueue() {
         }
 
         // Action recommendations
-        const { data: recs } = await (supabase as any)
+        const { data: recs } = await withTenantFilter((supabase as any)
           .from("clinical_action_recommendations")
           .select("id, recommended_action, reason, urgency_level, patient_id, created_at")
           .eq("nutritionist_id", user!.id)
           .eq("status", "pending")
           .order("created_at", { ascending: false })
-          .limit(5);
+          .limit(5), tenantId);
 
         for (const r of (recs ?? [])) {
           queue.push({

@@ -182,12 +182,12 @@ export default function ClinicalAIEntity() {
           .select("patient_id, adherence_score, dropout_risk_score, momentum_direction")
           .in("patient_id", ids)
           .order("snapshot_date", { ascending: false }) : Promise.resolve({ data: [] }),
-        (supabase as any)
+        withTenantFilter((supabase as any)
           .from("automation_runs")
           .select("id")
           .eq("nutritionist_id", user.id)
           .eq("status", "success")
-          .gte("executed_at", todayStart.toISOString()),
+          .gte("executed_at", todayStart.toISOString()), tenantId),
         (supabase as any)
           .from("clinical_decisions")
           .select("id")

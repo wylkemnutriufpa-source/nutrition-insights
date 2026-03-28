@@ -85,12 +85,12 @@ export default function GlobalClinicalStatusBar() {
           .eq("nutritionist_id", user!.id)
           .eq("status", "pending");
 
-        const { data: autoRuns } = await (supabase as any)
+        const { data: autoRuns } = await withTenantFilter((supabase as any)
           .from("automation_runs")
           .select("id")
           .eq("nutritionist_id", user!.id)
           .eq("status", "success")
-          .gte("executed_at", new Date(Date.now() - 86400000).toISOString());
+          .gte("executed_at", new Date(Date.now() - 86400000).toISOString()), tenantId);
 
         const critical = all.filter(s => (s.dropout_risk_score ?? 0) > 60 || s.risk_level === "critical").length;
         const positive = all.filter(s => (s.adherence_score ?? 0) > 70 && s.momentum_direction === "up").length;

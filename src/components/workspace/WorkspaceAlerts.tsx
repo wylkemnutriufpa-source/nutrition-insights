@@ -18,13 +18,16 @@ export default function WorkspaceAlerts({ search }: Props) {
   useEffect(() => {
     if (!user?.id) return;
     const fetch = async () => {
-      const { data } = await supabase
-        .from("clinical_alerts")
-        .select("*, profiles!clinical_alerts_patient_id_fkey(full_name)")
-        .eq("nutritionist_id", user.id)
-        .eq("is_active", true)
-        .order("created_at", { ascending: false })
-        .limit(30);
+      const { data } = await withTenantFilter(
+        supabase
+          .from("clinical_alerts")
+          .select("*, profiles!clinical_alerts_patient_id_fkey(full_name)")
+          .eq("nutritionist_id", user.id)
+          .eq("is_active", true)
+          .order("created_at", { ascending: false })
+          .limit(30),
+        tenantId
+      );
       setAlerts(data || []);
       setLoading(false);
     };
