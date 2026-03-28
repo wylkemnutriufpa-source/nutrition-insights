@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { cn } from "@/lib/utils";
 import { Zap, Clock, ShieldCheck, Activity } from "lucide-react";
 
@@ -14,6 +16,7 @@ interface AutoStats {
 
 export default function AutomationTransparencyPanel() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [stats, setStats] = useState<AutoStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,11 +28,11 @@ export default function AutomationTransparencyPanel() {
         todayStart.setHours(0, 0, 0, 0);
 
         const [{ data: runs }, { data: decisions }, { data: guardrails }] = await Promise.all([
-          (supabase as any)
+          withTenantFilter((supabase as any)
             .from("automation_runs")
             .select("id, status")
             .eq("nutritionist_id", user!.id)
-            .gte("executed_at", todayStart.toISOString()),
+            .gte("executed_at", todayStart.toISOString()), tenantId),
           (supabase as any)
             .from("clinical_decisions")
             .select("id, confidence")

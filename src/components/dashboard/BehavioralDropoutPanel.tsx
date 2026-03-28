@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -60,6 +62,7 @@ const clusterLabels: Record<string, string> = {
 
 export default function BehavioralDropoutPanel() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [applying, setApplying] = useState<string | null>(null);
@@ -82,13 +85,13 @@ export default function BehavioralDropoutPanel() {
 
       // Get recovery actions + profiles
       const [actionsRes, profilesRes] = await Promise.all([
-        (supabase as any)
+        withTenantFilter((supabase as any)
           .from("behavioral_recovery_actions")
           .select("*")
           .in("patient_id", pids)
           .eq("status", "pending")
           .order("priority", { ascending: true })
-          .order("dropout_risk_score", { ascending: false }),
+          .order("dropout_risk_score", { ascending: false }), tenantId),
         supabase
           .from("profiles")
           .select("user_id, full_name")

@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,6 +30,7 @@ const URGENCY_COLORS = {
 
 export default function ClinicalFocusQueue() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [items, setItems] = useState<QueueItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -101,13 +104,13 @@ export default function ClinicalFocusQueue() {
         }
 
         // Action recommendations
-        const { data: recs } = await (supabase as any)
+        const { data: recs } = await withTenantFilter((supabase as any)
           .from("clinical_action_recommendations")
           .select("id, recommended_action, reason, urgency_level, patient_id, created_at")
           .eq("nutritionist_id", user!.id)
           .eq("status", "pending")
           .order("created_at", { ascending: false })
-          .limit(5);
+          .limit(5), tenantId);
 
         for (const r of (recs ?? [])) {
           queue.push({

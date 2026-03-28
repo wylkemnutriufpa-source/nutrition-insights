@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { cn } from "@/lib/utils";
 import { Brain, TrendingDown, Target, Zap, Shield, Activity, CheckCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -28,6 +30,7 @@ const EVENT_ICONS: Record<string, { icon: React.ElementType; color: string }> = 
 
 export default function AICommandFeed() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [events, setEvents] = useState<FeedEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,12 +41,12 @@ export default function AICommandFeed() {
         const feed: FeedEvent[] = [];
 
         // Get recent alerts
-        const { data: alerts } = await (supabase as any)
+        const { data: alerts } = await withTenantFilter((supabase as any)
           .from("clinical_alerts")
           .select("id, title, alert_type, severity, created_at")
           .eq("nutritionist_id", user!.id)
           .order("created_at", { ascending: false })
-          .limit(10);
+          .limit(10), tenantId);
 
         for (const a of (alerts ?? [])) {
           const cfg = a.severity === "critical" ? EVENT_ICONS.alert : EVENT_ICONS.behavioral_risk;
@@ -58,12 +61,12 @@ export default function AICommandFeed() {
         }
 
         // Get recent automation runs
-        const { data: runs } = await (supabase as any)
+        const { data: runs } = await withTenantFilter((supabase as any)
           .from("automation_runs")
           .select("id, status, executed_at, trigger_data")
           .eq("nutritionist_id", user!.id)
           .order("executed_at", { ascending: false })
-          .limit(8);
+          .limit(8), tenantId);
 
         for (const r of (runs ?? [])) {
           feed.push({
@@ -77,11 +80,11 @@ export default function AICommandFeed() {
         }
 
         // Get recent behavioral recovery actions
-        const { data: recoveries } = await (supabase as any)
+        const { data: recoveries } = await withTenantFilter((supabase as any)
           .from("behavioral_recovery_actions")
           .select("id, clinical_reason, created_at")
           .order("created_at", { ascending: false })
-          .limit(5);
+          .limit(5), tenantId);
 
         for (const rec of (recoveries ?? [])) {
           feed.push({

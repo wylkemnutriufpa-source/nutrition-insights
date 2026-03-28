@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Users, AlertTriangle, ShieldAlert, TrendingUp, Zap, Clock, Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { cn } from "@/lib/utils";
 
 interface StatusMetric {
@@ -39,6 +41,7 @@ function AnimatedCounter({ value }: { value: number }) {
 
 export default function GlobalClinicalStatusBar() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [metrics, setMetrics] = useState<StatusMetric[]>([]);
   const [loaded, setLoaded] = useState(false);
 
@@ -71,11 +74,11 @@ export default function GlobalClinicalStatusBar() {
         }
         const all = Array.from(latest.values());
 
-        const { data: alerts } = await (supabase as any)
+        const { data: alerts } = await withTenantFilter((supabase as any)
           .from("clinical_alerts")
           .select("id")
           .eq("nutritionist_id", user!.id)
-          .eq("is_active", true);
+          .eq("is_active", true), tenantId);
 
         const { data: decisions } = await (supabase as any)
           .from("clinical_decisions")
@@ -83,12 +86,12 @@ export default function GlobalClinicalStatusBar() {
           .eq("nutritionist_id", user!.id)
           .eq("status", "pending");
 
-        const { data: autoRuns } = await (supabase as any)
+        const { data: autoRuns } = await withTenantFilter((supabase as any)
           .from("automation_runs")
           .select("id")
           .eq("nutritionist_id", user!.id)
           .eq("status", "success")
-          .gte("executed_at", new Date(Date.now() - 86400000).toISOString());
+          .gte("executed_at", new Date(Date.now() - 86400000).toISOString()), tenantId);
 
         const critical = all.filter(s => (s.dropout_risk_score ?? 0) > 60 || s.risk_level === "critical").length;
         const positive = all.filter(s => (s.adherence_score ?? 0) > 70 && s.momentum_direction === "up").length;

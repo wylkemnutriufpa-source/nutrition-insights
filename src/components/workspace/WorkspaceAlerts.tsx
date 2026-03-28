@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,19 +11,23 @@ interface Props { search: string; }
 
 export default function WorkspaceAlerts({ search }: Props) {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [alerts, setAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user?.id) return;
     const fetch = async () => {
-      const { data } = await supabase
-        .from("clinical_alerts")
-        .select("*, profiles!clinical_alerts_patient_id_fkey(full_name)")
-        .eq("nutritionist_id", user.id)
-        .eq("is_active", true)
-        .order("created_at", { ascending: false })
-        .limit(30);
+      const { data } = await withTenantFilter(
+        supabase
+          .from("clinical_alerts")
+          .select("*, profiles!clinical_alerts_patient_id_fkey(full_name)")
+          .eq("nutritionist_id", user.id)
+          .eq("is_active", true)
+          .order("created_at", { ascending: false })
+          .limit(30),
+        tenantId
+      );
       setAlerts(data || []);
       setLoading(false);
     };

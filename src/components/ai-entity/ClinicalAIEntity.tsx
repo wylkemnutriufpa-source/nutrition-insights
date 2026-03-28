@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { cn } from "@/lib/utils";
 import { Brain, X, ChevronRight, Eye, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -39,6 +41,7 @@ export default function ClinicalAIEntity() {
   } | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const mountedRef = useRef(true);
+  const { tenantId } = useTenant();
 
   // Load signals from real data
   useEffect(() => {
@@ -51,14 +54,14 @@ export default function ClinicalAIEntity() {
 
     async function checkSignals() {
       try {
-        const { data: alerts } = await (supabase as any)
+        const { data: alerts } = await withTenantFilter((supabase as any)
           .from("clinical_alerts")
           .select("id, title, severity, patient_id, description")
           .eq("nutritionist_id", user!.id)
           .eq("is_active", true)
           .eq("severity", "critical")
           .order("created_at", { ascending: false })
-          .limit(1);
+          .limit(1), tenantId);
 
         if (!mountedRef.current) return;
 
@@ -180,12 +183,12 @@ export default function ClinicalAIEntity() {
           .select("patient_id, adherence_score, dropout_risk_score, momentum_direction")
           .in("patient_id", ids)
           .order("snapshot_date", { ascending: false }) : Promise.resolve({ data: [] }),
-        (supabase as any)
+        withTenantFilter((supabase as any)
           .from("automation_runs")
           .select("id")
           .eq("nutritionist_id", user.id)
           .eq("status", "success")
-          .gte("executed_at", todayStart.toISOString()),
+          .gte("executed_at", todayStart.toISOString()), tenantId),
         (supabase as any)
           .from("clinical_decisions")
           .select("id")

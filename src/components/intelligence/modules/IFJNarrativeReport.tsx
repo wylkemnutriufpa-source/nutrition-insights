@@ -6,6 +6,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +20,7 @@ import ReactMarkdown from "react-markdown";
 
 export default function IFJNarrativeReport() {
   const { user, roles } = useAuth();
+  const { tenantId } = useTenant();
   const [selectedPatient, setSelectedPatient] = useState("");
   const [report, setReport] = useState<string | null>(null);
   const [clinicalData, setClinicalData] = useState<any>(null);
@@ -66,9 +69,9 @@ export default function IFJNarrativeReport() {
       // Fetch clinical data
       const [snapshotRes, anamnesisRes, mealsRes, alertsRes] = await Promise.all([
         supabase.from("clinical_daily_snapshots").select("*").eq("patient_id", selectedPatient).order("snapshot_date", { ascending: false }).limit(7),
-        supabase.from("patient_anamnesis").select("*").eq("user_id", selectedPatient).order("created_at", { ascending: false }).limit(1),
-        supabase.from("meal_plans").select("id, description, is_active, plan_status, created_at").eq("patient_id", selectedPatient).eq("is_active", true).limit(1),
-        supabase.from("clinical_alerts").select("*").eq("patient_id", selectedPatient).eq("is_active", true).order("created_at", { ascending: false }).limit(5),
+        withTenantFilter(supabase.from("patient_anamnesis").select("*").eq("user_id", selectedPatient).order("created_at", { ascending: false }), tenantId).limit(1),
+        withTenantFilter(supabase.from("meal_plans").select("id, description, is_active, plan_status, created_at").eq("patient_id", selectedPatient).eq("is_active", true), tenantId).limit(1),
+        withTenantFilter(supabase.from("clinical_alerts").select("*").eq("patient_id", selectedPatient).eq("is_active", true).order("created_at", { ascending: false }), tenantId).limit(5),
       ]);
 
       const snapshots = snapshotRes.data || [];

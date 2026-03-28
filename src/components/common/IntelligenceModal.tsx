@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import {
   Zap, Activity, Users, TrendingUp, CheckCircle2,
   UtensilsCrossed, MessageSquare, Trophy, Wifi,
@@ -362,6 +364,7 @@ function MetricsGrid({ metrics }: { metrics: IntelligenceMetric[] }) {
 /* ─── Hook dedicado para dados de inteligência ─── */
 function useIntelligenceData(open: boolean) {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [loading, setLoading] = useState(false);
   const [engineStatus, setEngineStatus] = useState<ClinicalEngineStatus | null>(null);
   const [metrics, setMetrics] = useState<IntelligenceMetric[]>([]);
@@ -388,7 +391,7 @@ function useIntelligenceData(open: boolean) {
         supabase.from("player_stats").select("total_xp, level, current_streak, meals_logged").eq("user_id", user.id).maybeSingle(),
         supabase.from("clinic_portfolio_state").select("*").eq("nutritionist_id", user.id).maybeSingle(),
         supabase.from("pipeline_runs").select("status, completed_at, total_patients_processed, steps_completed").order("created_at", { ascending: false }).limit(1).maybeSingle(),
-        supabase.from("clinical_alerts").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id).eq("is_active", true),
+        withTenantFilter(supabase.from("clinical_alerts").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id).eq("is_active", true), tenantId),
         supabase.from("clinical_daily_snapshots").select("id", { count: "exact", head: true }).gte("snapshot_date", weekAgo),
         supabase.from("clinic_clinical_evolution_metrics").select("*").eq("nutritionist_id", user.id).maybeSingle(),
         // Weekly trend data

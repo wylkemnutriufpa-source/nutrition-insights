@@ -176,7 +176,7 @@ export default function SystemUsageCard() {
         supabase.from("recipes").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id),
         supabase.from("branding_settings").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id),
         supabase.from("financial_transactions").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id),
-        supabase.from("automation_rules").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id),
+        withTenantFilter(supabase.from("automation_rules").select("id", { count: "exact", head: true }).eq("nutritionist_id", user.id), tenantId),
       ]);
 
       const featureMap = [
