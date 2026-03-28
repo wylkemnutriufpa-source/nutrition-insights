@@ -243,6 +243,36 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // ─── Auth validation ───
+    const authHeader = req.headers.get("Authorization");
+    const anonClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader || "" } } }
+    );
+    const { data: { user }, error: authErr } = await anonClient.auth.getUser();
+    if (authErr || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ─── Rate limiting ───
+    const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const clientKey = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || user.id;
+    const { data: allowed } = await sb.rpc("check_rate_limit", {
+      _function_name: "clinical-decision-support",
+      _client_key: clientKey,
+      _max_requests: 20,
+      _window_seconds: 60,
+    });
+    if (allowed === false) {
+      return new Response(
+        JSON.stringify({ error: "Muitas requisições. Tente novamente em 1 minuto." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60" } }
+      );
+    }
+
     const { patientData, useCopilot } = await req.json();
 
     // ─── Engine Layer (ALWAYS runs — zero cost) ───
