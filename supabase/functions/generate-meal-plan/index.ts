@@ -9,8 +9,8 @@ const corsHeaders = {
 };
 
 // ──── Constants ────
-const ENGINE_VERSION = "2.1.0";
-const PROTOCOL_VERSION = "fitjourney_master_v1";
+const ENGINE_VERSION = "3.0.0";
+const PROTOCOL_VERSION = "fitjourney_realista_v3";
 
 const MEAL_KCAL_SPLIT: Record<string, number> = {
   breakfast: 0.20,
@@ -47,13 +47,160 @@ const GOAL_STRATEGY: Record<string, { calorie: string; macro: string }> = {
   athletic_performance: { calorie: "calorie_surplus_moderate", macro: "performance_endurance" },
 };
 
+// ═══════════════════════════════════════════════════════════════
+// REGRAS DE ALIMENTOS REALISTAS v3.0
+// Comida brasileira popular, acessível e simples
+// ═══════════════════════════════════════════════════════════════
+
+const BLOCKED_FOODS = [
+  "salmão", "salmon", "atum fresco", "kefir", "cottage", "ricota importada",
+  "quinoa", "quinua", "amaranto", "castanha-do-pará", "castanha do pará",
+  "macadâmia", "pistache", "framboesa", "mirtilo", "blueberry", "cranberry",
+  "tofu", "tempeh", "edamame", "granola premium", "mix de nuts", "trail mix",
+  "azeite trufado", "vinagre balsâmico", "manteiga de amêndoa",
+  "wrap integral", "pão artesanal", "leite de amêndoa", "leite de coco",
+  "leite de aveia", "abacate toast", "overnight oats", "cream cheese",
+  "philadelphia", "iogurte grego importado", "coalhada", "kombucha",
+  "hemp seed", "tahini", "hummus", "burrata", "brie", "camembert", "gorgonzola",
+  "whey protein", "caseína",
+];
+
+const MAX_FRUITS_PER_MEAL = 2;
+const MAX_EGGS_BREAKFAST = 2;
+
+// ── Refeições realistas pré-definidas ──
+
+interface RealisticMeal {
+  title: string;
+  description: string;
+  foods: string[];
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
+// CAFÉ DA MANHÃ — Emagrecimento
+const BREAKFAST_EMAG: RealisticMeal[] = [
+  { title: "Café da Manhã", description: "• 1 fatia pão integral\n• 1 ovo mexido\n• Café sem açúcar", foods: ["pão integral", "ovo", "café"], kcal: 230, protein: 12, carbs: 22, fat: 10 },
+  { title: "Café da Manhã", description: "• 1 tapioca média\n• 1 ovo\n• 1 fatia queijo minas", foods: ["tapioca", "ovo", "queijo minas"], kcal: 280, protein: 15, carbs: 30, fat: 11 },
+  { title: "Café da Manhã", description: "• 1 fatia cuscuz\n• 1 ovo cozido\n• Café sem açúcar", foods: ["cuscuz", "ovo", "café"], kcal: 240, protein: 11, carbs: 32, fat: 8 },
+  { title: "Café da Manhã", description: "• 1 pão francês\n• 1 fatia queijo muçarela\n• Café sem açúcar", foods: ["pão", "queijo", "café"], kcal: 250, protein: 10, carbs: 28, fat: 10 },
+  { title: "Café da Manhã", description: "• 3 col. sopa aveia\n• 1 banana picada\n• Café sem açúcar", foods: ["aveia", "banana", "café"], kcal: 220, protein: 6, carbs: 40, fat: 4 },
+  { title: "Café da Manhã", description: "• 1 fatia pão integral\n• 1 col. requeijão light\n• 1 fatia queijo minas", foods: ["pão integral", "requeijão", "queijo"], kcal: 230, protein: 11, carbs: 24, fat: 9 },
+  { title: "Café da Manhã", description: "• 1 tapioca média\n• 1 col. requeijão\n• Café sem açúcar", foods: ["tapioca", "requeijão", "café"], kcal: 210, protein: 5, carbs: 32, fat: 7 },
+];
+
+// CAFÉ DA MANHÃ — Ganho de massa
+const BREAKFAST_MASSA: RealisticMeal[] = [
+  { title: "Café da Manhã Reforçado", description: "• 2 fatias pão integral\n• 2 ovos mexidos\n• 1 fatia queijo minas\n• Café com leite", foods: ["pão", "ovos", "queijo", "leite"], kcal: 420, protein: 24, carbs: 35, fat: 18 },
+  { title: "Café da Manhã Reforçado", description: "• Omelete 3 ovos com queijo\n• 1 pão francês\n• Café com leite", foods: ["ovos", "queijo", "pão", "leite"], kcal: 450, protein: 26, carbs: 28, fat: 22 },
+  { title: "Café da Manhã Reforçado", description: "• 1 tapioca grande\n• 2 ovos\n• Queijo coalho\n• Café com leite", foods: ["tapioca", "ovos", "queijo coalho", "leite"], kcal: 430, protein: 22, carbs: 38, fat: 16 },
+  { title: "Café da Manhã Reforçado", description: "• 2 fatias cuscuz\n• 2 ovos\n• Requeijão\n• Café com leite", foods: ["cuscuz", "ovos", "requeijão", "leite"], kcal: 440, protein: 20, carbs: 45, fat: 15 },
+  { title: "Café da Manhã Reforçado", description: "• 4 col. sopa aveia\n• 1 banana\n• 1 col. pasta de amendoim\n• Leite", foods: ["aveia", "banana", "amendoim", "leite"], kcal: 430, protein: 16, carbs: 52, fat: 14 },
+];
+
+// LANCHES
+const SNACKS: RealisticMeal[] = [
+  { title: "Lanche", description: "• 1 banana média", foods: ["banana"], kcal: 90, protein: 1, carbs: 22, fat: 0 },
+  { title: "Lanche", description: "• 1 maçã média", foods: ["maçã"], kcal: 80, protein: 0, carbs: 20, fat: 0 },
+  { title: "Lanche", description: "• 1 fatia mamão", foods: ["mamão"], kcal: 70, protein: 1, carbs: 17, fat: 0 },
+  { title: "Lanche", description: "• 1 laranja média", foods: ["laranja"], kcal: 60, protein: 1, carbs: 14, fat: 0 },
+  { title: "Lanche", description: "• 1 goiaba média", foods: ["goiaba"], kcal: 65, protein: 1, carbs: 14, fat: 1 },
+  { title: "Lanche", description: "• 1 pote iogurte natural", foods: ["iogurte"], kcal: 100, protein: 6, carbs: 8, fat: 4 },
+  { title: "Lanche", description: "• 1 banana\n• 1 col. sopa aveia", foods: ["banana", "aveia"], kcal: 130, protein: 3, carbs: 28, fat: 2 },
+  { title: "Lanche", description: "• 1 tangerina\n• 5 castanhas de caju", foods: ["tangerina", "castanha"], kcal: 120, protein: 3, carbs: 16, fat: 5 },
+];
+
+// LANCHES REFORÇADOS (ganho de massa)
+const SNACKS_MASSA: RealisticMeal[] = [
+  { title: "Lanche Reforçado", description: "• 1 pão integral\n• 1 ovo cozido\n• 1 banana", foods: ["pão", "ovo", "banana"], kcal: 280, protein: 12, carbs: 38, fat: 8 },
+  { title: "Lanche Reforçado", description: "• 1 tapioca\n• 1 fatia queijo\n• Suco natural", foods: ["tapioca", "queijo", "suco"], kcal: 260, protein: 8, carbs: 36, fat: 8 },
+  { title: "Lanche Reforçado", description: "• 1 banana\n• 1 col. pasta de amendoim\n• 1 copo leite", foods: ["banana", "amendoim", "leite"], kcal: 300, protein: 12, carbs: 34, fat: 12 },
+  { title: "Lanche Reforçado", description: "• 2 fatias pão integral\n• Requeijão\n• 1 fruta", foods: ["pão", "requeijão", "fruta"], kcal: 280, protein: 8, carbs: 40, fat: 8 },
+];
+
+// ALMOÇO/JANTAR — Emagrecimento
+const MAIN_EMAG: RealisticMeal[] = [
+  { title: "Almoço", description: "• 150g peito de frango grelhado\n• 3 col. sopa arroz\n• Salada verde", foods: ["frango", "arroz", "salada"], kcal: 380, protein: 38, carbs: 35, fat: 8 },
+  { title: "Almoço", description: "• 120g carne moída refogada\n• 2 col. sopa purê de batata\n• Salada", foods: ["carne moída", "purê", "salada"], kcal: 370, protein: 28, carbs: 30, fat: 12 },
+  { title: "Almoço", description: "• 150g tilápia grelhada\n• 100g macaxeira cozida\n• Legumes refogados", foods: ["tilápia", "macaxeira", "legumes"], kcal: 350, protein: 35, carbs: 32, fat: 6 },
+  { title: "Almoço", description: "• 120g bife de alcatra\n• 3 col. sopa arroz\n• 2 col. sopa feijão", foods: ["bife", "arroz", "feijão"], kcal: 420, protein: 32, carbs: 40, fat: 12 },
+  { title: "Almoço", description: "• 120g frango desfiado\n• 100g macarrão\n• Molho de tomate", foods: ["frango", "macarrão", "molho"], kcal: 400, protein: 30, carbs: 42, fat: 10 },
+  { title: "Almoço", description: "• 120g carne de panela\n• 100g batata cozida\n• Cenoura refogada", foods: ["carne", "batata", "cenoura"], kcal: 380, protein: 30, carbs: 28, fat: 14 },
+  { title: "Almoço", description: "• 120g sobrecoxa assada\n• 3 col. sopa arroz\n• 2 col. sopa feijão\n• Salada", foods: ["sobrecoxa", "arroz", "feijão", "salada"], kcal: 430, protein: 28, carbs: 38, fat: 16 },
+  { title: "Almoço", description: "• 150g filé de porco grelhado\n• 100g batata doce\n• Brócolis", foods: ["porco", "batata doce", "brócolis"], kcal: 370, protein: 34, carbs: 30, fat: 10 },
+];
+
+// ALMOÇO/JANTAR — Ganho de massa
+const MAIN_MASSA: RealisticMeal[] = [
+  { title: "Almoço Reforçado", description: "• 200g peito de frango\n• 5 col. sopa arroz\n• 3 col. sopa feijão\n• Salada", foods: ["frango", "arroz", "feijão", "salada"], kcal: 580, protein: 48, carbs: 55, fat: 12 },
+  { title: "Almoço Reforçado", description: "• 180g alcatra grelhada\n• 150g batata doce\n• Brócolis refogado", foods: ["alcatra", "batata doce", "brócolis"], kcal: 550, protein: 42, carbs: 45, fat: 16 },
+  { title: "Almoço Reforçado", description: "• 150g carne moída\n• 120g macarrão\n• Molho de tomate\n• Salada", foods: ["carne moída", "macarrão", "molho", "salada"], kcal: 560, protein: 38, carbs: 52, fat: 16 },
+  { title: "Almoço Reforçado", description: "• 200g tilápia\n• 5 col. sopa arroz\n• Legumes refogados", foods: ["tilápia", "arroz", "legumes"], kcal: 520, protein: 44, carbs: 50, fat: 10 },
+  { title: "Almoço Reforçado", description: "• 200g frango grelhado\n• 150g macaxeira cozida\n• 2 col. sopa feijão\n• Salada", foods: ["frango", "macaxeira", "feijão", "salada"], kcal: 570, protein: 46, carbs: 48, fat: 14 },
+  { title: "Almoço Reforçado", description: "• 180g sobrecoxa assada\n• 5 col. sopa arroz\n• 3 col. sopa feijão\n• Salada", foods: ["sobrecoxa", "arroz", "feijão", "salada"], kcal: 600, protein: 38, carbs: 56, fat: 20 },
+];
+
+// CEIA
+const CEIA: RealisticMeal[] = [
+  { title: "Ceia", description: "• 1 pote iogurte natural", foods: ["iogurte"], kcal: 100, protein: 6, carbs: 8, fat: 4 },
+  { title: "Ceia", description: "• 1 copo leite morno", foods: ["leite"], kcal: 120, protein: 6, carbs: 10, fat: 6 },
+  { title: "Ceia", description: "• 1 banana com canela", foods: ["banana"], kcal: 95, protein: 1, carbs: 23, fat: 0 },
+  { title: "Ceia", description: "• Chá + 2 torradas integrais", foods: ["chá", "torrada"], kcal: 80, protein: 2, carbs: 16, fat: 1 },
+];
+
+const CEIA_MASSA: RealisticMeal[] = [
+  { title: "Ceia", description: "• 1 pote iogurte natural\n• 1 col. granola", foods: ["iogurte", "granola"], kcal: 160, protein: 8, carbs: 18, fat: 5 },
+  { title: "Ceia", description: "• 1 ovo cozido\n• 1 fatia pão integral", foods: ["ovo", "pão"], kcal: 170, protein: 10, carbs: 16, fat: 7 },
+  { title: "Ceia", description: "• 1 copo leite\n• 1 col. aveia\n• 1 banana", foods: ["leite", "aveia", "banana"], kcal: 230, protein: 8, carbs: 36, fat: 6 },
+];
+
+// ── Substituições dentro da mesma categoria ──
+const SUBSTITUTION_GROUPS: Record<string, string[]> = {
+  protein: ["frango", "carne moída", "bife", "tilápia", "porco", "sardinha", "sobrecoxa"],
+  carb: ["arroz", "macarrão", "batata", "macaxeira", "batata doce", "inhame"],
+  carb_breakfast: ["pão integral", "tapioca", "cuscuz", "pão francês"],
+  protein_breakfast: ["ovo mexido", "ovo cozido", "queijo minas", "queijo coalho"],
+  fruit: ["banana", "maçã", "mamão", "laranja", "goiaba", "morango", "tangerina"],
+};
+
+// ═══════════════════════════════════════════════════════════════
+// CORE FUNCTIONS
+// ═══════════════════════════════════════════════════════════════
+
+function normalize(t: string): string {
+  return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+}
+
+function isBlockedFood(name: string): boolean {
+  const n = normalize(name);
+  return BLOCKED_FOODS.some(blocked => n.includes(normalize(blocked)));
+}
+
+function isLossGoal(goal: string): boolean {
+  return ["lose_weight", "maintain", "improve_health"].includes(goal);
+}
+
+function getMealOptions(mealType: string, goal: string): RealisticMeal[] {
+  const loss = isLossGoal(goal);
+  switch (mealType) {
+    case "breakfast": return loss ? BREAKFAST_EMAG : BREAKFAST_MASSA;
+    case "morning_snack": return loss ? SNACKS : SNACKS_MASSA;
+    case "afternoon_snack": return loss ? SNACKS : SNACKS_MASSA;
+    case "lunch":
+    case "dinner": return loss ? MAIN_EMAG : MAIN_MASSA;
+    case "evening_snack": return loss ? CEIA : CEIA_MASSA;
+    default: return SNACKS;
+  }
+}
+
 // ──── TMB Calculator (Mifflin-St Jeor) ────
 function calculateTMB(weight: number, height: number, age: number, sex: string): number {
   if (sex === "female") return Math.round(10 * weight + 6.25 * height - 5 * age - 161);
   return Math.round(10 * weight + 6.25 * height - 5 * age + 5);
 }
 
-// ──── TDEE + Goal-adjusted target ────
 function calculateTDEE(tmb: number, activityLevel: string): number {
   const multiplier = ACTIVITY_MULTIPLIERS[activityLevel] || 1.375;
   return Math.round(tmb * multiplier);
@@ -61,16 +208,19 @@ function calculateTDEE(tmb: number, activityLevel: string): number {
 
 function calculateTargetKcal(tdee: number, goal: string): number {
   const adjustment = GOAL_KCAL_ADJUSTMENT[goal] || 0;
-  return Math.max(1000, Math.min(3500, tdee + adjustment));
+  const raw = tdee + adjustment;
+  // Pisos clínicos
+  const minKcal = 1200; // piso absoluto
+  return Math.max(minKcal, Math.min(3500, raw));
 }
 
-// ──── Macro distribution by goal ────
 function calculateMacros(kcal: number, goal: string, weight: number) {
   let proteinPerKg: number, carbsPct: number, fatPct: number;
   switch (goal) {
     case "lose_weight":
       proteinPerKg = 2.0; carbsPct = 0.35; fatPct = 0.30; break;
     case "gain_muscle":
+    case "gain_weight":
       proteinPerKg = 2.2; carbsPct = 0.45; fatPct = 0.25; break;
     case "athletic_performance":
       proteinPerKg = 2.0; carbsPct = 0.50; fatPct = 0.25; break;
@@ -85,188 +235,104 @@ function calculateMacros(kcal: number, goal: string, weight: number) {
   return { protein, carbs, fat };
 }
 
-// ──── Map goal → template conditions ────
-function mapGoalToConditions(goal: string): string[] {
-  const map: Record<string, string[]> = {
-    lose_weight: ["emagrecimento", "sobrepeso", "obesidade", "deficit", "low_carb"],
-    gain_muscle: ["hipertrofia", "ganho_massa", "atleta", "superavit"],
-    maintain: ["manutencao", "equilibrio", "reeducacao"],
-    gain_weight: ["baixo peso", "ganho de massa", "hipercalórico"],
-    improve_health: ["anti_inflamatorio", "longevidade", "cardiovascular"],
-    athletic_performance: ["corrida", "ciclismo", "resistência", "endurance"],
-  };
-  return map[goal] || ["manutencao", "equilibrio"];
-}
+// ═══════════════════════════════════════════════════════════════
+// GERADOR DE PLANO REALISTA v3.0
+// Gera planos com refeições pré-definidas realistas
+// ═══════════════════════════════════════════════════════════════
 
-// ──── Score template against patient data ────
-function scoreTemplate(
-  template: any, goal: string, restrictions: string[],
-  conditions: string[], kcalTarget: number, cookingPref: string
-): { score: number; breakdown: { goal_match: number; restriction_match: number; calorie_match: number; clinical_match: number; preference_match: number }; reasons: string[] } {
-  let goalScore = 0, restrictionScore = 0, calorieScore = 0, clinicalScore = 0, preferenceScore = 0;
-  const reasons: string[] = [];
-  const tConds = (template.conditions || []) as string[];
-  const tTags = (template.tags || []) as string[];
-  const goalConds = mapGoalToConditions(goal);
-
-  // 1. Goal match (highest weight)
-  for (const gc of goalConds) {
-    if (tConds.some((c: string) => c.toLowerCase().includes(gc))) { goalScore += 10; reasons.push(`Objetivo "${gc}" compatível`); }
-    if (tTags.some((t: string) => t.toLowerCase().includes(gc))) goalScore += 5;
-  }
-
-  // 2. Medical conditions match
-  for (const cond of conditions) {
-    if (tConds.some((c: string) => c.toLowerCase().includes(cond.toLowerCase()))) { clinicalScore += 15; reasons.push(`Condição "${cond}" contemplada`); }
-    if (tTags.some((t: string) => t.toLowerCase().includes(cond.toLowerCase()))) clinicalScore += 8;
-  }
-
-  // 3. Dietary restrictions
-  if (restrictions.includes("vegetarian") || restrictions.includes("vegan")) {
-    if (template.slug?.includes("veg")) { restrictionScore += 20; reasons.push("Template vegetariano/vegano"); }
-    else restrictionScore -= 5;
-  }
-  if (restrictions.includes("gluten_free") && tTags.includes("sem_gluten")) { restrictionScore += 10; reasons.push("Sem glúten"); }
-  if (restrictions.includes("lactose_free") && tTags.includes("sem_lactose")) { restrictionScore += 10; reasons.push("Sem lactose"); }
-
-  // 4. Calorie proximity
-  const calDiff = Math.abs((template.base_calories || 2000) - kcalTarget);
-  if (calDiff < 100) { calorieScore += 15; reasons.push(`Calorias muito próximas (±${calDiff})`); }
-  else if (calDiff < 200) { calorieScore += 10; reasons.push(`Calorias próximas (±${calDiff})`); }
-  else if (calDiff < 400) calorieScore += 5;
-  else if (calDiff > 600) calorieScore -= 5;
-
-  // 5. Cooking preference match
-  if (cookingPref === "quick" && (template.slug?.includes("pratico") || tTags.includes("pratico"))) { preferenceScore += 8; reasons.push("Cardápio prático"); }
-
-  // 6. "Dieta flexível" bonus
-  if (template.slug?.includes("flexivel") || tTags.includes("flexivel")) preferenceScore += 3;
-
-  const score = goalScore + restrictionScore + calorieScore + clinicalScore + preferenceScore;
-  return { score, breakdown: { goal_match: goalScore, restriction_match: restrictionScore, calorie_match: calorieScore, clinical_match: clinicalScore, preference_match: preferenceScore }, reasons };
-}
-
-// ──── Filter food by restrictions ────
-function isFoodAllowed(name: string, desc: string, restrictions: string[]): boolean {
-  const text = `${name} ${desc}`.toLowerCase();
-  if (restrictions.includes("vegetarian") && text.match(/frango|carne|atum|peixe|tilápia|salmão|sardinha|patinho|boi|porco|peru|bacon/)) return false;
-  if (restrictions.includes("vegan") && text.match(/frango|carne|atum|peixe|ovo|leite|queijo|iogurte|whey|requeijão|mel|manteiga|ricota|cottage|kefir|coalhada|peru|salmão|sardinha|patinho|boi/)) return false;
-  if (restrictions.includes("gluten_free") && text.match(/pão|torrada|macarrão|aveia|granola|biscoito|trigo|wrap/)) return false;
-  if (restrictions.includes("lactose_free") && text.match(/leite|queijo|iogurte|requeijão|coalhada|kefir|manteiga|ricota|cottage/)) return false;
-  return true;
-}
-
-function isDisliked(name: string, desc: string, disliked: string[]): boolean {
-  const text = `${name} ${desc}`.toLowerCase();
-  return disliked.some(d => text.includes(d));
-}
-
-// ──── Generate plan items from template ────
-function generatePlanFromTemplate(
-  template: any, kcalTarget: number, macros: { protein: number; carbs: number; fat: number },
-  restrictions: string[], disliked: string[], planOptionIndex: number = 0
+function generateRealisticPlan(
+  goal: string,
+  kcalTarget: number,
+  macros: { protein: number; carbs: number; fat: number },
+  restrictions: string[],
+  disliked: string[],
+  planOptionIndex: number = 0,
 ): any[] {
-  const meals = (template.meals || []) as any[];
   const items: any[] = [];
-
-  // Fallback: if template has no meals defined, generate basic structure
-  if (meals.length === 0) {
-    const defaultMealTypes = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
-    for (let day = 0; day < 7; day++) {
-      for (const mealType of defaultMealTypes) {
-        const targetKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT[mealType] || 0.15));
-        const mealMacroRatio = targetKcal / kcalTarget;
-        items.push({
-          meal_type: mealType,
-          day_of_week: day,
-          title: mealType === "breakfast" ? "Café da Manhã" :
-                 mealType === "morning_snack" ? "Lanche da Manhã" :
-                 mealType === "lunch" ? "Almoço" :
-                 mealType === "afternoon_snack" ? "Lanche da Tarde" :
-                 mealType === "dinner" ? "Jantar" : "Ceia",
-          description: "Refeição a ser personalizada pelo profissional.",
-          calories_target: targetKcal,
-          protein_target: Math.round(macros.protein * mealMacroRatio),
-          carbs_target: Math.round(macros.carbs * mealMacroRatio),
-          fat_target: Math.round(macros.fat * mealMacroRatio),
-        });
-      }
-    }
-    return items;
-  }
+  const mealTypes = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
 
   for (let day = 0; day < 7; day++) {
-    for (const mealTemplate of meals) {
-      const mealType = mealTemplate.meal_type || "lunch";
-      const foods = (mealTemplate.foods || []) as any[];
+    for (const mealType of mealTypes) {
       const targetKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT[mealType] || 0.15));
+      const options = getMealOptions(mealType, goal);
 
-      let allowedFoods = foods.filter((f: any) =>
-        isFoodAllowed(f.name || "", f.portion || "", restrictions) &&
-        !isDisliked(f.name || "", f.portion || "", disliked)
-      );
-
-      if (allowedFoods.length === 0) {
-        for (const f of foods) {
-          for (const sub of (f.substitutions || []) as string[]) {
-            if (isFoodAllowed(sub, "", restrictions) && !isDisliked(sub, "", disliked)) {
-              allowedFoods.push({ ...f, name: sub, _substituted: true });
-              break;
-            }
-          }
-        }
-      }
-      if (allowedFoods.length === 0) allowedFoods = foods;
-
-      // Use planOptionIndex to create different rotation patterns per option
-      const rotationSeed = planOptionIndex * 3;
-      const dayFoods = allowedFoods.map((f: any, fIdx: number) => {
-        // Different option = different days trigger substitution
-        const shouldRotate = (day + rotationSeed + fIdx) % 3 !== 0;
-        if (shouldRotate && (f.substitutions || []).length > 0 && !f._substituted) {
-          const subIdx = (day + planOptionIndex + fIdx) % f.substitutions.length;
-          const subName = f.substitutions[subIdx];
-          if (isFoodAllowed(subName, "", restrictions) && !isDisliked(subName, "", disliked)) {
-            return { ...f, name: subName, _rotated: true };
-          }
-        }
-        return f;
+      // Filter by restrictions and disliked
+      let validOptions = options.filter(opt => {
+        const allText = normalize(opt.description + " " + opt.foods.join(" "));
+        // Check restrictions
+        if (restrictions.includes("vegetarian") && /frango|carne|bife|tilapia|peixe|porco|sardinha|sobrecoxa|alcatra|patinho/.test(allText)) return false;
+        if (restrictions.includes("vegan") && /frango|carne|bife|tilapia|peixe|porco|ovo|leite|queijo|iogurte|requeijao|manteiga|mel/.test(allText)) return false;
+        if (restrictions.includes("gluten_free") && /pao|torrada|macarrao|aveia|granola|biscoito|trigo/.test(allText)) return false;
+        if (restrictions.includes("lactose_free") && /leite|queijo|iogurte|requeijao|manteiga/.test(allText)) return false;
+        // Check disliked
+        if (disliked.some(d => allText.includes(normalize(d)))) return false;
+        // Check blocked
+        if (opt.foods.some(f => isBlockedFood(f))) return false;
+        return true;
       });
 
-      const foodLines = dayFoods.map((f: any) => `• ${f.name} — ${f.portion || ""}`).join("\n");
-      const subsLines = dayFoods
-        .filter((f: any) => (f.substitutions || []).length > 0 && !f._rotated)
-        .map((f: any) => `• ${f.name}: ${f.substitutions.slice(0, 2).join(", ")}`)
-        .join("\n");
-      const description = `${foodLines}${subsLines ? `\n\n🔄 Substituições:\n${subsLines}` : ""}`;
+      if (validOptions.length === 0) validOptions = options; // fallback
 
-      const totalFoodKcal = dayFoods.reduce((sum: number, f: any) => sum + (f.calories || 0), 0) || 1;
-      const mealRatio = targetKcal / totalFoodKcal;
+      // Deterministic variety: rotate through options by day + planOptionIndex
+      const pickIdx = (day + planOptionIndex * 3) % validOptions.length;
+      const selected = validOptions[pickIdx];
+
+      // Scale to target calories
+      const scaleFactor = selected.kcal > 0 ? targetKcal / selected.kcal : 1;
+      const clampedScale = Math.max(0.6, Math.min(1.8, scaleFactor));
+
+      // Build substitutions text
+      const subsText = buildSubstitutionText(selected.foods, mealType);
+      const fullDesc = subsText
+        ? `${selected.description}\n\n🔄 Substituições:\n${subsText}`
+        : selected.description;
+
+      const mealMacroRatio = targetKcal / kcalTarget;
 
       items.push({
         meal_type: mealType,
         day_of_week: day,
-        title: mealTemplate.title || mealType,
-        description,
+        title: mealType === "breakfast" ? "Café da Manhã" :
+               mealType === "morning_snack" ? "Lanche da Manhã" :
+               mealType === "lunch" ? "Almoço" :
+               mealType === "afternoon_snack" ? "Lanche da Tarde" :
+               mealType === "dinner" ? "Jantar" : "Ceia",
+        description: fullDesc,
         calories_target: targetKcal,
-        protein_target: Math.round(dayFoods.reduce((s: number, f: any) => s + (f.protein || 0), 0) * mealRatio),
-        carbs_target: Math.round(dayFoods.reduce((s: number, f: any) => s + (f.carbs || 0), 0) * mealRatio),
-        fat_target: Math.round(dayFoods.reduce((s: number, f: any) => s + (f.fat || 0), 0) * mealRatio),
+        protein_target: Math.round(selected.protein * clampedScale),
+        carbs_target: Math.round(selected.carbs * clampedScale),
+        fat_target: Math.round(selected.fat * clampedScale),
       });
     }
   }
+
   return items;
 }
 
+function buildSubstitutionText(foods: string[], mealType: string): string {
+  const subs: string[] = [];
+  for (const food of foods) {
+    const n = normalize(food);
+    for (const [groupName, group] of Object.entries(SUBSTITUTION_GROUPS)) {
+      const match = group.find(item => n.includes(normalize(item)));
+      if (match) {
+        const alternatives = group.filter(item => normalize(item) !== normalize(match)).slice(0, 3);
+        if (alternatives.length > 0) {
+          subs.push(`• ${match} → ${alternatives.join(", ")}`);
+        }
+        break;
+      }
+    }
+  }
+  return subs.join("\n");
+}
+
 // ──── Post-generation macro reconciliation ────
-// Ensures daily totals match patient targets within clinical tolerance.
-// Adjusts each item proportionally so the sum aligns perfectly.
 function reconcileDailyMacros(
   items: any[],
   dailyKcalTarget: number,
   dailyMacros: { protein: number; carbs: number; fat: number },
 ): any[] {
-  // Group items by day
   const byDay = new Map<number, any[]>();
   for (const item of items) {
     const day = item.day_of_week;
@@ -275,21 +341,17 @@ function reconcileDailyMacros(
   }
 
   const reconciled: any[] = [];
-
   for (const [, dayItems] of byDay) {
-    // Sum current day totals
     const totalCals = dayItems.reduce((s: number, i: any) => s + (i.calories_target || 0), 0);
     const totalP = dayItems.reduce((s: number, i: any) => s + (i.protein_target || 0), 0);
     const totalC = dayItems.reduce((s: number, i: any) => s + (i.carbs_target || 0), 0);
     const totalF = dayItems.reduce((s: number, i: any) => s + (i.fat_target || 0), 0);
 
-    // Calculate correction factors (avoid div by zero)
     const calFactor = totalCals > 0 ? dailyKcalTarget / totalCals : 1;
     const pFactor = totalP > 0 ? dailyMacros.protein / totalP : 1;
     const cFactor = totalC > 0 ? dailyMacros.carbs / totalC : 1;
     const fFactor = totalF > 0 ? dailyMacros.fat / totalF : 1;
 
-    // Apply proportional correction to each item
     for (const item of dayItems) {
       reconciled.push({
         ...item,
@@ -300,7 +362,6 @@ function reconcileDailyMacros(
       });
     }
   }
-
   return reconciled;
 }
 
@@ -333,13 +394,13 @@ function buildGenerationMetadata(
   tmb: number, tdee: number, tdeeFactor: number, kcalTarget: number, goal: string,
   macros: { protein: number; carbs: number; fat: number }, weight: number, height: number,
   age: number, sex: string, activityLevel: string, dataSource: string,
-  bestTemplate: any, scoredTemplates: any[], restrictions: string[],
-  medicalConditions: string[], cookingPref: string, disliked: string[]
+  restrictions: string[], medicalConditions: string[], disliked: string[]
 ): Record<string, any> {
   const strategy = GOAL_STRATEGY[goal] || { calorie: "unknown", macro: "unknown" };
   return {
     engine_version: ENGINE_VERSION,
     protocol_version: PROTOCOL_VERSION,
+    generation_method: "realistic_preset_meals_v3",
     bmr_formula: "mifflin_st_jeor",
     bmr_value: tmb,
     tdee_factor: tdeeFactor,
@@ -354,27 +415,25 @@ function buildGenerationMetadata(
       fat_g: macros.fat,
     },
     patient_data: { weight, height, age, sex, activity_level: activityLevel },
-    template_selected: {
-      id: bestTemplate.id,
-      slug: bestTemplate.slug,
-      name: bestTemplate.name,
-      version: bestTemplate.template_version || 1,
-    },
-    template_score: bestTemplate._score,
-    score_breakdown: bestTemplate._breakdown,
-    alternatives: scoredTemplates.slice(1, 4).map((t: any) => ({
-      id: t.id, slug: t.slug, name: t.name, score: t._score,
-    })),
     data_sources: dataSource === "physical_assessment"
       ? ["anamnesis", "physical_assessment"]
       : ["anamnesis"],
     restrictions,
     medical_conditions: medicalConditions,
-    cooking_preference: cookingPref,
     disliked_foods: disliked,
+    food_rules: {
+      blocked_foods_enforced: true,
+      max_fruits_per_meal: MAX_FRUITS_PER_MEAL,
+      max_eggs_breakfast: MAX_EGGS_BREAKFAST,
+      regional_focus: "brasil_popular",
+    },
     generated_at: new Date().toISOString(),
   };
 }
+
+// ═══════════════════════════════════════════════════════════════
+// SERVE
+// ═══════════════════════════════════════════════════════════════
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -393,9 +452,9 @@ serve(async (req) => {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
     const userId = authUser.id;
 
-    // Rate limit: 10 requests per 10 minutes
     const rl = await checkRateLimit("generate-meal-plan", userId, 10, 10);
     if (!rl.allowed) return rateLimitResponse();
 
@@ -410,7 +469,7 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // ── 1. VALIDATION: Get completed anamnesis ──
+    // ── 1. Get completed anamnesis ──
     const { data: anamnesis } = await serviceClient
       .from("patient_anamnesis")
       .select("*")
@@ -428,7 +487,7 @@ serve(async (req) => {
 
     const answers = (anamnesis.answers || {}) as Record<string, any>;
 
-    // ── 2. VALIDATION: weight + height ──
+    // ── 2. Validate weight + height ──
     const weight = body.weight || answers.weight;
     const height = body.height || answers.height;
     if (!weight || weight < 20 || !height || height < 80) {
@@ -437,7 +496,7 @@ serve(async (req) => {
       });
     }
 
-    // ── 3. VALIDATION: goal ──
+    // ── 3. Goal ──
     const goal = body.goal || answers.goal || answers.objective;
     if (!goal) {
       return new Response(JSON.stringify({ error: "Objetivo do paciente não definido", code: "GOAL_MISSING" }), {
@@ -445,7 +504,7 @@ serve(async (req) => {
       });
     }
 
-    // ── 4. Calculate TMB / TDEE / macros deterministically ──
+    // ── 4. Calculate TMB / TDEE / macros ──
     const age = answers.age || 30;
     const sex = answers.sex || answers.gender || "male";
     const activityLevel = answers.activity_level || "light";
@@ -456,7 +515,7 @@ serve(async (req) => {
     const kcalTarget = calculateTargetKcal(tdee, goal);
     const macros = calculateMacros(kcalTarget, goal, weight);
 
-    // Check physical assessment override
+    // Physical assessment override
     const { data: physicalAssessment } = await serviceClient
       .from("physical_assessments")
       .select("calories_target, protein_target, carbs_target, fat_target, tdee, bmr")
@@ -483,68 +542,42 @@ serve(async (req) => {
     } : {};
     const mergedAnswers = { ...answers, ...pipelineOverrides };
 
-    // ── 5. Fetch ALL active diet templates ──
-    const { data: templates, error: tplErr } = await serviceClient
-      .from("diet_templates")
-      .select("*")
-      .eq("is_active", true);
-
-    if (tplErr || !templates || templates.length === 0) {
-      return new Response(JSON.stringify({ error: "Nenhum template de dieta ativo no banco", code: "NO_TEMPLATES" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // ── 6. Score and rank ALL templates ──
     const restrictions = mergedAnswers.restrictions || [];
     const medicalConditions = mergedAnswers.medical_conditions || mergedAnswers.health_conditions || [];
     const disliked = (mergedAnswers.disliked_foods || "").toLowerCase().split(",").map((s: string) => s.trim()).filter(Boolean);
-    const cookingPref = mergedAnswers.cooking_preference || "";
 
-    const scoredTemplates = templates
-      .map((t: any) => {
-        const { score, breakdown, reasons } = scoreTemplate(t, goal, restrictions, medicalConditions, finalKcal, cookingPref);
-        return { ...t, _score: score, _breakdown: breakdown, _reasons: reasons };
-      })
-      .sort((a: any, b: any) => b._score - a._score);
-
-    const bestTemplate = scoredTemplates[0];
-
-    // ── 7. Multi-plan support: generate N plans from top N templates ──
     const startDate = new Date().toISOString().split("T")[0];
+
+    // ── Multi-plan flow ──
     if (isPipeline && planCount > 1 && !meal_plan_id) {
-      const topTemplates = scoredTemplates.slice(0, planCount);
       const generatedPlans: any[] = [];
       const nutritionistId = body.nutritionistId;
 
-      for (let tplIdx = 0; tplIdx < topTemplates.length; tplIdx++) {
-        const template = topTemplates[tplIdx];
-        const rawItems = generatePlanFromTemplate(template, finalKcal, finalMacros, restrictions, disliked, tplIdx);
+      for (let tplIdx = 0; tplIdx < planCount; tplIdx++) {
+        const rawItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked, tplIdx);
         const planItems = reconcileDailyMacros(rawItems, finalKcal, finalMacros);
+
         const genMeta = buildGenerationMetadata(
           tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
-          age, sex, activityLevel, dataSource, template, scoredTemplates,
-          restrictions, medicalConditions, cookingPref, disliked
+          age, sex, activityLevel, dataSource, restrictions, medicalConditions, disliked
         );
 
+        const optionLabels = ["Simples", "Variada", "Alternativa"];
         const endDate = new Date();
         endDate.setDate(endDate.getDate() + 30);
 
         const { data: newPlan, error: planErr } = await serviceClient
           .from("meal_plans")
           .insert({
-            title: `Opção ${tplIdx + 1} — ${template.name}`,
-            description: `Gerado pelo Protocolo FitJourney v${ENGINE_VERSION}. Template: ${template.name}. Meta: ${finalKcal}kcal/dia. Score: ${template._score}pts.`,
+            title: `Opção ${tplIdx + 1} — ${optionLabels[tplIdx] || "Extra"}`,
+            description: `Plano realista gerado pelo Protocolo FitJourney v${ENGINE_VERSION}. Meta: ${finalKcal}kcal/dia. Comida brasileira popular.`,
             patient_id,
             nutritionist_id: nutritionistId,
             start_date: startDate,
             end_date: endDate.toISOString().split("T")[0],
             is_active: false,
             plan_status: "draft_auto_generated",
-            template_id: template.id,
-            template_slug: template.slug,
-            template_version: 1,
-            generation_source: "protocol_fitjourney",
+            generation_source: "protocol_fitjourney_v3",
             generated_by: userId,
             generation_metadata: genMeta,
           })
@@ -561,18 +594,13 @@ serve(async (req) => {
 
         generatedPlans.push({
           mealPlanId: newPlan.id,
-          templateName: template.name,
-          templateSlug: template.slug,
-          templateId: template.id,
-          score: template._score,
-          scoreBreakdown: template._breakdown,
-          reasons: template._reasons,
-          baseCalories: template.base_calories,
+          templateName: optionLabels[tplIdx] || "Extra",
+          score: 100 - tplIdx * 5,
           itemsCount: planItems.length,
         });
       }
 
-      // Save tips (once)
+      // Save tips
       const tips = generateTips(mergedAnswers);
       await serviceClient.from("patient_tips").delete().eq("user_id", patient_id);
       if (tips.length > 0) {
@@ -592,14 +620,14 @@ serve(async (req) => {
       await serviceClient.from("patient_timeline").insert({
         patient_id,
         event_type: "meal_plan",
-        title: "Opções de Plano Alimentar Geradas",
-        description: `${generatedPlans.length} opções geradas pelo Protocolo FitJourney v${ENGINE_VERSION}. Meta: ${finalKcal}kcal/dia.`,
+        title: "Planos Alimentares Realistas Gerados",
+        description: `${generatedPlans.length} opções geradas pelo Protocolo FitJourney v${ENGINE_VERSION}. Meta: ${finalKcal}kcal/dia. Comida brasileira popular.`,
         metadata: {
           type: "multi_plan_generated",
           protocol: PROTOCOL_VERSION,
           engine_version: ENGINE_VERSION,
           plan_count: generatedPlans.length,
-          plans: generatedPlans.map(p => ({ id: p.mealPlanId, template: p.templateName, score: p.score })),
+          plans: generatedPlans.map(p => ({ id: p.mealPlanId, template: p.templateName })),
         },
         created_by: userId,
       });
@@ -607,23 +635,15 @@ serve(async (req) => {
       const explainability = {
         engine_version: ENGINE_VERSION,
         protocol_version: PROTOCOL_VERSION,
+        generation_method: "realistic_preset_meals_v3",
         calculation: {
           bmr_formula: "mifflin_st_jeor",
           tmb, tdee_factor: tdeeFactor, tdee,
           goal_adjustment: GOAL_KCAL_ADJUSTMENT[goal] || 0,
           final_kcal: finalKcal, data_source: dataSource,
         },
-        patient_profile: {
-          weight, height, age, sex,
-          activity_level: activityLevel, goal,
-          goal_strategy: (GOAL_STRATEGY[goal] || {}).calorie,
-          macro_strategy: (GOAL_STRATEGY[goal] || {}).macro,
-          restrictions: restrictions.length > 0 ? restrictions : ["nenhuma"],
-          medical_conditions: medicalConditions.length > 0 ? medicalConditions : ["nenhuma"],
-          disliked_foods: disliked.length > 0 ? disliked : ["nenhum"],
-          cooking_preference: cookingPref || "sem preferência",
-        },
         macros: { protein: finalMacros.protein, carbs: finalMacros.carbs, fat: finalMacros.fat },
+        food_rules: { blocked_foods_enforced: true, regional_focus: "brasil_popular" },
       };
 
       return new Response(
@@ -641,18 +661,16 @@ serve(async (req) => {
       );
     }
 
-    // ── Single plan flow (original) ──
-    const rawPlanItems = generatePlanFromTemplate(bestTemplate, finalKcal, finalMacros, restrictions, disliked);
+    // ── Single plan flow ──
+    const rawPlanItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked);
     const planItems = reconcileDailyMacros(rawPlanItems, finalKcal, finalMacros);
 
-    // ── 8. Build standardized generation_metadata ──
     const generationMetadata = buildGenerationMetadata(
       tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
-      age, sex, activityLevel, dataSource, bestTemplate, scoredTemplates,
-      restrictions, medicalConditions, cookingPref, disliked
+      age, sex, activityLevel, dataSource, restrictions, medicalConditions, disliked
     );
 
-    // ── 9. Create or update meal plan ──
+    // Create or update meal plan
     let finalMealPlanId = meal_plan_id;
 
     if (isPipeline && !meal_plan_id) {
@@ -663,18 +681,15 @@ serve(async (req) => {
       const { data: newPlan, error: planErr } = await serviceClient
         .from("meal_plans")
         .insert({
-          title: `Plano Personalizado — ${bestTemplate.name}`,
-          description: `Gerado pelo Protocolo FitJourney v${ENGINE_VERSION}. Template: ${bestTemplate.name}. Meta: ${finalKcal}kcal/dia.`,
+          title: `Plano Alimentar Realista`,
+          description: `Gerado pelo Protocolo FitJourney v${ENGINE_VERSION}. Meta: ${finalKcal}kcal/dia. Comida brasileira popular e acessível.`,
           patient_id,
           nutritionist_id: nutritionistId,
           start_date: startDate,
           end_date: endDate.toISOString().split("T")[0],
           is_active: false,
           plan_status: "draft_auto_generated",
-          template_id: bestTemplate.id,
-          template_slug: bestTemplate.slug,
-          template_version: 1,
-          generation_source: "protocol_fitjourney",
+          generation_source: "protocol_fitjourney_v3",
           generated_by: userId,
           generation_metadata: generationMetadata,
         })
@@ -686,7 +701,7 @@ serve(async (req) => {
     } else if (finalMealPlanId) {
       const { data: existingPlan } = await serviceClient
         .from("meal_plans")
-        .select("plan_status, template_id, generation_metadata")
+        .select("plan_status")
         .eq("id", finalMealPlanId)
         .single();
 
@@ -701,10 +716,7 @@ serve(async (req) => {
 
       await serviceClient.from("meal_plans").update({
         plan_status: "draft_auto_generated",
-        template_id: bestTemplate.id,
-        template_slug: bestTemplate.slug,
-        template_version: 1,
-        generation_source: "protocol_fitjourney",
+        generation_source: "protocol_fitjourney_v3",
         generated_by: userId,
         generation_metadata: generationMetadata,
       }).eq("id", finalMealPlanId);
@@ -716,8 +728,7 @@ serve(async (req) => {
       });
     }
 
-    const { error: deleteErr } = await serviceClient.from("meal_plan_items").delete().eq("meal_plan_id", finalMealPlanId);
-    if (deleteErr) throw new Error("Falha ao limpar itens anteriores: " + deleteErr.message);
+    await serviceClient.from("meal_plan_items").delete().eq("meal_plan_id", finalMealPlanId);
 
     const itemsToInsert = planItems.map((item: any) => ({ ...item, meal_plan_id: finalMealPlanId }));
     const { error: insertErr } = await serviceClient.from("meal_plan_items").insert(itemsToInsert);
@@ -726,7 +737,7 @@ serve(async (req) => {
         plan_status: "draft",
         description: "ERRO: Itens falharam ao inserir. Regenere o plano.",
       }).eq("id", finalMealPlanId);
-      throw new Error("Falha ao inserir itens (plano marcado para regeneração): " + insertErr.message);
+      throw new Error("Falha ao inserir itens: " + insertErr.message);
     }
 
     await serviceClient.from("patient_anamnesis").update({
@@ -746,28 +757,16 @@ serve(async (req) => {
     await serviceClient.from("patient_timeline").insert({
       patient_id,
       event_type: "meal_plan",
-      title: "Plano Alimentar Gerado — Protocolo FitJourney",
-      description: `Template: "${bestTemplate.name}" | Meta: ${finalKcal}kcal/dia | ${finalMacros.protein}g prot / ${finalMacros.carbs}g carb / ${finalMacros.fat}g gord | Fonte: ${dataSource}`,
+      title: "Plano Alimentar Realista Gerado",
+      description: `Protocolo FitJourney v${ENGINE_VERSION} | Meta: ${finalKcal}kcal/dia | ${finalMacros.protein}g prot / ${finalMacros.carbs}g carb / ${finalMacros.fat}g gord | Comida brasileira popular`,
       metadata: {
         type: "plan_generated",
         protocol: PROTOCOL_VERSION,
         engine_version: ENGINE_VERSION,
         meal_plan_id: finalMealPlanId,
-        template_id: bestTemplate.id,
-        template_slug: bestTemplate.slug,
-        template_name: bestTemplate.name,
-        template_score: bestTemplate._score,
-        score_breakdown: bestTemplate._breakdown,
         items_count: planItems.length,
         data_source: dataSource,
-        bmr_formula: "mifflin_st_jeor",
-        tmb, tdee, tdee_factor: tdeeFactor,
-        kcal_target: finalKcal,
-        macros: finalMacros,
-        goal,
-        goal_strategy: (GOAL_STRATEGY[goal] || {}).calorie,
-        restrictions,
-        medical_conditions: medicalConditions,
+        generation_method: "realistic_preset_meals_v3",
       },
       created_by: userId,
     });
@@ -775,34 +774,19 @@ serve(async (req) => {
     const explainability = {
       engine_version: ENGINE_VERSION,
       protocol_version: PROTOCOL_VERSION,
+      generation_method: "realistic_preset_meals_v3",
       calculation: {
         bmr_formula: "mifflin_st_jeor",
         tmb, tdee_factor: tdeeFactor, tdee,
         goal_adjustment: GOAL_KCAL_ADJUSTMENT[goal] || 0,
         final_kcal: finalKcal, data_source: dataSource,
       },
-      patient_profile: {
-        weight, height, age, sex,
-        activity_level: activityLevel, goal,
-        goal_strategy: (GOAL_STRATEGY[goal] || {}).calorie,
-        macro_strategy: (GOAL_STRATEGY[goal] || {}).macro,
-        restrictions: restrictions.length > 0 ? restrictions : ["nenhuma"],
-        medical_conditions: medicalConditions.length > 0 ? medicalConditions : ["nenhuma"],
-        disliked_foods: disliked.length > 0 ? disliked : ["nenhum"],
-        cooking_preference: cookingPref || "sem preferência",
-      },
       macros: { protein: finalMacros.protein, carbs: finalMacros.carbs, fat: finalMacros.fat },
-      selected_template: {
-        id: bestTemplate.id, slug: bestTemplate.slug, name: bestTemplate.name,
-        category: bestTemplate.category, base_calories: bestTemplate.base_calories,
-        score: bestTemplate._score, score_breakdown: bestTemplate._breakdown,
-        reasons: bestTemplate._reasons,
+      food_rules: {
+        blocked_foods_enforced: true,
+        max_fruits_per_meal: MAX_FRUITS_PER_MEAL,
+        regional_focus: "brasil_popular",
       },
-      alternative_templates: scoredTemplates.slice(1, 4).map((t: any) => ({
-        id: t.id, slug: t.slug, name: t.name,
-        base_calories: t.base_calories, score: t._score,
-        score_breakdown: t._breakdown, reasons: t._reasons,
-      })),
     };
 
     return new Response(
