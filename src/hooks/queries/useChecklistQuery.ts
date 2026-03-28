@@ -46,6 +46,7 @@ export function useChecklistTasks(date: string) {
 export function useToggleChecklistTask() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const inflightRef = React.useRef<Set<string>>(new Set());
 
   return useMutation({
