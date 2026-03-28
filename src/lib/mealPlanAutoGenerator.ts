@@ -1,18 +1,22 @@
 /**
- * Motor Automático de Montagem de Plano Alimentar — FitJourney Clinical Engine
+ * Motor Automático de Montagem de Plano Alimentar — FitJourney Clinical Engine v3.0
  * 100% determinístico. Sem IA generativa.
  * 
- * Algoritmo de seleção:
- * 1. Filtra meal_library por meal_type + goal_tag compatível
- * 2. Filtra por clinical_tags quando presentes
- * 3. Remove refeições com alimentos rejeitados pelo paciente
- * 4. Pontua cada refeição (goal match, clinical match, saciedade)
- * 5. Seleciona com diversidade: max 2 repetições/semana
- * 6. Escala porções ao alvo calórico da refeição
- * 7. Gera draft com metadata de explicabilidade
+ * v3.0: Refeições realistas pré-definidas com comida brasileira popular
+ * - Bloqueio de alimentos caros/importados
+ * - Limite de frutas (max 2 por refeição)
+ * - Estrutura fixa por objetivo (emagrecimento vs ganho de massa)
+ * - Substituições apenas dentro da mesma categoria
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import {
+  isBlockedFood,
+  getRealisticOptions,
+  getSubstitutionsFor,
+  MEAL_LIMITS,
+  BLOCKED_FOODS,
+} from "./mealPlanFoodRules";
 
 // ── Types ────────────────────────────────────────────────────
 export interface MealLibraryItem {
@@ -31,14 +35,14 @@ export interface MealLibraryItem {
 
 export interface PatientProfile {
   patientId: string;
-  goal: string;              // weight_loss | hypertrophy | low_carb | metabolic | functional | maintenance
+  goal: string;
   targetCalories: number;
   targetProtein: number;
   targetCarbs: number;
   targetFat: number;
-  restrictions: string[];    // e.g. ["gluten", "lactose"]
-  rejectedFoods: string[];   // e.g. ["fígado", "beterraba"]
-  clinicalTags: string[];    // e.g. ["diabetes", "intestinal"]
+  restrictions: string[];
+  rejectedFoods: string[];
+  clinicalTags: string[];
   weight?: number;
 }
 
@@ -52,7 +56,7 @@ export interface MealDistribution {
 }
 
 export interface GeneratedMealSlot {
-  day: number;               // 1-7
+  day: number;
   mealType: string;
   libraryItem: MealLibraryItem;
   targetKcal: number;
@@ -90,7 +94,7 @@ export interface AutoGenMetadata {
 }
 
 // ── Constants ────────────────────────────────────────────────
-const ENGINE_VERSION = "1.0.0";
+const ENGINE_VERSION = "3.0.0";
 const MAX_REPEAT_PER_WEEK = 2;
 const MEAL_TYPES: (keyof MealDistribution)[] = [
   "breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack",
@@ -105,7 +109,6 @@ const DEFAULT_DISTRIBUTION: MealDistribution = {
   evening_snack: 0.08,
 };
 
-// Goal compatibility map (primary → compatible fallbacks)
 const GOAL_COMPAT: Record<string, string[]> = {
   weight_loss: ["weight_loss", "low_carb", "metabolic", "functional"],
   hypertrophy: ["hypertrophy", "maintenance"],
@@ -115,8 +118,8 @@ const GOAL_COMPAT: Record<string, string[]> = {
   maintenance: ["maintenance", "functional", "hypertrophy"],
 };
 
-const SCALE_MIN = 0.4;
-const SCALE_MAX = 2.2;
+const SCALE_MIN = 0.5;
+const SCALE_MAX = 1.8; // Reduced from 2.2 to prevent absurd quantities
 
 // ── Main Engine ──────────────────────────────────────────────
 export async function generateMealPlanFromLibrary(
@@ -131,12 +134,24 @@ export async function generateMealPlanFromLibrary(
     .select("*")
     .eq("is_active", true);
 
-  const allItems = (rawItems || []) as unknown as MealLibraryItem[];
+  let allItems = (rawItems || []) as unknown as MealLibraryItem[];
+  
+  // 2. FILTER: Remove items with blocked foods
+  allItems = allItems.filter(item => {
+    if (!Array.isArray(item.foods)) return true;
+    const hasBlocked = item.foods.some(f => isBlockedFood(f.name || ""));
+    if (hasBlocked) {
+      warnings.push(`Item "${item.title}" removido: contém alimento bloqueado`);
+    }
+    return !hasBlocked;
+  });
+
   if (allItems.length === 0) {
-    return { success: false, slots: [], metadata: emptyMeta(profile, distribution, 0), warnings: ["Nenhum item na biblioteca de refeições."] };
+    // Fallback: generate from realistic presets
+    return generateFromPresets(profile, distribution);
   }
 
-  // 2. Pre-filter: remove items with rejected foods
+  // 3. Pre-filter: remove items with rejected foods
   const rejectedLower = profile.rejectedFoods.map((f) => f.toLowerCase());
   const filtered = allItems.filter((item) => {
     if (!Array.isArray(item.foods)) return true;
@@ -145,20 +160,31 @@ export async function generateMealPlanFromLibrary(
     );
   });
 
-  // 3. Generate 7 days
+  // 4. Validate fruit limits in remaining items
+  const validatedItems = filtered.filter(item => {
+    if (!Array.isArray(item.foods)) return true;
+    const fruitCount = item.foods.filter(f => {
+      const n = (f.name || "").toLowerCase();
+      return ["banana", "maçã", "mamão", "laranja", "goiaba", "morango", "tangerina", "manga", "melancia", "abacaxi", "uva", "melão"].some(fr => n.includes(fr));
+    }).length;
+    if (fruitCount > MEAL_LIMITS.maxFruitsPerMeal) {
+      warnings.push(`Item "${item.title}" removido: ${fruitCount} frutas (máx ${MEAL_LIMITS.maxFruitsPerMeal})`);
+      return false;
+    }
+    return true;
+  });
+
+  // 5. Generate 7 days
   const slots: GeneratedMealSlot[] = [];
-  const usageCount: Record<string, number> = {}; // libraryId → times used
+  const usageCount: Record<string, number> = {};
   let fallbackUsed = false;
 
   for (let day = 1; day <= 7; day++) {
     for (const mealType of MEAL_TYPES) {
       const targetKcal = Math.round(profile.targetCalories * distribution[mealType]);
-
-      // Get compatible goals
       const compatGoals = GOAL_COMPAT[profile.goal] || [profile.goal, "maintenance"];
 
-      // Score and filter candidates
-      let candidates = filtered
+      let candidates = validatedItems
         .filter((item) => item.meal_type === mealType)
         .map((item) => ({
           item,
@@ -167,16 +193,15 @@ export async function generateMealPlanFromLibrary(
         .filter((c) => c.score > 0)
         .sort((a, b) => b.score - a.score);
 
-      // Apply diversity: prefer items used less than MAX_REPEAT
+      // Diversity filter
       const diverse = candidates.filter((c) => (usageCount[c.item.id] || 0) < MAX_REPEAT_PER_WEEK);
       if (diverse.length > 0) {
         candidates = diverse;
       } else if (candidates.length > 0) {
         fallbackUsed = true;
-        warnings.push(`Dia ${day} ${mealType}: diversidade relaxada (poucos candidatos)`);
       }
 
-      // For lunch/dinner extra diversity: avoid same as other main meal today
+      // Lunch/dinner diversity
       if (mealType === "dinner") {
         const todayLunch = slots.find((s) => s.day === day && s.mealType === "lunch");
         if (todayLunch && candidates.length > 1) {
@@ -185,22 +210,31 @@ export async function generateMealPlanFromLibrary(
         }
       }
 
-      // Select best candidate (with slight randomization among top 3 for variety)
       const topN = candidates.slice(0, Math.min(3, candidates.length));
       const selected = topN.length > 0 ? topN[deterministicPick(day, mealType, topN.length)] : null;
 
       if (!selected) {
-        // Absolute fallback: pick any item of this meal_type
-        const anyFallback = filtered.find((item) => item.meal_type === mealType);
-        if (anyFallback) {
-          fallbackUsed = true;
-          warnings.push(`Dia ${day} ${mealType}: fallback genérico usado`);
-          const sf = calcScale(anyFallback.base_calories, targetKcal);
-          slots.push({ day, mealType, libraryItem: anyFallback, targetKcal, scaleFactor: sf, compatibilityScore: 0 });
-          usageCount[anyFallback.id] = (usageCount[anyFallback.id] || 0) + 1;
-        } else {
-          warnings.push(`Dia ${day} ${mealType}: nenhuma refeição disponível`);
-        }
+        // Fallback: use realistic presets
+        const presets = getRealisticOptions(mealType, profile.goal);
+        const presetIdx = day % presets.length;
+        const preset = presets[presetIdx];
+        fallbackUsed = true;
+        
+        const fakeLibItem: MealLibraryItem = {
+          id: `preset-${mealType}-${presetIdx}`,
+          title: preset.name,
+          meal_type: mealType,
+          goal_tag: profile.goal,
+          clinical_tags: [],
+          base_calories: preset.kcal,
+          protein: preset.protein,
+          carbs: preset.carbs,
+          fat: preset.fat,
+          foods: preset.foods.map(f => ({ name: f, portion: f })),
+          substitutions: [],
+        };
+        const sf = calcScale(preset.kcal, targetKcal);
+        slots.push({ day, mealType, libraryItem: fakeLibItem, targetKcal, scaleFactor: sf, compatibilityScore: 50 });
         continue;
       }
 
@@ -219,12 +253,12 @@ export async function generateMealPlanFromLibrary(
 
   const metadata: AutoGenMetadata = {
     engine_version: ENGINE_VERSION,
-    algorithm: "deterministic_scored_selection_v1",
+    algorithm: "deterministic_realistic_v3",
     patient_goal: profile.goal,
     target_calories: profile.targetCalories,
     distribution,
     total_library_items: allItems.length,
-    items_after_filter: filtered.length,
+    items_after_filter: validatedItems.length,
     diversity_enforced: !fallbackUsed,
     fallback_used: fallbackUsed,
     generated_at: new Date().toISOString(),
@@ -242,6 +276,67 @@ export async function generateMealPlanFromLibrary(
   return { success: true, slots, metadata, warnings };
 }
 
+// ── Fallback: generate entirely from presets ──
+function generateFromPresets(
+  profile: PatientProfile,
+  distribution: MealDistribution,
+): AutoGenerationResult {
+  const slots: GeneratedMealSlot[] = [];
+
+  for (let day = 1; day <= 7; day++) {
+    for (const mealType of MEAL_TYPES) {
+      const targetKcal = Math.round(profile.targetCalories * distribution[mealType]);
+      const presets = getRealisticOptions(mealType, profile.goal);
+      const pickIdx = (day + mealType.length) % presets.length;
+      const preset = presets[pickIdx];
+
+      const fakeLibItem: MealLibraryItem = {
+        id: `preset-${mealType}-${day}-${pickIdx}`,
+        title: preset.name,
+        meal_type: mealType,
+        goal_tag: profile.goal,
+        clinical_tags: [],
+        base_calories: preset.kcal,
+        protein: preset.protein,
+        carbs: preset.carbs,
+        fat: preset.fat,
+        foods: preset.foods.map(f => ({ name: f, portion: f })),
+        substitutions: [],
+      };
+
+      const sf = calcScale(preset.kcal, targetKcal);
+      slots.push({ day, mealType, libraryItem: fakeLibItem, targetKcal, scaleFactor: sf, compatibilityScore: 50 });
+    }
+  }
+
+  return {
+    success: true,
+    slots,
+    metadata: {
+      engine_version: ENGINE_VERSION,
+      algorithm: "preset_realistic_fallback_v3",
+      patient_goal: profile.goal,
+      target_calories: profile.targetCalories,
+      distribution,
+      total_library_items: 0,
+      items_after_filter: 0,
+      diversity_enforced: true,
+      fallback_used: true,
+      generated_at: new Date().toISOString(),
+      slots_summary: slots.map(s => ({
+        day: s.day,
+        meal_type: s.mealType,
+        library_meal_id: s.libraryItem.id,
+        library_meal_title: s.libraryItem.title,
+        score: 50,
+        scale_factor: s.scaleFactor,
+        target_kcal: s.targetKcal,
+      })),
+    },
+    warnings: ["Gerado a partir de presets realistas (biblioteca vazia ou filtrada)."],
+  };
+}
+
 // ── Scoring function ─────────────────────────────────────────
 function scoreMeal(
   item: MealLibraryItem,
@@ -251,95 +346,67 @@ function scoreMeal(
 ): number {
   let score = 0;
 
-  // Goal compatibility (0-40)
   const goalIdx = compatGoals.indexOf(item.goal_tag);
   if (goalIdx === 0) score += 40;
   else if (goalIdx === 1) score += 25;
   else if (goalIdx >= 2) score += 10;
-  else return 0; // incompatible goal → exclude
+  else return 0;
 
-  // Clinical tag match (0-30)
   if (clinicalTags.length > 0 && Array.isArray(item.clinical_tags)) {
     const matches = clinicalTags.filter((t) => item.clinical_tags.includes(t)).length;
     score += Math.min(30, matches * 15);
   }
 
-  // Caloric proximity (0-20): closer to target = higher score
   if (item.base_calories > 0 && targetKcal > 0) {
     const ratio = item.base_calories / targetKcal;
-    // Perfect = 1.0 → 20 points; far = 0 points
     const proximity = 1 - Math.min(1, Math.abs(ratio - 1));
     score += Math.round(proximity * 20);
   }
 
-  // Variety bonus: items with more foods get slight boost (0-10)
+  // Prefer simpler meals (fewer items = more realistic)
   if (Array.isArray(item.foods)) {
-    score += Math.min(10, item.foods.length * 2);
+    const count = item.foods.length;
+    if (count <= 3) score += 10;
+    else if (count <= 5) score += 5;
+    else score -= 5; // penalize overly complex meals
   }
 
   return score;
 }
 
-// ── Deterministic pick with patient-specific seed for differentiation ──
+// ── Seed and pick ────────────────────────────────────────────
 let _generationSeed = 0;
 
-/**
- * Set a seed before generating to ensure different patients get different plans.
- * Uses patient ID hash + timestamp to create uniqueness.
- */
 export function setGenerationSeed(patientId: string, optionIndex: number = 0) {
   let hash = 0;
   const seedStr = patientId + optionIndex.toString();
   for (let i = 0; i < seedStr.length; i++) {
     const char = seedStr.charCodeAt(i);
     hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
+    hash = hash & hash;
   }
   _generationSeed = Math.abs(hash);
 }
 
 function deterministicPick(day: number, mealType: string, max: number): number {
-  // Patient-seeded hash for unique plan per patient + option
   const mealHash = mealType.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
   const hash = (_generationSeed + day * 17 + mealHash * 31 + day * mealHash) % max;
   return Math.abs(hash) % max;
 }
 
-// ── Scale factor calculation ─────────────────────────────────
+// ── Scale factor ─────────────────────────────────────────────
 function calcScale(baseKcal: number, targetKcal: number): number {
   if (!baseKcal || baseKcal === 0) return 1;
   const raw = targetKcal / baseKcal;
   return Math.round(Math.max(SCALE_MIN, Math.min(SCALE_MAX, raw)) * 100) / 100;
 }
 
-// ── Empty metadata helper ────────────────────────────────────
-function emptyMeta(profile: PatientProfile, distribution: MealDistribution, total: number): AutoGenMetadata {
-  return {
-    engine_version: ENGINE_VERSION,
-    algorithm: "deterministic_scored_selection_v1",
-    patient_goal: profile.goal,
-    target_calories: profile.targetCalories,
-    distribution,
-    total_library_items: total,
-    items_after_filter: 0,
-    diversity_enforced: false,
-    fallback_used: false,
-    generated_at: new Date().toISOString(),
-    slots_summary: [],
-  };
-}
-
-// ── Helper: convert result to meal_plan_items inserts ────────
+// ── Convert to inserts ───────────────────────────────────────
 function normalizeGeneratedDayForStorage(day: number) {
-  // Generator uses 1-7 (Seg-Dom), while the database/editor use 0-6 (Dom-Sáb).
-  // This keeps Mon-Sat aligned and maps Sunday (7) to 0.
   return ((day % 7) + 7) % 7;
 }
 
-export function slotsToInserts(
-  slots: GeneratedMealSlot[],
-  planId: string,
-) {
+export function slotsToInserts(slots: GeneratedMealSlot[], planId: string) {
   type MealTypeEnum = "breakfast" | "morning_snack" | "lunch" | "afternoon_snack" | "dinner" | "evening_snack";
   return slots.flatMap((slot) => {
     const mealType = slot.mealType as MealTypeEnum;
@@ -375,7 +442,7 @@ export function slotsToInserts(
   });
 }
 
-// ── Helper: load patient profile from anamnesis ──────────────
+// ── Load patient profile ─────────────────────────────────────
 export async function loadPatientProfile(patientId: string): Promise<PatientProfile | null> {
   const { data: anamnesis } = await supabase
     .from("patient_anamnesis")
@@ -390,7 +457,6 @@ export async function loadPatientProfile(patientId: string): Promise<PatientProf
 
   const answers = (anamnesis.answers || {}) as Record<string, any>;
 
-  // Extract goal from answers
   const goalMap: Record<string, string> = {
     "Perder peso": "weight_loss",
     "Ganhar massa": "hypertrophy",
@@ -403,11 +469,9 @@ export async function loadPatientProfile(patientId: string): Promise<PatientProf
   const rawGoal = answers.objective || answers.goal || answers.objetivo || "";
   const goal = goalMap[rawGoal] || "maintenance";
 
-  // Extract restrictions
   const rawRestrictions = answers.restrictions || answers.restricoes || answers.intolerances || [];
   const restrictions = Array.isArray(rawRestrictions) ? rawRestrictions : [rawRestrictions].filter(Boolean);
 
-  // Extract rejected foods
   const rawRejected = answers.rejected_foods || answers.alimentos_rejeitados || [];
   const rejectedFoods = Array.isArray(rawRejected)
     ? rawRejected
@@ -415,7 +479,6 @@ export async function loadPatientProfile(patientId: string): Promise<PatientProf
       ? rawRejected.split(",").map((s: string) => s.trim()).filter(Boolean)
       : [];
 
-  // Clinical tags from conditions
   const rawConditions = answers.clinical_conditions || answers.condicoes_clinicas || [];
   const clinicalTags = Array.isArray(rawConditions) ? rawConditions : [];
 
