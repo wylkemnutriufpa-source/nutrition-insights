@@ -144,6 +144,9 @@ Deno.serve(async (req) => {
       else if (compositeScore >= 60) zone = "accelerated_evolution";
       else zone = "metabolic_adaptation";
 
+      // Resolve tenant from nutritionist
+      const tenantId = await resolveTenant(supabase, nid);
+
       states.push({
         patient_id: pid,
         zone,
@@ -154,6 +157,7 @@ Deno.serve(async (req) => {
         engagement_score: engagementScore,
         risk_score: riskScore,
         updated_at: new Date().toISOString(),
+        ...(tenantId ? { tenant_id: tenantId } : {}),
       });
 
       // DECISION GENERATION
