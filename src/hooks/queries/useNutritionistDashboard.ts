@@ -7,9 +7,10 @@ import { queryKeys } from "./queryKeys";
 
 export function useNutritionistDashboard() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
 
   return useQuery({
-    queryKey: queryKeys.dashboard.nutritionist(user?.id ?? ""),
+    queryKey: [...queryKeys.dashboard.nutritionist(user?.id ?? ""), tenantId],
     enabled: !!user,
     staleTime: 3 * 60 * 1000,
     queryFn: async () => {
