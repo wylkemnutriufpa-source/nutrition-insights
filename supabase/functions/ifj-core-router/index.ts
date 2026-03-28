@@ -1454,6 +1454,7 @@ serve(async (req) => {
 
     const body = await req.json();
     const inputText = body.input_text || body.question || body.command || "";
+    const forceTargetId = body.target_id || null; // From disambiguation re-execution
     const sessionKey = body.session_key || "default";
     const today = new Date().toISOString().split("T")[0];
 
