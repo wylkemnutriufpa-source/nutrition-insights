@@ -654,14 +654,24 @@ export default function OperationalDashboard() {
       <MetricsPanel />
 
       <Tabs defaultValue="alerts" className="w-full">
-        <TabsList className="w-full grid grid-cols-3">
+        <TabsList className="w-full grid grid-cols-5">
           <TabsTrigger value="alerts">Alertas</TabsTrigger>
+          <TabsTrigger value="monitor">Monitor</TabsTrigger>
+          <TabsTrigger value="dr">DR Test</TabsTrigger>
           <TabsTrigger value="killswitch">Kill Switch</TabsTrigger>
           <TabsTrigger value="runbooks">Runbooks</TabsTrigger>
         </TabsList>
 
         <TabsContent value="alerts" className="mt-4">
           <AlertsPanel />
+        </TabsContent>
+
+        <TabsContent value="monitor" className="mt-4">
+          <MonitorStatusPanel />
+        </TabsContent>
+
+        <TabsContent value="dr" className="mt-4">
+          <DRSimulationPanel />
         </TabsContent>
 
         <TabsContent value="killswitch" className="mt-4">
