@@ -15524,6 +15524,10 @@ export type Database = {
           trigger_name: string
         }[]
       }
+      get_nutritionist_dashboard_stats: {
+        Args: { _nutritionist_id: string }
+        Returns: Json
+      }
       get_patient_active_protocol: {
         Args: { _patient_id: string }
         Returns: {
@@ -15535,6 +15539,10 @@ export type Database = {
           start_date: string
           status: string
         }[]
+      }
+      get_patient_dashboard_stats: {
+        Args: { _patient_id: string }
+        Returns: Json
       }
       get_patient_emails: {
         Args: { _patient_ids: string[] }

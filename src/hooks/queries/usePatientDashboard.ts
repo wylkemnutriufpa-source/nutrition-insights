@@ -9,27 +9,53 @@ export function usePatientDashboard() {
   return useQuery({
     queryKey: queryKeys.dashboard.patient(user?.id ?? ""),
     enabled: !!user,
-    staleTime: 5 * 1000, // 5s — fast refresh for lifecycle sync
+    staleTime: 5 * 1000,
     queryFn: async () => {
       const userId = user!.id;
       const today = new Date().toISOString().split("T")[0];
 
-      const [statsRes, checkRes, anamRes, aptRes, mealsRes, msgRes] = await Promise.all([
-        supabase.from("player_stats").select("*").eq("user_id", userId).maybeSingle(),
+      // Single RPC for counts + stats
+      const { data: rpcStats, error: rpcError } = await supabase.rpc(
+        "get_patient_dashboard_stats" as any,
+        { _patient_id: userId }
+      );
+
+      // Full data still needs row-level fetches for checklist items, meals, anamnesis
+      const [checkRes, anamRes, mealsRes] = await Promise.all([
         supabase.from("checklist_tasks").select("*").eq("patient_id", userId).eq("date", today).order("category"),
         supabase.from("patient_anamnesis").select("*").eq("user_id", userId).eq("status", "completed").order("created_at", { ascending: false }).limit(1),
-        supabase.from("patient_appointments").select("*").eq("patient_id", userId).gte("appointment_date", new Date().toISOString()).order("appointment_date").limit(1),
         supabase.from("meals").select("*").eq("user_id", userId).order("logged_at", { ascending: false }).limit(3),
-        supabase.from("chat_messages").select("id", { count: "exact", head: true }).eq("receiver_id", userId).eq("is_read", false),
       ]);
 
+      // Use RPC stats when available, fallback to client-side
+      const unreadMessages = rpcError ? 0 : ((rpcStats as any)?.unread_messages || 0);
+      const stats = rpcError ? null : ((rpcStats as any)?.stats || null);
+      const nextAppointment = rpcError ? null : ((rpcStats as any)?.next_appointment || null);
+
+      // If RPC failed, fetch stats and appointment separately
+      if (rpcError) {
+        const [statsRes, aptRes, msgRes] = await Promise.all([
+          supabase.from("player_stats").select("*").eq("user_id", userId).maybeSingle(),
+          supabase.from("patient_appointments").select("*").eq("patient_id", userId).gte("appointment_date", new Date().toISOString()).order("appointment_date").limit(1),
+          supabase.from("chat_messages").select("id", { count: "exact", head: true }).eq("receiver_id", userId).eq("is_read", false),
+        ]);
+        return {
+          stats: statsRes.data,
+          checklistTasks: checkRes.data || [],
+          anamnesis: anamRes.data?.[0] || null,
+          nextAppointment: aptRes.data?.[0] || null,
+          recentMeals: mealsRes.data || [],
+          unreadMessages: msgRes.count || 0,
+        };
+      }
+
       return {
-        stats: statsRes.data,
+        stats,
         checklistTasks: checkRes.data || [],
         anamnesis: anamRes.data?.[0] || null,
-        nextAppointment: aptRes.data?.[0] || null,
+        nextAppointment,
         recentMeals: mealsRes.data || [],
-        unreadMessages: msgRes.count || 0,
+        unreadMessages,
       };
     },
   });
