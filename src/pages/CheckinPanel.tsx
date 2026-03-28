@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import StorageImage from "@/components/common/StorageImage";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
