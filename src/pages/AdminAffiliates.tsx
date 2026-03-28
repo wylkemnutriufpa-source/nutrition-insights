@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useTenant } from "@/hooks/useTenant";
+import { withTenantFilter, getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

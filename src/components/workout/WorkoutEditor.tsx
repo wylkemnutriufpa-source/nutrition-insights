@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/hooks/useTenant";
+import { getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import { toast } from "sonner";
 import ExerciseLibrary from "./ExerciseLibrary";
 import {

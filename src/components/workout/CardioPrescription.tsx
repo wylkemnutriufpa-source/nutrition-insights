@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/hooks/useTenant";
+import { withTenantFilter, getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
