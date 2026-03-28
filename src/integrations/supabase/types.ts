@@ -2243,6 +2243,36 @@ export type Database = {
         }
         Relationships: []
       }
+      clinical_file_access_log: {
+        Row: {
+          access_type: string
+          accessed_at: string
+          bucket: string
+          file_path: string
+          id: string
+          ip_address: string | null
+          user_id: string
+        }
+        Insert: {
+          access_type?: string
+          accessed_at?: string
+          bucket: string
+          file_path: string
+          id?: string
+          ip_address?: string | null
+          user_id: string
+        }
+        Update: {
+          access_type?: string
+          accessed_at?: string
+          bucket?: string
+          file_path?: string
+          id?: string
+          ip_address?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       clinical_flags_catalog: {
         Row: {
           category: string
