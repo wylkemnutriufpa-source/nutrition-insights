@@ -83,7 +83,7 @@ export default function ClinicalWorkspace() {
         {/* Tab system */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full justify-start overflow-x-auto bg-card border border-border rounded-xl p-1 h-auto flex-wrap">
-            {TABS.map((tab) => {
+            {visibleTabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <TabsTrigger
