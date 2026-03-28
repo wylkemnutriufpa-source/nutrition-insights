@@ -726,42 +726,48 @@ function NutritionistDashboardContent() {
         </div>
       </motion.div>
 
-      {/* ── 6️⃣ Evolution Analytics ── */}
-      <motion.div variants={item}>
-        <ExpandablePanel title="Evolução Geral">
-          <PatientEvolutionCharts
-            data={evolutionData}
-            activePeriod={evolutionPeriod}
-            onPeriodChange={(days) => setEvolutionPeriod(days)}
-          />
-        </ExpandablePanel>
-      </motion.div>
+      {/* ── 6️⃣ Evolution Analytics — PRO+ ── */}
+      {minMode("pro") && (
+        <motion.div variants={item}>
+          <ExpandablePanel title="Evolução Geral">
+            <PatientEvolutionCharts
+              data={evolutionData}
+              activePeriod={evolutionPeriod}
+              onPeriodChange={(days) => setEvolutionPeriod(days)}
+            />
+          </ExpandablePanel>
+        </motion.div>
+      )}
 
-      {/* ── Adherence Analytics ── */}
-      <motion.div variants={item}>
-        <ExpandablePanel title="Análise de Adesão">
-          <AdherenceAnalytics
-            patientCount={patientCount}
-            riskPatients={riskPatients}
-            evolutionData={evolutionData}
-          />
-        </ExpandablePanel>
-      </motion.div>
+      {/* ── Adherence Analytics — PRO+ ── */}
+      {minMode("pro") && (
+        <motion.div variants={item}>
+          <ExpandablePanel title="Análise de Adesão">
+            <AdherenceAnalytics
+              patientCount={patientCount}
+              riskPatients={riskPatients}
+              evolutionData={evolutionData}
+            />
+          </ExpandablePanel>
+        </motion.div>
+      )}
 
-      {/* ── Advanced Analytics Charts ── */}
-      <motion.div variants={item}>
-        <ExpandablePanel title="Analytics Avançados">
-          <DashboardAdvancedCharts
-            riskPatients={riskPatients}
-            evolutionData={evolutionData}
-            programPerformance={programPerformance}
-            patientCount={patientCount}
-          />
-        </ExpandablePanel>
-      </motion.div>
+      {/* ── Advanced Analytics Charts — ADVANCED ── */}
+      {minMode("advanced") && (
+        <motion.div variants={item}>
+          <ExpandablePanel title="Analytics Avançados">
+            <DashboardAdvancedCharts
+              riskPatients={riskPatients}
+              evolutionData={evolutionData}
+              programPerformance={programPerformance}
+              patientCount={patientCount}
+            />
+          </ExpandablePanel>
+        </motion.div>
+      )}
 
-
-      {riskPatients.length > 0 && (
+      {/* ── Health Score — PRO+ ── */}
+      {minMode("pro") && riskPatients.length > 0 && (
         <motion.div variants={item}>
           <ExpandablePanel title="Health Score dos Pacientes">
             <div className="glass-premium rounded-xl p-5 shimmer-sweep">
@@ -794,10 +800,12 @@ function NutritionistDashboardContent() {
         </motion.div>
       )}
 
-      {/* ── System Usage Gamification ── */}
-      <motion.div variants={item}>
-        <SystemUsageCard />
-      </motion.div>
+      {/* ── System Usage Gamification — ADVANCED ── */}
+      {minMode("advanced") && (
+        <motion.div variants={item}>
+          <SystemUsageCard />
+        </motion.div>
+      )}
 
       {/* ── 9️⃣ Module Shortcut Grid (Premium) ── */}
       <motion.div variants={item}>
