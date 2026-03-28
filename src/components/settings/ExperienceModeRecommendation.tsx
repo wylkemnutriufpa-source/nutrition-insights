@@ -1,8 +1,14 @@
-import { useExperienceModeRecommendation } from "@/hooks/useExperienceModeRecommendation";
+import {
+  useExperienceModeRecommendation,
+  dismissRecommendation,
+  markRecommendationApplied,
+  isRecommendationCoolingDown,
+} from "@/hooks/useExperienceModeRecommendation";
 import { useExperienceMode, type ExperienceMode } from "@/hooks/useExperienceMode";
-import { Sparkles } from "lucide-react";
+import { Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useState } from "react";
 
 const MODE_LABELS: Record<ExperienceMode, string> = {
   basic: "Básico",
@@ -15,22 +21,37 @@ const MODE_ORDER: ExperienceMode[] = ["basic", "pro", "advanced"];
 export default function ExperienceModeRecommendation() {
   const { suggested, reason, confidence, loading, factors } = useExperienceModeRecommendation();
   const { mode, setMode } = useExperienceMode();
+  const [dismissed, setDismissed] = useState(() => isRecommendationCoolingDown());
 
-  if (loading || suggested === mode) return null;
+  if (loading || suggested === mode || dismissed) return null;
 
   const handleApply = () => {
     setMode(suggested);
+    markRecommendationApplied();
+    setDismissed(true);
     toast.success(`Modo ${MODE_LABELS[suggested]} ativado 🚀`);
+  };
+
+  const handleDismiss = () => {
+    dismissRecommendation();
+    setDismissed(true);
   };
 
   const isUpgrade = MODE_ORDER.indexOf(suggested) > MODE_ORDER.indexOf(mode);
 
   return (
-    <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 flex items-start gap-3">
+    <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 flex items-start gap-3 relative">
+      <button
+        onClick={handleDismiss}
+        className="absolute top-2 right-2 text-muted-foreground hover:text-foreground transition-colors"
+        aria-label="Dispensar sugestão"
+      >
+        <X className="w-3.5 h-3.5" />
+      </button>
       <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
         <Sparkles className="w-4 h-4 text-primary" />
       </div>
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 pr-4">
         <p className="text-sm font-medium text-foreground">
           {isUpgrade
             ? `Você está pronto para o modo ${MODE_LABELS[suggested]} ✨`
