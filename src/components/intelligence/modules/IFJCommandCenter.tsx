@@ -30,13 +30,16 @@ import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 
 /* ─── Types ─── */
-type ActionType = "navigate" | "confirm";
+type ActionType = "navigate" | "confirm" | "disambiguate";
 
 type ActionButton = {
   label: string;
   route: string;
   type?: ActionType;
   confirmMessage?: string;
+  patient_id?: string;
+  original_command?: string;
+  subtitle?: string;
 };
 
 type Message = {
@@ -248,6 +251,12 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
       setConfirmAction(action);
       return;
     }
+    if (action.type === "disambiguate" && action.patient_id && action.original_command) {
+      // Re-send the original command with the selected patient ID
+      await logAudit("ifj_disambiguate_select", { patient_id: action.patient_id, label: action.label, command: action.original_command });
+      sendMessageWithTargetId(action.original_command, action.patient_id);
+      return;
+    }
     await logAudit("ifj_navigate", { route: action.route, label: action.label });
     navigate(action.route);
   }, [navigate, logAudit]);
@@ -261,18 +270,23 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
   }, [confirmAction, navigate, logAudit]);
 
   /* ─── Send Message (Deterministic — JSON, no streaming) ─── */
-  const sendMessage = async (text: string) => {
+  const sendMessage = async (text: string, targetId?: string) => {
     if (!text.trim() || isLoading || !user) return;
 
     const userMsg: Message = { role: "user", content: text.trim() };
-    setMessages(prev => [...prev, userMsg]);
-    setInput("");
+    if (!targetId) {
+      setMessages(prev => [...prev, userMsg]);
+      setInput("");
+    }
     setIsLoading(true);
 
-    await logAudit("ifj_command_sent", { command: text.trim().substring(0, 200) });
+    await logAudit("ifj_command_sent", { command: text.trim().substring(0, 200), target_id: targetId });
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
+      const payload: Record<string, unknown> = { command: text.trim(), isAdmin };
+      if (targetId) payload.target_id = targetId;
+
       const resp = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${config.edgeFunction}`,
         {
@@ -281,7 +295,7 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
             "Content-Type": "application/json",
             Authorization: `Bearer ${session?.access_token}`,
           },
-          body: JSON.stringify({ command: text.trim(), isAdmin }),
+          body: JSON.stringify(payload),
         }
       );
 
@@ -300,6 +314,9 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
         route: a.route,
         type: a.type || "navigate",
         confirmMessage: a.confirmMessage,
+        patient_id: a.patient_id,
+        original_command: a.original_command,
+        subtitle: a.subtitle,
       }));
       // Action level from meta.intent action_type or response_type
       const metaIntent = data.meta?.intent || "";
@@ -324,6 +341,10 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
       await logAudit("ifj_error", { error: String(e) });
     }
     setIsLoading(false);
+  };
+
+  const sendMessageWithTargetId = (text: string, targetId: string) => {
+    sendMessage(text, targetId);
   };
 
   return (
@@ -479,7 +500,7 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
 
                     {/* Action Buttons */}
                     {msg.actions && msg.actions.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 md:gap-2">
+                      <div className={`flex flex-wrap gap-1.5 md:gap-2 ${msg.actions.some(a => a.type === "disambiguate") ? "flex-col" : ""}`}>
                         {msg.actions.map((action, ai) => (
                           <motion.button
                             key={ai}
@@ -490,14 +511,23 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
                             className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-lg border transition-all text-[10px] md:text-xs font-medium ${
                               action.type === "confirm"
                                 ? "bg-destructive/5 border-destructive/30 text-destructive hover:bg-destructive/10"
-                                : "bg-gradient-to-r from-amber-500/10 to-amber-600/10 border-amber-500/30 text-amber-500 hover:from-amber-500/20 hover:to-amber-600/20"
+                                : action.type === "disambiguate"
+                                  ? "bg-gradient-to-r from-amber-500/5 to-amber-600/10 border-amber-500/25 text-foreground hover:from-amber-500/15 hover:to-amber-600/20 hover:border-amber-500/50 w-full justify-start"
+                                  : "bg-gradient-to-r from-amber-500/10 to-amber-600/10 border-amber-500/30 text-amber-500 hover:from-amber-500/20 hover:to-amber-600/20"
                             }`}
                           >
                             {action.type === "confirm"
                               ? <AlertTriangle className="w-3 h-3 md:w-3.5 md:h-3.5 shrink-0" />
-                              : <ExternalLink className="w-3 h-3 md:w-3.5 md:h-3.5 shrink-0" />
+                              : action.type === "disambiguate"
+                                ? <Play className="w-3 h-3 md:w-3.5 md:h-3.5 shrink-0 text-amber-500" />
+                                : <ExternalLink className="w-3 h-3 md:w-3.5 md:h-3.5 shrink-0" />
                             }
-                            <span className="truncate">{action.label}</span>
+                            <div className={`${action.type === "disambiguate" ? "flex flex-col items-start text-left" : ""}`}>
+                              <span className={`${action.type === "disambiguate" ? "font-semibold text-xs" : "truncate"}`}>{action.label}</span>
+                              {action.subtitle && (
+                                <span className="text-[9px] md:text-[10px] text-muted-foreground font-normal">{action.subtitle}</span>
+                              )}
+                            </div>
                           </motion.button>
                         ))}
                       </div>

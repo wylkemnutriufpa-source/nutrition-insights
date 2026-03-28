@@ -35,7 +35,7 @@ interface IFJResponse {
   response_type: string;
   summary: string;
   body_markdown: string;
-  actions: Array<{ label: string; route: string; type: string }>;
+  actions: Array<{ label: string; route: string; type: string; patient_id?: string; original_command?: string; subtitle?: string }>;
   meta: { intent: string; confidence: number; data_source: string; engine: string; used_context: boolean };
   sessionContext: Record<string, any>;
 }
@@ -454,6 +454,51 @@ function findByName(list: any[], searchName: string, nameField = "full_name"): {
   return { found: null, ambiguous: [] };
 }
 
+// ── SMART DISAMBIGUATION BUILDER ──────────────────────────────
+function buildDisambiguation(
+  ambiguous: PatientRecord[],
+  intent: IFJIntent,
+  originalCommand: string,
+  ctx: SessionCtx,
+  engine: string,
+  actionLabelPrefix?: string,
+): IFJResponse {
+  // Sort by relevance: patients with goal first, then alphabetically
+  const sorted = [...ambiguous].sort((a, b) => {
+    if (a.goal && !b.goal) return -1;
+    if (!a.goal && b.goal) return 1;
+    return a.full_name.localeCompare(b.full_name);
+  });
+
+  const statusLabel = (p: PatientRecord) => {
+    const s = p.journey_status || p.status || "";
+    const map: Record<string, string> = {
+      active: "Ativo", onboarding_active: "Em onboarding", awaiting_payment: "Aguardando pgto",
+      invited: "Convidado", completed: "Completo", "": "—",
+    };
+    return map[s] || s;
+  };
+
+  const actions = sorted.map((p) => ({
+    label: p.full_name,
+    subtitle: `${p.goal || "Sem objetivo"} · ${statusLabel(p)}`,
+    route: `/patients/${p.id}`,
+    type: "disambiguate" as const,
+    patient_id: p.id,
+    original_command: originalCommand,
+  }));
+
+  const md = `## Qual ${intent.target_name}?\n\nEncontrei **${sorted.length}** pacientes:\n\n` +
+    sorted.map((p, i) => `${i + 1}. **${p.full_name}** — ${p.goal || "Sem objetivo"} · _${statusLabel(p)}_`).join("\n") +
+    `\n\n💡 Selecione abaixo para continuar a ação.`;
+
+  return fmt(
+    "Qual paciente?", "🔍", "disambiguation",
+    `${sorted.length} pacientes com nome similar`,
+    md, actions, intent, engine, ctx,
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════
 // CONNECTORS — Schema-validated data fetchers
 // ═══════════════════════════════════════════════════════════════
@@ -816,7 +861,7 @@ function generateSmartSuggestions(n: string, intents: DBIntentRow[], phraseMap: 
 // ═══════════════════════════════════════════════════════════════
 // ACTION ENGINE — Execute real operations
 // ═══════════════════════════════════════════════════════════════
-async function runActionEngine(supabaseAdmin: any, supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], role: string): Promise<IFJResponse> {
+async function runActionEngine(supabaseAdmin: any, supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], role: string, originalCommand = ""): Promise<IFJResponse> {
   if (role === "patient" || role === "unknown")
     return fmt("Sem permissão", "🚫", "error", "Pacientes não podem executar ações.", "", [], intent, "action", ctx);
 
@@ -824,7 +869,7 @@ async function runActionEngine(supabaseAdmin: any, supabase: any, intent: IFJInt
     case "action_release_onboarding": {
       if (!intent.target_name) return fmt("Quem?", "❓", "error", "Diga o nome do paciente.", "Ex: *libere onboarding da Maria*", [], intent, "action", ctx);
       const { found, ambiguous } = findByName(patients, intent.target_name);
-      if (ambiguous.length > 0) return fmt("Qual paciente?", "🔍", "disambiguation", "Múltiplos encontrados", ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}**`).join("\n"), [], intent, "action", ctx);
+      if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, originalCommand, ctx, "action");
       if (!found) return fmt("Não encontrado", "❌", "error", "Paciente não encontrado.", "", [], intent, "action", ctx);
       const { error } = await supabaseAdmin.from("nutritionist_patients").update({ journey_status: "onboarding_active" }).eq("patient_id", found.id).eq("status", "active");
       if (error) return fmt("Erro", "❌", "error", "Erro ao liberar.", error.message, [], intent, "action", ctx);
@@ -887,7 +932,7 @@ async function runActionEngine(supabaseAdmin: any, supabase: any, intent: IFJInt
     case "action_set_premium": {
       if (!intent.target_name) return fmt("Quem?", "❓", "error", "Diga o nome.", "Ex: *coloque premium para Maria*", [], intent, "action", ctx);
       const { found, ambiguous } = findByName(patients, intent.target_name);
-      if (ambiguous.length > 0) return fmt("Qual?", "🔍", "disambiguation", "Múltiplos", ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}**`).join("\n"), [], intent, "action", ctx);
+      if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, originalCommand, ctx, "action");
       if (!found) return fmt("Não encontrado", "❌", "error", "Paciente não encontrado.", "", [], intent, "action", ctx);
       const { error } = await supabaseAdmin.from("user_subscriptions").upsert({ user_id: found.id, plan_type: "premium", is_active: true, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
       if (error) return fmt("Erro", "❌", "error", "Erro ao ativar.", error.message, [], intent, "action", ctx);
@@ -899,7 +944,7 @@ async function runActionEngine(supabaseAdmin: any, supabase: any, intent: IFJInt
     case "action_enable_ifj": {
       if (!intent.target_name) return fmt("Quem?", "❓", "error", "Diga o nome.", "Ex: *libere IFJ para Maria*", [], intent, "action", ctx);
       const { found, ambiguous } = findByName(patients, intent.target_name);
-      if (ambiguous.length > 0) return fmt("Qual?", "🔍", "disambiguation", "Múltiplos", ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}**`).join("\n"), [], intent, "action", ctx);
+      if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, originalCommand, ctx, "action");
       if (!found) return fmt("Não encontrado", "❌", "error", "Paciente não encontrado.", "", [], intent, "action", ctx);
       const { error } = await supabaseAdmin.from("ifj_patient_permissions").upsert({
         patient_id: found.id, ifj_mode: "standard", ifj_enabled: true,
@@ -916,7 +961,7 @@ async function runActionEngine(supabaseAdmin: any, supabase: any, intent: IFJInt
     case "action_compound_premium_ifj": {
       if (!intent.target_name) return fmt("Quem?", "❓", "error", "Diga o nome.", "Ex: *coloque premium e libere IFJ para Maria*", [], intent, "action", ctx);
       const { found, ambiguous } = findByName(patients, intent.target_name);
-      if (ambiguous.length > 0) return fmt("Qual?", "🔍", "disambiguation", "Múltiplos", ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}**`).join("\n"), [], intent, "action", ctx);
+      if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, originalCommand, ctx, "action");
       if (!found) return fmt("Não encontrado", "❌", "error", "Paciente não encontrado.", "", [], intent, "action", ctx);
       const [premRes, ifjRes] = await Promise.all([
         supabaseAdmin.from("user_subscriptions").upsert({ user_id: found.id, plan_type: "premium", is_active: true, updated_at: new Date().toISOString() }, { onConflict: "user_id" }),
@@ -1109,7 +1154,7 @@ CONTEXTO:
 // DOMAIN ENGINES (clinical, behavioral, financial, training, journey)
 // ═══════════════════════════════════════════════════════════════
 
-async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], today: string, role?: string): Promise<IFJResponse> {
+async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], today: string, role?: string, originalCommand = ""): Promise<IFJResponse> {
   const patientIds = patients.map(p => p.id);
   const safeIds = patientIds.length ? patientIds : ["00000000-0000-0000-0000-000000000000"];
 
@@ -1134,9 +1179,7 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
       if (intent.target_id) patient = patients.find(p => p.id === intent.target_id);
       else if (intent.target_name) {
         const { found, ambiguous } = findByName(patients, intent.target_name);
-        if (ambiguous.length > 0) {
-          const disambigActions = ambiguous.map((p: any) => ({ label: p.full_name, route: `/patients/${p.id}`, type: "navigate" }));
-          return fmt("Múltiplos", "🔍", "disambiguation", `${ambiguous.length} similares`, ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}** (${p.goal || "?"})`).join("\n"), disambigActions, intent, "clinical", ctx);
+        if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, originalCommand || intent.target_name || "", ctx, "clinical");
         }
         patient = found;
       }
@@ -1157,9 +1200,7 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
       let pid = intent.target_id || ctx.last_patient_id;
       if (!pid && intent.target_name) {
         const { found, ambiguous } = findByName(patients, intent.target_name);
-        if (ambiguous.length > 0) {
-          const disambigActions = ambiguous.map((p: any) => ({ label: `Anamnese de ${p.full_name}`, route: `/patients/${p.id}`, type: "navigate" }));
-          return fmt("Qual paciente?", "🔍", "disambiguation", `${ambiguous.length} pacientes com esse nome`, ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}** (${p.goal || "?"})`).join("\n"), disambigActions, intent, "clinical", ctx);
+        if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, originalCommand || intent.target_name || "", ctx, "clinical");
         }
         if (found) { pid = found.id; ctx.last_patient_id = found.id; ctx.last_patient_name = found.full_name; }
       }
@@ -1176,10 +1217,7 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
       let pid = intent.target_id || ctx.last_patient_id;
       if (!pid && intent.target_name) {
         const { found, ambiguous } = findByName(patients, intent.target_name);
-        if (ambiguous.length > 0) {
-          const disambigActions = ambiguous.map((p: any) => ({ label: `Exames de ${p.full_name}`, route: `/patients/${p.id}`, type: "navigate" }));
-          return fmt("Qual paciente?", "🔍", "disambiguation", `${ambiguous.length} pacientes com esse nome`, ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}** (${p.goal || "?"})`).join("\n"), disambigActions, intent, "clinical", ctx);
-        }
+        if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, originalCommand || intent.target_name || "", ctx, "clinical");
         if (found) { pid = found.id; ctx.last_patient_id = found.id; ctx.last_patient_name = found.full_name; }
       }
       if (!pid) return fmt("Quem?", "❓", "error", "Diga o nome do paciente.", "Ex: *exames da Maria*", [], intent, "clinical", ctx);
@@ -1196,11 +1234,7 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
       // Resolve patient by name if no ID
       if (!pid && intent.target_name) {
         const { found, ambiguous } = findByName(patients, intent.target_name);
-        if (ambiguous.length > 0) {
-          const disambigActions = ambiguous.map((p: any) => ({ label: `Plano de ${p.full_name}`, route: `/patients/${p.id}`, type: "navigate" }));
-          const disambigBody = ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}** (${p.goal || "?"})`).join("\n");
-          return fmt("Qual paciente?", "🔍", "disambiguation", `${ambiguous.length} pacientes com esse nome`, disambigBody, disambigActions, intent, "clinical", ctx);
-        }
+        if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, originalCommand || intent.target_name || "", ctx, "clinical");
         if (found) { pid = found.id; ctx.last_patient_id = found.id; ctx.last_patient_name = found.full_name; }
       }
       if (!pid) return fmt("Quem?", "❓", "error", "Diga o nome do paciente.", "Ex: *plano alimentar da Maria*", [], intent, "clinical", ctx);
@@ -1256,17 +1290,14 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
   }
 }
 
-async function runBehavioralEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], today: string): Promise<IFJResponse> {
+async function runBehavioralEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], today: string, originalCommand = ""): Promise<IFJResponse> {
   switch (intent.intent) {
     case "checklist_status": {
       let pid = intent.target_id || ctx.last_patient_id;
       // Resolve patient by name if target_name is present
       if (!pid && intent.target_name) {
         const { found, ambiguous } = findByName(patients, intent.target_name);
-        if (ambiguous.length > 0) {
-          const disambigActions = ambiguous.map((p: any) => ({ label: `Checklist de ${p.full_name}`, route: `/patients/${p.id}`, type: "navigate" }));
-          return fmt("Qual paciente?", "🔍", "disambiguation", `${ambiguous.length} pacientes com esse nome`, ambiguous.map((p: any, i: number) => `${i + 1}. **${p.full_name}** (${p.goal || "?"})`).join("\n"), disambigActions, intent, "behavioral", ctx);
-        }
+        if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, originalCommand || intent.target_name || "", ctx, "behavioral");
         if (found) { pid = found.id; ctx.last_patient_id = found.id; ctx.last_patient_name = found.full_name; }
       }
       if (pid) {
@@ -1409,6 +1440,7 @@ serve(async (req) => {
 
     const body = await req.json();
     const inputText = body.input_text || body.question || body.command || "";
+    const forceTargetId = body.target_id || null; // From disambiguation re-execution
     const sessionKey = body.session_key || "default";
     const today = new Date().toISOString().split("T")[0];
 
@@ -1445,6 +1477,12 @@ serve(async (req) => {
     // 5. Detect Intent FROM DATABASE
     const n = normalize(inputText);
     const intent = detectIntentFromDB(n, ctx, brain.intents, brain.phraseMap, role);
+
+    // 5b. Override target_id if disambiguation re-execution
+    if (forceTargetId) {
+      intent.target_id = forceTargetId;
+      intent.needs_disambiguation = false;
+    }
 
     // 6. Apply Guardrails
     const guardResult = applyGuardrails(intent, role, brain.guardrails, patientPerms, ctx);
@@ -1495,16 +1533,16 @@ serve(async (req) => {
           : fmt("Não encontrado", "❓", "error", "Tela não encontrada.", "Tente: *abrir financeiro*, *ir para pacientes*", [], intent, "navigation", ctx);
       }
       else if (intent.module === "action_engine") {
-        response = await runActionEngine(supabaseAdmin, supabase, intent, user.id, ctx, patients, role);
+        response = await runActionEngine(supabaseAdmin, supabase, intent, user.id, ctx, patients, role, inputText);
       }
       else if (intent.module === "priority_engine") {
         response = await runPriorityEngine(supabaseAdmin, intent, user.id, ctx, patients, today, role);
       }
       else if (intent.module === "clinical_engine") {
-        response = await runClinicalEngine(supabaseAdmin, intent, user.id, ctx, patients, today, role);
+        response = await runClinicalEngine(supabaseAdmin, intent, user.id, ctx, patients, today, role, inputText);
       }
       else if (intent.module === "behavioral_engine") {
-        response = await runBehavioralEngine(supabaseAdmin, intent, user.id, ctx, patients, today);
+        response = await runBehavioralEngine(supabaseAdmin, intent, user.id, ctx, patients, today, inputText);
       }
       else if (intent.module === "financial_engine") {
         response = await runFinancialEngine(supabaseAdmin, intent, user.id, ctx, patients, role);
