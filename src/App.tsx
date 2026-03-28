@@ -350,6 +350,7 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <TenantProvider>
+            <ExperienceModeProvider>
             <CelebrationProvider>
             <DarkModeInit />
             <NeuralScreensaver />
