@@ -21,6 +21,7 @@ import NeuralScreensaver from "@/components/common/NeuralScreensaver";
 import FitIntelligenceAssistant from "@/components/intelligence/FitIntelligenceAssistant";
 import IFJPatientCoach from "@/components/intelligence/modules/IFJPatientCoach";
 import { installGlobalErrorHandlers } from "@/lib/monitoring";
+import ExperienceRouteGuard from "@/components/common/ExperienceRouteGuard";
 import { initFeatureFlags } from "@/lib/featureFlags";
 import { useConsentGuard } from "@/hooks/useConsentGuard";
 import { usePaymentGuard } from "@/hooks/usePaymentGuard";
