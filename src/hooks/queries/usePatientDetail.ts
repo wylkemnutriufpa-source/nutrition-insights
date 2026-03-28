@@ -9,9 +9,10 @@ import type { PrestigePlan } from "@/hooks/usePrestige";
 
 export function usePatientDetail(patientId: string | undefined) {
   const { user, isAdmin } = useAuth();
+  const { tenantId } = useTenant();
 
   return useQuery({
-    queryKey: queryKeys.patients.detail(patientId ?? ""),
+    queryKey: [...queryKeys.patients.detail(patientId ?? ""), tenantId],
     enabled: !!patientId && !!user,
     staleTime: 10 * 1000, // 10s — fast refresh for lifecycle sync
     queryFn: async () => {
