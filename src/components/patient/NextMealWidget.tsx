@@ -37,6 +37,7 @@ const MEAL_TIMES: Record<string, string> = {
 
 export default function NextMealWidget() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [nextMeal, setNextMeal] = useState<MealSlot | null>(null);
   const [loading, setLoading] = useState(true);
 
