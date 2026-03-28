@@ -1290,7 +1290,7 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
   }
 }
 
-async function runBehavioralEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], today: string): Promise<IFJResponse> {
+async function runBehavioralEngine(supabase: any, intent: IFJIntent, userId: string, ctx: SessionCtx, patients: PatientRecord[], today: string, originalCommand = ""): Promise<IFJResponse> {
   switch (intent.intent) {
     case "checklist_status": {
       let pid = intent.target_id || ctx.last_patient_id;
