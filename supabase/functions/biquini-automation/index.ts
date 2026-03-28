@@ -41,6 +41,10 @@ Deno.serve(async (req) => {
     for (const enrollment of enrollments) {
       results.checked++;
 
+      // Resolve tenant_id for this enrollment's patient
+      const tenantId = await resolveTenant(supabase, enrollment.patient_id);
+      const tenantSpread = tenantId ? { tenant_id: tenantId } : {};
+
       // ─── WEIGHT DEADLINE CHECK (15 days) ───
       // Day 14: warning → Day 16+: block
       const activePhaseStatuses = [
