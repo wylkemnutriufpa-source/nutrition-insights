@@ -210,7 +210,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
       message: "Seu plano foi revisado e aprovado. Acesse em 'Minha Dieta'. Validade: 30 dias.",
       type: "success",
       action_url: "/my-diet",
-    });
+    } as any);
 
     // Clean up non-selected plan options
     if (planOptions.length > 1) {
