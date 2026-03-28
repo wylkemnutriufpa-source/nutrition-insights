@@ -1,10 +1,12 @@
 /**
- * Gerador Assistido de Plano Alimentar — FitJourney Clinical Engine v2.1
+ * Gerador Assistido de Plano Alimentar — FitJourney Clinical Engine v3.0
  * 
  * Gera 3 opções diferenciadas (Fácil, Equilibrada, Elaborada) com:
+ * - Refeições realistas com comida brasileira popular
+ * - Bloqueio de alimentos caros/importados
+ * - Limite de frutas (max 2 por refeição)
  * - Substituições reais por refeição com equivalência macro
- * - Ajuste inteligente de proteína por composição (não escala bruta)
- * - Aplicação segura (insert-first, delete-after)
+ * - Ajuste inteligente de proteína por composição
  * 
  * 100% determinístico. Sem IA generativa.
  */
@@ -12,6 +14,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import type { MealLibraryItem, GeneratedMealSlot } from "./mealPlanAutoGenerator";
+import { isBlockedFood, MEAL_LIMITS } from "./mealPlanFoodRules";
 
 // ── Types ────────────────────────────────────────────────────
 export type ComplexityTier = "easy" | "balanced" | "elaborate";
@@ -101,8 +104,8 @@ export interface AssistedGenerationResult {
 }
 
 // ── Constants ────────────────────────────────────────────────
-const SCALE_MIN = 0.4;
-const SCALE_MAX = 2.2;
+const SCALE_MIN = 0.5;
+const SCALE_MAX = 1.8; // Reduced from 2.2 to prevent absurd quantities
 
 const MEAL_CONFIGS: Record<number, { types: string[]; distribution: Record<string, number> }> = {
   3: {
@@ -302,14 +305,32 @@ export async function generateAssistedPlan(
     .select("*")
     .eq("is_active", true);
 
-  const allItems = (rawItems || []) as unknown as MealLibraryItem[];
+  let allItems = (rawItems || []) as unknown as MealLibraryItem[];
+  
+  // FILTER: Remove items with blocked foods (kefir, salmão, cottage, etc.)
+  allItems = allItems.filter(item => {
+    if (!Array.isArray(item.foods)) return true;
+    return !item.foods.some((f: any) => isBlockedFood(f.name || ""));
+  });
+
+  // FILTER: Remove items with excessive fruits (max 2 per meal)
+  allItems = allItems.filter(item => {
+    if (!Array.isArray(item.foods)) return true;
+    const fruitNames = ["banana", "maçã", "mamão", "laranja", "goiaba", "morango", "tangerina", "manga", "melancia", "abacaxi", "uva", "melão"];
+    const fruitCount = item.foods.filter((f: any) => {
+      const n = (f.name || "").toLowerCase();
+      return fruitNames.some(fn => n.includes(fn));
+    }).length;
+    return fruitCount <= MEAL_LIMITS.maxFruitsPerMeal;
+  });
+
   if (allItems.length === 0) {
     return {
       success: false,
       options: [],
       patientContext: context,
       kcalSuggestion: checkKcalCoherence(params.targetKcal, context),
-      warnings: ["Nenhum item na biblioteca de refeições."],
+      warnings: ["Nenhum item na biblioteca de refeições após filtros de qualidade."],
       generatedAt: new Date().toISOString(),
     };
   }
@@ -696,11 +717,13 @@ function scoreMealForTier(
 
   const foodCount = Array.isArray(item.foods) ? item.foods.length : 0;
   if (tier === "easy") {
-    score += foodCount <= 3 ? 10 : foodCount <= 5 ? 5 : 0;
+    // v3: strongly prefer simple meals for "easy" tier
+    score += foodCount <= 3 ? 15 : foodCount <= 5 ? 5 : -10;
   } else if (tier === "elaborate") {
     score += foodCount >= 5 ? 10 : foodCount >= 3 ? 5 : 0;
   } else {
-    score += Math.min(8, foodCount * 2);
+    // balanced: prefer moderate complexity
+    score += foodCount <= 5 ? 8 : foodCount <= 3 ? 5 : 0;
   }
 
   score += config.diversityBonus;
