@@ -83,7 +83,7 @@ export default function PlanRequestButton() {
           target_route: "/clinical-workspace",
           entity_type: "plan_request",
           entity_id: user.id,
-        });
+        } as any);
       }
       toast.success("📋 Solicitação enviada! Seu nutricionista será notificado.");
     }

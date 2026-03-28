@@ -144,7 +144,7 @@ export default function Appointments() {
         entity_type: "appointment",
         entity_id: apt?.id,
         target_route: "/appointments",
-      });
+      } as any);
     },
     onSuccess: () => {
       toast.success("Consulta agendada!");
@@ -170,7 +170,7 @@ export default function Appointments() {
         type: "appointment_request",
         entity_type: "appointment",
         target_route: "/appointments",
-      });
+      } as any);
     },
     onSuccess: () => {
       toast.success("Solicitação enviada ao seu profissional!");

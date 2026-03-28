@@ -167,7 +167,7 @@ export function useSendMessage() {
       // Online: send immediately
       const { data, error } = await supabase.from("chat_messages").insert({
         sender_id: user!.id, receiver_id: receiverId, message,
-      }).select().single();
+      } as any).select().single();
       if (error) throw error;
 
       // Replace optimistic message with real one

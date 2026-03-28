@@ -8,6 +8,8 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Dumbbell, Loader2, UserCheck, Save } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useTenant } from "@/lib/tenantContext";
+import { getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import {
   OrbitalSingleSelect,
   OrbitalMultiSelect,
@@ -473,6 +475,7 @@ const questions: Question[] = [
 // ──── Main page ────
 export default function FitnessAnamnesis() {
   const { user, isPersonal } = useAuth();
+  const { tenantId } = useTenant();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const forStudentId = searchParams.get("studentId");
@@ -545,7 +548,7 @@ export default function FitnessAnamnesis() {
       if (draftId) {
         await supabase.from("patient_anamnesis").update({ answers: currentAnswers, updated_at: new Date().toISOString() }).eq("id", draftId);
       } else {
-        const { data } = await supabase.from("patient_anamnesis").insert({ user_id: targetUserId, answers: currentAnswers, status: "draft" }).select("id").single();
+        const { data } = await supabase.from("patient_anamnesis").insert({ user_id: targetUserId, answers: currentAnswers, status: "draft", ...getTenantIdForInsert(tenantId) } as any).select("id").single();
         if (data) setDraftId(data.id);
       }
       setAutoSaveStatus("saved");
@@ -581,7 +584,8 @@ export default function FitnessAnamnesis() {
       user_id: targetUserId,
       answers,
       status: "completed",
-    };
+      ...getTenantIdForInsert(tenantId),
+    } as any;
 
     let error;
     if (draftId) {

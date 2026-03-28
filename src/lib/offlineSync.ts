@@ -98,7 +98,7 @@ class OfflineQueue {
               sender_id: action.data.sender_id,
               receiver_id: action.data.receiver_id,
               message: action.data.message,
-            });
+            } as any);
           if (error) throw error;
         }
         synced++;

@@ -284,7 +284,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
       message: `Seu plano não foi aprovado: ${rejectReason}. Ajuste seus dados e gere um novo.`,
       type: "warning",
       action_url: "/onboarding",
-    });
+    } as any);
 
     toast.success(`Plano de ${selectedPipeline.patient_name} rejeitado.`);
     setPipelines((prev) => prev.filter((p) => p.id !== selectedPipeline.id));

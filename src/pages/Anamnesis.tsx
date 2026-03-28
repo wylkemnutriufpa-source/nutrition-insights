@@ -10,6 +10,8 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Sparkles, Check, Heart, Brain, Loader2, UserCheck, Save, Lock, AlertTriangle } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useTenant } from "@/lib/tenantContext";
+import { getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
 import { getActiveAdaptiveBlocks, extractClinicalFlags, type AdaptiveBlock } from "@/lib/adaptiveAnamnesisBlocks";
 import { processAnamnesisFlags } from "@/lib/clinicalFlags";
@@ -526,6 +528,7 @@ function SliderInput({
 // ──── Main page ────
 export default function Anamnesis() {
   const { user, isNutritionist } = useAuth();
+  const { tenantId } = useTenant();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const forPatientId = searchParams.get("patientId");
@@ -662,7 +665,8 @@ export default function Anamnesis() {
             user_id: targetUserId,
             answers: currentAnswers,
             status: "draft",
-          })
+            ...getTenantIdForInsert(tenantId),
+          } as any)
           .select("id")
           .single();
         if (data) setDraftId(data.id);
@@ -793,7 +797,8 @@ export default function Anamnesis() {
       computed_carbs: carbs,
       computed_fat: fat,
       status: "completed",
-    };
+      ...getTenantIdForInsert(tenantId),
+    } as any;
 
     let anamData: any;
     if (draftId) {

@@ -553,7 +553,7 @@ export type Database = {
           metadata: Json | null
           resource_id: string | null
           resource_type: string
-          tenant_id: string | null
+          tenant_id: string
           user_id: string
         }
         Insert: {
@@ -564,7 +564,7 @@ export type Database = {
           metadata?: Json | null
           resource_id?: string | null
           resource_type: string
-          tenant_id?: string | null
+          tenant_id: string
           user_id: string
         }
         Update: {
@@ -575,7 +575,7 @@ export type Database = {
           metadata?: Json | null
           resource_id?: string | null
           resource_type?: string
-          tenant_id?: string | null
+          tenant_id?: string
           user_id?: string
         }
         Relationships: [
@@ -599,7 +599,7 @@ export type Database = {
           is_active: boolean
           name: string
           nutritionist_id: string
-          tenant_id: string | null
+          tenant_id: string
           trigger_type: string
           updated_at: string
         }
@@ -613,7 +613,7 @@ export type Database = {
           is_active?: boolean
           name: string
           nutritionist_id: string
-          tenant_id?: string | null
+          tenant_id: string
           trigger_type?: string
           updated_at?: string
         }
@@ -627,7 +627,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           nutritionist_id?: string
-          tenant_id?: string | null
+          tenant_id?: string
           trigger_type?: string
           updated_at?: string
         }
@@ -651,7 +651,7 @@ export type Database = {
           patient_id: string | null
           rule_id: string | null
           status: string
-          tenant_id: string | null
+          tenant_id: string
           trigger_data: Json | null
         }
         Insert: {
@@ -663,7 +663,7 @@ export type Database = {
           patient_id?: string | null
           rule_id?: string | null
           status?: string
-          tenant_id?: string | null
+          tenant_id: string
           trigger_data?: Json | null
         }
         Update: {
@@ -675,7 +675,7 @@ export type Database = {
           patient_id?: string | null
           rule_id?: string | null
           status?: string
-          tenant_id?: string | null
+          tenant_id?: string
           trigger_data?: Json | null
         }
         Relationships: [
@@ -779,7 +779,7 @@ export type Database = {
           priority: number
           status: string
           suggested_strategy: string
-          tenant_id: string | null
+          tenant_id: string
         }
         Insert: {
           adherence_at_moment?: number | null
@@ -799,7 +799,7 @@ export type Database = {
           priority?: number
           status?: string
           suggested_strategy: string
-          tenant_id?: string | null
+          tenant_id: string
         }
         Update: {
           adherence_at_moment?: number | null
@@ -819,7 +819,7 @@ export type Database = {
           priority?: number
           status?: string
           suggested_strategy?: string
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Relationships: [
           {
@@ -1112,7 +1112,7 @@ export type Database = {
           nutritionist_id: string
           primary_color: string | null
           secondary_color: string | null
-          tenant_id: string | null
+          tenant_id: string
           updated_at: string
         }
         Insert: {
@@ -1125,7 +1125,7 @@ export type Database = {
           nutritionist_id: string
           primary_color?: string | null
           secondary_color?: string | null
-          tenant_id?: string | null
+          tenant_id: string
           updated_at?: string
         }
         Update: {
@@ -1138,7 +1138,7 @@ export type Database = {
           nutritionist_id?: string
           primary_color?: string | null
           secondary_color?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           updated_at?: string
         }
         Relationships: [
@@ -1250,7 +1250,7 @@ export type Database = {
           scheduled_at: string | null
           scheduling_type: string | null
           status: string | null
-          tenant_id: string | null
+          tenant_id: string
           title: string
           updated_at: string | null
         }
@@ -1269,7 +1269,7 @@ export type Database = {
           scheduled_at?: string | null
           scheduling_type?: string | null
           status?: string | null
-          tenant_id?: string | null
+          tenant_id: string
           title: string
           updated_at?: string | null
         }
@@ -1288,7 +1288,7 @@ export type Database = {
           scheduled_at?: string | null
           scheduling_type?: string | null
           status?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           title?: string
           updated_at?: string | null
         }
@@ -1428,7 +1428,7 @@ export type Database = {
           message: string
           receiver_id: string
           sender_id: string
-          tenant_id: string | null
+          tenant_id: string
         }
         Insert: {
           created_at?: string
@@ -1438,7 +1438,7 @@ export type Database = {
           message: string
           receiver_id: string
           sender_id: string
-          tenant_id?: string | null
+          tenant_id: string
         }
         Update: {
           created_at?: string
@@ -1448,7 +1448,7 @@ export type Database = {
           message?: string
           receiver_id?: string
           sender_id?: string
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Relationships: [
           {
@@ -1514,7 +1514,7 @@ export type Database = {
           patient_id: string
           patient_protocol_id: string | null
           protocol_task_id: string | null
-          tenant_id: string | null
+          tenant_id: string
           title: string
         }
         Insert: {
@@ -1529,7 +1529,7 @@ export type Database = {
           patient_id: string
           patient_protocol_id?: string | null
           protocol_task_id?: string | null
-          tenant_id?: string | null
+          tenant_id: string
           title: string
         }
         Update: {
@@ -1544,7 +1544,7 @@ export type Database = {
           patient_id?: string
           patient_protocol_id?: string | null
           protocol_task_id?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           title?: string
         }
         Relationships: [
@@ -1781,7 +1781,7 @@ export type Database = {
           resolved_at: string | null
           resolved_by: string | null
           severity: string
-          tenant_id: string | null
+          tenant_id: string
           title: string
           trigger_source: string
         }
@@ -1797,7 +1797,7 @@ export type Database = {
           resolved_at?: string | null
           resolved_by?: string | null
           severity?: string
-          tenant_id?: string | null
+          tenant_id: string
           title: string
           trigger_source?: string
         }
@@ -1813,7 +1813,7 @@ export type Database = {
           resolved_at?: string | null
           resolved_by?: string | null
           severity?: string
-          tenant_id?: string | null
+          tenant_id?: string
           title?: string
           trigger_source?: string
         }
@@ -5569,7 +5569,7 @@ export type Database = {
           template_id: string | null
           template_slug: string | null
           template_version: number | null
-          tenant_id: string | null
+          tenant_id: string
           therapeutic_effectiveness_status: string | null
           therapeutic_efficacy_score: number | null
           title: string
@@ -5599,7 +5599,7 @@ export type Database = {
           template_id?: string | null
           template_slug?: string | null
           template_version?: number | null
-          tenant_id?: string | null
+          tenant_id: string
           therapeutic_effectiveness_status?: string | null
           therapeutic_efficacy_score?: number | null
           title: string
@@ -5629,7 +5629,7 @@ export type Database = {
           template_id?: string | null
           template_slug?: string | null
           template_version?: number | null
-          tenant_id?: string | null
+          tenant_id?: string
           therapeutic_effectiveness_status?: string | null
           therapeutic_efficacy_score?: number | null
           title?: string
@@ -5984,7 +5984,7 @@ export type Database = {
           metadata: Json | null
           priority: string | null
           target_route: string | null
-          tenant_id: string | null
+          tenant_id: string
           title: string
           type: string
           user_id: string
@@ -6000,7 +6000,7 @@ export type Database = {
           metadata?: Json | null
           priority?: string | null
           target_route?: string | null
-          tenant_id?: string | null
+          tenant_id: string
           title: string
           type?: string
           user_id: string
@@ -6016,7 +6016,7 @@ export type Database = {
           metadata?: Json | null
           priority?: string | null
           target_route?: string | null
-          tenant_id?: string | null
+          tenant_id?: string
           title?: string
           type?: string
           user_id?: string
@@ -6336,7 +6336,7 @@ export type Database = {
           nutritionist_id: string
           patient_id: string
           status: string
-          tenant_id: string | null
+          tenant_id: string
         }
         Insert: {
           checkin_frequency?: string | null
@@ -6349,7 +6349,7 @@ export type Database = {
           nutritionist_id: string
           patient_id: string
           status?: string
-          tenant_id?: string | null
+          tenant_id: string
         }
         Update: {
           checkin_frequency?: string | null
@@ -6362,7 +6362,7 @@ export type Database = {
           nutritionist_id?: string
           patient_id?: string
           status?: string
-          tenant_id?: string | null
+          tenant_id?: string
         }
         Relationships: [
           {
@@ -7233,7 +7233,7 @@ export type Database = {
           created_at: string
           id: string
           status: string
-          tenant_id: string | null
+          tenant_id: string
           updated_at: string
           user_id: string
         }
@@ -7249,7 +7249,7 @@ export type Database = {
           created_at?: string
           id?: string
           status?: string
-          tenant_id?: string | null
+          tenant_id: string
           updated_at?: string
           user_id: string
         }
@@ -7265,7 +7265,7 @@ export type Database = {
           created_at?: string
           id?: string
           status?: string
-          tenant_id?: string | null
+          tenant_id?: string
           updated_at?: string
           user_id?: string
         }
@@ -11832,7 +11832,7 @@ export type Database = {
           regain_probability: number | null
           search_vector: unknown
           show_in_ranking: boolean
-          tenant_id: string | null
+          tenant_id: string
           updated_at: string
           user_id: string
           weight_history_analyzed_at: string | null
@@ -11874,7 +11874,7 @@ export type Database = {
           regain_probability?: number | null
           search_vector?: unknown
           show_in_ranking?: boolean
-          tenant_id?: string | null
+          tenant_id: string
           updated_at?: string
           user_id: string
           weight_history_analyzed_at?: string | null
@@ -11916,7 +11916,7 @@ export type Database = {
           regain_probability?: number | null
           search_vector?: unknown
           show_in_ranking?: boolean
-          tenant_id?: string | null
+          tenant_id?: string
           updated_at?: string
           user_id?: string
           weight_history_analyzed_at?: string | null
@@ -16827,6 +16827,10 @@ export type Database = {
           phone: string
           user_id: string
         }[]
+      }
+      self_register_nutritionist: {
+        Args: { _full_name: string; _user_id: string }
+        Returns: Json
       }
       self_register_patient: {
         Args: { _referral_code?: string; _user_id: string }

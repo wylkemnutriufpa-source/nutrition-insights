@@ -148,7 +148,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
         message: "Seu nutricionista ativou o fluxo automático de onboarding. Complete as etapas para receber seu plano alimentar personalizado.",
         type: "success",
         action_url: "/onboarding",
-      });
+      } as any);
       fetchPipeline();
     }
     setCreating(false);
@@ -210,7 +210,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
       message: "Seu plano foi revisado e aprovado. Acesse em 'Minha Dieta'. Validade: 30 dias.",
       type: "success",
       action_url: "/my-diet",
-    });
+    } as any);
 
     // Clean up non-selected plan options
     if (planOptions.length > 1) {
@@ -256,7 +256,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
       message: `Seu plano não foi aprovado: ${rejectReason}. Ajuste seus dados e gere um novo.`,
       type: "warning",
       action_url: "/onboarding",
-    });
+    } as any);
 
     toast.success("Plano rejeitado. Paciente foi notificado.");
     setRejectDialog(false);

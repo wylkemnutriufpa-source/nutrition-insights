@@ -105,7 +105,7 @@ export default function Checklist() {
       date,
       completed: false,
     }));
-    const { error } = await supabase.from("checklist_tasks").insert(inserts);
+    const { error } = await supabase.from("checklist_tasks").insert(inserts as any);
     if (!error) {
       toast.success(t("checklist.seedSuccess"));
       queryClient.invalidateQueries({ queryKey: queryKeys.checklist.tasks(user.id, date) });
@@ -126,7 +126,7 @@ export default function Checklist() {
       date,
       completed: false,
     }));
-    const { error } = await supabase.from("checklist_tasks").insert(inserts);
+    const { error } = await supabase.from("checklist_tasks").insert(inserts as any);
     if (!error) {
       toast.success(t("checklist.resetSuccess"));
     } else {
@@ -186,7 +186,7 @@ export default function Checklist() {
         description: form.description || null,
         date,
         completed: false,
-      });
+      } as any);
       if (error) toast.error(error.message);
       else toast.success(t("checklist.taskAdded"));
     }

@@ -98,7 +98,7 @@ export default function PTStudentChat({ students }: Props) {
       sender_id: user.id,
       receiver_id: selectedStudent,
       message: newMessage.trim(),
-    });
+    } as any);
     if (error) {
       toast.error("Erro ao enviar mensagem");
     } else {
