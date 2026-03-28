@@ -42,6 +42,7 @@ const HR_ZONES = [
 
 export default function CardioPrescription({ students, plans }: Props) {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [prescriptions, setPrescriptions] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<any>({
