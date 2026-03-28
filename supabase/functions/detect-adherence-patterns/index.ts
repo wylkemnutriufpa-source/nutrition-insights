@@ -293,6 +293,7 @@ Deno.serve(async (req) => {
           patient_id: patientId,
           nutritionist_id: nutri.nutritionist_id,
           status: "success",
+          tenant_id: patientTenant,
           actions_executed: actionsExecuted,
           trigger_data: {
             pattern: rule.trigger_type,
