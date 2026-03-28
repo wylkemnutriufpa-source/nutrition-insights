@@ -665,7 +665,8 @@ export default function Anamnesis() {
             user_id: targetUserId,
             answers: currentAnswers,
             status: "draft",
-          })
+            ...getTenantIdForInsert(tenantId),
+          } as any)
           .select("id")
           .single();
         if (data) setDraftId(data.id);
