@@ -48,6 +48,23 @@ function AlertsPanel() {
     },
   });
 
+  // Realtime subscription for new alerts
+  const queryClient2 = useQueryClient();
+  useEffect(() => {
+    const channel = supabase
+      .channel("ops-alerts-live")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "system_alerts" },
+        () => {
+          queryClient2.invalidateQueries({ queryKey: ["system-alerts"] });
+          queryClient2.invalidateQueries({ queryKey: ["system-metrics-overview"] });
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [queryClient2]);
+
   const unresolvedCount = alerts.filter((a: any) => !a.is_resolved).length;
 
   const severityColors: Record<string, string> = {
