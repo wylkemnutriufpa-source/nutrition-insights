@@ -95,6 +95,11 @@ Deno.serve(async (req) => {
 
   const startTime = Date.now();
 
+  async function resolveTenantForUser(sb: any, uid: string): Promise<string | null> {
+    const { data } = await sb.from("user_tenants").select("tenant_id").eq("user_id", uid).limit(1).maybeSingle();
+    return data?.tenant_id || null;
+  }
+
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -792,6 +797,8 @@ async function createAlertIfNew(
 
   if ((count || 0) > 0) return false;
 
+  const tenantId = await resolveTenantForUser(supabase, nutritionistId);
+
   const { error: alertError } = await supabase
     .from("clinical_alerts")
     .insert({
@@ -802,6 +809,7 @@ async function createAlertIfNew(
       title: alertDef.title,
       description,
       trigger_source: alertDef.source,
+      tenant_id: tenantId,
       metadata: {
         ...metadata,
         engine_version: ALERT_ENGINE_VERSION,
@@ -820,6 +828,7 @@ async function createAlertIfNew(
       message: description,
       type: "clinical_alert",
       action_url: `/patients/${patientId}`,
+      tenant_id: tenantId,
       metadata: {
         alert_type: alertDef.type,
         severity: alertDef.severity,

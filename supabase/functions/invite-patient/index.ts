@@ -9,6 +9,11 @@ const corsHeaders = {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  async function resolveTenantForUser(sb: any, uid: string): Promise<string | null> {
+    const { data } = await sb.from("user_tenants").select("tenant_id").eq("user_id", uid).limit(1).maybeSingle();
+    return data?.tenant_id || null;
+  }
+
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -99,19 +104,23 @@ Deno.serve(async (req) => {
         phone: phone || null,
       }).eq("user_id", patientId);
     } else {
+      const callerTenant = await resolveTenantForUser(adminClient, caller.id);
       await adminClient.from("profiles").insert({
         user_id: patientId,
         full_name: name,
         phone: phone || null,
+        tenant_id: callerTenant,
       });
     }
 
     // Link to nutritionist
+    const callerTenantLink = await resolveTenantForUser(adminClient, caller.id);
     await adminClient.from("nutritionist_patients").upsert({
       nutritionist_id: caller.id,
       patient_id: patientId,
       status: "active",
       journey_status: "awaiting_payment",
+      tenant_id: callerTenantLink,
     }, { onConflict: "nutritionist_id,patient_id" });
 
     // Assign patient role
@@ -120,6 +129,15 @@ Deno.serve(async (req) => {
       role: "patient",
     }, { onConflict: "user_id,role" });
 
+    // Ensure patient is in same tenant
+    if (callerTenantLink) {
+      await adminClient.from("user_tenants").upsert({
+        user_id: patientId,
+        tenant_id: callerTenantLink,
+        role: "patient",
+      }, { onConflict: "user_id,tenant_id" }).then(() => {});
+    }
+
     // 3) Create in-app notification for the patient about their invite
     await adminClient.from("notifications").insert({
       user_id: patientId,
@@ -127,6 +145,7 @@ Deno.serve(async (req) => {
       message: `Seu acesso foi criado por ${name ? "seu nutricionista" : "um profissional"}. Aguarde a confirmação do pagamento para iniciar seu acompanhamento.`,
       type: "info",
       target_route: "/patient-dashboard",
+      tenant_id: callerTenantLink,
     });
 
     // Send magic link if requested

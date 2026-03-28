@@ -11,6 +11,11 @@ const log = (step: string, details?: any) => {
   console.log(`[STRIPE-WEBHOOK] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
 };
 
+async function resolveTenantForUser(supabase: any, userId: string): Promise<string | null> {
+  const { data } = await supabase.from("user_tenants").select("tenant_id").eq("user_id", userId).limit(1).maybeSingle();
+  return data?.tenant_id || null;
+}
+
 const PRODUCT_TIERS: Record<string, string> = {
   "prod_U7pdgNHCagBgbj": "Basic",
   "prod_U7pdcyM7zmUSwe": "Profissional",
@@ -89,6 +94,8 @@ serve(async (req) => {
             } catch (_) { /* ignore */ }
           }
 
+          const tenantId = await resolveTenantForUser(supabase, userId);
+
           // Create payment record
           await supabase.from("payments").insert({
             user_id: userId,
@@ -98,6 +105,7 @@ serve(async (req) => {
             currency: "BRL",
             status: "paid",
             paid_at: new Date().toISOString(),
+            tenant_id: tenantId,
             metadata: {
               plan_name: planName,
               subscription_id: subscriptionId,
@@ -115,6 +123,7 @@ serve(async (req) => {
             date: new Date().toISOString().split("T")[0],
             status: "paid",
             category: "assinatura",
+            tenant_id: tenantId,
           });
 
           log("Payment + financial transaction created", { userId, amount, planName });
@@ -158,6 +167,8 @@ serve(async (req) => {
               .maybeSingle();
 
             if (!existing) {
+              const tenantIdRecurring = await resolveTenantForUser(supabase, userId);
+
               await supabase.from("payments").insert({
                 user_id: userId,
                 gateway: "stripe",
@@ -166,6 +177,7 @@ serve(async (req) => {
                 currency: "BRL",
                 status: "paid",
                 paid_at: new Date().toISOString(),
+                tenant_id: tenantIdRecurring,
                 metadata: {
                   plan_name: planName,
                   subscription_id: subscriptionId,
@@ -181,6 +193,7 @@ serve(async (req) => {
                 date: new Date().toISOString().split("T")[0],
                 status: "paid",
                 category: "assinatura",
+                tenant_id: tenantIdRecurring,
               });
 
               log("Recurring payment recorded", { userId, amount, planName });
@@ -242,12 +255,14 @@ serve(async (req) => {
           const planName = PRODUCT_TIERS[productId] || "Premium";
 
           // Create notification for user about plan change
+          const tenantIdNotif = await resolveTenantForUser(supabase, userId);
           await supabase.from("notifications").insert({
             user_id: userId,
             title: "📋 Plano atualizado",
             message: `Seu plano foi atualizado para ${planName}. Status: ${subscription.status}.`,
             type: "subscription",
             action_url: "/settings",
+            tenant_id: tenantIdNotif,
           });
 
           log("User notified of plan update", { userId, planName });

@@ -18,7 +18,8 @@ async function importOnePatient(
   supabase: any,
   email: string,
   fullName: string,
-  nutritionistId: string
+  nutritionistId: string,
+  tenantId: string | null
 ): Promise<{ ok: boolean; error?: string }> {
   try {
     // Standard temporary password - patient changes on first login
@@ -71,7 +72,7 @@ async function importOnePatient(
         .maybeSingle();
 
       if (!profile) {
-        await supabase.from("profiles").insert({ user_id: finalId, full_name: fullName });
+        await supabase.from("profiles").insert({ user_id: finalId, full_name: fullName, tenant_id: tenantId });
       }
     } else if (finalId) {
       // RPC succeeded — ensure role exists (belt & suspenders)
@@ -93,9 +94,17 @@ async function importOnePatient(
 
     // Link to nutritionist
     await supabase.from("nutritionist_patients").upsert(
-      { nutritionist_id: nutritionistId, patient_id: finalId, status: "active", journey_status: "awaiting_payment" },
+      { nutritionist_id: nutritionistId, patient_id: finalId, status: "active", journey_status: "awaiting_payment", tenant_id: tenantId },
       { onConflict: "nutritionist_id,patient_id" }
     );
+
+    // Ensure patient is in same tenant
+    if (tenantId) {
+      await supabase.from("user_tenants").upsert(
+        { user_id: finalId, tenant_id: tenantId, role: "patient" },
+        { onConflict: "user_id,tenant_id" }
+      ).then(() => {});
+    }
 
     return { ok: true };
   } catch (err: any) {
@@ -112,6 +121,12 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
+
+    // Tenant resolver
+    async function resolveTenantForUser(uid: string): Promise<string | null> {
+      const { data } = await supabase.from("user_tenants").select("tenant_id").eq("user_id", uid).limit(1).maybeSingle();
+      return data?.tenant_id || null;
+    }
 
     // Auth check
     const authHeader = req.headers.get("Authorization");
@@ -172,6 +187,7 @@ Deno.serve(async (req) => {
     // Process patients in parallel groups of 5 for speed + safety
     const PARALLEL = 5;
     const results = { created: 0, skipped: 0, errors: [] as string[] };
+    const callerTenant = await resolveTenantForUser(user.id);
 
     for (let i = 0; i < patients.length; i += PARALLEL) {
       const chunk = patients.slice(i, i + PARALLEL);
@@ -183,7 +199,7 @@ Deno.serve(async (req) => {
           results.skipped++;
           return Promise.resolve(null);
         }
-        return importOnePatient(supabase, email, fullName, user.id);
+        return importOnePatient(supabase, email, fullName, user.id, callerTenant);
       });
 
       const chunkResults = await Promise.all(promises);

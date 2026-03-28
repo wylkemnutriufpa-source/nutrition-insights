@@ -59,6 +59,11 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
+    async function resolveTenantForUser(uid: string): Promise<string | null> {
+      const { data } = await supabase.from("user_tenants").select("tenant_id").eq("user_id", uid).limit(1).maybeSingle();
+      return data?.tenant_id || null;
+    }
+
     const body = await req.json().catch(() => ({}));
     const nutritionistId = body.nutritionist_id;
 
@@ -203,12 +208,15 @@ Deno.serve(async (req) => {
                   category: "motivation",
                 };
 
+            const patientTenant = await resolveTenantForUser(nutri.nutritionist_id);
+
             // Create notification
             await supabase.from("notifications").insert({
               user_id: patientId,
               title: tip.title,
               message: tip.tip,
               type: "automation",
+              tenant_id: patientTenant,
               metadata: {
                 rule_id: rule.id,
                 pattern: rule.trigger_type,
@@ -239,6 +247,7 @@ Deno.serve(async (req) => {
               title: "🧠 Padrão Comportamental Detectado",
               message: patternLabel,
               type: "automation",
+              tenant_id: patientTenant,
               metadata: {
                 patient_id: patientId,
                 rule_id: rule.id,
@@ -271,6 +280,7 @@ Deno.serve(async (req) => {
                 category: task.category,
                 date: todayStr,
                 completed: false,
+                tenant_id: patientTenant,
               });
             }
             actionsExecuted.push("create_task");
@@ -283,6 +293,7 @@ Deno.serve(async (req) => {
           patient_id: patientId,
           nutritionist_id: nutri.nutritionist_id,
           status: "success",
+          tenant_id: patientTenant,
           actions_executed: actionsExecuted,
           trigger_data: {
             pattern: rule.trigger_type,
