@@ -180,9 +180,9 @@ initFeatureFlags();
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000,
+      staleTime: 2 * 60 * 1000, // 2min default — critical queries override to 0-5s
       retry: 1,
-      refetchOnWindowFocus: false,
+      refetchOnWindowFocus: true, // refetch stale queries on tab focus
     },
     mutations: {
       retry: 0,

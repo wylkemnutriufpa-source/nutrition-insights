@@ -19,6 +19,10 @@ import IntelligenceModal from "@/components/common/IntelligenceModal";
 import IntelligenceShowcaseModal from "@/components/intelligence/IntelligenceShowcaseModal";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import ClinicalAIEntity from "@/components/ai-entity/ClinicalAIEntity";
+import { usePatientRealtime } from "@/hooks/usePatientRealtime";
+import { useNutritionistRealtime } from "@/hooks/useNutritionistRealtime";
+import { useRefetchOnFocus } from "@/hooks/useRefetchOnFocus";
+import { useRealtimeEventBus } from "@/hooks/useRealtimeEventBus";
 
 function LayoutFallbackCard({
   title,
