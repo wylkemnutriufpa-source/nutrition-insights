@@ -114,11 +114,13 @@ Deno.serve(async (req) => {
     }
 
     // Link to nutritionist
+    const callerTenantLink = await resolveTenantForUser(adminClient, caller.id);
     await adminClient.from("nutritionist_patients").upsert({
       nutritionist_id: caller.id,
       patient_id: patientId,
       status: "active",
       journey_status: "awaiting_payment",
+      tenant_id: callerTenantLink,
     }, { onConflict: "nutritionist_id,patient_id" });
 
     // Assign patient role
@@ -127,6 +129,15 @@ Deno.serve(async (req) => {
       role: "patient",
     }, { onConflict: "user_id,role" });
 
+    // Ensure patient is in same tenant
+    if (callerTenantLink) {
+      await adminClient.from("user_tenants").upsert({
+        user_id: patientId,
+        tenant_id: callerTenantLink,
+        role: "patient",
+      }, { onConflict: "user_id,tenant_id" }).then(() => {});
+    }
+
     // 3) Create in-app notification for the patient about their invite
     await adminClient.from("notifications").insert({
       user_id: patientId,
@@ -134,6 +145,7 @@ Deno.serve(async (req) => {
       message: `Seu acesso foi criado por ${name ? "seu nutricionista" : "um profissional"}. Aguarde a confirmação do pagamento para iniciar seu acompanhamento.`,
       type: "info",
       target_route: "/patient-dashboard",
+      tenant_id: callerTenantLink,
     });
 
     // Send magic link if requested
