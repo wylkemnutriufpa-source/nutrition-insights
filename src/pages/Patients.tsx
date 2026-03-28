@@ -760,19 +760,21 @@ export default function Patients() {
           </div>
         ) : (
           <>
-            {/* Summary cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {filterButtons.map(fb => (
-                <button
-                  key={fb.key}
-                  onClick={() => setFilter(fb.key)}
-                  className={`glass-premium rounded-xl p-4 text-left transition-all border-2 metric-glow ${filter === fb.key ? "border-primary shadow-glow" : "border-transparent"}`}
-                >
-                  <p className="text-2xl font-display font-bold">{scoreCounts[fb.key]}</p>
-                  <p className="text-sm text-muted-foreground mt-0.5">{fb.label}</p>
-                </button>
-              ))}
-            </div>
+            {/* Summary cards — PRO+ */}
+            {minMode("pro") && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {filterButtons.map(fb => (
+                  <button
+                    key={fb.key}
+                    onClick={() => setFilter(fb.key)}
+                    className={`glass-premium rounded-xl p-4 text-left transition-all border-2 metric-glow ${filter === fb.key ? "border-primary shadow-glow" : "border-transparent"}`}
+                  >
+                    <p className="text-2xl font-display font-bold">{scoreCounts[fb.key]}</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">{fb.label}</p>
+                  </button>
+                ))}
+              </div>
+            )}
 
             <div className="flex gap-2">
               <div className="relative flex-1">
