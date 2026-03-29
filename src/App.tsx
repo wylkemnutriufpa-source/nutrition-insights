@@ -206,10 +206,16 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function NutritionistRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isNutritionist, isAdmin, subscription } = useAuth();
   if (loading) return user ? <>{children}</> : <PageLoader />;
-  if (!user) return <Navigate to="/auth" replace />;
-  if (!isNutritionist && !isAdmin) return <Navigate to="/" replace />;
-  // Gate clinical features behind active subscription (admins bypass)
+  if (!user) {
+    console.warn("[RouteGuard:Nutritionist] No user → /auth");
+    return <Navigate to="/auth" replace />;
+  }
+  if (!isNutritionist && !isAdmin) {
+    console.warn("[RouteGuard:Nutritionist] Not nutritionist/admin → /", { isNutritionist, isAdmin });
+    return <Navigate to="/" replace />;
+  }
   if (!isAdmin && !subscription.subscribed && !subscription.is_trial) {
+    console.warn("[RouteGuard:Nutritionist] No subscription → /pricing");
     return <Navigate to="/pricing" replace />;
   }
   return <>{children}</>;
@@ -219,7 +225,10 @@ function PersonalRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isPersonal, isAdmin } = useAuth();
   if (loading) return user ? <>{children}</> : <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
-  if (!isPersonal && !isAdmin) return <Navigate to="/" replace />;
+  if (!isPersonal && !isAdmin) {
+    console.warn("[RouteGuard:Personal] Not personal/admin → /", { isPersonal, isAdmin });
+    return <Navigate to="/" replace />;
+  }
   return <>{children}</>;
 }
 
@@ -227,8 +236,12 @@ function ProfessionalRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isNutritionist, isPersonal, isAdmin, subscription } = useAuth();
   if (loading) return user ? <>{children}</> : <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
-  if (!isNutritionist && !isPersonal && !isAdmin) return <Navigate to="/" replace />;
+  if (!isNutritionist && !isPersonal && !isAdmin) {
+    console.warn("[RouteGuard:Professional] Not professional → /", { isNutritionist, isPersonal, isAdmin });
+    return <Navigate to="/" replace />;
+  }
   if (!isAdmin && !subscription.subscribed && !subscription.is_trial) {
+    console.warn("[RouteGuard:Professional] No subscription → /pricing");
     return <Navigate to="/pricing" replace />;
   }
   return <>{children}</>;
@@ -238,7 +251,10 @@ function PatientRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isPatient } = useAuth();
   if (loading) return user ? <>{children}</> : <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
-  if (!isPatient) return <Navigate to="/" replace />;
+  if (!isPatient) {
+    console.warn("[RouteGuard:Patient] Not patient → /", { isPatient });
+    return <Navigate to="/" replace />;
+  }
   return <>{children}</>;
 }
 
@@ -251,8 +267,14 @@ function ConsentGuardedPatientRoute({ children }: { children: React.ReactNode })
   // Professionals and admins are NEVER blocked by patient guards
   const isProfessional = isNutritionist || isPersonal || isAdmin;
   if (isProfessional) return <>{children}</>;
-  if (isPatient && !hasPaid) return <Navigate to="/payment-required" replace />;
-  if (isPatient && !hasConsent) return <Navigate to="/consent-required" replace />;
+  if (isPatient && !hasPaid) {
+    console.warn("[RouteGuard:ConsentGuarded] Not paid → /payment-required");
+    return <Navigate to="/payment-required" replace />;
+  }
+  if (isPatient && !hasConsent) {
+    console.warn("[RouteGuard:ConsentGuarded] No consent → /consent-required");
+    return <Navigate to="/consent-required" replace />;
+  }
   return <>{children}</>;
 }
 
@@ -260,7 +282,10 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isAdmin } = useAuth();
   if (loading) return user ? <>{children}</> : <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
-  if (!isAdmin) return <Navigate to="/" replace />;
+  if (!isAdmin) {
+    console.warn("[RouteGuard:Admin] Not admin → /", { isAdmin });
+    return <Navigate to="/" replace />;
+  }
   return <>{children}</>;
 }
 
