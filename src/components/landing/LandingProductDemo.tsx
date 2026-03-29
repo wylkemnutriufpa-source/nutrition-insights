@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import mockupDashboard from "@/assets/mockup-dashboard.jpg";
 import mockupMealPlan from "@/assets/mockup-meal-plan.jpg";
+import { EnergyGlow, MockupParticles, PremiumMockupFrame, EnergyBeam } from "./LandingEffects";
 
 export default function LandingProductDemo() {
   return (
@@ -29,36 +30,51 @@ export default function LandingProductDemo() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.7, delay: 0.15 }}
-            className="rounded-2xl bg-gradient-to-br from-[hsl(152,58%,45%,0.08)] to-[hsl(210,92%,55%,0.06)] p-2 md:p-3 border border-white/[0.06]"
+            className="relative"
           >
-            <img
-              src={mockupDashboard}
-              alt="Dashboard FitJourney"
-              className="rounded-xl w-full"
-              loading="lazy"
-              width={1280}
-              height={800}
-            />
+            <EnergyGlow />
+            <MockupParticles />
+            <EnergyBeam className="top-0 right-8" angle={160} />
+            <EnergyBeam className="bottom-4 left-12" angle={20} color="hsl(210,92%,55%)" />
+            <PremiumMockupFrame>
+              <img
+                src={mockupDashboard}
+                alt="Dashboard FitJourney"
+                className="rounded-xl w-full relative z-10"
+                loading="lazy"
+                width={1280}
+                height={800}
+              />
+            </PremiumMockupFrame>
           </motion.div>
         </div>
 
-        {/* Block 2 — Meal Plan Editor (reversed) */}
+        {/* Block 2 — Meal Plan Editor */}
         <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.7, delay: 0.15 }}
-            className="rounded-2xl bg-gradient-to-br from-[hsl(210,92%,55%,0.08)] to-[hsl(152,58%,45%,0.06)] p-2 md:p-3 border border-white/[0.06] md:order-first"
+            className="relative md:order-first"
           >
-            <img
-              src={mockupMealPlan}
-              alt="Editor de Planos Alimentares"
-              className="rounded-xl w-full"
-              loading="lazy"
-              width={1280}
-              height={800}
-            />
+            <EnergyGlow color1="hsl(210,92%,55%)" color2="hsl(152,58%,45%)" />
+            <MockupParticles color="hsla(210,92%,55%,0.5)" />
+            <EnergyBeam className="top-4 left-8" angle={140} color="hsl(210,92%,55%)" />
+            <PremiumMockupFrame
+              gradientFrom="hsl(210,92%,55%,0.08)"
+              gradientTo="hsl(152,58%,45%,0.06)"
+              floatDelay={1.5}
+            >
+              <img
+                src={mockupMealPlan}
+                alt="Editor de Planos Alimentares"
+                className="rounded-xl w-full relative z-10"
+                loading="lazy"
+                width={1280}
+                height={800}
+              />
+            </PremiumMockupFrame>
           </motion.div>
 
           <motion.div
