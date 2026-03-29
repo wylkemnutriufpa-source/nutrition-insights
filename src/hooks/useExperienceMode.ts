@@ -20,6 +20,7 @@ const PRO_ROUTES = new Set([
   "/protocols", "/programs", "/food-database", "/supplements",
   "/branding", "/financial", "/analyze-meal",
   "/body-projection", "/patient-overview",
+  "/workspace-editor", "/clinical-workspace",
 ]);
 
 const ADVANCED_ROUTES = new Set([
