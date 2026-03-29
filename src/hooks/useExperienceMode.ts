@@ -22,14 +22,14 @@ const PRO_ROUTES = new Set([
   "/body-projection", "/patient-overview",
   "/workspace-editor", "/clinical-workspace",
   "/coach-bodybuilder",
+  "/control-tower", "/intelligence-settings",
+  "/professional/crm", "/integrations",
+  "/team", "/settings/whatsapp",
 ]);
 
 const ADVANCED_ROUTES = new Set([
-  "/automation", "/control-tower",
-  "/intelligence-settings",
-  "/professional/crm",
-  "/admin/import-patients", "/integrations",
-  "/team", "/settings/whatsapp",
+  "/automation",
+  "/admin/import-patients",
 ]);
 
 export function getVisibleRoutes(mode: ExperienceMode): Set<string> {
