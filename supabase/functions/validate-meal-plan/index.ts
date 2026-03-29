@@ -268,28 +268,30 @@ function analyzePlanSimplicity(items: any[], goal: string): { score: number; sta
             });
         }
 
-        // Breakfast checks
+        // Breakfast checks (relaxed for mass gain)
         if (mealType === "breakfast" || mealType === "cafe_da_manha") {
-            if (mealItems.length > 3) {
+            const breakfastMaxItems = isMassGain ? 4 : 3;
+            if (mealItems.length > breakfastMaxItems) {
                 score -= 10;
                 issues.push({
                     category: "adherence",
                     severity: "high",
                     meal_type: mealType, day,
-                    message: `Café da manhã com ${mealItems.length} itens (recomendado: até 3)`,
-                    suggested_fix: "Simplificar: pão+ovo, tapioca+queijo, cuscuz+ovo",
+                    message: `Café da manhã com ${mealItems.length} itens (recomendado: até ${breakfastMaxItems})`,
+                    suggested_fix: isMassGain ? "Café reforçado: pão+2 ovos+queijo" : "Simplificar: pão+ovo, tapioca+queijo, cuscuz+ovo",
                     penalty: 10,
                 });
             }
+            const proteinLimit = isMassGain ? 45 : 30;
             const totalProtein = mealItems.reduce((s: number, i: any) => s + (Number(i.protein_target) || 0), 0);
-            if (totalProtein > 30) {
+            if (totalProtein > proteinLimit) {
                 score -= 10;
                 issues.push({
                     category: "adherence",
                     severity: "high",
                     meal_type: mealType, day,
-                    message: `Proteína excessiva no café (${Math.round(totalProtein)}g > 30g)`,
-                    suggested_fix: "Reduzir para máx 2 ovos ou 1 porção de queijo",
+                    message: `Proteína excessiva no café (${Math.round(totalProtein)}g > ${proteinLimit}g)`,
+                    suggested_fix: isMassGain ? "Reduzir para máx 3 ovos + queijo" : "Reduzir para máx 2 ovos ou 1 porção de queijo",
                     penalty: 10,
                 });
             }
