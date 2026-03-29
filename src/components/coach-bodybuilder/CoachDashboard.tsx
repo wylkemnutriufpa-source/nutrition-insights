@@ -15,6 +15,8 @@ import {
   Flame, Plus, Search, Users, TrendingUp, AlertTriangle, Trophy,
   ShieldAlert, Filter, Target, Zap, Clock, BarChart3
 } from "lucide-react";
+import CoachHeroBanner from "./CoachHeroBanner";
+import CoachOperationalCenter from "./CoachOperationalCenter";
 import { toast } from "sonner";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
