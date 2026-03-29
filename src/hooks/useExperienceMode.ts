@@ -24,11 +24,11 @@ const PRO_ROUTES = new Set([
 ]);
 
 const ADVANCED_ROUTES = new Set([
-  "/automation", "/control-tower", "/workspace",
+  "/automation", "/control-tower",
   "/intelligence-settings",
   "/professional/crm",
   "/admin/import-patients", "/integrations",
-  "/team", "/settings/whatsapp", "/campaigns",
+  "/team", "/settings/whatsapp",
   "/coach-bodybuilder",
 ]);
 
