@@ -160,6 +160,85 @@ const SEVERITY_CONFIG = {
   ok: { label: "OK", dotClass: "bg-emerald-500", badgeClass: "border-emerald-500/30 bg-emerald-500/10 text-emerald-500", rowClass: "border-emerald-500/30 bg-emerald-500/5" },
 };
 
+// ── Patient Picker Inline ──
+function PatientPickerInline({ onApply, disabled }: { onApply: (patientId: string, patientName: string) => void; disabled?: boolean }) {
+  const { user } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [patients, setPatients] = useState<{ id: string; name: string }[]>([]);
+  const [loadingPatients, setLoadingPatients] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open || patients.length > 0) return;
+    const load = async () => {
+      setLoadingPatients(true);
+      const { data: links } = await supabase
+        .from("nutritionist_patients")
+        .select("patient_id")
+        .eq("nutritionist_id", user?.id ?? "")
+        .eq("status", "active");
+      const ids = (links || []).map(l => l.patient_id);
+      if (ids.length === 0) { setLoadingPatients(false); return; }
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", ids);
+      setPatients((profiles || []).map(p => ({ id: p.user_id, name: p.full_name || "Sem nome" })).sort((a, b) => a.name.localeCompare(b.name)));
+      setLoadingPatients(false);
+    };
+    load();
+  }, [open, user?.id]);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const filtered = patients.filter(p => !search || p.name.toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <div ref={containerRef} className="relative">
+      <Button size="sm" variant="outline" className="gap-1.5 text-xs border-primary/30 text-primary" onClick={() => setOpen(!open)} disabled={disabled}>
+        <UserPlus className="w-3.5 h-3.5" />
+        Aplicar em...
+      </Button>
+      {open && (
+        <div className="absolute z-50 right-0 mt-1 w-72 rounded-xl border border-border bg-popover shadow-xl">
+          <div className="p-2 border-b border-border/50">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-muted-foreground" />
+              <Input placeholder="Buscar paciente..." value={search} onChange={e => setSearch(e.target.value)} className="pl-8 h-9 text-sm" autoFocus />
+            </div>
+          </div>
+          <ScrollArea className="max-h-56">
+            <div className="p-1">
+              {loadingPatients ? (
+                <div className="flex items-center justify-center py-4 gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Carregando...
+                </div>
+              ) : filtered.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-4">Nenhum paciente encontrado</p>
+              ) : (
+                filtered.map(p => (
+                  <button key={p.id} onClick={() => { onApply(p.id, p.name); setOpen(false); setSearch(""); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left hover:bg-primary/10 transition-all text-sm">
+                    <Users className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="truncate">{p.name}</span>
+                  </button>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Sub-components ──
 function StatCard({ label, value, color = "text-foreground", sub }: { label: string; value: string | number; color?: string; sub?: string }) {
   return (
