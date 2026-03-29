@@ -158,57 +158,52 @@ export default function CoachDashboard({ onSelectAthlete }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Premium Header */}
-      <div className="relative overflow-hidden rounded-xl border bg-gradient-to-r from-card via-card to-card p-6">
-        <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-transparent to-red-600/5" />
-        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 shadow-lg shadow-orange-500/20">
-              <Flame className="h-8 w-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-black text-foreground tracking-tight">Coach Bodybuilder</h1>
-              <p className="text-sm text-muted-foreground">Sistema Premium de Preparação Física</p>
-            </div>
-          </div>
-          <Dialog open={addOpen} onOpenChange={setAddOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-lg shadow-orange-500/20">
-                <Plus className="h-4 w-4 mr-2" /> Adicionar Atleta
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>Adicionar Atleta</DialogTitle></DialogHeader>
-              <div className="space-y-4 mt-2">
-                <div>
-                  <Label>Paciente</Label>
-                  <Select value={newPatientId} onValueChange={setNewPatientId}>
-                    <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                    <SelectContent>
-                      {availablePatients.map((p: any) => (
-                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Fase Atual</Label>
-                  <Select value={newPhase} onValueChange={setNewPhase}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(PHASE_LABELS).map(([k, v]) => (
-                        <SelectItem key={k} value={k}>{v}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button onClick={() => addMutation.mutate()} disabled={!newPatientId || addMutation.isPending} className="w-full">
-                  {addMutation.isPending ? "Adicionando..." : "Adicionar"}
-                </Button>
+      {/* Premium Hero Banner */}
+      <CoachHeroBanner
+        totalAthletes={stats.total}
+        avgScore={avgScore}
+        alertCount={stats.alert}
+      />
+
+      {/* Add Athlete button row */}
+      <div className="flex justify-end">
+        <Dialog open={addOpen} onOpenChange={setAddOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-lg shadow-orange-500/20">
+              <Plus className="h-4 w-4 mr-2" /> Adicionar Atleta
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Adicionar Atleta</DialogTitle></DialogHeader>
+            <div className="space-y-4 mt-2">
+              <div>
+                <Label>Paciente</Label>
+                <Select value={newPatientId} onValueChange={setNewPatientId}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    {availablePatients.map((p: any) => (
+                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+              <div>
+                <Label>Fase Atual</Label>
+                <Select value={newPhase} onValueChange={setNewPhase}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(PHASE_LABELS).map(([k, v]) => (
+                      <SelectItem key={k} value={k}>{v}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={() => addMutation.mutate()} disabled={!newPatientId || addMutation.isPending} className="w-full">
+                {addMutation.isPending ? "Adicionando..." : "Adicionar"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Premium Stats */}
