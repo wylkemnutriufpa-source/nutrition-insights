@@ -3,6 +3,8 @@
  * Creates a version snapshot, scales items, and persists changes.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { logError, logWarn } from "@/lib/monitoring";
+import type { Json } from "@/integrations/supabase/types";
 
 interface AdjustmentParams {
   planId: string;
@@ -26,6 +28,7 @@ interface AdjustmentResult {
 
 export async function applyTherapeuticAdjustment(params: AdjustmentParams): Promise<AdjustmentResult> {
   const { planId, patientId, interventionId, interventionType, caloricAdjustmentPercent, clinicalReason, appliedBy, metadata } = params;
+  const section = "TherapeuticAdjustment";
 
   try {
     // 1. Fetch current plan
@@ -36,7 +39,8 @@ export async function applyTherapeuticAdjustment(params: AdjustmentParams): Prom
       .single();
 
     if (planError || !plan) {
-      return { success: false, beforeCalories: 0, afterCalories: 0, changedFields: [], versionId: null, error: "Plano não encontrado" };
+      logError(section, "Plano não encontrado", { planId, error: planError?.message });
+      return { success: false, beforeCalories: 0, afterCalories: 0, changedFields: [], versionId: null, error: "Plano alimentar não encontrado. Verifique se o plano ainda existe." };
     }
 
     // 2. Fetch current items
@@ -46,10 +50,16 @@ export async function applyTherapeuticAdjustment(params: AdjustmentParams): Prom
       .eq("meal_plan_id", planId);
 
     if (itemsError) {
-      return { success: false, beforeCalories: 0, afterCalories: 0, changedFields: [], versionId: null, error: "Erro ao carregar itens" };
+      logError(section, "Falha ao carregar itens do plano", { planId, error: itemsError.message });
+      return { success: false, beforeCalories: 0, afterCalories: 0, changedFields: [], versionId: null, error: "Não foi possível carregar os itens do plano. Tente novamente." };
     }
 
     const currentItems = items || [];
+
+    if (currentItems.length === 0) {
+      logWarn(section, "Plano sem itens para ajustar", { planId });
+      return { success: false, beforeCalories: 0, afterCalories: 0, changedFields: [], versionId: null, error: "O plano não possui refeições para ajustar." };
+    }
 
     // 3. Calculate current totals from items
     const beforeCalories = currentItems.reduce((sum, item) => sum + (item.calories_target || 0), 0);
@@ -62,8 +72,8 @@ export async function applyTherapeuticAdjustment(params: AdjustmentParams): Prom
       .from("meal_plan_versions")
       .insert({
         meal_plan_id: planId,
-        snapshot_json: plan as any,
-        items_snapshot: currentItems as any,
+        snapshot_json: plan as unknown as Json,
+        items_snapshot: currentItems as unknown as Json,
         changed_by: appliedBy,
         change_reason: `[${interventionType}] ${clinicalReason}`,
         changed_fields: ["calories_target", "protein_target", "carbs_target", "fat_target"],
@@ -71,31 +81,34 @@ export async function applyTherapeuticAdjustment(params: AdjustmentParams): Prom
       .select("id")
       .single();
 
+    if (versionError) {
+      logWarn(section, "Falha ao criar snapshot de versão", { planId, error: versionError.message });
+    }
+
     const versionId = version?.id ?? null;
 
     // 5. Calculate adjustment factor
     const factor = 1 + (caloricAdjustmentPercent / 100);
-    const changedFields: string[] = [];
+    const changedFields = ["calories_target", "protein_target", "carbs_target", "fat_target"];
 
-    // 6. Scale each meal_plan_item proportionally
-    for (const item of currentItems) {
-      const newCalories = Math.round((item.calories_target || 0) * factor);
-      const newProtein = Math.round(((item.protein_target || 0) * factor) * 10) / 10;
-      const newCarbs = Math.round(((item.carbs_target || 0) * factor) * 10) / 10;
-      const newFat = Math.round(((item.fat_target || 0) * factor) * 10) / 10;
-
-      await supabase
+    // 6. Batch-update all items in a single RPC-style loop (avoid N+1)
+    const updatePromises = currentItems.map((item) =>
+      supabase
         .from("meal_plan_items")
         .update({
-          calories_target: newCalories,
-          protein_target: newProtein,
-          carbs_target: newCarbs,
-          fat_target: newFat,
+          calories_target: Math.round((item.calories_target || 0) * factor),
+          protein_target: Math.round(((item.protein_target || 0) * factor) * 10) / 10,
+          carbs_target: Math.round(((item.carbs_target || 0) * factor) * 10) / 10,
+          fat_target: Math.round(((item.fat_target || 0) * factor) * 10) / 10,
         })
-        .eq("id", item.id);
-    }
+        .eq("id", item.id)
+    );
 
-    changedFields.push("calories_target", "protein_target", "carbs_target", "fat_target");
+    const results = await Promise.all(updatePromises);
+    const failedUpdates = results.filter((r) => r.error);
+    if (failedUpdates.length > 0) {
+      logError(section, `${failedUpdates.length}/${currentItems.length} itens falharam ao atualizar`, { planId });
+    }
 
     // 7. Update plan-level totals and therapeutic fields
     const afterCalories = Math.round(beforeCalories * factor);
@@ -103,7 +116,7 @@ export async function applyTherapeuticAdjustment(params: AdjustmentParams): Prom
     const afterCarbs = Math.round(beforeCarbs * factor * 10) / 10;
     const afterFat = Math.round(beforeFat * factor * 10) / 10;
 
-    await supabase
+    const { error: planUpdateError } = await supabase
       .from("meal_plans")
       .update({
         total_target_calories: afterCalories,
@@ -113,11 +126,15 @@ export async function applyTherapeuticAdjustment(params: AdjustmentParams): Prom
         therapeutic_effectiveness_status: interventionType,
         therapeutic_efficacy_score: metadata?.efficacy_score ?? null,
         updated_at: new Date().toISOString(),
-      } as any)
+      } as Record<string, unknown>)
       .eq("id", planId);
 
+    if (planUpdateError) {
+      logError(section, "Falha ao atualizar totais do plano", { planId, error: planUpdateError.message });
+    }
+
     // 8. Log in audit trail
-    await supabase.from("clinical_auto_adjustment_logs").insert({
+    const { error: auditError } = await supabase.from("clinical_auto_adjustment_logs").insert({
       patient_id: patientId,
       adjustment_type: interventionType,
       triggering_driver: "therapeutic_suggestion",
@@ -139,6 +156,18 @@ export async function applyTherapeuticAdjustment(params: AdjustmentParams): Prom
       automation_confidence: (metadata?.efficacy_score ?? 0) / 100,
     });
 
+    if (auditError) {
+      logWarn(section, "Falha ao gravar log de auditoria", { planId, error: auditError.message });
+    }
+
+    console.info(`[FJ:${section}] Ajuste aplicado com sucesso`, {
+      planId,
+      factor,
+      beforeCalories,
+      afterCalories,
+      itemsUpdated: currentItems.length - failedUpdates.length,
+    });
+
     return {
       success: true,
       beforeCalories,
@@ -146,8 +175,9 @@ export async function applyTherapeuticAdjustment(params: AdjustmentParams): Prom
       changedFields,
       versionId,
     };
-  } catch (err: any) {
-    console.error("[applyTherapeuticAdjustment]", err);
-    return { success: false, beforeCalories: 0, afterCalories: 0, changedFields: [], versionId: null, error: err.message };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    logError(section, "Erro inesperado no ajuste terapêutico", { planId, error: message });
+    return { success: false, beforeCalories: 0, afterCalories: 0, changedFields: [], versionId: null, error: "Ocorreu um erro inesperado ao aplicar o ajuste. Tente novamente." };
   }
 }

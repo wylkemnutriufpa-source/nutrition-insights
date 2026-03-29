@@ -29,7 +29,7 @@ export async function generateTimelineEvent(payload: TimelineEventPayload) {
       visibility_scope: payload.visibility_scope || "global",
       poll_question: payload.poll_question || null,
       poll_options: payload.poll_options || null,
-    } as any)
+    } as Record<string, unknown>)
     .select()
     .single();
 

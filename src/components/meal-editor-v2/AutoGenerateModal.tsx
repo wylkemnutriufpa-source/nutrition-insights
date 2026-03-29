@@ -23,6 +23,7 @@ import {
   type MealDistribution,
 } from "@/lib/mealPlanAutoGenerator";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 
 interface Props {
   open: boolean;
