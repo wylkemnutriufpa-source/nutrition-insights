@@ -530,8 +530,9 @@ serve(async (req) => {
         const clinicalPassed = clinicalErrors.length === 0;
         const clinicalStatus = clinicalPassed ? "approved" : "reprovado";
 
-        // ── 2. Simplicity Validation (NEW) ───────────────────────────────────
-        const simplicityResult = analyzePlanSimplicity(items);
+        // ── 2. Simplicity Validation ──────────────────────────────────────
+        const patientGoal = (answers?.primary_goal || answers?.objective || answers?.goal || "emagrecimento") as string;
+        const simplicityResult = analyzePlanSimplicity(items, patientGoal);
 
         // ── 3. Practical Adherence Prediction (NEW) ──────────────────────────
         const adherenceResult = analyzePracticalAdherence(items, simplicityResult.score, simplicityResult.blocked_foods.length);
