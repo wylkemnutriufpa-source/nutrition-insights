@@ -54,6 +54,7 @@ interface Props {
 
 export default function PatientChecklistView({ patientId, editable = true }: Props) {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [tasks, setTasks] = useState<ChecklistTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
