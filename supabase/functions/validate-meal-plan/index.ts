@@ -90,8 +90,8 @@ const COMPLEX_PREP_KEYWORDS = [
 ];
 
 // ── Brazilian base foods for main meals ───────────────────────────────────────
-const BRAZILIAN_PROTEINS = ["frango", "carne", "peixe", "tilápia", "sardinha", "ovo", "porco", "bife", "filé"];
-const BRAZILIAN_CARBS = ["arroz", "macarrão", "batata", "batata doce", "macaxeira", "purê", "cuscuz", "feijão"];
+const BRAZILIAN_PROTEINS = ["frango", "carne", "peixe", "tilápia", "sardinha", "ovo", "porco", "bife", "filé", "linguiça", "charque", "jabá"];
+const BRAZILIAN_CARBS = ["arroz", "macarrão", "batata", "batata doce", "macaxeira", "purê", "cuscuz", "feijão", "tapioca", "inhame", "aipim", "mandioca", "farinha", "farofa", "milho", "açaí"];
 const ALLOWED_FRUITS = ["banana", "maçã", "mamão", "melão", "manga", "abacaxi", "laranja", "morango", "uva", "melancia", "goiaba", "acerola", "pera"];
 
 function normalize(text: string): string {
@@ -138,10 +138,11 @@ interface SimplicityIssue {
     penalty: number;
 }
 
-function analyzePlanSimplicity(items: any[]): { score: number; status: string; issues: SimplicityIssue[]; blocked_foods: Array<{ food: string; found_in: string; day: number; meal_type: string; replacement: string | null }> } {
+function analyzePlanSimplicity(items: any[], goal: string): { score: number; status: string; issues: SimplicityIssue[]; blocked_foods: Array<{ food: string; found_in: string; day: number; meal_type: string; replacement: string | null }> } {
     let score = 100;
     const issues: SimplicityIssue[] = [];
     const blockedFoods: Array<{ food: string; found_in: string; day: number; meal_type: string; replacement: string | null }> = [];
+    const isMassGain = ["muscle_gain", "ganho_de_massa", "mass", "bulking", "performance"].includes(normalize(goal));
 
     // Group by day+meal_type
     const groups = new Map<string, any[]>();
@@ -151,11 +152,18 @@ function analyzePlanSimplicity(items: any[]): { score: number; status: string; i
         groups.get(k)!.push(item);
     }
 
-    // 1. Blocked foods scan (hard fail -20 each)
+    // Track already-penalized items to avoid duplicate penalties
+    const penalizedKeys = new Set<string>();
+
+    // 1. Blocked foods scan (hard fail -20 each, deduplicated per food+day+meal)
     for (const item of items) {
         const desc = normalize(`${item.title || ""} ${item.description || ""}`);
         const found = findBlockedFoods(desc);
         for (const food of found) {
+            const dedupKey = `blocked_${normalize(food)}_${item.day_of_week ?? 0}_${item.meal_type}`;
+            if (penalizedKeys.has(dedupKey)) continue;
+            penalizedKeys.add(dedupKey);
+
             const nf = normalize(food);
             const replacement = REPLACEMENTS[nf] || REPLACEMENTS[food] || null;
             blockedFoods.push({
@@ -176,9 +184,15 @@ function analyzePlanSimplicity(items: any[]): { score: number; status: string; i
                 penalty: 20,
             });
         }
-        // Premium keywords
+        // Premium keywords (skip if already penalized as blocked food)
         for (const kw of PREMIUM_KEYWORDS) {
+            const kwKey = `premium_${normalize(kw)}_${item.day_of_week ?? 0}_${item.meal_type}`;
+            if (penalizedKeys.has(kwKey)) continue;
             if (desc.includes(normalize(kw))) {
+                // Don't double-penalize if this keyword is part of a blocked food already caught
+                const alreadyBlocked = found.some(f => normalize(kw).includes(normalize(f)) || normalize(f).includes(normalize(kw)));
+                if (alreadyBlocked) continue;
+                penalizedKeys.add(kwKey);
                 score -= 10;
                 issues.push({
                     category: "adherence",
@@ -191,9 +205,14 @@ function analyzePlanSimplicity(items: any[]): { score: number; status: string; i
                 });
             }
         }
-        // Complex prep
+        // Complex prep (skip if already penalized as blocked)
         for (const prep of COMPLEX_PREP_KEYWORDS) {
+            const prepKey = `prep_${normalize(prep)}_${item.day_of_week ?? 0}_${item.meal_type}`;
+            if (penalizedKeys.has(prepKey)) continue;
             if (desc.includes(normalize(prep))) {
+                const alreadyBlocked = found.some(f => normalize(prep).includes(normalize(f)) || normalize(f).includes(normalize(prep)));
+                if (alreadyBlocked) continue;
+                penalizedKeys.add(prepKey);
                 score -= 6;
                 issues.push({
                     category: "suggestion",
@@ -249,43 +268,46 @@ function analyzePlanSimplicity(items: any[]): { score: number; status: string; i
             });
         }
 
-        // Breakfast checks
+        // Breakfast checks (relaxed for mass gain)
         if (mealType === "breakfast" || mealType === "cafe_da_manha") {
-            if (mealItems.length > 3) {
+            const breakfastMaxItems = isMassGain ? 4 : 3;
+            if (mealItems.length > breakfastMaxItems) {
                 score -= 10;
                 issues.push({
                     category: "adherence",
                     severity: "high",
                     meal_type: mealType, day,
-                    message: `Café da manhã com ${mealItems.length} itens (recomendado: até 3)`,
-                    suggested_fix: "Simplificar: pão+ovo, tapioca+queijo, cuscuz+ovo",
+                    message: `Café da manhã com ${mealItems.length} itens (recomendado: até ${breakfastMaxItems})`,
+                    suggested_fix: isMassGain ? "Café reforçado: pão+2 ovos+queijo" : "Simplificar: pão+ovo, tapioca+queijo, cuscuz+ovo",
                     penalty: 10,
                 });
             }
+            const proteinLimit = isMassGain ? 45 : 30;
             const totalProtein = mealItems.reduce((s: number, i: any) => s + (Number(i.protein_target) || 0), 0);
-            if (totalProtein > 30) {
+            if (totalProtein > proteinLimit) {
                 score -= 10;
                 issues.push({
                     category: "adherence",
                     severity: "high",
                     meal_type: mealType, day,
-                    message: `Proteína excessiva no café (${Math.round(totalProtein)}g > 30g)`,
-                    suggested_fix: "Reduzir para máx 2 ovos ou 1 porção de queijo",
+                    message: `Proteína excessiva no café (${Math.round(totalProtein)}g > ${proteinLimit}g)`,
+                    suggested_fix: isMassGain ? "Reduzir para máx 3 ovos + queijo" : "Reduzir para máx 2 ovos ou 1 porção de queijo",
                     penalty: 10,
                 });
             }
         }
 
-        // Snack checks
+        // Snack checks (relaxed for mass gain)
         if (mealType.includes("snack") || mealType.includes("lanche")) {
-            if (mealItems.length > 2) {
+            const snackMaxItems = isMassGain ? 3 : 2;
+            if (mealItems.length > snackMaxItems) {
                 score -= 10;
                 issues.push({
                     category: "adherence",
                     severity: "medium",
                     meal_type: mealType, day,
-                    message: `Lanche com ${mealItems.length} itens (recomendado: 1-2)`,
-                    suggested_fix: "Simplificar: 1 fruta ou fruta + iogurte",
+                    message: `Lanche com ${mealItems.length} itens (recomendado: até ${snackMaxItems})`,
+                    suggested_fix: isMassGain ? "Lanche proteico: pão+ovo ou tapioca+queijo" : "Simplificar: 1 fruta ou fruta + iogurte",
                     penalty: 10,
                 });
             }
@@ -508,8 +530,9 @@ serve(async (req) => {
         const clinicalPassed = clinicalErrors.length === 0;
         const clinicalStatus = clinicalPassed ? "approved" : "reprovado";
 
-        // ── 2. Simplicity Validation (NEW) ───────────────────────────────────
-        const simplicityResult = analyzePlanSimplicity(items);
+        // ── 2. Simplicity Validation ──────────────────────────────────────
+        const patientGoal = (answers?.primary_goal || answers?.objective || answers?.goal || "emagrecimento") as string;
+        const simplicityResult = analyzePlanSimplicity(items, patientGoal);
 
         // ── 3. Practical Adherence Prediction (NEW) ──────────────────────────
         const adherenceResult = analyzePracticalAdherence(items, simplicityResult.score, simplicityResult.blocked_foods.length);
@@ -556,6 +579,17 @@ serve(async (req) => {
             adherence: { score: adherenceResult.score, status: adherenceResult.status, factors_count: adherenceResult.factors.length },
             overall: { score: overallScore, status: overallStatus },
         };
+
+        // ── Persist validation scores to meal_plans ─────────────────────────
+        await supabase.from("meal_plans").update({
+            clinical_score: clinicalScore,
+            simplicity_score: simplicityResult.score,
+            adherence_score: adherenceResult.score,
+            overall_score: overallScore,
+            overall_validation_status: overallStatus,
+            last_validated_at: new Date().toISOString(),
+            validation_engine_version: "unified_v4",
+        }).eq("id", meal_plan_id);
 
         // Timeline
         const timelineTitle = overallPassed

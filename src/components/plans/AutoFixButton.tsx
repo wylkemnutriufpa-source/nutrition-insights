@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { useTenant } from "@/lib/tenantContext";
+import { supabase } from "@/integrations/supabase/client";
 import { autoFixMealPlan, type AutoFixResult } from "@/lib/autoFixEngine";
 import AutoFixPreviewModal from "./AutoFixPreviewModal";
 
@@ -26,9 +27,21 @@ export default function AutoFixButton({ mealPlanId, patientId, onFixed }: Props)
     try {
       const res = await autoFixMealPlan(mealPlanId, patientId, user.id, tenantId);
       setResult(res);
-      if (res.success) {
+      if (res.success && res.newPlanId) {
+        // Auto-validate the new plan
+        try {
+          const { data: valData } = await supabase.functions.invoke("validate-meal-plan", {
+            body: { meal_plan_id: res.newPlanId },
+          });
+          if (valData?.success) {
+            toast.success(`Plano corrigido e APROVADO! Score: ${valData.score}/100 ✅`);
+          } else {
+            toast.success(`Plano corrigido! ${res.changes.length} correções. Score: ${valData?.score ?? "?"}/100 — revise antes de publicar.`);
+          }
+        } catch {
+          toast.success(`Plano corrigido! ${res.changes.length} correções aplicadas.`);
+        }
         setShowModal(true);
-        toast.success(`Plano corrigido! ${res.changes.length} correções aplicadas.`);
       } else {
         toast.error(res.warnings[0] || "Erro ao corrigir plano");
       }
@@ -46,7 +59,7 @@ export default function AutoFixButton({ mealPlanId, patientId, onFixed }: Props)
         className="gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg"
       >
         {loading ? (
-          <><Loader2 className="w-4 h-4 animate-spin" /> Corrigindo...</>
+          <><Loader2 className="w-4 h-4 animate-spin" /> Corrigindo e validando...</>
         ) : (
           <><Wand2 className="w-4 h-4" /> Corrigir automaticamente</>
         )}
