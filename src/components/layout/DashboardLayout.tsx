@@ -318,6 +318,18 @@ function DynamicSidebar({
               </span>
             )}
           </Link>
+          <Link
+            to="/coach-bodybuilder"
+            onClick={onLinkClick}
+            className={`flex items-center gap-2 w-full rounded-xl border border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
+          >
+            <Activity className="w-4 h-4 text-orange-500 flex-shrink-0" />
+            {!collapsed && (
+              <span className="text-xs font-semibold text-orange-500 truncate group-hover:text-orange-400 transition-colors">
+                Coach Bodybuilder
+              </span>
+            )}
+          </Link>
         </div>
       )}
 
