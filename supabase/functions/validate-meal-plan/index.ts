@@ -138,10 +138,11 @@ interface SimplicityIssue {
     penalty: number;
 }
 
-function analyzePlanSimplicity(items: any[]): { score: number; status: string; issues: SimplicityIssue[]; blocked_foods: Array<{ food: string; found_in: string; day: number; meal_type: string; replacement: string | null }> } {
+function analyzePlanSimplicity(items: any[], goal: string): { score: number; status: string; issues: SimplicityIssue[]; blocked_foods: Array<{ food: string; found_in: string; day: number; meal_type: string; replacement: string | null }> } {
     let score = 100;
     const issues: SimplicityIssue[] = [];
     const blockedFoods: Array<{ food: string; found_in: string; day: number; meal_type: string; replacement: string | null }> = [];
+    const isMassGain = ["muscle_gain", "ganho_de_massa", "mass", "bulking", "performance"].includes(normalize(goal));
 
     // Group by day+meal_type
     const groups = new Map<string, any[]>();
