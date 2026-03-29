@@ -18,6 +18,6 @@ export default function CoachBodybuilder() {
           <CoachDashboard onSelectAthlete={setSelectedAthleteId} />
         )}
       </div>
-    </MainLayout>
+    </DashboardLayout>
   );
 }
