@@ -20,12 +20,13 @@ const PRO_ROUTES = new Set([
   "/protocols", "/programs", "/food-database", "/supplements",
   "/branding", "/financial", "/analyze-meal",
   "/body-projection", "/patient-overview",
+  "/workspace-editor", "/clinical-workspace",
 ]);
 
 const ADVANCED_ROUTES = new Set([
   "/automation", "/control-tower", "/workspace",
-  "/workspace-editor", "/intelligence-settings",
-  "/clinical-workspace", "/professional/crm",
+  "/intelligence-settings",
+  "/professional/crm",
   "/admin/import-patients", "/integrations",
   "/team", "/settings/whatsapp", "/campaigns",
   "/coach-bodybuilder",
