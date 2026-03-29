@@ -155,7 +155,7 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
         .update({
           plan_status: "draft_auto_generated",
           generation_source: "meal_library_engine",
-          generation_metadata: result.metadata as any,
+          generation_metadata: result.metadata as unknown as Json,
           updated_at: new Date().toISOString(),
         })
         .eq("id", planId);
@@ -163,9 +163,9 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
       useMealPlanEditorV2Store.getState().updatePlan({
         plan_status: "draft_auto_generated",
         generation_source: "meal_library_engine",
-        generation_metadata: result.metadata as any,
+        generation_metadata: result.metadata as unknown as Json,
         updated_at: new Date().toISOString(),
-      } as any);
+      } as Partial<MealPlan>);
 
       // 6. Persist snapshot to sessionStorage
       useMealPlanEditorV2Store.getState()._persistSnapshot();
