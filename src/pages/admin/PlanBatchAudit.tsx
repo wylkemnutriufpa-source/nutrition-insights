@@ -808,7 +808,7 @@ export default function PlanBatchAudit() {
             </div>
           </TabsContent>
 
-          {/* Reformulate */}
+           {/* Reformulate */}
           <TabsContent value="reformulate" className="space-y-4">
             <Card className="glass border-border/50">
               <CardContent className="p-5 space-y-3">
@@ -842,37 +842,87 @@ export default function PlanBatchAudit() {
 
             {reformulations.length > 0 && (
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-semibold">{reformulations.length} planos reformulados</h4>
-                  <Badge variant="outline" className="text-[10px]">
-                    Score: {Math.round(reformulations.reduce((s, r) => s + r.oldScore, 0) / reformulations.length)} → {Math.round(reformulations.reduce((s, r) => s + r.newScore, 0) / reformulations.length)}
-                  </Badge>
-                </div>
-                {reformulations.map(r => (
-                  <div key={r.planId} className="flex items-center gap-3 p-3 rounded-lg border border-primary/20 bg-primary/5">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className={SEVERITY_CONFIG[r.original.severity].badgeClass + " text-[10px]"}>{r.oldScore}</Badge>
-                      <ArrowRight className="w-3 h-3 text-muted-foreground" />
-                      <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-500 text-[10px]">{r.newScore}</Badge>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{r.original.title}</p>
-                      <p className="text-xs text-muted-foreground">{r.original.patient_name} • {r.substitutions.length} substituições</p>
-                    </div>
-                    <div className="flex gap-1.5 shrink-0">
-                      {r.savedPlanId ? (
-                        <Button size="sm" variant="outline" className="gap-1.5 border-primary/30" onClick={() => openDraft(r.savedPlanId!)}>
-                          <ExternalLink className="w-3.5 h-3.5" /> Abrir Draft
-                        </Button>
-                      ) : (
-                        <Button size="sm" variant="outline" className="gap-1.5" onClick={() => saveSingle(r)} disabled={saving !== null}>
-                          {saving === r.planId ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                          Salvar Draft
-                        </Button>
-                      )}
-                    </div>
+                {/* Header with search */}
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-3">
+                    <h4 className="text-sm font-semibold">{filteredReformulations.length} cardápios reformulados</h4>
+                    <Badge variant="outline" className="text-[10px]">
+                      Score: {Math.round(reformulations.reduce((s, r) => s + r.oldScore, 0) / reformulations.length)} → {Math.round(reformulations.reduce((s, r) => s + r.newScore, 0) / reformulations.length)}
+                    </Badge>
                   </div>
-                ))}
+                  <div className="relative w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar por plano ou paciente..."
+                      value={reformSearch}
+                      onChange={e => setReformSearch(e.target.value)}
+                      className="pl-9 h-8 text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Reformulated cards */}
+                <div className="space-y-2 max-h-[65vh] overflow-y-auto pr-1">
+                  {filteredReformulations.map(r => (
+                    <motion.div
+                      key={r.planId}
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`rounded-xl border p-3 transition-colors ${
+                        r.savedPlanId
+                          ? r.appliedToPatient
+                            ? "border-emerald-500/30 bg-emerald-500/5"
+                            : "border-primary/20 bg-primary/5"
+                          : "border-border bg-card"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        {/* Score change */}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Badge variant="outline" className={SEVERITY_CONFIG[r.original.severity].badgeClass + " text-[10px]"}>{r.oldScore}</Badge>
+                          <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                          <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-500 text-[10px]">{r.newScore}</Badge>
+                        </div>
+
+                        {/* Plan info */}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{r.original.title}</p>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span>{r.original.patient_name}</span>
+                            <span>•</span>
+                            <span>{r.substitutions.length} substituições</span>
+                            {r.appliedToPatient && (
+                              <>
+                                <span>•</span>
+                                <span className="text-emerald-500 font-medium">✓ Aplicado: {r.appliedToPatient}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {r.savedPlanId ? (
+                            <>
+                              <PatientPickerInline
+                                onApply={(patientId, patientName) => applyToPatient(r, patientId, patientName)}
+                                disabled={applyingTo === r.savedPlanId}
+                              />
+                              <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => openDraft(r.savedPlanId!)}>
+                                <ExternalLink className="w-3.5 h-3.5" /> Abrir
+                              </Button>
+                            </>
+                          ) : (
+                            <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => saveSingle(r)} disabled={saving !== null}>
+                              {saving === r.planId ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                              Salvar Draft
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
             )}
           </TabsContent>
