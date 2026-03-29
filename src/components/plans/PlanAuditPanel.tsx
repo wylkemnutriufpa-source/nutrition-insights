@@ -38,7 +38,7 @@ interface AuditResult {
     suggestions: Suggestion[];
     audit: Record<string, any>;
 }
-interface Props { mealPlanId: string; onApproved?: () => void; }
+interface Props { mealPlanId: string; patientId?: string; onApproved?: () => void; onFixed?: (newPlanId: string) => void; }
 
 function MacroBar({ m }: { m: MacroResult }) {
     const barValue = m.target > 0 ? Math.min(100, Math.max(0, (m.actual / m.target) * 100)) : 0;
