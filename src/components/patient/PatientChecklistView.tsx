@@ -140,6 +140,7 @@ export default function PatientChecklistView({ patientId, editable = true }: Pro
         description: form.description || null,
         date,
         completed: false,
+        ...getTenantIdForInsert(tenantId),
       } as any);
       if (error) toast.error(error.message);
       else toast.success("Tarefa adicionada!");
