@@ -21,6 +21,7 @@ const PRO_ROUTES = new Set([
   "/branding", "/financial", "/analyze-meal",
   "/body-projection", "/patient-overview",
   "/workspace-editor", "/clinical-workspace",
+  "/coach-bodybuilder",
 ]);
 
 const ADVANCED_ROUTES = new Set([
@@ -29,7 +30,6 @@ const ADVANCED_ROUTES = new Set([
   "/professional/crm",
   "/admin/import-patients", "/integrations",
   "/team", "/settings/whatsapp",
-  "/coach-bodybuilder",
 ]);
 
 export function getVisibleRoutes(mode: ExperienceMode): Set<string> {

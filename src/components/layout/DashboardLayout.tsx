@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck, Shield, Activity, LayoutDashboard } from "lucide-react";
+import { LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck, Shield, Activity, LayoutDashboard, Dumbbell } from "lucide-react";
 import { Search } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { openCommandPalette } from "@/components/common/CommandPalette";
@@ -327,6 +327,18 @@ function DynamicSidebar({
             {!collapsed && (
               <span className="text-xs font-semibold text-orange-500 truncate group-hover:text-orange-400 transition-colors">
                 Coach Bodybuilder
+              </span>
+            )}
+          </Link>
+          <Link
+            to="/personal/dashboard"
+            onClick={onLinkClick}
+            className={`flex items-center gap-2 w-full rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
+          >
+            <Dumbbell className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+            {!collapsed && (
+              <span className="text-xs font-semibold text-emerald-500 truncate group-hover:text-emerald-400 transition-colors">
+                Personal Trainer
               </span>
             )}
           </Link>
