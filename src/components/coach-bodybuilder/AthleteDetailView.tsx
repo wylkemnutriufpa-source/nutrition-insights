@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useAuth } from "@/lib/auth";
 import { useTenant } from "@/lib/tenantContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { analyzeAthleteData, generateDecisions, generateAlerts, PHASE_LABELS, type CheckinData } from "@/lib/coachAnalysisEngine";
+import { calculatePriority } from "@/lib/coachPriorityEngine";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,8 @@ import CoachPhotoEvolution from "./CoachPhotoEvolution";
 import CoachQuickActions from "./CoachQuickActions";
 import CoachManualDecision from "./CoachManualDecision";
 import CoachNoteForm from "./CoachNoteForm";
+import CoachAthleteStrategicSummary from "./CoachAthleteStrategicSummary";
+import CoachRetentionBadge from "./CoachRetentionBadge";
 import { toast } from "sonner";
 
 interface Props {
@@ -61,6 +64,20 @@ export default function AthleteDetailView({ athleteId, onBack }: Props) {
     },
   });
 
+  // Get last manual decision
+  const { data: lastDecision } = useQuery({
+    queryKey: ["coach-last-decision", athleteId],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("coach_decisions")
+        .select("decision_type, notes")
+        .eq("athlete_id", athleteId)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      return data?.[0] || null;
+    },
+  });
+
   const phaseMutation = useMutation({
     mutationFn: async (newPhase: string) => {
       await supabase.from("coach_athletes" as any)
@@ -88,11 +105,60 @@ export default function AthleteDetailView({ athleteId, onBack }: Props) {
   const decisions = generateDecisions(analysisResult, phase, checkins as CheckinData[]);
   const alerts = generateAlerts(analysisResult, checkins as CheckinData[], phase);
 
+  // Priority calculation
+  const priority = useMemo(() => {
+    const now = Date.now();
+    const daysSince = lastCheckin
+      ? Math.floor((now - new Date(lastCheckin.checkin_date).getTime()) / 86400000)
+      : 99;
+    const hasRecentPhotos = checkins.some((c: any) =>
+      (c.front_photo_url || c.side_photo_url || c.back_photo_url) &&
+      (now - new Date(c.checkin_date).getTime()) / 86400000 < 7
+    );
+    return calculatePriority({
+      id: athleteId,
+      current_phase: phase,
+      prep_score: athlete?.prep_score || 0,
+      status: athlete?.status || "evolving",
+      alertCount: alerts.length,
+      hasCriticalAlert: alerts.some(al => al.severity === "critical"),
+      daysSinceCheckin: daysSince,
+      hasRecentPhotos,
+    });
+  }, [athleteId, phase, athlete, alerts, lastCheckin, checkins]);
+
+  // Retention metrics
+  const retentionMetrics = useMemo(() => {
+    const totalCheckins = checkins.length;
+    // Calculate week streak
+    const sorted = [...checkins].sort((a: any, b: any) => b.checkin_date.localeCompare(a.checkin_date));
+    let weekStreak = 0;
+    const now = new Date();
+    for (let w = 0; w < 52; w++) {
+      const weekStart = new Date(now);
+      weekStart.setDate(weekStart.getDate() - (w + 1) * 7);
+      const weekEnd = new Date(now);
+      weekEnd.setDate(weekEnd.getDate() - w * 7);
+      const hasCheckin = sorted.some((c: any) => {
+        const d = new Date(c.checkin_date);
+        return d >= weekStart && d < weekEnd;
+      });
+      if (hasCheckin) weekStreak++;
+      else break;
+    }
+    const adherences = checkins.map((c: any) => c.adherence_pct).filter((v: any): v is number => v != null);
+    const avgAdherence = adherences.length > 0 ? Math.round(adherences.reduce((s: number, v: number) => s + v, 0) / adherences.length) : 0;
+    return { totalCheckins, weekStreak, avgAdherence };
+  }, [checkins]);
+
+  // Last visual observation
+  const lastVisualObs = checkins.find((c: any) => c.visual_observation)?.visual_observation || null;
+
   const handleQuickAction = (action: string) => {
     switch (action) {
       case "checkin": setActiveTab("checkin"); break;
       case "photos": setActiveTab("photos"); break;
-      case "phase": break; // phase selector is in header
+      case "phase": break;
       case "manual_decision": setActiveTab("decisions"); break;
       case "alerts": setActiveTab("alerts"); break;
       case "note": setActiveTab("timeline"); break;
@@ -152,6 +218,7 @@ export default function AthleteDetailView({ athleteId, onBack }: Props) {
               }>
                 Score: {analysisResult.overall_score}/100
               </Badge>
+              <CoachRetentionBadge {...retentionMetrics} compact />
               {alerts.length > 0 && (
                 <Badge className="bg-red-500/20 text-red-400 border-red-500/30 cursor-pointer" onClick={() => setActiveTab("alerts")}>
                   <AlertTriangle className="h-3 w-3 mr-1" />
@@ -207,70 +274,87 @@ export default function AthleteDetailView({ athleteId, onBack }: Props) {
 
       {/* Tab Content */}
       {activeTab === "overview" && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="space-y-4">
-            <Card className="border-primary/10">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Activity className="h-4 w-4 text-primary" />
-                  Status Atual
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-2 gap-3">
-                <QuickStat label="Peso" value={lastCheckin?.weight ? `${lastCheckin.weight} kg` : "—"} />
-                <QuickStat label="Média 7d" value={lastCheckin?.weight_avg_7d ? `${lastCheckin.weight_avg_7d} kg` : "—"} />
-                <QuickStat label="Variação" value={lastCheckin?.weight_variation != null ? `${lastCheckin.weight_variation > 0 ? "+" : ""}${lastCheckin.weight_variation} kg` : "—"} />
-                <QuickStat label="Aderência" value={lastCheckin?.adherence_pct != null ? `${lastCheckin.adherence_pct}%` : "—"} />
-              </CardContent>
-            </Card>
-            <CoachCompositeScore score={analysisResult.composite_score} />
-          </div>
+        <div className="space-y-4">
+          {/* Strategic Summary */}
+          <CoachAthleteStrategicSummary
+            athleteName={athlete?.athlete_name || "Atleta"}
+            phase={phase}
+            analysis={analysisResult}
+            alerts={alerts}
+            decisions={decisions}
+            priorityLevel={priority.level}
+            lastVisualObservation={lastVisualObs}
+            lastManualDecision={lastDecision?.notes || null}
+          />
 
-          <div className="space-y-4">
-            {alerts.length > 0 && (
-              <Card className="border-red-500/20 bg-red-500/5 cursor-pointer" onClick={() => setActiveTab("alerts")}>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <AlertTriangle className="h-4 w-4 text-red-400" />
-                    <span className="text-sm font-semibold text-foreground">{alerts.length} Alerta{alerts.length > 1 ? "s" : ""} Ativo{alerts.length > 1 ? "s" : ""}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">{alerts[0]?.title}{alerts.length > 1 ? ` e mais ${alerts.length - 1}...` : ""}</p>
-                </CardContent>
-              </Card>
-            )}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Brain className="h-4 w-4 text-primary" />
-                  Resumo da Análise
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-foreground leading-relaxed">{analysisResult.analysis_summary}</p>
-              </CardContent>
-            </Card>
-            {decisions[0] && (
-              <Card className="border-amber-500/20 bg-amber-500/5">
+          {/* Retention Badge */}
+          <CoachRetentionBadge {...retentionMetrics} />
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="space-y-4">
+              <Card className="border-primary/10">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <Zap className="h-4 w-4 text-amber-400" />
-                    Decisão Prioritária
+                    <Activity className="h-4 w-4 text-primary" />
+                    Status Atual
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 gap-3">
+                  <QuickStat label="Peso" value={lastCheckin?.weight ? `${lastCheckin.weight} kg` : "—"} />
+                  <QuickStat label="Média 7d" value={lastCheckin?.weight_avg_7d ? `${lastCheckin.weight_avg_7d} kg` : "—"} />
+                  <QuickStat label="Variação" value={lastCheckin?.weight_variation != null ? `${lastCheckin.weight_variation > 0 ? "+" : ""}${lastCheckin.weight_variation} kg` : "—"} />
+                  <QuickStat label="Aderência" value={lastCheckin?.adherence_pct != null ? `${lastCheckin.adherence_pct}%` : "—"} />
+                </CardContent>
+              </Card>
+              <CoachCompositeScore score={analysisResult.composite_score} />
+            </div>
+
+            <div className="space-y-4">
+              {alerts.length > 0 && (
+                <Card className="border-red-500/20 bg-red-500/5 cursor-pointer" onClick={() => setActiveTab("alerts")}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <AlertTriangle className="h-4 w-4 text-red-400" />
+                      <span className="text-sm font-semibold text-foreground">{alerts.length} Alerta{alerts.length > 1 ? "s" : ""} Ativo{alerts.length > 1 ? "s" : ""}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{alerts[0]?.title}{alerts.length > 1 ? ` e mais ${alerts.length - 1}...` : ""}</p>
+                  </CardContent>
+                </Card>
+              )}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Brain className="h-4 w-4 text-primary" />
+                    Resumo da Análise
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-foreground">{decisions[0].reason}</p>
-                  {decisions[0].expected_impact && (
-                    <p className="text-xs text-primary mt-1">→ {decisions[0].expected_impact}</p>
-                  )}
+                  <p className="text-sm text-foreground leading-relaxed">{analysisResult.analysis_summary}</p>
                 </CardContent>
               </Card>
-            )}
-            <CoachManualDecision athleteId={athleteId} />
-            <CoachNoteForm athleteId={athleteId} />
-          </div>
+              {decisions[0] && (
+                <Card className="border-amber-500/20 bg-amber-500/5">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Zap className="h-4 w-4 text-amber-400" />
+                      Decisão Prioritária
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-foreground">{decisions[0].reason}</p>
+                    {decisions[0].expected_impact && (
+                      <p className="text-xs text-primary mt-1">→ {decisions[0].expected_impact}</p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+              <CoachManualDecision athleteId={athleteId} />
+              <CoachNoteForm athleteId={athleteId} />
+            </div>
 
-          <div>
-            <CoachTimeline athleteId={athleteId} />
+            <div>
+              <CoachTimeline athleteId={athleteId} />
+            </div>
           </div>
         </div>
       )}
