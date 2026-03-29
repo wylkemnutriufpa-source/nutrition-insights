@@ -218,7 +218,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
     } finally {
       setApplying(false);
     }
-  }, [selectedOption, planId, currentItems, context, result, targetKcal]);
+  }, [selectedOption, planId, plan?.plan_status, currentItems, context, result, targetKcal]);
 
   const handleClose = () => {
     onOpenChange(false);
