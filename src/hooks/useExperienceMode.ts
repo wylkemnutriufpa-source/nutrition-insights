@@ -43,7 +43,16 @@ export function getVisibleRoutes(mode: ExperienceMode): Set<string> {
   return routes;
 }
 
+/**
+ * Returns true if a route is allowed for the given mode.
+ * Routes NOT listed in any experience set are always visible (uncontrolled).
+ * Routes IN a set are only visible if the set is included in the current mode.
+ */
 export function isRouteVisible(route: string, mode: ExperienceMode): boolean {
+  const allControlled = getVisibleRoutes("advanced");
+  // If the route is not controlled by experience mode, allow it
+  if (!allControlled.has(route)) return true;
+  // Otherwise check if it's in the current mode's visible set
   const visible = getVisibleRoutes(mode);
   return visible.has(route);
 }
