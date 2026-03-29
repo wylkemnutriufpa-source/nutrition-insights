@@ -76,8 +76,9 @@ export function PremiumMockupFrame({
   return (
     <motion.div
       animate={{ y: [0, -6, 0] }}
+      whileHover={{ scale: 1.03 }}
       transition={{ duration: 5, repeat: Infinity, delay: floatDelay, ease: "easeInOut" }}
-      className={`relative ${className}`}
+      className={`relative cursor-pointer ${className}`}
     >
       {/* Glass border glow */}
       <div

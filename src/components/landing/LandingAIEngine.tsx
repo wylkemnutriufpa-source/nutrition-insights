@@ -86,7 +86,9 @@ export default function LandingAIEngine() {
           {/* Floating mockup with glass frame */}
           <motion.div
             animate={{ y: [0, -8, 0] }}
+            whileHover={{ scale: 1.04 }}
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            className="cursor-pointer"
           >
             {/* Glass border */}
             <div
