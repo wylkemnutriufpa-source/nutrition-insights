@@ -309,6 +309,9 @@ export default function DietTemplates() {
 
       // If no meal plan exists, create one
       if (!targetPlanId) {
+        // Resolve tenant_id
+        const { data: tenantId } = await supabase.rpc("get_user_tenant", { _user_id: user.id });
+
         const { data: newPlan, error: planError } = await supabase
           .from("meal_plans")
           .insert({
@@ -318,6 +321,7 @@ export default function DietTemplates() {
             description: `Baseado no modelo "${template.name}". ${anamnesis ? "Ajustado conforme anamnese do paciente." : ""}`,
             start_date: new Date().toISOString().split("T")[0],
             is_active: true,
+            tenant_id: tenantId,
           } as any)
           .select("id")
           .single();

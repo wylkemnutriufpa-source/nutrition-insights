@@ -352,6 +352,7 @@ function ComparisonView({ reform, onOpenDraft }: { reform: Reformulation; onOpen
 // ── Main Page ──
 export default function PlanBatchAudit() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<BatchReport | null>(null);
   const [reformulations, setReformulations] = useState<Reformulation[]>([]);
@@ -529,11 +530,18 @@ export default function PlanBatchAudit() {
         .from("meal_plans").select("*").eq("id", reform.planId).single();
       if (!originalPlan) throw new Error("Plano original não encontrado");
 
+      // Get current user's tenant
+      const { data: currentProfile } = await supabase
+        .from("profiles")
+        .select("tenant_id")
+        .eq("user_id", user?.id ?? "")
+        .maybeSingle();
+
       const { data: newPlan, error: insertErr } = await supabase
         .from("meal_plans")
         .insert([{
           patient_id: originalPlan.patient_id,
-          nutritionist_id: originalPlan.nutritionist_id,
+          nutritionist_id: user?.id ?? originalPlan.nutritionist_id,
           title: `${originalPlan.title} (Reformulado v3)`,
           plan_status: "draft_auto_generated",
           start_date: new Date().toISOString().split("T")[0],
@@ -542,7 +550,7 @@ export default function PlanBatchAudit() {
           total_target_carbs: originalPlan.total_target_carbs,
           total_target_fat: originalPlan.total_target_fat,
           template_id: originalPlan.template_id,
-          tenant_id: originalPlan.tenant_id,
+          tenant_id: currentProfile?.tenant_id ?? originalPlan.tenant_id,
         }])
         .select("id").single();
       if (insertErr || !newPlan) throw insertErr || new Error("Erro ao criar plano");
