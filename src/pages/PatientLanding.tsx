@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import {
   CheckCircle2, Trophy, Target, Brain, UtensilsCrossed, TrendingUp,
   MessageSquare, Camera, Star, Sparkles, ArrowRight, Shield, Zap,
-  BarChart3, Heart, Flame, Crown
+  BarChart3, Heart, Flame, Crown, Download, Smartphone
 } from "lucide-react";
+import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 import { useSiteSettings, getSetting } from "@/hooks/useSiteSettings";
 import {
   FloatingOrb, LandingNav, HeroBadge, TestimonialCard,
@@ -35,6 +36,7 @@ const defaultTestimonials = [
 
 export default function PatientLanding() {
   const { data } = useSiteSettings();
+  const { canInstall, isInstalled, install } = useInstallPrompt();
   const map = data?.map;
 
   const heroBadge = getSetting(map, "patient_hero_badge", "Programa de Acompanhamento Online Inteligente");
@@ -67,12 +69,27 @@ export default function PatientLanding() {
             <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">{heroTitle}</span>
           </motion.h1>
           <motion.p variants={fadeUp} className="text-white/45 text-lg md:text-xl max-w-2xl mx-auto mb-10">{heroSubtitle}</motion.p>
-          <motion.div variants={fadeUp}>
+          <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link to="/auth">
               <Button size="lg" className="h-14 px-10 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-lg hover:opacity-90 shadow-xl shadow-emerald-500/25 rounded-xl font-semibold hover:scale-105 transition-transform">
                 Acessar Minha Conta <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
+            {canInstall && (
+              <Button
+                size="lg"
+                onClick={install}
+                className="h-14 px-10 bg-white/10 border border-white/20 text-white text-lg hover:bg-white/20 shadow-xl rounded-xl font-semibold hover:scale-105 transition-transform backdrop-blur-sm"
+              >
+                <Smartphone className="w-5 h-5 mr-2" />
+                Instalar Aplicativo
+              </Button>
+            )}
+            {isInstalled && (
+              <span className="text-emerald-400/70 text-sm flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4" /> App instalado
+              </span>
+            )}
           </motion.div>
         </motion.div>
       </section>
