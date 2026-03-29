@@ -10,8 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Activity, Save, Camera } from "lucide-react";
+import { Activity, Save } from "lucide-react";
 import { toast } from "sonner";
+import CoachPhotoUploader from "./CoachPhotoUploader";
 
 const SUBJECTIVE_FIELDS = [
   { key: "hunger", label: "Fome", emoji: "🍽️" },
@@ -43,14 +44,18 @@ export default function AthleteCheckinForm({ athleteId, coachId }: Props) {
     notes: "",
     visual_observation: "",
     visual_verdict: "maintained",
-    front_photo_url: "",
-    side_photo_url: "",
-    back_photo_url: "",
+    front_photo_path: "",
+    side_photo_path: "",
+    back_photo_path: "",
     hunger: 5, energy: 5, sleep_quality: 5, pump: 5,
     libido: 5, retention: 5, digestion: 5, performance: 5,
   });
 
   const set = (key: string, val: any) => setForm(prev => ({ ...prev, [key]: val }));
+
+  const handlePhotoUploaded = (position: "front" | "side" | "back", path: string) => {
+    set(`${position}_photo_path`, path);
+  };
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -67,9 +72,9 @@ export default function AthleteCheckinForm({ athleteId, coachId }: Props) {
         notes: form.notes || null,
         visual_observation: form.visual_observation || null,
         visual_verdict: form.visual_verdict,
-        front_photo_url: form.front_photo_url || null,
-        side_photo_url: form.side_photo_url || null,
-        back_photo_url: form.back_photo_url || null,
+        front_photo_url: form.front_photo_path || null,
+        side_photo_url: form.side_photo_path || null,
+        back_photo_url: form.back_photo_path || null,
         hunger: form.hunger,
         energy: form.energy,
         sleep_quality: form.sleep_quality,
@@ -81,7 +86,6 @@ export default function AthleteCheckinForm({ athleteId, coachId }: Props) {
       });
       if (error) throw error;
 
-      // Timeline event
       await supabase.from("coach_timeline" as any).insert({
         athlete_id: athleteId,
         coach_id: coachId,
@@ -89,7 +93,11 @@ export default function AthleteCheckinForm({ athleteId, coachId }: Props) {
         event_type: "checkin",
         title: `Check-in registrado${form.weight ? ` — ${form.weight}kg` : ""}`,
         description: form.notes || `Aderência: ${form.adherence_pct || "—"}%, Energia: ${form.energy}/10`,
-        metadata: { weight: form.weight ? Number(form.weight) : null, adherence: form.adherence_pct ? Number(form.adherence_pct) : null },
+        metadata: {
+          weight: form.weight ? Number(form.weight) : null,
+          adherence: form.adherence_pct ? Number(form.adherence_pct) : null,
+          has_photos: !!(form.front_photo_path || form.side_photo_path || form.back_photo_path),
+        },
       });
     },
     onSuccess: () => {
@@ -99,7 +107,7 @@ export default function AthleteCheckinForm({ athleteId, coachId }: Props) {
       setForm({
         weight: "", adherence_pct: "", training_load: "", training_volume: "",
         cardio_minutes: "", steps: "", notes: "", visual_observation: "", visual_verdict: "maintained",
-        front_photo_url: "", side_photo_url: "", back_photo_url: "",
+        front_photo_path: "", side_photo_path: "", back_photo_path: "",
         hunger: 5, energy: 5, sleep_quality: 5, pump: 5,
         libido: 5, retention: 5, digestion: 5, performance: 5,
       });
@@ -147,26 +155,14 @@ export default function AthleteCheckinForm({ athleteId, coachId }: Props) {
             </div>
           </div>
 
-          {/* Photos */}
-          <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-              <Camera className="h-4 w-4" /> Fotos (URLs)
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="space-y-1">
-                <Label className="text-xs">Frente</Label>
-                <Input value={form.front_photo_url} onChange={e => set("front_photo_url", e.target.value)} placeholder="URL da foto frontal" />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Lado</Label>
-                <Input value={form.side_photo_url} onChange={e => set("side_photo_url", e.target.value)} placeholder="URL da foto lateral" />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Costas</Label>
-                <Input value={form.back_photo_url} onChange={e => set("back_photo_url", e.target.value)} placeholder="URL da foto posterior" />
-              </div>
-            </div>
-          </div>
+          {/* Photo Upload */}
+          <CoachPhotoUploader
+            athleteId={athleteId}
+            onUploaded={handlePhotoUploaded}
+            frontPath={form.front_photo_path}
+            sidePath={form.side_photo_path}
+            backPath={form.back_photo_path}
+          />
 
           {/* Visual observation */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -203,7 +199,7 @@ export default function AthleteCheckinForm({ athleteId, coachId }: Props) {
             />
           </div>
 
-          <Button onClick={() => mutation.mutate()} disabled={mutation.isPending} className="w-full">
+          <Button onClick={() => mutation.mutate()} disabled={mutation.isPending} className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white">
             <Save className="h-4 w-4 mr-2" />
             {mutation.isPending ? "Salvando..." : "Registrar Check-in"}
           </Button>
