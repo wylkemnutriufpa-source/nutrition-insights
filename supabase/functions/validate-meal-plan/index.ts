@@ -297,16 +297,17 @@ function analyzePlanSimplicity(items: any[], goal: string): { score: number; sta
             }
         }
 
-        // Snack checks
+        // Snack checks (relaxed for mass gain)
         if (mealType.includes("snack") || mealType.includes("lanche")) {
-            if (mealItems.length > 2) {
+            const snackMaxItems = isMassGain ? 3 : 2;
+            if (mealItems.length > snackMaxItems) {
                 score -= 10;
                 issues.push({
                     category: "adherence",
                     severity: "medium",
                     meal_type: mealType, day,
-                    message: `Lanche com ${mealItems.length} itens (recomendado: 1-2)`,
-                    suggested_fix: "Simplificar: 1 fruta ou fruta + iogurte",
+                    message: `Lanche com ${mealItems.length} itens (recomendado: até ${snackMaxItems})`,
+                    suggested_fix: isMassGain ? "Lanche proteico: pão+ovo ou tapioca+queijo" : "Simplificar: 1 fruta ou fruta + iogurte",
                     penalty: 10,
                 });
             }
