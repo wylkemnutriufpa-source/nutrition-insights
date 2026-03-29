@@ -6,6 +6,7 @@ import { CheckCircle2, XCircle, AlertTriangle, Loader2, ShieldCheck, Gauge, Tren
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import AutoFixButton from "./AutoFixButton";
 
 interface MacroResult {
     label: string; unit: string; target: number; actual: number;
@@ -38,7 +39,7 @@ interface AuditResult {
     suggestions: Suggestion[];
     audit: Record<string, any>;
 }
-interface Props { mealPlanId: string; onApproved?: () => void; }
+interface Props { mealPlanId: string; patientId?: string; onApproved?: () => void; onFixed?: (newPlanId: string) => void; }
 
 function MacroBar({ m }: { m: MacroResult }) {
     const barValue = m.target > 0 ? Math.min(100, Math.max(0, (m.actual / m.target) * 100)) : 0;
@@ -106,7 +107,7 @@ const MEAL_TYPE_LABELS: Record<string, string> = {
     evening_snack: "🥛 Ceia", ceia: "🥛 Ceia",
 };
 
-export default function PlanAuditPanel({ mealPlanId, onApproved }: Props) {
+export default function PlanAuditPanel({ mealPlanId, patientId, onApproved, onFixed }: Props) {
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<AuditResult | null>(null);
 
@@ -136,6 +137,11 @@ export default function PlanAuditPanel({ mealPlanId, onApproved }: Props) {
             <Button onClick={runAudit} disabled={loading} variant="outline" className="w-full gap-2 border-primary/40 hover:border-primary hover:bg-primary/5">
                 {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Auditando (Clínico + Simplicidade + Adesão)...</> : <><ShieldCheck className="w-4 h-4 text-primary" /> Auditar / Validar Plano</>}
             </Button>
+
+            {/* Auto-fix button — shows when plan has issues */}
+            {patientId && (
+                <AutoFixButton mealPlanId={mealPlanId} patientId={patientId} onFixed={onFixed} />
+            )}
 
             <AnimatePresence>
                 {result && (
