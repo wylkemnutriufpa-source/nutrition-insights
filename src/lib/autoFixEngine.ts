@@ -372,13 +372,15 @@ export async function autoFixMealPlan(
   try {
     const { data: anamnesis } = await supabase
       .from("patient_anamnesis")
-      .select("primary_goal")
+      .select("answers")
       .eq("user_id", patientId)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (anamnesis?.primary_goal) {
-      patientGoal = anamnesis.primary_goal;
+    if (anamnesis?.answers && typeof anamnesis.answers === "object") {
+      const ans = anamnesis.answers as Record<string, any>;
+      const goal = ans.primary_goal || ans.objetivo || ans.goal;
+      if (goal && typeof goal === "string") patientGoal = goal;
     }
   } catch { /* fallback to default */ }
 
