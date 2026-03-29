@@ -3069,6 +3069,294 @@ export type Database = {
           },
         ]
       }
+      coach_athlete_analysis: {
+        Row: {
+          analysis_date: string
+          analysis_summary: string | null
+          athlete_id: string
+          catabolism_risk: string | null
+          coach_id: string
+          created_at: string | null
+          evolution_consistency: string | null
+          id: string
+          overall_score: number | null
+          plateau_detected: boolean | null
+          raw_data: Json | null
+          tenant_id: string | null
+          water_retention: string | null
+        }
+        Insert: {
+          analysis_date?: string
+          analysis_summary?: string | null
+          athlete_id: string
+          catabolism_risk?: string | null
+          coach_id: string
+          created_at?: string | null
+          evolution_consistency?: string | null
+          id?: string
+          overall_score?: number | null
+          plateau_detected?: boolean | null
+          raw_data?: Json | null
+          tenant_id?: string | null
+          water_retention?: string | null
+        }
+        Update: {
+          analysis_date?: string
+          analysis_summary?: string | null
+          athlete_id?: string
+          catabolism_risk?: string | null
+          coach_id?: string
+          created_at?: string | null
+          evolution_consistency?: string | null
+          id?: string
+          overall_score?: number | null
+          plateau_detected?: boolean | null
+          raw_data?: Json | null
+          tenant_id?: string | null
+          water_retention?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_athlete_analysis_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "coach_athletes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_athlete_analysis_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coach_athlete_checkins: {
+        Row: {
+          adherence_pct: number | null
+          athlete_id: string
+          back_photo_url: string | null
+          cardio_minutes: number | null
+          checkin_date: string
+          coach_id: string
+          created_at: string | null
+          digestion: number | null
+          energy: number | null
+          front_photo_url: string | null
+          hunger: number | null
+          id: string
+          libido: number | null
+          notes: string | null
+          performance: number | null
+          pump: number | null
+          retention: number | null
+          side_photo_url: string | null
+          sleep_quality: number | null
+          steps: number | null
+          tenant_id: string | null
+          training_load: number | null
+          training_volume: number | null
+          weight: number | null
+          weight_avg_7d: number | null
+          weight_variation: number | null
+        }
+        Insert: {
+          adherence_pct?: number | null
+          athlete_id: string
+          back_photo_url?: string | null
+          cardio_minutes?: number | null
+          checkin_date?: string
+          coach_id: string
+          created_at?: string | null
+          digestion?: number | null
+          energy?: number | null
+          front_photo_url?: string | null
+          hunger?: number | null
+          id?: string
+          libido?: number | null
+          notes?: string | null
+          performance?: number | null
+          pump?: number | null
+          retention?: number | null
+          side_photo_url?: string | null
+          sleep_quality?: number | null
+          steps?: number | null
+          tenant_id?: string | null
+          training_load?: number | null
+          training_volume?: number | null
+          weight?: number | null
+          weight_avg_7d?: number | null
+          weight_variation?: number | null
+        }
+        Update: {
+          adherence_pct?: number | null
+          athlete_id?: string
+          back_photo_url?: string | null
+          cardio_minutes?: number | null
+          checkin_date?: string
+          coach_id?: string
+          created_at?: string | null
+          digestion?: number | null
+          energy?: number | null
+          front_photo_url?: string | null
+          hunger?: number | null
+          id?: string
+          libido?: number | null
+          notes?: string | null
+          performance?: number | null
+          pump?: number | null
+          retention?: number | null
+          side_photo_url?: string | null
+          sleep_quality?: number | null
+          steps?: number | null
+          tenant_id?: string | null
+          training_load?: number | null
+          training_volume?: number | null
+          weight?: number | null
+          weight_avg_7d?: number | null
+          weight_variation?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_athlete_checkins_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "coach_athletes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_athlete_checkins_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coach_athletes: {
+        Row: {
+          coach_id: string
+          competition_date: string | null
+          created_at: string | null
+          current_phase: string
+          id: string
+          is_active: boolean | null
+          notes: string | null
+          patient_id: string
+          prep_score: number | null
+          status: string
+          target_weight: number | null
+          tenant_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          coach_id: string
+          competition_date?: string | null
+          created_at?: string | null
+          current_phase?: string
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          patient_id: string
+          prep_score?: number | null
+          status?: string
+          target_weight?: number | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          coach_id?: string
+          competition_date?: string | null
+          created_at?: string | null
+          current_phase?: string
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          patient_id?: string
+          prep_score?: number | null
+          status?: string
+          target_weight?: number | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_athletes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coach_decisions: {
+        Row: {
+          analysis_id: string | null
+          applied_at: string | null
+          athlete_id: string
+          coach_id: string
+          confidence_level: string | null
+          created_at: string | null
+          data_basis: string | null
+          decision_type: string
+          id: string
+          reason: string
+          status: string | null
+          tenant_id: string | null
+        }
+        Insert: {
+          analysis_id?: string | null
+          applied_at?: string | null
+          athlete_id: string
+          coach_id: string
+          confidence_level?: string | null
+          created_at?: string | null
+          data_basis?: string | null
+          decision_type: string
+          id?: string
+          reason: string
+          status?: string | null
+          tenant_id?: string | null
+        }
+        Update: {
+          analysis_id?: string | null
+          applied_at?: string | null
+          athlete_id?: string
+          coach_id?: string
+          confidence_level?: string | null
+          created_at?: string | null
+          data_basis?: string | null
+          decision_type?: string
+          id?: string
+          reason?: string
+          status?: string | null
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_decisions_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "coach_athlete_analysis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_decisions_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "coach_athletes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_decisions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cross_professional_alerts: {
         Row: {
           alert_type: string
