@@ -357,7 +357,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">Substituições</Label>
-                    <Select value={String(subsPerMeal)} onValueChange={v => setSubsPerMeal(Number(v))}>
+                    <Select value={String(subsPerMeal)} onValueChange={v => setSubsPerMeal(Number(v) as 0 | 1 | 2 | 3)}>
                       <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="0">Nenhuma</SelectItem>
