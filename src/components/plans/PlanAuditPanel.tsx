@@ -109,7 +109,7 @@ const MEAL_TYPE_LABELS: Record<string, string> = {
     evening_snack: "🥛 Ceia", ceia: "🥛 Ceia",
 };
 
-export default function PlanAuditPanel({ mealPlanId, onApproved }: Props) {
+export default function PlanAuditPanel({ mealPlanId, patientId, onApproved, onFixed }: Props) {
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<AuditResult | null>(null);
 
