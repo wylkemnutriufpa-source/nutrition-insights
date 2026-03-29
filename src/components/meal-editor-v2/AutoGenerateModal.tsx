@@ -12,7 +12,7 @@ import {
   Loader2, Wand2, AlertTriangle, CheckCircle2, Flame, Beef, Wheat, Droplets, Info,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useMealPlanEditorV2Store, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
+import { useMealPlanEditorV2Store, type MealPlanItem, type MealPlan } from "@/stores/mealPlanEditorV2Store";
 import {
   generateMealPlanFromLibrary,
   loadPatientProfile,
@@ -23,6 +23,7 @@ import {
   type MealDistribution,
 } from "@/lib/mealPlanAutoGenerator";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 
 interface Props {
   open: boolean;
@@ -155,7 +156,7 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
         .update({
           plan_status: "draft_auto_generated",
           generation_source: "meal_library_engine",
-          generation_metadata: result.metadata as any,
+          generation_metadata: result.metadata as unknown as Json,
           updated_at: new Date().toISOString(),
         })
         .eq("id", planId);
@@ -163,9 +164,9 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
       useMealPlanEditorV2Store.getState().updatePlan({
         plan_status: "draft_auto_generated",
         generation_source: "meal_library_engine",
-        generation_metadata: result.metadata as any,
+        generation_metadata: result.metadata as unknown as Json,
         updated_at: new Date().toISOString(),
-      } as any);
+      } as Partial<MealPlan>);
 
       // 6. Persist snapshot to sessionStorage
       useMealPlanEditorV2Store.getState()._persistSnapshot();

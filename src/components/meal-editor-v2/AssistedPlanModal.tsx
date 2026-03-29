@@ -17,9 +17,10 @@ import {
   RefreshCw, ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useMealPlanEditorV2Store, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
+import { useMealPlanEditorV2Store, type MealPlanItem, type MealPlan } from "@/stores/mealPlanEditorV2Store";
 import { slotsToInserts } from "@/lib/mealPlanAutoGenerator";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import {
   loadPatientContext,
   generateAssistedPlan,
@@ -196,7 +197,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
         .update({
           plan_status: "draft_auto_generated",
           generation_source: "assisted_engine_v2",
-          generation_metadata: genMeta as any,
+          generation_metadata: genMeta as unknown as Json,
           updated_at: new Date().toISOString(),
         })
         .eq("id", planId);
@@ -204,9 +205,9 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
       useMealPlanEditorV2Store.getState().updatePlan({
         plan_status: "draft_auto_generated",
         generation_source: "assisted_engine_v2",
-        generation_metadata: genMeta as any,
+        generation_metadata: genMeta as unknown as Json,
         updated_at: new Date().toISOString(),
-      } as any);
+      } as Partial<MealPlan>);
 
       useMealPlanEditorV2Store.getState()._persistSnapshot();
 
@@ -344,7 +345,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1">
                     <Label className="text-xs">Nº Refeições</Label>
-                    <Select value={String(mealCount)} onValueChange={v => setMealCount(Number(v) as any)}>
+                    <Select value={String(mealCount)} onValueChange={v => setMealCount(Number(v) as 3 | 4 | 5 | 6)}>
                       <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="3">3 refeições</SelectItem>
@@ -356,7 +357,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">Substituições</Label>
-                    <Select value={String(subsPerMeal)} onValueChange={v => setSubsPerMeal(Number(v) as any)}>
+                    <Select value={String(subsPerMeal)} onValueChange={v => setSubsPerMeal(Number(v) as 0 | 1 | 2 | 3)}>
                       <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="0">Nenhuma</SelectItem>
