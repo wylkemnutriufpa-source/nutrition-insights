@@ -32,6 +32,7 @@ export default function ExperienceRouteGuard() {
     }
 
     if (!isAllowedPathForMode(location.pathname, mode)) {
+      console.warn("[ExperienceRouteGuard] Blocking route", location.pathname, "for mode", mode);
       navigate("/", { replace: true });
     }
   }, [location.pathname, mode, navigate]);
