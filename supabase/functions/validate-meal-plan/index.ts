@@ -567,8 +567,21 @@ serve(async (req) => {
             arr.findIndex(x => x.before === s.before && x.day === s.day && x.meal_type === s.meal_type) === idx
         );
 
+        // ── 4. Clinical Decision Layer (v5) ─────────────────────────────
+        const prioritizedIssues = prioritizeIssuesInternal(
+            simplicityResult.issues, clinicalErrors, restrictionsViolated
+        );
+        const buckets = groupByBucketInternal(prioritizedIssues);
+        const { decision: finalDecision, reason: finalDecisionReason, confidence: confidenceLevel } =
+            computeFinalDecisionInternal(overallScore, overallPassed, prioritizedIssues);
+        const { summary: executiveSummary, recommendation: approvalRecommendation, strategy: correctionStrategy } =
+            generateExecutiveSummaryInternal(
+                overallPassed, overallScore, clinicalScore, simplicityResult.score, adherenceResult.score,
+                simplicityResult.blocked_foods.length, restrictionsViolated.length, prioritizedIssues
+            );
+
         const audit = {
-            engine: "validate-meal-plan@unified_v4",
+            engine: "validate-meal-plan@unified_v5",
             run_at: new Date().toISOString(),
             inputs: { meal_plan_id, patient_id: patientId, num_days: numDays, num_items: items.length, source: assessment ? "physical_assessment" : "anamnesis" },
             targets: { kcal: targetCals, protein: targetP, carbs: targetC, fat: targetF },
@@ -578,6 +591,7 @@ serve(async (req) => {
             simplicity: { score: simplicityResult.score, status: simplicityResult.status, issues_count: simplicityResult.issues.length, blocked_count: simplicityResult.blocked_foods.length },
             adherence: { score: adherenceResult.score, status: adherenceResult.status, factors_count: adherenceResult.factors.length },
             overall: { score: overallScore, status: overallStatus },
+            decision: { final_decision: finalDecision, confidence_level: confidenceLevel, prioritized_issues_count: prioritizedIssues.length },
         };
 
         // ── Persist validation scores to meal_plans ─────────────────────────
@@ -588,20 +602,29 @@ serve(async (req) => {
             overall_score: overallScore,
             overall_validation_status: overallStatus,
             last_validated_at: new Date().toISOString(),
-            validation_engine_version: "unified_v4",
+            validation_engine_version: "unified_v5",
         }).eq("id", meal_plan_id);
 
         // Timeline
         const timelineTitle = overallPassed
             ? "Plano Aprovado pelo Motor Clínico Unificado ✅"
             : "Plano Reprovado pelo Motor Clínico Unificado ❌";
-        const timelineDesc = `Score: ${overallScore}/100 (Clínico: ${clinicalScore} | Simplicidade: ${simplicityResult.score} | Adesão: ${adherenceResult.score})${simplicityResult.blocked_foods.length > 0 ? ` | Bloqueados: ${[...new Set(simplicityResult.blocked_foods.map(b => b.food))].join(", ")}` : ""}`;
+        const timelineDesc = `Score: ${overallScore}/100 (Clínico: ${clinicalScore} | Simplicidade: ${simplicityResult.score} | Adesão: ${adherenceResult.score}) | Decisão: ${finalDecision}`;
 
         await supabase.from("patient_timeline").insert({
             patient_id: patientId, event_type: "meal_plan",
             title: timelineTitle,
             description: timelineDesc,
-            metadata: { type: overallPassed ? "ai_plan_validated" : "plan_validation_failed", meal_plan_id, ...audit },
+            metadata: {
+                type: overallPassed ? "ai_plan_validated" : "plan_validation_failed",
+                meal_plan_id,
+                final_decision: finalDecision,
+                final_decision_reason: finalDecisionReason,
+                confidence_level: confidenceLevel,
+                executive_summary: executiveSummary,
+                prioritized_issues_count: prioritizedIssues.length,
+                ...audit,
+            },
         });
 
         return new Response(JSON.stringify({
@@ -617,6 +640,16 @@ serve(async (req) => {
             clinical_score: clinicalScore,
             simplicity_score: simplicityResult.score,
             adherence_score_prediction: adherenceResult.score,
+
+            // Decision layer (v5)
+            executive_summary: executiveSummary,
+            approval_recommendation: approvalRecommendation,
+            correction_strategy: correctionStrategy,
+            final_decision: finalDecision,
+            final_decision_reason: finalDecisionReason,
+            confidence_level: confidenceLevel,
+            prioritized_issues: prioritizedIssues,
+            buckets,
 
             macros: macroResults,
             restrictions_violated: restrictionsViolated,
