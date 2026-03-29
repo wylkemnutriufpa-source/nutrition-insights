@@ -1,12 +1,13 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import {
   ShieldCheck, Loader2, AlertTriangle, CheckCircle2, XCircle,
   RefreshCw, ArrowRight, ChevronDown, ChevronUp, Filter,
-  ExternalLink, Square, CheckSquare, Zap, Eye
+  ExternalLink, Square, CheckSquare, Zap, Eye, Search, UserPlus, Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,8 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { BLOCKED_FOODS } from "@/lib/mealPlanFoodRules";
 
 // ── Types ──
@@ -61,6 +64,7 @@ interface Reformulation {
   oldScore: number;
   newScore: number;
   savedPlanId?: string;
+  appliedToPatient?: string;
 }
 
 interface ReformulatedItem extends PlanItem {
@@ -156,6 +160,85 @@ const SEVERITY_CONFIG = {
   medium: { label: "MÉDIO", dotClass: "bg-amber-500", badgeClass: "border-amber-500/30 bg-amber-500/10 text-amber-500", rowClass: "border-amber-500/30 bg-amber-500/5" },
   ok: { label: "OK", dotClass: "bg-emerald-500", badgeClass: "border-emerald-500/30 bg-emerald-500/10 text-emerald-500", rowClass: "border-emerald-500/30 bg-emerald-500/5" },
 };
+
+// ── Patient Picker Inline ──
+function PatientPickerInline({ onApply, disabled }: { onApply: (patientId: string, patientName: string) => void; disabled?: boolean }) {
+  const { user } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [patients, setPatients] = useState<{ id: string; name: string }[]>([]);
+  const [loadingPatients, setLoadingPatients] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open || patients.length > 0) return;
+    const load = async () => {
+      setLoadingPatients(true);
+      const { data: links } = await supabase
+        .from("nutritionist_patients")
+        .select("patient_id")
+        .eq("nutritionist_id", user?.id ?? "")
+        .eq("status", "active");
+      const ids = (links || []).map(l => l.patient_id);
+      if (ids.length === 0) { setLoadingPatients(false); return; }
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", ids);
+      setPatients((profiles || []).map(p => ({ id: p.user_id, name: p.full_name || "Sem nome" })).sort((a, b) => a.name.localeCompare(b.name)));
+      setLoadingPatients(false);
+    };
+    load();
+  }, [open, user?.id]);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const filtered = patients.filter(p => !search || p.name.toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <div ref={containerRef} className="relative">
+      <Button size="sm" variant="outline" className="gap-1.5 text-xs border-primary/30 text-primary" onClick={() => setOpen(!open)} disabled={disabled}>
+        <UserPlus className="w-3.5 h-3.5" />
+        Aplicar em...
+      </Button>
+      {open && (
+        <div className="absolute z-50 right-0 mt-1 w-72 rounded-xl border border-border bg-popover shadow-xl">
+          <div className="p-2 border-b border-border/50">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-muted-foreground" />
+              <Input placeholder="Buscar paciente..." value={search} onChange={e => setSearch(e.target.value)} className="pl-8 h-9 text-sm" autoFocus />
+            </div>
+          </div>
+          <ScrollArea className="max-h-56">
+            <div className="p-1">
+              {loadingPatients ? (
+                <div className="flex items-center justify-center py-4 gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Carregando...
+                </div>
+              ) : filtered.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-4">Nenhum paciente encontrado</p>
+              ) : (
+                filtered.map(p => (
+                  <button key={p.id} onClick={() => { onApply(p.id, p.name); setOpen(false); setSearch(""); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left hover:bg-primary/10 transition-all text-sm">
+                    <Users className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="truncate">{p.name}</span>
+                  </button>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ── Sub-components ──
 function StatCard({ label, value, color = "text-foreground", sub }: { label: string; value: string | number; color?: string; sub?: string }) {
@@ -513,6 +596,41 @@ export default function PlanBatchAudit() {
   }, [reformulations, saveReformulation]);
 
   const openDraft = (planId: string) => navigate(`/meal-plans/${planId}`);
+  const [reformSearch, setReformSearch] = useState("");
+  const [applyingTo, setApplyingTo] = useState<string | null>(null);
+
+  const applyToPatient = useCallback(async (reform: Reformulation, patientId: string, patientName: string) => {
+    if (!reform.savedPlanId) {
+      toast.error("Salve o draft primeiro antes de aplicar.");
+      return;
+    }
+    setApplyingTo(reform.savedPlanId);
+    try {
+      const { error } = await supabase
+        .from("meal_plans")
+        .update({ patient_id: patientId })
+        .eq("id", reform.savedPlanId);
+      if (error) throw error;
+      toast.success(`Plano aplicado para ${patientName}!`);
+      setReformulations(prev => prev.map(r =>
+        r.savedPlanId === reform.savedPlanId
+          ? { ...r, appliedToPatient: patientName }
+          : r
+      ));
+    } catch (e: any) {
+      toast.error("Erro ao aplicar: " + e.message);
+    }
+    setApplyingTo(null);
+  }, []);
+
+  const filteredReformulations = useMemo(() => {
+    if (!reformSearch) return reformulations;
+    const q = reformSearch.toLowerCase();
+    return reformulations.filter(r =>
+      r.original.title.toLowerCase().includes(q) ||
+      r.original.patient_name.toLowerCase().includes(q)
+    );
+  }, [reformulations, reformSearch]);
 
   const selectedCount = selected.size;
   const rejectedInFilter = filteredPlans.filter(p => p.blocked_count > 0).length;
@@ -690,7 +808,7 @@ export default function PlanBatchAudit() {
             </div>
           </TabsContent>
 
-          {/* Reformulate */}
+           {/* Reformulate */}
           <TabsContent value="reformulate" className="space-y-4">
             <Card className="glass border-border/50">
               <CardContent className="p-5 space-y-3">
@@ -724,37 +842,87 @@ export default function PlanBatchAudit() {
 
             {reformulations.length > 0 && (
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-semibold">{reformulations.length} planos reformulados</h4>
-                  <Badge variant="outline" className="text-[10px]">
-                    Score: {Math.round(reformulations.reduce((s, r) => s + r.oldScore, 0) / reformulations.length)} → {Math.round(reformulations.reduce((s, r) => s + r.newScore, 0) / reformulations.length)}
-                  </Badge>
-                </div>
-                {reformulations.map(r => (
-                  <div key={r.planId} className="flex items-center gap-3 p-3 rounded-lg border border-primary/20 bg-primary/5">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className={SEVERITY_CONFIG[r.original.severity].badgeClass + " text-[10px]"}>{r.oldScore}</Badge>
-                      <ArrowRight className="w-3 h-3 text-muted-foreground" />
-                      <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-500 text-[10px]">{r.newScore}</Badge>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{r.original.title}</p>
-                      <p className="text-xs text-muted-foreground">{r.original.patient_name} • {r.substitutions.length} substituições</p>
-                    </div>
-                    <div className="flex gap-1.5 shrink-0">
-                      {r.savedPlanId ? (
-                        <Button size="sm" variant="outline" className="gap-1.5 border-primary/30" onClick={() => openDraft(r.savedPlanId!)}>
-                          <ExternalLink className="w-3.5 h-3.5" /> Abrir Draft
-                        </Button>
-                      ) : (
-                        <Button size="sm" variant="outline" className="gap-1.5" onClick={() => saveSingle(r)} disabled={saving !== null}>
-                          {saving === r.planId ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                          Salvar Draft
-                        </Button>
-                      )}
-                    </div>
+                {/* Header with search */}
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-3">
+                    <h4 className="text-sm font-semibold">{filteredReformulations.length} cardápios reformulados</h4>
+                    <Badge variant="outline" className="text-[10px]">
+                      Score: {Math.round(reformulations.reduce((s, r) => s + r.oldScore, 0) / reformulations.length)} → {Math.round(reformulations.reduce((s, r) => s + r.newScore, 0) / reformulations.length)}
+                    </Badge>
                   </div>
-                ))}
+                  <div className="relative w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar por plano ou paciente..."
+                      value={reformSearch}
+                      onChange={e => setReformSearch(e.target.value)}
+                      className="pl-9 h-8 text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Reformulated cards */}
+                <div className="space-y-2 max-h-[65vh] overflow-y-auto pr-1">
+                  {filteredReformulations.map(r => (
+                    <motion.div
+                      key={r.planId}
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`rounded-xl border p-3 transition-colors ${
+                        r.savedPlanId
+                          ? r.appliedToPatient
+                            ? "border-emerald-500/30 bg-emerald-500/5"
+                            : "border-primary/20 bg-primary/5"
+                          : "border-border bg-card"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        {/* Score change */}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Badge variant="outline" className={SEVERITY_CONFIG[r.original.severity].badgeClass + " text-[10px]"}>{r.oldScore}</Badge>
+                          <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                          <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-500 text-[10px]">{r.newScore}</Badge>
+                        </div>
+
+                        {/* Plan info */}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{r.original.title}</p>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span>{r.original.patient_name}</span>
+                            <span>•</span>
+                            <span>{r.substitutions.length} substituições</span>
+                            {r.appliedToPatient && (
+                              <>
+                                <span>•</span>
+                                <span className="text-emerald-500 font-medium">✓ Aplicado: {r.appliedToPatient}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {r.savedPlanId ? (
+                            <>
+                              <PatientPickerInline
+                                onApply={(patientId, patientName) => applyToPatient(r, patientId, patientName)}
+                                disabled={applyingTo === r.savedPlanId}
+                              />
+                              <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => openDraft(r.savedPlanId!)}>
+                                <ExternalLink className="w-3.5 h-3.5" /> Abrir
+                              </Button>
+                            </>
+                          ) : (
+                            <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => saveSingle(r)} disabled={saving !== null}>
+                              {saving === r.planId ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                              Salvar Draft
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
             )}
           </TabsContent>
