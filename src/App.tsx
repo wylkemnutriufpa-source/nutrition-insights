@@ -540,6 +540,7 @@ const App = () => (
               <Route path="/system-diagnostics" element={<AdminRoute><LP section="System Diagnostics"><SystemDiagnostics /></LP></AdminRoute>} />
               <Route path="/system-diagnostics/realtime" element={<AdminRoute><LP section="Realtime Debug"><RealtimeDebugCenter /></LP></AdminRoute>} />
               <Route path="/admin/personal-workouts" element={<AdminRoute><LP section="Personal Trainer"><PersonalWorkouts /></LP></AdminRoute>} />
+              <Route path="/coach-bodybuilder" element={<NutritionistRoute><LP section="Coach Bodybuilder"><CoachBodybuilder /></LP></NutritionistRoute>} />
               <Route path="/system-health-live" element={<AdminRoute><LP section="System Health"><SystemHealthLive /></LP></AdminRoute>} />
               <Route path="/ops-center" element={<AdminRoute><LP section="Operations Center"><OperationalDashboard /></LP></AdminRoute>} />
               <Route path="/professional/crm" element={<NutritionistRoute><LP section="CRM"><ClinicalCRM /></LP></NutritionistRoute>} />
