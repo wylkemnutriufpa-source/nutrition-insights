@@ -25,8 +25,8 @@ const PRO_ROUTES = new Set([
 
 const ADVANCED_ROUTES = new Set([
   "/automation", "/control-tower", "/workspace",
-  "/workspace-editor", "/intelligence-settings",
-  "/clinical-workspace", "/professional/crm",
+  "/intelligence-settings",
+  "/professional/crm",
   "/admin/import-patients", "/integrations",
   "/team", "/settings/whatsapp", "/campaigns",
   "/coach-bodybuilder",
