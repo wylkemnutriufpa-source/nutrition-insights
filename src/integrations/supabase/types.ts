@@ -5501,6 +5501,77 @@ export type Database = {
           },
         ]
       }
+      meal_plan_simplification_audit: {
+        Row: {
+          created_at: string
+          id: string
+          issue_type: string
+          meal_plan_id: string
+          meal_plan_item_id: string | null
+          message: string
+          severity: string
+          simplicity_score_after: number | null
+          simplicity_score_before: number | null
+          suggested_fix: string | null
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          issue_type: string
+          meal_plan_id: string
+          meal_plan_item_id?: string | null
+          message: string
+          severity?: string
+          simplicity_score_after?: number | null
+          simplicity_score_before?: number | null
+          suggested_fix?: string | null
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          issue_type?: string
+          meal_plan_id?: string
+          meal_plan_item_id?: string | null
+          message?: string
+          severity?: string
+          simplicity_score_after?: number | null
+          simplicity_score_before?: number | null
+          suggested_fix?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_plan_simplification_audit_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_resolved_state"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_plan_simplification_audit_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_plan_simplification_audit_meal_plan_item_id_fkey"
+            columns: ["meal_plan_item_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_plan_simplification_audit_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meal_plan_versions: {
         Row: {
           change_reason: string | null

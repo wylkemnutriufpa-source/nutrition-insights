@@ -5,6 +5,8 @@ import {
   ArrowLeft, Loader2, AlertTriangle, Zap, Save, Send, CheckCircle2,
   Wand2, Trash2, Library, LayoutGrid, List, Minimize2, Maximize2, Sparkles, Utensils
 } from "lucide-react";
+import { useTenant } from "@/lib/tenantContext";
+import SimplifyPlanButton from "@/components/meal-simplification/SimplifyPlanButton";
 import { useAuth } from "@/lib/auth";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,6 +33,7 @@ export default function MealPlanEditorV2() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const store = useMealPlanEditorV2Store();
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
@@ -252,6 +255,16 @@ export default function MealPlanEditorV2() {
               <Sparkles className="w-4 h-4" />
               <span className="hidden sm:inline">Plano Assistido</span>
             </Button>
+            {plan && tenantId && (
+              <SimplifyPlanButton
+                planId={plan.id}
+                patientId={plan.patient_id}
+                nutritionistId={plan.nutritionist_id}
+                tenantId={tenantId}
+                items={store.items}
+                onSimplified={(newId) => navigate(`/meal-plan-editor/${newId}`)}
+              />
+            )}
             <Button
               variant="outline"
               size="sm"
