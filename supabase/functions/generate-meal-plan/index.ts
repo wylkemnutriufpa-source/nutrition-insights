@@ -702,6 +702,7 @@ serve(async (req) => {
           generation_source: "protocol_fitjourney_v3",
           generated_by: userId,
           generation_metadata: generationMetadata,
+          tenant_id: resolvedTenantId,
         })
         .select("id")
         .single();
