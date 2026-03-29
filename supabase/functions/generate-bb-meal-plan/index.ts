@@ -493,6 +493,7 @@ serve(async (req) => {
         generation_source: "protocol_biquini_branco",
         generated_by: userId,
         generation_metadata: generationMetadata,
+        tenant_id: resolvedTenantId,
       })
       .select("id")
       .single();
