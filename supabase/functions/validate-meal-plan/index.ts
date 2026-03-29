@@ -90,8 +90,8 @@ const COMPLEX_PREP_KEYWORDS = [
 ];
 
 // ── Brazilian base foods for main meals ───────────────────────────────────────
-const BRAZILIAN_PROTEINS = ["frango", "carne", "peixe", "tilápia", "sardinha", "ovo", "porco", "bife", "filé"];
-const BRAZILIAN_CARBS = ["arroz", "macarrão", "batata", "batata doce", "macaxeira", "purê", "cuscuz", "feijão"];
+const BRAZILIAN_PROTEINS = ["frango", "carne", "peixe", "tilápia", "sardinha", "ovo", "porco", "bife", "filé", "linguiça", "charque", "jabá"];
+const BRAZILIAN_CARBS = ["arroz", "macarrão", "batata", "batata doce", "macaxeira", "purê", "cuscuz", "feijão", "tapioca", "inhame", "aipim", "mandioca", "farinha", "farofa", "milho", "açaí"];
 const ALLOWED_FRUITS = ["banana", "maçã", "mamão", "melão", "manga", "abacaxi", "laranja", "morango", "uva", "melancia", "goiaba", "acerola", "pera"];
 
 function normalize(text: string): string {
