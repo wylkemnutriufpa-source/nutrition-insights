@@ -36,7 +36,7 @@ const defaultTestimonials = [
 
 export default function PatientLanding() {
   const { data } = useSiteSettings();
-  const { canInstall, isInstalled, install } = useInstallPrompt();
+  const { canInstall, isIos, isInstalled, install, showIosGuide, setShowIosGuide } = useInstallPrompt();
   const map = data?.map;
 
   const heroBadge = getSetting(map, "patient_hero_badge", "Programa de Acompanhamento Online Inteligente");
@@ -81,8 +81,18 @@ export default function PatientLanding() {
                 onClick={install}
                 className="h-14 px-10 bg-white/10 border border-white/20 text-white text-lg hover:bg-white/20 shadow-xl rounded-xl font-semibold hover:scale-105 transition-transform backdrop-blur-sm"
               >
-                <Smartphone className="w-5 h-5 mr-2" />
+                <Download className="w-5 h-5 mr-2" />
                 Instalar Aplicativo
+              </Button>
+            )}
+            {isIos && (
+              <Button
+                size="lg"
+                onClick={() => setShowIosGuide(true)}
+                className="h-14 px-10 bg-white/10 border border-white/20 text-white text-lg hover:bg-white/20 shadow-xl rounded-xl font-semibold hover:scale-105 transition-transform backdrop-blur-sm"
+              >
+                <Smartphone className="w-5 h-5 mr-2" />
+                Adicionar à Tela Inicial
               </Button>
             )}
             {isInstalled && (
@@ -91,6 +101,49 @@ export default function PatientLanding() {
               </span>
             )}
           </motion.div>
+
+          {/* iOS Install Guide Modal */}
+          {showIosGuide && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+              onClick={() => setShowIosGuide(false)}
+            >
+              <motion.div
+                initial={{ y: 100, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ type: "spring", damping: 25 }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-md rounded-2xl border border-white/10 bg-[#1a1a2e] p-6 shadow-2xl"
+              >
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <Smartphone className="w-5 h-5 text-emerald-400" />
+                  Adicionar à Tela Inicial
+                </h3>
+                <div className="space-y-4 text-white/70 text-sm">
+                  <div className="flex items-start gap-3">
+                    <span className="flex-shrink-0 w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">1</span>
+                    <p>Toque no botão <strong className="text-white">Compartilhar</strong> <span className="inline-block align-middle">⬆️</span> na barra do Safari (parte inferior da tela)</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="flex-shrink-0 w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">2</span>
+                    <p>Role para baixo e toque em <strong className="text-white">"Adicionar à Tela de Início"</strong> <span className="inline-block align-middle">➕</span></p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="flex-shrink-0 w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">3</span>
+                    <p>Toque em <strong className="text-white">"Adicionar"</strong> no canto superior direito</p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => setShowIosGuide(false)}
+                  className="w-full mt-6 h-12 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold"
+                >
+                  Entendi!
+                </Button>
+              </motion.div>
+            </motion.div>
+          )}
         </motion.div>
       </section>
 
