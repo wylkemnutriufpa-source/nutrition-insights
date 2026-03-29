@@ -65,6 +65,7 @@ const CATEGORIES = [
 
 export default function Checklist() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const { awardPoints } = usePatientPoints();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
