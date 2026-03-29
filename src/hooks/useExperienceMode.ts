@@ -30,7 +30,6 @@ const ADVANCED_ROUTES = new Set([
   "/professional/crm",
   "/admin/import-patients", "/integrations",
   "/team", "/settings/whatsapp",
-  "/coach-bodybuilder",
 ]);
 
 export function getVisibleRoutes(mode: ExperienceMode): Set<string> {
