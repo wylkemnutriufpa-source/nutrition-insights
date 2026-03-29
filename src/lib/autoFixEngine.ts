@@ -1,8 +1,16 @@
 /**
- * Motor de Correção Automática Inteligente — FitJourney Autopilot Clínico v1.0
+ * Motor de Correção Automática Inteligente — FitJourney AutoFix Engine v1.0
  * 
- * Analisa, corrige e gera nova versão do plano em 1 clique.
- * Preserva objetivo clínico e macros dentro de ±10-15%.
+ * Pipeline completo:
+ * 1. Carregar contexto (plano, itens, objetivo do paciente)
+ * 2. Remover alimentos bloqueados
+ * 3. Simplificar cafés da manhã
+ * 4. Simplificar lanches
+ * 5. Padronizar refeições principais
+ * 6. Reduzir complexidade
+ * 7. Rebalancear macros
+ * 8. Criar nova versão draft
+ * 9. Registrar timeline
  */
 
 import { supabase } from "@/integrations/supabase/client";
@@ -19,8 +27,18 @@ type MealPlanItem = Tables<"meal_plan_items">;
 
 // ── Types ────────────────────────────────────────────────────
 
+export type AutoFixChangeType =
+  | "blocked_food_removed"
+  | "meal_simplified"
+  | "fruit_reduction"
+  | "breakfast_fixed"
+  | "snack_fixed"
+  | "main_meal_standardized"
+  | "macro_rebalanced"
+  | "complexity_reduced";
+
 export interface AutoFixChange {
-  type: "blocked_food_removed" | "meal_simplified" | "fruit_reduction" | "breakfast_fixed" | "snack_fixed" | "macro_rebalanced";
+  type: AutoFixChangeType;
   mealType: string;
   dayOfWeek: number;
   from: string;
@@ -47,7 +65,40 @@ export interface AutoFixResult {
     totalFat: number;
   };
   warnings: string[];
+  summary: {
+    blocked_removed: number;
+    meals_simplified: number;
+    snacks_fixed: number;
+    breakfasts_fixed: number;
+    main_meals_standardized: number;
+    macro_rebalanced: boolean;
+  };
 }
+
+export type AutoFixStep =
+  | "loading_context"
+  | "removing_blocked"
+  | "simplifying_breakfast"
+  | "simplifying_snacks"
+  | "standardizing_meals"
+  | "reducing_complexity"
+  | "rebalancing_macros"
+  | "creating_draft"
+  | "revalidating"
+  | "done";
+
+export const AUTOFIX_STEP_LABELS: Record<AutoFixStep, string> = {
+  loading_context: "Carregando contexto do plano...",
+  removing_blocked: "Removendo alimentos bloqueados...",
+  simplifying_breakfast: "Simplificando cafés da manhã...",
+  simplifying_snacks: "Simplificando lanches...",
+  standardizing_meals: "Padronizando refeições principais...",
+  reducing_complexity: "Reduzindo complexidade...",
+  rebalancing_macros: "Recalculando macros...",
+  creating_draft: "Criando versão corrigida...",
+  revalidating: "Revalidando plano...",
+  done: "Concluído!",
+};
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -59,7 +110,24 @@ function sumMacro(items: MealPlanItem[], key: "calories_target" | "protein_targe
   return items.reduce((s, i) => s + (i[key] || 0), 0);
 }
 
-// ── Core: Apply text replacements ────────────────────────────
+function isMealType(mealType: string, ...types: string[]): boolean {
+  const n = normalize(mealType);
+  return types.some(t => n.includes(t));
+}
+
+function isBreakfast(mealType: string): boolean {
+  return isMealType(mealType, "breakfast", "cafe");
+}
+
+function isSnack(mealType: string): boolean {
+  return isMealType(mealType, "snack", "lanche", "ceia");
+}
+
+function isMainMeal(mealType: string): boolean {
+  return isMealType(mealType, "lunch", "dinner", "almoco", "jantar");
+}
+
+// ── Fix: Replace blocked foods ──────────────────────────────
 
 function replaceBlockedFoods(text: string): { result: string; changes: Array<{ from: string; to: string }> } {
   let result = text;
@@ -85,14 +153,13 @@ function replaceBlockedFoods(text: string): { result: string; changes: Array<{ f
   return { result: result || text, changes };
 }
 
-// ── Core: Fix a single item ─────────────────────────────────
+// ── Fix: Single item (blocked foods) ────────────────────────
 
-function fixItem(item: MealPlanItem): { fixed: MealPlanItem; changes: AutoFixChange[] } {
+function fixItemBlockedFoods(item: MealPlanItem): { fixed: MealPlanItem; changes: AutoFixChange[] } {
   const changes: AutoFixChange[] = [];
   let title = item.title;
   let description = item.description || "";
 
-  // 1. Replace blocked foods in title
   const titleFix = replaceBlockedFoods(title);
   for (const c of titleFix.changes) {
     changes.push({
@@ -105,7 +172,6 @@ function fixItem(item: MealPlanItem): { fixed: MealPlanItem; changes: AutoFixCha
   }
   title = titleFix.result;
 
-  // 2. Replace blocked foods in description
   const descFix = replaceBlockedFoods(description);
   for (const c of descFix.changes) {
     if (!changes.some(ch => ch.from === c.from && ch.dayOfWeek === (item.day_of_week ?? 0))) {
@@ -120,31 +186,137 @@ function fixItem(item: MealPlanItem): { fixed: MealPlanItem; changes: AutoFixCha
   }
   description = descFix.result;
 
-  return {
-    fixed: { ...item, title, description },
-    changes,
-  };
+  return { fixed: { ...item, title, description }, changes };
 }
 
-// ── Core: Fix meal group complexity ──────────────────────────
+// ── Fix: Breakfast simplification ───────────────────────────
 
-function fixMealGroupComplexity(
+function fixBreakfastComplexity(
   items: MealPlanItem[],
+  dayOfWeek: number,
   mealType: string,
-  dayOfWeek: number
+  isGainGoal: boolean
+): { items: MealPlanItem[]; changes: AutoFixChange[] } {
+  const changes: AutoFixChange[] = [];
+  let result = [...items];
+  const maxItems = isGainGoal ? 4 : 3;
+
+  if (result.length > maxItems) {
+    const removed = result.splice(maxItems);
+    changes.push({
+      type: "breakfast_fixed",
+      mealType,
+      dayOfWeek,
+      from: `${result.length + removed.length} itens`,
+      to: `${result.length} itens (máx ${maxItems})`,
+      detail: `Removidos: ${removed.map(r => r.title).join(", ")}`,
+    });
+  }
+
+  // Check excess protein at breakfast for weight loss
+  if (!isGainGoal) {
+    const totalProtein = result.reduce((sum, i) => sum + (i.protein_target || 0), 0);
+    if (totalProtein > 30) {
+      // Scale down protein items
+      const factor = 30 / totalProtein;
+      for (const item of result) {
+        if (item.protein_target && item.protein_target > 10) {
+          const oldP = item.protein_target;
+          item.protein_target = Math.round(item.protein_target * factor);
+          item.calories_target = Math.round((item.calories_target || 0) * 0.9);
+          changes.push({
+            type: "breakfast_fixed",
+            mealType,
+            dayOfWeek,
+            from: `${oldP}g proteína`,
+            to: `${item.protein_target}g proteína`,
+            detail: "Proteína reduzida no café da manhã para emagrecimento",
+          });
+        }
+      }
+    }
+  }
+
+  return { items: result, changes };
+}
+
+// ── Fix: Snack simplification ───────────────────────────────
+
+function fixSnackComplexity(
+  items: MealPlanItem[],
+  dayOfWeek: number,
+  mealType: string,
+  isGainGoal: boolean
+): { items: MealPlanItem[]; changes: AutoFixChange[] } {
+  const changes: AutoFixChange[] = [];
+  let result = [...items];
+  const maxItems = isGainGoal ? 3 : 2;
+
+  if (result.length > maxItems) {
+    const removed = result.splice(maxItems);
+    changes.push({
+      type: "snack_fixed",
+      mealType,
+      dayOfWeek,
+      from: `${result.length + removed.length} itens`,
+      to: `${result.length} itens (máx ${maxItems})`,
+      detail: `Removidos: ${removed.map(r => r.title).join(", ")}`,
+    });
+  }
+
+  return { items: result, changes };
+}
+
+// ── Fix: Main meal standardization ──────────────────────────
+
+const BRAZILIAN_PROTEINS = [
+  "frango", "peito de frango", "coxa", "sobrecoxa",
+  "carne", "bife", "patinho", "alcatra", "acém", "carne moída",
+  "tilápia", "sardinha", "merluza", "peixe",
+  "porco", "lombo", "bisteca",
+  "ovo", "ovos", "omelete",
+  "linguiça",
+];
+
+const BRAZILIAN_CARBS = [
+  "arroz", "macarrão", "espaguete",
+  "batata", "purê", "batata doce",
+  "macaxeira", "aipim", "mandioca",
+  "cuscuz", "tapioca",
+  "feijão", "lentilha",
+  "inhame", "cará",
+  "farofa",
+];
+
+function fixMainMealStandardization(
+  items: MealPlanItem[],
+  dayOfWeek: number,
+  mealType: string
 ): { items: MealPlanItem[]; changes: AutoFixChange[] } {
   const changes: AutoFixChange[] = [];
   let result = [...items];
 
-  const isBreakfast = mealType.includes("breakfast") || mealType.includes("cafe");
-  const isSnack = mealType.includes("snack") || mealType.includes("lanche") || mealType.includes("ceia");
+  // Check if has Brazilian protein
+  const allText = result.map(i => normalize(`${i.title} ${i.description || ""}`)).join(" ");
+  const hasProtein = BRAZILIAN_PROTEINS.some(p => allText.includes(normalize(p)));
+  const hasCarb = BRAZILIAN_CARBS.some(c => allText.includes(normalize(c)));
+
+  if (!hasProtein || !hasCarb) {
+    changes.push({
+      type: "main_meal_standardized",
+      mealType,
+      dayOfWeek,
+      from: hasProtein ? "sem carboidrato brasileiro" : "sem proteína brasileira",
+      to: hasProtein ? "adicionar arroz/batata/macarrão" : "adicionar frango/carne/peixe",
+      detail: "Refeição principal deve ter base brasileira (proteína + carbo)",
+    });
+  }
 
   // Reduce excess items
-  const maxItems = isBreakfast ? 3 : isSnack ? 2 : 5;
-  if (result.length > maxItems) {
-    const removed = result.splice(maxItems);
+  if (result.length > 5) {
+    const removed = result.splice(5);
     changes.push({
-      type: "meal_simplified",
+      type: "complexity_reduced",
       mealType,
       dayOfWeek,
       from: `${result.length + removed.length} itens`,
@@ -162,11 +334,14 @@ export async function autoFixMealPlan(
   planId: string,
   patientId: string,
   nutritionistId: string,
-  tenantId: string
+  tenantId: string,
+  onStep?: (step: AutoFixStep) => void
 ): Promise<AutoFixResult> {
   const warnings: string[] = [];
 
-  // 1. Load plan
+  // ─── STEP 1: Load context ───────────────────────────────
+  onStep?.("loading_context");
+
   const { data: plan, error: planErr } = await supabase
     .from("meal_plans")
     .select("*")
@@ -177,12 +352,10 @@ export async function autoFixMealPlan(
     return emptyResult("Plano não encontrado");
   }
 
-  // Block fixing immutable plans (create new version instead)
   if (["approved", "published", "published_to_patient"].includes(plan.plan_status)) {
     warnings.push("Plano imutável — nova versão será criada como draft");
   }
 
-  // 2. Load items
   const { data: items, error: itemsErr } = await supabase
     .from("meal_plan_items")
     .select("*")
@@ -194,7 +367,28 @@ export async function autoFixMealPlan(
     return emptyResult("Itens do plano não encontrados");
   }
 
-  // 3. Calculate BEFORE scores
+  // Load patient goal for goal-aware fixes
+  let patientGoal = "emagrecimento";
+  try {
+    const { data: anamnesis } = await supabase
+      .from("patient_anamnesis")
+      .select("answers")
+      .eq("user_id", patientId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (anamnesis?.answers && typeof anamnesis.answers === "object") {
+      const ans = anamnesis.answers as Record<string, any>;
+      const goal = ans.primary_goal || ans.objetivo || ans.goal;
+      if (goal && typeof goal === "string") patientGoal = goal;
+    }
+  } catch { /* fallback to default */ }
+
+  const isGainGoal = ["gain_weight", "muscle_gain", "ganho_de_massa", "hipertrofia", "performance"].includes(
+    normalize(patientGoal)
+  );
+
+  // ─── STEP 2: Calculate BEFORE scores ────────────────────
   const beforeAudit = toAuditItems(items);
   const beforeScore = calculatePlanSimplicityScore(beforeAudit);
   const beforeCal = sumMacro(items, "calories_target");
@@ -202,15 +396,16 @@ export async function autoFixMealPlan(
   const beforeCarbs = sumMacro(items, "carbs_target");
   const beforeFat = sumMacro(items, "fat_target");
 
-  // 4. Apply fixes to each item
+  // ─── STEP 3: Remove blocked foods ──────────────────────
+  onStep?.("removing_blocked");
   const allChanges: AutoFixChange[] = [];
   let fixedItems: MealPlanItem[] = items.map(item => {
-    const { fixed, changes } = fixItem(item);
+    const { fixed, changes } = fixItemBlockedFoods(item);
     allChanges.push(...changes);
     return fixed;
   });
 
-  // 5. Fix meal group complexity
+  // ─── STEP 4-6: Fix by meal type ────────────────────────
   const mealGroups = new Map<string, MealPlanItem[]>();
   for (const item of fixedItems) {
     const key = `${item.day_of_week ?? 0}_${item.meal_type}`;
@@ -223,14 +418,48 @@ export async function autoFixMealPlan(
     const [dayStr, ...mealParts] = key.split("_");
     const mealType = mealParts.join("_");
     const day = parseInt(dayStr);
-    const { items: fixedGroup, changes } = fixMealGroupComplexity(groupItems, mealType, day);
-    allChanges.push(...changes);
-    finalItems.push(...fixedGroup);
+
+    if (isBreakfast(mealType)) {
+      onStep?.("simplifying_breakfast");
+      const { items: fixed, changes } = fixBreakfastComplexity(groupItems, day, mealType, isGainGoal);
+      allChanges.push(...changes);
+      finalItems.push(...fixed);
+    } else if (isSnack(mealType)) {
+      onStep?.("simplifying_snacks");
+      const { items: fixed, changes } = fixSnackComplexity(groupItems, day, mealType, isGainGoal);
+      allChanges.push(...changes);
+      finalItems.push(...fixed);
+    } else if (isMainMeal(mealType)) {
+      onStep?.("standardizing_meals");
+      const { items: fixed, changes } = fixMainMealStandardization(groupItems, day, mealType);
+      allChanges.push(...changes);
+      finalItems.push(...fixed);
+    } else {
+      // Other meal types: just reduce complexity
+      onStep?.("reducing_complexity");
+      if (groupItems.length > 5) {
+        const kept = groupItems.slice(0, 5);
+        const removed = groupItems.slice(5);
+        allChanges.push({
+          type: "complexity_reduced",
+          mealType,
+          dayOfWeek: day,
+          from: `${groupItems.length} itens`,
+          to: `${kept.length} itens`,
+          detail: `Removidos: ${removed.map(r => r.title).join(", ")}`,
+        });
+        finalItems.push(...kept);
+      } else {
+        finalItems.push(...groupItems);
+      }
+    }
   }
 
-  // 6. Rebalance macros if drift > 15%
+  // ─── STEP 7: Rebalance macros ──────────────────────────
+  onStep?.("rebalancing_macros");
+  let macroRebalanced = false;
   const afterCal = sumMacro(finalItems, "calories_target");
-  if (beforeCal > 0 && Math.abs(afterCal - beforeCal) / beforeCal > 0.15) {
+  if (beforeCal > 0 && Math.abs(afterCal - beforeCal) / beforeCal > 0.10) {
     const factor = beforeCal / (afterCal || 1);
     for (const item of finalItems) {
       if (item.calories_target) item.calories_target = Math.round(item.calories_target * factor);
@@ -238,6 +467,7 @@ export async function autoFixMealPlan(
       if (item.carbs_target) item.carbs_target = Math.round(item.carbs_target * factor);
       if (item.fat_target) item.fat_target = Math.round(item.fat_target * factor);
     }
+    macroRebalanced = true;
     allChanges.push({
       type: "macro_rebalanced",
       mealType: "all",
@@ -248,11 +478,22 @@ export async function autoFixMealPlan(
     });
   }
 
-  // 7. Calculate AFTER scores
+  // ─── STEP 8: Calculate AFTER scores ────────────────────
   const afterAudit = toAuditItems(finalItems);
   const afterScore = calculatePlanSimplicityScore(afterAudit);
 
-  // 8. Create new draft plan
+  // ─── STEP 9: Create new draft plan ─────────────────────
+  onStep?.("creating_draft");
+
+  const changeSummary = {
+    blocked_removed: allChanges.filter(c => c.type === "blocked_food_removed").length,
+    meals_simplified: allChanges.filter(c => c.type === "meal_simplified" || c.type === "complexity_reduced").length,
+    snacks_fixed: allChanges.filter(c => c.type === "snack_fixed").length,
+    breakfasts_fixed: allChanges.filter(c => c.type === "breakfast_fixed").length,
+    main_meals_standardized: allChanges.filter(c => c.type === "main_meal_standardized").length,
+    macro_rebalanced: macroRebalanced,
+  };
+
   const newPlanInsert: TablesInsert<"meal_plans"> = {
     title: `${plan.title} (Corrigido)`,
     description: `Versão corrigida automaticamente a partir do plano "${plan.title}"`,
@@ -271,11 +512,14 @@ export async function autoFixMealPlan(
     total_target_fat: plan.total_target_fat,
     editor_version: "v2",
     generation_metadata: {
-      engine: "auto_fix_v1",
+      engine: "auto_fix_engine_v1",
       original_plan_id: planId,
       original_score: beforeScore.total,
       fixed_score: afterScore.total,
       changes_count: allChanges.length,
+      patient_goal: patientGoal,
+      is_gain_goal: isGainGoal,
+      changes_summary: changeSummary,
       generated_at: new Date().toISOString(),
     } as unknown as Tables<"meal_plans">["generation_metadata"],
   };
@@ -291,7 +535,7 @@ export async function autoFixMealPlan(
     return emptyResult("Falha ao criar plano corrigido");
   }
 
-  // 9. Insert fixed items
+  // Insert fixed items
   const newItems: TablesInsert<"meal_plan_items">[] = finalItems.map(fi => ({
     meal_plan_id: newPlan.id,
     title: fi.title,
@@ -314,21 +558,24 @@ export async function autoFixMealPlan(
     warnings.push("Alguns itens podem não ter sido salvos");
   }
 
-  // 10. Record timeline
+  // Record timeline
   await supabase.from("patient_timeline").insert({
     patient_id: patientId,
     event_type: "plan_auto_fixed",
     title: "Plano alimentar corrigido automaticamente",
-    description: `Score: ${beforeScore.total} → ${afterScore.total}. ${allChanges.length} correções aplicadas.`,
+    description: `Score: ${beforeScore.total} → ${afterScore.total}. ${allChanges.length} correções. Objetivo: ${patientGoal}.`,
     metadata: {
       original_plan_id: planId,
       new_plan_id: newPlan.id,
       score_before: beforeScore.total,
       score_after: afterScore.total,
       changes_count: allChanges.length,
+      patient_goal: patientGoal,
     } as any,
     tenant_id: tenantId,
   });
+
+  onStep?.("done");
 
   return {
     success: true,
@@ -349,6 +596,7 @@ export async function autoFixMealPlan(
       totalFat: sumMacro(finalItems, "fat_target"),
     },
     warnings,
+    summary: changeSummary,
   };
 }
 
@@ -369,7 +617,7 @@ function toAuditItems(items: MealPlanItem[]): MealItemForAudit[] {
 }
 
 function emptyResult(warning: string): AutoFixResult {
-  const empty = {
+  const empty: SimplicityScore = {
     total: 0, label: "N/A", color: "text-muted-foreground",
     issues: [], blockedFoodsFound: [], problematicMeals: 0, totalMeals: 0,
   };
@@ -379,5 +627,13 @@ function emptyResult(warning: string): AutoFixResult {
     before: { score: empty, totalCalories: 0, totalProtein: 0, totalCarbs: 0, totalFat: 0 },
     after: { score: empty, totalCalories: 0, totalProtein: 0, totalCarbs: 0, totalFat: 0 },
     warnings: [warning],
+    summary: {
+      blocked_removed: 0,
+      meals_simplified: 0,
+      snacks_fixed: 0,
+      breakfasts_fixed: 0,
+      main_meals_standardized: 0,
+      macro_rebalanced: false,
+    },
   };
 }
