@@ -315,11 +315,11 @@ export default function PlanBatchAudit() {
       const patientIds = [...new Set((plans || []).map(p => p.patient_id))];
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, full_name")
-        .in("id", patientIds.slice(0, 100));
+        .select("user_id, full_name")
+        .in("user_id", patientIds.slice(0, 100));
 
       const nameMap: Record<string, string> = {};
-      (profiles || []).forEach(p => { if (p.full_name) nameMap[p.id] = p.full_name; });
+      (profiles || []).forEach(p => { if (p.full_name) nameMap[p.user_id] = p.full_name; });
 
       const itemsByPlan: Record<string, PlanItem[]> = {};
       (allItems || []).forEach(item => {
