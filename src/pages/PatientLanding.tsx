@@ -36,7 +36,7 @@ const defaultTestimonials = [
 
 export default function PatientLanding() {
   const { data } = useSiteSettings();
-  const { canInstall, isInstalled, install } = useInstallPrompt();
+  const { canInstall, isIos, isInstalled, install, showIosGuide, setShowIosGuide } = useInstallPrompt();
   const map = data?.map;
 
   const heroBadge = getSetting(map, "patient_hero_badge", "Programa de Acompanhamento Online Inteligente");
