@@ -351,7 +351,7 @@ function ComparisonView({ reform, onOpenDraft }: { reform: Reformulation; onOpen
 
 // ── Main Page ──
 export default function PlanBatchAudit() {
-  const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<BatchReport | null>(null);
   const [reformulations, setReformulations] = useState<Reformulation[]>([]);
