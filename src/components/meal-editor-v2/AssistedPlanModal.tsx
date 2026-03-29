@@ -17,9 +17,10 @@ import {
   RefreshCw, ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useMealPlanEditorV2Store, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
+import { useMealPlanEditorV2Store, type MealPlanItem, type MealPlan } from "@/stores/mealPlanEditorV2Store";
 import { slotsToInserts } from "@/lib/mealPlanAutoGenerator";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import {
   loadPatientContext,
   generateAssistedPlan,
