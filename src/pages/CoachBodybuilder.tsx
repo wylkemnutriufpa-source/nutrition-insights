@@ -7,7 +7,7 @@ export default function CoachBodybuilder() {
   const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
 
   return (
-    <MainLayout>
+    <DashboardLayout>
       <div className="min-h-screen p-4 md:p-6 space-y-6">
         {selectedAthleteId ? (
           <AthleteDetailView
