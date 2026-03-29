@@ -567,8 +567,21 @@ serve(async (req) => {
             arr.findIndex(x => x.before === s.before && x.day === s.day && x.meal_type === s.meal_type) === idx
         );
 
+        // ── 4. Clinical Decision Layer (v5) ─────────────────────────────
+        const prioritizedIssues = prioritizeIssuesInternal(
+            simplicityResult.issues, clinicalErrors, restrictionsViolated
+        );
+        const buckets = groupByBucketInternal(prioritizedIssues);
+        const { decision: finalDecision, reason: finalDecisionReason, confidence: confidenceLevel } =
+            computeFinalDecisionInternal(overallScore, overallPassed, prioritizedIssues);
+        const { summary: executiveSummary, recommendation: approvalRecommendation, strategy: correctionStrategy } =
+            generateExecutiveSummaryInternal(
+                overallPassed, overallScore, clinicalScore, simplicityResult.score, adherenceResult.score,
+                simplicityResult.blocked_foods.length, restrictionsViolated.length, prioritizedIssues
+            );
+
         const audit = {
-            engine: "validate-meal-plan@unified_v4",
+            engine: "validate-meal-plan@unified_v5",
             run_at: new Date().toISOString(),
             inputs: { meal_plan_id, patient_id: patientId, num_days: numDays, num_items: items.length, source: assessment ? "physical_assessment" : "anamnesis" },
             targets: { kcal: targetCals, protein: targetP, carbs: targetC, fat: targetF },
@@ -578,6 +591,7 @@ serve(async (req) => {
             simplicity: { score: simplicityResult.score, status: simplicityResult.status, issues_count: simplicityResult.issues.length, blocked_count: simplicityResult.blocked_foods.length },
             adherence: { score: adherenceResult.score, status: adherenceResult.status, factors_count: adherenceResult.factors.length },
             overall: { score: overallScore, status: overallStatus },
+            decision: { final_decision: finalDecision, confidence_level: confidenceLevel, prioritized_issues_count: prioritizedIssues.length },
         };
 
         // ── Persist validation scores to meal_plans ─────────────────────────
@@ -588,20 +602,29 @@ serve(async (req) => {
             overall_score: overallScore,
             overall_validation_status: overallStatus,
             last_validated_at: new Date().toISOString(),
-            validation_engine_version: "unified_v4",
+            validation_engine_version: "unified_v5",
         }).eq("id", meal_plan_id);
 
         // Timeline
         const timelineTitle = overallPassed
             ? "Plano Aprovado pelo Motor Clínico Unificado ✅"
             : "Plano Reprovado pelo Motor Clínico Unificado ❌";
-        const timelineDesc = `Score: ${overallScore}/100 (Clínico: ${clinicalScore} | Simplicidade: ${simplicityResult.score} | Adesão: ${adherenceResult.score})${simplicityResult.blocked_foods.length > 0 ? ` | Bloqueados: ${[...new Set(simplicityResult.blocked_foods.map(b => b.food))].join(", ")}` : ""}`;
+        const timelineDesc = `Score: ${overallScore}/100 (Clínico: ${clinicalScore} | Simplicidade: ${simplicityResult.score} | Adesão: ${adherenceResult.score}) | Decisão: ${finalDecision}`;
 
         await supabase.from("patient_timeline").insert({
             patient_id: patientId, event_type: "meal_plan",
             title: timelineTitle,
             description: timelineDesc,
-            metadata: { type: overallPassed ? "ai_plan_validated" : "plan_validation_failed", meal_plan_id, ...audit },
+            metadata: {
+                type: overallPassed ? "ai_plan_validated" : "plan_validation_failed",
+                meal_plan_id,
+                final_decision: finalDecision,
+                final_decision_reason: finalDecisionReason,
+                confidence_level: confidenceLevel,
+                executive_summary: executiveSummary,
+                prioritized_issues_count: prioritizedIssues.length,
+                ...audit,
+            },
         });
 
         return new Response(JSON.stringify({
@@ -617,6 +640,16 @@ serve(async (req) => {
             clinical_score: clinicalScore,
             simplicity_score: simplicityResult.score,
             adherence_score_prediction: adherenceResult.score,
+
+            // Decision layer (v5)
+            executive_summary: executiveSummary,
+            approval_recommendation: approvalRecommendation,
+            correction_strategy: correctionStrategy,
+            final_decision: finalDecision,
+            final_decision_reason: finalDecisionReason,
+            confidence_level: confidenceLevel,
+            prioritized_issues: prioritizedIssues,
+            buckets,
 
             macros: macroResults,
             restrictions_violated: restrictionsViolated,
@@ -635,3 +668,101 @@ serve(async (req) => {
             { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 });
+
+// ── Decision Helper Functions (inline for edge function context) ──────────────
+
+type IssueSeverity = "critical" | "high" | "medium" | "low";
+type CorrectionBucket = "bloquear_publicacao" | "corrigir_agora" | "corrigir_depois" | "opcional";
+
+interface PrioritizedIssue {
+    severity: IssueSeverity;
+    priority_order: number;
+    correction_bucket: CorrectionBucket;
+    category: string;
+    meal_type: string;
+    day: number;
+    message: string;
+    suggested_fix: string;
+    penalty: number;
+}
+
+const SEV_PRIORITY: Record<IssueSeverity, number> = { critical: 1, high: 2, medium: 3, low: 4 };
+
+function assignBucket(sev: IssueSeverity, cat: string): CorrectionBucket {
+    if (sev === "critical") return "bloquear_publicacao";
+    if (sev === "high" && cat === "critical") return "bloquear_publicacao";
+    if (sev === "high") return "corrigir_agora";
+    if (sev === "medium") return "corrigir_depois";
+    return "opcional";
+}
+
+function prioritizeIssuesInternal(
+    simplicityIssues: SimplicityIssue[],
+    clinicalErrors: Array<{ rule: string; message: string; weight: number }>,
+    restrictionsViolated: Array<{ restriction: string; keyword_found: string }>
+): PrioritizedIssue[] {
+    const issues: PrioritizedIssue[] = [];
+    let order = 0;
+    for (const rv of restrictionsViolated) {
+        order++;
+        issues.push({ severity: "critical", priority_order: order, correction_bucket: "bloquear_publicacao", category: "restriction", meal_type: "", day: 0, message: `Restrição violada: "${rv.restriction}" — "${rv.keyword_found}"`, suggested_fix: `Remover "${rv.keyword_found}"`, penalty: 50 });
+    }
+    for (const err of clinicalErrors) {
+        if (err.rule === "restricao_alimentar") continue;
+        order++;
+        const sev: IssueSeverity = err.weight >= 50 ? "critical" : err.weight >= 30 ? "high" : "medium";
+        issues.push({ severity: sev, priority_order: order, correction_bucket: assignBucket(sev, "clinical"), category: "clinical", meal_type: "", day: 0, message: err.message, suggested_fix: err.rule === "sem_meta_calorica" ? "Completar Anamnese ou Avaliação Física" : "Ajustar quantidades de macros", penalty: err.weight });
+    }
+    for (const issue of simplicityIssues) {
+        order++;
+        const sev = issue.severity as IssueSeverity;
+        issues.push({ severity: sev, priority_order: order, correction_bucket: assignBucket(sev, issue.category), category: issue.category, meal_type: issue.meal_type, day: issue.day, message: issue.message, suggested_fix: issue.suggested_fix, penalty: issue.penalty });
+    }
+    issues.sort((a, b) => { const sp = SEV_PRIORITY[a.severity] - SEV_PRIORITY[b.severity]; return sp !== 0 ? sp : b.penalty - a.penalty; });
+    issues.forEach((issue, idx) => { issue.priority_order = idx + 1; });
+    return issues;
+}
+
+function groupByBucketInternal(issues: PrioritizedIssue[]) {
+    return {
+        bloquear_publicacao: issues.filter(i => i.correction_bucket === "bloquear_publicacao"),
+        corrigir_agora: issues.filter(i => i.correction_bucket === "corrigir_agora"),
+        corrigir_depois: issues.filter(i => i.correction_bucket === "corrigir_depois"),
+        opcional: issues.filter(i => i.correction_bucket === "opcional"),
+    };
+}
+
+function computeFinalDecisionInternal(overallScore: number, overallPassed: boolean, issues: PrioritizedIssue[]) {
+    const hasCritical = issues.some(i => i.severity === "critical");
+    const blockingCount = issues.filter(i => i.correction_bucket === "bloquear_publicacao").length;
+    if (overallPassed && !hasCritical) {
+        return { decision: "publish_now" as const, reason: "Plano aprovado em todas as dimensões.", confidence: (overallScore >= 85 ? "high" : overallScore >= 75 ? "medium" : "low") as const };
+    }
+    if (overallScore < 50) {
+        return { decision: "rebuild_plan" as const, reason: `Score muito baixo (${overallScore}/100) com ${blockingCount} bloqueante(s). Refazer o plano.`, confidence: "high" as const };
+    }
+    return { decision: "fix_and_revalidate" as const, reason: `${blockingCount} problema(s) bloqueante(s). Corrija e revalide.`, confidence: (hasCritical ? "high" : "medium") as const };
+}
+
+function generateExecutiveSummaryInternal(
+    overallPassed: boolean, overallScore: number, clinicalScore: number, simplicityScore: number, adherenceScore: number,
+    blockedFoodsCount: number, restrictionsViolatedCount: number, issues: PrioritizedIssue[]
+) {
+    const criticalCount = issues.filter(i => i.severity === "critical").length;
+    const highCount = issues.filter(i => i.severity === "high").length;
+    if (overallPassed) {
+        return { summary: `Plano aprovado com score ${overallScore}/100. Todas as dimensões dentro dos padrões.`, recommendation: "publicar", strategy: [] as string[] };
+    }
+    const reasons: string[] = [];
+    const strategy: string[] = [];
+    if (restrictionsViolatedCount > 0) { reasons.push("restrições alimentares violadas"); strategy.push("Remover alimentos que violam restrições"); }
+    if (blockedFoodsCount > 0) { reasons.push("alimentos de baixa aderência"); strategy.push("Substituir alimentos bloqueados por alternativas brasileiras"); }
+    if (clinicalScore < 75) { reasons.push("divergências nutricionais"); strategy.push("Ajustar quantidades de macros"); }
+    if (simplicityScore < 75) { reasons.push("complexidade acima do aceitável"); strategy.push("Simplificar café da manhã e lanches"); }
+    if (adherenceScore < 65) { reasons.push("previsão de adesão baixa"); strategy.push("Reduzir complexidade geral"); }
+    return {
+        summary: `Plano reprovado (${overallScore}/100) por: ${reasons.join(", ")}. ${criticalCount} crítico(s), ${highCount} alto(s).`,
+        recommendation: overallScore < 50 ? "refazer_plano" : "corrigir_e_revalidar",
+        strategy,
+    };
+}
