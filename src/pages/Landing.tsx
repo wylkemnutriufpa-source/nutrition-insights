@@ -686,6 +686,9 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ══════════ COACH BODYBUILDER ══════════ */}
+      <CoachBodybuilderLandingSection />
+
       {/* ══════════ PRICING ══════════ */}
       <section id="pricing" className="py-28 px-4 bg-muted/20 border-y border-border/30">
         <div className="max-w-5xl mx-auto">
