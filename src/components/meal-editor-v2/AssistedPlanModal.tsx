@@ -345,7 +345,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1">
                     <Label className="text-xs">Nº Refeições</Label>
-                    <Select value={String(mealCount)} onValueChange={v => setMealCount(Number(v))}>
+                    <Select value={String(mealCount)} onValueChange={v => setMealCount(Number(v) as 3 | 4 | 5 | 6)}>
                       <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="3">3 refeições</SelectItem>
