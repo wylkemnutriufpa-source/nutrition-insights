@@ -107,6 +107,7 @@ export default function Checklist() {
       description: t.description,
       date,
       completed: false,
+      ...getTenantIdForInsert(tenantId),
     }));
     const { error } = await supabase.from("checklist_tasks").insert(inserts as any);
     if (!error) {
