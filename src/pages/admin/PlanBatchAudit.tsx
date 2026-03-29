@@ -595,6 +595,41 @@ export default function PlanBatchAudit() {
   }, [reformulations, saveReformulation]);
 
   const openDraft = (planId: string) => navigate(`/meal-plans/${planId}`);
+  const [reformSearch, setReformSearch] = useState("");
+  const [applyingTo, setApplyingTo] = useState<string | null>(null);
+
+  const applyToPatient = useCallback(async (reform: Reformulation, patientId: string, patientName: string) => {
+    if (!reform.savedPlanId) {
+      toast.error("Salve o draft primeiro antes de aplicar.");
+      return;
+    }
+    setApplyingTo(reform.savedPlanId);
+    try {
+      const { error } = await supabase
+        .from("meal_plans")
+        .update({ patient_id: patientId })
+        .eq("id", reform.savedPlanId);
+      if (error) throw error;
+      toast.success(`Plano aplicado para ${patientName}!`);
+      setReformulations(prev => prev.map(r =>
+        r.savedPlanId === reform.savedPlanId
+          ? { ...r, appliedToPatient: patientName }
+          : r
+      ));
+    } catch (e: any) {
+      toast.error("Erro ao aplicar: " + e.message);
+    }
+    setApplyingTo(null);
+  }, []);
+
+  const filteredReformulations = useMemo(() => {
+    if (!reformSearch) return reformulations;
+    const q = reformSearch.toLowerCase();
+    return reformulations.filter(r =>
+      r.original.title.toLowerCase().includes(q) ||
+      r.original.patient_name.toLowerCase().includes(q)
+    );
+  }, [reformulations, reformSearch]);
 
   const selectedCount = selected.size;
   const rejectedInFilter = filteredPlans.filter(p => p.blocked_count > 0).length;
