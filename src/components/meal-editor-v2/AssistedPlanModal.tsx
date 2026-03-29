@@ -197,7 +197,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
         .update({
           plan_status: "draft_auto_generated",
           generation_source: "assisted_engine_v2",
-          generation_metadata: genMeta as any,
+          generation_metadata: genMeta as unknown as Json,
           updated_at: new Date().toISOString(),
         })
         .eq("id", planId);
@@ -205,9 +205,9 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
       useMealPlanEditorV2Store.getState().updatePlan({
         plan_status: "draft_auto_generated",
         generation_source: "assisted_engine_v2",
-        generation_metadata: genMeta as any,
+        generation_metadata: genMeta as unknown as Json,
         updated_at: new Date().toISOString(),
-      } as any);
+      } as Partial<MealPlan>);
 
       useMealPlanEditorV2Store.getState()._persistSnapshot();
 
