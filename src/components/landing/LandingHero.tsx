@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Sparkles, Play } from "lucide-react";
+import { Sparkles, Play, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 
@@ -32,6 +32,12 @@ const particles = [
   { delay: 3, x: "90%", y: "60%", size: 3 },
   { delay: 0.5, x: "8%", y: "55%", size: 3 },
   { delay: 2.8, x: "45%", y: "15%", size: 4 },
+];
+
+const trustBadges = [
+  "14 dias grátis",
+  "Sem cartão de crédito",
+  "Configuração em 2 minutos",
 ];
 
 export default function LandingHero() {
@@ -67,10 +73,10 @@ export default function LandingHero() {
           className="max-w-3xl"
         >
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 text-shimmer">
-            A nova geração do acompanhamento nutricional inteligente
+            A plataforma de nutrição inteligente para profissionais modernos
           </h1>
           <p className="text-white/40 text-base md:text-xl leading-relaxed max-w-2xl mx-auto">
-            Gerencie pacientes, crie planos alimentares com IA e acompanhe evolução em tempo real.
+            Gerencie pacientes, crie planos alimentares com IA e acompanhe resultados em tempo real.
           </p>
         </motion.div>
 
@@ -79,27 +85,44 @@ export default function LandingHero() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
-          className="flex flex-col sm:flex-row gap-4 mt-4"
+          className="flex flex-col items-center gap-6 mt-4"
         >
-          <Link to="/auth">
-            <Button
-              size="lg"
-              className="h-14 px-10 text-sm font-bold rounded-xl bg-gradient-to-r from-[hsl(152,58%,45%)] to-[hsl(170,55%,42%)] hover:opacity-90 text-white shadow-lg shadow-[hsl(152_58%_45%/0.2)] transition-all duration-300 hover:scale-[1.04] glow-pulse-border"
-            >
-              <Sparkles className="w-4 h-4 mr-2" />
-              Começar grátis
-            </Button>
-          </Link>
-          <Link to="/landing">
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-14 px-10 text-sm font-bold rounded-xl border-white/10 text-white/70 hover:text-white hover:border-white/20 hover:bg-white/[0.04] transition-all duration-300"
-            >
-              <Play className="w-4 h-4 mr-2" />
-              Ver demonstração
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Link to="/auth">
+              <Button
+                size="lg"
+                className="h-14 px-10 text-sm font-bold rounded-xl bg-gradient-to-r from-[hsl(152,58%,45%)] to-[hsl(170,55%,42%)] hover:opacity-90 text-white shadow-lg shadow-[hsl(152_58%_45%/0.2)] transition-all duration-300 hover:scale-[1.04] glow-pulse-border"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Criar conta gratuita
+              </Button>
+            </Link>
+            <Link to="/landing">
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-14 px-10 text-sm font-bold rounded-xl border-white/10 text-white/70 hover:text-white hover:border-white/20 hover:bg-white/[0.04] transition-all duration-300"
+              >
+                <Play className="w-4 h-4 mr-2" />
+                Ver demonstração
+              </Button>
+            </Link>
+          </div>
+
+          {/* Trust badges */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+            className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2"
+          >
+            {trustBadges.map((badge) => (
+              <span key={badge} className="flex items-center gap-1.5 text-white/35 text-sm">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[hsl(152,58%,45%)]" />
+                {badge}
+              </span>
+            ))}
+          </motion.div>
         </motion.div>
       </div>
     </section>
