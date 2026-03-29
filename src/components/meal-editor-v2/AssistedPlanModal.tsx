@@ -138,6 +138,14 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
   // ── SAFE APPLICATION: Insert first, delete after ──
   const handleApply = useCallback(async () => {
     if (!selectedOption || !planId) return;
+
+    // Guard: block application on approved/published plans
+    const currentStatus = plan?.plan_status;
+    if (currentStatus === "approved" || currentStatus === "published" || currentStatus === "published_to_patient") {
+      toast.error("Plano já aprovado/publicado. Crie um novo plano ou duplique antes de regenerar.");
+      return;
+    }
+
     setApplying(true);
 
     try {

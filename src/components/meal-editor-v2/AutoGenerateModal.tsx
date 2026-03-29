@@ -112,17 +112,18 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
   const handleApply = useCallback(async () => {
     if (!result || !planId) return;
 
-    try {
-      // 1. Delete existing items from DB
-      const existingIds = currentItems.filter((i) => !i.id.startsWith("temp-")).map((i) => i.id);
-      if (existingIds.length > 0) {
-        await supabase.from("meal_plan_items").delete().in("id", existingIds);
-      }
+    // Guard: block application on approved/published plans
+    const currentStatus = plan?.plan_status;
+    if (currentStatus === "approved" || currentStatus === "published" || currentStatus === "published_to_patient") {
+      toast.error("Plano já aprovado/publicado. Crie um novo plano ou duplique antes de regenerar.");
+      return;
+    }
 
-      // 2. Generate inserts from generated slots
+    try {
+      // 1. Generate inserts from generated slots
       const inserts = slotsToInserts(result.slots, planId);
 
-      // 3. Insert directly into DB (bypass queue to guarantee persistence)
+      // 2. Insert new items FIRST (safe: if this fails, old plan remains intact)
       const { data: savedItems, error: insertError } = await supabase
         .from("meal_plan_items")
         .insert(inserts)
@@ -132,6 +133,12 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
         console.error("[AutoGenerate] Insert error:", insertError);
         toast.error("Erro ao salvar refeições geradas: " + insertError.message);
         return;
+      }
+
+      // 3. Only NOW delete old items (plan is never empty)
+      const existingIds = currentItems.filter((i) => !i.id.startsWith("temp-")).map((i) => i.id);
+      if (existingIds.length > 0) {
+        await supabase.from("meal_plan_items").delete().in("id", existingIds);
       }
 
       // 4. Update store with real persisted items
@@ -173,7 +180,7 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
     onOpenChange(false);
     setStep("config");
     setResult(null);
-  }, [result, planId, currentItems, onOpenChange]);
+  }, [result, planId, plan?.plan_status, currentItems, onOpenChange]);
 
   const handleClose = () => {
     onOpenChange(false);
