@@ -151,11 +151,18 @@ function analyzePlanSimplicity(items: any[]): { score: number; status: string; i
         groups.get(k)!.push(item);
     }
 
-    // 1. Blocked foods scan (hard fail -20 each)
+    // Track already-penalized items to avoid duplicate penalties
+    const penalizedKeys = new Set<string>();
+
+    // 1. Blocked foods scan (hard fail -20 each, deduplicated per food+day+meal)
     for (const item of items) {
         const desc = normalize(`${item.title || ""} ${item.description || ""}`);
         const found = findBlockedFoods(desc);
         for (const food of found) {
+            const dedupKey = `blocked_${normalize(food)}_${item.day_of_week ?? 0}_${item.meal_type}`;
+            if (penalizedKeys.has(dedupKey)) continue;
+            penalizedKeys.add(dedupKey);
+
             const nf = normalize(food);
             const replacement = REPLACEMENTS[nf] || REPLACEMENTS[food] || null;
             blockedFoods.push({
