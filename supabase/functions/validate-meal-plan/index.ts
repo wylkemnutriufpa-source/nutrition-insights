@@ -183,9 +183,15 @@ function analyzePlanSimplicity(items: any[]): { score: number; status: string; i
                 penalty: 20,
             });
         }
-        // Premium keywords
+        // Premium keywords (skip if already penalized as blocked food)
         for (const kw of PREMIUM_KEYWORDS) {
+            const kwKey = `premium_${normalize(kw)}_${item.day_of_week ?? 0}_${item.meal_type}`;
+            if (penalizedKeys.has(kwKey)) continue;
             if (desc.includes(normalize(kw))) {
+                // Don't double-penalize if this keyword is part of a blocked food already caught
+                const alreadyBlocked = found.some(f => normalize(kw).includes(normalize(f)) || normalize(f).includes(normalize(kw)));
+                if (alreadyBlocked) continue;
+                penalizedKeys.add(kwKey);
                 score -= 10;
                 issues.push({
                     category: "adherence",
@@ -198,9 +204,14 @@ function analyzePlanSimplicity(items: any[]): { score: number; status: string; i
                 });
             }
         }
-        // Complex prep
+        // Complex prep (skip if already penalized as blocked)
         for (const prep of COMPLEX_PREP_KEYWORDS) {
+            const prepKey = `prep_${normalize(prep)}_${item.day_of_week ?? 0}_${item.meal_type}`;
+            if (penalizedKeys.has(prepKey)) continue;
             if (desc.includes(normalize(prep))) {
+                const alreadyBlocked = found.some(f => normalize(prep).includes(normalize(f)) || normalize(f).includes(normalize(prep)));
+                if (alreadyBlocked) continue;
+                penalizedKeys.add(prepKey);
                 score -= 6;
                 issues.push({
                     category: "suggestion",
