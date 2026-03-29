@@ -330,6 +330,18 @@ function DynamicSidebar({
               </span>
             )}
           </Link>
+          <Link
+            to="/personal/dashboard"
+            onClick={onLinkClick}
+            className={`flex items-center gap-2 w-full rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
+          >
+            <Dumbbell className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+            {!collapsed && (
+              <span className="text-xs font-semibold text-emerald-500 truncate group-hover:text-emerald-400 transition-colors">
+                Personal Trainer
+              </span>
+            )}
+          </Link>
         </div>
       )}
 
