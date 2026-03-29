@@ -557,6 +557,17 @@ serve(async (req) => {
             overall: { score: overallScore, status: overallStatus },
         };
 
+        // ── Persist validation scores to meal_plans ─────────────────────────
+        await supabase.from("meal_plans").update({
+            clinical_score: clinicalScore,
+            simplicity_score: simplicityResult.score,
+            adherence_score: adherenceResult.score,
+            overall_score: overallScore,
+            overall_validation_status: overallStatus,
+            last_validated_at: new Date().toISOString(),
+            validation_engine_version: "unified_v4",
+        }).eq("id", meal_plan_id);
+
         // Timeline
         const timelineTitle = overallPassed
             ? "Plano Aprovado pelo Motor Clínico Unificado ✅"
