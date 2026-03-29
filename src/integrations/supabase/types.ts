@@ -5622,6 +5622,8 @@ export type Database = {
       }
       meal_plans: {
         Row: {
+          adherence_score: number | null
+          clinical_score: number | null
           created_at: string
           description: string | null
           editor_version: string | null
@@ -5631,11 +5633,15 @@ export type Database = {
           generation_source: string | null
           id: string
           is_active: boolean
+          last_validated_at: string | null
           nutritionist_id: string
+          overall_score: number | null
+          overall_validation_status: string | null
           patient_id: string
           plan_status: string
           previous_plan_id: string | null
           requires_regeneration: boolean | null
+          simplicity_score: number | null
           start_date: string
           template_id: string | null
           template_slug: string | null
@@ -5650,8 +5656,11 @@ export type Database = {
           total_target_protein: number | null
           transition_origin_id: string | null
           updated_at: string
+          validation_engine_version: string | null
         }
         Insert: {
+          adherence_score?: number | null
+          clinical_score?: number | null
           created_at?: string
           description?: string | null
           editor_version?: string | null
@@ -5661,11 +5670,15 @@ export type Database = {
           generation_source?: string | null
           id?: string
           is_active?: boolean
+          last_validated_at?: string | null
           nutritionist_id: string
+          overall_score?: number | null
+          overall_validation_status?: string | null
           patient_id: string
           plan_status?: string
           previous_plan_id?: string | null
           requires_regeneration?: boolean | null
+          simplicity_score?: number | null
           start_date: string
           template_id?: string | null
           template_slug?: string | null
@@ -5680,8 +5693,11 @@ export type Database = {
           total_target_protein?: number | null
           transition_origin_id?: string | null
           updated_at?: string
+          validation_engine_version?: string | null
         }
         Update: {
+          adherence_score?: number | null
+          clinical_score?: number | null
           created_at?: string
           description?: string | null
           editor_version?: string | null
@@ -5691,11 +5707,15 @@ export type Database = {
           generation_source?: string | null
           id?: string
           is_active?: boolean
+          last_validated_at?: string | null
           nutritionist_id?: string
+          overall_score?: number | null
+          overall_validation_status?: string | null
           patient_id?: string
           plan_status?: string
           previous_plan_id?: string | null
           requires_regeneration?: boolean | null
+          simplicity_score?: number | null
           start_date?: string
           template_id?: string | null
           template_slug?: string | null
@@ -5710,6 +5730,7 @@ export type Database = {
           total_target_protein?: number | null
           transition_origin_id?: string | null
           updated_at?: string
+          validation_engine_version?: string | null
         }
         Relationships: [
           {
