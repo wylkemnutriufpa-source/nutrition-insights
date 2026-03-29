@@ -3069,6 +3069,56 @@ export type Database = {
           },
         ]
       }
+      coach_alerts: {
+        Row: {
+          alert_type: string
+          athlete_id: string
+          coach_id: string
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          resolved_at: string | null
+          severity: string
+          tenant_id: string | null
+          title: string
+        }
+        Insert: {
+          alert_type: string
+          athlete_id: string
+          coach_id: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          resolved_at?: string | null
+          severity?: string
+          tenant_id?: string | null
+          title: string
+        }
+        Update: {
+          alert_type?: string
+          athlete_id?: string
+          coach_id?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          resolved_at?: string | null
+          severity?: string
+          tenant_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_alerts_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "coach_athletes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coach_athlete_analysis: {
         Row: {
           analysis_date: string
@@ -3157,6 +3207,8 @@ export type Database = {
           tenant_id: string | null
           training_load: number | null
           training_volume: number | null
+          visual_observation: string | null
+          visual_verdict: string | null
           weight: number | null
           weight_avg_7d: number | null
           weight_variation: number | null
@@ -3185,6 +3237,8 @@ export type Database = {
           tenant_id?: string | null
           training_load?: number | null
           training_volume?: number | null
+          visual_observation?: string | null
+          visual_verdict?: string | null
           weight?: number | null
           weight_avg_7d?: number | null
           weight_variation?: number | null
@@ -3213,6 +3267,8 @@ export type Database = {
           tenant_id?: string | null
           training_load?: number | null
           training_volume?: number | null
+          visual_observation?: string | null
+          visual_verdict?: string | null
           weight?: number | null
           weight_avg_7d?: number | null
           weight_variation?: number | null
@@ -3245,6 +3301,11 @@ export type Database = {
           notes: string | null
           patient_id: string
           prep_score: number | null
+          score_adherence: number | null
+          score_performance: number | null
+          score_physical: number | null
+          score_recovery: number | null
+          score_risk: number | null
           status: string
           target_weight: number | null
           tenant_id: string | null
@@ -3260,6 +3321,11 @@ export type Database = {
           notes?: string | null
           patient_id: string
           prep_score?: number | null
+          score_adherence?: number | null
+          score_performance?: number | null
+          score_physical?: number | null
+          score_recovery?: number | null
+          score_risk?: number | null
           status?: string
           target_weight?: number | null
           tenant_id?: string | null
@@ -3275,6 +3341,11 @@ export type Database = {
           notes?: string | null
           patient_id?: string
           prep_score?: number | null
+          score_adherence?: number | null
+          score_performance?: number | null
+          score_physical?: number | null
+          score_recovery?: number | null
+          score_risk?: number | null
           status?: string
           target_weight?: number | null
           tenant_id?: string | null
@@ -3296,10 +3367,12 @@ export type Database = {
           applied_at: string | null
           athlete_id: string
           coach_id: string
+          coach_reason: string | null
           confidence_level: string | null
           created_at: string | null
           data_basis: string | null
           decision_type: string
+          expected_impact: string | null
           id: string
           reason: string
           status: string | null
@@ -3310,10 +3383,12 @@ export type Database = {
           applied_at?: string | null
           athlete_id: string
           coach_id: string
+          coach_reason?: string | null
           confidence_level?: string | null
           created_at?: string | null
           data_basis?: string | null
           decision_type: string
+          expected_impact?: string | null
           id?: string
           reason: string
           status?: string | null
@@ -3324,10 +3399,12 @@ export type Database = {
           applied_at?: string | null
           athlete_id?: string
           coach_id?: string
+          coach_reason?: string | null
           confidence_level?: string | null
           created_at?: string | null
           data_basis?: string | null
           decision_type?: string
+          expected_impact?: string | null
           id?: string
           reason?: string
           status?: string | null
@@ -3353,6 +3430,50 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coach_timeline: {
+        Row: {
+          athlete_id: string
+          coach_id: string
+          created_at: string | null
+          description: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          tenant_id: string | null
+          title: string
+        }
+        Insert: {
+          athlete_id: string
+          coach_id: string
+          created_at?: string | null
+          description?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          tenant_id?: string | null
+          title: string
+        }
+        Update: {
+          athlete_id?: string
+          coach_id?: string
+          created_at?: string | null
+          description?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          tenant_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_timeline_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "coach_athletes"
             referencedColumns: ["id"]
           },
         ]
