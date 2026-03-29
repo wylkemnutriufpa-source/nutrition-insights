@@ -469,6 +469,15 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    // Resolve tenant_id for meal_plans (NOT NULL constraint)
+    const nutritionistIdForTenant = body.nutritionistId || userId;
+    const { data: tenantProfile } = await serviceClient
+      .from("profiles")
+      .select("tenant_id")
+      .eq("user_id", nutritionistIdForTenant)
+      .maybeSingle();
+    const resolvedTenantId = tenantProfile?.tenant_id;
+
     // ── 1. Get completed anamnesis ──
     const { data: anamnesis } = await serviceClient
       .from("patient_anamnesis")
