@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import {
   CheckCircle2, Trophy, Target, Brain, UtensilsCrossed, TrendingUp,
   MessageSquare, Camera, Star, Sparkles, ArrowRight, Shield, Zap,
-  BarChart3, Heart, Flame, Crown
+  BarChart3, Heart, Flame, Crown, Download, Smartphone
 } from "lucide-react";
+import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 import { useSiteSettings, getSetting } from "@/hooks/useSiteSettings";
 import {
   FloatingOrb, LandingNav, HeroBadge, TestimonialCard,
