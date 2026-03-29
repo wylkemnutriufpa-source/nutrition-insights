@@ -2,13 +2,15 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/lib/tenantContext";
+import { VISUAL_VERDICT_OPTIONS } from "@/lib/coachAnalysisEngine";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
-import { Activity, Save } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Activity, Save, Camera } from "lucide-react";
 import { toast } from "sonner";
 
 const SUBJECTIVE_FIELDS = [
@@ -39,6 +41,11 @@ export default function AthleteCheckinForm({ athleteId, coachId }: Props) {
     cardio_minutes: "",
     steps: "",
     notes: "",
+    visual_observation: "",
+    visual_verdict: "maintained",
+    front_photo_url: "",
+    side_photo_url: "",
+    back_photo_url: "",
     hunger: 5, energy: 5, sleep_quality: 5, pump: 5,
     libido: 5, retention: 5, digestion: 5, performance: 5,
   });
@@ -58,6 +65,11 @@ export default function AthleteCheckinForm({ athleteId, coachId }: Props) {
         cardio_minutes: form.cardio_minutes ? Number(form.cardio_minutes) : null,
         steps: form.steps ? Number(form.steps) : null,
         notes: form.notes || null,
+        visual_observation: form.visual_observation || null,
+        visual_verdict: form.visual_verdict,
+        front_photo_url: form.front_photo_url || null,
+        side_photo_url: form.side_photo_url || null,
+        back_photo_url: form.back_photo_url || null,
         hunger: form.hunger,
         energy: form.energy,
         sleep_quality: form.sleep_quality,
@@ -68,13 +80,26 @@ export default function AthleteCheckinForm({ athleteId, coachId }: Props) {
         performance: form.performance,
       });
       if (error) throw error;
+
+      // Timeline event
+      await supabase.from("coach_timeline" as any).insert({
+        athlete_id: athleteId,
+        coach_id: coachId,
+        tenant_id: tenantId,
+        event_type: "checkin",
+        title: `Check-in registrado${form.weight ? ` — ${form.weight}kg` : ""}`,
+        description: form.notes || `Aderência: ${form.adherence_pct || "—"}%, Energia: ${form.energy}/10`,
+        metadata: { weight: form.weight ? Number(form.weight) : null, adherence: form.adherence_pct ? Number(form.adherence_pct) : null },
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["coach-checkins", athleteId] });
+      queryClient.invalidateQueries({ queryKey: ["coach-timeline", athleteId] });
       toast.success("Check-in registrado com sucesso!");
       setForm({
         weight: "", adherence_pct: "", training_load: "", training_volume: "",
-        cardio_minutes: "", steps: "", notes: "",
+        cardio_minutes: "", steps: "", notes: "", visual_observation: "", visual_verdict: "maintained",
+        front_photo_url: "", side_photo_url: "", back_photo_url: "",
         hunger: 5, energy: 5, sleep_quality: 5, pump: 5,
         libido: 5, retention: 5, digestion: 5, performance: 5,
       });
@@ -83,61 +108,108 @@ export default function AthleteCheckinForm({ athleteId, coachId }: Props) {
   });
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Activity className="h-5 w-5 text-primary" />
-          Novo Check-in
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Metrics */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <NumField label="Peso (kg)" value={form.weight} onChange={v => set("weight", v)} />
-          <NumField label="Aderência (%)" value={form.adherence_pct} onChange={v => set("adherence_pct", v)} />
-          <NumField label="Carga (kg)" value={form.training_load} onChange={v => set("training_load", v)} />
-          <NumField label="Volume (sets)" value={form.training_volume} onChange={v => set("training_volume", v)} />
-          <NumField label="Cardio (min)" value={form.cardio_minutes} onChange={v => set("cardio_minutes", v)} />
-          <NumField label="Steps" value={form.steps} onChange={v => set("steps", v)} />
-        </div>
-
-        {/* Subjective markers */}
-        <div>
-          <h3 className="text-sm font-semibold text-foreground mb-3">Marcadores Subjetivos (1-10)</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {SUBJECTIVE_FIELDS.map(f => (
-              <div key={f.key} className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">{f.emoji} {f.label}</Label>
-                  <span className="text-sm font-bold text-primary">{(form as any)[f.key]}</span>
-                </div>
-                <Slider
-                  min={1} max={10} step={1}
-                  value={[(form as any)[f.key]]}
-                  onValueChange={([v]) => set(f.key, v)}
-                />
-              </div>
-            ))}
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Activity className="h-4 w-4 text-primary" />
+            Novo Check-in
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Metrics */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <NumField label="Peso (kg)" value={form.weight} onChange={v => set("weight", v)} />
+            <NumField label="Aderência (%)" value={form.adherence_pct} onChange={v => set("adherence_pct", v)} />
+            <NumField label="Carga (kg)" value={form.training_load} onChange={v => set("training_load", v)} />
+            <NumField label="Volume (sets)" value={form.training_volume} onChange={v => set("training_volume", v)} />
+            <NumField label="Cardio (min)" value={form.cardio_minutes} onChange={v => set("cardio_minutes", v)} />
+            <NumField label="Steps" value={form.steps} onChange={v => set("steps", v)} />
           </div>
-        </div>
 
-        {/* Notes */}
-        <div>
-          <Label>Observações</Label>
-          <Textarea
-            value={form.notes}
-            onChange={e => set("notes", e.target.value)}
-            placeholder="Observações sobre o atleta..."
-            rows={3}
-          />
-        </div>
+          {/* Subjective markers */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Marcadores Subjetivos (1-10)</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {SUBJECTIVE_FIELDS.map(f => (
+                <div key={f.key} className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">{f.emoji} {f.label}</Label>
+                    <span className="text-sm font-bold text-primary">{(form as any)[f.key]}</span>
+                  </div>
+                  <Slider
+                    min={1} max={10} step={1}
+                    value={[(form as any)[f.key]]}
+                    onValueChange={([v]) => set(f.key, v)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
 
-        <Button onClick={() => mutation.mutate()} disabled={mutation.isPending} className="w-full">
-          <Save className="h-4 w-4 mr-2" />
-          {mutation.isPending ? "Salvando..." : "Registrar Check-in"}
-        </Button>
-      </CardContent>
-    </Card>
+          {/* Photos */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+              <Camera className="h-4 w-4" /> Fotos (URLs)
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Frente</Label>
+                <Input value={form.front_photo_url} onChange={e => set("front_photo_url", e.target.value)} placeholder="URL da foto frontal" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Lado</Label>
+                <Input value={form.side_photo_url} onChange={e => set("side_photo_url", e.target.value)} placeholder="URL da foto lateral" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Costas</Label>
+                <Input value={form.back_photo_url} onChange={e => set("back_photo_url", e.target.value)} placeholder="URL da foto posterior" />
+              </div>
+            </div>
+          </div>
+
+          {/* Visual observation */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-xs">Observação Visual do Coach</Label>
+              <Textarea
+                value={form.visual_observation}
+                onChange={e => set("visual_observation", e.target.value)}
+                placeholder="Ex: deltoides mais definidos, retenção abdominal..."
+                rows={2}
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Veredicto Visual</Label>
+              <Select value={form.visual_verdict} onValueChange={v => set("visual_verdict", v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {VISUAL_VERDICT_OPTIONS.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <Label>Observações Gerais</Label>
+            <Textarea
+              value={form.notes}
+              onChange={e => set("notes", e.target.value)}
+              placeholder="Observações sobre o atleta..."
+              rows={2}
+            />
+          </div>
+
+          <Button onClick={() => mutation.mutate()} disabled={mutation.isPending} className="w-full">
+            <Save className="h-4 w-4 mr-2" />
+            {mutation.isPending ? "Salvando..." : "Registrar Check-in"}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 

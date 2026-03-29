@@ -3,29 +3,33 @@ import { useAuth } from "@/lib/auth";
 import { useTenant } from "@/lib/tenantContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { analyzeAthleteData, generateDecisions, type CheckinData } from "@/lib/coachAnalysisEngine";
+import { analyzeAthleteData, generateDecisions, generateAlerts, PHASE_LABELS, type CheckinData } from "@/lib/coachAnalysisEngine";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Activity, Brain, Dumbbell, TrendingUp, Camera, Zap } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, Activity, Brain, Zap, Camera, Clock, AlertTriangle, Settings } from "lucide-react";
 import AthleteCheckinForm from "./AthleteCheckinForm";
 import AthleteAnalysisPanel from "./AthleteAnalysisPanel";
 import AthleteDecisionPanel from "./AthleteDecisionPanel";
-
-const PHASE_LABELS: Record<string, string> = {
-  cutting: "Cutting", bulking: "Bulking", peak_week: "Peak Week",
-  reverse: "Reverse Diet", maintenance: "Manutenção",
-};
+import CoachCompositeScore from "./CoachCompositeScore";
+import CoachAlertsList from "./CoachAlertsList";
+import CoachTimeline from "./CoachTimeline";
+import CoachPhotoEvolution from "./CoachPhotoEvolution";
+import { toast } from "sonner";
 
 interface Props {
   athleteId: string;
   onBack: () => void;
 }
 
+type TabKey = "overview" | "checkin" | "analysis" | "decisions" | "photos" | "timeline";
+
 export default function AthleteDetailView({ athleteId, onBack }: Props) {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState<TabKey>("overview");
 
   const { data: athlete } = useQuery({
     queryKey: ["coach-athlete", athleteId],
@@ -36,7 +40,6 @@ export default function AthleteDetailView({ athleteId, onBack }: Props) {
         .eq("id", athleteId)
         .single();
       if (error) throw error;
-      // Get name
       const { data: prof } = await supabase.from("profiles").select("full_name").eq("user_id", (data as any).patient_id).maybeSingle();
       return { ...(data as any), athlete_name: prof?.full_name || "Atleta" };
     },
@@ -55,12 +58,42 @@ export default function AthleteDetailView({ athleteId, onBack }: Props) {
     },
   });
 
+  const phaseMutation = useMutation({
+    mutationFn: async (newPhase: string) => {
+      await supabase.from("coach_athletes" as any)
+        .update({ current_phase: newPhase, updated_at: new Date().toISOString() })
+        .eq("id", athleteId);
+      // Timeline event
+      await supabase.from("coach_timeline" as any).insert({
+        athlete_id: athleteId,
+        coach_id: user!.id,
+        tenant_id: tenantId,
+        event_type: "phase_change",
+        title: `Fase alterada para ${PHASE_LABELS[newPhase] || newPhase}`,
+        description: `Fase anterior: ${PHASE_LABELS[athlete?.current_phase] || athlete?.current_phase}`,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["coach-athlete", athleteId] });
+      queryClient.invalidateQueries({ queryKey: ["coach-timeline", athleteId] });
+      toast.success("Fase atualizada!");
+    },
+  });
+
   const lastCheckin = checkins[0] || null;
   const phase = athlete?.current_phase || "bulking";
-
-  // Run analysis
   const analysisResult = analyzeAthleteData(checkins as CheckinData[], phase);
   const decisions = generateDecisions(analysisResult, phase, checkins as CheckinData[]);
+  const alerts = generateAlerts(analysisResult, checkins as CheckinData[], phase);
+
+  const tabs: { key: TabKey; label: string; icon: any }[] = [
+    { key: "overview", label: "Visão Geral", icon: Activity },
+    { key: "checkin", label: "Check-in", icon: Activity },
+    { key: "analysis", label: "Análise", icon: Brain },
+    { key: "decisions", label: "Decisões", icon: Zap },
+    { key: "photos", label: "Fotos", icon: Camera },
+    { key: "timeline", label: "Timeline", icon: Clock },
+  ];
 
   return (
     <div className="space-y-6">
@@ -71,8 +104,18 @@ export default function AthleteDetailView({ athleteId, onBack }: Props) {
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-foreground">{athlete?.athlete_name || "Carregando..."}</h1>
-          <div className="flex items-center gap-2 mt-1">
-            <Badge variant="outline">{PHASE_LABELS[phase]}</Badge>
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
+            <Select value={phase} onValueChange={v => phaseMutation.mutate(v)}>
+              <SelectTrigger className="w-auto h-7 text-xs gap-1">
+                <Settings className="h-3 w-3" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(PHASE_LABELS).map(([k, v]) => (
+                  <SelectItem key={k} value={k}>{v}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Badge className={
               analysisResult.overall_score >= 70 ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" :
               analysisResult.overall_score >= 40 ? "bg-amber-500/20 text-amber-400 border-amber-500/30" :
@@ -80,81 +123,121 @@ export default function AthleteDetailView({ athleteId, onBack }: Props) {
             }>
               Score: {analysisResult.overall_score}
             </Badge>
+            {alerts.length > 0 && (
+              <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
+                <AlertTriangle className="h-3 w-3 mr-1" />
+                {alerts.length} alerta{alerts.length > 1 ? "s" : ""}
+              </Badge>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Status Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatusCard label="Peso Atual" value={lastCheckin?.weight ? `${lastCheckin.weight} kg` : "—"} icon={Activity} />
-        <StatusCard label="Média 7d" value={lastCheckin?.weight_avg_7d ? `${lastCheckin.weight_avg_7d} kg` : "—"} icon={TrendingUp} />
-        <StatusCard label="Variação" value={lastCheckin?.weight_variation != null ? `${lastCheckin.weight_variation > 0 ? "+" : ""}${lastCheckin.weight_variation} kg` : "—"} icon={Zap} />
-        <StatusCard label="Aderência" value={lastCheckin?.adherence_pct != null ? `${lastCheckin.adherence_pct}%` : "—"} icon={Dumbbell} />
+      {/* Tabs */}
+      <div className="flex gap-1 overflow-x-auto pb-1">
+        {tabs.map(tab => {
+          const Icon = tab.icon;
+          return (
+            <Button
+              key={tab.key}
+              variant={activeTab === tab.key ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setActiveTab(tab.key)}
+              className="shrink-0 text-xs"
+            >
+              <Icon className="h-3.5 w-3.5 mr-1" />
+              {tab.label}
+            </Button>
+          );
+        })}
       </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="checkin" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="checkin"><Activity className="h-4 w-4 mr-1.5" />Check-in</TabsTrigger>
-          <TabsTrigger value="analysis"><Brain className="h-4 w-4 mr-1.5" />Análise</TabsTrigger>
-          <TabsTrigger value="decisions"><Zap className="h-4 w-4 mr-1.5" />Decisões</TabsTrigger>
-          <TabsTrigger value="photos"><Camera className="h-4 w-4 mr-1.5" />Fotos</TabsTrigger>
-        </TabsList>
+      {/* Overview Tab */}
+      {activeTab === "overview" && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Left: Status + Score */}
+          <div className="space-y-4">
+            {/* Quick stats */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Status Atual</CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-2 gap-3">
+                <QuickStat label="Peso" value={lastCheckin?.weight ? `${lastCheckin.weight} kg` : "—"} />
+                <QuickStat label="Média 7d" value={lastCheckin?.weight_avg_7d ? `${lastCheckin.weight_avg_7d} kg` : "—"} />
+                <QuickStat label="Variação" value={lastCheckin?.weight_variation != null ? `${lastCheckin.weight_variation > 0 ? "+" : ""}${lastCheckin.weight_variation} kg` : "—"} />
+                <QuickStat label="Aderência" value={lastCheckin?.adherence_pct != null ? `${lastCheckin.adherence_pct}%` : "—"} />
+              </CardContent>
+            </Card>
+            <CoachCompositeScore score={analysisResult.composite_score} />
+          </div>
 
-        <TabsContent value="checkin">
-          <AthleteCheckinForm athleteId={athleteId} coachId={user?.id || ""} />
-        </TabsContent>
+          {/* Center: Alerts + Analysis summary */}
+          <div className="space-y-4">
+            <CoachAlertsList alerts={alerts} />
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Brain className="h-4 w-4 text-primary" />
+                  Resumo da Análise
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-foreground leading-relaxed">{analysisResult.analysis_summary}</p>
+              </CardContent>
+            </Card>
+            {/* Top decision */}
+            {decisions[0] && (
+              <Card className="border-amber-500/20">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-amber-400" />
+                    Decisão Prioritária
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-foreground">{decisions[0].reason}</p>
+                  <p className="text-xs text-muted-foreground mt-1 italic">{decisions[0].data_basis}</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
 
-        <TabsContent value="analysis">
-          <AthleteAnalysisPanel analysis={analysisResult} checkins={checkins} phase={phase} />
-        </TabsContent>
+          {/* Right: Timeline preview */}
+          <div>
+            <CoachTimeline athleteId={athleteId} />
+          </div>
+        </div>
+      )}
 
-        <TabsContent value="decisions">
-          <AthleteDecisionPanel
-            decisions={decisions}
-            athleteId={athleteId}
-            analysis={analysisResult}
-          />
-        </TabsContent>
+      {activeTab === "checkin" && (
+        <AthleteCheckinForm athleteId={athleteId} coachId={user?.id || ""} />
+      )}
 
-        <TabsContent value="photos">
-          <Card>
-            <CardHeader><CardTitle className="flex items-center gap-2"><Camera className="h-5 w-5" />Evolução Visual</CardTitle></CardHeader>
-            <CardContent>
-              {checkins.filter((c: any) => c.front_photo_url || c.side_photo_url || c.back_photo_url).length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">Nenhuma foto registrada. Adicione fotos nos check-ins.</p>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {checkins.filter((c: any) => c.front_photo_url || c.side_photo_url || c.back_photo_url).slice(0, 6).map((c: any) => (
-                    <div key={c.id} className="space-y-2">
-                      <p className="text-sm font-medium text-muted-foreground">{new Date(c.checkin_date).toLocaleDateString("pt-BR")}</p>
-                      <div className="grid grid-cols-3 gap-2">
-                        {c.front_photo_url && <img src={c.front_photo_url} alt="Frente" className="rounded-lg aspect-[3/4] object-cover" />}
-                        {c.side_photo_url && <img src={c.side_photo_url} alt="Lado" className="rounded-lg aspect-[3/4] object-cover" />}
-                        {c.back_photo_url && <img src={c.back_photo_url} alt="Costas" className="rounded-lg aspect-[3/4] object-cover" />}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      {activeTab === "analysis" && (
+        <AthleteAnalysisPanel analysis={analysisResult} checkins={checkins} phase={phase} />
+      )}
+
+      {activeTab === "decisions" && (
+        <AthleteDecisionPanel decisions={decisions} athleteId={athleteId} analysis={analysisResult} />
+      )}
+
+      {activeTab === "photos" && (
+        <CoachPhotoEvolution checkins={checkins as CheckinData[]} />
+      )}
+
+      {activeTab === "timeline" && (
+        <CoachTimeline athleteId={athleteId} />
+      )}
     </div>
   );
 }
 
-function StatusCard({ label, value, icon: Icon }: { label: string; value: string; icon: any }) {
+function QuickStat({ label, value }: { label: string; value: string }) {
   return (
-    <Card>
-      <CardContent className="p-4 flex items-center gap-3">
-        <Icon className="h-5 w-5 text-primary" />
-        <div>
-          <p className="text-lg font-bold text-foreground">{value}</p>
-          <p className="text-xs text-muted-foreground">{label}</p>
-        </div>
-      </CardContent>
-    </Card>
+    <div>
+      <p className="text-lg font-bold text-foreground">{value}</p>
+      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</p>
+    </div>
   );
 }
