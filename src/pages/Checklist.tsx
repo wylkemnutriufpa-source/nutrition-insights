@@ -191,6 +191,7 @@ export default function Checklist() {
         description: form.description || null,
         date,
         completed: false,
+        ...getTenantIdForInsert(tenantId),
       } as any);
       if (error) toast.error(error.message);
       else toast.success(t("checklist.taskAdded"));
