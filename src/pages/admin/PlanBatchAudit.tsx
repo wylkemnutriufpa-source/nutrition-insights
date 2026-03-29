@@ -64,6 +64,7 @@ interface Reformulation {
   oldScore: number;
   newScore: number;
   savedPlanId?: string;
+  appliedToPatient?: string;
 }
 
 interface ReformulatedItem extends PlanItem {
