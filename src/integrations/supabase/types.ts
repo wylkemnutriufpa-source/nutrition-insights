@@ -5861,6 +5861,7 @@ export type Database = {
           description: string | null
           fat_target: number | null
           id: string
+          image_url: string | null
           meal_plan_id: string
           meal_type: Database["public"]["Enums"]["meal_type"]
           protein_target: number | null
@@ -5875,6 +5876,7 @@ export type Database = {
           description?: string | null
           fat_target?: number | null
           id?: string
+          image_url?: string | null
           meal_plan_id: string
           meal_type: Database["public"]["Enums"]["meal_type"]
           protein_target?: number | null
@@ -5889,6 +5891,7 @@ export type Database = {
           description?: string | null
           fat_target?: number | null
           id?: string
+          image_url?: string | null
           meal_plan_id?: string
           meal_type?: Database["public"]["Enums"]["meal_type"]
           protein_target?: number | null
@@ -13958,6 +13961,7 @@ export type Database = {
           description: string | null
           fat_target: number | null
           id: string
+          image_url: string | null
           meal_type: Database["public"]["Enums"]["meal_type"]
           nutritionist_id: string
           protein_target: number | null
@@ -13970,6 +13974,7 @@ export type Database = {
           description?: string | null
           fat_target?: number | null
           id?: string
+          image_url?: string | null
           meal_type?: Database["public"]["Enums"]["meal_type"]
           nutritionist_id: string
           protein_target?: number | null
@@ -13982,6 +13987,7 @@ export type Database = {
           description?: string | null
           fat_target?: number | null
           id?: string
+          image_url?: string | null
           meal_type?: Database["public"]["Enums"]["meal_type"]
           nutritionist_id?: string
           protein_target?: number | null

@@ -1,11 +1,12 @@
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
-  Flame, Beef, PencilLine, CopyPlus, X, Loader2, Check, Eye,
+  Flame, Beef, PencilLine, CopyPlus, X, Loader2, Check, Eye, Camera,
 } from "lucide-react";
 import { useMealPlanEditorV2Store, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
 import { getCategoryDot } from "@/components/meals/FoodSubstitutions";
 import { useMealDetail } from "@/components/patient/MealDetailContext";
+import { MealPhotoUpload } from "./MealPhotoUpload";
 
 interface MealItemCardProps {
   item: MealPlanItem;
@@ -27,6 +28,7 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
   }, [editValue, item.id, item.title, updateItem]);
 
   const catDot = getCategoryDot(item.title);
+  const imageUrl = (item as any).image_url as string | null | undefined;
 
   return (
     <motion.div
@@ -35,7 +37,7 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.15 }}
-      className="bg-secondary/60 rounded-md px-2 py-1.5 hover:bg-secondary transition-colors group/item relative cursor-pointer"
+      className="bg-secondary/60 rounded-md hover:bg-secondary transition-colors group/item relative cursor-pointer overflow-hidden"
       onClick={() => {
         if (!inlineEdit) {
           openMealDetail({
@@ -47,82 +49,120 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
             carbs_target: item.carbs_target,
             fat_target: item.fat_target,
             metadata: (item as any).metadata,
+            image_url: imageUrl,
           });
         }
       }}
     >
-      {inlineEdit ? (
-        <div className="flex gap-1">
-          <input
-            autoFocus
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") commitEdit();
-              if (e.key === "Escape") setInlineEdit(false);
-            }}
-            onBlur={commitEdit}
-            className="w-full text-[11px] bg-transparent border-b border-primary outline-none"
+      {/* Meal Photo Thumbnail */}
+      {imageUrl ? (
+        <div className="relative w-full h-16 overflow-hidden">
+          <img
+            src={imageUrl}
+            alt={item.title}
+            className="w-full h-full object-cover"
+            loading="lazy"
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+          {/* Photo action buttons */}
+          <div className="absolute top-0.5 right-0.5 flex gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity z-10">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                updateItem(item.id, { image_url: null } as any);
+              }}
+              className="p-0.5 rounded bg-black/50 hover:bg-destructive/80"
+              title="Remover foto"
+            >
+              <X className="w-2.5 h-2.5 text-white" />
+            </button>
+          </div>
         </div>
       ) : (
-        <>
-          <div className="flex items-center gap-1">
-            {catDot && <span className={`w-1.5 h-1.5 rounded-full ${catDot} shrink-0`} />}
-            <p className="text-[11px] font-medium leading-tight truncate flex-1">{item.title}</p>
-          </div>
-          {item.description && (
-            <p className="text-[9px] text-muted-foreground leading-tight mt-0.5 line-clamp-2">
-              {item.description}
-            </p>
-          )}
-          <div className="flex items-center gap-1.5 mt-1 text-[9px] text-muted-foreground">
-            {item.calories_target != null && (
-              <span className="flex items-center gap-0.5">
-                <Flame className="w-2.5 h-2.5 text-orange-400" />{item.calories_target}
-              </span>
-            )}
-            {item.protein_target != null && (
-              <span className="flex items-center gap-0.5">
-                <Beef className="w-2.5 h-2.5 text-red-400" />{Number(item.protein_target).toFixed(0)}g
-              </span>
-            )}
-          </div>
-          {isSyncing && (
-            <span className="inline-flex items-center gap-1 mt-1 rounded-full border border-border bg-card px-1.5 py-0.5 text-[8px] font-medium text-muted-foreground">
-              <Loader2 className="w-2.5 h-2.5 animate-spin text-primary" />
-              sincronizando...
-            </span>
-          )}
-          {/* Action buttons */}
-          <div className="absolute top-1 right-1 z-10 flex gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); setInlineEdit(true); setEditValue(item.title); }}
-              className="p-0.5 rounded hover:bg-accent/50"
-              title="Editar"
-            >
-              <PencilLine className="w-2.5 h-2.5 text-muted-foreground" />
-            </button>
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); duplicateItem(item.id); }}
-              className="p-0.5 rounded hover:bg-accent/50"
-              title="Duplicar"
-            >
-              <CopyPlus className="w-2.5 h-2.5 text-muted-foreground" />
-            </button>
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); deleteItem(item.id); }}
-              className="p-0.5 rounded hover:bg-destructive/10"
-              title="Remover"
-            >
-              <X className="w-3 h-3 text-destructive" />
-            </button>
-          </div>
-        </>
+        <div className="opacity-0 group-hover/item:opacity-100 transition-opacity">
+          <MealPhotoUpload
+            compact
+            onUploaded={(url) => updateItem(item.id, { image_url: url } as any)}
+            onRemoved={() => {}}
+          />
+        </div>
       )}
+
+      <div className="px-2 py-1.5">
+        {inlineEdit ? (
+          <div className="flex gap-1">
+            <input
+              autoFocus
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") commitEdit();
+                if (e.key === "Escape") setInlineEdit(false);
+              }}
+              onBlur={commitEdit}
+              className="w-full text-[11px] bg-transparent border-b border-primary outline-none"
+            />
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-1">
+              {catDot && <span className={`w-1.5 h-1.5 rounded-full ${catDot} shrink-0`} />}
+              <p className="text-[11px] font-medium leading-tight truncate flex-1">{item.title}</p>
+            </div>
+            {item.description && (
+              <p className="text-[9px] text-muted-foreground leading-tight mt-0.5 line-clamp-2">
+                {item.description}
+              </p>
+            )}
+            <div className="flex items-center gap-1.5 mt-1 text-[9px] text-muted-foreground">
+              {item.calories_target != null && (
+                <span className="flex items-center gap-0.5">
+                  <Flame className="w-2.5 h-2.5 text-orange-400" />{item.calories_target}
+                </span>
+              )}
+              {item.protein_target != null && (
+                <span className="flex items-center gap-0.5">
+                  <Beef className="w-2.5 h-2.5 text-red-400" />{Number(item.protein_target).toFixed(0)}g
+                </span>
+              )}
+            </div>
+            {isSyncing && (
+              <span className="inline-flex items-center gap-1 mt-1 rounded-full border border-border bg-card px-1.5 py-0.5 text-[8px] font-medium text-muted-foreground">
+                <Loader2 className="w-2.5 h-2.5 animate-spin text-primary" />
+                sincronizando...
+              </span>
+            )}
+            {/* Action buttons */}
+            <div className="absolute top-1 right-1 z-10 flex gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setInlineEdit(true); setEditValue(item.title); }}
+                className="p-0.5 rounded hover:bg-accent/50"
+                title="Editar"
+              >
+                <PencilLine className="w-2.5 h-2.5 text-muted-foreground" />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); duplicateItem(item.id); }}
+                className="p-0.5 rounded hover:bg-accent/50"
+                title="Duplicar"
+              >
+                <CopyPlus className="w-2.5 h-2.5 text-muted-foreground" />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); deleteItem(item.id); }}
+                className="p-0.5 rounded hover:bg-destructive/10"
+                title="Remover"
+              >
+                <X className="w-3 h-3 text-destructive" />
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </motion.div>
   );
 }
