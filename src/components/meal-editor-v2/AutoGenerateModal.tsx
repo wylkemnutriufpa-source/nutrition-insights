@@ -12,7 +12,7 @@ import {
   Loader2, Wand2, AlertTriangle, CheckCircle2, Flame, Beef, Wheat, Droplets, Info,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useMealPlanEditorV2Store, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
+import { useMealPlanEditorV2Store, type MealPlanItem, type MealPlan } from "@/stores/mealPlanEditorV2Store";
 import {
   generateMealPlanFromLibrary,
   loadPatientProfile,

@@ -15,21 +15,23 @@ export interface TimelineEventPayload {
 }
 
 export async function generateTimelineEvent(payload: TimelineEventPayload) {
+  const insertPayload = {
+    workspace_id: payload.workspace_id,
+    author_id: payload.author_id,
+    target_patient_id: payload.target_patient_id || null,
+    event_type: payload.event_type,
+    title: payload.title,
+    description: payload.description || null,
+    media_url: payload.media_url || null,
+    metadata_json: payload.metadata_json || {},
+    visibility_scope: payload.visibility_scope || "global",
+    poll_question: payload.poll_question || null,
+    poll_options: payload.poll_options || null,
+  };
+
   const { data, error } = await supabase
     .from("timeline_events")
-    .insert({
-      workspace_id: payload.workspace_id,
-      author_id: payload.author_id,
-      target_patient_id: payload.target_patient_id || null,
-      event_type: payload.event_type,
-      title: payload.title,
-      description: payload.description || null,
-      media_url: payload.media_url || null,
-      metadata_json: payload.metadata_json || {},
-      visibility_scope: payload.visibility_scope || "global",
-      poll_question: payload.poll_question || null,
-      poll_options: payload.poll_options || null,
-    } as Record<string, unknown>)
+    .insert(insertPayload as any)
     .select()
     .single();
 
