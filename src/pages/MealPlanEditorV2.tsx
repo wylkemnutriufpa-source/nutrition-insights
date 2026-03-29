@@ -255,6 +255,16 @@ export default function MealPlanEditorV2() {
               <Sparkles className="w-4 h-4" />
               <span className="hidden sm:inline">Plano Assistido</span>
             </Button>
+            {plan && tenantId && (
+              <SimplifyPlanButton
+                planId={plan.id}
+                patientId={plan.patient_id}
+                nutritionistId={plan.nutritionist_id}
+                tenantId={tenantId}
+                items={store.items}
+                onSimplified={(newId) => navigate(`/meal-plan-editor/${newId}`)}
+              />
+            )}
             <Button
               variant="outline"
               size="sm"
