@@ -215,86 +215,18 @@ export default function CoachDashboard({ onSelectAthlete }: Props) {
         <PremiumStatCard icon={Trophy} label="Score Médio" value={avgScore} color="from-primary/20 to-primary/10" iconColor="text-primary" />
       </div>
 
-      {/* Executive Widgets */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Alerts widget */}
-        {athletesWithAlerts.length > 0 && (
-          <Card className="border-red-500/20 bg-gradient-to-b from-red-500/5 to-transparent">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <ShieldAlert className="h-4 w-4 text-red-400" />
-                Alertas Ativos ({athletesWithAlerts.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {athletesWithAlerts.slice(0, 4).map((a: any) => (
-                <div
-                  key={a.id}
-                  className="flex items-center justify-between p-2 rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => onSelectAthlete(a.id)}
-                >
-                  <span className="text-sm font-medium text-foreground truncate">{a.athlete_name}</span>
-                  <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[10px]">
-                    {athleteAlerts[a.id]?.length || 0}
-                  </Badge>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* No checkin widget */}
-        {staleAthletes.length > 0 && (
-          <Card className="border-amber-500/20 bg-gradient-to-b from-amber-500/5 to-transparent">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Clock className="h-4 w-4 text-amber-400" />
-                Sem Check-in Recente ({staleAthletes.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {staleAthletes.slice(0, 4).map((a: any) => (
-                <div
-                  key={a.id}
-                  className="flex items-center justify-between p-2 rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => onSelectAthlete(a.id)}
-                >
-                  <span className="text-sm font-medium text-foreground truncate">{a.athlete_name}</span>
-                  <Badge variant="outline" className="text-[10px]">{PHASE_LABELS[a.current_phase] || a.current_phase}</Badge>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Low score / Peak week */}
-        {(lowScoreAthletes.length > 0 || peakWeekAthletes.length > 0) && (
-          <Card className="border-primary/20 bg-gradient-to-b from-primary/5 to-transparent">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Target className="h-4 w-4 text-primary" />
-                Atenção Especial
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {peakWeekAthletes.map((a: any) => (
-                <div key={a.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => onSelectAthlete(a.id)}>
-                  <span className="text-sm font-medium text-foreground truncate">{a.athlete_name}</span>
-                  <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30 text-[10px]">{PHASE_LABELS[a.current_phase]}</Badge>
-                </div>
-              ))}
-              {lowScoreAthletes.filter(a => !peakWeekAthletes.includes(a)).slice(0, 3).map((a: any) => (
-                <div key={a.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => onSelectAthlete(a.id)}>
-                  <span className="text-sm font-medium text-foreground truncate">{a.athlete_name}</span>
-                  <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[10px]">Score {a.prep_score || 0}</Badge>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {/* Phase distribution */}
+      {/* Operational Center */}
+      <CoachOperationalCenter
+        athletes={athletes.map((a: any) => ({
+          id: a.id,
+          athlete_name: a.athlete_name,
+          current_phase: a.current_phase,
+          status: a.status,
+          prep_score: a.prep_score || 0,
+        }))}
+        allCheckins={allCheckins}
+        onSelectAthlete={onSelectAthlete}
+      />
       <div className="flex gap-2 flex-wrap">
         {Object.entries(phaseGroups).filter(([, c]) => c > 0).map(([phase, count]) => (
           <Badge
