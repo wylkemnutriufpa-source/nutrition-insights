@@ -5,6 +5,8 @@ import {
   ArrowLeft, Loader2, AlertTriangle, Zap, Save, Send, CheckCircle2,
   Wand2, Trash2, Library, LayoutGrid, List, Minimize2, Maximize2, Sparkles, Utensils
 } from "lucide-react";
+import { useTenant } from "@/lib/tenantContext";
+import SimplifyPlanButton from "@/components/meal-simplification/SimplifyPlanButton";
 import { useAuth } from "@/lib/auth";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import { supabase } from "@/integrations/supabase/client";
