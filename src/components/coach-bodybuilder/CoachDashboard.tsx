@@ -13,15 +13,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import {
   Flame, Plus, Search, Users, TrendingUp, AlertTriangle, Trophy,
-  ShieldAlert, Droplets, Zap, Filter, Clock
+  ShieldAlert, Filter, Target, Zap, Clock, BarChart3
 } from "lucide-react";
 import { toast } from "sonner";
-import CoachAlertsList from "./CoachAlertsList";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
   evolving: { label: "Evoluindo", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30", icon: TrendingUp },
   stagnant: { label: "Estagnado", color: "bg-amber-500/20 text-amber-400 border-amber-500/30", icon: AlertTriangle },
-  alert: { label: "Alerta", color: "bg-red-500/20 text-red-400 border-red-500/30", icon: AlertTriangle },
+  alert: { label: "Alerta", color: "bg-red-500/20 text-red-400 border-red-500/30", icon: ShieldAlert },
 };
 
 interface Props {
@@ -59,7 +58,6 @@ export default function CoachDashboard({ onSelectAthlete }: Props) {
     },
   });
 
-  // Fetch recent checkins for all athletes to compute alerts
   const athleteIds = athletes.map((a: any) => a.id);
   const { data: allCheckins = [] } = useQuery({
     queryKey: ["coach-all-checkins", athleteIds.join(",")],
@@ -76,7 +74,6 @@ export default function CoachDashboard({ onSelectAthlete }: Props) {
     },
   });
 
-  // Compute alerts per athlete
   const athleteAlerts = useMemo(() => {
     const map: Record<string, ReturnType<typeof generateAlerts>> = {};
     athletes.forEach((a: any) => {
@@ -136,13 +133,22 @@ export default function CoachDashboard({ onSelectAthlete }: Props) {
     alert: athletes.filter((a: any) => a.status === "alert").length,
   };
 
-  const totalAlerts = Object.values(athleteAlerts).reduce((s, a) => s + a.length, 0);
   const avgScore = athletes.length > 0
     ? Math.round(athletes.reduce((s: number, a: any) => s + (a.prep_score || 0), 0) / athletes.length)
     : 0;
 
-  // Widgets data
   const athletesWithAlerts = athletes.filter((a: any) => (athleteAlerts[a.id]?.length || 0) > 0);
+  const lowScoreAthletes = athletes.filter((a: any) => (a.prep_score || 0) < 50);
+  const peakWeekAthletes = athletes.filter((a: any) => a.current_phase === "peak_week" || a.current_phase === "pre_contest");
+
+  // Athletes without recent checkin (>3 days)
+  const staleAthletes = athletes.filter((a: any) => {
+    const lastCheckin = allCheckins.find((c: any) => c.athlete_id === a.id);
+    if (!lastCheckin) return true;
+    const days = Math.floor((Date.now() - new Date(lastCheckin.checkin_date).getTime()) / 86400000);
+    return days > 3;
+  });
+
   const phaseGroups = PHASE_LIST.reduce<Record<string, number>>((acc, p) => {
     acc[p] = athletes.filter((a: any) => a.current_phase === p).length;
     return acc;
@@ -150,96 +156,154 @@ export default function CoachDashboard({ onSelectAthlete }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 shadow-lg">
-            <Flame className="h-7 w-7 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Coach Bodybuilder</h1>
-            <p className="text-sm text-muted-foreground">Sistema premium de preparação física</p>
-          </div>
-        </div>
-        <Dialog open={addOpen} onOpenChange={setAddOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white">
-              <Plus className="h-4 w-4 mr-2" /> Adicionar Atleta
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle>Adicionar Atleta</DialogTitle></DialogHeader>
-            <div className="space-y-4 mt-2">
-              <div>
-                <Label>Paciente</Label>
-                <Select value={newPatientId} onValueChange={setNewPatientId}>
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>
-                    {availablePatients.map((p: any) => (
-                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Fase Atual</Label>
-                <Select value={newPhase} onValueChange={setNewPhase}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(PHASE_LABELS).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{v}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button onClick={() => addMutation.mutate()} disabled={!newPatientId || addMutation.isPending} className="w-full">
-                {addMutation.isPending ? "Adicionando..." : "Adicionar"}
-              </Button>
+      {/* Premium Header */}
+      <div className="relative overflow-hidden rounded-xl border bg-gradient-to-r from-card via-card to-card p-6">
+        <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 via-transparent to-red-600/5" />
+        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 shadow-lg shadow-orange-500/20">
+              <Flame className="h-8 w-8 text-white" />
             </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {/* Stats Widgets */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <StatCard icon={Users} label="Total" value={stats.total} color="text-blue-400" />
-        <StatCard icon={TrendingUp} label="Evoluindo" value={stats.evolving} color="text-emerald-400" />
-        <StatCard icon={AlertTriangle} label="Estagnados" value={stats.stagnant} color="text-amber-400" />
-        <StatCard icon={ShieldAlert} label="Em Alerta" value={stats.alert} color="text-red-400" />
-        <StatCard icon={Trophy} label="Score Médio" value={avgScore} color="text-primary" />
-      </div>
-
-      {/* Alerts widget */}
-      {athletesWithAlerts.length > 0 && (
-        <Card className="border-red-500/20">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-red-400" />
-              Atletas com Alertas ({athletesWithAlerts.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {athletesWithAlerts.slice(0, 5).map((a: any) => (
-              <div
-                key={a.id}
-                className="flex items-center justify-between p-2 rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
-                onClick={() => onSelectAthlete(a.id)}
-              >
-                <span className="text-sm font-medium text-foreground">{a.athlete_name}</span>
-                <CoachAlertsList alerts={athleteAlerts[a.id] || []} compact />
+            <div>
+              <h1 className="text-2xl md:text-3xl font-black text-foreground tracking-tight">Coach Bodybuilder</h1>
+              <p className="text-sm text-muted-foreground">Sistema Premium de Preparação Física</p>
+            </div>
+          </div>
+          <Dialog open={addOpen} onOpenChange={setAddOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-lg shadow-orange-500/20">
+                <Plus className="h-4 w-4 mr-2" /> Adicionar Atleta
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Adicionar Atleta</DialogTitle></DialogHeader>
+              <div className="space-y-4 mt-2">
+                <div>
+                  <Label>Paciente</Label>
+                  <Select value={newPatientId} onValueChange={setNewPatientId}>
+                    <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                    <SelectContent>
+                      {availablePatients.map((p: any) => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Fase Atual</Label>
+                  <Select value={newPhase} onValueChange={setNewPhase}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(PHASE_LABELS).map(([k, v]) => (
+                        <SelectItem key={k} value={k}>{v}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button onClick={() => addMutation.mutate()} disabled={!newPatientId || addMutation.isPending} className="w-full">
+                  {addMutation.isPending ? "Adicionando..." : "Adicionar"}
+                </Button>
               </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
 
-      {/* Phases widget */}
+      {/* Premium Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <PremiumStatCard icon={Users} label="Atletas" value={stats.total} color="from-blue-500/20 to-cyan-500/20" iconColor="text-blue-400" />
+        <PremiumStatCard icon={TrendingUp} label="Evoluindo" value={stats.evolving} color="from-emerald-500/20 to-green-500/20" iconColor="text-emerald-400" />
+        <PremiumStatCard icon={AlertTriangle} label="Estagnados" value={stats.stagnant} color="from-amber-500/20 to-yellow-500/20" iconColor="text-amber-400" />
+        <PremiumStatCard icon={ShieldAlert} label="Em Alerta" value={stats.alert} color="from-red-500/20 to-orange-500/20" iconColor="text-red-400" />
+        <PremiumStatCard icon={Trophy} label="Score Médio" value={avgScore} color="from-primary/20 to-primary/10" iconColor="text-primary" />
+      </div>
+
+      {/* Executive Widgets */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Alerts widget */}
+        {athletesWithAlerts.length > 0 && (
+          <Card className="border-red-500/20 bg-gradient-to-b from-red-500/5 to-transparent">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <ShieldAlert className="h-4 w-4 text-red-400" />
+                Alertas Ativos ({athletesWithAlerts.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {athletesWithAlerts.slice(0, 4).map((a: any) => (
+                <div
+                  key={a.id}
+                  className="flex items-center justify-between p-2 rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => onSelectAthlete(a.id)}
+                >
+                  <span className="text-sm font-medium text-foreground truncate">{a.athlete_name}</span>
+                  <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[10px]">
+                    {athleteAlerts[a.id]?.length || 0}
+                  </Badge>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* No checkin widget */}
+        {staleAthletes.length > 0 && (
+          <Card className="border-amber-500/20 bg-gradient-to-b from-amber-500/5 to-transparent">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Clock className="h-4 w-4 text-amber-400" />
+                Sem Check-in Recente ({staleAthletes.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {staleAthletes.slice(0, 4).map((a: any) => (
+                <div
+                  key={a.id}
+                  className="flex items-center justify-between p-2 rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => onSelectAthlete(a.id)}
+                >
+                  <span className="text-sm font-medium text-foreground truncate">{a.athlete_name}</span>
+                  <Badge variant="outline" className="text-[10px]">{PHASE_LABELS[a.current_phase] || a.current_phase}</Badge>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Low score / Peak week */}
+        {(lowScoreAthletes.length > 0 || peakWeekAthletes.length > 0) && (
+          <Card className="border-primary/20 bg-gradient-to-b from-primary/5 to-transparent">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Target className="h-4 w-4 text-primary" />
+                Atenção Especial
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {peakWeekAthletes.map((a: any) => (
+                <div key={a.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => onSelectAthlete(a.id)}>
+                  <span className="text-sm font-medium text-foreground truncate">{a.athlete_name}</span>
+                  <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30 text-[10px]">{PHASE_LABELS[a.current_phase]}</Badge>
+                </div>
+              ))}
+              {lowScoreAthletes.filter(a => !peakWeekAthletes.includes(a)).slice(0, 3).map((a: any) => (
+                <div key={a.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => onSelectAthlete(a.id)}>
+                  <span className="text-sm font-medium text-foreground truncate">{a.athlete_name}</span>
+                  <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[10px]">Score {a.prep_score || 0}</Badge>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Phase distribution */}
       <div className="flex gap-2 flex-wrap">
         {Object.entries(phaseGroups).filter(([, c]) => c > 0).map(([phase, count]) => (
           <Badge
             key={phase}
-            variant="outline"
-            className="cursor-pointer hover:bg-muted/50"
+            variant={filterPhase === phase ? "default" : "outline"}
+            className={`cursor-pointer transition-colors ${filterPhase === phase ? "bg-primary text-primary-foreground" : "hover:bg-muted/50"}`}
             onClick={() => setFilterPhase(filterPhase === phase ? "all" : phase)}
           >
             {PHASE_LABELS[phase]}: {count}
@@ -254,7 +318,7 @@ export default function CoachDashboard({ onSelectAthlete }: Props) {
           <Input placeholder="Buscar atleta..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
         </div>
         <Select value={filterPhase} onValueChange={setFilterPhase}>
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger className="w-[150px]">
             <Filter className="h-3 w-3 mr-1" />
             <SelectValue placeholder="Fase" />
           </SelectTrigger>
@@ -266,7 +330,8 @@ export default function CoachDashboard({ onSelectAthlete }: Props) {
           </SelectContent>
         </Select>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger className="w-[150px]">
+            <BarChart3 className="h-3 w-3 mr-1" />
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -280,10 +345,20 @@ export default function CoachDashboard({ onSelectAthlete }: Props) {
 
       {/* Athletes Grid */}
       {isLoading ? (
-        <div className="text-center py-12 text-muted-foreground">Carregando atletas...</div>
+        <div className="flex items-center justify-center py-16">
+          <div className="text-center space-y-3">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-sm text-muted-foreground">Carregando atletas...</p>
+          </div>
+        </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          {athletes.length === 0 ? "Nenhum atleta cadastrado. Adicione seu primeiro atleta!" : "Nenhum resultado encontrado."}
+        <div className="text-center py-16">
+          <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+            <Users className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <p className="text-muted-foreground">
+            {athletes.length === 0 ? "Nenhum atleta cadastrado. Adicione seu primeiro atleta!" : "Nenhum resultado encontrado."}
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -291,40 +366,54 @@ export default function CoachDashboard({ onSelectAthlete }: Props) {
             const sc = STATUS_CONFIG[athlete.status] || STATUS_CONFIG.evolving;
             const ScIcon = sc.icon;
             const alerts = athleteAlerts[athlete.id] || [];
+            const score = athlete.prep_score || 0;
+
             return (
               <Card
                 key={athlete.id}
-                className="cursor-pointer hover:border-primary/50 transition-all group"
+                className="cursor-pointer hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all group overflow-hidden"
                 onClick={() => onSelectAthlete(athlete.id)}
               >
-                <CardContent className="p-5 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-foreground text-lg group-hover:text-primary transition-colors truncate">
-                      {athlete.athlete_name}
-                    </h3>
-                    <Badge className={sc.color}>
-                      <ScIcon className="h-3 w-3 mr-1" />
-                      {sc.label}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-2 flex-wrap text-sm text-muted-foreground">
-                    <Badge variant="outline">{PHASE_LABELS[athlete.current_phase] || athlete.current_phase}</Badge>
-                    <span>Score: <strong className="text-foreground">{athlete.prep_score ?? 0}</strong></span>
-                    {alerts.length > 0 && (
-                      <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[10px]">
-                        {alerts.length} alerta{alerts.length > 1 ? "s" : ""}
+                <CardContent className="p-0">
+                  {/* Score gradient bar at top */}
+                  <div className="h-1 w-full" style={{
+                    background: `linear-gradient(to right, ${score >= 70 ? "#10b981" : score >= 40 ? "#f59e0b" : "#ef4444"}, ${score >= 70 ? "#34d399" : score >= 40 ? "#fbbf24" : "#f87171"})`,
+                  }} />
+                  <div className="p-5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-bold text-foreground text-lg group-hover:text-primary transition-colors truncate">
+                        {athlete.athlete_name}
+                      </h3>
+                      <Badge className={sc.color}>
+                        <ScIcon className="h-3 w-3 mr-1" />
+                        {sc.label}
                       </Badge>
-                    )}
-                  </div>
-                  {/* Score bar */}
-                  <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all"
-                      style={{
-                        width: `${Math.min(100, athlete.prep_score || 0)}%`,
-                        background: (athlete.prep_score || 0) >= 70 ? "#10b981" : (athlete.prep_score || 0) >= 40 ? "#f59e0b" : "#ef4444",
-                      }}
-                    />
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant="outline" className="text-xs">{PHASE_LABELS[athlete.current_phase] || athlete.current_phase}</Badge>
+                      <div className="flex items-center gap-1">
+                        <span className={`text-lg font-black ${score >= 70 ? "text-emerald-400" : score >= 40 ? "text-amber-400" : "text-red-400"}`}>
+                          {score}
+                        </span>
+                        <span className="text-xs text-muted-foreground">/100</span>
+                      </div>
+                      {alerts.length > 0 && (
+                        <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[10px]">
+                          <AlertTriangle className="h-2.5 w-2.5 mr-0.5" />
+                          {alerts.length}
+                        </Badge>
+                      )}
+                    </div>
+                    {/* Score bar */}
+                    <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${Math.min(100, score)}%`,
+                          background: score >= 70 ? "#10b981" : score >= 40 ? "#f59e0b" : "#ef4444",
+                        }}
+                      />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -336,14 +425,20 @@ export default function CoachDashboard({ onSelectAthlete }: Props) {
   );
 }
 
-function StatCard({ icon: Icon, label, value, color }: { icon: any; label: string; value: number; color: string }) {
+function PremiumStatCard({ icon: Icon, label, value, color, iconColor }: { icon: any; label: string; value: number; color: string; iconColor: string }) {
   return (
-    <Card>
-      <CardContent className="p-4 flex items-center gap-3">
-        <Icon className={`h-5 w-5 ${color}`} />
-        <div>
-          <p className="text-2xl font-bold text-foreground">{value}</p>
-          <p className="text-xs text-muted-foreground">{label}</p>
+    <Card className="overflow-hidden">
+      <CardContent className="p-0">
+        <div className={`p-4 bg-gradient-to-br ${color}`}>
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-background/50">
+              <Icon className={`h-5 w-5 ${iconColor}`} />
+            </div>
+            <div>
+              <p className="text-2xl font-black text-foreground">{value}</p>
+              <p className="text-xs text-muted-foreground">{label}</p>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>

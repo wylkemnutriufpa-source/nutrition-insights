@@ -8,14 +8,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Activity, Brain, Zap, Camera, Clock, AlertTriangle, Settings } from "lucide-react";
+import { ArrowLeft, Activity, Brain, Zap, Camera, Clock, AlertTriangle, Settings, Shield } from "lucide-react";
 import AthleteCheckinForm from "./AthleteCheckinForm";
 import AthleteAnalysisPanel from "./AthleteAnalysisPanel";
 import AthleteDecisionPanel from "./AthleteDecisionPanel";
 import CoachCompositeScore from "./CoachCompositeScore";
-import CoachAlertsList from "./CoachAlertsList";
+import CoachAlertCenter from "./CoachAlertCenter";
 import CoachTimeline from "./CoachTimeline";
 import CoachPhotoEvolution from "./CoachPhotoEvolution";
+import CoachQuickActions from "./CoachQuickActions";
+import CoachManualDecision from "./CoachManualDecision";
+import CoachNoteForm from "./CoachNoteForm";
 import { toast } from "sonner";
 
 interface Props {
@@ -23,7 +26,7 @@ interface Props {
   onBack: () => void;
 }
 
-type TabKey = "overview" | "checkin" | "analysis" | "decisions" | "photos" | "timeline";
+type TabKey = "overview" | "checkin" | "analysis" | "decisions" | "photos" | "timeline" | "alerts";
 
 export default function AthleteDetailView({ athleteId, onBack }: Props) {
   const { user } = useAuth();
@@ -31,7 +34,7 @@ export default function AthleteDetailView({ athleteId, onBack }: Props) {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabKey>("overview");
 
-  const { data: athlete } = useQuery({
+  const { data: athlete, isLoading: athleteLoading } = useQuery({
     queryKey: ["coach-athlete", athleteId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -45,7 +48,7 @@ export default function AthleteDetailView({ athleteId, onBack }: Props) {
     },
   });
 
-  const { data: checkins = [] } = useQuery({
+  const { data: checkins = [], isLoading: checkinsLoading } = useQuery({
     queryKey: ["coach-checkins", athleteId],
     queryFn: async () => {
       const { data } = await supabase
@@ -63,7 +66,6 @@ export default function AthleteDetailView({ athleteId, onBack }: Props) {
       await supabase.from("coach_athletes" as any)
         .update({ current_phase: newPhase, updated_at: new Date().toISOString() })
         .eq("id", athleteId);
-      // Timeline event
       await supabase.from("coach_timeline" as any).insert({
         athlete_id: athleteId,
         coach_id: user!.id,
@@ -86,55 +88,101 @@ export default function AthleteDetailView({ athleteId, onBack }: Props) {
   const decisions = generateDecisions(analysisResult, phase, checkins as CheckinData[]);
   const alerts = generateAlerts(analysisResult, checkins as CheckinData[], phase);
 
-  const tabs: { key: TabKey; label: string; icon: any }[] = [
+  const handleQuickAction = (action: string) => {
+    switch (action) {
+      case "checkin": setActiveTab("checkin"); break;
+      case "photos": setActiveTab("photos"); break;
+      case "phase": break; // phase selector is in header
+      case "manual_decision": setActiveTab("decisions"); break;
+      case "alerts": setActiveTab("alerts"); break;
+      case "note": setActiveTab("timeline"); break;
+    }
+  };
+
+  const tabs: { key: TabKey; label: string; icon: any; badge?: number }[] = [
     { key: "overview", label: "Visão Geral", icon: Activity },
     { key: "checkin", label: "Check-in", icon: Activity },
     { key: "analysis", label: "Análise", icon: Brain },
     { key: "decisions", label: "Decisões", icon: Zap },
+    { key: "alerts", label: "Alertas", icon: Shield, badge: alerts.length },
     { key: "photos", label: "Fotos", icon: Camera },
     { key: "timeline", label: "Timeline", icon: Clock },
   ];
 
+  const isLoading = athleteLoading || checkinsLoading;
+
+  if (isLoading && !athlete) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center space-y-3">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-sm text-muted-foreground">Carregando atleta...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={onBack}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-foreground">{athlete?.athlete_name || "Carregando..."}</h1>
-          <div className="flex items-center gap-2 mt-1 flex-wrap">
-            <Select value={phase} onValueChange={v => phaseMutation.mutate(v)}>
-              <SelectTrigger className="w-auto h-7 text-xs gap-1">
-                <Settings className="h-3 w-3" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(PHASE_LABELS).map(([k, v]) => (
-                  <SelectItem key={k} value={k}>{v}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Badge className={
-              analysisResult.overall_score >= 70 ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" :
-              analysisResult.overall_score >= 40 ? "bg-amber-500/20 text-amber-400 border-amber-500/30" :
-              "bg-red-500/20 text-red-400 border-red-500/30"
-            }>
-              Score: {analysisResult.overall_score}
-            </Badge>
-            {alerts.length > 0 && (
-              <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
-                <AlertTriangle className="h-3 w-3 mr-1" />
-                {alerts.length} alerta{alerts.length > 1 ? "s" : ""}
+    <div className="space-y-4">
+      {/* Premium Header */}
+      <div className="relative overflow-hidden rounded-xl border bg-gradient-to-r from-card via-card to-card p-5">
+        <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 to-red-600/5" />
+        <div className="relative flex items-start gap-4">
+          <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0 mt-0.5">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl font-bold text-foreground truncate">{athlete?.athlete_name || "Atleta"}</h1>
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
+              <Select value={phase} onValueChange={v => phaseMutation.mutate(v)}>
+                <SelectTrigger className="w-auto h-7 text-xs gap-1 bg-background/50">
+                  <Settings className="h-3 w-3" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(PHASE_LABELS).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Badge className={
+                analysisResult.overall_score >= 70 ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" :
+                analysisResult.overall_score >= 40 ? "bg-amber-500/20 text-amber-400 border-amber-500/30" :
+                "bg-red-500/20 text-red-400 border-red-500/30"
+              }>
+                Score: {analysisResult.overall_score}/100
               </Badge>
-            )}
+              {alerts.length > 0 && (
+                <Badge className="bg-red-500/20 text-red-400 border-red-500/30 cursor-pointer" onClick={() => setActiveTab("alerts")}>
+                  <AlertTriangle className="h-3 w-3 mr-1" />
+                  {alerts.length} alerta{alerts.length > 1 ? "s" : ""}
+                </Badge>
+              )}
+            </div>
+          </div>
+          {/* Score circle */}
+          <div className="shrink-0 hidden md:flex flex-col items-center">
+            <div className={`w-16 h-16 rounded-full border-4 flex items-center justify-center ${
+              analysisResult.overall_score >= 70 ? "border-emerald-500/50" :
+              analysisResult.overall_score >= 40 ? "border-amber-500/50" :
+              "border-red-500/50"
+            }`}>
+              <span className={`text-xl font-black ${
+                analysisResult.overall_score >= 70 ? "text-emerald-400" :
+                analysisResult.overall_score >= 40 ? "text-amber-400" :
+                "text-red-400"
+              }`}>{analysisResult.overall_score}</span>
+            </div>
+            <span className="text-[10px] text-muted-foreground mt-1">Score Geral</span>
           </div>
         </div>
       </div>
 
+      {/* Quick Actions */}
+      <CoachQuickActions onAction={handleQuickAction} alertCount={alerts.length} />
+
       {/* Tabs */}
-      <div className="flex gap-1 overflow-x-auto pb-1">
+      <div className="flex gap-1 overflow-x-auto pb-1 -mx-1 px-1">
         {tabs.map(tab => {
           const Icon = tab.icon;
           return (
@@ -143,24 +191,30 @@ export default function AthleteDetailView({ athleteId, onBack }: Props) {
               variant={activeTab === tab.key ? "default" : "ghost"}
               size="sm"
               onClick={() => setActiveTab(tab.key)}
-              className="shrink-0 text-xs"
+              className={`shrink-0 text-xs relative ${activeTab === tab.key ? "bg-gradient-to-r from-orange-500 to-red-600 text-white border-0" : ""}`}
             >
               <Icon className="h-3.5 w-3.5 mr-1" />
               {tab.label}
+              {tab.badge && tab.badge > 0 && (
+                <span className="ml-1 bg-red-500 text-white text-[9px] rounded-full w-4 h-4 flex items-center justify-center">
+                  {tab.badge}
+                </span>
+              )}
             </Button>
           );
         })}
       </div>
 
-      {/* Overview Tab */}
+      {/* Tab Content */}
       {activeTab === "overview" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Left: Status + Score */}
           <div className="space-y-4">
-            {/* Quick stats */}
-            <Card>
+            <Card className="border-primary/10">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Status Atual</CardTitle>
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-primary" />
+                  Status Atual
+                </CardTitle>
               </CardHeader>
               <CardContent className="grid grid-cols-2 gap-3">
                 <QuickStat label="Peso" value={lastCheckin?.weight ? `${lastCheckin.weight} kg` : "—"} />
@@ -172,9 +226,18 @@ export default function AthleteDetailView({ athleteId, onBack }: Props) {
             <CoachCompositeScore score={analysisResult.composite_score} />
           </div>
 
-          {/* Center: Alerts + Analysis summary */}
           <div className="space-y-4">
-            <CoachAlertsList alerts={alerts} />
+            {alerts.length > 0 && (
+              <Card className="border-red-500/20 bg-red-500/5 cursor-pointer" onClick={() => setActiveTab("alerts")}>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertTriangle className="h-4 w-4 text-red-400" />
+                    <span className="text-sm font-semibold text-foreground">{alerts.length} Alerta{alerts.length > 1 ? "s" : ""} Ativo{alerts.length > 1 ? "s" : ""}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{alerts[0]?.title}{alerts.length > 1 ? ` e mais ${alerts.length - 1}...` : ""}</p>
+                </CardContent>
+              </Card>
+            )}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
@@ -186,9 +249,8 @@ export default function AthleteDetailView({ athleteId, onBack }: Props) {
                 <p className="text-sm text-foreground leading-relaxed">{analysisResult.analysis_summary}</p>
               </CardContent>
             </Card>
-            {/* Top decision */}
             {decisions[0] && (
-              <Card className="border-amber-500/20">
+              <Card className="border-amber-500/20 bg-amber-500/5">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Zap className="h-4 w-4 text-amber-400" />
@@ -197,13 +259,16 @@ export default function AthleteDetailView({ athleteId, onBack }: Props) {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-foreground">{decisions[0].reason}</p>
-                  <p className="text-xs text-muted-foreground mt-1 italic">{decisions[0].data_basis}</p>
+                  {decisions[0].expected_impact && (
+                    <p className="text-xs text-primary mt-1">→ {decisions[0].expected_impact}</p>
+                  )}
                 </CardContent>
               </Card>
             )}
+            <CoachManualDecision athleteId={athleteId} />
+            <CoachNoteForm athleteId={athleteId} />
           </div>
 
-          {/* Right: Timeline preview */}
           <div>
             <CoachTimeline athleteId={athleteId} />
           </div>
@@ -219,7 +284,14 @@ export default function AthleteDetailView({ athleteId, onBack }: Props) {
       )}
 
       {activeTab === "decisions" && (
-        <AthleteDecisionPanel decisions={decisions} athleteId={athleteId} analysis={analysisResult} />
+        <div className="space-y-4">
+          <CoachManualDecision athleteId={athleteId} />
+          <AthleteDecisionPanel decisions={decisions} athleteId={athleteId} analysis={analysisResult} />
+        </div>
+      )}
+
+      {activeTab === "alerts" && (
+        <CoachAlertCenter athleteId={athleteId} generatedAlerts={alerts} />
       )}
 
       {activeTab === "photos" && (
@@ -227,7 +299,10 @@ export default function AthleteDetailView({ athleteId, onBack }: Props) {
       )}
 
       {activeTab === "timeline" && (
-        <CoachTimeline athleteId={athleteId} />
+        <div className="space-y-4">
+          <CoachNoteForm athleteId={athleteId} />
+          <CoachTimeline athleteId={athleteId} />
+        </div>
       )}
     </div>
   );
@@ -235,7 +310,7 @@ export default function AthleteDetailView({ athleteId, onBack }: Props) {
 
 function QuickStat({ label, value }: { label: string; value: string }) {
   return (
-    <div>
+    <div className="p-2 rounded-lg bg-muted/30">
       <p className="text-lg font-bold text-foreground">{value}</p>
       <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</p>
     </div>
