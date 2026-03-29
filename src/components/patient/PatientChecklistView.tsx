@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -52,6 +54,7 @@ interface Props {
 
 export default function PatientChecklistView({ patientId, editable = true }: Props) {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [tasks, setTasks] = useState<ChecklistTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
@@ -137,6 +140,7 @@ export default function PatientChecklistView({ patientId, editable = true }: Pro
         description: form.description || null,
         date,
         completed: false,
+        ...getTenantIdForInsert(tenantId),
       } as any);
       if (error) toast.error(error.message);
       else toast.success("Tarefa adicionada!");

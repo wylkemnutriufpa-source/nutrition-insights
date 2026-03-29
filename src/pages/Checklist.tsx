@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { useTenant } from "@/lib/tenantContext";
+import { getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
@@ -63,6 +65,7 @@ const CATEGORIES = [
 
 export default function Checklist() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const { awardPoints } = usePatientPoints();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -104,6 +107,7 @@ export default function Checklist() {
       description: t.description,
       date,
       completed: false,
+      ...getTenantIdForInsert(tenantId),
     }));
     const { error } = await supabase.from("checklist_tasks").insert(inserts as any);
     if (!error) {
@@ -125,6 +129,7 @@ export default function Checklist() {
       description: t.description,
       date,
       completed: false,
+      ...getTenantIdForInsert(tenantId),
     }));
     const { error } = await supabase.from("checklist_tasks").insert(inserts as any);
     if (!error) {
@@ -186,6 +191,7 @@ export default function Checklist() {
         description: form.description || null,
         date,
         completed: false,
+        ...getTenantIdForInsert(tenantId),
       } as any);
       if (error) toast.error(error.message);
       else toast.success(t("checklist.taskAdded"));
