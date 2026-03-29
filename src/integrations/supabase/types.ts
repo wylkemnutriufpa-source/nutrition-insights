@@ -3074,10 +3074,12 @@ export type Database = {
           alert_type: string
           athlete_id: string
           coach_id: string
+          coach_note: string | null
           created_at: string | null
           description: string | null
           id: string
           is_active: boolean | null
+          read_at: string | null
           resolved_at: string | null
           severity: string
           tenant_id: string | null
@@ -3087,10 +3089,12 @@ export type Database = {
           alert_type: string
           athlete_id: string
           coach_id: string
+          coach_note?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
           is_active?: boolean | null
+          read_at?: string | null
           resolved_at?: string | null
           severity?: string
           tenant_id?: string | null
@@ -3100,10 +3104,12 @@ export type Database = {
           alert_type?: string
           athlete_id?: string
           coach_id?: string
+          coach_note?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
           is_active?: boolean | null
+          read_at?: string | null
           resolved_at?: string | null
           severity?: string
           tenant_id?: string | null
@@ -3374,6 +3380,7 @@ export type Database = {
           decision_type: string
           expected_impact: string | null
           id: string
+          is_manual: boolean | null
           reason: string
           status: string | null
           tenant_id: string | null
@@ -3390,6 +3397,7 @@ export type Database = {
           decision_type: string
           expected_impact?: string | null
           id?: string
+          is_manual?: boolean | null
           reason: string
           status?: string | null
           tenant_id?: string | null
@@ -3406,6 +3414,7 @@ export type Database = {
           decision_type?: string
           expected_impact?: string | null
           id?: string
+          is_manual?: boolean | null
           reason?: string
           status?: string | null
           tenant_id?: string | null
