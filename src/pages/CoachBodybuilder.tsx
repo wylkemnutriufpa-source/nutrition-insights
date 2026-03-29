@@ -1,9 +1,5 @@
 import { useState } from "react";
-import { useAuth } from "@/lib/auth";
-import { useTenant } from "@/lib/tenantContext";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import MainLayout from "@/components/layout/MainLayout";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import CoachDashboard from "@/components/coach-bodybuilder/CoachDashboard";
 import AthleteDetailView from "@/components/coach-bodybuilder/AthleteDetailView";
 
