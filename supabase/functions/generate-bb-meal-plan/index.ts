@@ -307,6 +307,14 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    // Resolve tenant_id for meal_plans (NOT NULL constraint)
+    const { data: tenantProfile } = await serviceClient
+      .from("profiles")
+      .select("tenant_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    const resolvedTenantId = tenantProfile?.tenant_id;
+
     // ── 1. Load BB settings from site_settings ──
     const { data: bbSettingsRow } = await serviceClient
       .from("site_settings")
@@ -485,6 +493,7 @@ serve(async (req) => {
         generation_source: "protocol_biquini_branco",
         generated_by: userId,
         generation_metadata: generationMetadata,
+        tenant_id: resolvedTenantId,
       })
       .select("id")
       .single();
