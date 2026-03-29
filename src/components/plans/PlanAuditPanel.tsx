@@ -138,8 +138,8 @@ export default function PlanAuditPanel({ mealPlanId, patientId, onApproved, onFi
                 {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Auditando (Clínico + Simplicidade + Adesão)...</> : <><ShieldCheck className="w-4 h-4 text-primary" /> Auditar / Validar Plano</>}
             </Button>
 
-            {/* Auto-fix button — shows when plan has issues */}
-            {patientId && (
+            {/* Auto-fix button — shows only when plan has been audited and failed */}
+            {patientId && result && !result.success && (
                 <AutoFixButton mealPlanId={mealPlanId} patientId={patientId} onFixed={onFixed} />
             )}
 
