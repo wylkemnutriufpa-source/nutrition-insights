@@ -131,14 +131,14 @@ export default function PatientGridDashboard() {
         </motion.div>
       )}
 
-      {/* FitJourney Timeline */}
-      <FitJourneyTimeline compact maxHeight="400px" />
+      {/* FitJourney Timeline — hidden in basic mode */}
+      {!expUI.isBasic && <FitJourneyTimeline compact maxHeight="400px" />}
 
       {/* Header with view toggle */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Meu Painel</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Acesse tudo em um só lugar</p>
+          <h2 className="text-xl font-bold text-foreground">{expUI.isBasic ? "Minha Jornada" : "Meu Painel"}</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">{expUI.isBasic ? "Foque no essencial para seguir seu plano" : "Acesse tudo em um só lugar"}</p>
         </div>
         <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
           <Button
