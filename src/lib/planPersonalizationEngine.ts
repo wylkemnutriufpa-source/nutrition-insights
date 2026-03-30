@@ -219,6 +219,7 @@ export function personalizePlanItems(
     const regex = new RegExp(rejected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
 
     personalizedItems = personalizedItems.map(item => {
+      if (isProtected(item)) return item;
       const title = item.title || "";
       const description = item.description || "";
 
