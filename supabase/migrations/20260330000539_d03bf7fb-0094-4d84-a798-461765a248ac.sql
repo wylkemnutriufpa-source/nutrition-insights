@@ -1,0 +1,1 @@
+ALTER VIEW public.meal_plan_resolved_state SET (security_invoker = on);
