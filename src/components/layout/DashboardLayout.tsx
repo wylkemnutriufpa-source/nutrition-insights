@@ -24,6 +24,8 @@ import { usePatientRealtime } from "@/hooks/usePatientRealtime";
 import { useNutritionistRealtime } from "@/hooks/useNutritionistRealtime";
 import { useRefetchOnFocus } from "@/hooks/useRefetchOnFocus";
 import { useRealtimeEventBus } from "@/hooks/useRealtimeEventBus";
+import WorkspaceContextSwitcher from "@/components/layout/WorkspaceContextSwitcher";
+import { WorkspaceContext, useWorkspaceContextState } from "@/hooks/useWorkspaceContext";
 
 function LayoutFallbackCard({
   title,
