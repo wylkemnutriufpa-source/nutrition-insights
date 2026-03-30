@@ -417,7 +417,7 @@ export default function DietTemplates() {
         created_by: user.id,
         event_type: "meal_plan",
         title: `Modelo "${template.name}" aplicado`,
-        description: `Plano alimentar criado a partir do modelo pré-definido com ${items.length} refeições. ${anamnesis ? "Calorias ajustadas para " + getAdjustedCalories(template) + "kcal." : ""}`,
+        description: `Plano alimentar criado a partir do modelo pré-definido com ${items.length} refeições. ${anamnesis ? "Calorias ajustadas para " + getAdjustedCalories(template) + "kcal." : ""}${personalizationSummary}`,
         metadata: { template_slug: template.slug, adjusted_calories: getAdjustedCalories(template) },
       });
 
