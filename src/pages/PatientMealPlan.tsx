@@ -249,13 +249,26 @@ export default function PatientMealPlan() {
     setDate(d.toISOString().split("T")[0]);
   }, [date]);
 
+  // Apply substitution overlays to displayed items (without mutating plan data)
+  const overlayedItems = useMemo(() =>
+    items.map(item => {
+      const sub = activeSubstitutions[item.id];
+      if (!sub) return item;
+      return {
+        ...item,
+        title: `${sub.foodName}`,
+        description: `Substituição de: ${sub.originalTitle}${item.description ? ` • ${item.description}` : ""}`,
+      };
+    }),
+  [items, activeSubstitutions]);
+
   // Memoized grouped items
   const groupedItems = useMemo(() =>
     MEAL_TYPES.map(mt => ({
       ...mt,
-      items: items.filter(i => i.meal_type === mt.key),
+      items: overlayedItems.filter(i => i.meal_type === mt.key),
     })).filter(g => g.items.length > 0),
-  [items]);
+  [overlayedItems]);
 
   // Memoized daily adherence
   const { followedCount, partialCount, notFollowedCount, dailyAdherence, allMarked } = useMemo(() => {
