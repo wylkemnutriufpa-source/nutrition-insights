@@ -75,28 +75,51 @@ export default function PatientGridDashboard() {
   const { user } = useAuth();
   const expUI = useExperienceUI();
   const [onboarding, setOnboarding] = useState<any>(null);
+  const [anamnesisCompleted, setAnamnesisCompleted] = useState<boolean | null>(null);
+  const [loadingAnamnesis, setLoadingAnamnesis] = useState(true);
 
   useEffect(() => {
     if (!user?.id) return;
-    supabase
-      .from("onboarding_pipelines" as any)
-      .select("id, status, current_step")
-      .eq("patient_id", user.id)
-      .in("status", ["active", "in_progress", "pending"])
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .then(({ data }) => {
-        if (data && data.length > 0) setOnboarding(data[0]);
-      });
+    
+    // Check onboarding pipeline AND anamnesis completion in parallel
+    Promise.all([
+      supabase
+        .from("onboarding_pipelines" as any)
+        .select("id, status, current_step, anamnesis_completed")
+        .eq("patient_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1),
+      supabase
+        .from("patient_anamnesis")
+        .select("id, status")
+        .eq("user_id", user.id)
+        .eq("status", "completed")
+        .limit(1),
+    ]).then(([pipelineRes, anamnesisRes]) => {
+      const pipeline = pipelineRes.data?.[0];
+      if (pipeline) setOnboarding(pipeline);
+      
+      const hasCompletedAnamnesis = !!(anamnesisRes.data && anamnesisRes.data.length > 0) || !!(pipeline as any)?.anamnesis_completed;
+      setAnamnesisCompleted(hasCompletedAnamnesis);
+      setLoadingAnamnesis(false);
+    });
   }, [user?.id]);
 
   // Filter cards by experience mode
   const visibleCards = PATIENT_CARDS.filter((c) => expUI.minMode(c.minMode ?? "basic"));
   const visibleRows = [...new Set(visibleCards.map((c) => c.row))].sort();
 
-  const ONBOARDING_KEY = "patient_onboarding_completed";
-  const onboardingDone = localStorage.getItem(ONBOARDING_KEY) === "true";
-  const showOnboardingCard = onboarding || !onboardingDone;
+  // Onboarding is mandatory — block everything until anamnesis is done
+  const showOnboardingCard = !anamnesisCompleted;
+  const blockDashboard = loadingAnamnesis === false && !anamnesisCompleted;
+
+  if (loadingAnamnesis) {
+    return (
+      <div className="flex items-center justify-center h-40">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -105,7 +128,7 @@ export default function PatientGridDashboard() {
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <Card
             className="relative cursor-pointer overflow-hidden border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-emerald-600/5 to-teal-500/10 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-300 group"
-            onClick={() => navigate("/onboarding-paciente")}
+            onClick={() => navigate("/anamnesis")}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             <div className="relative flex items-center gap-4 p-4">
@@ -114,15 +137,13 @@ export default function PatientGridDashboard() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold text-foreground">Onboarding FitJourney</h3>
+                  <h3 className="text-sm font-bold text-foreground">Complete sua Anamnese</h3>
                   <Badge variant="default" className="text-[9px] h-5 bg-emerald-600 hover:bg-emerald-500">
-                    {onboarding ? (onboarding as any).status === "active" ? "Em andamento" : "Pendente" : "Iniciar"}
+                    Obrigatório
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {onboarding
-                    ? `Etapa atual: ${(onboarding as any).current_step || (onboarding as any).status}`
-                    : "Conheça o sistema e comece sua jornada de transformação"}
+                  Preencha suas informações de saúde para que seu profissional crie um plano personalizado.
                 </p>
               </div>
               <ChevronRight className="w-5 h-5 text-emerald-500/60 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all flex-shrink-0" />
@@ -130,6 +151,20 @@ export default function PatientGridDashboard() {
           </Card>
         </motion.div>
       )}
+
+      {/* If onboarding not done, block access to the rest */}
+      {blockDashboard && (
+        <div className="text-center py-8 space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Para acessar seus recursos, preencha a anamnese primeiro.
+          </p>
+          <Button onClick={() => navigate("/anamnesis")} className="gap-2">
+            <Rocket className="w-4 h-4" /> Preencher Anamnese
+          </Button>
+        </div>
+      )}
+
+      {!blockDashboard && (<>
 
       {/* FitJourney Timeline — hidden in basic mode */}
       {!expUI.isBasic && <FitJourneyTimeline compact maxHeight="400px" />}
@@ -260,6 +295,8 @@ export default function PatientGridDashboard() {
             );
           })}
         </motion.div>
+      )}
+      </>
       )}
     </div>
   );
