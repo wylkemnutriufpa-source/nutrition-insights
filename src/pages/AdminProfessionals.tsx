@@ -34,6 +34,8 @@ interface Professional {
   clinic_name: string | null;
   onboarding_completed: boolean;
   patient_count: number;
+  coach_bodybuilder_enabled: boolean;
+  personal_trainer_enabled: boolean;
 }
 
 interface PricingPlan {
