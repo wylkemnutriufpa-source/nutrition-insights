@@ -27,6 +27,8 @@ interface MealPlanItem {
   carbs_target: number | null;
   fat_target: number | null;
   metadata?: Record<string, any> | null;
+  image_url?: string | null;
+  visual_library_item_id?: string | null;
 }
 
 interface MealCompletion {
