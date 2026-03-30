@@ -8,8 +8,9 @@ import {
   CheckCircle2, Circle, Calendar, ChevronLeft, ChevronRight,
   Utensils, Coffee, Apple, Cookie, Moon, Sun, Flame,
   Trophy, Beef, Wheat, Droplets, AlertCircle, MinusCircle,
-  Shield, Zap, Award, TrendingUp
+  Shield, Zap, Award, TrendingUp, UtensilsCrossed
 } from "lucide-react";
+import { useMealVisualItem } from "@/hooks/useMealVisualItem";
 import type { Database } from "@/integrations/supabase/types";
 
 type MealType = Database["public"]["Enums"]["meal_type"];
@@ -26,6 +27,8 @@ interface MealPlanItem {
   carbs_target: number | null;
   fat_target: number | null;
   metadata?: Record<string, any> | null;
+  image_url?: string | null;
+  visual_library_item_id?: string | null;
 }
 
 interface MealCompletion {
@@ -144,6 +147,9 @@ const MealItemCard = memo(function MealItemCard({
   onOpenDetail: (item: MealDetailData) => void;
 }) {
   const impacts = useMemo(() => getImpactTags(item), [item]);
+  const { item: visualItem } = useMealVisualItem(item.visual_library_item_id);
+  const resolvedImage = (item as any).image_url || visualItem?.image_url || visualItem?.image_path || null;
+  
   const statusColor = status === "followed" ? "border-emerald-500/30 bg-emerald-500/5"
     : status === "partial" ? "border-amber-500/30 bg-amber-500/5"
     : status === "not_followed" ? "border-red-500/30 bg-red-500/5"
@@ -157,69 +163,98 @@ const MealItemCard = memo(function MealItemCard({
         opacity: 1, x: 0,
         boxShadow: isJustDone ? "0 0 20px rgba(16,185,129,0.3)" : "none",
       }}
-      className={`glass rounded-xl p-4 transition-all ${statusColor}`}
+      className={`glass rounded-xl overflow-hidden transition-all ${statusColor}`}
     >
-      <div
-        className="flex items-start gap-3 cursor-pointer"
-        onClick={() => onOpenDetail({ ...item, metadata: (item as any).metadata })}
-      >
-        <div className="mt-0.5">
-          {status === "followed" ? <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-            : status === "partial" ? <MinusCircle className="w-5 h-5 text-amber-500" />
-            : status === "not_followed" ? <AlertCircle className="w-5 h-5 text-red-500" />
-            : <Circle className="w-5 h-5 text-muted-foreground" />}
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className={`font-medium text-sm ${status === "followed" ? "line-through text-muted-foreground" : ""}`}>
-            {item.title}
-          </p>
-          {item.description && (
-            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{item.description}</p>
-          )}
-          {impacts.length > 0 && !focusMode && (
-            <div className="flex flex-wrap gap-1 mt-1.5">
-              {impacts.map(tag => {
-                const t = IMPACT_TAGS[tag];
-                return (
-                  <span key={tag} className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-medium border ${t.color}`}>
-                    {t.icon} {t.label}
-                  </span>
-                );
-              })}
-            </div>
-          )}
-          {(item.calories_target || item.protein_target) && (
-            <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
-              {item.calories_target && <span className="flex items-center gap-1"><Flame className="w-3 h-3 text-orange-400" /> {item.calories_target} kcal</span>}
-              {item.protein_target && <span className="flex items-center gap-1"><Beef className="w-3 h-3 text-red-400" /> {item.protein_target}g</span>}
-              {item.carbs_target && <span className="flex items-center gap-1"><Wheat className="w-3 h-3 text-amber-400" /> {item.carbs_target}g</span>}
-            </div>
-          )}
-          <div className="flex gap-1.5 mt-3">
-            {ADHERENCE_OPTIONS.map(opt => (
-              <button
-                key={opt.status}
-                onClick={(e) => { e.stopPropagation(); onSetAdherence(item, opt.status); }}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[11px] font-medium transition-all ${
-                  status === opt.status
-                    ? `${opt.bgColor} ${opt.color} ring-1 ring-current`
-                    : "border-border/50 text-muted-foreground hover:border-border"
-                }`}
-              >
-                {opt.icon}
-                {opt.label}
-              </button>
-            ))}
+      {/* Visual image hero */}
+      {resolvedImage && (
+        <div
+          className="relative w-full h-24 overflow-hidden cursor-pointer"
+          onClick={() => onOpenDetail({ ...item, metadata: (item as any).metadata })}
+        >
+          <img src={resolvedImage} alt={item.title} className="w-full h-full object-cover" loading="lazy" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent" />
+          {/* Status overlay icon */}
+          <div className="absolute top-2 right-2">
+            {status === "followed" ? <CheckCircle2 className="w-5 h-5 text-emerald-500 drop-shadow" />
+              : status === "partial" ? <MinusCircle className="w-5 h-5 text-amber-500 drop-shadow" />
+              : status === "not_followed" ? <AlertCircle className="w-5 h-5 text-red-500 drop-shadow" />
+              : null}
           </div>
-          <MealFeedbackButton mealPlanId={item.id} mealPlanItemId={item.id} mealType={item.meal_type} />
+          {visualItem && !(item as any).image_url && (
+            <div className="absolute bottom-1 left-1">
+              <span className="text-[8px] px-1.5 py-0.5 rounded bg-primary/70 text-primary-foreground backdrop-blur-sm">
+                📸 Inspiração
+              </span>
+            </div>
+          )}
         </div>
-        {completedAt && status && (
-          <span className={`text-[10px] font-medium ${
-            status === "followed" ? "text-emerald-500" : status === "partial" ? "text-amber-500" : "text-red-500"
-          }`}>
-            {new Date(completedAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-          </span>
-        )}
+      )}
+
+      <div className="p-4">
+        <div
+          className="flex items-start gap-3 cursor-pointer"
+          onClick={() => onOpenDetail({ ...item, metadata: (item as any).metadata })}
+        >
+          {!resolvedImage && (
+            <div className="mt-0.5">
+              {status === "followed" ? <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                : status === "partial" ? <MinusCircle className="w-5 h-5 text-amber-500" />
+                : status === "not_followed" ? <AlertCircle className="w-5 h-5 text-red-500" />
+                : <Circle className="w-5 h-5 text-muted-foreground" />}
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className={`font-medium text-sm ${status === "followed" ? "line-through text-muted-foreground" : ""}`}>
+              {item.title}
+            </p>
+            {item.description && (
+              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{item.description}</p>
+            )}
+            {impacts.length > 0 && !focusMode && (
+              <div className="flex flex-wrap gap-1 mt-1.5">
+                {impacts.map(tag => {
+                  const t = IMPACT_TAGS[tag];
+                  return (
+                    <span key={tag} className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-medium border ${t.color}`}>
+                      {t.icon} {t.label}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+            {(item.calories_target || item.protein_target) && (
+              <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
+                {item.calories_target && <span className="flex items-center gap-1"><Flame className="w-3 h-3 text-orange-400" /> {item.calories_target} kcal</span>}
+                {item.protein_target && <span className="flex items-center gap-1"><Beef className="w-3 h-3 text-red-400" /> {item.protein_target}g</span>}
+                {item.carbs_target && <span className="flex items-center gap-1"><Wheat className="w-3 h-3 text-amber-400" /> {item.carbs_target}g</span>}
+              </div>
+            )}
+            <div className="flex gap-1.5 mt-3">
+              {ADHERENCE_OPTIONS.map(opt => (
+                <button
+                  key={opt.status}
+                  onClick={(e) => { e.stopPropagation(); onSetAdherence(item, opt.status); }}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[11px] font-medium transition-all ${
+                    status === opt.status
+                      ? `${opt.bgColor} ${opt.color} ring-1 ring-current`
+                      : "border-border/50 text-muted-foreground hover:border-border"
+                  }`}
+                >
+                  {opt.icon}
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            <MealFeedbackButton mealPlanId={item.id} mealPlanItemId={item.id} mealType={item.meal_type} />
+          </div>
+          {completedAt && status && (
+            <span className={`text-[10px] font-medium ${
+              status === "followed" ? "text-emerald-500" : status === "partial" ? "text-amber-500" : "text-red-500"
+            }`}>
+              {new Date(completedAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          )}
+        </div>
       </div>
     </motion.div>
   );

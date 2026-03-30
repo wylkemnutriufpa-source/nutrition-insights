@@ -364,6 +364,15 @@ export default function DietTemplates() {
         }
       }
 
+      // Auto-associate visual library items by alias
+      const { autoMatchSingle } = await import("@/lib/mealVisualAssociation");
+      const enrichedItems = await Promise.all(
+        items.map(async (item) => {
+          const visualId = await autoMatchSingle(item.title);
+          return visualId ? { ...item, visual_library_item_id: visualId } : item;
+        })
+      );
+
       // Use server-authoritative RPC for plan activation (ensures single active plan atomically)
       const activateResult = await activateMealPlan(targetPlanId);
       if (!activateResult.success) {
@@ -376,7 +385,7 @@ export default function DietTemplates() {
         .eq("meal_plan_id", targetPlanId);
       if (deleteError) throw deleteError;
 
-      const { error: itemsError } = await supabase.from("meal_plan_items").insert(items);
+      const { error: itemsError } = await supabase.from("meal_plan_items").insert(enrichedItems as any);
       if (itemsError) throw itemsError;
 
       // Add timeline event

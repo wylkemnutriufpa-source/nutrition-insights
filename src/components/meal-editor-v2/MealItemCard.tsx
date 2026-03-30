@@ -7,6 +7,7 @@ import { useMealPlanEditorV2Store, type MealPlanItem } from "@/stores/mealPlanEd
 import { getCategoryDot } from "@/components/meals/FoodSubstitutions";
 import { useMealDetail } from "@/components/patient/MealDetailContext";
 import { MealPhotoUpload } from "./MealPhotoUpload";
+import { useMealVisualItem } from "@/hooks/useMealVisualItem";
 
 interface MealItemCardProps {
   item: MealPlanItem;
@@ -29,6 +30,11 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
 
   const catDot = getCategoryDot(item.title);
   const imageUrl = (item as any).image_url as string | null | undefined;
+  const visualLibraryItemId = (item as any).visual_library_item_id as string | null | undefined;
+  const { item: visualItem } = useMealVisualItem(visualLibraryItemId);
+
+  // Resolve image: manual upload > visual library > none
+  const resolvedImage = imageUrl || visualItem?.image_url || visualItem?.image_path || null;
 
   return (
     <motion.div
@@ -49,35 +55,45 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
             carbs_target: item.carbs_target,
             fat_target: item.fat_target,
             metadata: (item as any).metadata,
-            image_url: imageUrl,
+            image_url: resolvedImage,
           });
         }
       }}
     >
       {/* Meal Photo Thumbnail */}
-      {imageUrl ? (
+      {resolvedImage ? (
         <div className="relative w-full h-16 overflow-hidden">
           <img
-            src={imageUrl}
+            src={resolvedImage}
             alt={item.title}
             className="w-full h-full object-cover"
             loading="lazy"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-          {/* Photo action buttons */}
-          <div className="absolute top-0.5 right-0.5 flex gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity z-10">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                updateItem(item.id, { image_url: null } as any);
-              }}
-              className="p-0.5 rounded bg-black/50 hover:bg-destructive/80"
-              title="Remover foto"
-            >
-              <X className="w-2.5 h-2.5 text-white" />
-            </button>
-          </div>
+          {/* Visual library badge */}
+          {visualItem && !imageUrl && (
+            <div className="absolute bottom-0.5 left-0.5">
+              <span className="text-[7px] px-1 py-0.5 rounded bg-primary/60 text-primary-foreground backdrop-blur-sm">
+                📸 Biblioteca
+              </span>
+            </div>
+          )}
+          {/* Photo action buttons (only for manual uploads) */}
+          {imageUrl && (
+            <div className="absolute top-0.5 right-0.5 flex gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity z-10">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  updateItem(item.id, { image_url: null } as any);
+                }}
+                className="p-0.5 rounded bg-black/50 hover:bg-destructive/80"
+                title="Remover foto"
+              >
+                <X className="w-2.5 h-2.5 text-white" />
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="opacity-0 group-hover/item:opacity-100 transition-opacity">
