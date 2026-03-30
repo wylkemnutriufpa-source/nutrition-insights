@@ -582,19 +582,13 @@ export default function PatientMealPlan() {
             mealPlanItemId={substitutionItem?.id || ""}
             mealPlanId={plan?.id || ""}
             patientId={user?.id || ""}
-            onSubstitute={(food: FoodItem) => {
-              // Update local state to reflect substitution
+            onSubstitute={(food: FoodItem, originalTitle: string) => {
+              // Update overlay map — plan data stays untouched
               if (substitutionItem) {
-                setItems(prev => prev.map(i =>
-                  i.id === substitutionItem.id
-                    ? { ...i, title: food.name, description: `${food.portion} • Substituição de ${substitutionItem.title}` }
-                    : i
-                ));
-                setAllItems(prev => prev.map(i =>
-                  i.id === substitutionItem.id
-                    ? { ...i, title: food.name, description: `${food.portion} • Substituição de ${substitutionItem.title}` }
-                    : i
-                ));
+                setActiveSubstitutions(prev => ({
+                  ...prev,
+                  [substitutionItem.id]: { foodName: food.name, originalTitle },
+                }));
               }
               setSubstitutionItem(null);
             }}
