@@ -469,7 +469,7 @@ function DynamicSidebar({
             categories={categories}
             flatItems={flatItems}
             collapsed={collapsed}
-            isProRole={isProRole}
+            isProRole={effectiveProRole}
             onLinkClick={onLinkClick}
             trackClick={trackClick}
           />
