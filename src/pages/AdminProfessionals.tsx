@@ -400,7 +400,21 @@ function PromotePatientDialog({
 }
 
 // ─── Professional Detail Card ───
-function ProfessionalDetailPanel({ professional, onClose }: { professional: Professional; onClose: () => void }) {
+function ProfessionalDetailPanel({ professional, onClose, onRefresh }: { professional: Professional; onClose: () => void; onRefresh: () => void }) {
+  const [toggling, setToggling] = useState<string | null>(null);
+
+  const toggleModule = async (field: "coach_bodybuilder_enabled" | "personal_trainer_enabled", current: boolean) => {
+    setToggling(field);
+    if (professional.profile_id) {
+      await supabase.from("professional_profiles").update({ [field]: !current }).eq("id", professional.profile_id);
+    } else {
+      await supabase.from("professional_profiles").insert({ user_id: professional.user_id, [field]: !current });
+    }
+    toast.success(`Módulo ${!current ? "liberado" : "bloqueado"} com sucesso`);
+    onRefresh();
+    setToggling(null);
+  };
+
   return (
     <Card className="glass shadow-card">
       <CardHeader className="pb-3">
@@ -451,6 +465,33 @@ function ProfessionalDetailPanel({ professional, onClose }: { professional: Prof
           <div className="p-3 rounded-lg bg-muted/50">
             <p className="text-xs text-muted-foreground">Desde</p>
             <p className="font-medium">{new Date(professional.created_at).toLocaleDateString("pt-BR")}</p>
+          </div>
+        </div>
+
+        {/* Module Access Toggles */}
+        <div className="border-t border-border pt-3 space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Módulos Liberados</p>
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
+            <div className="flex items-center gap-2">
+              <Activity className="w-4 h-4 text-orange-500" />
+              <span className="text-sm font-medium">Coach Bodybuilder</span>
+            </div>
+            <Switch
+              checked={professional.coach_bodybuilder_enabled}
+              disabled={toggling === "coach_bodybuilder_enabled"}
+              onCheckedChange={() => toggleModule("coach_bodybuilder_enabled", professional.coach_bodybuilder_enabled)}
+            />
+          </div>
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
+            <div className="flex items-center gap-2">
+              <Dumbbell className="w-4 h-4 text-emerald-500" />
+              <span className="text-sm font-medium">Personal Trainer</span>
+            </div>
+            <Switch
+              checked={professional.personal_trainer_enabled}
+              disabled={toggling === "personal_trainer_enabled"}
+              onCheckedChange={() => toggleModule("personal_trainer_enabled", professional.personal_trainer_enabled)}
+            />
           </div>
         </div>
       </CardContent>
