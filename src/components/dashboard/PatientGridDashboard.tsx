@@ -229,7 +229,7 @@ export default function PatientGridDashboard() {
           animate="show"
           className="space-y-1.5"
         >
-          {PATIENT_CARDS.map((card) => {
+          {visibleCards.map((card) => {
             const Icon = card.icon;
             return (
               <motion.div key={card.key} variants={cardAnim}>
