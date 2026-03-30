@@ -1329,7 +1329,6 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
       if (!pid && intent.target_name) {
         const { found, ambiguous } = findByName(patients, intent.target_name);
         if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, originalCommand || intent.target_name || "", ctx, "clinical");
-        }
         if (found) { pid = found.id; ctx.last_patient_id = found.id; ctx.last_patient_name = found.full_name; }
       }
       if (!pid) return fmt("Quem?", "❓", "error", "Diga o nome do paciente.", "Ex: *anamnese da Maria*", [], intent, "clinical", ctx);
