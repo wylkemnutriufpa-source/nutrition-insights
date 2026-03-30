@@ -577,10 +577,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
         </main>
       </div>
+      </WorkspaceContext.Provider>
     );
   }
 
   return (
+    <WorkspaceContext.Provider value={workspaceCtx}>
     <div className="min-h-screen flex bg-background">
       <motion.aside
         initial={false}
@@ -616,5 +618,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </ErrorBoundary>
       )}
     </div>
+    </WorkspaceContext.Provider>
   );
 }
