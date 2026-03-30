@@ -437,16 +437,16 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10 z-10" />
                 <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/60 to-transparent z-10" />
 
-                {/* Ken Burns image */}
+                {/* Ken Burns image with varied motion per slide */}
                 <motion.img
                   key={`img-${idx}`}
                   src={slide.image_url}
                   alt={slide.title || `Slide ${idx + 1}`}
                   className="w-full h-full object-contain bg-black/30"
-                  style={{ maxHeight: "62vh" }}
-                  initial={{ scale: 1.06 }}
-                  animate={{ scale: 1 }}
-                  transition={{ duration: 12, ease: "linear" }}
+                  style={{ maxHeight: "62vh", transformOrigin: kenBurnsOrigins[idx % kenBurnsOrigins.length] }}
+                  initial={{ scale: 1.08, opacity: 0.7 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ scale: { duration: 10, ease: "linear" }, opacity: { duration: 0.8, ease: "easeOut" } }}
                 />
 
                 {/* Glass ring */}
