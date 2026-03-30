@@ -39,6 +39,7 @@ export default function Settings() {
 
   const [showInRanking, setShowInRanking] = useState(false);
   const [rankingNickname, setRankingNickname] = useState("");
+  const [hasOwnMealPlan, setHasOwnMealPlan] = useState(false);
 
   useEffect(() => {
     if (!user) return;
