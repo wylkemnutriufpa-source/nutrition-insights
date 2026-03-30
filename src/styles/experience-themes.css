@@ -1,0 +1,97 @@
+/* ─── Experience Mode Visual Themes ───
+   Applied via data-experience-mode and data-experience-role attributes on <html> */
+
+/* ════════════════════════════════════════════
+   PATIENT THEMES
+   ════════════════════════════════════════════ */
+
+/* Patient Basic — ultra clean, minimal */
+html[data-experience-role="patient"][data-experience-mode="basic"] {
+  --card: 0 0% 100%;
+  --border: 220 13% 91%;
+  --shadow-card: 0 1px 2px hsl(220 25% 10% / 0.03);
+  --shadow-glow: none;
+}
+html[data-experience-role="patient"][data-experience-mode="basic"] .dark {
+  --card: 222 20% 12%;
+  --border: 222 15% 20%;
+  --shadow-card: 0 1px 2px hsl(0 0% 0% / 0.1);
+  --shadow-glow: none;
+}
+
+/* Patient Pro — slightly richer, soft accents */
+html[data-experience-role="patient"][data-experience-mode="pro"] {
+  --shadow-card: 0 1px 3px hsl(220 25% 10% / 0.05), 0 8px 20px hsl(220 25% 10% / 0.04);
+}
+
+/* Patient Advanced — premium feel, subtle glow */
+html[data-experience-role="patient"][data-experience-mode="advanced"] {
+  --shadow-card: 0 1px 3px hsl(220 25% 10% / 0.06), 0 10px 30px hsl(152 58% 42% / 0.06);
+  --shadow-glow: 0 0 16px hsl(152 58% 42% / 0.1);
+}
+
+/* ════════════════════════════════════════════
+   PROFESSIONAL THEMES
+   ════════════════════════════════════════════ */
+
+/* Pro Basic — clean gray, low density */
+html[data-experience-role="professional"][data-experience-mode="basic"] {
+  --primary: 220 15% 50%;
+  --ring: 220 15% 50%;
+  --sidebar-primary: 220 15% 50%;
+  --shadow-glow: none;
+  --shadow-card: 0 1px 2px hsl(220 10% 10% / 0.04);
+}
+html[data-experience-role="professional"][data-experience-mode="basic"] .dark {
+  --primary: 220 15% 55%;
+  --ring: 220 15% 55%;
+  --sidebar-primary: 220 15% 55%;
+  --shadow-glow: none;
+}
+
+/* Pro Professional — blue-tinted, refined */
+html[data-experience-role="professional"][data-experience-mode="pro"] {
+  --primary: 210 70% 50%;
+  --ring: 210 70% 50%;
+  --sidebar-primary: 210 70% 50%;
+  --shadow-glow: 0 0 16px hsl(210 70% 50% / 0.12);
+  --gradient-primary: linear-gradient(135deg, hsl(210, 70%, 50%), hsl(220, 65%, 55%));
+}
+html[data-experience-role="professional"][data-experience-mode="pro"] .dark {
+  --primary: 210 70% 55%;
+  --ring: 210 70% 55%;
+  --sidebar-primary: 210 70% 55%;
+  --shadow-glow: 0 0 20px hsl(210 70% 55% / 0.15);
+}
+
+/* Pro Advanced — premium blackout with green+gold accents */
+html[data-experience-role="professional"][data-experience-mode="advanced"] {
+  --primary: 152 58% 42%;
+  --ring: 152 58% 42%;
+  --accent: 40 65% 55%;
+  --shadow-glow: 0 0 24px hsl(152 58% 42% / 0.15);
+  --shadow-card: 0 1px 4px hsl(0 0% 0% / 0.08), 0 12px 36px hsl(152 58% 42% / 0.08);
+  --gradient-primary: linear-gradient(135deg, hsl(152, 58%, 42%), hsl(40, 65%, 55%));
+}
+html[data-experience-role="professional"][data-experience-mode="advanced"] .dark {
+  --background: 220 30% 6%;
+  --card: 220 28% 9%;
+  --sidebar-background: 220 30% 7%;
+  --border: 220 20% 14%;
+  --primary: 152 58% 48%;
+  --accent: 40 65% 58%;
+  --shadow-glow: 0 0 30px hsl(152 58% 48% / 0.2);
+  --shadow-card: 0 2px 6px hsl(0 0% 0% / 0.3), 0 16px 40px hsl(152 58% 48% / 0.1);
+  --gradient-primary: linear-gradient(135deg, hsl(152, 58%, 48%), hsl(40, 65%, 58%));
+}
+
+/* Advanced professional — subtle energy background in dark mode */
+html[data-experience-role="professional"][data-experience-mode="advanced"].dark body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(ellipse at 20% 50%, hsl(152 58% 48% / 0.03), transparent 60%),
+              radial-gradient(ellipse at 80% 20%, hsl(40 65% 55% / 0.02), transparent 50%);
+}
