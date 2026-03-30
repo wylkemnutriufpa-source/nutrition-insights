@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, X, Rocket, Volume2, VolumeX, Pause, Play, RotateCcw } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Rocket, Volume2, VolumeX, Pause, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useAmbientAudio } from "@/hooks/useAmbientAudio";
@@ -30,19 +30,21 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
   const [autoPlay, setAutoPlay] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
   const [autoProgress, setAutoProgress] = useState(0);
-  const [imagesReady, setImagesReady] = useState(false);
+  const [allPreloaded, setAllPreloaded] = useState(false);
+  const [slideImageLoaded, setSlideImageLoaded] = useState<Record<number, boolean>>({});
   const [isPortrait, setIsPortrait] = useState(false);
   const [orientationDismissed, setOrientationDismissed] = useState(false);
+  const [started, setStarted] = useState(false);
   const touchStart = useRef(0);
   const autoTimerRef = useRef<number | null>(null);
   const progressRef = useRef<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const total = slides.length;
   const isLast = idx === total - 1;
   const progress = ((idx + 1) / total) * 100;
   const isPro = mode === "professional";
   const [showVolume, setShowVolume] = useState(false);
 
-  // Reduce particles on mobile
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
   const particleCount = isMobile ? 8 : 20;
 
@@ -53,53 +55,92 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
     loop: true,
   });
 
+  // Current slide image is ready
+  const currentImageReady = !!slideImageLoaded[idx];
+
   // Block body scroll
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
   }, []);
 
-  // Stop audio on unmount
-  useEffect(() => () => { audio.stop(); }, []);
+  // Stop audio + exit fullscreen on unmount
+  useEffect(() => () => {
+    audio.stop();
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  }, []);
 
-  // Preload ALL images upfront
+  // Preload ALL images and track per-slide readiness
   useEffect(() => {
     let loaded = 0;
-    const total = slides.length;
-    slides.forEach((s) => {
+    const t = slides.length;
+    slides.forEach((s, i) => {
       const img = new Image();
-      img.onload = img.onerror = () => {
+      img.onload = () => {
+        setSlideImageLoaded(prev => ({ ...prev, [i]: true }));
         loaded++;
-        if (loaded >= total) setImagesReady(true);
+        if (loaded >= t) setAllPreloaded(true);
+      };
+      img.onerror = () => {
+        setSlideImageLoaded(prev => ({ ...prev, [i]: true }));
+        loaded++;
+        if (loaded >= t) setAllPreloaded(true);
       };
       img.src = s.image_url;
     });
-    // Fallback: show after 3s even if not all loaded
-    const t = setTimeout(() => setImagesReady(true), 3000);
-    return () => clearTimeout(t);
+    // Fallback
+    const timer = setTimeout(() => {
+      setAllPreloaded(true);
+      const all: Record<number, boolean> = {};
+      slides.forEach((_, i) => { all[i] = true; });
+      setSlideImageLoaded(prev => ({ ...prev, ...all }));
+    }, 5000);
+    return () => clearTimeout(timer);
   }, [slides]);
 
-  // Detect portrait orientation on mobile
+  // Detect portrait orientation
   useEffect(() => {
-    const checkOrientation = () => {
+    const check = () => {
       const mobile = window.innerWidth < 768;
       const portrait = window.innerHeight > window.innerWidth;
       setIsPortrait(mobile && portrait);
     };
-    checkOrientation();
-    window.addEventListener("resize", checkOrientation);
-    window.addEventListener("orientationchange", checkOrientation);
+    check();
+    window.addEventListener("resize", check);
+    window.addEventListener("orientationchange", check);
     return () => {
-      window.removeEventListener("resize", checkOrientation);
-      window.removeEventListener("orientationchange", checkOrientation);
+      window.removeEventListener("resize", check);
+      window.removeEventListener("orientationchange", check);
     };
   }, []);
 
-  // Auto-play logic
+  // Request fullscreen
+  const requestFullscreen = useCallback(() => {
+    const el = containerRef.current || document.documentElement;
+    if (!document.fullscreenElement && el.requestFullscreen) {
+      el.requestFullscreen().catch(() => {});
+    }
+  }, []);
+
+  // Start experience: audio + fullscreen
+  const startExperience = useCallback(() => {
+    if (started) return;
+    setStarted(true);
+    audio.startPlayback();
+    requestFullscreen();
+  }, [started, audio, requestFullscreen]);
+
+  // Auto-play: only advance when current slide image is loaded
   useEffect(() => {
-    if (!autoPlay || isPaused || isLast) {
+    if (!autoPlay || isPaused || isLast || !started) {
       if (autoTimerRef.current) { clearTimeout(autoTimerRef.current); autoTimerRef.current = null; }
       if (progressRef.current) { cancelAnimationFrame(progressRef.current); progressRef.current = null; }
+      return;
+    }
+
+    // Wait for current image before starting timer
+    if (!currentImageReady) {
+      setAutoProgress(0);
       return;
     }
 
@@ -117,6 +158,7 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
     progressRef.current = requestAnimationFrame(tick);
 
     autoTimerRef.current = window.setTimeout(() => {
+      // Only advance if next slide image is also loaded (or preloaded)
       setDir(1);
       setIdx(prev => Math.min(prev + 1, total - 1));
       setAutoProgress(0);
@@ -126,7 +168,7 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
       if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
       if (progressRef.current) cancelAnimationFrame(progressRef.current);
     };
-  }, [idx, autoPlay, isPaused, isLast, total]);
+  }, [idx, autoPlay, isPaused, isLast, total, started, currentImageReady]);
 
   const go = useCallback((next: number) => {
     if (next < 0 || next >= total) return;
@@ -138,17 +180,18 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
   // Keyboard
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (!started) { startExperience(); return; }
       if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); go(idx + 1); }
       else if (e.key === "ArrowLeft") go(idx - 1);
-      else if (e.key === "Escape") { audio.stop(); if (onSkip) onSkip(); else onFinish(); }
+      else if (e.key === "Escape") { audio.stop(); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); if (onSkip) onSkip(); else onFinish(); }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [go, idx, onFinish, onSkip]);
+  }, [go, idx, onFinish, onSkip, started, startExperience]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStart.current = e.touches[0].clientX;
-    if (audio.needsInteraction) audio.startPlayback();
+    if (!started) startExperience();
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
@@ -156,8 +199,16 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
     if (Math.abs(delta) > SWIPE_THRESHOLD) go(idx + (delta > 0 ? 1 : -1));
   };
 
-  const handleFinish = () => { audio.stop(); onFinish(); };
-  const handleSkip = () => { audio.stop(); if (onSkip) onSkip(); else onFinish(); };
+  const handleFinish = () => {
+    audio.stop();
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    onFinish();
+  };
+  const handleSkip = () => {
+    audio.stop();
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    if (onSkip) onSkip(); else onFinish();
+  };
 
   const slide = slides[idx];
 
@@ -170,20 +221,23 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
   const accent = isPro ? "#10b981" : "#3b82f6";
   const accentGlow = isPro ? "rgba(16,185,129,0.12)" : "rgba(59,130,246,0.12)";
 
+  // Show loading shimmer over image if not yet loaded
+  const showImageShimmer = !currentImageReady;
+
   return (
     <div
+      ref={containerRef}
       className="fixed inset-0 z-[9999] flex flex-col overflow-hidden select-none"
       style={{ background: "linear-gradient(145deg, hsl(160 35% 3%) 0%, hsl(160 20% 7%) 35%, hsl(200 15% 5%) 100%)" }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      onClick={() => { if (audio.needsInteraction) audio.startPlayback(); }}
-      onMouseMove={() => { if (isPaused) return; }}
+      onClick={() => { if (!started) startExperience(); }}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* ── Loading overlay ── */}
+      {/* ── Loading overlay (initial preload) ── */}
       <AnimatePresence>
-        {!imagesReady && (
+        {!allPreloaded && (
           <motion.div
             className="absolute inset-0 z-[100] flex flex-col items-center justify-center gap-4"
             style={{ background: "hsl(160 35% 3%)" }}
@@ -203,7 +257,7 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
 
       {/* ── Portrait orientation prompt ── */}
       <AnimatePresence>
-        {isPortrait && !orientationDismissed && imagesReady && (
+        {isPortrait && !orientationDismissed && allPreloaded && (
           <motion.div
             className="absolute inset-0 z-[90] flex flex-col items-center justify-center gap-6 px-8"
             style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)" }}
@@ -226,11 +280,36 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setOrientationDismissed(true)}
+              onClick={() => { setOrientationDismissed(true); startExperience(); }}
               className="text-white/40 hover:text-white/70 hover:bg-white/10 text-xs mt-2"
             >
               Continuar assim mesmo
             </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── "Tap to start" overlay ── */}
+      <AnimatePresence>
+        {!started && allPreloaded && !isPortrait && (
+          <motion.div
+            className="absolute inset-0 z-[80] flex flex-col items-center justify-center gap-6 cursor-pointer"
+            style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            onClick={() => startExperience()}
+          >
+            <motion.div
+              className="px-8 py-4 rounded-2xl text-base md:text-lg text-white font-semibold backdrop-blur-xl border border-white/15 active:scale-95 transition-transform"
+              style={{ background: `linear-gradient(135deg, ${accent}30, rgba(255,255,255,0.08))` }}
+              animate={{ scale: [1, 1.05, 1], boxShadow: [`0 0 20px ${accent}20`, `0 0 40px ${accent}40`, `0 0 20px ${accent}20`] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              ✨ Toque para iniciar a experiência
+            </motion.div>
+            <p className="text-white/30 text-xs">A apresentação entrará em tela cheia com som</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -257,32 +336,14 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
         <motion.div
           className="absolute pointer-events-none"
           style={{
-            width: 600,
-            height: 600,
-            left: "50%",
-            top: "45%",
-            marginLeft: -300,
-            marginTop: -300,
+            width: 600, height: 600,
+            left: "50%", top: "45%",
+            marginLeft: -300, marginTop: -300,
             borderRadius: "50%",
             background: `radial-gradient(circle, ${accentGlow} 0%, transparent 70%)`,
           }}
           animate={{ scale: [1, 1.2, 1], opacity: [0.25, 0.45, 0.25], rotate: [0, 180, 360] }}
           transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-        />
-
-        {/* Secondary glow */}
-        <motion.div
-          className="absolute pointer-events-none"
-          style={{
-            width: 400,
-            height: 400,
-            right: "10%",
-            bottom: "15%",
-            borderRadius: "50%",
-            background: `radial-gradient(circle, ${isPro ? "rgba(52,211,153,0.06)" : "rgba(96,165,250,0.06)"} 0%, transparent 60%)`,
-          }}
-          animate={{ scale: [1.1, 0.9, 1.1], opacity: [0.2, 0.35, 0.2] }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
         />
       </div>
 
@@ -302,8 +363,6 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
           <span className="text-xs text-white/35 font-mono tracking-widest">
             {String(idx + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
           </span>
-
-          {/* Auto-play toggle */}
           <Button
             variant="ghost"
             size="icon"
@@ -316,7 +375,6 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
         </div>
 
         <div className="flex items-center gap-1.5">
-          {/* Glassmorphism audio control */}
           <div
             className="flex items-center gap-1"
             onMouseEnter={() => setShowVolume(true)}
@@ -330,7 +388,6 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
                 borderColor: "rgba(255,255,255,0.12)",
                 boxShadow: audio.isMuted ? "none" : `0 0 16px ${accent}30`,
               }}
-              title={audio.isMuted ? "Ativar som" : "Silenciar"}
             >
               {audio.isMuted || audio.needsInteraction
                 ? <VolumeX className="w-4 h-4 text-white/50" />
@@ -438,7 +495,26 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10 z-10" />
                 <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/60 to-transparent z-10" />
 
-                {/* Ken Burns image with varied motion per slide */}
+                {/* Loading shimmer over image */}
+                <AnimatePresence>
+                  {showImageShimmer && (
+                    <motion.div
+                      className="absolute inset-0 z-20 flex items-center justify-center"
+                      style={{ background: "hsl(160 20% 5%)" }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.4 }}
+                    >
+                      <motion.div
+                        className="w-10 h-10 rounded-full border-2 border-t-transparent"
+                        style={{ borderColor: `${accent}30`, borderTopColor: "transparent" }}
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Ken Burns image */}
                 <motion.img
                   key={`img-${idx}`}
                   src={slide.image_url}
@@ -455,7 +531,7 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
               </div>
             </motion.div>
 
-            {/* Text — staggered entrance */}
+            {/* Text */}
             <div className="text-center space-y-2.5 max-w-2xl px-4">
               {slide.title && (
                 <motion.h2
@@ -544,7 +620,6 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
 
       {/* ── Bottom navigation ── */}
       <div className="flex-shrink-0 relative z-30">
-        {/* Auto-play progress bar */}
         {autoPlay && !isLast && (
           <div className="h-[2px] w-full bg-white/5 mx-auto">
             <motion.div
@@ -568,7 +643,6 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
             <ChevronLeft className="w-4 h-4 mr-1" /> Voltar
           </Button>
 
-          {/* Dots */}
           <div className="flex gap-1.5 items-center">
             {slides.map((_, i) => (
               <button
@@ -614,29 +688,6 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
           )}
         </div>
       </div>
-
-      {/* ── Mobile tap hint ── */}
-      <AnimatePresence>
-        {audio.needsInteraction && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.5 }}
-            className="absolute bottom-20 left-0 right-0 flex justify-center z-40 cursor-pointer"
-            onClick={() => audio.startPlayback()}
-          >
-            <motion.div
-              className="px-6 py-3 rounded-full text-sm text-white/80 backdrop-blur-xl border border-white/15 active:scale-95 transition-transform"
-              style={{ background: "rgba(255,255,255,0.1)" }}
-              animate={{ opacity: [0.6, 1, 0.6], scale: [1, 1.03, 1] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            >
-              ✨ Toque na tela para iniciar a experiência
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
