@@ -50,7 +50,12 @@ export default function Settings() {
           setRankingNickname(data.ranking_nickname || "");
         }
       });
-  }, [user]);
+    // Check if professional also has a meal plan as patient
+    if (isNutritionist || isPersonal) {
+      supabase.from("meal_plans").select("id").eq("patient_id", user.id).eq("is_active", true).limit(1)
+        .then(({ data }) => { setHasOwnMealPlan(!!data?.length); });
+    }
+  }, [user, isNutritionist, isPersonal]);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
