@@ -25,7 +25,7 @@ import { useNutritionistRealtime } from "@/hooks/useNutritionistRealtime";
 import { useRefetchOnFocus } from "@/hooks/useRefetchOnFocus";
 import { useRealtimeEventBus } from "@/hooks/useRealtimeEventBus";
 import WorkspaceContextSwitcher from "@/components/layout/WorkspaceContextSwitcher";
-import { WorkspaceContext, useWorkspaceContextState } from "@/hooks/useWorkspaceContext";
+import { WorkspaceContext, useWorkspaceContextState, useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 
 function LayoutFallbackCard({
   title,
@@ -183,6 +183,7 @@ function DynamicSidebar({
 }) {
   const { categories, flatItems, trackClick } = useSmartMenu();
   const { isNutritionist, isPersonal, isAdmin } = useAuth();
+  const { isProfessionalContext } = useWorkspaceContext();
   const pendingCount = usePendingApprovals();
   const { coachBodybuilderEnabled, personalTrainerEnabled } = useProfessionalModules();
   const [approvalsOpen, setApprovalsOpen] = useState(false);
@@ -190,7 +191,9 @@ function DynamicSidebar({
   const [showcaseOpen, setShowcaseOpen] = useState(false);
 
   const isProRole = useMemo(() => isNutritionist || isPersonal || isAdmin, [isNutritionist, isPersonal, isAdmin]);
-  const showPending = isProRole && pendingCount > 0;
+  // Effective role considers workspace context — hybrid users in patient context see patient sidebar
+  const effectiveProRole = isProRole && isProfessionalContext;
+  const showPending = effectiveProRole && pendingCount > 0;
 
   return (
     <>
@@ -201,7 +204,7 @@ function DynamicSidebar({
         <FitJourneyLogo collapsed={collapsed} size="sm" />
       </div>
 
-      {isProRole ? (
+      {effectiveProRole ? (
         <div className="px-3 mb-1">
           <Link
             to="/intelligence-settings"
@@ -291,7 +294,7 @@ function DynamicSidebar({
         </div>
       )}
 
-      {isProRole && (
+      {effectiveProRole && (
         <div className="px-3 mb-1 space-y-1">
           <Link
             to="/control-tower"
@@ -368,7 +371,7 @@ function DynamicSidebar({
         </div>
       )}
 
-      {!isProRole && (
+      {!effectiveProRole && (
         <div className="px-3 mb-1">
           <Link
             to="/patient-overview"
@@ -466,7 +469,7 @@ function DynamicSidebar({
             categories={categories}
             flatItems={flatItems}
             collapsed={collapsed}
-            isProRole={isProRole}
+            isProRole={effectiveProRole}
             onLinkClick={onLinkClick}
             trackClick={trackClick}
           />
@@ -482,7 +485,7 @@ function DynamicSidebar({
         signOut={signOut}
         setCollapsed={setCollapsed}
         onLinkClick={onLinkClick}
-        isProRole={isProRole}
+        isProRole={effectiveProRole}
       />
     </>
   );

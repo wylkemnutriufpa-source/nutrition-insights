@@ -365,22 +365,36 @@ function ExperienceModeProvider({ children }: { children: React.ReactNode }) {
   return <ExperienceModeContext.Provider value={value}>{children}</ExperienceModeContext.Provider>;
 }
 
-/** Syncs experience mode + role to HTML data attributes for CSS theming */
+/** Syncs experience mode + role to HTML data attributes for CSS theming.
+ *  Respects workspace context so hybrid users get the correct theme. */
 function ExperienceThemeSync() {
   const { mode } = useExperienceMode();
-  const { isNutritionist, isPersonal, isAdmin, loading } = useAuth();
+  const { isNutritionist, isPersonal, isAdmin, isPatient, loading } = useAuth();
   const isProRole = isNutritionist || isPersonal || isAdmin;
 
   useEffect(() => {
     if (loading) return;
-    const role = isProRole ? "professional" : "patient";
+    const isHybrid = isProRole && isPatient;
+    let role: "professional" | "patient" = isProRole ? "professional" : "patient";
+    if (isHybrid) {
+      const saved = localStorage.getItem("fj_workspace_context");
+      if (saved === "patient") role = "patient";
+    }
     document.documentElement.setAttribute("data-experience-mode", mode);
     document.documentElement.setAttribute("data-experience-role", role);
+
+    // Listen for workspace context changes (dispatched by useWorkspaceContext)
+    const handler = (e: Event) => {
+      const ctx = (e as CustomEvent).detail;
+      document.documentElement.setAttribute("data-experience-role", ctx === "patient" ? "patient" : "professional");
+    };
+    window.addEventListener("fj:workspace-context-change", handler);
     return () => {
       document.documentElement.removeAttribute("data-experience-mode");
       document.documentElement.removeAttribute("data-experience-role");
+      window.removeEventListener("fj:workspace-context-change", handler);
     };
-  }, [mode, isProRole, loading]);
+  }, [mode, isProRole, isPatient, loading]);
 
   return null;
 }
