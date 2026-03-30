@@ -84,6 +84,7 @@ const Supplements = lazy(() => import("./pages/Supplements"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const PatientMealPlan = lazy(() => import("./pages/PatientMealPlan"));
 const BiquiniBrancoLanding = lazy(() => import("./pages/BiquiniBrancoLanding"));
+const PublicDemo = lazy(() => import("./pages/PublicDemo"));
 const Checkin = lazy(() => import("./pages/Checkin"));
 const CheckinPanel = lazy(() => import("./pages/CheckinPanel"));
 const ClientDashboard = lazy(() => import("./pages/ClientDashboard"));
