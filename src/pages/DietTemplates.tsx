@@ -385,7 +385,7 @@ export default function DietTemplates() {
         .eq("meal_plan_id", targetPlanId);
       if (deleteError) throw deleteError;
 
-      const { error: itemsError } = await supabase.from("meal_plan_items").insert(items);
+      const { error: itemsError } = await supabase.from("meal_plan_items").insert(enrichedItems as any);
       if (itemsError) throw itemsError;
 
       // Add timeline event
