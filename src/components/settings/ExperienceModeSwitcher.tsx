@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useExperienceMode, type ExperienceMode } from "@/hooks/useExperienceMode";
 import { useAuth } from "@/lib/auth";
+import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 import { Zap, BarChart3, Rocket } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -65,7 +66,8 @@ const PATIENT_MODES: ModeConfig[] = [
 export default function ExperienceModeSwitcher() {
   const { mode, setMode } = useExperienceMode();
   const { isNutritionist, isPersonal, isAdmin } = useAuth();
-  const isProRole = isNutritionist || isPersonal || isAdmin;
+  const { isProfessionalContext } = useWorkspaceContext();
+  const isProRole = (isNutritionist || isPersonal || isAdmin) && isProfessionalContext;
   const MODES = isProRole ? PRO_MODES : PATIENT_MODES;
 
   const handleSelect = (key: ExperienceMode) => {
