@@ -1,11 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useExperienceMode, type ExperienceMode } from "@/hooks/useExperienceMode";
+import { useAuth } from "@/lib/auth";
 import { Zap, BarChart3, Rocket } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import ExperienceModeRecommendation from "./ExperienceModeRecommendation";
 
-const MODES: { key: ExperienceMode; label: string; desc: string; icon: typeof Zap; color: string; bgColor: string }[] = [
+type ModeConfig = { key: ExperienceMode; label: string; desc: string; icon: typeof Zap; color: string; bgColor: string };
+
+const PRO_MODES: ModeConfig[] = [
   {
     key: "basic",
     label: "Básico",
@@ -32,8 +35,38 @@ const MODES: { key: ExperienceMode; label: string; desc: string; icon: typeof Za
   },
 ];
 
+const PATIENT_MODES: ModeConfig[] = [
+  {
+    key: "basic",
+    label: "Simples",
+    desc: "Plano alimentar, receitas e avaliação física. Foco no essencial.",
+    icon: Zap,
+    color: "text-emerald-500",
+    bgColor: "bg-emerald-500/10 border-emerald-500/30",
+  },
+  {
+    key: "pro",
+    label: "Completo",
+    desc: "Checklist diário, agenda, gráficos de evolução e acompanhamento.",
+    icon: BarChart3,
+    color: "text-primary",
+    bgColor: "bg-primary/10 border-primary/30",
+  },
+  {
+    key: "advanced",
+    label: "Avançado",
+    desc: "Insights com IA, projeção corporal, metas e recursos extras.",
+    icon: Rocket,
+    color: "text-amber-500",
+    bgColor: "bg-amber-500/10 border-amber-500/30",
+  },
+];
+
 export default function ExperienceModeSwitcher() {
   const { mode, setMode } = useExperienceMode();
+  const { isNutritionist, isPersonal, isAdmin } = useAuth();
+  const isProRole = isNutritionist || isPersonal || isAdmin;
+  const MODES = isProRole ? PRO_MODES : PATIENT_MODES;
 
   const handleSelect = (key: ExperienceMode) => {
     setMode(key);
@@ -49,11 +82,13 @@ export default function ExperienceModeSwitcher() {
           Nível de Experiência
         </CardTitle>
         <p className="text-xs text-muted-foreground">
-          Controle a complexidade da interface. Você pode mudar a qualquer momento.
+          {isProRole
+            ? "Controle a complexidade da interface. Você pode mudar a qualquer momento."
+            : "Escolha o quanto quer ver no seu painel. Comece pelo simples!"}
         </p>
       </CardHeader>
       <CardContent className="space-y-3">
-        <ExperienceModeRecommendation />
+        {isProRole && <ExperienceModeRecommendation />}
         {MODES.map((m) => {
           const Icon = m.icon;
           const selected = mode === m.key;

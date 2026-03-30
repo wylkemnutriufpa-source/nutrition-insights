@@ -75,28 +75,43 @@ export default function PatientGridDashboard() {
   const { user } = useAuth();
   const expUI = useExperienceUI();
   const [onboarding, setOnboarding] = useState<any>(null);
+  const [anamnesisCompleted, setAnamnesisCompleted] = useState<boolean | null>(null);
+  const [loadingAnamnesis, setLoadingAnamnesis] = useState(true);
 
   useEffect(() => {
     if (!user?.id) return;
-    supabase
-      .from("onboarding_pipelines" as any)
-      .select("id, status, current_step")
-      .eq("patient_id", user.id)
-      .in("status", ["active", "in_progress", "pending"])
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .then(({ data }) => {
-        if (data && data.length > 0) setOnboarding(data[0]);
-      });
+    
+    // Check onboarding pipeline AND anamnesis completion in parallel
+    Promise.all([
+      supabase
+        .from("onboarding_pipelines" as any)
+        .select("id, status, current_step, anamnesis_completed")
+        .eq("patient_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1),
+      supabase
+        .from("patient_anamnesis")
+        .select("id, status")
+        .eq("user_id", user.id)
+        .eq("status", "completed")
+        .limit(1),
+    ]).then(([pipelineRes, anamnesisRes]) => {
+      const pipeline = pipelineRes.data?.[0];
+      if (pipeline) setOnboarding(pipeline);
+      
+      const hasCompletedAnamnesis = !!(anamnesisRes.data && anamnesisRes.data.length > 0) || !!(pipeline as any)?.anamnesis_completed;
+      setAnamnesisCompleted(hasCompletedAnamnesis);
+      setLoadingAnamnesis(false);
+    });
   }, [user?.id]);
 
   // Filter cards by experience mode
   const visibleCards = PATIENT_CARDS.filter((c) => expUI.minMode(c.minMode ?? "basic"));
   const visibleRows = [...new Set(visibleCards.map((c) => c.row))].sort();
 
-  const ONBOARDING_KEY = "patient_onboarding_completed";
-  const onboardingDone = localStorage.getItem(ONBOARDING_KEY) === "true";
-  const showOnboardingCard = onboarding || !onboardingDone;
+  // Onboarding is mandatory — block everything until anamnesis is done
+  const showOnboardingCard = !anamnesisCompleted;
+  const blockDashboard = loadingAnamnesis === false && !anamnesisCompleted;
 
   return (
     <div className="space-y-6">
