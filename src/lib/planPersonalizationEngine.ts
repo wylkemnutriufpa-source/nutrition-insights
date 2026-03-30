@@ -174,6 +174,7 @@ export function personalizePlanItems(
     if (restrictedFoods.length === 0) continue;
 
     personalizedItems = personalizedItems.map(item => {
+      if (isProtected(item)) return item;
       let title = item.title || "";
       let description = item.description || "";
       let changed = false;
