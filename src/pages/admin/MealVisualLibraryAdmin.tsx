@@ -34,7 +34,9 @@ export default function MealVisualLibraryAdmin() {
   const [createOpen, setCreateOpen] = useState(false);
   const [previewItem, setPreviewItem] = useState<MealVisualItem | null>(null);
   const [editItem, setEditItem] = useState<MealVisualItem | null>(null);
-
+  const [activeTab, setActiveTab] = useState("library");
+  const [auditReport, setAuditReport] = useState<AssociationReport | null>(null);
+  const [auditRunning, setAuditRunning] = useState(false);
   const [form, setForm] = useState({
     display_name: "",
     category: "cafe_da_manha",
