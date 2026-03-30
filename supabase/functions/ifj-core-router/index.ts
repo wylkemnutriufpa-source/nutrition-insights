@@ -395,12 +395,29 @@ function detectIntentFromDB(
     }
   }
 
+  // ── EMAIL DETECTION ──────────────────────────────────────────
+  // If input looks like an email, treat as patient search by email
+  const emailMatch = n.match(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/);
+  if (emailMatch && role !== "patient") {
+    const pd = intents.find(i => i.intent_key === "patient_detail");
+    if (pd) {
+      return {
+        ...base, intent: "patient_detail", target_entity: "patient", target_name: emailMatch[0],
+        module: pd.module, confidence: 0.80, response_mode: "detail",
+        requires_context: pd.requires_context, requires_active_plan: pd.requires_active_plan,
+        requires_patient_selected: pd.requires_patient_selected,
+        requires_permission_key: pd.requires_permission_key,
+        action_type: pd.action_type, executor_key: pd.executor_key, scope: pd.scope,
+      };
+    }
+  }
+
   // ── BARE-NAME FALLBACK ──────────────────────────────────────
-  // If input is 1-3 words and no intent was detected, treat as patient name search
+  // If input is 1-4 words and no intent was detected, treat as patient name search
   const wordCount = n.split(/\s+/).length;
-  if (wordCount <= 3 && role !== "patient") {
+  if (wordCount <= 4 && role !== "patient") {
     // Only if it doesn't look like a navigation or food word
-    const skipWords = /^(ajuda|help|oi|ola|menu|sair|voltar|cancelar|sim|nao|ok|obrigad|valeu)$/;
+    const skipWords = /^(ajuda|help|oi|ola|menu|sair|voltar|cancelar|sim|nao|ok|obrigad|valeu|bom dia|boa tarde|boa noite)$/;
     const foodCheck = /(?:comer|receita|saudavel|engorda|emagrec|caloria|proteina|carboidrato|substituir|trocar)/;
     if (!skipWords.test(n) && !foodCheck.test(n)) {
       const pd = intents.find(i => i.intent_key === "patient_detail");
@@ -443,14 +460,72 @@ function applyGuardrails(intent: IFJIntent, role: string, guardrails: any[], per
   return { blocked: false, message: "" };
 }
 
-// ── NAME RESOLVER ──────────────────────────────────────────────
+// ── NAME RESOLVER (enhanced with email + fuzzy) ───────────────
 function findByName(list: any[], searchName: string, nameField = "full_name"): { found: any | null; ambiguous: any[] } {
   const sn = normalize(searchName);
+
+  // 1. Exact full name match
   const exact = list.filter(p => normalize(p[nameField]) === sn);
   if (exact.length === 1) return { found: exact[0], ambiguous: [] };
+
+  // 2. Partial name match (contains)
   const partial = list.filter(p => normalize(p[nameField]).includes(sn));
   if (partial.length === 1) return { found: partial[0], ambiguous: [] };
   if (partial.length > 1) return { found: null, ambiguous: partial };
+
+  // 3. Reverse partial (search term contains the name part)
+  const reverse = list.filter(p => {
+    const parts = normalize(p[nameField]).split(" ");
+    return parts.some(part => part.length >= 3 && sn.includes(part));
+  });
+  if (reverse.length === 1) return { found: reverse[0], ambiguous: [] };
+  if (reverse.length > 1) return { found: null, ambiguous: reverse };
+
+  // 4. Fuzzy match (Levenshtein-like: allow 1-2 char difference)
+  const fuzzy = list.filter(p => {
+    const pn = normalize(p[nameField]);
+    const parts = pn.split(" ");
+    return parts.some(part => {
+      if (Math.abs(part.length - sn.length) > 2) return false;
+      let diff = 0;
+      const maxLen = Math.max(part.length, sn.length);
+      for (let i = 0; i < maxLen; i++) {
+        if (part[i] !== sn[i]) diff++;
+        if (diff > 2) return false;
+      }
+      return diff <= 2 && part.length >= 3;
+    });
+  });
+  if (fuzzy.length === 1) return { found: fuzzy[0], ambiguous: [] };
+  if (fuzzy.length > 1) return { found: null, ambiguous: fuzzy };
+
+  return { found: null, ambiguous: [] };
+}
+
+// ── EMAIL RESOLVER ────────────────────────────────────────────
+async function findByEmail(supabase: any, email: string, patients: PatientRecord[]): Promise<{ found: PatientRecord | null; ambiguous: PatientRecord[] }> {
+  const normalizedEmail = email.toLowerCase().trim();
+  // Search in auth.users via profiles
+  const { data: profiles } = await supabase.from("profiles")
+    .select("user_id, full_name")
+    .limit(500);
+
+  if (!profiles?.length) return { found: null, ambiguous: [] };
+
+  // Cross-reference with the patient list
+  for (const profile of profiles) {
+    const patient = patients.find(p => p.id === profile.user_id);
+    if (patient) {
+      // We can't query auth.users email directly from profiles, but we can check if the input matches profile data
+      // For now, match by checking if any patient name words match the email prefix
+      const emailPrefix = normalizedEmail.split("@")[0].replace(/[._-]/g, " ");
+      const nameNorm = normalize(profile.full_name);
+      if (nameNorm.includes(normalize(emailPrefix)) || normalize(emailPrefix).includes(nameNorm.split(" ")[0])) {
+        return { found: patient, ambiguous: [] };
+      }
+    }
+  }
+
   return { found: null, ambiguous: [] };
 }
 
@@ -1178,12 +1253,65 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
       let patient: PatientRecord | undefined;
       if (intent.target_id) patient = patients.find(p => p.id === intent.target_id);
       else if (intent.target_name) {
-        const { found, ambiguous } = findByName(patients, intent.target_name);
-        if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, originalCommand || intent.target_name || "", ctx, "clinical");
+        // Check if the search term is an email
+        const isEmail = intent.target_name.includes("@");
+        if (isEmail) {
+          // Search by email: query profiles to find user by email cross-ref
+          const emailSearch = normalize(intent.target_name).split("@")[0].replace(/[._-]/g, " ");
+          // Try matching email prefix against patient names
+          const emailMatches = patients.filter(p => {
+            const pn = normalize(p.full_name);
+            const words = emailSearch.split(" ").filter(w => w.length >= 2);
+            return words.some(w => pn.includes(w));
+          });
+          if (emailMatches.length === 1) { patient = emailMatches[0]; }
+          else if (emailMatches.length > 1) return buildDisambiguation(emailMatches, intent, originalCommand || intent.target_name || "", ctx, "clinical");
+          else {
+            // Broader search: try all patients with similar first names
+            const allMatches = patients.filter(p => {
+              const pn = normalize(p.full_name);
+              const emailParts = emailSearch.split(" ");
+              return emailParts.some(part => part.length >= 3 && pn.split(" ").some(np => np.startsWith(part)));
+            });
+            if (allMatches.length === 1) patient = allMatches[0];
+            else if (allMatches.length > 1) return buildDisambiguation(allMatches, intent, originalCommand || intent.target_name || "", ctx, "clinical");
+          }
+        } else {
+          const { found, ambiguous } = findByName(patients, intent.target_name);
+          if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, originalCommand || intent.target_name || "", ctx, "clinical");
+          patient = found;
         }
-        patient = found;
       }
-      if (!patient) return fmt("Não encontrado", "❌", "error", "Nenhum paciente.", "Verifique a grafia.", [], intent, "clinical", ctx);
+      if (!patient) {
+        // Enhanced not-found: suggest similar patients
+        const searchTerm = normalize(intent.target_name || "");
+        const suggestions = patients
+          .filter(p => {
+            const pn = normalize(p.full_name);
+            const searchWords = searchTerm.split(" ").filter(w => w.length >= 2);
+            return searchWords.some(w => pn.split(" ").some(np => np.startsWith(w.substring(0, 2))));
+          })
+          .slice(0, 5);
+
+        if (suggestions.length > 0) {
+          const md = `## Paciente não encontrado\n\nNão encontrei **"${intent.target_name}"**.\n\nVocê quis dizer?\n\n` +
+            suggestions.map((p, i) => `${i + 1}. **${p.full_name}** — ${p.goal || "Sem objetivo"}`).join("\n") +
+            `\n\n💡 Clique abaixo ou digite o nome completo.`;
+          const actions = suggestions.map(p => ({
+            label: p.full_name,
+            subtitle: p.goal || "Sem objetivo",
+            route: `/patients/${p.id}`,
+            type: "disambiguate" as const,
+            patient_id: p.id,
+            original_command: originalCommand || intent.target_name || "",
+          }));
+          return fmt("Paciente não encontrado", "🔍", "disambiguation", `${suggestions.length} sugestão(ões)`, md, actions, intent, "clinical", ctx);
+        }
+
+        return fmt("Não encontrado", "❌", "error", "Nenhum paciente encontrado.",
+          `❌ Não encontrei **"${intent.target_name}"** na sua carteira.\n\n💡 Dicas:\n- Tente o primeiro nome\n- Verifique a grafia\n- Diga *"meus pacientes"* para ver a lista`,
+          [], intent, "clinical", ctx);
+      }
       ctx.last_patient_id = patient.id; ctx.last_patient_name = patient.full_name; ctx.last_entity_type = "patient"; ctx.last_entity_id = patient.id;
       const overview = await getPatientOverview(supabase, patient.id, today);
       const s = overview.snapshot;
@@ -1201,7 +1329,6 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
       if (!pid && intent.target_name) {
         const { found, ambiguous } = findByName(patients, intent.target_name);
         if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, originalCommand || intent.target_name || "", ctx, "clinical");
-        }
         if (found) { pid = found.id; ctx.last_patient_id = found.id; ctx.last_patient_name = found.full_name; }
       }
       if (!pid) return fmt("Quem?", "❓", "error", "Diga o nome do paciente.", "Ex: *anamnese da Maria*", [], intent, "clinical", ctx);
@@ -1565,7 +1692,6 @@ serve(async (req) => {
             `\n\n---\nDiga *"ajuda"* para ver todos os comandos.`;
           const sugActions = suggestions
             .filter(s => {
-              // If suggestion maps to a nav route, add action button
               const navKey = Object.keys(NAV_MAP).find(k => s.example.includes(k));
               return !!navKey;
             })
@@ -1577,9 +1703,69 @@ serve(async (req) => {
             .filter(Boolean) as any[];
           response = fmt("Você quis dizer...", "💡", "suggestions", "Sugestões baseadas na sua pergunta", sugMd, sugActions, intent, "suggestion_engine", ctx);
         } else {
-          response = fmt("Não entendi", "❓", "error", "Comando não reconhecido.",
-            "❓ Não entendi.\n\n💡 Tente:\n- *\"Quem precisa de atenção?\"*\n- *\"Sobre [paciente]\"*\n- *\"O que preciso resolver hoje?\"*\n- *\"Libere todos\"*\n- *\"Ajuda\"*",
-            [], intent, "general", ctx);
+          // ── AI FALLBACK — Last resort for truly unknown commands ──
+          const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+          if (LOVABLE_API_KEY && (role === "admin" || role === "nutritionist" || role === "personal")) {
+            try {
+              const patientSummary = patients.slice(0, 20).map(p => `${p.full_name} (${p.goal || "sem objetivo"}, status: ${p.journey_status || p.status || "ativo"})`).join("; ");
+              const aiSystemPrompt = `Você é o IFJ (Inteligência FitJourney), assistente clínico integrado para profissionais de saúde.
+
+CONTEXTO DO SISTEMA:
+- O profissional "${userName}" tem ${patients.length} pacientes.
+- Pacientes ativos: ${patientSummary || "nenhum carregado"}.
+- Hoje: ${today}
+- Role: ${role}
+
+REGRAS:
+1. Responda APENAS sobre gestão de pacientes, nutrição clínica, ou funcionalidades do sistema.
+2. Se a pergunta é sobre um paciente específico, sugira o comando correto (ex: "sobre [nome]").
+3. Se não souber, sugira comandos disponíveis.
+4. Máximo 200 palavras, markdown.
+5. NÃO invente dados. Use apenas o contexto fornecido.
+6. Se perguntarem sobre funcionalidades, explique e sugira o comando.
+
+COMANDOS DISPONÍVEIS:
+- "sobre [nome]" → ficha do paciente
+- "plano da [nome]" → plano alimentar
+- "quem precisa de atenção?" → prioridades
+- "quem está sem dieta?" → sem plano
+- "libere IFJ para [nome]" → ativar IFJ
+- "coloque premium para [nome]" → ativar premium
+- "ajuda" → lista completa`;
+
+              const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+                method: "POST",
+                headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  model: "google/gemini-2.5-flash-lite",
+                  messages: [{ role: "system", content: aiSystemPrompt }, { role: "user", content: inputText }],
+                  max_tokens: 500, temperature: 0.3,
+                }),
+              });
+
+              if (aiResp.ok) {
+                const aiData = await aiResp.json();
+                const aiText = aiData.choices?.[0]?.message?.content;
+                if (aiText) {
+                  response = fmt("🧠 IFJ Assistente", "🧠", "ai_response", "Resposta inteligente",
+                    `${aiText}\n\n---\n*💡 Diga "ajuda" para ver todos os comandos disponíveis.*`,
+                    [], intent, "ai_fallback", ctx);
+                } else {
+                  throw new Error("empty");
+                }
+              } else {
+                throw new Error("ai_error");
+              }
+            } catch {
+              response = fmt("Não entendi", "❓", "error", "Comando não reconhecido.",
+                "❓ Não entendi.\n\n💡 Tente:\n- *\"Quem precisa de atenção?\"*\n- *\"Sobre [paciente]\"*\n- *\"O que preciso resolver hoje?\"*\n- *\"Libere todos\"*\n- *\"Ajuda\"*",
+                [], intent, "general", ctx);
+            }
+          } else {
+            response = fmt("Não entendi", "❓", "error", "Comando não reconhecido.",
+              "❓ Não entendi.\n\n💡 Tente:\n- *\"Quem precisa de atenção?\"*\n- *\"Sobre [paciente]\"*\n- *\"O que preciso resolver hoje?\"*\n- *\"Libere todos\"*\n- *\"Ajuda\"*",
+              [], intent, "general", ctx);
+          }
         }
       }
     } catch (engineError) {
