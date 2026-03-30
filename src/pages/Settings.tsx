@@ -17,6 +17,8 @@ import AvatarPicker from "@/components/profile/AvatarPicker";
 import ProtocolFitJourneyToggle from "@/components/admin/ProtocolFitJourneyToggle";
 import { useTranslation } from "react-i18next";
 import ExperienceModeSwitcher from "@/components/settings/ExperienceModeSwitcher";
+import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 
 export default function Settings() {
   const { t } = useTranslation();
