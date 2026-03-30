@@ -92,19 +92,19 @@ const defaultTestimonials = [
 
 const defaultPlans = [
   {
-    name: "Basic", price: "R$ 29,90", period: "/mês", popular: false,
-    features: ["Até 10 pacientes", "Planos alimentares", "Checklist de hábitos", "Chat básico", "Banco de alimentos TACO"],
-    cta: "Testar Grátis por 7 dias",
+    name: "Basic", price: "R$ 30", period: "/mês", popular: false,
+    features: ["Até 3 pacientes", "Planos alimentares básicos", "Chat com pacientes"],
+    cta: "Testar Grátis por 7 dias →",
   },
   {
-    name: "Profissional", price: "R$ 74,90", period: "/mês", popular: true,
-    features: ["Pacientes ilimitados", "IA completa (análise, receitas, planos)", "Avaliação física + corporal", "Gamificação avançada", "Relatórios semanais", "Suplementação", "Suporte prioritário"],
-    cta: "Testar Grátis por 7 dias",
+    name: "Profissional", price: "R$ 75", period: "/mês", popular: true,
+    features: ["Até 30 pacientes", "Planos alimentares ilimitados", "Análise de IA", "Relatórios automáticos", "Suporte prioritário"],
+    cta: "Testar Grátis por 7 dias →",
   },
   {
-    name: "Premium", price: "R$ 97", period: "/mês", popular: false,
-    features: ["Tudo do Profissional", "Branding personalizado", "Programas em grupo", "Central de automação", "Financeiro integrado", "Inteligência clínica avançada", "Suporte dedicado"],
-    cta: "Testar Grátis por 7 dias",
+    name: "Premium", price: "R$ 147", period: "/mês", popular: true,
+    features: ["Pacientes ilimitados", "Todas as funcionalidades Pro", "Branding personalizado", "API de integração", "Suporte dedicado", "Todas as IAs do sistema", "Todo sistema de gamificação"],
+    cta: "Testar Grátis por 7 dias →",
   },
 ];
 
