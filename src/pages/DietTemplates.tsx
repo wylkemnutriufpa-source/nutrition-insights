@@ -6,6 +6,7 @@ import { useTenant } from "@/lib/tenantContext";
 import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { supabase } from "@/integrations/supabase/client";
 import { activateMealPlan } from "@/lib/serverTransitions";
+import { loadPersonalizationContext, personalizePlanItems } from "@/lib/planPersonalizationEngine";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -366,10 +367,30 @@ export default function DietTemplates() {
         }
       }
 
+      // ── PERSONALIZATION: adapt to patient restrictions, TMB/TED, rejected foods ──
+      let personalizedItems = items;
+      let personalizationSummary = "";
+      try {
+        const ctx = await loadPersonalizationContext(patientId);
+        if (ctx) {
+          const result = personalizePlanItems(items, ctx);
+          personalizedItems = result.items as any[];
+          if (result.changes.length > 0) {
+            personalizationSummary = ` Personalização: ${result.changes.length} ajustes (restrições, TMB/TED).`;
+            console.log("[DietTemplates] Personalization applied:", result.changes.length, "changes");
+          }
+          if (result.warnings.length > 0) {
+            console.warn("[DietTemplates] Personalization warnings:", result.warnings);
+          }
+        }
+      } catch (e) {
+        console.warn("[DietTemplates] Personalization skipped:", e);
+      }
+
       // Auto-associate visual library items by alias
       const { autoMatchSingle } = await import("@/lib/mealVisualAssociation");
       const enrichedItems = await Promise.all(
-        items.map(async (item) => {
+        personalizedItems.map(async (item) => {
           const visualId = await autoMatchSingle(item.title);
           return visualId ? { ...item, visual_library_item_id: visualId } : item;
         })
@@ -396,7 +417,7 @@ export default function DietTemplates() {
         created_by: user.id,
         event_type: "meal_plan",
         title: `Modelo "${template.name}" aplicado`,
-        description: `Plano alimentar criado a partir do modelo pré-definido com ${items.length} refeições. ${anamnesis ? "Calorias ajustadas para " + getAdjustedCalories(template) + "kcal." : ""}`,
+        description: `Plano alimentar criado a partir do modelo pré-definido com ${items.length} refeições. ${anamnesis ? "Calorias ajustadas para " + getAdjustedCalories(template) + "kcal." : ""}${personalizationSummary}`,
         metadata: { template_slug: template.slug, adjusted_calories: getAdjustedCalories(template) },
       });
 
