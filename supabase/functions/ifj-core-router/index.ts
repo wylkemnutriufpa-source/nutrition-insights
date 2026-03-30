@@ -1253,12 +1253,65 @@ async function runClinicalEngine(supabase: any, intent: IFJIntent, userId: strin
       let patient: PatientRecord | undefined;
       if (intent.target_id) patient = patients.find(p => p.id === intent.target_id);
       else if (intent.target_name) {
-        const { found, ambiguous } = findByName(patients, intent.target_name);
-        if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, originalCommand || intent.target_name || "", ctx, "clinical");
+        // Check if the search term is an email
+        const isEmail = intent.target_name.includes("@");
+        if (isEmail) {
+          // Search by email: query profiles to find user by email cross-ref
+          const emailSearch = normalize(intent.target_name).split("@")[0].replace(/[._-]/g, " ");
+          // Try matching email prefix against patient names
+          const emailMatches = patients.filter(p => {
+            const pn = normalize(p.full_name);
+            const words = emailSearch.split(" ").filter(w => w.length >= 2);
+            return words.some(w => pn.includes(w));
+          });
+          if (emailMatches.length === 1) { patient = emailMatches[0]; }
+          else if (emailMatches.length > 1) return buildDisambiguation(emailMatches, intent, originalCommand || intent.target_name || "", ctx, "clinical");
+          else {
+            // Broader search: try all patients with similar first names
+            const allMatches = patients.filter(p => {
+              const pn = normalize(p.full_name);
+              const emailParts = emailSearch.split(" ");
+              return emailParts.some(part => part.length >= 3 && pn.split(" ").some(np => np.startsWith(part)));
+            });
+            if (allMatches.length === 1) patient = allMatches[0];
+            else if (allMatches.length > 1) return buildDisambiguation(allMatches, intent, originalCommand || intent.target_name || "", ctx, "clinical");
+          }
+        } else {
+          const { found, ambiguous } = findByName(patients, intent.target_name);
+          if (ambiguous.length > 0) return buildDisambiguation(ambiguous, intent, originalCommand || intent.target_name || "", ctx, "clinical");
+          patient = found;
         }
-        patient = found;
       }
-      if (!patient) return fmt("Não encontrado", "❌", "error", "Nenhum paciente.", "Verifique a grafia.", [], intent, "clinical", ctx);
+      if (!patient) {
+        // Enhanced not-found: suggest similar patients
+        const searchTerm = normalize(intent.target_name || "");
+        const suggestions = patients
+          .filter(p => {
+            const pn = normalize(p.full_name);
+            const searchWords = searchTerm.split(" ").filter(w => w.length >= 2);
+            return searchWords.some(w => pn.split(" ").some(np => np.startsWith(w.substring(0, 2))));
+          })
+          .slice(0, 5);
+
+        if (suggestions.length > 0) {
+          const md = `## Paciente não encontrado\n\nNão encontrei **"${intent.target_name}"**.\n\nVocê quis dizer?\n\n` +
+            suggestions.map((p, i) => `${i + 1}. **${p.full_name}** — ${p.goal || "Sem objetivo"}`).join("\n") +
+            `\n\n💡 Clique abaixo ou digite o nome completo.`;
+          const actions = suggestions.map(p => ({
+            label: p.full_name,
+            subtitle: p.goal || "Sem objetivo",
+            route: `/patients/${p.id}`,
+            type: "disambiguate" as const,
+            patient_id: p.id,
+            original_command: originalCommand || intent.target_name || "",
+          }));
+          return fmt("Paciente não encontrado", "🔍", "disambiguation", `${suggestions.length} sugestão(ões)`, md, actions, intent, "clinical", ctx);
+        }
+
+        return fmt("Não encontrado", "❌", "error", "Nenhum paciente encontrado.",
+          `❌ Não encontrei **"${intent.target_name}"** na sua carteira.\n\n💡 Dicas:\n- Tente o primeiro nome\n- Verifique a grafia\n- Diga *"meus pacientes"* para ver a lista`,
+          [], intent, "clinical", ctx);
+      }
       ctx.last_patient_id = patient.id; ctx.last_patient_name = patient.full_name; ctx.last_entity_type = "patient"; ctx.last_entity_id = patient.id;
       const overview = await getPatientOverview(supabase, patient.id, today);
       const s = overview.snapshot;
