@@ -58,54 +58,76 @@ serve(async (req) => {
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
 
-    if (customers.data.length === 0) {
-      logStep("No customer found");
-      return new Response(JSON.stringify({ subscribed: false }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    }
+    // ── 1. Check Stripe subscriptions ──
+    let hasActiveSub = false;
+    let productId = null;
+    let subscriptionTier: string | null = null;
+    let subscriptionEnd: string | null = null;
+    let isTrial = false;
+    let trialEnd: string | null = null;
 
-    const customerId = customers.data[0].id;
-    logStep("Found customer", { customerId });
+    if (customers.data.length > 0) {
+      const customerId = customers.data[0].id;
+      logStep("Found customer", { customerId });
 
-    // Check active + trialing subscriptions
-    const subscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      status: "active",
-      limit: 1,
-    });
-
-    let trialingSubs = { data: [] as any[] };
-    if (subscriptions.data.length === 0) {
-      trialingSubs = await stripe.subscriptions.list({
+      const subscriptions = await stripe.subscriptions.list({
         customer: customerId,
-        status: "trialing",
+        status: "active",
         limit: 1,
       });
+
+      let trialingSubs = { data: [] as any[] };
+      if (subscriptions.data.length === 0) {
+        trialingSubs = await stripe.subscriptions.list({
+          customer: customerId,
+          status: "trialing",
+          limit: 1,
+        });
+      }
+
+      const allSubs = [...subscriptions.data, ...trialingSubs.data];
+      hasActiveSub = allSubs.length > 0;
+
+      if (hasActiveSub) {
+        const subscription = allSubs[0];
+        subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+        productId = subscription.items.data[0].price.product;
+        subscriptionTier = PRODUCT_TIERS[productId as string] || "unknown";
+        isTrial = subscription.status === "trialing";
+        if (subscription.trial_end) {
+          trialEnd = new Date(subscription.trial_end * 1000).toISOString();
+        }
+        logStep("Active Stripe subscription found", { tier: subscriptionTier, isTrial });
+      }
+    } else {
+      logStep("No Stripe customer found");
     }
 
-    const allSubs = [...subscriptions.data, ...trialingSubs.data];
-    const hasActiveSub = allSubs.length > 0;
+    // ── 2. Fallback: check manual payments in DB ──
+    if (!hasActiveSub) {
+      logStep("Checking manual payments fallback");
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: manualPayment } = await supabaseClient
+        .from("payments")
+        .select("id, amount, status, paid_at, metadata")
+        .eq("user_id", user.id)
+        .eq("status", "paid")
+        .gte("paid_at", thirtyDaysAgo)
+        .order("paid_at", { ascending: false })
+        .limit(1);
 
-    let productId = null;
-    let subscriptionTier = null;
-    let subscriptionEnd = null;
-    let isTrial = false;
-    let trialEnd = null;
-
-    if (hasActiveSub) {
-      const subscription = allSubs[0];
-      subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-      productId = subscription.items.data[0].price.product;
-      subscriptionTier = PRODUCT_TIERS[productId as string] || "unknown";
-      isTrial = subscription.status === "trialing";
-      if (subscription.trial_end) {
-        trialEnd = new Date(subscription.trial_end * 1000).toISOString();
+      if (manualPayment && manualPayment.length > 0) {
+        const payment = manualPayment[0];
+        const meta = (payment.metadata || {}) as Record<string, any>;
+        subscriptionTier = meta.plan_slug || "profissional";
+        const paidDate = new Date(payment.paid_at);
+        const periodMonths = meta.period === "yearly" ? 12 : 1;
+        subscriptionEnd = new Date(paidDate.getTime() + periodMonths * 30 * 24 * 60 * 60 * 1000).toISOString();
+        hasActiveSub = true;
+        logStep("Manual payment found", { paymentId: payment.id, tier: subscriptionTier, end: subscriptionEnd });
+      } else {
+        logStep("No manual payment found");
       }
-      logStep("Active subscription found", { subscriptionId: subscription.id, tier: subscriptionTier, isTrial });
-    } else {
-      logStep("No active subscription");
     }
 
     return new Response(JSON.stringify({

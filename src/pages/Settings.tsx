@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { User, Lock, Save, Bell, BellOff, Trophy, Eye, Camera, Database, Download, Loader2, CreditCard, Crown, ExternalLink, Settings as SettingsIcon } from "lucide-react";
+import { User, Lock, Save, Bell, BellOff, Trophy, Eye, Camera, Database, Download, Loader2, CreditCard, Crown, ExternalLink, Settings as SettingsIcon, UtensilsCrossed } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import AvatarPicker from "@/components/profile/AvatarPicker";
 import ProtocolFitJourneyToggle from "@/components/admin/ProtocolFitJourneyToggle";
@@ -39,6 +39,7 @@ export default function Settings() {
 
   const [showInRanking, setShowInRanking] = useState(false);
   const [rankingNickname, setRankingNickname] = useState("");
+  const [hasOwnMealPlan, setHasOwnMealPlan] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -49,7 +50,12 @@ export default function Settings() {
           setRankingNickname(data.ranking_nickname || "");
         }
       });
-  }, [user]);
+    // Check if professional also has a meal plan as patient
+    if (isNutritionist || isPersonal) {
+      supabase.from("meal_plans").select("id").eq("patient_id", user.id).eq("is_active", true).limit(1)
+        .then(({ data }) => { setHasOwnMealPlan(!!data?.length); });
+    }
+  }, [user, isNutritionist, isPersonal]);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -169,6 +175,25 @@ export default function Settings() {
                   Atualizar status
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Minha Dieta — for professionals who also have a meal plan */}
+        {(isNutritionist || isPersonal) && hasOwnMealPlan && (
+          <Card className="shadow-card border-violet-500/20">
+            <CardHeader>
+              <CardTitle className="font-display flex items-center gap-2">
+                <UtensilsCrossed className="w-5 h-5 text-violet-500" /> Minha Dieta
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-3">
+                Você possui um plano alimentar ativo como paciente. Acesse para visualizar suas refeições.
+              </p>
+              <Button variant="outline" className="gap-2 border-violet-500/30 hover:bg-violet-500/10" onClick={() => navigate("/my-diet")}>
+                <UtensilsCrossed className="w-4 h-4" /> Ver Minha Dieta
+              </Button>
             </CardContent>
           </Card>
         )}
