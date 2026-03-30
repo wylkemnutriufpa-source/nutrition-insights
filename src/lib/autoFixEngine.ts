@@ -429,9 +429,10 @@ export async function autoFixMealPlan(
     patientGoal = personalizationCtx.goal || patientGoal;
   }
 
-  // ─── STEP 3: Remove blocked foods ──────────────────────
+  // ─── STEP 3: Remove blocked foods (skip protected items) ──
   onStep?.("removing_blocked");
   let fixedItems: MealPlanItem[] = workingItems.map(item => {
+    if (isItemProtected(item)) return item;
     const { fixed, changes } = fixItemBlockedFoods(item);
     allChanges.push(...changes);
     return fixed;
