@@ -164,10 +164,7 @@ export default function PatientGridDashboard() {
         </div>
       )}
 
-      {!blockDashboard && (
-        <>
-        </motion.div>
-      )}
+      {!blockDashboard && (<>
 
       {/* FitJourney Timeline — hidden in basic mode */}
       {!expUI.isBasic && <FitJourneyTimeline compact maxHeight="400px" />}
