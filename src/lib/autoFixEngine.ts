@@ -23,6 +23,7 @@ import {
 } from "./planSimplicityEngine";
 import { BLOCKED_FOODS } from "./mealPlanFoodRules";
 import { loadPersonalizationContext, personalizePlanItems, type PersonalizationChange } from "./planPersonalizationEngine";
+import { isItemProtected } from "./planPipelineOrchestrator";
 
 type MealPlanItem = Tables<"meal_plan_items">;
 
