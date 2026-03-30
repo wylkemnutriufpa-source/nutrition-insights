@@ -499,7 +499,7 @@ export default function AdminProfessionals() {
 
     // Get professional_profiles
     const { data: profProfiles } = await supabase.from("professional_profiles")
-      .select("id, user_id, plan_id, status, clinic_name, onboarding_completed")
+      .select("id, user_id, plan_id, status, clinic_name, onboarding_completed, coach_bodybuilder_enabled, personal_trainer_enabled")
       .in("user_id", nutIds);
 
     // Get plans
