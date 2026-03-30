@@ -113,6 +113,14 @@ export default function PatientGridDashboard() {
   const showOnboardingCard = !anamnesisCompleted;
   const blockDashboard = loadingAnamnesis === false && !anamnesisCompleted;
 
+  if (loadingAnamnesis) {
+    return (
+      <div className="flex items-center justify-center h-40">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Onboarding Card — top priority */}
@@ -120,7 +128,7 @@ export default function PatientGridDashboard() {
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <Card
             className="relative cursor-pointer overflow-hidden border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-emerald-600/5 to-teal-500/10 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-300 group"
-            onClick={() => navigate("/onboarding-paciente")}
+            onClick={() => navigate("/anamnesis")}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             <div className="relative flex items-center gap-4 p-4">
@@ -129,20 +137,35 @@ export default function PatientGridDashboard() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold text-foreground">Onboarding FitJourney</h3>
+                  <h3 className="text-sm font-bold text-foreground">Complete sua Anamnese</h3>
                   <Badge variant="default" className="text-[9px] h-5 bg-emerald-600 hover:bg-emerald-500">
-                    {onboarding ? (onboarding as any).status === "active" ? "Em andamento" : "Pendente" : "Iniciar"}
+                    Obrigatório
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {onboarding
-                    ? `Etapa atual: ${(onboarding as any).current_step || (onboarding as any).status}`
-                    : "Conheça o sistema e comece sua jornada de transformação"}
+                  Preencha suas informações de saúde para que seu profissional crie um plano personalizado.
                 </p>
               </div>
               <ChevronRight className="w-5 h-5 text-emerald-500/60 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all flex-shrink-0" />
             </div>
           </Card>
+        </motion.div>
+      )}
+
+      {/* If onboarding not done, block access to the rest */}
+      {blockDashboard && (
+        <div className="text-center py-8 space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Para acessar seus recursos, preencha a anamnese primeiro.
+          </p>
+          <Button onClick={() => navigate("/anamnesis")} className="gap-2">
+            <Rocket className="w-4 h-4" /> Preencher Anamnese
+          </Button>
+        </div>
+      )}
+
+      {!blockDashboard && (
+        <>
         </motion.div>
       )}
 
