@@ -350,7 +350,7 @@ const DateNavigator = memo(function DateNavigator({
 // ── Meal Group (memoized) ──
 const MealGroup = memo(function MealGroup({
   mealType, items, completions, justCompleted, focusMode,
-  onSetAdherence, onOpenDetail,
+  onSetAdherence, onOpenDetail, onOpenSubstitution,
 }: {
   mealType: { key: MealType; label: string; icon: React.ReactNode; time: string };
   items: MealPlanItem[];
@@ -359,6 +359,7 @@ const MealGroup = memo(function MealGroup({
   focusMode: boolean;
   onSetAdherence: (item: MealPlanItem, status: AdherenceStatus) => void;
   onOpenDetail: (item: MealDetailData) => void;
+  onOpenSubstitution?: (item: MealPlanItem) => void;
 }) {
   const mealFollowed = items.filter(i => completions.find(c => c.meal_plan_item_id === i.id && c.adherence_status === "followed")).length;
   const mealPartial = items.filter(i => completions.find(c => c.meal_plan_item_id === i.id && c.adherence_status === "partial")).length;
