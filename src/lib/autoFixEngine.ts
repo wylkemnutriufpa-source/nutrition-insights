@@ -22,6 +22,7 @@ import {
   type SimplicityScore,
 } from "./planSimplicityEngine";
 import { BLOCKED_FOODS } from "./mealPlanFoodRules";
+import { loadPersonalizationContext, personalizePlanItems, type PersonalizationChange } from "./planPersonalizationEngine";
 
 type MealPlanItem = Tables<"meal_plan_items">;
 
