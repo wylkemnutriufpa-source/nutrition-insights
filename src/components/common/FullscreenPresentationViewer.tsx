@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, X, Rocket, Volume2, VolumeX, Pause, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Rocket, Volume2, VolumeX, Pause, Play, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useAmbientAudio } from "@/hooks/useAmbientAudio";
@@ -22,6 +22,7 @@ interface Props {
 
 const SWIPE_THRESHOLD = 50;
 const AUTOPLAY_INTERVAL = 7000;
+const kenBurnsOrigins = ["center center", "top left", "top right", "bottom left", "bottom right", "center top", "center bottom"];
 
 export default function FullscreenPresentationViewer({ slides, mode, onFinish, onSkip, finalCTAs }: Props) {
   const [idx, setIdx] = useState(0);
@@ -29,6 +30,9 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
   const [autoPlay, setAutoPlay] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
   const [autoProgress, setAutoProgress] = useState(0);
+  const [imagesReady, setImagesReady] = useState(false);
+  const [isPortrait, setIsPortrait] = useState(false);
+  const [orientationDismissed, setOrientationDismissed] = useState(false);
   const touchStart = useRef(0);
   const autoTimerRef = useRef<number | null>(null);
   const progressRef = useRef<number | null>(null);
@@ -58,15 +62,38 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
   // Stop audio on unmount
   useEffect(() => () => { audio.stop(); }, []);
 
-  // Preload next 2 images
+  // Preload ALL images upfront
   useEffect(() => {
-    for (let i = 1; i <= 2; i++) {
-      if (idx + i < total) {
-        const img = new Image();
-        img.src = slides[idx + i].image_url;
-      }
-    }
-  }, [idx, slides, total]);
+    let loaded = 0;
+    const total = slides.length;
+    slides.forEach((s) => {
+      const img = new Image();
+      img.onload = img.onerror = () => {
+        loaded++;
+        if (loaded >= total) setImagesReady(true);
+      };
+      img.src = s.image_url;
+    });
+    // Fallback: show after 3s even if not all loaded
+    const t = setTimeout(() => setImagesReady(true), 3000);
+    return () => clearTimeout(t);
+  }, [slides]);
+
+  // Detect portrait orientation on mobile
+  useEffect(() => {
+    const checkOrientation = () => {
+      const mobile = window.innerWidth < 768;
+      const portrait = window.innerHeight > window.innerWidth;
+      setIsPortrait(mobile && portrait);
+    };
+    checkOrientation();
+    window.addEventListener("resize", checkOrientation);
+    window.addEventListener("orientationchange", checkOrientation);
+    return () => {
+      window.removeEventListener("resize", checkOrientation);
+      window.removeEventListener("orientationchange", checkOrientation);
+    };
+  }, []);
 
   // Auto-play logic
   useEffect(() => {
@@ -154,6 +181,60 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
+      {/* ── Loading overlay ── */}
+      <AnimatePresence>
+        {!imagesReady && (
+          <motion.div
+            className="absolute inset-0 z-[100] flex flex-col items-center justify-center gap-4"
+            style={{ background: "hsl(160 35% 3%)" }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <motion.div
+              className="w-16 h-16 rounded-full border-2 border-t-transparent"
+              style={{ borderColor: `${accent}40`, borderTopColor: "transparent" }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            />
+            <p className="text-white/40 text-sm font-light tracking-wide">Preparando apresentação...</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Portrait orientation prompt ── */}
+      <AnimatePresence>
+        {isPortrait && !orientationDismissed && imagesReady && (
+          <motion.div
+            className="absolute inset-0 z-[90] flex flex-col items-center justify-center gap-6 px-8"
+            style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <motion.div
+              animate={{ rotate: [0, -90, -90, 0] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", times: [0, 0.3, 0.7, 1] }}
+              className="text-5xl"
+            >
+              📱
+            </motion.div>
+            <div className="text-center space-y-2">
+              <p className="text-white text-lg font-semibold">Gire o celular</p>
+              <p className="text-white/50 text-sm max-w-xs">Para uma melhor experiência, assista a apresentação no modo paisagem</p>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setOrientationDismissed(true)}
+              className="text-white/40 hover:text-white/70 hover:bg-white/10 text-xs mt-2"
+            >
+              Continuar assim mesmo
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ── Ambient particles ── */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {Array.from({ length: particleCount }).map((_, i) => (
@@ -357,16 +438,16 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10 z-10" />
                 <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/60 to-transparent z-10" />
 
-                {/* Ken Burns image */}
+                {/* Ken Burns image with varied motion per slide */}
                 <motion.img
                   key={`img-${idx}`}
                   src={slide.image_url}
                   alt={slide.title || `Slide ${idx + 1}`}
                   className="w-full h-full object-contain bg-black/30"
-                  style={{ maxHeight: "62vh" }}
-                  initial={{ scale: 1.06 }}
-                  animate={{ scale: 1 }}
-                  transition={{ duration: 12, ease: "linear" }}
+                  style={{ maxHeight: "62vh", transformOrigin: kenBurnsOrigins[idx % kenBurnsOrigins.length] }}
+                  initial={{ scale: 1.08, opacity: 0.7 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ scale: { duration: 10, ease: "linear" }, opacity: { duration: 0.8, ease: "easeOut" } }}
                 />
 
                 {/* Glass ring */}
