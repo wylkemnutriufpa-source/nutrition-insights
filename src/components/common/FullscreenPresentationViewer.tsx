@@ -623,12 +623,13 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.5 }}
-            className="absolute bottom-20 left-0 right-0 flex justify-center z-40 pointer-events-none"
+            className="absolute bottom-20 left-0 right-0 flex justify-center z-40 cursor-pointer"
+            onClick={() => audio.startPlayback()}
           >
             <motion.div
-              className="px-5 py-2.5 rounded-full text-xs text-white/60 backdrop-blur-xl border border-white/10"
-              style={{ background: "rgba(255,255,255,0.06)" }}
-              animate={{ opacity: [0.5, 1, 0.5] }}
+              className="px-6 py-3 rounded-full text-sm text-white/80 backdrop-blur-xl border border-white/15 active:scale-95 transition-transform"
+              style={{ background: "rgba(255,255,255,0.1)" }}
+              animate={{ opacity: [0.6, 1, 0.6], scale: [1, 1.03, 1] }}
               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             >
               ✨ Toque na tela para iniciar a experiência
