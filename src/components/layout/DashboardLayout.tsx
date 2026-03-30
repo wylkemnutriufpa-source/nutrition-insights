@@ -5,13 +5,14 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck, Shield, Activity, LayoutDashboard, Dumbbell } from "lucide-react";
+import { LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck, Shield, Activity, LayoutDashboard, Dumbbell, Lock } from "lucide-react";
 import { Search } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { openCommandPalette } from "@/components/common/CommandPalette";
 import { useIsMobile, useIsTablet } from "@/hooks/use-mobile";
 import { useSmartMenu } from "@/hooks/useSmartMenu";
 import AccordionSidebar from "@/components/layout/AccordionSidebar";
+import { useProfessionalModules } from "@/hooks/useProfessionalModules";
 import PendingApprovalsModal, { usePendingApprovals } from "@/components/patient/PendingApprovalsModal";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import SmartResumeModal from "@/components/common/SmartResumeModal";
@@ -181,6 +182,7 @@ function DynamicSidebar({
   const { categories, flatItems, trackClick } = useSmartMenu();
   const { isNutritionist, isPersonal, isAdmin } = useAuth();
   const pendingCount = usePendingApprovals();
+  const { coachBodybuilderEnabled, personalTrainerEnabled } = useProfessionalModules();
   const [approvalsOpen, setApprovalsOpen] = useState(false);
   const [intelligenceOpen, setIntelligenceOpen] = useState(false);
   const [showcaseOpen, setShowcaseOpen] = useState(false);
@@ -318,30 +320,46 @@ function DynamicSidebar({
               </span>
             )}
           </Link>
-          <Link
-            to="/coach-bodybuilder"
-            onClick={onLinkClick}
-            className={`flex items-center gap-2 w-full rounded-xl border border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
-          >
-            <Activity className="w-4 h-4 text-orange-500 flex-shrink-0" />
-            {!collapsed && (
-              <span className="text-xs font-semibold text-orange-500 truncate group-hover:text-orange-400 transition-colors">
-                Coach Bodybuilder
-              </span>
+          {/* Coach Bodybuilder — locked unless admin-enabled */}
+          <div className="relative">
+            {!coachBodybuilderEnabled && (
+              <div className="absolute inset-0 z-10 rounded-xl bg-muted/60 backdrop-blur-[1px] flex items-center justify-center cursor-not-allowed">
+                <Lock className="w-3.5 h-3.5 text-muted-foreground" />
+              </div>
             )}
-          </Link>
-          <Link
-            to="/personal/dashboard"
-            onClick={onLinkClick}
-            className={`flex items-center gap-2 w-full rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
-          >
-            <Dumbbell className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-            {!collapsed && (
-              <span className="text-xs font-semibold text-emerald-500 truncate group-hover:text-emerald-400 transition-colors">
-                Personal Trainer
-              </span>
+            <Link
+              to={coachBodybuilderEnabled ? "/coach-bodybuilder" : "#"}
+              onClick={(e) => { if (!coachBodybuilderEnabled) { e.preventDefault(); return; } onLinkClick?.(); }}
+              className={`flex items-center gap-2 w-full rounded-xl border border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
+            >
+              <Activity className="w-4 h-4 text-orange-500 flex-shrink-0" />
+              {!collapsed && (
+                <span className="text-xs font-semibold text-orange-500 truncate group-hover:text-orange-400 transition-colors">
+                  Coach Bodybuilder
+                </span>
+              )}
+            </Link>
+          </div>
+          {/* Personal Trainer — locked unless admin-enabled */}
+          <div className="relative">
+            {!personalTrainerEnabled && (
+              <div className="absolute inset-0 z-10 rounded-xl bg-muted/60 backdrop-blur-[1px] flex items-center justify-center cursor-not-allowed">
+                <Lock className="w-3.5 h-3.5 text-muted-foreground" />
+              </div>
             )}
-          </Link>
+            <Link
+              to={personalTrainerEnabled ? "/personal/dashboard" : "#"}
+              onClick={(e) => { if (!personalTrainerEnabled) { e.preventDefault(); return; } onLinkClick?.(); }}
+              className={`flex items-center gap-2 w-full rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
+            >
+              <Dumbbell className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+              {!collapsed && (
+                <span className="text-xs font-semibold text-emerald-500 truncate group-hover:text-emerald-400 transition-colors">
+                  Personal Trainer
+                </span>
+              )}
+            </Link>
+          </div>
         </div>
       )}
 

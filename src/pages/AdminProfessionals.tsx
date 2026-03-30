@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Users, UserPlus, Search, Loader2, Ban, CheckCircle2, KeyRound,
-  Edit, Eye, Building2, Shield, ArrowLeft, Dumbbell, Salad, ArrowUpCircle
+  Edit, Eye, Building2, Shield, ArrowLeft, Dumbbell, Salad, ArrowUpCircle, Activity
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -34,6 +34,8 @@ interface Professional {
   clinic_name: string | null;
   onboarding_completed: boolean;
   patient_count: number;
+  coach_bodybuilder_enabled: boolean;
+  personal_trainer_enabled: boolean;
 }
 
 interface PricingPlan {
@@ -398,7 +400,21 @@ function PromotePatientDialog({
 }
 
 // ─── Professional Detail Card ───
-function ProfessionalDetailPanel({ professional, onClose }: { professional: Professional; onClose: () => void }) {
+function ProfessionalDetailPanel({ professional, onClose, onRefresh }: { professional: Professional; onClose: () => void; onRefresh: () => void }) {
+  const [toggling, setToggling] = useState<string | null>(null);
+
+  const toggleModule = async (field: "coach_bodybuilder_enabled" | "personal_trainer_enabled", current: boolean) => {
+    setToggling(field);
+    if (professional.profile_id) {
+      await supabase.from("professional_profiles").update({ [field]: !current }).eq("id", professional.profile_id);
+    } else {
+      await supabase.from("professional_profiles").insert({ user_id: professional.user_id, [field]: !current });
+    }
+    toast.success(`Módulo ${!current ? "liberado" : "bloqueado"} com sucesso`);
+    onRefresh();
+    setToggling(null);
+  };
+
   return (
     <Card className="glass shadow-card">
       <CardHeader className="pb-3">
@@ -451,6 +467,33 @@ function ProfessionalDetailPanel({ professional, onClose }: { professional: Prof
             <p className="font-medium">{new Date(professional.created_at).toLocaleDateString("pt-BR")}</p>
           </div>
         </div>
+
+        {/* Module Access Toggles */}
+        <div className="border-t border-border pt-3 space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Módulos Liberados</p>
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
+            <div className="flex items-center gap-2">
+              <Activity className="w-4 h-4 text-orange-500" />
+              <span className="text-sm font-medium">Coach Bodybuilder</span>
+            </div>
+            <Switch
+              checked={professional.coach_bodybuilder_enabled}
+              disabled={toggling === "coach_bodybuilder_enabled"}
+              onCheckedChange={() => toggleModule("coach_bodybuilder_enabled", professional.coach_bodybuilder_enabled)}
+            />
+          </div>
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
+            <div className="flex items-center gap-2">
+              <Dumbbell className="w-4 h-4 text-emerald-500" />
+              <span className="text-sm font-medium">Personal Trainer</span>
+            </div>
+            <Switch
+              checked={professional.personal_trainer_enabled}
+              disabled={toggling === "personal_trainer_enabled"}
+              onCheckedChange={() => toggleModule("personal_trainer_enabled", professional.personal_trainer_enabled)}
+            />
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
@@ -497,7 +540,7 @@ export default function AdminProfessionals() {
 
     // Get professional_profiles
     const { data: profProfiles } = await supabase.from("professional_profiles")
-      .select("id, user_id, plan_id, status, clinic_name, onboarding_completed")
+      .select("id, user_id, plan_id, status, clinic_name, onboarding_completed, coach_bodybuilder_enabled, personal_trainer_enabled")
       .in("user_id", nutIds);
 
     // Get plans
@@ -537,6 +580,8 @@ export default function AdminProfessionals() {
         clinic_name: pp?.clinic_name || null,
         onboarding_completed: pp?.onboarding_completed ?? false,
         patient_count: countMap.get(p.user_id) || 0,
+        coach_bodybuilder_enabled: pp?.coach_bodybuilder_enabled ?? false,
+        personal_trainer_enabled: pp?.personal_trainer_enabled ?? false,
       };
     });
 
@@ -649,7 +694,7 @@ export default function AdminProfessionals() {
 
         {/* Detail panel */}
         {viewingProfessional && (
-          <ProfessionalDetailPanel professional={viewingProfessional} onClose={() => setViewingProfessional(null)} />
+          <ProfessionalDetailPanel professional={viewingProfessional} onClose={() => setViewingProfessional(null)} onRefresh={fetchData} />
         )}
 
         {/* List */}
