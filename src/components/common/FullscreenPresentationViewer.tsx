@@ -180,6 +180,60 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
+      {/* ── Loading overlay ── */}
+      <AnimatePresence>
+        {!imagesReady && (
+          <motion.div
+            className="absolute inset-0 z-[100] flex flex-col items-center justify-center gap-4"
+            style={{ background: "hsl(160 35% 3%)" }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <motion.div
+              className="w-16 h-16 rounded-full border-2 border-t-transparent"
+              style={{ borderColor: `${accent}40`, borderTopColor: "transparent" }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            />
+            <p className="text-white/40 text-sm font-light tracking-wide">Preparando apresentação...</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Portrait orientation prompt ── */}
+      <AnimatePresence>
+        {isPortrait && !orientationDismissed && imagesReady && (
+          <motion.div
+            className="absolute inset-0 z-[90] flex flex-col items-center justify-center gap-6 px-8"
+            style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <motion.div
+              animate={{ rotate: [0, -90, -90, 0] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", times: [0, 0.3, 0.7, 1] }}
+              className="text-5xl"
+            >
+              📱
+            </motion.div>
+            <div className="text-center space-y-2">
+              <p className="text-white text-lg font-semibold">Gire o celular</p>
+              <p className="text-white/50 text-sm max-w-xs">Para uma melhor experiência, assista a apresentação no modo paisagem</p>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setOrientationDismissed(true)}
+              className="text-white/40 hover:text-white/70 hover:bg-white/10 text-xs mt-2"
+            >
+              Continuar assim mesmo
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ── Ambient particles ── */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {Array.from({ length: particleCount }).map((_, i) => (
