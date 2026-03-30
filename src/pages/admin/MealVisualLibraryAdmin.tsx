@@ -10,13 +10,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   BookOpen, Plus, Search, Filter, Image as ImageIcon, Pencil, Trash2, Link2, Unlink, Eye,
+  RefreshCw, BarChart3, AlertTriangle, Loader2,
 } from "lucide-react";
 import MealVisualCard from "@/components/meals/MealVisualCard";
 import MealVisualModal from "@/components/meals/MealVisualModal";
+import { runAutoAssociation, type AssociationReport } from "@/lib/mealVisualAssociation";
 import type { MealVisualItem, MealVisualAlias } from "@/types/mealVisualLibrary";
 import { MEAL_VISUAL_CATEGORIES } from "@/types/mealVisualLibrary";
 
