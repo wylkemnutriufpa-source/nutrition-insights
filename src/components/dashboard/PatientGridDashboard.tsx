@@ -7,13 +7,16 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { useLayoutPreference } from "@/hooks/useLayoutPreference";
+import { useExperienceUI } from "@/hooks/useExperienceUI";
 import FitJourneyTimeline from "@/components/timeline/FitJourneyTimeline";
 import {
   UtensilsCrossed, CheckCircle2, Calendar, Dumbbell,
   TrendingUp, Brain, Camera, Target,
-  LayoutGrid, List, ArrowRight, Sparkles, Rocket, ChevronRight,
+  LayoutGrid, List, ArrowRight, Sparkles, Rocket, ChevronRight, ChefHat,
 } from "lucide-react";
 import NewFeatureBadge from "@/components/common/NewFeatureBadge";
+
+type MinMode = "basic" | "pro" | "advanced";
 
 interface GridCard {
   key: string;
@@ -24,28 +27,31 @@ interface GridCard {
   gradient: string;
   badge?: { text: string; variant: "default" | "secondary" | "destructive" | "outline" };
   row: number;
+  /** Minimum experience mode to show this card. Defaults to "basic" */
+  minMode?: MinMode;
 }
 
 const PATIENT_CARDS: GridCard[] = [
-  // Row 1 — Ação imediata
-  { key: "meal-plan", label: "Plano Alimentar", description: "Seu plano nutricional personalizado", icon: UtensilsCrossed, route: "/my-diet", gradient: "from-emerald-500/10 to-emerald-600/5", row: 1 },
-  { key: "checklist", label: "Checklist Diário", description: "Tarefas e hábitos do dia", icon: CheckCircle2, route: "/checklist", gradient: "from-sky-500/10 to-sky-600/5", row: 1 },
-  { key: "agenda", label: "Agenda / Reavaliação", description: "Consultas e compromissos", icon: Calendar, route: "/appointments", gradient: "from-rose-500/10 to-rose-600/5", row: 1 },
+  // Row 1 — Essenciais (basic)
+  { key: "meal-plan", label: "Plano Alimentar", description: "Seu plano nutricional personalizado", icon: UtensilsCrossed, route: "/my-diet", gradient: "from-emerald-500/10 to-emerald-600/5", row: 1, minMode: "basic" },
+  { key: "physical", label: "Avaliação Física", description: "Evolução corporal e medidas", icon: Dumbbell, route: "/checkin", gradient: "from-violet-500/10 to-violet-600/5", row: 1, minMode: "basic" },
+  { key: "recipes", label: "Receitas", description: "Receitas saudáveis e práticas", icon: ChefHat, route: "/recipes", gradient: "from-orange-500/10 to-orange-600/5", row: 1, minMode: "basic" },
 
-  // Row 2 — Acompanhamento
-  { key: "physical", label: "Avaliação Física", description: "Evolução corporal e medidas", icon: Dumbbell, route: "/checkin", gradient: "from-violet-500/10 to-violet-600/5", row: 2 },
-  { key: "evolution", label: "Evolução e Gráficos", description: "Visualize seu progresso completo", icon: TrendingUp, route: "/journey", gradient: "from-teal-500/10 to-teal-600/5", row: 2 },
-  { key: "ai-insights", label: "IA Insights", description: "Análises inteligentes do seu progresso", icon: Brain, route: "/analyze", gradient: "from-amber-500/10 to-amber-600/5", row: 2, badge: { text: "IA", variant: "secondary" } },
+  // Row 2 — Acompanhamento (pro+)
+  { key: "checklist", label: "Checklist Diário", description: "Tarefas e hábitos do dia", icon: CheckCircle2, route: "/checklist", gradient: "from-sky-500/10 to-sky-600/5", row: 2, minMode: "pro" },
+  { key: "agenda", label: "Agenda / Reavaliação", description: "Consultas e compromissos", icon: Calendar, route: "/appointments", gradient: "from-rose-500/10 to-rose-600/5", row: 2, minMode: "pro" },
+  { key: "evolution", label: "Evolução e Gráficos", description: "Visualize seu progresso completo", icon: TrendingUp, route: "/journey", gradient: "from-teal-500/10 to-teal-600/5", row: 2, minMode: "pro" },
 
-  // Row 3 — Estratégia futura
-  { key: "body-ai", label: "Projeção Corporal", description: "Projeção visual de transformação com IA", icon: Camera, route: "/body-projection", gradient: "from-purple-500/10 to-purple-600/5", row: 3, badge: { text: "Novo", variant: "default" } },
-  { key: "goals", label: "Metas e Projeção", description: "Metas, objetivos e projeção de peso", icon: Target, route: "/weekly-goals", gradient: "from-orange-500/10 to-orange-600/5", row: 3 },
+  // Row 3 — Estratégia futura (advanced)
+  { key: "ai-insights", label: "IA Insights", description: "Análises inteligentes do seu progresso", icon: Brain, route: "/analyze", gradient: "from-amber-500/10 to-amber-600/5", row: 3, minMode: "advanced", badge: { text: "IA", variant: "secondary" } },
+  { key: "body-ai", label: "Projeção Corporal", description: "Projeção visual de transformação com IA", icon: Camera, route: "/body-projection", gradient: "from-purple-500/10 to-purple-600/5", row: 3, minMode: "advanced", badge: { text: "Novo", variant: "default" } },
+  { key: "goals", label: "Metas e Projeção", description: "Metas, objetivos e projeção de peso", icon: Target, route: "/weekly-goals", gradient: "from-orange-500/10 to-orange-600/5", row: 3, minMode: "advanced" },
 ];
 
 const ROW_LABELS: Record<number, string> = {
-  1: "Ação Imediata",
+  1: "Essencial",
   2: "Acompanhamento",
-  3: "Estratégia Futura",
+  3: "Estratégia Avançada",
 };
 
 const ROW_ICONS: Record<number, any> = {
@@ -67,6 +73,7 @@ export default function PatientGridDashboard() {
   const navigate = useNavigate();
   const { patientView, setPatientView } = useLayoutPreference();
   const { user } = useAuth();
+  const expUI = useExperienceUI();
   const [onboarding, setOnboarding] = useState<any>(null);
 
   useEffect(() => {
@@ -83,7 +90,9 @@ export default function PatientGridDashboard() {
       });
   }, [user?.id]);
 
-  const rows = [1, 2, 3];
+  // Filter cards by experience mode
+  const visibleCards = PATIENT_CARDS.filter((c) => expUI.minMode(c.minMode ?? "basic"));
+  const visibleRows = [...new Set(visibleCards.map((c) => c.row))].sort();
 
   const ONBOARDING_KEY = "patient_onboarding_completed";
   const onboardingDone = localStorage.getItem(ONBOARDING_KEY) === "true";
@@ -122,42 +131,44 @@ export default function PatientGridDashboard() {
         </motion.div>
       )}
 
-      {/* FitJourney Timeline */}
-      <FitJourneyTimeline compact maxHeight="400px" />
+      {/* FitJourney Timeline — hidden in basic mode */}
+      {!expUI.isBasic && <FitJourneyTimeline compact maxHeight="400px" />}
 
       {/* Header with view toggle */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Meu Painel</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Acesse tudo em um só lugar</p>
+          <h2 className="text-xl font-bold text-foreground">{expUI.isBasic ? "Minha Jornada" : "Meu Painel"}</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">{expUI.isBasic ? "Foque no essencial para seguir seu plano" : "Acesse tudo em um só lugar"}</p>
         </div>
-        <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
-          <Button
-            variant={patientView === "grid" ? "default" : "ghost"}
-            size="sm"
-            className="h-7 px-2 gap-1 text-xs"
-            onClick={() => setPatientView("grid")}
-          >
-            <LayoutGrid className="w-3.5 h-3.5" />
-            Grade
-          </Button>
-          <Button
-            variant={patientView === "list" ? "default" : "ghost"}
-            size="sm"
-            className="h-7 px-2 gap-1 text-xs"
-            onClick={() => setPatientView("list")}
-          >
-            <List className="w-3.5 h-3.5" />
-            Lista
-          </Button>
-        </div>
+        {!expUI.isBasic && (
+          <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
+            <Button
+              variant={patientView === "grid" ? "default" : "ghost"}
+              size="sm"
+              className="h-7 px-2 gap-1 text-xs"
+              onClick={() => setPatientView("grid")}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              Grade
+            </Button>
+            <Button
+              variant={patientView === "list" ? "default" : "ghost"}
+              size="sm"
+              className="h-7 px-2 gap-1 text-xs"
+              onClick={() => setPatientView("list")}
+            >
+              <List className="w-3.5 h-3.5" />
+              Lista
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Grid view */}
       {patientView === "grid" && (
         <div className="space-y-5">
-          {rows.map((row) => {
-            const rowCards = PATIENT_CARDS.filter((c) => c.row === row);
+          {visibleRows.map((row) => {
+            const rowCards = visibleCards.filter((c) => c.row === row);
             const RowIcon = ROW_ICONS[row];
             return (
               <div key={row}>
@@ -220,7 +231,7 @@ export default function PatientGridDashboard() {
           animate="show"
           className="space-y-1.5"
         >
-          {PATIENT_CARDS.map((card) => {
+          {visibleCards.map((card) => {
             const Icon = card.icon;
             return (
               <motion.div key={card.key} variants={cardAnim}>
