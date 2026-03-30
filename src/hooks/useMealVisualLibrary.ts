@@ -19,7 +19,7 @@ export function useMealVisualLibrary(options?: { category?: string; search?: str
     }
 
     const { data } = await query;
-    let result = (data || []) as MealVisualItem[];
+    let result = (data || []) as unknown as MealVisualItem[];
 
     if (options?.search) {
       const s = options.search.toLowerCase();
