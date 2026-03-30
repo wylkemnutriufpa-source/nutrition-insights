@@ -140,26 +140,28 @@ export default function PatientGridDashboard() {
           <h2 className="text-xl font-bold text-foreground">{expUI.isBasic ? "Minha Jornada" : "Meu Painel"}</h2>
           <p className="text-xs text-muted-foreground mt-0.5">{expUI.isBasic ? "Foque no essencial para seguir seu plano" : "Acesse tudo em um só lugar"}</p>
         </div>
-        <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
-          <Button
-            variant={patientView === "grid" ? "default" : "ghost"}
-            size="sm"
-            className="h-7 px-2 gap-1 text-xs"
-            onClick={() => setPatientView("grid")}
-          >
-            <LayoutGrid className="w-3.5 h-3.5" />
-            Grade
-          </Button>
-          <Button
-            variant={patientView === "list" ? "default" : "ghost"}
-            size="sm"
-            className="h-7 px-2 gap-1 text-xs"
-            onClick={() => setPatientView("list")}
-          >
-            <List className="w-3.5 h-3.5" />
-            Lista
-          </Button>
-        </div>
+        {!expUI.isBasic && (
+          <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
+            <Button
+              variant={patientView === "grid" ? "default" : "ghost"}
+              size="sm"
+              className="h-7 px-2 gap-1 text-xs"
+              onClick={() => setPatientView("grid")}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              Grade
+            </Button>
+            <Button
+              variant={patientView === "list" ? "default" : "ghost"}
+              size="sm"
+              className="h-7 px-2 gap-1 text-xs"
+              onClick={() => setPatientView("list")}
+            >
+              <List className="w-3.5 h-3.5" />
+              Lista
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Grid view */}
