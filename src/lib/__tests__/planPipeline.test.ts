@@ -40,23 +40,27 @@ function mockContext(overrides: Partial<PersonalizationContext> = {}): Personali
 function mockItems(items: Array<{
   title: string;
   description?: string;
-  meal_type?: string;
+  meal_type?: MealType;
   day_of_week?: number;
   calories_target?: number;
   protein_target?: number;
   carbs_target?: number;
   fat_target?: number;
+  is_locked?: boolean;
+  is_manually_edited?: boolean;
 }>) {
   return items.map((i, idx) => ({
     id: `item-${idx}`,
     title: i.title,
     description: i.description || "",
-    meal_type: i.meal_type || "lunch",
+    meal_type: (i.meal_type || "lunch") as MealType,
     day_of_week: i.day_of_week ?? 0,
     calories_target: i.calories_target ?? 300,
     protein_target: i.protein_target ?? 25,
     carbs_target: i.carbs_target ?? 40,
     fat_target: i.fat_target ?? 10,
+    is_locked: i.is_locked,
+    is_manually_edited: i.is_manually_edited,
   }));
 }
 
