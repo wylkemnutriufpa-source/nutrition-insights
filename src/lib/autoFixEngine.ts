@@ -36,7 +36,8 @@ export type AutoFixChangeType =
   | "snack_fixed"
   | "main_meal_standardized"
   | "macro_rebalanced"
-  | "complexity_reduced";
+  | "complexity_reduced"
+  | "personalization_applied";
 
 export interface AutoFixChange {
   type: AutoFixChangeType;
