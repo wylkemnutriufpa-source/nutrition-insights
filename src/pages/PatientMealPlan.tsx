@@ -84,6 +84,7 @@ export default function PatientMealPlan() {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [viewMode, setViewMode] = useState<"daily" | "weekly">("daily");
   const [selectedMeal, setSelectedMeal] = useState<MealDetailData | null>(null);
+  const [substitutionItem, setSubstitutionItem] = useState<MealPlanItem | null>(null);
   const [focusMode, setFocusMode] = useState(false);
   const [xpPopup, setXpPopup] = useState<{ show: boolean; points: number }>({ show: false, points: 0 });
   const [justCompleted, setJustCompleted] = useState<string | null>(null);
