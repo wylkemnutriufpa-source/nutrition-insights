@@ -145,7 +145,7 @@ export async function runPlanPipeline(input: PipelineInput): Promise<PipelineRes
     meal_plan_id: newPlan.id,
     title: item.title || "",
     description: item.description || null,
-    meal_type: item.meal_type || "other",
+    meal_type: (item.meal_type || "breakfast") as TablesInsert<"meal_plan_items">["meal_type"],
     day_of_week: item.day_of_week ?? 0,
     calories_target: item.calories_target || null,
     protein_target: item.protein_target || null,
