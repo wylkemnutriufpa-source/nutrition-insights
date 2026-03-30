@@ -31,6 +31,8 @@ export default function GatewayPage() {
       </AnimatePresence>
 
       <div className="min-h-screen mesh-gradient-bg">
+        <LandingTopNav />
+        <div className="pt-16" /> {/* spacer for fixed nav */}
         <LandingHero />
         <LandingSocialProof />
         <LandingProductDemo />
