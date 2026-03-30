@@ -46,18 +46,54 @@ async function buildAliasMap(): Promise<Map<string, string>> {
   return map;
 }
 
+/** Primary protein keywords mapped to their base slug */
+const PROTEIN_KEYWORDS: Record<string, string> = {
+  frango: "frango",
+  carne: "carne",
+  bife: "carne",
+  peixe: "peixe",
+  tilapia: "peixe",
+  salmao: "peixe",
+  camarao: "camarao",
+  ovo: "ovo",
+  ovos: "ovo",
+  omelete: "ovo",
+};
+
+/** Carb keywords to ignore when determining the visual */
+const CARB_KEYWORDS = new Set([
+  "arroz", "batata", "macarrao", "macarronada", "feijao",
+  "pure", "mandioca", "inhame", "legumes", "salada",
+]);
+
 /**
  * Tries to find a match using multiple strategies:
  * 1. Exact normalized alias match
- * 2. Partial match (alias contained in title or vice-versa)
+ * 2. Protein-first keyword extraction
+ * 3. Partial match (alias contained in title or vice-versa)
  */
 function findMatch(title: string, aliasMap: Map<string, string>): string | null {
   const norm = normalize(title);
 
-  // Strategy 1: exact match
+  // Strategy 1: exact alias match
   if (aliasMap.has(norm)) return aliasMap.get(norm)!;
 
-  // Strategy 2: partial match
+  // Strategy 2: protein-first keyword matching
+  const words = norm.split(/\s+/);
+  for (const word of words) {
+    if (CARB_KEYWORDS.has(word)) continue;
+    const proteinBase = PROTEIN_KEYWORDS[word];
+    if (proteinBase) {
+      // Find any alias that starts with the protein base
+      for (const [alias, itemId] of aliasMap) {
+        if (alias === proteinBase || alias.startsWith(proteinBase + " ")) {
+          return itemId;
+        }
+      }
+    }
+  }
+
+  // Strategy 3: partial match (fallback)
   for (const [alias, itemId] of aliasMap) {
     if (norm.includes(alias) || alias.includes(norm)) {
       return itemId;
