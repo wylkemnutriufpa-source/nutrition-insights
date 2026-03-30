@@ -12346,9 +12346,11 @@ export type Database = {
       professional_profiles: {
         Row: {
           clinic_name: string | null
+          coach_bodybuilder_enabled: boolean
           created_at: string
           id: string
           onboarding_completed: boolean
+          personal_trainer_enabled: boolean
           plan_id: string | null
           status: string
           tenant_id: string | null
@@ -12357,9 +12359,11 @@ export type Database = {
         }
         Insert: {
           clinic_name?: string | null
+          coach_bodybuilder_enabled?: boolean
           created_at?: string
           id?: string
           onboarding_completed?: boolean
+          personal_trainer_enabled?: boolean
           plan_id?: string | null
           status?: string
           tenant_id?: string | null
@@ -12368,9 +12372,11 @@ export type Database = {
         }
         Update: {
           clinic_name?: string | null
+          coach_bodybuilder_enabled?: boolean
           created_at?: string
           id?: string
           onboarding_completed?: boolean
+          personal_trainer_enabled?: boolean
           plan_id?: string | null
           status?: string
           tenant_id?: string | null
