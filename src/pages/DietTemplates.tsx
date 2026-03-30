@@ -320,7 +320,9 @@ export default function DietTemplates() {
             title: template.name + (patientName ? ` - ${patientName}` : ""),
             description: `Baseado no modelo "${template.name}". ${anamnesis ? "Ajustado conforme anamnese do paciente." : ""}`,
             start_date: new Date().toISOString().split("T")[0],
-            is_active: true,
+            // Must start inactive to avoid unique index collision when patient already has an active plan.
+            // Activation is handled atomically later via activateMealPlan().
+            is_active: false,
             tenant_id: tenantId,
           } as any)
           .select("id")
