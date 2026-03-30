@@ -123,6 +123,17 @@ export default function LandingHero() {
               </span>
             ))}
           </motion.div>
+
+          {/* Login link */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 1 }}
+          >
+            <Link to="/auth?tab=login" className="text-white/40 hover:text-white/70 text-sm transition-colors underline underline-offset-4 decoration-white/20 hover:decoration-white/40">
+              Já tenho conta → Entrar
+            </Link>
+          </motion.div>
         </motion.div>
       </div>
     </section>

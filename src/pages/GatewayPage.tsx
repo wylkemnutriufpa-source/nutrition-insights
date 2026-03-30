@@ -11,6 +11,7 @@ import LandingFAQ from "@/components/landing/LandingFAQ";
 import LandingFinalCTA from "@/components/landing/LandingFinalCTA";
 import CinematicIntro from "@/components/landing/CinematicIntro";
 import InstitutionalFooter from "@/components/institutional/InstitutionalFooter";
+import LandingTopNav from "@/components/landing/LandingTopNav";
 
 const STORAGE_KEY = "fj_intro_seen";
 
@@ -30,6 +31,8 @@ export default function GatewayPage() {
       </AnimatePresence>
 
       <div className="min-h-screen mesh-gradient-bg">
+        <LandingTopNav />
+        <div className="pt-16" /> {/* spacer for fixed nav */}
         <LandingHero />
         <LandingSocialProof />
         <LandingProductDemo />
