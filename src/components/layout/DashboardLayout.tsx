@@ -371,7 +371,7 @@ function DynamicSidebar({
         </div>
       )}
 
-      {!isProRole && (
+      {!effectiveProRole && (
         <div className="px-3 mb-1">
           <Link
             to="/patient-overview"
