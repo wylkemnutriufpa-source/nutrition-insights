@@ -9414,6 +9414,76 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_meal_substitutions: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          meal_plan_id: string
+          meal_plan_item_id: string
+          original_calories: number | null
+          original_food: string
+          original_protein: number | null
+          patient_id: string
+          substituted_calories: number | null
+          substituted_food: string
+          substituted_protein: number | null
+          substitution_category: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          meal_plan_id: string
+          meal_plan_item_id: string
+          original_calories?: number | null
+          original_food: string
+          original_protein?: number | null
+          patient_id: string
+          substituted_calories?: number | null
+          substituted_food: string
+          substituted_protein?: number | null
+          substitution_category: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          meal_plan_id?: string
+          meal_plan_item_id?: string
+          original_calories?: number | null
+          original_food?: string
+          original_protein?: number | null
+          patient_id?: string
+          substituted_calories?: number | null
+          substituted_food?: string
+          substituted_protein?: number | null
+          substitution_category?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_meal_substitutions_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_resolved_state"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_meal_substitutions_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_meal_substitutions_meal_plan_item_id_fkey"
+            columns: ["meal_plan_item_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_metabolic_twin: {
         Row: {
           adaptive_resistance_score: number | null
