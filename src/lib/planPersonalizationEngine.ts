@@ -162,6 +162,10 @@ export function personalizePlanItems(
 
   let personalizedItems = items.map(item => ({ ...item }));
 
+  // Skip items that are manually edited or locked
+  const isProtected = (item: Partial<MealPlanItem>) => 
+    Boolean((item as any).is_locked || (item as any).is_manually_edited);
+
   // 1. Remove restricted foods
   for (const restriction of context.restrictions) {
     const restrictedFoods = RESTRICTION_FOODS[restriction] || [];
@@ -170,6 +174,7 @@ export function personalizePlanItems(
     if (restrictedFoods.length === 0) continue;
 
     personalizedItems = personalizedItems.map(item => {
+      if (isProtected(item)) return item;
       let title = item.title || "";
       let description = item.description || "";
       let changed = false;
@@ -214,6 +219,7 @@ export function personalizePlanItems(
     const regex = new RegExp(rejected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
 
     personalizedItems = personalizedItems.map(item => {
+      if (isProtected(item)) return item;
       const title = item.title || "";
       const description = item.description || "";
 

@@ -23,6 +23,7 @@ import {
 } from "./planSimplicityEngine";
 import { BLOCKED_FOODS } from "./mealPlanFoodRules";
 import { loadPersonalizationContext, personalizePlanItems, type PersonalizationChange } from "./planPersonalizationEngine";
+import { isItemProtected } from "./planPipelineOrchestrator";
 
 type MealPlanItem = Tables<"meal_plan_items">;
 
@@ -428,9 +429,10 @@ export async function autoFixMealPlan(
     patientGoal = personalizationCtx.goal || patientGoal;
   }
 
-  // ─── STEP 3: Remove blocked foods ──────────────────────
+  // ─── STEP 3: Remove blocked foods (skip protected items) ──
   onStep?.("removing_blocked");
   let fixedItems: MealPlanItem[] = workingItems.map(item => {
+    if (isItemProtected(item)) return item;
     const { fixed, changes } = fixItemBlockedFoods(item);
     allChanges.push(...changes);
     return fixed;
@@ -578,6 +580,10 @@ export async function autoFixMealPlan(
     carbs_target: fi.carbs_target,
     fat_target: fi.fat_target,
     tenant_id: tenantId,
+    item_origin: (fi as any).is_manually_edited ? "manual" : "auto_corrected",
+    is_manually_edited: (fi as any).is_manually_edited || false,
+    is_locked: (fi as any).is_locked || false,
+    was_auto_corrected: !isItemProtected(fi),
   }));
 
   const { error: insertErr } = await supabase
