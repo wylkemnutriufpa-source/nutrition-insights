@@ -171,7 +171,25 @@ export default function Landing() {
   const heroCta = getSetting(s, "hero_cta_text", "Começar Gratuitamente");
   const heroBadge = getSetting(s, "hero_badge_text", "Plataforma #1 para Nutricionistas Modernos");
   const stats = getSetting(s, "stats", defaultStats);
-  const plans = getSetting(s, "pricing_plans", defaultPlans);
+  const [dbPlans, setDbPlans] = useState<typeof defaultPlans | null>(null);
+  
+  useEffect(() => {
+    supabase.from("pricing_plans").select("name, price_monthly, features, is_featured, max_patients, description")
+      .eq("is_active", true).order("sort_order").then(({ data }) => {
+        if (data?.length) {
+          setDbPlans(data.map(p => ({
+            name: p.name,
+            price: `R$ ${Math.round(p.price_monthly)}`,
+            period: "/mês",
+            popular: p.is_featured || false,
+            features: Array.isArray(p.features) ? p.features as string[] : [],
+            cta: "Testar Grátis por 7 dias →",
+          })));
+        }
+      });
+  }, []);
+  
+  const plans = dbPlans || getSetting(s, "pricing_plans", defaultPlans);
   const testimonials = dbTestimonials.length > 0
     ? dbTestimonials.map(t => ({ name: t.is_anonymous ? "Paciente Anônimo" : (t.display_name || "Paciente"), role: "Paciente FitJourney", text: t.content, rating: t.rating || 5, avatar: (t.display_name || "P")[0].toUpperCase() }))
     : getSetting(s, "testimonials_landing", defaultTestimonials);
