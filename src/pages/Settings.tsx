@@ -106,6 +106,73 @@ export default function Settings() {
         {/* Experience Mode */}
         <ExperienceModeSwitcher />
 
+        {/* Minha Assinatura — only for professionals */}
+        {(isNutritionist || isPersonal) && (
+          <Card className="shadow-card border-primary/20">
+            <CardHeader>
+              <CardTitle className="font-display flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-primary" /> Minha Assinatura
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    subscription.subscribed ? "bg-green-500/15" : subscription.is_trial ? "bg-amber-500/15" : "bg-red-500/15"
+                  }`}>
+                    <Crown className={`w-5 h-5 ${
+                      subscription.subscribed ? "text-green-500" : subscription.is_trial ? "text-amber-500" : "text-red-500"
+                    }`} />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">
+                      {subscription.subscribed
+                        ? `Plano ${subscription.subscription_tier || "Ativo"}`
+                        : subscription.is_trial ? "Período de Teste" : "Sem assinatura ativa"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {subscription.is_trial && subscription.trial_end
+                        ? `Trial termina em ${new Date(subscription.trial_end).toLocaleDateString("pt-BR")}`
+                        : subscription.subscription_end
+                          ? `Próxima cobrança: ${new Date(subscription.subscription_end).toLocaleDateString("pt-BR")}`
+                          : "Assine para desbloquear todas as funcionalidades"}
+                    </p>
+                  </div>
+                </div>
+                <Badge variant={subscription.subscribed ? "default" : subscription.is_trial ? "secondary" : "destructive"}>
+                  {subscription.subscribed ? "Ativo" : subscription.is_trial ? "Trial" : "Inativo"}
+                </Badge>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {subscription.subscribed ? (
+                  <Button variant="outline" className="gap-2" disabled={portalLoading}
+                    onClick={async () => {
+                      setPortalLoading(true);
+                      try {
+                        const { data, error } = await supabase.functions.invoke("customer-portal");
+                        if (error) throw error;
+                        if (data?.url) window.open(data.url, "_blank");
+                      } catch (err: any) {
+                        toast.error("Erro ao abrir portal: " + (err?.message || "Tente novamente"));
+                      } finally { setPortalLoading(false); }
+                    }}>
+                    {portalLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <SettingsIcon className="w-4 h-4" />}
+                    Gerenciar Assinatura <ExternalLink className="w-3 h-3" />
+                  </Button>
+                ) : (
+                  <Button className="gap-2 gradient-primary shadow-glow" onClick={() => navigate("/pricing")}>
+                    <Crown className="w-4 h-4" /> Ver Planos e Assinar
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" className="gap-1 text-xs"
+                  onClick={() => { checkSubscription(); toast.success("Status atualizado!"); }}>
+                  Atualizar status
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Profile */}
         <Card className="shadow-card">
           <CardHeader>
