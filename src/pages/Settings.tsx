@@ -179,6 +179,25 @@ export default function Settings() {
           </Card>
         )}
 
+        {/* Minha Dieta — for professionals who also have a meal plan */}
+        {(isNutritionist || isPersonal) && hasOwnMealPlan && (
+          <Card className="shadow-card border-violet-500/20">
+            <CardHeader>
+              <CardTitle className="font-display flex items-center gap-2">
+                <UtensilsCrossed className="w-5 h-5 text-violet-500" /> Minha Dieta
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-3">
+                Você possui um plano alimentar ativo como paciente. Acesse para visualizar suas refeições.
+              </p>
+              <Button variant="outline" className="gap-2 border-violet-500/30 hover:bg-violet-500/10" onClick={() => navigate("/my-diet")}>
+                <UtensilsCrossed className="w-4 h-4" /> Ver Minha Dieta
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Profile */}
         <Card className="shadow-card">
           <CardHeader>
