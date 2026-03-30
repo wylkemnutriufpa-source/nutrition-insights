@@ -16,7 +16,7 @@ import {
   Shield, Users, UserCheck, Zap, Star, UserPlus, Settings, Globe,
   Eye, BarChart3, DollarSign, CreditCard, Crown, Loader2,
   Search, ToggleLeft, Trash2, Ban, CheckCircle2, Plus, FileText, Download, Sparkles,
-  Palette, LayoutGrid, GraduationCap, Wand2, Dumbbell
+  Palette, LayoutGrid, GraduationCap, Wand2, Dumbbell, Image as ImageIcon
 } from "lucide-react";
 import { toast } from "sonner";
 import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
