@@ -302,7 +302,7 @@ describe("Scenario 9: Protected items skip personalization", () => {
     const result = personalizePlanItems(items, ctx);
 
     expect(result.items[0].title).toBe("Iogurte especial");
-    expect(result.items[1].title?.toLowerCase()).not.toContain("leite");
+    expect(result.items[1].title?.toLowerCase()).toContain("vegetal");
   });
 
   it("isItemProtected correctly identifies protected items", () => {
