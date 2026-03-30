@@ -8,8 +8,9 @@ import {
   CheckCircle2, Circle, Calendar, ChevronLeft, ChevronRight,
   Utensils, Coffee, Apple, Cookie, Moon, Sun, Flame,
   Trophy, Beef, Wheat, Droplets, AlertCircle, MinusCircle,
-  Shield, Zap, Award, TrendingUp
+  Shield, Zap, Award, TrendingUp, UtensilsCrossed
 } from "lucide-react";
+import { useMealVisualItem } from "@/hooks/useMealVisualItem";
 import type { Database } from "@/integrations/supabase/types";
 
 type MealType = Database["public"]["Enums"]["meal_type"];
