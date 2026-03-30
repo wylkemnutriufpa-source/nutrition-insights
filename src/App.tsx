@@ -374,7 +374,6 @@ function ExperienceThemeSync() {
 
   useEffect(() => {
     if (loading) return;
-    // Read workspace context from localStorage for hybrid users
     const isHybrid = isProRole && isPatient;
     let role: "professional" | "patient" = isProRole ? "professional" : "patient";
     if (isHybrid) {
@@ -383,28 +382,19 @@ function ExperienceThemeSync() {
     }
     document.documentElement.setAttribute("data-experience-mode", mode);
     document.documentElement.setAttribute("data-experience-role", role);
+
+    // Listen for workspace context changes (dispatched by useWorkspaceContext)
+    const handler = (e: Event) => {
+      const ctx = (e as CustomEvent).detail;
+      document.documentElement.setAttribute("data-experience-role", ctx === "patient" ? "patient" : "professional");
+    };
+    window.addEventListener("fj:workspace-context-change", handler);
     return () => {
       document.documentElement.removeAttribute("data-experience-mode");
       document.documentElement.removeAttribute("data-experience-role");
+      window.removeEventListener("fj:workspace-context-change", handler);
     };
   }, [mode, isProRole, isPatient, loading]);
-
-  // Also listen for workspace context changes via storage events
-  useEffect(() => {
-    const handler = () => {
-      const saved = localStorage.getItem("fj_workspace_context");
-      const { isNutritionist, isPersonal, isAdmin, isPatient } = useAuth as any;
-      // Simpler: just re-read and set
-      const currentRole = document.documentElement.getAttribute("data-experience-role");
-      if (saved === "patient" && currentRole !== "patient") {
-        document.documentElement.setAttribute("data-experience-role", "patient");
-      } else if (saved !== "patient" && currentRole !== "professional") {
-        document.documentElement.setAttribute("data-experience-role", "professional");
-      }
-    };
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
-  }, []);
 
   return null;
 }

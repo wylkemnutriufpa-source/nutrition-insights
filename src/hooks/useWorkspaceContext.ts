@@ -41,6 +41,8 @@ export function useWorkspaceContextState(isProRole: boolean, isPatient: boolean)
   const setContext = useCallback((ctx: WorkspaceContextType) => {
     setActiveContextState(ctx);
     localStorage.setItem(STORAGE_KEY, ctx);
+    // Notify theme sync
+    window.dispatchEvent(new CustomEvent("fj:workspace-context-change", { detail: ctx }));
   }, []);
 
   // If not hybrid, force the correct context
