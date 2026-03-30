@@ -7,13 +7,16 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { useLayoutPreference } from "@/hooks/useLayoutPreference";
+import { useExperienceUI } from "@/hooks/useExperienceUI";
 import FitJourneyTimeline from "@/components/timeline/FitJourneyTimeline";
 import {
   UtensilsCrossed, CheckCircle2, Calendar, Dumbbell,
   TrendingUp, Brain, Camera, Target,
-  LayoutGrid, List, ArrowRight, Sparkles, Rocket, ChevronRight,
+  LayoutGrid, List, ArrowRight, Sparkles, Rocket, ChevronRight, ChefHat,
 } from "lucide-react";
 import NewFeatureBadge from "@/components/common/NewFeatureBadge";
+
+type MinMode = "basic" | "pro" | "advanced";
 
 interface GridCard {
   key: string;
@@ -24,28 +27,31 @@ interface GridCard {
   gradient: string;
   badge?: { text: string; variant: "default" | "secondary" | "destructive" | "outline" };
   row: number;
+  /** Minimum experience mode to show this card. Defaults to "basic" */
+  minMode?: MinMode;
 }
 
 const PATIENT_CARDS: GridCard[] = [
-  // Row 1 — Ação imediata
-  { key: "meal-plan", label: "Plano Alimentar", description: "Seu plano nutricional personalizado", icon: UtensilsCrossed, route: "/my-diet", gradient: "from-emerald-500/10 to-emerald-600/5", row: 1 },
-  { key: "checklist", label: "Checklist Diário", description: "Tarefas e hábitos do dia", icon: CheckCircle2, route: "/checklist", gradient: "from-sky-500/10 to-sky-600/5", row: 1 },
-  { key: "agenda", label: "Agenda / Reavaliação", description: "Consultas e compromissos", icon: Calendar, route: "/appointments", gradient: "from-rose-500/10 to-rose-600/5", row: 1 },
+  // Row 1 — Essenciais (basic)
+  { key: "meal-plan", label: "Plano Alimentar", description: "Seu plano nutricional personalizado", icon: UtensilsCrossed, route: "/my-diet", gradient: "from-emerald-500/10 to-emerald-600/5", row: 1, minMode: "basic" },
+  { key: "physical", label: "Avaliação Física", description: "Evolução corporal e medidas", icon: Dumbbell, route: "/checkin", gradient: "from-violet-500/10 to-violet-600/5", row: 1, minMode: "basic" },
+  { key: "recipes", label: "Receitas", description: "Receitas saudáveis e práticas", icon: ChefHat, route: "/recipes", gradient: "from-orange-500/10 to-orange-600/5", row: 1, minMode: "basic" },
 
-  // Row 2 — Acompanhamento
-  { key: "physical", label: "Avaliação Física", description: "Evolução corporal e medidas", icon: Dumbbell, route: "/checkin", gradient: "from-violet-500/10 to-violet-600/5", row: 2 },
-  { key: "evolution", label: "Evolução e Gráficos", description: "Visualize seu progresso completo", icon: TrendingUp, route: "/journey", gradient: "from-teal-500/10 to-teal-600/5", row: 2 },
-  { key: "ai-insights", label: "IA Insights", description: "Análises inteligentes do seu progresso", icon: Brain, route: "/analyze", gradient: "from-amber-500/10 to-amber-600/5", row: 2, badge: { text: "IA", variant: "secondary" } },
+  // Row 2 — Acompanhamento (pro+)
+  { key: "checklist", label: "Checklist Diário", description: "Tarefas e hábitos do dia", icon: CheckCircle2, route: "/checklist", gradient: "from-sky-500/10 to-sky-600/5", row: 2, minMode: "pro" },
+  { key: "agenda", label: "Agenda / Reavaliação", description: "Consultas e compromissos", icon: Calendar, route: "/appointments", gradient: "from-rose-500/10 to-rose-600/5", row: 2, minMode: "pro" },
+  { key: "evolution", label: "Evolução e Gráficos", description: "Visualize seu progresso completo", icon: TrendingUp, route: "/journey", gradient: "from-teal-500/10 to-teal-600/5", row: 2, minMode: "pro" },
 
-  // Row 3 — Estratégia futura
-  { key: "body-ai", label: "Projeção Corporal", description: "Projeção visual de transformação com IA", icon: Camera, route: "/body-projection", gradient: "from-purple-500/10 to-purple-600/5", row: 3, badge: { text: "Novo", variant: "default" } },
-  { key: "goals", label: "Metas e Projeção", description: "Metas, objetivos e projeção de peso", icon: Target, route: "/weekly-goals", gradient: "from-orange-500/10 to-orange-600/5", row: 3 },
+  // Row 3 — Estratégia futura (advanced)
+  { key: "ai-insights", label: "IA Insights", description: "Análises inteligentes do seu progresso", icon: Brain, route: "/analyze", gradient: "from-amber-500/10 to-amber-600/5", row: 3, minMode: "advanced", badge: { text: "IA", variant: "secondary" } },
+  { key: "body-ai", label: "Projeção Corporal", description: "Projeção visual de transformação com IA", icon: Camera, route: "/body-projection", gradient: "from-purple-500/10 to-purple-600/5", row: 3, minMode: "advanced", badge: { text: "Novo", variant: "default" } },
+  { key: "goals", label: "Metas e Projeção", description: "Metas, objetivos e projeção de peso", icon: Target, route: "/weekly-goals", gradient: "from-orange-500/10 to-orange-600/5", row: 3, minMode: "advanced" },
 ];
 
 const ROW_LABELS: Record<number, string> = {
-  1: "Ação Imediata",
+  1: "Essencial",
   2: "Acompanhamento",
-  3: "Estratégia Futura",
+  3: "Estratégia Avançada",
 };
 
 const ROW_ICONS: Record<number, any> = {
