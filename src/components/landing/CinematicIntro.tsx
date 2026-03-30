@@ -121,19 +121,56 @@ export default function CinematicIntro({ onComplete }: CinematicIntroProps) {
       {/* Energy rings appear early */}
       <EnergyRings />
 
-      {/* Central volumetric glow */}
+      {/* Volumetric soft light behind logo */}
       <motion.div
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none"
         style={{
-          width: 400,
-          height: 400,
+          width: 500,
+          height: 500,
           background:
-            "radial-gradient(circle, hsl(var(--primary) / 0.12) 0%, hsl(var(--primary) / 0.04) 40%, transparent 70%)",
+            "radial-gradient(circle, hsl(var(--primary) / 0.18) 0%, hsl(var(--primary) / 0.08) 30%, hsl(var(--primary) / 0.03) 55%, transparent 75%)",
+          filter: "blur(30px)",
         }}
-        initial={{ opacity: 0, scale: 0.3 }}
-        animate={{ opacity: 1, scale: [0.3, 1.2, 1] }}
-        transition={{ duration: 1.5, ease: EASE_PREMIUM }}
+        initial={{ opacity: 0, scale: 0.2 }}
+        animate={{ opacity: [0, 1, 0.7], scale: [0.2, 1.3, 1.05] }}
+        transition={{ duration: 2, ease: EASE_PREMIUM }}
       />
+
+      {/* Glow pulse layers */}
+      {[0, 0.5, 1].map((delay, i) => (
+        <motion.div
+          key={`glow-${i}`}
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none"
+          style={{
+            width: 280 + i * 60,
+            height: 280 + i * 60,
+            background: `radial-gradient(circle, hsl(var(--primary) / ${0.12 - i * 0.03}) 0%, transparent 70%)`,
+            filter: `blur(${16 + i * 8}px)`,
+          }}
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: [0, 0.8, 0.3, 0.8], scale: [0.5, 1.1, 0.95, 1.1] }}
+          transition={{ duration: 3, delay: 0.3 + delay, repeat: Infinity, ease: "easeInOut" }}
+        />
+      ))}
+
+      {/* Light rays behind logo */}
+      {Array.from({ length: 8 }, (_, i) => (
+        <motion.div
+          key={`ray-${i}`}
+          className="absolute top-1/2 left-1/2 pointer-events-none"
+          style={{
+            width: 2,
+            height: 140 + Math.random() * 80,
+            background: `linear-gradient(180deg, hsl(var(--primary) / 0.25), hsl(var(--primary) / 0.06), transparent)`,
+            transformOrigin: "top center",
+            transform: `rotate(${i * 45}deg)`,
+            filter: "blur(3px)",
+          }}
+          initial={{ opacity: 0, scaleY: 0 }}
+          animate={{ opacity: [0, 0.6, 0.2, 0.5], scaleY: [0, 1, 0.8, 1] }}
+          transition={{ duration: 2.5, delay: 0.4 + i * 0.08, repeat: Infinity, ease: "easeInOut" }}
+        />
+      ))}
 
       {/* Logo reveal */}
       <AnimatePresence>
