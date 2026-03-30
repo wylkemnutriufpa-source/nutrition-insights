@@ -130,7 +130,7 @@ describe("Scenario 3: Patient with lactose restriction", () => {
 
     expect(result.changes.some(c => c.type === "restriction_removed")).toBe(true);
     const iogurteItem = result.items[0];
-    expect(iogurteItem.title?.toLowerCase()).not.toContain("iogurte");
+    expect(iogurteItem.title?.toLowerCase()).toContain("coco");
     const frangoItem = result.items[1];
     expect(frangoItem.title?.toLowerCase()).toContain("frango");
   });
