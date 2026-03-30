@@ -70,7 +70,7 @@ export function useMealVisualMatch(title: string | null | undefined) {
           .select("*")
           .eq("id", (aliasData[0] as any).library_item_id)
           .single();
-        if (item) { setMatch(item as MealVisualItem); return; }
+        if (item) { setMatch(item as unknown as MealVisualItem); return; }
       }
 
       // Try partial name match
