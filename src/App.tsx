@@ -401,6 +401,7 @@ const App = () => (
           <AuthProvider>
             <TenantProvider>
             <ExperienceModeProvider>
+            <ExperienceThemeSync />
             <ExperienceRouteGuard />
             <CelebrationProvider>
             <DarkModeInit />
