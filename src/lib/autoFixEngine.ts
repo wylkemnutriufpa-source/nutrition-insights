@@ -400,10 +400,37 @@ export async function autoFixMealPlan(
   const beforeCarbs = sumMacro(items, "carbs_target");
   const beforeFat = sumMacro(items, "fat_target");
 
+  // ─── STEP 2.5: Personalize for patient (restrictions, TMB, rejected foods) ──
+  onStep?.("personalizing");
+  const allChanges: AutoFixChange[] = [];
+
+  const personalizationCtx = await loadPersonalizationContext(patientId);
+  let workingItems: MealPlanItem[] = [...items];
+
+  if (personalizationCtx) {
+    const personalized = personalizePlanItems(workingItems, personalizationCtx);
+    workingItems = personalized.items as MealPlanItem[];
+    warnings.push(...personalized.warnings);
+
+    // Convert personalization changes to AutoFix changes
+    for (const pc of personalized.changes) {
+      allChanges.push({
+        type: "personalization_applied",
+        mealType: pc.mealType || "all",
+        dayOfWeek: pc.dayOfWeek ?? -1,
+        from: pc.detail,
+        to: pc.detail,
+        detail: pc.detail,
+      });
+    }
+
+    // Update patient goal from personalization context
+    patientGoal = personalizationCtx.goal || patientGoal;
+  }
+
   // ─── STEP 3: Remove blocked foods ──────────────────────
   onStep?.("removing_blocked");
-  const allChanges: AutoFixChange[] = [];
-  let fixedItems: MealPlanItem[] = items.map(item => {
+  let fixedItems: MealPlanItem[] = workingItems.map(item => {
     const { fixed, changes } = fixItemBlockedFoods(item);
     allChanges.push(...changes);
     return fixed;
