@@ -93,12 +93,12 @@ const defaultTestimonials = [
 const defaultPlans = [
   {
     name: "Basic", price: "R$ 30", period: "/mês", popular: false,
-    features: ["Até 3 pacientes", "Planos alimentares básicos", "Chat com pacientes"],
+    features: ["Até 20 pacientes", "Planos alimentares básicos", "Chat com pacientes"],
     cta: "Testar Grátis por 7 dias →",
   },
   {
     name: "Profissional", price: "R$ 75", period: "/mês", popular: true,
-    features: ["Até 30 pacientes", "Planos alimentares ilimitados", "Análise de IA", "Relatórios automáticos", "Suporte prioritário"],
+    features: ["Até 100 pacientes", "Planos alimentares ilimitados", "Análise de IA", "Relatórios automáticos", "Suporte prioritário"],
     cta: "Testar Grátis por 7 dias →",
   },
   {
