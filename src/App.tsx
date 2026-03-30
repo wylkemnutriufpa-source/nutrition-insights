@@ -418,6 +418,7 @@ const App = () => (
             <ExperienceModeProvider>
             <ExperienceThemeSync />
             <ExperienceRouteGuard />
+            <WorkspaceRouteGuard />
             <CelebrationProvider>
             <DarkModeInit />
             <NeuralScreensaver />
