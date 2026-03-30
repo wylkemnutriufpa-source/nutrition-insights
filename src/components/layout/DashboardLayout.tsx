@@ -193,6 +193,7 @@ function DynamicSidebar({
   const showPending = isProRole && pendingCount > 0;
 
   return (
+    <>
       {/* Workspace context switcher for hybrid users */}
       <WorkspaceContextSwitcher collapsed={collapsed} />
 
