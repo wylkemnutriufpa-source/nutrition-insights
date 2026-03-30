@@ -136,7 +136,7 @@ const MacroSummary = memo(function MacroSummary({ items }: { items: MealPlanItem
 // ── Single Meal Item Card (memoized) ──
 const MealItemCard = memo(function MealItemCard({
   item, status, completedAt, isJustDone, focusMode,
-  onSetAdherence, onOpenDetail,
+  onSetAdherence, onOpenDetail, onOpenSubstitution,
 }: {
   item: MealPlanItem;
   status: AdherenceStatus | null;
@@ -145,6 +145,7 @@ const MealItemCard = memo(function MealItemCard({
   focusMode: boolean;
   onSetAdherence: (item: MealPlanItem, status: AdherenceStatus) => void;
   onOpenDetail: (item: MealDetailData) => void;
+  onOpenSubstitution?: (item: MealPlanItem) => void;
 }) {
   const impacts = useMemo(() => getImpactTags(item), [item]);
   const { item: visualItem } = useMealVisualItem(item.visual_library_item_id);
