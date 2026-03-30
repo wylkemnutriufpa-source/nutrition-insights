@@ -165,8 +165,8 @@ export default function PatientGridDashboard() {
       {/* Grid view */}
       {patientView === "grid" && (
         <div className="space-y-5">
-          {rows.map((row) => {
-            const rowCards = PATIENT_CARDS.filter((c) => c.row === row);
+          {visibleRows.map((row) => {
+            const rowCards = visibleCards.filter((c) => c.row === row);
             const RowIcon = ROW_ICONS[row];
             return (
               <div key={row}>
