@@ -204,7 +204,7 @@ function DynamicSidebar({
         <FitJourneyLogo collapsed={collapsed} size="sm" />
       </div>
 
-      {isProRole ? (
+      {effectiveProRole ? (
         <div className="px-3 mb-1">
           <Link
             to="/intelligence-settings"
