@@ -157,6 +157,7 @@ const BodyProjectionExperience = lazy(() => import("./pages/BodyProjectionExperi
 const AdminOperationalCosts = lazy(() => import("./pages/AdminOperationalCosts"));
 const AIUsageDashboard = lazy(() => import("./pages/admin/AIUsageDashboard"));
 const MealCoverageDashboard = lazy(() => import("./pages/admin/MealCoverageDashboard"));
+const MealVisualLibraryAdmin = lazy(() => import("./pages/admin/MealVisualLibraryAdmin"));
 const PlanBatchAudit = lazy(() => import("./pages/admin/PlanBatchAudit"));
 const CoachBodybuilder = lazy(() => import("./pages/CoachBodybuilder"));
 const TeamManagement = lazy(() => import("./pages/TeamManagement"));
