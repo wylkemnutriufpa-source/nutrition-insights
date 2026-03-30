@@ -15,6 +15,8 @@ import {
   CheckCircle2, MinusCircle, AlertCircle, Circle
 } from "lucide-react";
 import { MealDetailModal } from "@/components/patient/MealDetailModal";
+import MealSubstitutionModal from "@/components/patient/MealSubstitutionModal";
+import type { FoodItem } from "@/components/meals/FoodAutocomplete";
 import {
   MacroSummary, AdherenceCard, DateNavigator, MealGroup,
   MEAL_TYPES, DAYS,
