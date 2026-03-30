@@ -539,6 +539,8 @@ export default function AdminProfessionals() {
         clinic_name: pp?.clinic_name || null,
         onboarding_completed: pp?.onboarding_completed ?? false,
         patient_count: countMap.get(p.user_id) || 0,
+        coach_bodybuilder_enabled: pp?.coach_bodybuilder_enabled ?? false,
+        personal_trainer_enabled: pp?.personal_trainer_enabled ?? false,
       };
     });
 
