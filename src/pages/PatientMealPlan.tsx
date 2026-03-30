@@ -363,6 +363,7 @@ export default function PatientMealPlan() {
                     focusMode={focusMode}
                     onSetAdherence={setAdherence}
                     onOpenDetail={setSelectedMeal}
+                    onOpenSubstitution={setSubstitutionItem}
                   />
                 ))}
               </div>
