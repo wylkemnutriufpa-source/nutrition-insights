@@ -3,22 +3,23 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import {
   CreditCard, Users, Search, Loader2, CheckCircle2, XCircle,
-  Clock, AlertTriangle, RefreshCw, Crown, Ban
+  Clock, RefreshCw, Crown, Ban, Power, PowerOff
 } from "lucide-react";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
 interface ProfessionalSub {
   user_id: string;
   full_name: string;
+  email: string;
   subscribed: boolean;
   subscription_tier: string | null;
   subscription_end: string | null;
@@ -33,13 +34,19 @@ export default function AdminSubscriptionMonitor() {
   const [professionals, setProfessionals] = useState<ProfessionalSub[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [activating, setActivating] = useState<string | null>(null);
+  const [pricingPlans, setPricingPlans] = useState<{ id: string; name: string; slug: string }[]>([]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
 
-    // Get all nutritionists
-    const { data: nutRoles } = await supabase.from("user_roles").select("user_id").eq("role", "nutritionist");
-    const nutIds = nutRoles?.map((r) => r.user_id) || [];
+    const [nutRolesRes, plansRes] = await Promise.all([
+      supabase.from("user_roles").select("user_id").eq("role", "nutritionist"),
+      supabase.from("pricing_plans").select("id, name, slug").eq("is_active", true).order("sort_order"),
+    ]);
+
+    const nutIds = nutRolesRes.data?.map((r) => r.user_id) || [];
+    setPricingPlans(plansRes.data || []);
 
     const results: ProfessionalSub[] = [];
     for (const nId of nutIds) {
@@ -53,6 +60,7 @@ export default function AdminSubscriptionMonitor() {
       results.push({
         user_id: nId,
         full_name: profileRes.data?.full_name || "Nutricionista",
+        email: "",
         subscribed: lastPayment?.status === "paid",
         subscription_tier: null,
         subscription_end: null,
@@ -68,8 +76,57 @@ export default function AdminSubscriptionMonitor() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  const handleActivate = async (prof: ProfessionalSub, planSlug?: string) => {
+    setActivating(prof.user_id);
+    try {
+      // Insert a "paid" record in payments table to activate
+      const endDate = new Date();
+      endDate.setMonth(endDate.getMonth() + 1);
+
+      const { error } = await supabase.from("payments").insert({
+        user_id: prof.user_id,
+        amount: 0,
+        status: "paid",
+        gateway: "manual",
+        paid_at: new Date().toISOString(),
+        metadata: { activated_by: user?.id, plan_slug: planSlug || "manual", type: "admin_manual_activation" },
+      });
+
+      if (error) throw error;
+      toast.success(`${prof.full_name} ativado(a) com sucesso! ✅`);
+      loadData();
+    } catch (err: any) {
+      toast.error("Erro ao ativar: " + err.message);
+    } finally {
+      setActivating(null);
+    }
+  };
+
+  const handleDeactivate = async (prof: ProfessionalSub) => {
+    if (!confirm(`Desativar ${prof.full_name}? Isso removerá o acesso ao sistema.`)) return;
+    setActivating(prof.user_id);
+    try {
+      // Mark last payment as cancelled
+      const { error } = await supabase.from("payments")
+        .update({ status: "cancelled" })
+        .eq("user_id", prof.user_id)
+        .eq("status", "paid")
+        .order("paid_at", { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+      toast.success(`${prof.full_name} desativado(a).`);
+      loadData();
+    } catch (err: any) {
+      toast.error("Erro ao desativar: " + err.message);
+    } finally {
+      setActivating(null);
+    }
+  };
+
   const filtered = professionals.filter((p) =>
-    p.full_name.toLowerCase().includes(search.toLowerCase())
+    p.full_name.toLowerCase().includes(search.toLowerCase()) ||
+    p.email.toLowerCase().includes(search.toLowerCase())
   );
 
   const activeCount = professionals.filter((p) => p.subscribed).length;
@@ -85,7 +142,7 @@ export default function AdminSubscriptionMonitor() {
             <div>
               <h1 className="font-display text-2xl font-bold">Monitor de Assinaturas</h1>
               <p className="text-muted-foreground text-sm">
-                Acompanhe o status de pagamento de todos os profissionais
+                Acompanhe e gerencie o status de pagamento dos profissionais
               </p>
             </div>
           </div>
@@ -138,7 +195,7 @@ export default function AdminSubscriptionMonitor() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar profissional..."
+            placeholder="Buscar por nome ou email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10"
@@ -158,8 +215,7 @@ export default function AdminSubscriptionMonitor() {
                 filtered.map((prof) => (
                   <div
                     key={prof.user_id}
-                    onClick={() => navigate("/admin/pricing")}
-                    className="flex items-center justify-between p-4 rounded-xl bg-muted/50 hover:bg-muted/80 transition-colors cursor-pointer"
+                    className="flex items-center justify-between p-4 rounded-xl bg-muted/50 hover:bg-muted/80 transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
@@ -174,7 +230,7 @@ export default function AdminSubscriptionMonitor() {
                       <div>
                         <p className="font-medium text-sm">{prof.full_name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {prof.patient_count} pacientes
+                          {prof.email} • {prof.patient_count} pacientes
                         </p>
                       </div>
                     </div>
@@ -191,10 +247,42 @@ export default function AdminSubscriptionMonitor() {
                       >
                         {prof.subscribed ? "Ativo" : prof.is_trial ? "Trial" : "Inadimplente"}
                       </Badge>
-                      {prof.subscription_end && (
-                        <span className="text-[10px] text-muted-foreground">
-                          até {format(new Date(prof.subscription_end), "dd/MM/yyyy")}
-                        </span>
+                      
+                      {/* Action Buttons */}
+                      {prof.subscribed ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="gap-1 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => handleDeactivate(prof)}
+                          disabled={activating === prof.user_id}
+                        >
+                          {activating === prof.user_id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <>
+                              <PowerOff className="w-4 h-4" />
+                              <span className="hidden sm:inline">Desativar</span>
+                            </>
+                          )}
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="gap-1 bg-green-600 hover:bg-green-700"
+                          onClick={() => handleActivate(prof)}
+                          disabled={activating === prof.user_id}
+                        >
+                          {activating === prof.user_id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <>
+                              <Power className="w-4 h-4" />
+                              <span className="hidden sm:inline">Ativar</span>
+                            </>
+                          )}
+                        </Button>
                       )}
                     </div>
                   </div>

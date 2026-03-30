@@ -92,19 +92,19 @@ const defaultTestimonials = [
 
 const defaultPlans = [
   {
-    name: "Basic", price: "R$ 29,90", period: "/mês", popular: false,
-    features: ["Até 10 pacientes", "Planos alimentares", "Checklist de hábitos", "Chat básico", "Banco de alimentos TACO"],
-    cta: "Testar Grátis por 7 dias",
+    name: "Basic", price: "R$ 30", period: "/mês", popular: false,
+    features: ["Até 3 pacientes", "Planos alimentares básicos", "Chat com pacientes"],
+    cta: "Testar Grátis por 7 dias →",
   },
   {
-    name: "Profissional", price: "R$ 74,90", period: "/mês", popular: true,
-    features: ["Pacientes ilimitados", "IA completa (análise, receitas, planos)", "Avaliação física + corporal", "Gamificação avançada", "Relatórios semanais", "Suplementação", "Suporte prioritário"],
-    cta: "Testar Grátis por 7 dias",
+    name: "Profissional", price: "R$ 75", period: "/mês", popular: true,
+    features: ["Até 30 pacientes", "Planos alimentares ilimitados", "Análise de IA", "Relatórios automáticos", "Suporte prioritário"],
+    cta: "Testar Grátis por 7 dias →",
   },
   {
-    name: "Premium", price: "R$ 97", period: "/mês", popular: false,
-    features: ["Tudo do Profissional", "Branding personalizado", "Programas em grupo", "Central de automação", "Financeiro integrado", "Inteligência clínica avançada", "Suporte dedicado"],
-    cta: "Testar Grátis por 7 dias",
+    name: "Premium", price: "R$ 147", period: "/mês", popular: true,
+    features: ["Pacientes ilimitados", "Todas as funcionalidades Pro", "Branding personalizado", "API de integração", "Suporte dedicado", "Todas as IAs do sistema", "Todo sistema de gamificação"],
+    cta: "Testar Grátis por 7 dias →",
   },
 ];
 
@@ -171,7 +171,25 @@ export default function Landing() {
   const heroCta = getSetting(s, "hero_cta_text", "Começar Gratuitamente");
   const heroBadge = getSetting(s, "hero_badge_text", "Plataforma #1 para Nutricionistas Modernos");
   const stats = getSetting(s, "stats", defaultStats);
-  const plans = getSetting(s, "pricing_plans", defaultPlans);
+  const [dbPlans, setDbPlans] = useState<typeof defaultPlans | null>(null);
+  
+  useEffect(() => {
+    supabase.from("pricing_plans").select("name, price_monthly, features, is_featured, max_patients, description")
+      .eq("is_active", true).order("sort_order").then(({ data }) => {
+        if (data?.length) {
+          setDbPlans(data.map(p => ({
+            name: p.name,
+            price: `R$ ${Math.round(p.price_monthly)}`,
+            period: "/mês",
+            popular: p.is_featured || false,
+            features: Array.isArray(p.features) ? p.features as string[] : [],
+            cta: "Testar Grátis por 7 dias →",
+          })));
+        }
+      });
+  }, []);
+  
+  const plans = dbPlans || getSetting(s, "pricing_plans", defaultPlans);
   const testimonials = dbTestimonials.length > 0
     ? dbTestimonials.map(t => ({ name: t.is_anonymous ? "Paciente Anônimo" : (t.display_name || "Paciente"), role: "Paciente FitJourney", text: t.content, rating: t.rating || 5, avatar: (t.display_name || "P")[0].toUpperCase() }))
     : getSetting(s, "testimonials_landing", defaultTestimonials);
