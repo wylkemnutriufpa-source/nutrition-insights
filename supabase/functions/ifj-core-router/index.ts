@@ -443,14 +443,72 @@ function applyGuardrails(intent: IFJIntent, role: string, guardrails: any[], per
   return { blocked: false, message: "" };
 }
 
-// ── NAME RESOLVER ──────────────────────────────────────────────
+// ── NAME RESOLVER (enhanced with email + fuzzy) ───────────────
 function findByName(list: any[], searchName: string, nameField = "full_name"): { found: any | null; ambiguous: any[] } {
   const sn = normalize(searchName);
+
+  // 1. Exact full name match
   const exact = list.filter(p => normalize(p[nameField]) === sn);
   if (exact.length === 1) return { found: exact[0], ambiguous: [] };
+
+  // 2. Partial name match (contains)
   const partial = list.filter(p => normalize(p[nameField]).includes(sn));
   if (partial.length === 1) return { found: partial[0], ambiguous: [] };
   if (partial.length > 1) return { found: null, ambiguous: partial };
+
+  // 3. Reverse partial (search term contains the name part)
+  const reverse = list.filter(p => {
+    const parts = normalize(p[nameField]).split(" ");
+    return parts.some(part => part.length >= 3 && sn.includes(part));
+  });
+  if (reverse.length === 1) return { found: reverse[0], ambiguous: [] };
+  if (reverse.length > 1) return { found: null, ambiguous: reverse };
+
+  // 4. Fuzzy match (Levenshtein-like: allow 1-2 char difference)
+  const fuzzy = list.filter(p => {
+    const pn = normalize(p[nameField]);
+    const parts = pn.split(" ");
+    return parts.some(part => {
+      if (Math.abs(part.length - sn.length) > 2) return false;
+      let diff = 0;
+      const maxLen = Math.max(part.length, sn.length);
+      for (let i = 0; i < maxLen; i++) {
+        if (part[i] !== sn[i]) diff++;
+        if (diff > 2) return false;
+      }
+      return diff <= 2 && part.length >= 3;
+    });
+  });
+  if (fuzzy.length === 1) return { found: fuzzy[0], ambiguous: [] };
+  if (fuzzy.length > 1) return { found: null, ambiguous: fuzzy };
+
+  return { found: null, ambiguous: [] };
+}
+
+// ── EMAIL RESOLVER ────────────────────────────────────────────
+async function findByEmail(supabase: any, email: string, patients: PatientRecord[]): Promise<{ found: PatientRecord | null; ambiguous: PatientRecord[] }> {
+  const normalizedEmail = email.toLowerCase().trim();
+  // Search in auth.users via profiles
+  const { data: profiles } = await supabase.from("profiles")
+    .select("user_id, full_name")
+    .limit(500);
+
+  if (!profiles?.length) return { found: null, ambiguous: [] };
+
+  // Cross-reference with the patient list
+  for (const profile of profiles) {
+    const patient = patients.find(p => p.id === profile.user_id);
+    if (patient) {
+      // We can't query auth.users email directly from profiles, but we can check if the input matches profile data
+      // For now, match by checking if any patient name words match the email prefix
+      const emailPrefix = normalizedEmail.split("@")[0].replace(/[._-]/g, " ");
+      const nameNorm = normalize(profile.full_name);
+      if (nameNorm.includes(normalize(emailPrefix)) || normalize(emailPrefix).includes(nameNorm.split(" ")[0])) {
+        return { found: patient, ambiguous: [] };
+      }
+    }
+  }
+
   return { found: null, ambiguous: [] };
 }
 
