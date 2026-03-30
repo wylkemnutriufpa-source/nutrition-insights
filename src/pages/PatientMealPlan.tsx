@@ -85,6 +85,7 @@ export default function PatientMealPlan() {
   const [viewMode, setViewMode] = useState<"daily" | "weekly">("daily");
   const [selectedMeal, setSelectedMeal] = useState<MealDetailData | null>(null);
   const [substitutionItem, setSubstitutionItem] = useState<MealPlanItem | null>(null);
+  const [activeSubstitutions, setActiveSubstitutions] = useState<Record<string, { foodName: string; originalTitle: string }>>({});
   const [focusMode, setFocusMode] = useState(false);
   const [xpPopup, setXpPopup] = useState<{ show: boolean; points: number }>({ show: false, points: 0 });
   const [justCompleted, setJustCompleted] = useState<string | null>(null);
@@ -122,6 +123,27 @@ export default function PatientMealPlan() {
 
     setAllItems(allItemsData || []);
     setItems((allItemsData || []).filter(i => i.day_of_week === dayOfWeek));
+
+    // Fetch active substitutions for this plan
+    const { data: subsData } = await supabase
+      .from("patient_meal_substitutions" as any)
+      .select("meal_plan_item_id, original_food, substituted_food")
+      .eq("patient_id", user.id)
+      .eq("meal_plan_id", planData.id)
+      .order("created_at", { ascending: false });
+
+    if (subsData && subsData.length > 0) {
+      const subsMap: Record<string, { foodName: string; originalTitle: string }> = {};
+      for (const s of subsData as any[]) {
+        // Keep only the latest substitution per item
+        if (!subsMap[s.meal_plan_item_id]) {
+          subsMap[s.meal_plan_item_id] = { foodName: s.substituted_food, originalTitle: s.original_food };
+        }
+      }
+      setActiveSubstitutions(subsMap);
+    } else {
+      setActiveSubstitutions({});
+    }
 
     const { data: completionsData } = await supabase
       .from("meal_item_completions")
@@ -227,13 +249,26 @@ export default function PatientMealPlan() {
     setDate(d.toISOString().split("T")[0]);
   }, [date]);
 
+  // Apply substitution overlays to displayed items (without mutating plan data)
+  const overlayedItems = useMemo(() =>
+    items.map(item => {
+      const sub = activeSubstitutions[item.id];
+      if (!sub) return item;
+      return {
+        ...item,
+        title: `${sub.foodName}`,
+        description: `Substituição de: ${sub.originalTitle}${item.description ? ` • ${item.description}` : ""}`,
+      };
+    }),
+  [items, activeSubstitutions]);
+
   // Memoized grouped items
   const groupedItems = useMemo(() =>
     MEAL_TYPES.map(mt => ({
       ...mt,
-      items: items.filter(i => i.meal_type === mt.key),
+      items: overlayedItems.filter(i => i.meal_type === mt.key),
     })).filter(g => g.items.length > 0),
-  [items]);
+  [overlayedItems]);
 
   // Memoized daily adherence
   const { followedCount, partialCount, notFollowedCount, dailyAdherence, allMarked } = useMemo(() => {
@@ -543,23 +578,17 @@ export default function PatientMealPlan() {
           <MealSubstitutionModal
             open={!!substitutionItem}
             onOpenChange={(open) => { if (!open) setSubstitutionItem(null); }}
-            mealTitle={substitutionItem?.title || ""}
+            mealTitle={substitutionItem ? (items.find(i => i.id === substitutionItem.id)?.title || substitutionItem.title) : ""}
             mealPlanItemId={substitutionItem?.id || ""}
             mealPlanId={plan?.id || ""}
             patientId={user?.id || ""}
-            onSubstitute={(food: FoodItem) => {
-              // Update local state to reflect substitution
+            onSubstitute={(food: FoodItem, originalTitle: string) => {
+              // Update overlay map — plan data stays untouched
               if (substitutionItem) {
-                setItems(prev => prev.map(i =>
-                  i.id === substitutionItem.id
-                    ? { ...i, title: food.name, description: `${food.portion} • Substituição de ${substitutionItem.title}` }
-                    : i
-                ));
-                setAllItems(prev => prev.map(i =>
-                  i.id === substitutionItem.id
-                    ? { ...i, title: food.name, description: `${food.portion} • Substituição de ${substitutionItem.title}` }
-                    : i
-                ));
+                setActiveSubstitutions(prev => ({
+                  ...prev,
+                  [substitutionItem.id]: { foodName: food.name, originalTitle },
+                }));
               }
               setSubstitutionItem(null);
             }}

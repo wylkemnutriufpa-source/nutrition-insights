@@ -7,9 +7,13 @@ import { Separator } from "@/components/ui/separator";
 import {
   ArrowRightLeft, Flame, Beef, Wheat, Droplets,
   Check, TrendingDown, TrendingUp, Minus, Sparkles,
-  UtensilsCrossed,
+  UtensilsCrossed, ShieldCheck,
 } from "lucide-react";
 import { FOOD_DATABASE, type FoodItem } from "@/components/meals/FoodAutocomplete";
+import {
+  getValidSubstitutions, getFoodGroup, SUBSTITUTION_GROUP_LABELS,
+  SMART_LABEL_CONFIG, type SmartLabel, type SubstitutionGroup,
+} from "@/lib/substitutionGroups";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -20,18 +24,8 @@ interface MealSubstitutionModalProps {
   mealPlanItemId: string;
   mealPlanId: string;
   patientId: string;
-  onSubstitute: (food: FoodItem) => void;
+  onSubstitute: (food: FoodItem, originalTitle: string) => void;
 }
-
-const CATEGORY_LABELS: Record<string, { label: string; emoji: string }> = {
-  proteina: { label: "Proteínas", emoji: "🥩" },
-  carboidrato: { label: "Carboidratos", emoji: "🌾" },
-  verdura: { label: "Verduras", emoji: "🥦" },
-  fruta: { label: "Frutas", emoji: "🍎" },
-  gordura: { label: "Gorduras", emoji: "🥑" },
-  laticinio: { label: "Laticínios", emoji: "🥛" },
-  preparacao: { label: "Preparações", emoji: "🍽️" },
-};
 
 function DiffBadge({ diff, unit }: { diff: number; unit: string }) {
   if (Math.abs(diff) < 3) return <span className="text-[10px] text-muted-foreground flex items-center gap-0.5"><Minus className="w-2.5 h-2.5" /> ≈{unit}</span>;
@@ -50,27 +44,21 @@ export default function MealSubstitutionModal({
   const [selected, setSelected] = useState<FoodItem | null>(null);
   const [confirming, setConfirming] = useState(false);
 
-  // Find current food in database
-  const { currentMatch, substitutions, category } = useMemo(() => {
-    const query = mealTitle.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-    // Try exact, then partial match
+  const { currentMatch, substitutions, groupLabel } = useMemo(() => {
+    const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const query = norm(mealTitle);
     const match = FOOD_DATABASE.find(f => {
-      const name = f.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      return name === query || query.includes(name) || name.includes(query);
+      const n = norm(f.name);
+      return n === query || query.includes(n) || n.includes(query);
     });
 
-    if (!match) return { currentMatch: null, substitutions: [], category: null };
+    if (!match) return { currentMatch: null, substitutions: [], groupLabel: null };
 
-    const subs = FOOD_DATABASE.filter(
-      f => f.category === match.category && f.name !== match.name
-    ).sort((a, b) => {
-      const diffA = Math.abs(a.calories - match.calories);
-      const diffB = Math.abs(b.calories - match.calories);
-      return diffA - diffB;
-    }).slice(0, 6);
+    const group = getFoodGroup(match.name);
+    const subs = getValidSubstitutions(match.name, undefined, 3);
+    const label = group ? SUBSTITUTION_GROUP_LABELS[group] : null;
 
-    return { currentMatch: match, substitutions: subs, category: match.category };
+    return { currentMatch: match, substitutions: subs, groupLabel: label };
   }, [mealTitle]);
 
   const handleConfirm = async () => {
@@ -78,22 +66,23 @@ export default function MealSubstitutionModal({
     setConfirming(true);
 
     try {
+      // Save substitution record — does NOT modify the original plan
       await supabase.from("patient_meal_substitutions" as any).insert({
         patient_id: patientId,
         meal_plan_id: mealPlanId,
         meal_plan_item_id: mealPlanItemId,
         original_food: currentMatch.name,
         substituted_food: selected.name,
-        substitution_category: currentMatch.category,
+        substitution_category: getFoodGroup(currentMatch.name) || currentMatch.category,
         original_calories: currentMatch.calories,
         substituted_calories: selected.calories,
         original_protein: currentMatch.protein,
         substituted_protein: selected.protein,
       });
 
-      onSubstitute(selected);
+      onSubstitute(selected, currentMatch.name);
       toast.success(`✅ ${currentMatch.name} → ${selected.name}`, {
-        description: "Substituição registrada com sucesso!",
+        description: "Substituição registrada! O plano original permanece intacto.",
       });
       setSelected(null);
       onOpenChange(false);
@@ -103,8 +92,6 @@ export default function MealSubstitutionModal({
       setConfirming(false);
     }
   };
-
-  const catInfo = category ? CATEGORY_LABELS[category] : null;
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) setSelected(null); onOpenChange(o); }}>
@@ -119,7 +106,7 @@ export default function MealSubstitutionModal({
               <div className="flex-1 min-w-0">
                 <DialogTitle className="text-lg font-bold leading-tight">Substituir Refeição</DialogTitle>
                 <DialogDescription className="text-xs mt-0.5">
-                  Escolha uma opção equivalente
+                  Escolha uma opção equivalente do mesmo grupo
                 </DialogDescription>
               </div>
             </div>
@@ -142,10 +129,13 @@ export default function MealSubstitutionModal({
                 </div>
               </div>
             </div>
-            {catInfo && (
+            {groupLabel && (
               <div className="flex items-center gap-1.5 mt-2">
-                <Badge variant="outline" className="text-[10px]">{catInfo.emoji} {catInfo.label}</Badge>
-                <span className="text-[10px] text-muted-foreground">• {substitutions.length} opções equivalentes</span>
+                <Badge variant="outline" className="text-[10px]">{groupLabel}</Badge>
+                <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3 text-emerald-500" />
+                  Validação clínica ativa
+                </span>
               </div>
             )}
           </div>
@@ -155,20 +145,21 @@ export default function MealSubstitutionModal({
 
         {/* Substitution list */}
         <div className="flex-1 overflow-y-auto overscroll-contain px-6 pb-4 max-h-[calc(90vh-320px)]">
-          {!currentMatch ? (
+          {!currentMatch || substitutions.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground">
               <UtensilsCrossed className="w-10 h-10 mx-auto mb-3 opacity-40" />
               <p className="text-sm font-medium">Sem substituições disponíveis</p>
-              <p className="text-xs mt-1">Este alimento não está na base de dados.</p>
+              <p className="text-xs mt-1">Este alimento não possui equivalentes no mesmo grupo.</p>
             </div>
           ) : (
             <div className="space-y-2 pt-2">
               <div className="flex items-center gap-1.5 mb-3">
                 <Sparkles className="w-3.5 h-3.5 text-primary" />
-                <span className="text-xs font-semibold">Substituições Equivalentes</span>
+                <span className="text-xs font-semibold">Melhores Substituições</span>
+                <span className="text-[10px] text-muted-foreground ml-auto">{substitutions.length} opções</span>
               </div>
               <AnimatePresence>
-                {substitutions.map((food, i) => {
+                {substitutions.map(({ food, labels }, i) => {
                   const calDiff = food.calories - (currentMatch?.calories || 0);
                   const protDiff = food.protein - (currentMatch?.protein || 0);
                   const isSelected = selected?.name === food.name;
@@ -188,7 +179,6 @@ export default function MealSubstitutionModal({
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        {/* Selection indicator */}
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all ${
                           isSelected ? "bg-primary text-primary-foreground" : "bg-secondary"
                         }`}>
@@ -198,9 +188,21 @@ export default function MealSubstitutionModal({
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm">{food.name}</p>
                           <p className="text-[10px] text-muted-foreground">{food.portion}</p>
+                          {/* Smart labels */}
+                          {labels.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {labels.map(label => {
+                                const cfg = SMART_LABEL_CONFIG[label];
+                                return (
+                                  <span key={label} className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-medium border ${cfg.color}`}>
+                                    {cfg.emoji} {cfg.text}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
 
-                        {/* Macro comparison */}
                         <div className="flex flex-col items-end gap-0.5 shrink-0">
                           <div className="flex items-center gap-2">
                             <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
@@ -217,7 +219,7 @@ export default function MealSubstitutionModal({
                         </div>
                       </div>
 
-                      {/* Expanded macro detail when selected */}
+                      {/* Expanded detail */}
                       {isSelected && (
                         <motion.div
                           initial={{ height: 0, opacity: 0 }}
@@ -239,7 +241,7 @@ export default function MealSubstitutionModal({
                             ))}
                           </div>
                           <p className="text-[10px] text-emerald-600 mt-2 text-center font-medium">
-                            ✅ Substituição equivalente • mesmo grupo nutricional
+                            ✅ Mesmo grupo nutricional • plano original preservado
                           </p>
                         </motion.div>
                       )}
@@ -251,7 +253,7 @@ export default function MealSubstitutionModal({
           )}
         </div>
 
-        {/* Footer - confirm button */}
+        {/* Footer */}
         {selected && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -267,7 +269,7 @@ export default function MealSubstitutionModal({
               {confirming ? "Substituindo..." : `Substituir por ${selected.name}`}
             </Button>
             <p className="text-[10px] text-muted-foreground text-center mt-2">
-              A substituição será registrada para seu nutricionista
+              📋 O plano original permanece intacto. A substituição fica registrada para seu nutricionista.
             </p>
           </motion.div>
         )}
