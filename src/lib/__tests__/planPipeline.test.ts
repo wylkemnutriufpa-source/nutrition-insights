@@ -174,7 +174,7 @@ describe("Scenario 4: Patient with gluten restriction", () => {
 // ══════════════════════════════════════════════════════════════
 describe("Scenario 5: Patient with rejected foods", () => {
   it("should remove explicitly rejected foods", () => {
-    const ctx = mockContext({ rejectedFoods: ["brocolis", "berinjela"] });
+    const ctx = mockContext({ rejectedFoods: ["brócolis", "berinjela"] });
     const items = mockItems([
       { title: "Frango com brócolis", description: "Frango grelhado com brócolis" },
       { title: "Carne com batata", description: "Carne moída com purê" },
