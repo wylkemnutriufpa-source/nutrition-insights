@@ -51,7 +51,7 @@ export default function AdminSubscriptionMonitor() {
     const results: ProfessionalSub[] = [];
     for (const nId of nutIds) {
       const [profileRes, countRes, paymentRes] = await Promise.all([
-        supabase.from("profiles").select("full_name, email").eq("user_id", nId).maybeSingle(),
+        supabase.from("profiles").select("full_name").eq("user_id", nId).maybeSingle(),
         supabase.from("nutritionist_patients").select("id", { count: "exact", head: true }).eq("nutritionist_id", nId).eq("status", "active"),
         supabase.from("payments").select("status, amount, paid_at").eq("user_id", nId).order("paid_at", { ascending: false }).limit(1),
       ]);
@@ -60,7 +60,7 @@ export default function AdminSubscriptionMonitor() {
       results.push({
         user_id: nId,
         full_name: profileRes.data?.full_name || "Nutricionista",
-        email: profileRes.data?.email || "",
+        email: "",
         subscribed: lastPayment?.status === "paid",
         subscription_tier: null,
         subscription_end: null,
