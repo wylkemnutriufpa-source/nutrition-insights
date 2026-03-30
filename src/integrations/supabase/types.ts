@@ -6279,6 +6279,7 @@ export type Database = {
           default_portion: string | null
           default_protein: number | null
           display_name: string
+          gallery_images: string[] | null
           id: string
           image_path: string | null
           image_url: string | null
@@ -6304,6 +6305,7 @@ export type Database = {
           default_portion?: string | null
           default_protein?: number | null
           display_name: string
+          gallery_images?: string[] | null
           id?: string
           image_path?: string | null
           image_url?: string | null
@@ -6329,6 +6331,7 @@ export type Database = {
           default_portion?: string | null
           default_protein?: number | null
           display_name?: string
+          gallery_images?: string[] | null
           id?: string
           image_path?: string | null
           image_url?: string | null

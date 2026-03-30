@@ -7,6 +7,7 @@ export interface MealVisualItem {
   subcategory: string | null;
   image_url: string | null;
   image_path: string | null;
+  gallery_images: string[];
   short_description: string | null;
   base_recipe: string | null;
   default_portion: string | null;

@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useTenant } from "@/lib/tenantContext";
@@ -12,14 +12,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import {
-  BookOpen, Plus, Search, Filter, Image as ImageIcon, Pencil, Trash2, Link2, Unlink, Eye,
-  RefreshCw, BarChart3, AlertTriangle, Loader2,
+  BookOpen, Plus, Search, Filter, Image as ImageIcon, Trash2, Link2, Eye,
+  RefreshCw, BarChart3, AlertTriangle, Loader2, Upload, CheckCircle2, XCircle, ImagePlus,
 } from "lucide-react";
 import MealVisualCard from "@/components/meals/MealVisualCard";
 import MealVisualModal from "@/components/meals/MealVisualModal";
 import { runAutoAssociation, type AssociationReport } from "@/lib/mealVisualAssociation";
+import { batchUploadAndLink, type BatchUploadReport } from "@/lib/mealVisualBatchUpload";
 import type { MealVisualItem, MealVisualAlias } from "@/types/mealVisualLibrary";
 import { MEAL_VISUAL_CATEGORIES } from "@/types/mealVisualLibrary";
 
@@ -33,25 +35,18 @@ export default function MealVisualLibraryAdmin() {
   const [filterCat, setFilterCat] = useState<string>("all");
   const [createOpen, setCreateOpen] = useState(false);
   const [previewItem, setPreviewItem] = useState<MealVisualItem | null>(null);
-  const [editItem, setEditItem] = useState<MealVisualItem | null>(null);
   const [activeTab, setActiveTab] = useState("library");
   const [auditReport, setAuditReport] = useState<AssociationReport | null>(null);
   const [auditRunning, setAuditRunning] = useState(false);
-  const [form, setForm] = useState({
-    display_name: "",
-    category: "cafe_da_manha",
-    subcategory: "",
-    short_description: "",
-    base_recipe: "",
-    default_portion: "",
-    default_calories: "",
-    default_protein: "",
-    default_carbs: "",
-    default_fat: "",
-    image_url: "",
-    tags: "",
-  });
+  const [uploadReport, setUploadReport] = useState<BatchUploadReport | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [form, setForm] = useState({
+    display_name: "", category: "cafe_da_manha", subcategory: "", short_description: "",
+    base_recipe: "", default_portion: "", default_calories: "", default_protein: "",
+    default_carbs: "", default_fat: "", image_url: "", tags: "",
+  });
   const [aliasInput, setAliasInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -68,8 +63,17 @@ export default function MealVisualLibraryAdmin() {
 
   useEffect(() => { fetchAll(); }, []);
 
+  // Coverage stats
+  const coverageStats = useMemo(() => {
+    const withImage = items.filter((i) => i.image_url || i.image_path).length;
+    const withoutImage = items.length - withImage;
+    const pct = items.length > 0 ? Math.round((withImage / items.length) * 100) : 0;
+    return { withImage, withoutImage, pct, total: items.length };
+  }, [items]);
+
   const filtered = useMemo(() => {
     let result = items;
+    if (filterCat === "no_image") return result.filter((i) => !i.image_url && !i.image_path);
     if (filterCat !== "all") result = result.filter((i) => i.category === filterCat);
     if (search) {
       const s = search.toLowerCase();
@@ -96,35 +100,24 @@ export default function MealVisualLibraryAdmin() {
     const aliasesArr = aliasInput.split(",").map((a) => a.trim()).filter(Boolean);
 
     const payload: any = {
-      slug,
-      name: slug,
-      display_name: form.display_name,
-      category: form.category,
-      subcategory: form.subcategory || null,
-      short_description: form.short_description || null,
-      base_recipe: form.base_recipe || null,
-      default_portion: form.default_portion || null,
+      slug, name: slug, display_name: form.display_name, category: form.category,
+      subcategory: form.subcategory || null, short_description: form.short_description || null,
+      base_recipe: form.base_recipe || null, default_portion: form.default_portion || null,
       default_calories: form.default_calories ? Number(form.default_calories) : null,
       default_protein: form.default_protein ? Number(form.default_protein) : null,
       default_carbs: form.default_carbs ? Number(form.default_carbs) : null,
       default_fat: form.default_fat ? Number(form.default_fat) : null,
-      image_url: form.image_url || null,
-      tags: tagsArr,
-      search_terms: tagsArr,
-      created_by: user?.id,
-      ...getTenantIdForInsert(tenantId),
+      image_url: form.image_url || null, tags: tagsArr, search_terms: tagsArr,
+      created_by: user?.id, ...getTenantIdForInsert(tenantId),
     };
 
     const { data, error } = await supabase.from("meal_visual_library" as any).insert(payload).select().single();
     if (error) {
       toast.error("Erro: " + error.message);
     } else if (data) {
-      // Insert aliases
       if (aliasesArr.length > 0) {
         const aliasInserts = aliasesArr.map((a) => ({
-          library_item_id: (data as any).id,
-          alias: a,
-          normalized_alias: normalize(a),
+          library_item_id: (data as any).id, alias: a, normalized_alias: normalize(a),
         }));
         await supabase.from("meal_visual_aliases" as any).insert(aliasInserts);
       }
@@ -162,6 +155,24 @@ export default function MealVisualLibraryAdmin() {
     setAuditRunning(false);
   };
 
+  const handleBatchUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    setUploadReport(null);
+    try {
+      const report = await batchUploadAndLink(Array.from(files), tenantId, user?.id || null);
+      setUploadReport(report);
+      toast.success(`Upload concluído! ${report.linked} vinculados, ${report.created} criados.`);
+      fetchAll();
+    } catch (err: any) {
+      toast.error("Erro no upload: " + err.message);
+    }
+    setUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -172,13 +183,30 @@ export default function MealVisualLibraryAdmin() {
               <BookOpen className="w-7 h-7 text-primary" /> Biblioteca Visual de Refeições
             </h1>
             <p className="text-muted-foreground text-sm">
-              {items.length} refeições cadastradas · {aliases.length} aliases
+              {items.length} refeições · {aliases.length} aliases
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept="image/*"
+              className="hidden"
+              onChange={handleBatchUpload}
+            />
+            <Button
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="gap-2"
+            >
+              {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+              Upload em Lote
+            </Button>
             <Button variant="outline" onClick={handleRunAssociation} disabled={auditRunning} className="gap-2">
-              {auditRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-              Auto-Associar
+              {auditRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
+              Vincular Automaticamente
             </Button>
             <Dialog open={createOpen} onOpenChange={setCreateOpen}>
               <DialogTrigger asChild>
@@ -212,46 +240,19 @@ export default function MealVisualLibraryAdmin() {
                       <Input value={form.subcategory} onChange={(e) => setForm({ ...form, subcategory: e.target.value })} />
                     </div>
                   </div>
-                  <div>
-                    <Label>Descrição curta</Label>
-                    <Input value={form.short_description} onChange={(e) => setForm({ ...form, short_description: e.target.value })} />
-                  </div>
-                  <div>
-                    <Label>URL da imagem</Label>
-                    <Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://..." />
-                  </div>
+                  <div><Label>Descrição curta</Label><Input value={form.short_description} onChange={(e) => setForm({ ...form, short_description: e.target.value })} /></div>
+                  <div><Label>URL da imagem</Label><Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://..." /></div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label>Porção padrão</Label>
-                      <Input value={form.default_portion} onChange={(e) => setForm({ ...form, default_portion: e.target.value })} />
-                    </div>
-                    <div>
-                      <Label>Calorias</Label>
-                      <Input type="number" value={form.default_calories} onChange={(e) => setForm({ ...form, default_calories: e.target.value })} />
-                    </div>
+                    <div><Label>Porção padrão</Label><Input value={form.default_portion} onChange={(e) => setForm({ ...form, default_portion: e.target.value })} /></div>
+                    <div><Label>Calorias</Label><Input type="number" value={form.default_calories} onChange={(e) => setForm({ ...form, default_calories: e.target.value })} /></div>
                   </div>
                   <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <Label>Proteína (g)</Label>
-                      <Input type="number" value={form.default_protein} onChange={(e) => setForm({ ...form, default_protein: e.target.value })} />
-                    </div>
-                    <div>
-                      <Label>Carbs (g)</Label>
-                      <Input type="number" value={form.default_carbs} onChange={(e) => setForm({ ...form, default_carbs: e.target.value })} />
-                    </div>
-                    <div>
-                      <Label>Gordura (g)</Label>
-                      <Input type="number" value={form.default_fat} onChange={(e) => setForm({ ...form, default_fat: e.target.value })} />
-                    </div>
+                    <div><Label>Proteína (g)</Label><Input type="number" value={form.default_protein} onChange={(e) => setForm({ ...form, default_protein: e.target.value })} /></div>
+                    <div><Label>Carbs (g)</Label><Input type="number" value={form.default_carbs} onChange={(e) => setForm({ ...form, default_carbs: e.target.value })} /></div>
+                    <div><Label>Gordura (g)</Label><Input type="number" value={form.default_fat} onChange={(e) => setForm({ ...form, default_fat: e.target.value })} /></div>
                   </div>
-                  <div>
-                    <Label>Receita / Modo de preparo</Label>
-                    <Textarea value={form.base_recipe} onChange={(e) => setForm({ ...form, base_recipe: e.target.value })} rows={3} />
-                  </div>
-                  <div>
-                    <Label>Tags (separadas por vírgula)</Label>
-                    <Input value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} placeholder="proteico, rapido, fitness" />
-                  </div>
+                  <div><Label>Receita / Modo de preparo</Label><Textarea value={form.base_recipe} onChange={(e) => setForm({ ...form, base_recipe: e.target.value })} rows={3} /></div>
+                  <div><Label>Tags (separadas por vírgula)</Label><Input value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} placeholder="proteico, rapido, fitness" /></div>
                   <div>
                     <Label>Aliases (separados por vírgula)</Label>
                     <Input value={aliasInput} onChange={(e) => setAliasInput(e.target.value)} placeholder="pão com ovo, pao + ovo" />
@@ -266,37 +267,69 @@ export default function MealVisualLibraryAdmin() {
           </div>
         </div>
 
-        {/* Tabs: Library + Audit */}
+        {/* Coverage Bar */}
+        <div className="glass rounded-xl p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <ImagePlus className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium">Cobertura de Imagens</span>
+            </div>
+            <span className="text-sm font-bold text-primary">{coverageStats.pct}%</span>
+          </div>
+          <Progress value={coverageStats.pct} className="h-2" />
+          <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> {coverageStats.withImage} com imagem</span>
+            <span className="flex items-center gap-1"><XCircle className="w-3 h-3 text-red-500" /> {coverageStats.withoutImage} sem imagem</span>
+          </div>
+        </div>
+
+        {/* Upload Report */}
+        {uploadReport && (
+          <div className="glass rounded-xl p-4 border border-primary/20">
+            <h4 className="font-semibold text-sm flex items-center gap-2 mb-3">
+              <Upload className="w-4 h-4 text-primary" /> Relatório do Upload em Lote
+            </h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+              <div className="text-center"><p className="text-lg font-bold">{uploadReport.processed}</p><p className="text-[10px] text-muted-foreground">Processados</p></div>
+              <div className="text-center"><p className="text-lg font-bold text-emerald-500">{uploadReport.linked}</p><p className="text-[10px] text-muted-foreground">Vinculados</p></div>
+              <div className="text-center"><p className="text-lg font-bold text-blue-500">{uploadReport.created}</p><p className="text-[10px] text-muted-foreground">Criados</p></div>
+              <div className="text-center"><p className="text-lg font-bold text-amber-500">{uploadReport.unrecognized.length}</p><p className="text-[10px] text-muted-foreground">Erros</p></div>
+            </div>
+            <div className="space-y-1 max-h-40 overflow-y-auto">
+              {uploadReport.details.map((d, i) => (
+                <div key={i} className="flex items-center justify-between text-xs bg-secondary/30 rounded px-3 py-1.5">
+                  <span className="truncate flex-1">{d.fileName}</span>
+                  <Badge variant={d.status.startsWith("Erro") ? "destructive" : "secondary"} className="text-[9px] ml-2">
+                    {d.status}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
-            <TabsTrigger value="library" className="gap-1.5">
-              <BookOpen className="w-4 h-4" /> Biblioteca
-            </TabsTrigger>
-            <TabsTrigger value="audit" className="gap-1.5">
-              <BarChart3 className="w-4 h-4" /> Auditoria Visual
-            </TabsTrigger>
+            <TabsTrigger value="library" className="gap-1.5"><BookOpen className="w-4 h-4" /> Biblioteca</TabsTrigger>
+            <TabsTrigger value="audit" className="gap-1.5"><BarChart3 className="w-4 h-4" /> Auditoria Visual</TabsTrigger>
           </TabsList>
 
           {/* LIBRARY TAB */}
           <TabsContent value="library" className="space-y-4 mt-4">
-            {/* Filters */}
             <div className="flex flex-wrap gap-3">
               <div className="relative flex-1 min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Buscar refeição..."
-                  className="pl-9"
-                />
+                <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar refeição..." className="pl-9" />
               </div>
               <Select value={filterCat} onValueChange={setFilterCat}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-[200px]">
                   <Filter className="w-4 h-4 mr-2" />
                   <SelectValue placeholder="Categoria" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas categorias</SelectItem>
+                  <SelectItem value="no_image">❌ Sem imagem</SelectItem>
                   {Object.entries(MEAL_VISUAL_CATEGORIES).map(([k, v]) => (
                     <SelectItem key={k} value={k}>{v.emoji} {v.label}</SelectItem>
                   ))}
@@ -304,7 +337,6 @@ export default function MealVisualLibraryAdmin() {
               </Select>
             </div>
 
-            {/* Grid */}
             {loading ? (
               <div className="flex items-center justify-center h-40">
                 <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -320,26 +352,46 @@ export default function MealVisualLibraryAdmin() {
                 {filtered.map((item) => (
                   <div key={item.id} className="relative group/admin">
                     <MealVisualCard item={item} onClick={() => setPreviewItem(item)} />
-                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover/admin:opacity-100 transition-opacity z-20">
+                    {/* Image indicator */}
+                    {(item.image_url || item.image_path) ? (
+                      <div className="absolute top-2 right-2 z-10">
+                        <div className="w-5 h-5 rounded-full bg-emerald-500/80 flex items-center justify-center">
+                          <CheckCircle2 className="w-3 h-3 text-white" />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="absolute top-2 right-2 z-10">
+                        <div className="w-5 h-5 rounded-full bg-red-500/80 flex items-center justify-center">
+                          <XCircle className="w-3 h-3 text-white" />
+                        </div>
+                      </div>
+                    )}
+                    {/* Gallery count */}
+                    {item.gallery_images && item.gallery_images.length > 0 && (
+                      <div className="absolute top-2 right-8 z-10">
+                        <Badge variant="secondary" className="text-[8px] bg-background/70 backdrop-blur-sm">
+                          +{item.gallery_images.length}
+                        </Badge>
+                      </div>
+                    )}
+                    {/* Admin actions */}
+                    <div className="absolute bottom-1 left-1 flex gap-1 opacity-0 group-hover/admin:opacity-100 transition-opacity z-20">
                       <button
                         onClick={(e) => { e.stopPropagation(); setPreviewItem(item); }}
                         className="p-1 rounded bg-background/80 backdrop-blur-sm hover:bg-primary/20 transition-colors"
-                        title="Visualizar"
                       >
                         <Eye className="w-3.5 h-3.5 text-foreground" />
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
                         className="p-1 rounded bg-background/80 backdrop-blur-sm hover:bg-destructive/20 transition-colors"
-                        title="Excluir"
                       >
                         <Trash2 className="w-3.5 h-3.5 text-destructive" />
                       </button>
                     </div>
                     <div className="absolute bottom-1 right-1">
                       <Badge variant="secondary" className="text-[8px] bg-background/60 backdrop-blur-sm">
-                        <Link2 className="w-2.5 h-2.5 mr-0.5" />
-                        {getAliasCount(item.id)} aliases
+                        <Link2 className="w-2.5 h-2.5 mr-0.5" />{getAliasCount(item.id)}
                       </Badge>
                     </div>
                   </div>
@@ -364,7 +416,6 @@ export default function MealVisualLibraryAdmin() {
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Summary Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <div className="glass rounded-xl p-4 text-center">
                     <p className="text-2xl font-bold text-primary">{auditReport.totalAnalyzed}</p>
@@ -384,7 +435,6 @@ export default function MealVisualLibraryAdmin() {
                   </div>
                 </div>
 
-                {/* Breakdown */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="glass rounded-xl p-4">
                     <h4 className="font-semibold text-sm mb-2">🍽️ Itens de Plano</h4>
@@ -404,7 +454,6 @@ export default function MealVisualLibraryAdmin() {
                   </div>
                 </div>
 
-                {/* Top Unrecognized */}
                 {auditReport.topUnrecognized.length > 0 && (
                   <div className="glass rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-3">
