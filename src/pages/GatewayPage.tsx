@@ -11,6 +11,7 @@ import LandingFAQ from "@/components/landing/LandingFAQ";
 import LandingFinalCTA from "@/components/landing/LandingFinalCTA";
 import CinematicIntro from "@/components/landing/CinematicIntro";
 import InstitutionalFooter from "@/components/institutional/InstitutionalFooter";
+import LandingTopNav from "@/components/landing/LandingTopNav";
 
 const STORAGE_KEY = "fj_intro_seen";
 
