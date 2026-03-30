@@ -694,7 +694,7 @@ export default function AdminProfessionals() {
 
         {/* Detail panel */}
         {viewingProfessional && (
-          <ProfessionalDetailPanel professional={viewingProfessional} onClose={() => setViewingProfessional(null)} />
+          <ProfessionalDetailPanel professional={viewingProfessional} onClose={() => setViewingProfessional(null)} onRefresh={fetchData} />
         )}
 
         {/* List */}
