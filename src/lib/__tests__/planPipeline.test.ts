@@ -376,7 +376,7 @@ describe("Scenario 12: Full pipeline - combined adjustments", () => {
   it("should apply all personalization layers correctly", () => {
     const ctx = mockContext({
       restrictions: ["lactose"],
-      rejectedFoods: ["brocolis"],
+      rejectedFoods: ["brócolis"],
       targetCalories: 1200,
     });
     const items = mockItems([
