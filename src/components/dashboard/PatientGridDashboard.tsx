@@ -299,6 +299,8 @@ export default function PatientGridDashboard() {
           })}
         </motion.div>
       )}
+      </>
+      )}
     </div>
   );
 }
