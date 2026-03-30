@@ -365,22 +365,46 @@ function ExperienceModeProvider({ children }: { children: React.ReactNode }) {
   return <ExperienceModeContext.Provider value={value}>{children}</ExperienceModeContext.Provider>;
 }
 
-/** Syncs experience mode + role to HTML data attributes for CSS theming */
+/** Syncs experience mode + role to HTML data attributes for CSS theming.
+ *  Respects workspace context so hybrid users get the correct theme. */
 function ExperienceThemeSync() {
   const { mode } = useExperienceMode();
-  const { isNutritionist, isPersonal, isAdmin, loading } = useAuth();
+  const { isNutritionist, isPersonal, isAdmin, isPatient, loading } = useAuth();
   const isProRole = isNutritionist || isPersonal || isAdmin;
 
   useEffect(() => {
     if (loading) return;
-    const role = isProRole ? "professional" : "patient";
+    // Read workspace context from localStorage for hybrid users
+    const isHybrid = isProRole && isPatient;
+    let role: "professional" | "patient" = isProRole ? "professional" : "patient";
+    if (isHybrid) {
+      const saved = localStorage.getItem("fj_workspace_context");
+      if (saved === "patient") role = "patient";
+    }
     document.documentElement.setAttribute("data-experience-mode", mode);
     document.documentElement.setAttribute("data-experience-role", role);
     return () => {
       document.documentElement.removeAttribute("data-experience-mode");
       document.documentElement.removeAttribute("data-experience-role");
     };
-  }, [mode, isProRole, loading]);
+  }, [mode, isProRole, isPatient, loading]);
+
+  // Also listen for workspace context changes via storage events
+  useEffect(() => {
+    const handler = () => {
+      const saved = localStorage.getItem("fj_workspace_context");
+      const { isNutritionist, isPersonal, isAdmin, isPatient } = useAuth as any;
+      // Simpler: just re-read and set
+      const currentRole = document.documentElement.getAttribute("data-experience-role");
+      if (saved === "patient" && currentRole !== "patient") {
+        document.documentElement.setAttribute("data-experience-role", "patient");
+      } else if (saved !== "patient" && currentRole !== "professional") {
+        document.documentElement.setAttribute("data-experience-role", "professional");
+      }
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  }, []);
 
   return null;
 }
