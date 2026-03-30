@@ -193,7 +193,9 @@ function DynamicSidebar({
   const showPending = isProRole && pendingCount > 0;
 
   return (
-    <>
+      {/* Workspace context switcher for hybrid users */}
+      <WorkspaceContextSwitcher collapsed={collapsed} />
+
       <div className="p-4 flex items-center">
         <FitJourneyLogo collapsed={collapsed} size="sm" />
       </div>
