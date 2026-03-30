@@ -1693,7 +1693,6 @@ serve(async (req) => {
             `\n\n---\nDiga *"ajuda"* para ver todos os comandos.`;
           const sugActions = suggestions
             .filter(s => {
-              // If suggestion maps to a nav route, add action button
               const navKey = Object.keys(NAV_MAP).find(k => s.example.includes(k));
               return !!navKey;
             })
@@ -1705,15 +1704,71 @@ serve(async (req) => {
             .filter(Boolean) as any[];
           response = fmt("Você quis dizer...", "💡", "suggestions", "Sugestões baseadas na sua pergunta", sugMd, sugActions, intent, "suggestion_engine", ctx);
         } else {
-          response = fmt("Não entendi", "❓", "error", "Comando não reconhecido.",
-            "❓ Não entendi.\n\n💡 Tente:\n- *\"Quem precisa de atenção?\"*\n- *\"Sobre [paciente]\"*\n- *\"O que preciso resolver hoje?\"*\n- *\"Libere todos\"*\n- *\"Ajuda\"*",
-            [], intent, "general", ctx);
+          // ── AI FALLBACK — Last resort for truly unknown commands ──
+          const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+          if (LOVABLE_API_KEY && (role === "admin" || role === "nutritionist" || role === "personal")) {
+            try {
+              const patientSummary = patients.slice(0, 20).map(p => `${p.full_name} (${p.goal || "sem objetivo"}, status: ${p.journey_status || p.status || "ativo"})`).join("; ");
+              const aiSystemPrompt = `Você é o IFJ (Inteligência FitJourney), assistente clínico integrado para profissionais de saúde.
+
+CONTEXTO DO SISTEMA:
+- O profissional "${userName}" tem ${patients.length} pacientes.
+- Pacientes ativos: ${patientSummary || "nenhum carregado"}.
+- Hoje: ${today}
+- Role: ${role}
+
+REGRAS:
+1. Responda APENAS sobre gestão de pacientes, nutrição clínica, ou funcionalidades do sistema.
+2. Se a pergunta é sobre um paciente específico, sugira o comando correto (ex: "sobre [nome]").
+3. Se não souber, sugira comandos disponíveis.
+4. Máximo 200 palavras, markdown.
+5. NÃO invente dados. Use apenas o contexto fornecido.
+6. Se perguntarem sobre funcionalidades, explique e sugira o comando.
+
+COMANDOS DISPONÍVEIS:
+- "sobre [nome]" → ficha do paciente
+- "plano da [nome]" → plano alimentar
+- "quem precisa de atenção?" → prioridades
+- "quem está sem dieta?" → sem plano
+- "libere IFJ para [nome]" → ativar IFJ
+- "coloque premium para [nome]" → ativar premium
+- "ajuda" → lista completa`;
+
+              const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+                method: "POST",
+                headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  model: "google/gemini-2.5-flash-lite",
+                  messages: [{ role: "system", content: aiSystemPrompt }, { role: "user", content: inputText }],
+                  max_tokens: 500, temperature: 0.3,
+                }),
+              });
+
+              if (aiResp.ok) {
+                const aiData = await aiResp.json();
+                const aiText = aiData.choices?.[0]?.message?.content;
+                if (aiText) {
+                  response = fmt("🧠 IFJ Assistente", "🧠", "ai_response", "Resposta inteligente",
+                    `${aiText}\n\n---\n*💡 Diga "ajuda" para ver todos os comandos disponíveis.*`,
+                    [], intent, "ai_fallback", ctx);
+                } else {
+                  throw new Error("empty");
+                }
+              } else {
+                throw new Error("ai_error");
+              }
+            } catch {
+              response = fmt("Não entendi", "❓", "error", "Comando não reconhecido.",
+                "❓ Não entendi.\n\n💡 Tente:\n- *\"Quem precisa de atenção?\"*\n- *\"Sobre [paciente]\"*\n- *\"O que preciso resolver hoje?\"*\n- *\"Libere todos\"*\n- *\"Ajuda\"*",
+                [], intent, "general", ctx);
+            }
+          } else {
+            response = fmt("Não entendi", "❓", "error", "Comando não reconhecido.",
+              "❓ Não entendi.\n\n💡 Tente:\n- *\"Quem precisa de atenção?\"*\n- *\"Sobre [paciente]\"*\n- *\"O que preciso resolver hoje?\"*\n- *\"Libere todos\"*\n- *\"Ajuda\"*",
+              [], intent, "general", ctx);
+          }
         }
       }
-    } catch (engineError) {
-      console.error("Engine error:", engineError);
-      response = fmt("Erro", "❌", "error", "Erro ao processar.", "Tente novamente.", [], intent, "error", ctx);
-    }
 
     // 9. Save session context
     await saveSessionContext(supabase, user.id, role, sessionKey, ctx, intent.intent);
