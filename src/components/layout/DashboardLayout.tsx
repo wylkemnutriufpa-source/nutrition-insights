@@ -294,7 +294,7 @@ function DynamicSidebar({
         </div>
       )}
 
-      {isProRole && (
+      {effectiveProRole && (
         <div className="px-3 mb-1 space-y-1">
           <Link
             to="/control-tower"
