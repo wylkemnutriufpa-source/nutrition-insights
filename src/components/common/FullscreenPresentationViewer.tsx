@@ -22,6 +22,7 @@ interface Props {
 
 const SWIPE_THRESHOLD = 50;
 const AUTOPLAY_INTERVAL = 7000;
+const kenBurnsOrigins = ["center center", "top left", "top right", "bottom left", "bottom right", "center top", "center bottom"];
 
 export default function FullscreenPresentationViewer({ slides, mode, onFinish, onSkip, finalCTAs }: Props) {
   const [idx, setIdx] = useState(0);
