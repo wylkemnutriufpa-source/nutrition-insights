@@ -29,6 +29,9 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
   const [autoPlay, setAutoPlay] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
   const [autoProgress, setAutoProgress] = useState(0);
+  const [imagesReady, setImagesReady] = useState(false);
+  const [isPortrait, setIsPortrait] = useState(false);
+  const [orientationDismissed, setOrientationDismissed] = useState(false);
   const touchStart = useRef(0);
   const autoTimerRef = useRef<number | null>(null);
   const progressRef = useRef<number | null>(null);
@@ -58,15 +61,38 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
   // Stop audio on unmount
   useEffect(() => () => { audio.stop(); }, []);
 
-  // Preload next 2 images
+  // Preload ALL images upfront
   useEffect(() => {
-    for (let i = 1; i <= 2; i++) {
-      if (idx + i < total) {
-        const img = new Image();
-        img.src = slides[idx + i].image_url;
-      }
-    }
-  }, [idx, slides, total]);
+    let loaded = 0;
+    const total = slides.length;
+    slides.forEach((s) => {
+      const img = new Image();
+      img.onload = img.onerror = () => {
+        loaded++;
+        if (loaded >= total) setImagesReady(true);
+      };
+      img.src = s.image_url;
+    });
+    // Fallback: show after 3s even if not all loaded
+    const t = setTimeout(() => setImagesReady(true), 3000);
+    return () => clearTimeout(t);
+  }, [slides]);
+
+  // Detect portrait orientation on mobile
+  useEffect(() => {
+    const checkOrientation = () => {
+      const mobile = window.innerWidth < 768;
+      const portrait = window.innerHeight > window.innerWidth;
+      setIsPortrait(mobile && portrait);
+    };
+    checkOrientation();
+    window.addEventListener("resize", checkOrientation);
+    window.addEventListener("orientationchange", checkOrientation);
+    return () => {
+      window.removeEventListener("resize", checkOrientation);
+      window.removeEventListener("orientationchange", checkOrientation);
+    };
+  }, []);
 
   // Auto-play logic
   useEffect(() => {
