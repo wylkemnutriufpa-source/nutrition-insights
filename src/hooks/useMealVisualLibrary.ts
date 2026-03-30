@@ -56,8 +56,15 @@ export function useMealVisualMatch(title: string | null | undefined) {
       .replace(/[^a-z0-9\s]/g, "")
       .trim();
 
+    // Protein keywords for client-side protein-first matching
+    const PROTEIN_MAP: Record<string, string> = {
+      frango: "frango", carne: "carne", bife: "carne",
+      peixe: "peixe", tilapia: "peixe", salmao: "peixe",
+      camarao: "camarao", ovo: "ovo", ovos: "ovo", omelete: "ovo",
+    };
+
     const findMatch = async () => {
-      // Try alias match first
+      // Strategy 1: exact alias match
       const { data: aliasData } = await supabase
         .from("meal_visual_aliases" as any)
         .select("library_item_id")
@@ -69,11 +76,35 @@ export function useMealVisualMatch(title: string | null | undefined) {
           .from("meal_visual_library" as any)
           .select("*")
           .eq("id", (aliasData[0] as any).library_item_id)
+          .eq("is_active", true)
           .single();
         if (item) { setMatch(item as unknown as MealVisualItem); return; }
       }
 
-      // Try partial name match
+      // Strategy 2: protein-first keyword extraction
+      const words = normalized.split(/\s+/);
+      for (const word of words) {
+        const proteinBase = PROTEIN_MAP[word];
+        if (proteinBase) {
+          const { data: proteinAlias } = await supabase
+            .from("meal_visual_aliases" as any)
+            .select("library_item_id")
+            .eq("normalized_alias", proteinBase)
+            .limit(1);
+          if (proteinAlias && proteinAlias.length > 0) {
+            const { data: item } = await supabase
+              .from("meal_visual_library" as any)
+              .select("*")
+              .eq("id", (proteinAlias[0] as any).library_item_id)
+              .eq("is_active", true)
+              .single();
+            if (item) { setMatch(item as unknown as MealVisualItem); return; }
+          }
+          break;
+        }
+      }
+
+      // Strategy 3: partial name match (fallback)
       const { data: nameData } = await supabase
         .from("meal_visual_library" as any)
         .select("*")
