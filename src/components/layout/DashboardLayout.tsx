@@ -183,6 +183,7 @@ function DynamicSidebar({
 }) {
   const { categories, flatItems, trackClick } = useSmartMenu();
   const { isNutritionist, isPersonal, isAdmin } = useAuth();
+  const { isProfessionalContext } = useWorkspaceContext();
   const pendingCount = usePendingApprovals();
   const { coachBodybuilderEnabled, personalTrainerEnabled } = useProfessionalModules();
   const [approvalsOpen, setApprovalsOpen] = useState(false);
@@ -190,7 +191,9 @@ function DynamicSidebar({
   const [showcaseOpen, setShowcaseOpen] = useState(false);
 
   const isProRole = useMemo(() => isNutritionist || isPersonal || isAdmin, [isNutritionist, isPersonal, isAdmin]);
-  const showPending = isProRole && pendingCount > 0;
+  // Effective role considers workspace context — hybrid users in patient context see patient sidebar
+  const effectiveProRole = isProRole && isProfessionalContext;
+  const showPending = effectiveProRole && pendingCount > 0;
 
   return (
     <>
