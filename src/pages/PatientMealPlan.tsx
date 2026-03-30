@@ -124,6 +124,27 @@ export default function PatientMealPlan() {
     setAllItems(allItemsData || []);
     setItems((allItemsData || []).filter(i => i.day_of_week === dayOfWeek));
 
+    // Fetch active substitutions for this plan
+    const { data: subsData } = await supabase
+      .from("patient_meal_substitutions" as any)
+      .select("meal_plan_item_id, original_food, substituted_food")
+      .eq("patient_id", user.id)
+      .eq("meal_plan_id", planData.id)
+      .order("created_at", { ascending: false });
+
+    if (subsData && subsData.length > 0) {
+      const subsMap: Record<string, { foodName: string; originalTitle: string }> = {};
+      for (const s of subsData as any[]) {
+        // Keep only the latest substitution per item
+        if (!subsMap[s.meal_plan_item_id]) {
+          subsMap[s.meal_plan_item_id] = { foodName: s.substituted_food, originalTitle: s.original_food };
+        }
+      }
+      setActiveSubstitutions(subsMap);
+    } else {
+      setActiveSubstitutions({});
+    }
+
     const { data: completionsData } = await supabase
       .from("meal_item_completions")
       .select("*")
