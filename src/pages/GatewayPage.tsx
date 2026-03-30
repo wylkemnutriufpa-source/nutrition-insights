@@ -10,6 +10,7 @@ import LandingIntegrations from "@/components/landing/LandingIntegrations";
 import LandingFAQ from "@/components/landing/LandingFAQ";
 import LandingFinalCTA from "@/components/landing/LandingFinalCTA";
 import CinematicIntro from "@/components/landing/CinematicIntro";
+import InstitutionalFooter from "@/components/institutional/InstitutionalFooter";
 
 const STORAGE_KEY = "fj_intro_seen";
 
