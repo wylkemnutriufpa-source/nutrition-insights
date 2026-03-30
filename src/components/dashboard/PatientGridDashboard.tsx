@@ -73,6 +73,7 @@ export default function PatientGridDashboard() {
   const navigate = useNavigate();
   const { patientView, setPatientView } = useLayoutPreference();
   const { user } = useAuth();
+  const expUI = useExperienceUI();
   const [onboarding, setOnboarding] = useState<any>(null);
 
   useEffect(() => {
@@ -89,7 +90,9 @@ export default function PatientGridDashboard() {
       });
   }, [user?.id]);
 
-  const rows = [1, 2, 3];
+  // Filter cards by experience mode
+  const visibleCards = PATIENT_CARDS.filter((c) => expUI.minMode(c.minMode ?? "basic"));
+  const visibleRows = [...new Set(visibleCards.map((c) => c.row))].sort();
 
   const ONBOARDING_KEY = "patient_onboarding_completed";
   const onboardingDone = localStorage.getItem(ONBOARDING_KEY) === "true";
