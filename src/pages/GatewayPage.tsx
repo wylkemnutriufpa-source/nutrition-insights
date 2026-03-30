@@ -39,6 +39,7 @@ export default function GatewayPage() {
         <LandingIntegrations />
         <LandingFAQ />
         <LandingFinalCTA />
+        <InstitutionalFooter />
       </div>
     </>
   );
