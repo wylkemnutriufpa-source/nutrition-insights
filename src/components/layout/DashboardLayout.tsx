@@ -24,6 +24,8 @@ import { usePatientRealtime } from "@/hooks/usePatientRealtime";
 import { useNutritionistRealtime } from "@/hooks/useNutritionistRealtime";
 import { useRefetchOnFocus } from "@/hooks/useRefetchOnFocus";
 import { useRealtimeEventBus } from "@/hooks/useRealtimeEventBus";
+import WorkspaceContextSwitcher from "@/components/layout/WorkspaceContextSwitcher";
+import { WorkspaceContext, useWorkspaceContextState } from "@/hooks/useWorkspaceContext";
 
 function LayoutFallbackCard({
   title,
@@ -192,6 +194,9 @@ function DynamicSidebar({
 
   return (
     <>
+      {/* Workspace context switcher for hybrid users */}
+      <WorkspaceContextSwitcher collapsed={collapsed} />
+
       <div className="p-4 flex items-center">
         <FitJourneyLogo collapsed={collapsed} size="sm" />
       </div>
@@ -484,7 +489,9 @@ function DynamicSidebar({
 }
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { profile, signOut, isPatient } = useAuth();
+  const { profile, signOut, isPatient, isNutritionist, isPersonal, isAdmin } = useAuth();
+  const isProRole = isNutritionist || isPersonal || isAdmin;
+  const workspaceCtx = useWorkspaceContextState(isProRole, isPatient);
   const location = useLocation();
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
@@ -535,6 +542,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   if (isMobile) {
     return (
+      <WorkspaceContext.Provider value={workspaceCtx}>
       <div className="min-h-screen bg-background">
         <div className="fixed top-0 left-0 right-0 z-50 h-14 bg-card border-b border-border flex items-center justify-between px-4">
           <div className="flex items-center gap-3">
@@ -569,10 +577,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
         </main>
       </div>
+      </WorkspaceContext.Provider>
     );
   }
 
   return (
+    <WorkspaceContext.Provider value={workspaceCtx}>
     <div className="min-h-screen flex bg-background">
       <motion.aside
         initial={false}
@@ -608,5 +618,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </ErrorBoundary>
       )}
     </div>
+    </WorkspaceContext.Provider>
   );
 }
