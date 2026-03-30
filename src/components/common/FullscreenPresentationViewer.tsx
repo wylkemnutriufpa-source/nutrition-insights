@@ -213,9 +213,27 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
   const slide = slides[idx];
 
   const slideVariants = {
-    enter: (d: number) => ({ x: d > 0 ? 250 : -250, opacity: 0, scale: 0.94, filter: isMobile ? "none" : "blur(12px)" }),
-    center: { x: 0, opacity: 1, scale: 1, filter: "blur(0px)" },
-    exit: (d: number) => ({ x: d > 0 ? -250 : 250, opacity: 0, scale: 0.94, filter: isMobile ? "none" : "blur(12px)" }),
+    enter: (d: number) => ({
+      x: d > 0 ? 120 : -120,
+      opacity: 0,
+      scale: 1.06,
+      rotateY: d > 0 ? 8 : -8,
+      filter: isMobile ? "brightness(0.3)" : "blur(16px) brightness(0.3)",
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+      scale: 1,
+      rotateY: 0,
+      filter: isMobile ? "brightness(1)" : "blur(0px) brightness(1)",
+    },
+    exit: (d: number) => ({
+      x: d > 0 ? -120 : 120,
+      opacity: 0,
+      scale: 0.92,
+      rotateY: d > 0 ? -6 : 6,
+      filter: isMobile ? "brightness(0.3)" : "blur(12px) brightness(0.3)",
+    }),
   };
 
   const accent = isPro ? "#10b981" : "#3b82f6";
@@ -469,8 +487,9 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{ duration: 0.65, ease: [0.22, 0.68, 0.36, 1.0] }}
+            transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
             className="w-full max-w-[1200px] flex flex-col items-center gap-5"
+            style={{ perspective: 1200 }}
           >
             {/* Image container */}
             <motion.div
