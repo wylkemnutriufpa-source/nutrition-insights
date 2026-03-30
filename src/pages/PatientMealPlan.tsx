@@ -539,6 +539,31 @@ export default function PatientMealPlan() {
             onOpenChange={(open) => { if (!open) setSelectedMeal(null); }}
             meal={selectedMeal}
           />
+
+          <MealSubstitutionModal
+            open={!!substitutionItem}
+            onOpenChange={(open) => { if (!open) setSubstitutionItem(null); }}
+            mealTitle={substitutionItem?.title || ""}
+            mealPlanItemId={substitutionItem?.id || ""}
+            mealPlanId={plan?.id || ""}
+            patientId={user?.id || ""}
+            onSubstitute={(food: FoodItem) => {
+              // Update local state to reflect substitution
+              if (substitutionItem) {
+                setItems(prev => prev.map(i =>
+                  i.id === substitutionItem.id
+                    ? { ...i, title: food.name, description: `${food.portion} • Substituição de ${substitutionItem.title}` }
+                    : i
+                ));
+                setAllItems(prev => prev.map(i =>
+                  i.id === substitutionItem.id
+                    ? { ...i, title: food.name, description: `${food.portion} • Substituição de ${substitutionItem.title}` }
+                    : i
+                ));
+              }
+              setSubstitutionItem(null);
+            }}
+          />
         </div>
       </div>
     </DashboardLayout>
