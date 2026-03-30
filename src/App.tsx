@@ -365,6 +365,26 @@ function ExperienceModeProvider({ children }: { children: React.ReactNode }) {
   return <ExperienceModeContext.Provider value={value}>{children}</ExperienceModeContext.Provider>;
 }
 
+/** Syncs experience mode + role to HTML data attributes for CSS theming */
+function ExperienceThemeSync() {
+  const { mode } = useExperienceModeState();
+  const { isNutritionist, isPersonal, isAdmin, isPatient, loading } = useAuth();
+  const isProRole = isNutritionist || isPersonal || isAdmin;
+
+  useEffect(() => {
+    if (loading) return;
+    const role = isProRole ? "professional" : "patient";
+    document.documentElement.setAttribute("data-experience-mode", mode);
+    document.documentElement.setAttribute("data-experience-role", role);
+    return () => {
+      document.documentElement.removeAttribute("data-experience-mode");
+      document.documentElement.removeAttribute("data-experience-role");
+    };
+  }, [mode, isProRole, loading]);
+
+  return null;
+}
+
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
