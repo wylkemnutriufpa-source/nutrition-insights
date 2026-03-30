@@ -367,8 +367,8 @@ function ExperienceModeProvider({ children }: { children: React.ReactNode }) {
 
 /** Syncs experience mode + role to HTML data attributes for CSS theming */
 function ExperienceThemeSync() {
-  const { mode } = useExperienceModeState();
-  const { isNutritionist, isPersonal, isAdmin, isPatient, loading } = useAuth();
+  const { mode } = useExperienceMode();
+  const { isNutritionist, isPersonal, isAdmin, loading } = useAuth();
   const isProRole = isNutritionist || isPersonal || isAdmin;
 
   useEffect(() => {
