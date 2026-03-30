@@ -8,7 +8,7 @@ import {
   CheckCircle2, Circle, Calendar, ChevronLeft, ChevronRight,
   Utensils, Coffee, Apple, Cookie, Moon, Sun, Flame,
   Trophy, Beef, Wheat, Droplets, AlertCircle, MinusCircle,
-  Shield, Zap, Award, TrendingUp, UtensilsCrossed
+  Shield, Zap, Award, TrendingUp, UtensilsCrossed, ArrowRightLeft,
 } from "lucide-react";
 import { useMealVisualItem } from "@/hooks/useMealVisualItem";
 import type { Database } from "@/integrations/supabase/types";
