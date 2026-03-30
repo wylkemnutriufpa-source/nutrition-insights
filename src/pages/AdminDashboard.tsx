@@ -1054,6 +1054,15 @@ export default function AdminDashboard() {
                     </div>
                   </CardContent>
                 </Card>
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow border-primary/20" onClick={() => navigate("/admin/meal-visual-library")}>
+                  <CardContent className="flex items-center gap-4 py-6">
+                    <ImageIcon className="w-8 h-8 text-emerald-400" />
+                    <div>
+                      <p className="font-display font-semibold">Biblioteca Visual de Refeições</p>
+                      <p className="text-sm text-muted-foreground">Imagens, aliases e associação automática</p>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
 
               {/* ─── Simulação de Progresso ─── */}
