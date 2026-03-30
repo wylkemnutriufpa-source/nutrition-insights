@@ -82,7 +82,7 @@ export function useMealVisualMatch(title: string | null | undefined) {
         .limit(1);
 
       if (nameData && nameData.length > 0) {
-        setMatch(nameData[0] as MealVisualItem);
+        setMatch(nameData[0] as unknown as MealVisualItem);
       } else {
         setMatch(null);
       }

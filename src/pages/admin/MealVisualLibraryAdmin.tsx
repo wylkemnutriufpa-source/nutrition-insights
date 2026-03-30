@@ -56,8 +56,8 @@ export default function MealVisualLibraryAdmin() {
       supabase.from("meal_visual_library" as any).select("*").order("sort_order"),
       supabase.from("meal_visual_aliases" as any).select("*"),
     ]);
-    setItems((libData || []) as MealVisualItem[]);
-    setAliases((aliasData || []) as MealVisualAlias[]);
+    setItems((libData || []) as unknown as MealVisualItem[]);
+    setAliases((aliasData || []) as unknown as MealVisualAlias[]);
     setLoading(false);
   };
 
