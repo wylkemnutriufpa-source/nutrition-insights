@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Users, UserPlus, Search, Loader2, Ban, CheckCircle2, KeyRound,
-  Edit, Eye, Building2, Shield, ArrowLeft, Dumbbell, Salad, ArrowUpCircle
+  Edit, Eye, Building2, Shield, ArrowLeft, Dumbbell, Salad, ArrowUpCircle, Activity
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
