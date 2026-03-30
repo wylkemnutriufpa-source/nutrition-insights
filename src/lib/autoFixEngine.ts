@@ -79,6 +79,7 @@ export interface AutoFixResult {
 
 export type AutoFixStep =
   | "loading_context"
+  | "personalizing"
   | "removing_blocked"
   | "simplifying_breakfast"
   | "simplifying_snacks"
@@ -91,6 +92,7 @@ export type AutoFixStep =
 
 export const AUTOFIX_STEP_LABELS: Record<AutoFixStep, string> = {
   loading_context: "Carregando contexto do plano...",
+  personalizing: "Aplicando personalização do paciente...",
   removing_blocked: "Removendo alimentos bloqueados...",
   simplifying_breakfast: "Simplificando cafés da manhã...",
   simplifying_snacks: "Simplificando lanches...",
