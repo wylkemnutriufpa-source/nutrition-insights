@@ -578,7 +578,7 @@ export default function PatientMealPlan() {
           <MealSubstitutionModal
             open={!!substitutionItem}
             onOpenChange={(open) => { if (!open) setSubstitutionItem(null); }}
-            mealTitle={substitutionItem?.title || ""}
+            mealTitle={substitutionItem ? (items.find(i => i.id === substitutionItem.id)?.title || substitutionItem.title) : ""}
             mealPlanItemId={substitutionItem?.id || ""}
             mealPlanId={plan?.id || ""}
             patientId={user?.id || ""}
