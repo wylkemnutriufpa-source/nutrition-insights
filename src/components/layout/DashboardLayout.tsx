@@ -182,6 +182,7 @@ function DynamicSidebar({
   const { categories, flatItems, trackClick } = useSmartMenu();
   const { isNutritionist, isPersonal, isAdmin } = useAuth();
   const pendingCount = usePendingApprovals();
+  const { coachBodybuilderEnabled, personalTrainerEnabled } = useProfessionalModules();
   const [approvalsOpen, setApprovalsOpen] = useState(false);
   const [intelligenceOpen, setIntelligenceOpen] = useState(false);
   const [showcaseOpen, setShowcaseOpen] = useState(false);
