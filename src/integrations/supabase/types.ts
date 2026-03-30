@@ -5859,15 +5859,20 @@ export type Database = {
           created_at: string
           day_of_week: number | null
           description: string | null
+          edit_metadata: Json | null
           fat_target: number | null
           id: string
           image_url: string | null
+          is_locked: boolean
+          is_manually_edited: boolean
+          item_origin: string
           meal_plan_id: string
           meal_type: Database["public"]["Enums"]["meal_type"]
           protein_target: number | null
           tenant_id: string | null
           title: string
           visual_library_item_id: string | null
+          was_auto_corrected: boolean
         }
         Insert: {
           calories_target?: number | null
@@ -5875,15 +5880,20 @@ export type Database = {
           created_at?: string
           day_of_week?: number | null
           description?: string | null
+          edit_metadata?: Json | null
           fat_target?: number | null
           id?: string
           image_url?: string | null
+          is_locked?: boolean
+          is_manually_edited?: boolean
+          item_origin?: string
           meal_plan_id: string
           meal_type: Database["public"]["Enums"]["meal_type"]
           protein_target?: number | null
           tenant_id?: string | null
           title: string
           visual_library_item_id?: string | null
+          was_auto_corrected?: boolean
         }
         Update: {
           calories_target?: number | null
@@ -5891,15 +5901,20 @@ export type Database = {
           created_at?: string
           day_of_week?: number | null
           description?: string | null
+          edit_metadata?: Json | null
           fat_target?: number | null
           id?: string
           image_url?: string | null
+          is_locked?: boolean
+          is_manually_edited?: boolean
+          item_origin?: string
           meal_plan_id?: string
           meal_type?: Database["public"]["Enums"]["meal_type"]
           protein_target?: number | null
           tenant_id?: string | null
           title?: string
           visual_library_item_id?: string | null
+          was_auto_corrected?: boolean
         }
         Relationships: [
           {
@@ -6069,6 +6084,9 @@ export type Database = {
           overall_score: number | null
           overall_validation_status: string | null
           patient_id: string
+          personalization_applied: boolean
+          pipeline_completed_at: string | null
+          pipeline_version: string | null
           plan_status: string
           previous_plan_id: string | null
           requires_regeneration: boolean | null
@@ -6106,6 +6124,9 @@ export type Database = {
           overall_score?: number | null
           overall_validation_status?: string | null
           patient_id: string
+          personalization_applied?: boolean
+          pipeline_completed_at?: string | null
+          pipeline_version?: string | null
           plan_status?: string
           previous_plan_id?: string | null
           requires_regeneration?: boolean | null
@@ -6143,6 +6164,9 @@ export type Database = {
           overall_score?: number | null
           overall_validation_status?: string | null
           patient_id?: string
+          personalization_applied?: boolean
+          pipeline_completed_at?: string | null
+          pipeline_version?: string | null
           plan_status?: string
           previous_plan_id?: string | null
           requires_regeneration?: boolean | null
