@@ -8,6 +8,9 @@
 import { describe, it, expect } from "vitest";
 import { personalizePlanItems, type PersonalizationContext } from "@/lib/planPersonalizationEngine";
 import { isItemProtected } from "@/lib/planPipelineOrchestrator";
+import type { Database } from "@/integrations/supabase/types";
+
+type MealType = Database["public"]["Enums"]["meal_type"];
 
 // ── Helper: create mock context ──────────────────────────────
 function mockContext(overrides: Partial<PersonalizationContext> = {}): PersonalizationContext {
