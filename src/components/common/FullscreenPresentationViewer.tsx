@@ -487,8 +487,9 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{ duration: 0.65, ease: [0.22, 0.68, 0.36, 1.0] }}
+            transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
             className="w-full max-w-[1200px] flex flex-col items-center gap-5"
+            style={{ perspective: 1200 }}
           >
             {/* Image container */}
             <motion.div
