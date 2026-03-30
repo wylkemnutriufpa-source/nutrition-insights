@@ -22,6 +22,7 @@ import FitIntelligenceAssistant from "@/components/intelligence/FitIntelligenceA
 import IFJPatientCoach from "@/components/intelligence/modules/IFJPatientCoach";
 import { installGlobalErrorHandlers } from "@/lib/monitoring";
 import ExperienceRouteGuard from "@/components/common/ExperienceRouteGuard";
+import WorkspaceRouteGuard from "@/components/common/WorkspaceRouteGuard";
 import { initFeatureFlags } from "@/lib/featureFlags";
 import { useConsentGuard } from "@/hooks/useConsentGuard";
 import { usePaymentGuard } from "@/hooks/usePaymentGuard";
