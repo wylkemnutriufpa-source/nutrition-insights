@@ -5867,6 +5867,7 @@ export type Database = {
           protein_target: number | null
           tenant_id: string | null
           title: string
+          visual_library_item_id: string | null
         }
         Insert: {
           calories_target?: number | null
@@ -5882,6 +5883,7 @@ export type Database = {
           protein_target?: number | null
           tenant_id?: string | null
           title: string
+          visual_library_item_id?: string | null
         }
         Update: {
           calories_target?: number | null
@@ -5897,6 +5899,7 @@ export type Database = {
           protein_target?: number | null
           tenant_id?: string | null
           title?: string
+          visual_library_item_id?: string | null
         }
         Relationships: [
           {
@@ -5918,6 +5921,13 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_plan_items_visual_library_item_id_fkey"
+            columns: ["visual_library_item_id"]
+            isOneToOne: false
+            referencedRelation: "meal_visual_library"
             referencedColumns: ["id"]
           },
         ]
@@ -6221,6 +6231,124 @@ export type Database = {
             columns: ["template_id"]
             isOneToOne: false
             referencedRelation: "nutritionist_meal_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meal_visual_aliases: {
+        Row: {
+          alias: string
+          created_at: string | null
+          id: string
+          library_item_id: string
+          normalized_alias: string
+        }
+        Insert: {
+          alias: string
+          created_at?: string | null
+          id?: string
+          library_item_id: string
+          normalized_alias: string
+        }
+        Update: {
+          alias?: string
+          created_at?: string | null
+          id?: string
+          library_item_id?: string
+          normalized_alias?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_visual_aliases_library_item_id_fkey"
+            columns: ["library_item_id"]
+            isOneToOne: false
+            referencedRelation: "meal_visual_library"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meal_visual_library: {
+        Row: {
+          base_recipe: string | null
+          category: string
+          created_at: string | null
+          created_by: string | null
+          default_calories: number | null
+          default_carbs: number | null
+          default_fat: number | null
+          default_portion: string | null
+          default_protein: number | null
+          display_name: string
+          id: string
+          image_path: string | null
+          image_url: string | null
+          is_active: boolean | null
+          name: string
+          search_terms: string[] | null
+          short_description: string | null
+          slug: string
+          sort_order: number | null
+          subcategory: string | null
+          tags: string[] | null
+          tenant_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          base_recipe?: string | null
+          category: string
+          created_at?: string | null
+          created_by?: string | null
+          default_calories?: number | null
+          default_carbs?: number | null
+          default_fat?: number | null
+          default_portion?: string | null
+          default_protein?: number | null
+          display_name: string
+          id?: string
+          image_path?: string | null
+          image_url?: string | null
+          is_active?: boolean | null
+          name: string
+          search_terms?: string[] | null
+          short_description?: string | null
+          slug: string
+          sort_order?: number | null
+          subcategory?: string | null
+          tags?: string[] | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          base_recipe?: string | null
+          category?: string
+          created_at?: string | null
+          created_by?: string | null
+          default_calories?: number | null
+          default_carbs?: number | null
+          default_fat?: number | null
+          default_portion?: string | null
+          default_protein?: number | null
+          display_name?: string
+          id?: string
+          image_path?: string | null
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string
+          search_terms?: string[] | null
+          short_description?: string | null
+          slug?: string
+          sort_order?: number | null
+          subcategory?: string | null
+          tags?: string[] | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_visual_library_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -13966,6 +14094,7 @@ export type Database = {
           nutritionist_id: string
           protein_target: number | null
           title: string
+          visual_library_item_id: string | null
         }
         Insert: {
           calories_target?: number | null
@@ -13979,6 +14108,7 @@ export type Database = {
           nutritionist_id: string
           protein_target?: number | null
           title: string
+          visual_library_item_id?: string | null
         }
         Update: {
           calories_target?: number | null
@@ -13992,8 +14122,17 @@ export type Database = {
           nutritionist_id?: string
           protein_target?: number | null
           title?: string
+          visual_library_item_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "saved_meals_visual_library_item_id_fkey"
+            columns: ["visual_library_item_id"]
+            isOneToOne: false
+            referencedRelation: "meal_visual_library"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       saved_plan_templates: {
         Row: {

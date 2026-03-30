@@ -16,7 +16,7 @@ import {
   Shield, Users, UserCheck, Zap, Star, UserPlus, Settings, Globe,
   Eye, BarChart3, DollarSign, CreditCard, Crown, Loader2,
   Search, ToggleLeft, Trash2, Ban, CheckCircle2, Plus, FileText, Download, Sparkles,
-  Palette, LayoutGrid, GraduationCap, Wand2, Dumbbell
+  Palette, LayoutGrid, GraduationCap, Wand2, Dumbbell, Image as ImageIcon
 } from "lucide-react";
 import { toast } from "sonner";
 import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
@@ -1051,6 +1051,15 @@ export default function AdminDashboard() {
                     <div>
                       <p className="font-display font-semibold">Módulo Personal Trainer</p>
                       <p className="text-sm text-muted-foreground">Templates, pré-planos, treinos e periodização</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow border-primary/20" onClick={() => navigate("/admin/meal-visual-library")}>
+                  <CardContent className="flex items-center gap-4 py-6">
+                    <ImageIcon className="w-8 h-8 text-emerald-400" />
+                    <div>
+                      <p className="font-display font-semibold">Biblioteca Visual de Refeições</p>
+                      <p className="text-sm text-muted-foreground">Imagens, aliases e associação automática</p>
                     </div>
                   </CardContent>
                 </Card>
