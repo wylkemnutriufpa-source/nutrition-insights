@@ -580,6 +580,10 @@ export async function autoFixMealPlan(
     carbs_target: fi.carbs_target,
     fat_target: fi.fat_target,
     tenant_id: tenantId,
+    item_origin: (fi as any).is_manually_edited ? "manual" : "auto_corrected",
+    is_manually_edited: (fi as any).is_manually_edited || false,
+    is_locked: (fi as any).is_locked || false,
+    was_auto_corrected: !isItemProtected(fi),
   }));
 
   const { error: insertErr } = await supabase
