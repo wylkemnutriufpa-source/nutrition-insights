@@ -393,6 +393,7 @@ const MealGroup = memo(function MealGroup({
                 focusMode={focusMode}
                 onSetAdherence={onSetAdherence}
                 onOpenDetail={onOpenDetail}
+                onOpenSubstitution={onOpenSubstitution}
               />
             );
           })}
