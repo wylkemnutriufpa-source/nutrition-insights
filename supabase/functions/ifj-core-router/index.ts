@@ -1768,6 +1768,10 @@ COMANDOS DISPONÍVEIS:
           }
         }
       }
+    } catch (engineError) {
+      console.error("Engine error:", engineError);
+      response = fmt("Erro", "❌", "error", "Erro ao processar.", "Tente novamente.", [], intent, "error", ctx);
+    }
 
     // 9. Save session context
     await saveSessionContext(supabase, user.id, role, sessionKey, ctx, intent.intent);
