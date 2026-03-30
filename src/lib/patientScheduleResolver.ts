@@ -162,18 +162,21 @@ export async function resolvePatientSchedule(patientId: string): Promise<Resolve
     }
 
     // 3. Try onboarding pipeline
-    const { data: pipeline } = await supabase
-      .from("patient_onboarding_pipeline" as any)
-      .select("wake_time, sleep_time")
-      .eq("patient_id", patientId)
-      .maybeSingle();
+    try {
+      const { data: pipeline } = await supabase
+        .from("patient_onboarding_pipeline" as any)
+        .select("wake_time, sleep_time")
+        .eq("patient_id", patientId)
+        .maybeSingle();
 
-    if (pipeline?.wake_time && pipeline?.sleep_time) {
-      const schedule = buildScheduleFromWakeSleep(pipeline.wake_time, pipeline.sleep_time);
-      if (isValidSchedule(schedule)) {
-        return { schedule, source: "patient_preferences", wasResolved: true, warnings };
+      const pipelineData = pipeline as any;
+      if (pipelineData?.wake_time && pipelineData?.sleep_time) {
+        const schedule = buildScheduleFromWakeSleep(pipelineData.wake_time, pipelineData.sleep_time);
+        if (isValidSchedule(schedule)) {
+          return { schedule, source: "patient_preferences", wasResolved: true, warnings };
+        }
       }
-    }
+    } catch { /* table may not exist */ }
   } catch (e) {
     console.warn("[ScheduleResolver] Error loading patient data:", e);
   }
