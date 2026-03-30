@@ -15,6 +15,8 @@ import {
   CheckCircle2, MinusCircle, AlertCircle, Circle
 } from "lucide-react";
 import { MealDetailModal } from "@/components/patient/MealDetailModal";
+import MealSubstitutionModal from "@/components/patient/MealSubstitutionModal";
+import type { FoodItem } from "@/components/meals/FoodAutocomplete";
 import {
   MacroSummary, AdherenceCard, DateNavigator, MealGroup,
   MEAL_TYPES, DAYS,
@@ -82,6 +84,7 @@ export default function PatientMealPlan() {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [viewMode, setViewMode] = useState<"daily" | "weekly">("daily");
   const [selectedMeal, setSelectedMeal] = useState<MealDetailData | null>(null);
+  const [substitutionItem, setSubstitutionItem] = useState<MealPlanItem | null>(null);
   const [focusMode, setFocusMode] = useState(false);
   const [xpPopup, setXpPopup] = useState<{ show: boolean; points: number }>({ show: false, points: 0 });
   const [justCompleted, setJustCompleted] = useState<string | null>(null);
@@ -360,6 +363,7 @@ export default function PatientMealPlan() {
                     focusMode={focusMode}
                     onSetAdherence={setAdherence}
                     onOpenDetail={setSelectedMeal}
+                    onOpenSubstitution={setSubstitutionItem}
                   />
                 ))}
               </div>
@@ -534,6 +538,31 @@ export default function PatientMealPlan() {
             open={!!selectedMeal}
             onOpenChange={(open) => { if (!open) setSelectedMeal(null); }}
             meal={selectedMeal}
+          />
+
+          <MealSubstitutionModal
+            open={!!substitutionItem}
+            onOpenChange={(open) => { if (!open) setSubstitutionItem(null); }}
+            mealTitle={substitutionItem?.title || ""}
+            mealPlanItemId={substitutionItem?.id || ""}
+            mealPlanId={plan?.id || ""}
+            patientId={user?.id || ""}
+            onSubstitute={(food: FoodItem) => {
+              // Update local state to reflect substitution
+              if (substitutionItem) {
+                setItems(prev => prev.map(i =>
+                  i.id === substitutionItem.id
+                    ? { ...i, title: food.name, description: `${food.portion} • Substituição de ${substitutionItem.title}` }
+                    : i
+                ));
+                setAllItems(prev => prev.map(i =>
+                  i.id === substitutionItem.id
+                    ? { ...i, title: food.name, description: `${food.portion} • Substituição de ${substitutionItem.title}` }
+                    : i
+                ));
+              }
+              setSubstitutionItem(null);
+            }}
           />
         </div>
       </div>

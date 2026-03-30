@@ -8,7 +8,7 @@ import {
   CheckCircle2, Circle, Calendar, ChevronLeft, ChevronRight,
   Utensils, Coffee, Apple, Cookie, Moon, Sun, Flame,
   Trophy, Beef, Wheat, Droplets, AlertCircle, MinusCircle,
-  Shield, Zap, Award, TrendingUp, UtensilsCrossed
+  Shield, Zap, Award, TrendingUp, UtensilsCrossed, ArrowRightLeft,
 } from "lucide-react";
 import { useMealVisualItem } from "@/hooks/useMealVisualItem";
 import type { Database } from "@/integrations/supabase/types";
@@ -136,7 +136,7 @@ const MacroSummary = memo(function MacroSummary({ items }: { items: MealPlanItem
 // ── Single Meal Item Card (memoized) ──
 const MealItemCard = memo(function MealItemCard({
   item, status, completedAt, isJustDone, focusMode,
-  onSetAdherence, onOpenDetail,
+  onSetAdherence, onOpenDetail, onOpenSubstitution,
 }: {
   item: MealPlanItem;
   status: AdherenceStatus | null;
@@ -145,6 +145,7 @@ const MealItemCard = memo(function MealItemCard({
   focusMode: boolean;
   onSetAdherence: (item: MealPlanItem, status: AdherenceStatus) => void;
   onOpenDetail: (item: MealDetailData) => void;
+  onOpenSubstitution?: (item: MealPlanItem) => void;
 }) {
   const impacts = useMemo(() => getImpactTags(item), [item]);
   const { item: visualItem } = useMealVisualItem(item.visual_library_item_id);
@@ -244,6 +245,17 @@ const MealItemCard = memo(function MealItemCard({
                   {opt.label}
                 </button>
               ))}
+              {/* Substitution button */}
+              {onOpenSubstitution && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onOpenSubstitution(item); }}
+                  className="flex items-center gap-1.5 mt-2 px-2.5 py-1.5 rounded-lg border border-primary/20 bg-primary/5 text-primary text-[11px] font-medium hover:bg-primary/10 transition-all w-fit"
+                >
+                  <ArrowRightLeft className="w-3.5 h-3.5" />
+                  Substituir
+                </button>
+              )}
             </div>
             <MealFeedbackButton mealPlanId={item.id} mealPlanItemId={item.id} mealType={item.meal_type} />
           </div>
@@ -338,7 +350,7 @@ const DateNavigator = memo(function DateNavigator({
 // ── Meal Group (memoized) ──
 const MealGroup = memo(function MealGroup({
   mealType, items, completions, justCompleted, focusMode,
-  onSetAdherence, onOpenDetail,
+  onSetAdherence, onOpenDetail, onOpenSubstitution,
 }: {
   mealType: { key: MealType; label: string; icon: React.ReactNode; time: string };
   items: MealPlanItem[];
@@ -347,6 +359,7 @@ const MealGroup = memo(function MealGroup({
   focusMode: boolean;
   onSetAdherence: (item: MealPlanItem, status: AdherenceStatus) => void;
   onOpenDetail: (item: MealDetailData) => void;
+  onOpenSubstitution?: (item: MealPlanItem) => void;
 }) {
   const mealFollowed = items.filter(i => completions.find(c => c.meal_plan_item_id === i.id && c.adherence_status === "followed")).length;
   const mealPartial = items.filter(i => completions.find(c => c.meal_plan_item_id === i.id && c.adherence_status === "partial")).length;
@@ -380,6 +393,7 @@ const MealGroup = memo(function MealGroup({
                 focusMode={focusMode}
                 onSetAdherence={onSetAdherence}
                 onOpenDetail={onOpenDetail}
+                onOpenSubstitution={onOpenSubstitution}
               />
             );
           })}
