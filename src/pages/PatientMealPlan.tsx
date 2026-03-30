@@ -85,6 +85,7 @@ export default function PatientMealPlan() {
   const [viewMode, setViewMode] = useState<"daily" | "weekly">("daily");
   const [selectedMeal, setSelectedMeal] = useState<MealDetailData | null>(null);
   const [substitutionItem, setSubstitutionItem] = useState<MealPlanItem | null>(null);
+  const [activeSubstitutions, setActiveSubstitutions] = useState<Record<string, { foodName: string; originalTitle: string }>>({});
   const [focusMode, setFocusMode] = useState(false);
   const [xpPopup, setXpPopup] = useState<{ show: boolean; points: number }>({ show: false, points: 0 });
   const [justCompleted, setJustCompleted] = useState<string | null>(null);
