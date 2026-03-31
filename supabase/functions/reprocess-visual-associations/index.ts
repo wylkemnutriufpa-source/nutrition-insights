@@ -45,14 +45,21 @@ Deno.serve(async (req) => {
 
     // Extended protein map
     const PROTEIN_MAP: Record<string, string> = {
-      frango: "frango", peito: "frango", sobrecoxa: "frango",
-      carne: "carne", bife: "carne", alcatra: "carne", patinho: "carne", acem: "carne", maminha: "carne",
-      "carne moida": "carne moida",
+      frango: "frango", peito: "frango", sobrecoxa: "sobrecoxa", coxa: "sobrecoxa",
+      carne: "carne", bife: "carne", alcatra: "carne", patinho: "carne",
+      acem: "acem", maminha: "maminha",
+      "carne moida": "carne moida", "carne de panela": "carne de panela", "carne assada": "carne assada",
       picanha: "picanha", costelinha: "costelinha",
-      porco: "porco", suino: "porco", lombo: "porco",
-      peixe: "peixe", tilapia: "peixe", salmao: "peixe", pescada: "peixe", merluza: "peixe",
+      costela: "costela-suina",
+      porco: "porco", suino: "porco", lombo: "lombo suino",
+      peixe: "peixe", tilapia: "file de tilapia", salmao: "peixe", pescada: "peixe", merluza: "peixe",
       camarao: "camarao",
       ovo: "ovo", ovos: "ovo", omelete: "ovo",
+    };
+    const FRUIT_MAP: Record<string, string> = {
+      abacaxi: "abacaxi", morango: "morango", melao: "melao", goiaba: "goiaba",
+      pera: "pera", uva: "uva", laranja: "laranja", melancia: "melancia",
+      manga: "manga", maca: "maca", mamao: "mamao", banana: "banana",
     };
     const CARB_IGNORE = new Set(["arroz", "batata", "macarrao", "feijao", "pure", "mandioca", "inhame", "legumes", "salada", "brocolis", "macaxeira"]);
     const GENERIC_TITLES = new Set(["almoco", "jantar", "cafe da manha", "lanche", "lanche da manha", "lanche da tarde", "ceia"]);

@@ -46,15 +46,24 @@ async function buildAliasMap(): Promise<Map<string, string>> {
   return map;
 }
 
-/** Primary protein keywords mapped to their base slug */
+/** Primary protein/food keywords mapped to their base slug */
 const PROTEIN_KEYWORDS: Record<string, string> = {
-  frango: "frango", peito: "frango", sobrecoxa: "frango",
-  carne: "carne", bife: "carne", alcatra: "carne", patinho: "carne", acem: "carne", maminha: "carne",
+  frango: "frango", peito: "frango", sobrecoxa: "sobrecoxa", coxa: "sobrecoxa",
+  carne: "carne", bife: "carne", alcatra: "carne", patinho: "carne",
+  acem: "acem", maminha: "maminha",
   picanha: "picanha", costelinha: "costelinha",
-  porco: "porco", suino: "porco", lombo: "porco",
-  peixe: "peixe", tilapia: "peixe", salmao: "peixe", pescada: "peixe", merluza: "peixe",
+  costela: "costela-suina",
+  porco: "porco", suino: "porco", lombo: "lombo-suino",
+  peixe: "peixe", tilapia: "file-de-tilapia", salmao: "peixe", pescada: "peixe", merluza: "peixe",
   camarao: "camarao",
   ovo: "ovo", ovos: "ovo", omelete: "ovo",
+};
+
+/** Fruit keywords mapped to their visual slug */
+const FRUIT_KEYWORDS: Record<string, string> = {
+  abacaxi: "abacaxi", morango: "morango", melao: "melao", goiaba: "goiaba",
+  pera: "pera", uva: "uva", laranja: "laranja", melancia: "melancia",
+  manga: "manga", maca: "maca", mamao: "mamao", banana: "banana",
 };
 
 /** Carb keywords to ignore when determining the visual */
