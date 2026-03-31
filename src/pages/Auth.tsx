@@ -264,75 +264,99 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
                   </button>
                 </motion.form>
               ) : (
-                <motion.form key="login" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
-                  onSubmit={handleLogin} className="space-y-4">
-                  {/* Premium role indicator */}
-                  <div className="relative flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 border border-primary/10">
-                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/10 via-transparent to-accent/10 opacity-50 blur-sm pointer-events-none" />
-                    <div className="relative flex items-center gap-1.5 text-xs font-medium text-primary/80">
-                      <div className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10">
-                        <Stethoscope className="w-3 h-3 text-primary" />
-                      </div>
-                      <span>{t("auth.nutritionist")}</span>
-                    </div>
-                    <div className="relative w-px h-4 bg-gradient-to-b from-transparent via-primary/30 to-transparent" />
-                    <div className="relative flex items-center gap-1.5 text-xs font-medium text-accent-foreground/70">
-                      <div className="flex items-center justify-center w-5 h-5 rounded-full bg-orange-500/10">
-                        <Dumbbell className="w-3 h-3 text-orange-500" />
-                      </div>
-                      <span>Personal</span>
-                    </div>
-                    <div className="relative w-px h-4 bg-gradient-to-b from-transparent via-primary/30 to-transparent" />
-                    <div className="relative flex items-center gap-1.5 text-xs font-medium text-accent-foreground/70">
-                      <div className="flex items-center justify-center w-5 h-5 rounded-full bg-accent/20">
-                        <Users className="w-3 h-3 text-accent-foreground/70" />
-                      </div>
-                      <span>{t("auth.patient")}</span>
-                    </div>
+                <motion.div key="login" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
+                  className="space-y-4">
+                  {/* Interactive role selector */}
+                  <p className="text-center text-sm text-muted-foreground mb-1">Selecione sua área para entrar</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {([
+                      { key: "nutritionist" as SelectedRole, label: t("auth.nutritionist"), icon: Stethoscope, color: "primary" },
+                      { key: "personal" as SelectedRole, label: "Personal", icon: Dumbbell, color: "orange-500" },
+                      { key: "patient" as SelectedRole, label: t("auth.patient"), icon: Users, color: "accent" },
+                    ]).map((role) => {
+                      const isActive = selectedRole === role.key;
+                      const Icon = role.icon;
+                      return (
+                        <button
+                          key={role.key}
+                          type="button"
+                          onClick={() => setSelectedRole(isActive ? null : role.key)}
+                          className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border-2 transition-all duration-200 cursor-pointer ${
+                            isActive
+                              ? "border-primary bg-primary/10 shadow-md scale-[1.03]"
+                              : "border-border/50 bg-card hover:border-primary/30 hover:bg-primary/5"
+                          }`}
+                        >
+                          <div className={`flex items-center justify-center w-8 h-8 rounded-full transition-colors ${
+                            isActive ? "bg-primary/20" : "bg-muted"
+                          }`}>
+                            <Icon className={`w-4 h-4 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
+                          </div>
+                          <span className={`text-xs font-medium ${isActive ? "text-primary" : "text-muted-foreground"}`}>
+                            {role.label}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
 
-                  <div>
-                    <Label htmlFor="email">{t("auth.email")}</Label>
-                    <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" required />
-                  </div>
-                  <div>
-                    <Label htmlFor="password">{t("auth.password")}</Label>
-                    <div className="relative">
-                      <Input id="password" type={showPassword ? "text" : "password"} value={password}
-                        onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
+                  {/* Collapsible email/password fields */}
+                  <AnimatePresence>
+                    {selectedRole && (
+                      <motion.form
+                        key="login-fields"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        onSubmit={handleLogin}
+                        className="space-y-4 overflow-hidden"
+                      >
+                        <div className="pt-1">
+                          <Label htmlFor="email">{t("auth.email")}</Label>
+                          <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" required autoFocus />
+                        </div>
+                        <div>
+                          <Label htmlFor="password">{t("auth.password")}</Label>
+                          <div className="relative">
+                            <Input id="password" type={showPassword ? "text" : "password"} value={password}
+                              onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
+                            <button type="button" onClick={() => setShowPassword(!showPassword)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
+                        </div>
 
-                  {/* Remember me + forgot */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Checkbox id="remember" checked={rememberMe} onCheckedChange={(v) => setRememberMe(!!v)} />
-                      <label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer select-none">
-                        {t("auth.stayLoggedIn")}
-                      </label>
-                    </div>
-                    <button type="button" onClick={() => setMode("forgot")} className="text-sm text-primary hover:underline">
-                      {t("auth.forgotPassword")}
-                    </button>
-                  </div>
+                        {/* Remember me + forgot */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Checkbox id="remember" checked={rememberMe} onCheckedChange={(v) => setRememberMe(!!v)} />
+                            <label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer select-none">
+                              {t("auth.stayLoggedIn")}
+                            </label>
+                          </div>
+                          <button type="button" onClick={() => setMode("forgot")} className="text-sm text-primary hover:underline">
+                            {t("auth.forgotPassword")}
+                          </button>
+                        </div>
 
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? t("auth.loggingIn") : (
-                      <span className="flex items-center gap-2">{t("auth.loginButton")} <ArrowRight className="w-4 h-4" /></span>
+                        <Button type="submit" className="w-full" disabled={loading}>
+                          {loading ? t("auth.loggingIn") : (
+                            <span className="flex items-center gap-2">{t("auth.loginButton")} <ArrowRight className="w-4 h-4" /></span>
+                          )}
+                        </Button>
+
+                        <div className="pt-2 text-center">
+                          <p className="text-xs text-muted-foreground mb-1">É nutricionista ou personal trainer e ainda não tem conta?</p>
+                          <button type="button" onClick={() => setMode("register")} className="text-sm text-primary hover:underline font-medium">
+                            Criar conta profissional
+                          </button>
+                        </div>
+                      </motion.form>
                     )}
-                  </Button>
-
-                  <div className="pt-2 text-center">
-                    <p className="text-xs text-muted-foreground mb-1">É nutricionista ou personal trainer e ainda não tem conta?</p>
-                    <button type="button" onClick={() => setMode("register")} className="text-sm text-primary hover:underline font-medium">
-                      Criar conta profissional
-                    </button>
-                  </div>
-                </motion.form>
+                  </AnimatePresence>
+                </motion.div>
               )}
             </AnimatePresence>
           </CardContent>
