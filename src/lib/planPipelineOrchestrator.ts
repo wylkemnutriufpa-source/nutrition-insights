@@ -230,11 +230,13 @@ export async function runPlanPipeline(input: PipelineInput): Promise<PipelineRes
       .single();
 
     if (planErr || !newPlan) {
+      const { friendlySupabaseError } = await import("@/lib/supabaseErrorMapper");
+      const friendlyMsg = friendlySupabaseError(planErr, "Falha ao criar plano");
       console.error("[Pipeline] Failed to create plan:", planErr);
       return {
         success: false, items, personalization: personalizationResult,
         context: personalizationCtx, auditLog,
-        warnings: [...warnings, "Falha ao criar plano"],
+        warnings: [...warnings, friendlyMsg],
         pipelineVersion: PIPELINE_VERSION,
       };
     }
