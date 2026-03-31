@@ -38,12 +38,20 @@ export interface WorkspaceProfile {
 }
 
 export function useWorkspace() {
-  const { user, isNutritionist, isPersonal, isAdmin } = useAuth();
+  const { user, isNutritionist, isPersonal, isAdmin, roles } = useAuth();
   const [profile, setProfile] = useState<WorkspaceProfile | null>(null);
   const [sections, setSections] = useState<WorkspaceSection[]>([]);
   const [items, setItems] = useState<WorkspaceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const isProRole = isNutritionist || isPersonal || isAdmin;
+
+  // Determine the user's primary role for filtering
+  const userRole = useMemo(() => {
+    if ((roles as string[]).includes("admin")) return "admin";
+    if (roles.includes("nutritionist")) return "nutritionist";
+    if (roles.includes("personal")) return "personal";
+    return "patient";
+  }, [roles]);
 
   const initialize = useCallback(async () => {
     if (!user?.id || !isProRole) { setLoading(false); return; }
