@@ -91,8 +91,20 @@ function extractProteinFromDescription(description: string): string | null {
  * 2. Protein-first keyword extraction
  * 3. Partial match (alias contained in title or vice-versa)
  */
-function findMatch(title: string, aliasMap: Map<string, string>): string | null {
+function findMatch(title: string, aliasMap: Map<string, string>, description?: string): string | null {
   const norm = normalize(title);
+
+  // If title is generic (e.g. "Almoço"), extract protein from description
+  if (GENERIC_TITLES.has(norm) && description) {
+    const protein = extractProteinFromDescription(description);
+    if (protein) {
+      if (aliasMap.has(protein)) return aliasMap.get(protein)!;
+      for (const [alias, itemId] of aliasMap) {
+        if (alias === protein || alias.startsWith(protein + " ")) return itemId;
+      }
+    }
+    return null; // Don't fallback for generic titles
+  }
 
   // Strategy 1: exact alias match
   if (aliasMap.has(norm)) return aliasMap.get(norm)!;
@@ -103,7 +115,6 @@ function findMatch(title: string, aliasMap: Map<string, string>): string | null 
     if (CARB_KEYWORDS.has(word)) continue;
     const proteinBase = PROTEIN_KEYWORDS[word];
     if (proteinBase) {
-      // Find any alias that starts with the protein base
       for (const [alias, itemId] of aliasMap) {
         if (alias === proteinBase || alias.startsWith(proteinBase + " ")) {
           return itemId;
