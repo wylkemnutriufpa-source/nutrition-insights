@@ -48,25 +48,42 @@ async function buildAliasMap(): Promise<Map<string, string>> {
 
 /** Primary protein keywords mapped to their base slug */
 const PROTEIN_KEYWORDS: Record<string, string> = {
-  frango: "frango",
-  carne: "carne",
-  bife: "carne",
-  picanha: "picanha",
-  costelinha: "costelinha",
-  peixe: "peixe",
-  tilapia: "peixe",
-  salmao: "peixe",
+  frango: "frango", peito: "frango", sobrecoxa: "frango",
+  carne: "carne", bife: "carne", alcatra: "carne", patinho: "carne", acem: "carne", maminha: "carne",
+  picanha: "picanha", costelinha: "costelinha",
+  porco: "porco", suino: "porco", lombo: "porco",
+  peixe: "peixe", tilapia: "peixe", salmao: "peixe", pescada: "peixe", merluza: "peixe",
   camarao: "camarao",
-  ovo: "ovo",
-  ovos: "ovo",
-  omelete: "ovo",
+  ovo: "ovo", ovos: "ovo", omelete: "ovo",
 };
 
 /** Carb keywords to ignore when determining the visual */
 const CARB_KEYWORDS = new Set([
   "arroz", "batata", "macarrao", "macarronada", "feijao",
-  "pure", "mandioca", "inhame", "legumes", "salada",
+  "pure", "mandioca", "inhame", "legumes", "salada", "brocolis", "macaxeira",
 ]);
+
+const GENERIC_TITLES = new Set([
+  "almoco", "jantar", "cafe da manha", "lanche",
+  "lanche da manha", "lanche da tarde", "ceia",
+]);
+
+function extractProteinFromDescription(description: string): string | null {
+  const lines = description.split('\n');
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.includes('Substituiç') || trimmed.includes('🔄')) break;
+    if (!trimmed.startsWith('•') && !trimmed.startsWith('-')) continue;
+    const normLine = normalize(trimmed);
+    if (normLine.includes("carne moida")) return "carne moida";
+    const words = normLine.split(/\s+/);
+    for (const word of words) {
+      if (CARB_KEYWORDS.has(word)) continue;
+      if (PROTEIN_KEYWORDS[word]) return PROTEIN_KEYWORDS[word];
+    }
+  }
+  return null;
+}
 
 /**
  * Tries to find a match using multiple strategies:
