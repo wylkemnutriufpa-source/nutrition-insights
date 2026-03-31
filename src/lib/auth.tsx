@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { invalidateMenuCache } from "@/hooks/useSmartMenu";
 import type { Database } from "@/integrations/supabase/types";
 import { logAudit } from "@/lib/auditLog";
 
@@ -234,6 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = async () => {
+    invalidateMenuCache();
     await supabase.auth.signOut();
   };
 

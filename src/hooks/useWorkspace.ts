@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 
@@ -28,6 +28,7 @@ export interface WorkspaceItem {
   route?: string;
   icon?: string;
   premium_only?: boolean;
+  role_visibility?: string[];
 }
 
 export interface WorkspaceProfile {
@@ -38,12 +39,20 @@ export interface WorkspaceProfile {
 }
 
 export function useWorkspace() {
-  const { user, isNutritionist, isPersonal, isAdmin } = useAuth();
+  const { user, isNutritionist, isPersonal, isAdmin, roles } = useAuth();
   const [profile, setProfile] = useState<WorkspaceProfile | null>(null);
   const [sections, setSections] = useState<WorkspaceSection[]>([]);
   const [items, setItems] = useState<WorkspaceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const isProRole = isNutritionist || isPersonal || isAdmin;
+
+  // Determine the user's primary role for filtering
+  const userRole = useMemo(() => {
+    if ((roles as string[]).includes("admin")) return "admin";
+    if (roles.includes("nutritionist")) return "nutritionist";
+    if (roles.includes("personal")) return "personal";
+    return "patient";
+  }, [roles]);
 
   const initialize = useCallback(async () => {
     if (!user?.id || !isProRole) { setLoading(false); return; }
@@ -99,7 +108,7 @@ export function useWorkspace() {
       if (menuItemIds.length > 0) {
         const { data: menuData } = await supabase
           .from("menu_items")
-          .select("id, label, label_key, route, icon, premium_only")
+          .select("id, label, label_key, route, icon, premium_only, role_visibility")
           .in("id", menuItemIds);
 
         (menuData || []).forEach((m: any) => menuMap.set(m.id, m));
@@ -114,6 +123,7 @@ export function useWorkspace() {
           route: menu?.route || "/",
           icon: menu?.icon || "LayoutDashboard",
           premium_only: menu?.premium_only || false,
+          role_visibility: Array.isArray(menu?.role_visibility) ? menu.role_visibility : [],
         };
       });
 
@@ -232,12 +242,18 @@ export function useWorkspace() {
     await initialize();
   }, [profile, user?.id, initialize]);
 
-  // Get items for a specific section, sorted
+  // Get items for a specific section, sorted and filtered by role
   const getItemsForSection = useCallback((sectionId: string) => {
     return items
       .filter(i => i.section_id === sectionId)
+      .filter(i => {
+        const rv = (i as any).role_visibility;
+        // If no role_visibility defined, show to everyone
+        if (!Array.isArray(rv) || rv.length === 0) return true;
+        return rv.includes(userRole);
+      })
       .sort((a, b) => a.sort_order - b.sort_order);
-  }, [items]);
+  }, [items, userRole]);
 
   return {
     profile, sections, items, loading,
