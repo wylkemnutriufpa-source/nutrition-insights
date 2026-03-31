@@ -14396,6 +14396,131 @@ export type Database = {
         }
         Relationships: []
       }
+      simulation_rate_limits: {
+        Row: {
+          id: string
+          run_count: number
+          run_date: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          run_count?: number
+          run_date?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          run_count?: number
+          run_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      simulation_runs: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          errors: string[] | null
+          executed_by: string | null
+          finished_at: string | null
+          id: string
+          mode: string
+          results_json: Json | null
+          scenarios_failed: number
+          scenarios_passed: number
+          scenarios_skipped: number
+          scenarios_total: number
+          started_at: string
+          status: string
+          warnings: string[] | null
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          errors?: string[] | null
+          executed_by?: string | null
+          finished_at?: string | null
+          id?: string
+          mode?: string
+          results_json?: Json | null
+          scenarios_failed?: number
+          scenarios_passed?: number
+          scenarios_skipped?: number
+          scenarios_total?: number
+          started_at?: string
+          status?: string
+          warnings?: string[] | null
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          errors?: string[] | null
+          executed_by?: string | null
+          finished_at?: string | null
+          id?: string
+          mode?: string
+          results_json?: Json | null
+          scenarios_failed?: number
+          scenarios_passed?: number
+          scenarios_skipped?: number
+          scenarios_total?: number
+          started_at?: string
+          status?: string
+          warnings?: string[] | null
+        }
+        Relationships: []
+      }
+      simulation_scenario_results: {
+        Row: {
+          affected_function: string | null
+          affected_route: string | null
+          created_at: string
+          duration_ms: number | null
+          error_detail: string | null
+          error_message: string | null
+          id: string
+          run_id: string
+          scenario_group: string
+          scenario_name: string
+          status: string
+        }
+        Insert: {
+          affected_function?: string | null
+          affected_route?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_detail?: string | null
+          error_message?: string | null
+          id?: string
+          run_id: string
+          scenario_group: string
+          scenario_name: string
+          status?: string
+        }
+        Update: {
+          affected_function?: string | null
+          affected_route?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_detail?: string | null
+          error_message?: string | null
+          id?: string
+          run_id?: string
+          scenario_group?: string
+          scenario_name?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simulation_scenario_results_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "simulation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_settings: {
         Row: {
           category: string
@@ -17164,6 +17289,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_simulation_rate_limit: { Args: never; Returns: boolean }
       cleanup_observability_logs: {
         Args: { retention_days?: number }
         Returns: Json
