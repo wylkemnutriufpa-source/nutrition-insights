@@ -457,7 +457,7 @@ export async function loadPatientProfile(patientId: string): Promise<PatientProf
   if (!anamnesis) {
     const { data: assessment } = await supabase
       .from("physical_assessments")
-      .select("weight, height, gender")
+      .select("weight, height")
       .eq("patient_id", patientId)
       .order("assessment_date", { ascending: false })
       .limit(1)
@@ -465,8 +465,7 @@ export async function loadPatientProfile(patientId: string): Promise<PatientProf
 
     if (assessment?.weight) {
       const weight = Number(assessment.weight) || 70;
-      const isFemale = (assessment.gender || "").toLowerCase().includes("f");
-      const baseCal = isFemale ? Math.round(weight * 25) : Math.round(weight * 28);
+      const baseCal = Math.round(weight * 26);
       return {
         patientId,
         goal: "maintenance",
