@@ -77,7 +77,7 @@ const GENERIC_TITLES = new Set([
   "lanche da manha", "lanche da tarde", "ceia",
 ]);
 
-function extractProteinFromDescription(description: string): string | null {
+function extractFoodFromDescription(description: string): string | null {
   const lines = description.split('\n');
   for (const line of lines) {
     const trimmed = line.trim();
@@ -85,10 +85,13 @@ function extractProteinFromDescription(description: string): string | null {
     if (!trimmed.startsWith('•') && !trimmed.startsWith('-')) continue;
     const normLine = normalize(trimmed);
     if (normLine.includes("carne moida")) return "carne moida";
+    if (normLine.includes("carne de panela")) return "carne de panela";
+    if (normLine.includes("carne assada")) return "carne assada";
     const words = normLine.split(/\s+/);
     for (const word of words) {
       if (CARB_KEYWORDS.has(word)) continue;
       if (PROTEIN_KEYWORDS[word]) return PROTEIN_KEYWORDS[word];
+      if (FRUIT_KEYWORDS[word]) return FRUIT_KEYWORDS[word];
     }
   }
   return null;
