@@ -651,6 +651,34 @@ export default function SystemDiagnostics() {
             </Card>
           </TabsContent>
 
+          {/* Errors Tab */}
+          <TabsContent value="errors">
+            <Suspense fallback={<div className="p-8 text-center text-muted-foreground">Carregando...</div>}>
+              <ErrorsTab />
+            </Suspense>
+          </TabsContent>
+
+          {/* Pipelines Tab */}
+          <TabsContent value="pipelines">
+            <Suspense fallback={<div className="p-8 text-center text-muted-foreground">Carregando...</div>}>
+              <PipelinesTab />
+            </Suspense>
+          </TabsContent>
+
+          {/* Performance Tab */}
+          <TabsContent value="performance">
+            <Suspense fallback={<div className="p-8 text-center text-muted-foreground">Carregando...</div>}>
+              <PerformanceTab />
+            </Suspense>
+          </TabsContent>
+
+          {/* Alerts Tab */}
+          <TabsContent value="alerts">
+            <Suspense fallback={<div className="p-8 text-center text-muted-foreground">Carregando...</div>}>
+              <AlertsTab />
+            </Suspense>
+          </TabsContent>
+
           {/* History Tab */}
           <TabsContent value="history">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
