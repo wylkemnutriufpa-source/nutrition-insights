@@ -579,14 +579,26 @@ export default function SystemDiagnostics() {
 
         {/* Tabs: Live Logs + History + Cleanup */}
         <Tabs defaultValue="live" className="w-full">
-          <TabsList className="w-full sm:w-auto">
-            <TabsTrigger value="live" className="gap-1.5 flex-1 sm:flex-none">
+          <TabsList className="w-full sm:w-auto flex-wrap h-auto gap-1 p-1">
+            <TabsTrigger value="live" className="gap-1.5 text-xs">
               <FileText className="w-3.5 h-3.5" /> Live Logs
             </TabsTrigger>
-            <TabsTrigger value="history" className="gap-1.5 flex-1 sm:flex-none">
+            <TabsTrigger value="errors" className="gap-1.5 text-xs">
+              <Bug className="w-3.5 h-3.5" /> Erros
+            </TabsTrigger>
+            <TabsTrigger value="pipelines" className="gap-1.5 text-xs">
+              <Cpu className="w-3.5 h-3.5" /> Pipelines
+            </TabsTrigger>
+            <TabsTrigger value="performance" className="gap-1.5 text-xs">
+              <Gauge className="w-3.5 h-3.5" /> Performance
+            </TabsTrigger>
+            <TabsTrigger value="alerts" className="gap-1.5 text-xs">
+              <Bell className="w-3.5 h-3.5" /> Alertas
+            </TabsTrigger>
+            <TabsTrigger value="history" className="gap-1.5 text-xs">
               <History className="w-3.5 h-3.5" /> Histórico
             </TabsTrigger>
-            <TabsTrigger value="cleanup" className="gap-1.5 flex-1 sm:flex-none">
+            <TabsTrigger value="cleanup" className="gap-1.5 text-xs">
               <Database className="w-3.5 h-3.5" /> Limpeza
             </TabsTrigger>
           </TabsList>
