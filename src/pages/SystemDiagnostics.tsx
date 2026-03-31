@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, lazy, Suspense } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,9 +14,15 @@ import { cn } from "@/lib/utils";
 import {
   Activity, Play, AlertTriangle, CheckCircle2, XCircle,
   Database, Route, Bell, Radio, Cpu, Shield, RefreshCw,
-  BarChart3, Clock, FileText, Copy, History, Filter
+  BarChart3, Clock, FileText, Copy, History, Filter,
+  Gauge, Bug
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+
+const ErrorsTab = lazy(() => import("@/components/diagnostics/ErrorsTab"));
+const PipelinesTab = lazy(() => import("@/components/diagnostics/PipelinesTab"));
+const PerformanceTab = lazy(() => import("@/components/diagnostics/PerformanceTab"));
+const AlertsTab = lazy(() => import("@/components/diagnostics/AlertsTab"));
 
 type LogLevel = "ok" | "warning" | "error" | "info";
 interface DiagLog {
@@ -494,9 +500,9 @@ export default function SystemDiagnostics() {
           <div>
             <h1 className="font-display text-xl sm:text-2xl font-bold flex items-center gap-2">
               <Cpu className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-              System Test Center
+              System Diagnostics & Observability
             </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground">Auto-diagnostic engine with persistent logging</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Diagnóstico, monitoramento e observabilidade operacional em tempo real</p>
           </div>
           <div className="flex gap-2">
             {logs.length > 0 && (
@@ -573,14 +579,26 @@ export default function SystemDiagnostics() {
 
         {/* Tabs: Live Logs + History + Cleanup */}
         <Tabs defaultValue="live" className="w-full">
-          <TabsList className="w-full sm:w-auto">
-            <TabsTrigger value="live" className="gap-1.5 flex-1 sm:flex-none">
+          <TabsList className="w-full sm:w-auto flex-wrap h-auto gap-1 p-1">
+            <TabsTrigger value="live" className="gap-1.5 text-xs">
               <FileText className="w-3.5 h-3.5" /> Live Logs
             </TabsTrigger>
-            <TabsTrigger value="history" className="gap-1.5 flex-1 sm:flex-none">
+            <TabsTrigger value="errors" className="gap-1.5 text-xs">
+              <Bug className="w-3.5 h-3.5" /> Erros
+            </TabsTrigger>
+            <TabsTrigger value="pipelines" className="gap-1.5 text-xs">
+              <Cpu className="w-3.5 h-3.5" /> Pipelines
+            </TabsTrigger>
+            <TabsTrigger value="performance" className="gap-1.5 text-xs">
+              <Gauge className="w-3.5 h-3.5" /> Performance
+            </TabsTrigger>
+            <TabsTrigger value="alerts" className="gap-1.5 text-xs">
+              <Bell className="w-3.5 h-3.5" /> Alertas
+            </TabsTrigger>
+            <TabsTrigger value="history" className="gap-1.5 text-xs">
               <History className="w-3.5 h-3.5" /> Histórico
             </TabsTrigger>
-            <TabsTrigger value="cleanup" className="gap-1.5 flex-1 sm:flex-none">
+            <TabsTrigger value="cleanup" className="gap-1.5 text-xs">
               <Database className="w-3.5 h-3.5" /> Limpeza
             </TabsTrigger>
           </TabsList>
@@ -631,6 +649,34 @@ export default function SystemDiagnostics() {
                 </ScrollArea>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Errors Tab */}
+          <TabsContent value="errors">
+            <Suspense fallback={<div className="p-8 text-center text-muted-foreground">Carregando...</div>}>
+              <ErrorsTab />
+            </Suspense>
+          </TabsContent>
+
+          {/* Pipelines Tab */}
+          <TabsContent value="pipelines">
+            <Suspense fallback={<div className="p-8 text-center text-muted-foreground">Carregando...</div>}>
+              <PipelinesTab />
+            </Suspense>
+          </TabsContent>
+
+          {/* Performance Tab */}
+          <TabsContent value="performance">
+            <Suspense fallback={<div className="p-8 text-center text-muted-foreground">Carregando...</div>}>
+              <PerformanceTab />
+            </Suspense>
+          </TabsContent>
+
+          {/* Alerts Tab */}
+          <TabsContent value="alerts">
+            <Suspense fallback={<div className="p-8 text-center text-muted-foreground">Carregando...</div>}>
+              <AlertsTab />
+            </Suspense>
           </TabsContent>
 
           {/* History Tab */}
