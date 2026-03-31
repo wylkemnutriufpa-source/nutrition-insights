@@ -1,8 +1,7 @@
 import { motion } from "framer-motion";
-import { MessageSquare, Database, FileText, BarChart3, TrendingUp, Smartphone, Shield, Zap } from "lucide-react";
+import { Database, FileText, BarChart3, TrendingUp, Smartphone, Shield, Zap } from "lucide-react";
 
 const integrations = [
-  { icon: MessageSquare, label: "WhatsApp", desc: "Comunicação direta com pacientes" },
   { icon: Database, label: "Banco TACO", desc: "Tabela nutricional brasileira integrada" },
   { icon: FileText, label: "Exportação PDF", desc: "Planos e relatórios em PDF profissional" },
   { icon: BarChart3, label: "Dashboard Clínico", desc: "Analytics de desempenho em tempo real" },

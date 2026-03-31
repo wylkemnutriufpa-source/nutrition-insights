@@ -31,7 +31,6 @@ const CAMPAIGN_TYPES = [
 
 const CHANNELS = [
   { id: "notification", label: "Notificação Interna", icon: Bell },
-  { id: "whatsapp", label: "WhatsApp", icon: MessageSquare },
   { id: "push", label: "Push Notification", icon: Send },
 ];
 

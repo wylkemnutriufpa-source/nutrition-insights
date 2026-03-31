@@ -1611,7 +1611,7 @@ export default function PatientDetail() {
                       </p>
                     </div>
                     <div>
-                      <Label>Telefone / WhatsApp</Label>
+                      <Label>Telefone</Label>
                       <Input
                         value={editProfileForm.phone}
                         onChange={(e) => setEditProfileForm({ ...editProfileForm, phone: e.target.value })}
