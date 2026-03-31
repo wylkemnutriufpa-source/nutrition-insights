@@ -100,6 +100,10 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
     <div className="space-y-1">
       {visibleSections.map(section => {
         const sectionItems = getItemsForSection(section.id).filter(i => i.is_visible && isRouteAllowed(i.route || "/"));
+        
+        // Hide sections with no visible items (e.g. admin sections for non-admin users)
+        if (sectionItems.length === 0) return null;
+        
         const isOpen = openGroups.includes(section.section_name);
         const SectionIcon = ICON_MAP[section.section_icon] || LayoutDashboard;
         const hasActiveItem = sectionItems.some(item => location.pathname === item.route);
