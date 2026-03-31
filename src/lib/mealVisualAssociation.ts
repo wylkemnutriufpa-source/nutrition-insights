@@ -63,8 +63,10 @@ const PROTEIN_KEYWORDS: Record<string, string> = {
 const FRUIT_KEYWORDS: Record<string, string> = {
   abacaxi: "abacaxi", morango: "morango", melao: "melao", goiaba: "goiaba",
   pera: "pera", uva: "uva", laranja: "laranja", melancia: "melancia",
-  manga: "manga", maca: "maca", mamao: "mamao", banana: "banana",
-  abacate: "abacate",
+  manga: "manga", maca: "maca", mamao: "mamao",
+  banana: "banana", tangerina: "laranja", mexerica: "laranja", ponkan: "laranja",
+  kiwi: "salada-de-frutas", abacate: "abacate",
+  pessego: "fruta", ameixa: "fruta",
 };
 
 /** Misc food keywords mapped to their visual slug */
