@@ -76,8 +76,18 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
       setTargetCarbs(p.targetCarbs);
       setTargetFat(p.targetFat);
       setRejectedFoods(p.rejectedFoods.join(", "));
+      if (!p.clinicalTags?.length && p.goal === "maintenance") {
+        toast.info("Dados básicos carregados a partir da avaliação física. Para personalização completa, peça ao paciente para preencher a anamnese.");
+      } else {
+        toast.success("Dados da anamnese carregados com sucesso!");
+      }
     } else {
-      toast.info("Anamnese não preenchida para este paciente. Preencha a anamnese ou configure os valores manualmente abaixo.");
+      toast.info(
+        "Nenhuma anamnese ou avaliação encontrada para este paciente. " +
+        "Configure os valores manualmente abaixo — objetivo, calorias, macros e restrições. " +
+        "Você pode gerar o plano normalmente!",
+        { duration: 6000 }
+      );
     }
     setLoadingProfile(false);
   }, [plan?.patient_id]);
