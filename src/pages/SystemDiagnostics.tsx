@@ -448,6 +448,7 @@ export default function SystemDiagnostics() {
     }
 
     setTestStatus("done");
+    runningRef.current = false;
     void refetchHistory();
     toast.success(`Diagnóstico completo: Score ${score}/100`);
   }, [user, addLog, runAuthTest, runDatabaseTest, runRouteTest, runNotificationTest, runRealtimeTest, runConsistencyTest, persistEntries, refetchHistory]);
