@@ -60,6 +60,7 @@ import PatientEvolutionPDF from "@/components/patient/PatientEvolutionPDF";
 import FitIntelligenceToggle from "@/components/intelligence/FitIntelligenceToggle";
 import PatientLabExams from "@/components/patient/PatientLabExams";
 import PatientFeedbacksPanel from "@/components/patient/PatientFeedbacksPanel";
+import { deactivateMealPlan } from "@/lib/serverTransitions";
 
 export default function PatientDetail() {
   const { patientId } = useParams<{ patientId: string }>();
@@ -92,6 +93,10 @@ export default function PatientDetail() {
   const prestigePlans = data?.prestigePlans ?? [];
   const currentPrestigePlan = data?.currentPrestigePlan ?? null;
   const patientEmail = data?.patientEmail ?? "";
+  const activeMealPlan = useMemo(
+    () => mealPlans.find((plan: any) => plan.is_active) ?? null,
+    [mealPlans]
+  );
 
   // Local UI state
   const [activateOpen, setActivateOpen] = useState(false);
@@ -130,6 +135,7 @@ export default function PatientDetail() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [releaseOnboardingOpen, setReleaseOnboardingOpen] = useState(false);
   const [confirmingPayment, setConfirmingPayment] = useState(false);
+  const [markingWithoutDiet, setMarkingWithoutDiet] = useState(false);
 
   // Sync selectedPrestigePlanId when data loads asynchronously
   useEffect(() => {
@@ -141,6 +147,28 @@ export default function PatientDetail() {
   // Invalidation helper — centralized
   const invalidate = () => {
     invalidateLifecycleQueries(queryClient, patientId ?? undefined);
+  };
+
+  const handleMarkWithoutDiet = async () => {
+    if (!user || !activeMealPlan) return;
+
+    setMarkingWithoutDiet(true);
+
+    try {
+      const result = await deactivateMealPlan(activeMealPlan.id, user.id);
+
+      if (!result.success) {
+        throw new Error(result.error || "Erro ao remover plano ativo");
+      }
+
+      toast.success("Paciente marcado como sem dieta.");
+      invalidate();
+      refetch();
+    } catch (err: any) {
+      toast.error(err?.message || "Erro ao deixar paciente sem dieta");
+    } finally {
+      setMarkingWithoutDiet(false);
+    }
   };
 
   // Confirm payment + auto-release onboarding
@@ -630,6 +658,37 @@ export default function PatientDetail() {
             <Button variant="outline" className="gap-2" onClick={() => navigate(`/diet-templates?patientId=${patientId}`)}>
               <BookOpen className="w-4 h-4" /> Modelos de Dieta
             </Button>
+            {activeMealPlan && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="gap-2 border-destructive/30 text-destructive hover:bg-destructive/10"
+                    disabled={markingWithoutDiet}
+                  >
+                    {markingWithoutDiet ? <Loader2 className="w-4 h-4 animate-spin" /> : <UtensilsCrossed className="w-4 h-4" />}
+                    Estou sem dieta
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Deixar este paciente sem dieta?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      O plano ativo {activeMealPlan.title ? `“${activeMealPlan.title}”` : "deste paciente"} será removido da rotina ativa e, se já tiver sido publicado, ficará arquivado para preservar o histórico.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleMarkWithoutDiet}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Confirmar
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
             <Button variant="outline" className="gap-2" onClick={() => navigate(`/anamnesis?patientId=${patientId}`)}>
               <Heart className="w-4 h-4" /> {anamnesis ? "Editar Anamnese" : "Preencher Anamnese"}
             </Button>
