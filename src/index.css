@@ -205,6 +205,8 @@
   .shimmer-sweep::after {
     content: '';
     position: absolute;
+    z-index: 0;
+    pointer-events: none;
     top: 0;
     left: -100%;
     width: 50%;
