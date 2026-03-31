@@ -453,7 +453,36 @@ export async function loadPatientProfile(patientId: string): Promise<PatientProf
     .limit(1)
     .maybeSingle();
 
-  if (!anamnesis) return null;
+  // Fallback: try physical assessment for weight even without anamnesis
+  if (!anamnesis) {
+    const { data: assessment } = await supabase
+      .from("physical_assessments")
+      .select("weight, height, gender")
+      .eq("patient_id", patientId)
+      .order("assessment_date", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (assessment?.weight) {
+      const weight = Number(assessment.weight) || 70;
+      const isFemale = (assessment.gender || "").toLowerCase().includes("f");
+      const baseCal = isFemale ? Math.round(weight * 25) : Math.round(weight * 28);
+      return {
+        patientId,
+        goal: "maintenance",
+        targetCalories: baseCal,
+        targetProtein: Math.round(weight * 1.6),
+        targetCarbs: Math.round(baseCal * 0.45 / 4),
+        targetFat: Math.round(baseCal * 0.25 / 9),
+        restrictions: [],
+        rejectedFoods: [],
+        clinicalTags: [],
+        weight,
+      };
+    }
+
+    return null;
+  }
 
   const answers = (anamnesis.answers || {}) as Record<string, any>;
 
