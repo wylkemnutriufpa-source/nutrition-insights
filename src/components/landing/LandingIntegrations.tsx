@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { MessageSquare, Database, FileText, BarChart3, TrendingUp, Smartphone, Shield, Zap } from "lucide-react";
+import { Database, FileText, BarChart3, TrendingUp, Smartphone, Shield, Zap } from "lucide-react";
 
 const integrations = [
   { icon: Database, label: "Banco TACO", desc: "Tabela nutricional brasileira integrada" },
