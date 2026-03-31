@@ -100,6 +100,7 @@ function extractFoodFromDescription(description: string): string | null {
       if (CARB_KEYWORDS.has(word)) continue;
       if (PROTEIN_KEYWORDS[word]) return PROTEIN_KEYWORDS[word];
       if (FRUIT_KEYWORDS[word]) return FRUIT_KEYWORDS[word];
+      if (MISC_FOOD_KEYWORDS[word]) return MISC_FOOD_KEYWORDS[word];
     }
   }
   return null;
