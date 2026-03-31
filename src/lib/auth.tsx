@@ -235,6 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = async () => {
+    invalidateMenuCache();
     await supabase.auth.signOut();
   };
 
