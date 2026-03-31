@@ -1089,12 +1089,14 @@ function generateLocalInsights(patients: any[]) {
 
 export default function Index() {
   const { isNutritionist, isPersonal, isAdmin, loading } = useAuth();
+  const { isPatientContext, isHybridUser } = useWorkspaceContext();
   const { minMode } = useExperienceMode();
   const [showTour, setShowTour] = useState(false);
   const { proView, setProView } = useLayoutPreference();
 
   const isProRole = isNutritionist || isPersonal || isAdmin;
-  const isPatient = !isProRole;
+  // For hybrid users, respect workspace context; for pure roles, use role check
+  const isPatient = isHybridUser ? isPatientContext : !isProRole;
 
   const tourKey = isProRole ? "tour_professional_completed" : "tour_patient_completed";
   const onboardingKey = isProRole ? "fitjourney_professional_onboarding_completed" : "patient_onboarding_completed";
