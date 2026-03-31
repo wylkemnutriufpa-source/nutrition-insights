@@ -80,13 +80,10 @@ Deno.serve(async (req) => {
           patientId = existingUser.id;
         }
 
-        // ALWAYS reset password for existing users to ensure they can login
-        const passwordToSet = (method === "password" && password) ? password : finalPassword;
-        await adminClient.auth.admin.updateUserById(patientId, { 
-          password: passwordToSet,
-          email_confirm: true,
-        });
-        console.log(`[invite-patient] Password reset for existing user ${patientId}`);
+        // If password method, update the password
+        if (method === "password" && password) {
+          await adminClient.auth.admin.updateUserById(patientId, { password });
+        }
       } else {
         throw createError;
       }

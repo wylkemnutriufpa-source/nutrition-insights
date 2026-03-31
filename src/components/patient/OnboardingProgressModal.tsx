@@ -3,19 +3,22 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import {
-  Dialog, DialogContent,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import {
   ClipboardCheck, Scale, UtensilsCrossed, CheckCircle2,
-  ArrowRight, Sparkles,
+  ArrowRight, Sparkles, Clock, PartyPopper, Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePatientPlanStatus } from "@/hooks/usePatientPlanStatus";
 
-interface Step {
+interface PipelineStep {
   key: string;
   label: string;
+  description: string;
+  helpText: string;
   icon: React.ElementType;
   completed: boolean;
   route: string;
@@ -28,13 +31,15 @@ export default function OnboardingProgressModal() {
   const navigate = useNavigate();
   const planStatus = usePatientPlanStatus();
   const [open, setOpen] = useState(false);
-  const [steps, setSteps] = useState<Step[]>([]);
+  const [steps, setSteps] = useState<PipelineStep[]>([]);
+  const [pipelineId, setPipelineId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user || !isPatient) return;
     if (planStatus.isLoading) return;
     if (!planStatus.showOnboarding) return;
 
+    // Don't show if dismissed in the last 4 hours
     const dismissedRaw = localStorage.getItem(`${DISMISSED_KEY}_${user.id}`);
     if (dismissedRaw) {
       const dismissed = JSON.parse(dismissedRaw);
@@ -54,30 +59,63 @@ export default function OnboardingProgressModal() {
 
       if (!pipeline) return;
 
+      // Block onboarding if not released by professional
       const releaseStatus = (pipeline as any).release_status;
       if (releaseStatus !== "released") return;
 
-      const detectedSteps: Step[] = [
+      setPipelineId(pipeline.id);
+
+      // Read progressive step state
+      const stepState = (pipeline as any).onboarding_step_completed || {};
+
+      const allPatientStepsDone = !!pipeline.anamnesis_completed && !!pipeline.body_data_completed && !!pipeline.preferences_completed;
+
+      const detectedSteps: PipelineStep[] = [
         {
           key: "anamnesis",
-          label: "Questionário de saúde",
+          label: "Anamnese Nutricional",
+          description: pipeline.anamnesis_completed
+            ? "✅ Anamnese preenchida com sucesso!"
+            : "Responda o questionário sobre sua saúde e hábitos alimentares.",
+          helpText: "Esse questionário leva cerca de 5 minutos. Suas respostas ajudam seu nutricionista a criar um plano personalizado.",
           icon: ClipboardCheck,
           completed: !!pipeline.anamnesis_completed,
           route: "/anamnesis",
         },
         {
           key: "body_data",
-          label: "Peso e altura",
+          label: "Dados Corporais",
+          description: pipeline.body_data_completed
+            ? "✅ Dados corporais registrados!"
+            : "Informe seu peso e altura atuais.",
+          helpText: "Precisamos do seu peso e altura para calcular suas necessidades calóricas. Leva menos de 1 minuto.",
           icon: Scale,
           completed: !!pipeline.body_data_completed,
           route: "/onboarding",
         },
         {
           key: "preferences",
-          label: "Preferências alimentares",
+          label: "Preferências Alimentares",
+          description: pipeline.preferences_completed
+            ? "✅ Preferências salvas!"
+            : "Informe suas preferências de refeição, horários e restrições.",
+          helpText: "Conte ao seu nutricionista sobre alergias, alimentos que não gosta e horários de refeição. Leva cerca de 2 minutos.",
           icon: UtensilsCrossed,
           completed: !!pipeline.preferences_completed,
           route: "/onboarding",
+        },
+        {
+          key: "approval",
+          label: "Geração do Plano",
+          description: allPatientStepsDone
+            ? "🎉 Todas as etapas concluídas! Seu nutricionista está preparando seu plano."
+            : "Após preencher tudo acima, seu nutricionista criará seu plano personalizado.",
+          helpText: allPatientStepsDone
+            ? "Seu profissional foi notificado. O plano será entregue em breve!"
+            : "Complete as etapas acima para que seu nutricionista possa iniciar a elaboração do seu plano.",
+          icon: allPatientStepsDone ? PartyPopper : CheckCircle2,
+          completed: !!pipeline.plan_approved,
+          route: "/dashboard",
         },
       ];
 
@@ -89,6 +127,10 @@ export default function OnboardingProgressModal() {
     })();
   }, [user, isPatient, planStatus.isLoading, planStatus.showOnboarding]);
 
+  const completedCount = steps.filter((s) => s.completed).length;
+  const totalCount = steps.length;
+  const percent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
   const handleDismiss = () => {
     if (user) {
       localStorage.setItem(
@@ -99,83 +141,122 @@ export default function OnboardingProgressModal() {
     setOpen(false);
   };
 
-  const handleGo = (route: string) => {
+  const handleGoToStep = (route: string) => {
     setOpen(false);
     navigate(route);
   };
 
-  const completedCount = steps.filter((s) => s.completed).length;
-  const firstIncomplete = steps.find((s) => !s.completed);
+  const firstIncomplete = steps.find((s) => !s.completed && s.key !== "approval");
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleDismiss(); }}>
-      <DialogContent className="sm:max-w-sm p-6">
-        <div className="text-center space-y-4">
-          <span className="text-4xl block">🎯</span>
-          <div>
-            <h2 className="text-lg font-bold text-foreground">
-              Complete seu perfil
-            </h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              {completedCount}/{steps.length} etapas concluídas
-            </p>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-lg">
+            <Sparkles className="h-5 w-5 text-primary" />
+            Bem-vindo(a) ao FitJourney! 🎯
+          </DialogTitle>
+          <DialogDescription className="text-sm">
+            Para receber seu plano alimentar personalizado, complete as etapas abaixo. 
+            <span className="font-medium text-foreground"> É rápido e fácil!</span>
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* Progress bar */}
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span className="font-medium">{completedCount} de {totalCount} concluídas</span>
+              <span className="font-bold text-primary">{percent}%</span>
+            </div>
+            <Progress value={percent} className="h-2.5" />
           </div>
-        </div>
 
-        <div className="space-y-2 mt-4">
-          {steps.map((step) => {
-            const Icon = step.icon;
-            const isNext = step.key === firstIncomplete?.key;
-            return (
-              <button
-                key={step.key}
-                onClick={() => !step.completed && handleGo(step.route)}
-                disabled={step.completed}
-                className={cn(
-                  "w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all",
-                  step.completed
-                    ? "bg-accent/30"
-                    : isNext
-                      ? "bg-primary/10 border border-primary/30"
-                      : "bg-muted/20"
-                )}
-              >
-                <div className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
-                  step.completed
-                    ? "bg-accent text-accent-foreground"
-                    : isNext
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
-                )}>
-                  {step.completed ? (
-                    <CheckCircle2 className="h-4 w-4" />
-                  ) : (
-                    <Icon className="h-4 w-4" />
+          {/* Steps */}
+          <div className="space-y-2">
+            {steps.map((step, index) => {
+              const Icon = step.icon;
+              const isNext = !step.completed && step.key === firstIncomplete?.key;
+              return (
+                <button
+                  key={step.key}
+                  onClick={() => {
+                    if (!step.completed && step.key !== "approval") handleGoToStep(step.route);
+                  }}
+                  disabled={step.completed || step.key === "approval"}
+                  className={cn(
+                    "w-full flex items-start gap-3 p-3.5 rounded-xl text-left transition-all duration-200",
+                    step.completed
+                      ? "bg-accent/30 border border-accent/50"
+                      : step.key === "approval"
+                        ? "bg-muted/30 border border-dashed border-muted-foreground/20"
+                        : isNext
+                          ? "bg-primary/10 border-2 border-primary/40 hover:bg-primary/15 shadow-sm"
+                          : "bg-muted/20 border border-muted-foreground/10 hover:bg-muted/40"
                   )}
-                </div>
-                <span className={cn(
-                  "text-sm font-medium flex-1",
-                  step.completed && "line-through text-muted-foreground"
-                )}>
-                  {step.label}
-                </span>
-                {isNext && <ArrowRight className="h-4 w-4 text-primary" />}
-              </button>
-            );
-          })}
-        </div>
+                >
+                  {/* Step number / check */}
+                  <div className={cn(
+                    "flex-shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-sm font-bold",
+                    step.completed
+                      ? "bg-accent text-accent-foreground"
+                      : step.key === "approval"
+                        ? "bg-muted text-muted-foreground"
+                        : isNext
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"
+                  )}>
+                    {step.completed ? (
+                      <CheckCircle2 className="h-5 w-5" />
+                    ) : step.key === "approval" ? (
+                      <Clock className="h-4 w-4" />
+                    ) : (
+                      <span>{index + 1}</span>
+                    )}
+                  </div>
 
-        <div className="flex gap-2 mt-4">
-          <Button variant="ghost" size="sm" onClick={handleDismiss} className="flex-1 text-muted-foreground text-xs">
-            Depois
-          </Button>
-          {firstIncomplete && (
-            <Button onClick={() => handleGo(firstIncomplete.route)} size="sm" className="flex-1 gap-1.5">
-              <Sparkles className="h-3.5 w-3.5" />
-              Começar
+                  <div className="flex-1 min-w-0">
+                    <p className={cn(
+                      "text-sm font-semibold",
+                      step.completed && "text-accent-foreground"
+                    )}>
+                      {step.label}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{step.description}</p>
+                    {/* Help text for the next step */}
+                    {isNext && (
+                      <div className="flex items-start gap-1.5 mt-2 p-2 rounded-lg bg-primary/5 border border-primary/10">
+                        <Info className="h-3.5 w-3.5 text-primary mt-0.5 flex-shrink-0" />
+                        <p className="text-xs text-primary/80">{step.helpText}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {!step.completed && step.key !== "approval" && (
+                    <ArrowRight className={cn(
+                      "h-4 w-4 flex-shrink-0 mt-1",
+                      isNext ? "text-primary" : "text-muted-foreground"
+                    )} />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex gap-2 pt-2">
+            <Button variant="ghost" size="sm" onClick={handleDismiss} className="flex-1 text-muted-foreground">
+              Lembrar depois
             </Button>
-          )}
+            {firstIncomplete && (
+              <Button onClick={() => handleGoToStep(firstIncomplete.route)} className="flex-1 gap-1.5 font-semibold">
+                <Sparkles className="h-4 w-4" />
+                {firstIncomplete.key === "anamnesis" ? "Começar agora" :
+                 firstIncomplete.key === "body_data" ? "Informar dados" :
+                 "Preencher agora"}
+              </Button>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
