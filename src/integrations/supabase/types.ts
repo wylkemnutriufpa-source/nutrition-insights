@@ -17561,6 +17561,7 @@ export type Database = {
         Args: { _patient_id: string }
         Returns: Json
       }
+      resolve_tenant_for_user: { Args: { _user_id: string }; Returns: string }
       run_security_audit: { Args: never; Returns: Json }
       save_plan_as_approved: {
         Args: { _nutritionist_id: string; _plan_id: string }
