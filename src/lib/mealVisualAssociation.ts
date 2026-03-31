@@ -95,6 +95,8 @@ function extractFoodFromDescription(description: string): string | null {
     if (normLine.includes("carne moida")) return "carne moida";
     if (normLine.includes("carne de panela")) return "carne de panela";
     if (normLine.includes("carne assada")) return "carne assada";
+    if (normLine.includes("banana com pasta de amendoim") || normLine.includes("banana com amendoim")) return "banana com pasta de amendoim";
+    if (normLine.includes("wrap integral") || normLine.includes("rap10")) return "wrap integral";
     const words = normLine.split(/\s+/);
     for (const word of words) {
       if (CARB_KEYWORDS.has(word)) continue;
