@@ -264,14 +264,21 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
               ) : (
                 <motion.form key="login" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
                   onSubmit={handleLogin} className="space-y-4">
-                  {/* Role indicator */}
-                  <div className="flex items-center justify-center gap-4 py-2">
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
-                      <Stethoscope className="w-3.5 h-3.5" /><span>{t("auth.nutritionist")}</span>
+                  {/* Premium role indicator */}
+                  <div className="relative flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 border border-primary/10">
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/10 via-transparent to-accent/10 opacity-50 blur-sm" />
+                    <div className="relative flex items-center gap-1.5 text-xs font-medium text-primary/80">
+                      <div className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10">
+                        <Stethoscope className="w-3 h-3 text-primary" />
+                      </div>
+                      <span>{t("auth.nutritionist")}</span>
                     </div>
-                    <div className="w-px h-3.5 bg-border/50" />
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
-                      <Users className="w-3.5 h-3.5" /><span>{t("auth.patient")}</span>
+                    <div className="relative w-px h-4 bg-gradient-to-b from-transparent via-primary/30 to-transparent" />
+                    <div className="relative flex items-center gap-1.5 text-xs font-medium text-accent-foreground/70">
+                      <div className="flex items-center justify-center w-5 h-5 rounded-full bg-accent/20">
+                        <Users className="w-3 h-3 text-accent-foreground/70" />
+                      </div>
+                      <span>{t("auth.patient")}</span>
                     </div>
                   </div>
 
