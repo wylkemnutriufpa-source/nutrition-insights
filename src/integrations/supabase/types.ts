@@ -14521,6 +14521,33 @@ export type Database = {
           },
         ]
       }
+      simulator_audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          new_state: boolean | null
+          performed_by: string | null
+          previous_state: boolean | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          new_state?: boolean | null
+          performed_by?: string | null
+          previous_state?: boolean | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          new_state?: boolean | null
+          performed_by?: string | null
+          previous_state?: boolean | null
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           category: string
@@ -17289,7 +17316,9 @@ export type Database = {
         }
         Returns: boolean
       }
-      check_simulation_rate_limit: { Args: never; Returns: boolean }
+      check_simulation_rate_limit:
+        | { Args: never; Returns: boolean }
+        | { Args: { _mode?: string }; Returns: boolean }
       cleanup_observability_logs: {
         Args: { retention_days?: number }
         Returns: Json
