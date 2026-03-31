@@ -241,12 +241,18 @@ export function useWorkspace() {
     await initialize();
   }, [profile, user?.id, initialize]);
 
-  // Get items for a specific section, sorted
+  // Get items for a specific section, sorted and filtered by role
   const getItemsForSection = useCallback((sectionId: string) => {
     return items
       .filter(i => i.section_id === sectionId)
+      .filter(i => {
+        const rv = (i as any).role_visibility;
+        // If no role_visibility defined, show to everyone
+        if (!Array.isArray(rv) || rv.length === 0) return true;
+        return rv.includes(userRole);
+      })
       .sort((a, b) => a.sort_order - b.sort_order);
-  }, [items]);
+  }, [items, userRole]);
 
   return {
     profile, sections, items, loading,
