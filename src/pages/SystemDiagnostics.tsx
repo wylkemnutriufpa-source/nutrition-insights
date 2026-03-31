@@ -854,5 +854,6 @@ export default function SystemDiagnostics() {
         </Tabs>
       </div>
     </DashboardLayout>
+  );
 }
 
