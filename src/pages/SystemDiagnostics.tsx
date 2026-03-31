@@ -845,8 +845,15 @@ export default function SystemDiagnostics() {
               </CardContent>
             </Card>
           </TabsContent>
+          {/* Simulations Tab */}
+          <TabsContent value="simulations">
+            <Suspense fallback={<div className="p-8 text-center text-muted-foreground">Carregando...</div>}>
+              <SimulationsTab />
+            </Suspense>
+          </TabsContent>
         </Tabs>
       </div>
     </DashboardLayout>
+  );
   );
 }
