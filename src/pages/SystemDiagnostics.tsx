@@ -343,6 +343,10 @@ export default function SystemDiagnostics() {
 
   // ─── Full Diagnostic Runner ────────────────────────────────────
   const runFullDiagnostic = useCallback(async () => {
+    // Prevent duplicate runs from double-click or StrictMode
+    if (runningRef.current) return;
+    runningRef.current = true;
+
     // Log this diagnostic run as a pipeline execution for observability
     let pipelineRunId: string | null = null;
     try {
