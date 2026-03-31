@@ -46,15 +46,24 @@ async function buildAliasMap(): Promise<Map<string, string>> {
   return map;
 }
 
-/** Primary protein keywords mapped to their base slug */
+/** Primary protein/food keywords mapped to their base slug */
 const PROTEIN_KEYWORDS: Record<string, string> = {
-  frango: "frango", peito: "frango", sobrecoxa: "frango",
-  carne: "carne", bife: "carne", alcatra: "carne", patinho: "carne", acem: "carne", maminha: "carne",
+  frango: "frango", peito: "frango", sobrecoxa: "sobrecoxa", coxa: "sobrecoxa",
+  carne: "carne", bife: "carne", alcatra: "carne", patinho: "carne",
+  acem: "acem", maminha: "maminha",
   picanha: "picanha", costelinha: "costelinha",
-  porco: "porco", suino: "porco", lombo: "porco",
-  peixe: "peixe", tilapia: "peixe", salmao: "peixe", pescada: "peixe", merluza: "peixe",
+  costela: "costela-suina",
+  porco: "porco", suino: "porco", lombo: "lombo-suino",
+  peixe: "peixe", tilapia: "file-de-tilapia", salmao: "peixe", pescada: "peixe", merluza: "peixe",
   camarao: "camarao",
   ovo: "ovo", ovos: "ovo", omelete: "ovo",
+};
+
+/** Fruit keywords mapped to their visual slug */
+const FRUIT_KEYWORDS: Record<string, string> = {
+  abacaxi: "abacaxi", morango: "morango", melao: "melao", goiaba: "goiaba",
+  pera: "pera", uva: "uva", laranja: "laranja", melancia: "melancia",
+  manga: "manga", maca: "maca", mamao: "mamao", banana: "banana",
 };
 
 /** Carb keywords to ignore when determining the visual */
@@ -68,7 +77,7 @@ const GENERIC_TITLES = new Set([
   "lanche da manha", "lanche da tarde", "ceia",
 ]);
 
-function extractProteinFromDescription(description: string): string | null {
+function extractFoodFromDescription(description: string): string | null {
   const lines = description.split('\n');
   for (const line of lines) {
     const trimmed = line.trim();
@@ -76,10 +85,13 @@ function extractProteinFromDescription(description: string): string | null {
     if (!trimmed.startsWith('•') && !trimmed.startsWith('-')) continue;
     const normLine = normalize(trimmed);
     if (normLine.includes("carne moida")) return "carne moida";
+    if (normLine.includes("carne de panela")) return "carne de panela";
+    if (normLine.includes("carne assada")) return "carne assada";
     const words = normLine.split(/\s+/);
     for (const word of words) {
       if (CARB_KEYWORDS.has(word)) continue;
       if (PROTEIN_KEYWORDS[word]) return PROTEIN_KEYWORDS[word];
+      if (FRUIT_KEYWORDS[word]) return FRUIT_KEYWORDS[word];
     }
   }
   return null;
@@ -96,14 +108,14 @@ function findMatch(title: string, aliasMap: Map<string, string>, description?: s
 
   // If title is generic (e.g. "Almoço"), extract protein from description
   if (GENERIC_TITLES.has(norm) && description) {
-    const protein = extractProteinFromDescription(description);
-    if (protein) {
-      if (aliasMap.has(protein)) return aliasMap.get(protein)!;
+    const food = extractFoodFromDescription(description);
+    if (food) {
+      if (aliasMap.has(food)) return aliasMap.get(food)!;
       for (const [alias, itemId] of aliasMap) {
-        if (alias === protein || alias.startsWith(protein + " ")) return itemId;
+        if (alias === food || alias.startsWith(food + " ")) return itemId;
       }
     }
-    return null; // Don't fallback for generic titles
+    return null;
   }
 
   // Strategy 1: exact alias match
@@ -113,10 +125,10 @@ function findMatch(title: string, aliasMap: Map<string, string>, description?: s
   const words = norm.split(/\s+/);
   for (const word of words) {
     if (CARB_KEYWORDS.has(word)) continue;
-    const proteinBase = PROTEIN_KEYWORDS[word];
-    if (proteinBase) {
+    const foodBase = PROTEIN_KEYWORDS[word] || FRUIT_KEYWORDS[word];
+    if (foodBase) {
       for (const [alias, itemId] of aliasMap) {
-        if (alias === proteinBase || alias.startsWith(proteinBase + " ")) {
+        if (alias === foodBase || alias.startsWith(foodBase + " ")) {
           return itemId;
         }
       }
