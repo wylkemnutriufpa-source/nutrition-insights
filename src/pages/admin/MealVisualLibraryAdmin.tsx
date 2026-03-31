@@ -227,7 +227,11 @@ export default function MealVisualLibraryAdmin() {
             </Button>
             <Button variant="outline" onClick={handleRunAssociation} disabled={auditRunning} className="gap-2">
               {auditRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
-              Vincular Automaticamente
+              Vincular (Client)
+            </Button>
+            <Button variant="outline" onClick={handleServerReprocess} disabled={auditRunning} className="gap-2">
+              {auditRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              Reprocessar em Massa
             </Button>
             <Dialog open={createOpen} onOpenChange={setCreateOpen}>
               <DialogTrigger asChild>
