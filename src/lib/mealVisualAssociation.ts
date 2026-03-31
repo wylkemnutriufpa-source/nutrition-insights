@@ -51,6 +51,8 @@ const PROTEIN_KEYWORDS: Record<string, string> = {
   frango: "frango",
   carne: "carne",
   bife: "carne",
+  picanha: "picanha",
+  costelinha: "costelinha",
   peixe: "peixe",
   tilapia: "peixe",
   salmao: "peixe",
