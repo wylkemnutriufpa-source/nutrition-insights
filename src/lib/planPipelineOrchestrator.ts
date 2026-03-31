@@ -206,7 +206,7 @@ export async function runPlanPipeline(input: PipelineInput): Promise<PipelineRes
       description: input.planDescription || null,
       patient_id: input.patientId,
       nutritionist_id: input.nutritionistId,
-      tenant_id: input.tenantId,
+      tenant_id: input.tenantId || null,
       start_date: input.startDate,
       end_date: input.endDate || null,
       plan_status: "draft",
