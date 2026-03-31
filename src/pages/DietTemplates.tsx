@@ -687,32 +687,35 @@ export default function DietTemplates() {
                             const isSwapped = subIdx >= 0;
 
                             return (
-                              <div key={fi} className="flex items-start justify-between gap-2 text-sm">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2">
-                                    <span className={isSwapped ? "line-through text-muted-foreground" : ""}>
-                                      {food.name}
-                                    </span>
-                                    {isSwapped && (
-                                      <span className="font-medium text-primary">
-                                        → {food.substitutions[subIdx]}
+                              <div key={fi} className="flex items-start gap-2 text-sm">
+                                <TemplateFoodVisual foodName={food.name} />
+                                <div className="flex-1 flex items-start justify-between gap-2">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <span className={isSwapped ? "line-through text-muted-foreground" : ""}>
+                                        {food.name}
                                       </span>
+                                      {isSwapped && (
+                                        <span className="font-medium text-primary">
+                                          → {food.substitutions[subIdx]}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">{food.portion}</p>
+                                    {food.substitutions?.length > 0 && (
+                                      <button
+                                        onClick={() => toggleSubstitution(key, food.substitutions.length)}
+                                        className="text-[10px] text-primary hover:underline flex items-center gap-1 mt-0.5"
+                                      >
+                                        <RefreshCw className="w-3 h-3" />
+                                        {isSwapped ? "Próxima substituição" : "Ver substituições"} ({food.substitutions.length})
+                                      </button>
                                     )}
                                   </div>
-                                  <p className="text-xs text-muted-foreground">{food.portion}</p>
-                                  {food.substitutions?.length > 0 && (
-                                    <button
-                                      onClick={() => toggleSubstitution(key, food.substitutions.length)}
-                                      className="text-[10px] text-primary hover:underline flex items-center gap-1 mt-0.5"
-                                    >
-                                      <RefreshCw className="w-3 h-3" />
-                                      {isSwapped ? "Próxima substituição" : "Ver substituições"} ({food.substitutions.length})
-                                    </button>
-                                  )}
-                                </div>
-                                <div className="text-right text-xs text-muted-foreground whitespace-nowrap">
-                                  <span className="text-orange-400">{adjusted.calories}kcal</span>
-                                  {" · "}P{adjusted.protein}g · C{adjusted.carbs}g · G{adjusted.fat}g
+                                  <div className="text-right text-xs text-muted-foreground whitespace-nowrap">
+                                    <span className="text-orange-400">{adjusted.calories}kcal</span>
+                                    {" · "}P{adjusted.protein}g · C{adjusted.carbs}g · G{adjusted.fat}g
+                                  </div>
                                 </div>
                               </div>
                             );
