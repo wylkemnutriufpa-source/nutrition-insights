@@ -265,15 +265,13 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
                 <motion.form key="login" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
                   onSubmit={handleLogin} className="space-y-4">
                   {/* Role indicator */}
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border/50">
-                    <div className="flex gap-2">
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Stethoscope className="w-3.5 h-3.5" /><span>{t("auth.nutritionist")}</span>
-                      </div>
-                      <span className="text-border">|</span>
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Users className="w-3.5 h-3.5" /><span>{t("auth.patient")}</span>
-                      </div>
+                  <div className="flex items-center justify-center gap-4 py-2">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
+                      <Stethoscope className="w-3.5 h-3.5" /><span>{t("auth.nutritionist")}</span>
+                    </div>
+                    <div className="w-px h-3.5 bg-border/50" />
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
+                      <Users className="w-3.5 h-3.5" /><span>{t("auth.patient")}</span>
                     </div>
                   </div>
 
