@@ -149,12 +149,16 @@ export default function MealPlanEditorV2() {
 
       // Use server-authoritative RPC for publishing (critical transition)
       const result = await publishMealPlan(plan.id, user.id);
-      if (!result.success) throw new Error(result.error || "Erro ao publicar");
+      if (!result.success) {
+        const rpcData = result.data as Record<string, unknown> | undefined;
+        const rpcMessage = rpcData?.message as string | undefined;
+        throw new Error(rpcMessage || result.error || "Erro ao publicar");
+      }
       store.updatePlan({ plan_status: "published_to_patient", is_active: true, updated_at: new Date().toISOString() } as any);
       toast.success("Plano publicado para o paciente!");
     } catch (err: any) {
       console.error("[Publish] Error:", err);
-      toast.error("Erro ao publicar: " + (err?.message || "Tente novamente"));
+      toast.error(err?.message || "Erro ao publicar. Tente novamente.");
     } finally {
       setPublishing(false);
     }

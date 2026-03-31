@@ -18,6 +18,21 @@ const ERROR_MAP: Record<string, MappedError> = {
     errorKey: "tenant_resolution_failed",
     isSystemError: true,
   },
+  EMPTY_PLAN: {
+    userMessage: "Não é possível publicar ou aprovar um plano sem refeições. Adicione itens ao plano primeiro.",
+    errorKey: "empty_plan",
+    isSystemError: false,
+  },
+  VALIDATION_REQUIRED: {
+    userMessage: "O plano precisa ser validado e aprovado pelo Motor Clínico antes de ser publicado.",
+    errorKey: "validation_required",
+    isSystemError: false,
+  },
+  PLAN_NOT_FOUND: {
+    userMessage: "Plano alimentar não encontrado.",
+    errorKey: "plan_not_found",
+    isSystemError: false,
+  },
   "violates row-level security": {
     userMessage: "Sem permissão para realizar esta ação. Verifique se está logado corretamente.",
     errorKey: "rls_violation",
