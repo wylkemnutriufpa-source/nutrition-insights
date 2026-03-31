@@ -68,24 +68,25 @@ Deno.serve(async (req) => {
      * Extract the first protein mentioned in the description.
      * Only looks at lines that start with "•" (food lines), ignoring substitution lines.
      */
-    const extractProteinFromDescription = (description: string): string | null => {
+    const extractFoodFromDescription = (description: string): string | null => {
       const lines = description.split('\n');
       for (const line of lines) {
         const trimmed = line.trim();
-        // Stop at substitution section
         if (trimmed.includes('Substituiç') || trimmed.includes('🔄')) break;
-        // Only process food item lines
         if (!trimmed.startsWith('•') && !trimmed.startsWith('-')) continue;
 
         const normLine = normalize(trimmed);
         const words = normLine.split(/\s+/);
 
-        // Check multi-word proteins first
+        // Check multi-word items first
         if (normLine.includes("carne moida")) return "carne moida";
+        if (normLine.includes("carne de panela")) return "carne de panela";
+        if (normLine.includes("carne assada")) return "carne assada";
 
         for (const word of words) {
           if (CARB_IGNORE.has(word)) continue;
           if (PROTEIN_MAP[word]) return PROTEIN_MAP[word];
+          if (FRUIT_MAP[word]) return FRUIT_MAP[word];
         }
       }
       return null;
