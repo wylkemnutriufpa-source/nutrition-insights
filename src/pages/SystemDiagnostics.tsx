@@ -102,6 +102,7 @@ export default function SystemDiagnostics() {
   const [progress, setProgress] = useState(0);
   const [historyFilter, setHistoryFilter] = useState<string>("all");
   const logIdRef = useRef(0);
+  const runningRef = useRef(false);
   const logsBufferRef = useRef<DiagLog[]>([]);
 
   const addLog = useCallback((level: LogLevel, module: string, message: string, detail?: string) => {
