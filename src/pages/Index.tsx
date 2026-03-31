@@ -8,6 +8,7 @@ import ProStrategicDashboard from "@/components/dashboard/ProStrategicDashboard"
 import { useLayoutPreference } from "@/hooks/useLayoutPreference";
 import { LayoutGrid, List as ListIcon } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import AIInsightsPanel from "@/components/dashboard/AIInsightsPanel";
