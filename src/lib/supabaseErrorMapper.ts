@@ -18,6 +18,26 @@ const ERROR_MAP: Record<string, MappedError> = {
     errorKey: "tenant_resolution_failed",
     isSystemError: true,
   },
+  "violates row-level security": {
+    userMessage: "Sem permissão para realizar esta ação. Verifique se está logado corretamente.",
+    errorKey: "rls_violation",
+    isSystemError: false,
+  },
+  "violates not-null constraint": {
+    userMessage: "Dados incompletos. Preencha todos os campos obrigatórios.",
+    errorKey: "not_null_violation",
+    isSystemError: false,
+  },
+  "violates foreign key constraint": {
+    userMessage: "Referência inválida. O registro vinculado não existe ou foi removido.",
+    errorKey: "fk_violation",
+    isSystemError: false,
+  },
+  "duplicate key value violates unique constraint": {
+    userMessage: "Este registro já existe. Não é possível criar duplicatas.",
+    errorKey: "unique_violation",
+    isSystemError: false,
+  },
 };
 
 /**
