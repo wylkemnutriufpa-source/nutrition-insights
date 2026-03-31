@@ -156,7 +156,7 @@ export async function runAutoAssociation(): Promise<AssociationReport> {
   // 1. Process meal_plan_items
   const { data: mealItems } = await supabase
     .from("meal_plan_items")
-    .select("id, title, visual_library_item_id" as any)
+    .select("id, title, description, visual_library_item_id" as any)
     .limit(1000);
 
   if (mealItems) {
@@ -164,13 +164,15 @@ export async function runAutoAssociation(): Promise<AssociationReport> {
       report.details.mealPlanItems.analyzed++;
       report.totalAnalyzed++;
 
-      if (item.visual_library_item_id) {
+      const match = findMatch(item.title || "", aliasMap, item.description || "");
+      
+      if (match && item.visual_library_item_id === match) {
         report.totalAlreadyLinked++;
         report.details.mealPlanItems.skipped++;
         continue;
       }
 
-      const match = findMatch(item.title || "", aliasMap);
+      if (match) {
       if (match) {
         await supabase
           .from("meal_plan_items")
