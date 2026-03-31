@@ -64,6 +64,14 @@ const FRUIT_KEYWORDS: Record<string, string> = {
   abacaxi: "abacaxi", morango: "morango", melao: "melao", goiaba: "goiaba",
   pera: "pera", uva: "uva", laranja: "laranja", melancia: "melancia",
   manga: "manga", maca: "maca", mamao: "mamao", banana: "banana",
+  abacate: "abacate",
+};
+
+/** Misc food keywords mapped to their visual slug */
+const MISC_FOOD_KEYWORDS: Record<string, string> = {
+  gelatina: "gelatina",
+  wrap: "wrap-integral", rap10: "wrap-integral", tortilha: "wrap-integral",
+  azeite: "azeite",
 };
 
 /** Carb keywords to ignore when determining the visual */
