@@ -197,34 +197,62 @@ export default function SimulationsTab() {
           {/* Mode summaries */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
             {/* Smoke Test Card */}
-            <div className="rounded-lg border border-border p-3 space-y-2">
+            <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3 space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5 text-primary" /> Smoke Test
+                <span className="text-xs font-semibold flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-emerald-500" /> Smoke Test
                 </span>
                 {impactBadge(smokeSummary.impactLevel)}
               </div>
-              <div className="flex flex-wrap gap-2 text-[10px] text-muted-foreground">
-                <span className="flex items-center gap-1"><Database className="w-3 h-3" />{smokeSummary.count} cenários</span>
-                <span>~{smokeSummary.totalQueries} queries</span>
-                <span className="flex items-center gap-1"><Eye className="w-3 h-3" />100% read-only</span>
+              <div className="grid grid-cols-2 gap-1.5">
+                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground bg-background/60 rounded px-2 py-1">
+                  <Database className="w-3 h-3 text-emerald-500" />
+                  <span className="font-medium text-foreground">{smokeSummary.count}</span> cenários
+                </div>
+                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground bg-background/60 rounded px-2 py-1">
+                  <BarChart3 className="w-3 h-3 text-emerald-500" />
+                  <span className="font-medium text-foreground">~{smokeSummary.totalQueries}</span> queries
+                </div>
+                <div className="flex items-center gap-1.5 text-[10px] bg-blue-500/10 text-blue-400 rounded px-2 py-1 font-medium">
+                  <Eye className="w-3 h-3" /> 100% read-only
+                </div>
+                <div className="flex items-center gap-1.5 text-[10px] bg-emerald-500/10 text-emerald-400 rounded px-2 py-1 font-medium">
+                  <Shield className="w-3 h-3" /> Sem writes clínicos
+                </div>
               </div>
               <p className="text-[10px] text-muted-foreground">Limite: {smokeSummary.rateLimit}</p>
             </div>
 
             {/* Full Battery Card */}
-            <div className="rounded-lg border border-border p-3 space-y-2">
+            <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium flex items-center gap-1.5">
-                  <Play className="w-3.5 h-3.5 text-primary" /> Bateria Completa
-                  {!isAdmin && <Lock className="w-3 h-3 text-muted-foreground" />}
+                <span className="text-xs font-semibold flex items-center gap-1.5">
+                  <Play className="w-3.5 h-3.5 text-amber-500" /> Bateria Completa
                 </span>
-                {impactBadge(fullSummary.impactLevel)}
+                <div className="flex items-center gap-1.5">
+                  {impactBadge(fullSummary.impactLevel)}
+                  <Badge variant="outline" className="text-[9px] bg-red-500/10 text-red-400 border-red-500/20">
+                    <Lock className="w-2.5 h-2.5 mr-0.5" /> Admin-only
+                  </Badge>
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2 text-[10px] text-muted-foreground">
-                <span className="flex items-center gap-1"><Database className="w-3 h-3" />{fullSummary.count} cenários</span>
-                <span>~{fullSummary.totalQueries} queries</span>
-                {fullSummary.allReadOnly && <span className="flex items-center gap-1"><Eye className="w-3 h-3" />read-only</span>}
+              <div className="grid grid-cols-2 gap-1.5">
+                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground bg-background/60 rounded px-2 py-1">
+                  <Database className="w-3 h-3 text-amber-500" />
+                  <span className="font-medium text-foreground">{fullSummary.count}</span> cenários
+                </div>
+                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground bg-background/60 rounded px-2 py-1">
+                  <BarChart3 className="w-3 h-3 text-amber-500" />
+                  <span className="font-medium text-foreground">~{fullSummary.totalQueries}</span> queries
+                </div>
+                {fullSummary.allReadOnly && (
+                  <div className="flex items-center gap-1.5 text-[10px] bg-blue-500/10 text-blue-400 rounded px-2 py-1 font-medium">
+                    <Eye className="w-3 h-3" /> 100% read-only
+                  </div>
+                )}
+                <div className="flex items-center gap-1.5 text-[10px] bg-emerald-500/10 text-emerald-400 rounded px-2 py-1 font-medium">
+                  <Shield className="w-3 h-3" /> Sem writes clínicos
+                </div>
               </div>
               <p className="text-[10px] text-muted-foreground">Limite: {fullSummary.rateLimit} • Requer admin</p>
             </div>
