@@ -250,7 +250,7 @@ export default function SystemDiagnostics() {
         const channel = supabase.channel(`diag-${ch}`);
         channel.on("postgres_changes", { event: "*", schema: "public", table: ch }, () => {});
         const subResult = await new Promise<string>((resolve) => {
-          const timer = setTimeout(() => resolve("timeout"), 5000);
+          const timer = setTimeout(() => resolve("timeout"), 10000);
           channel.subscribe((status) => {
             if (status === "SUBSCRIBED") { clearTimeout(timer); resolve("ok"); }
           });
