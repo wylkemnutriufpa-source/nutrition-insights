@@ -125,10 +125,10 @@ function findMatch(title: string, aliasMap: Map<string, string>, description?: s
   const words = norm.split(/\s+/);
   for (const word of words) {
     if (CARB_KEYWORDS.has(word)) continue;
-    const proteinBase = PROTEIN_KEYWORDS[word];
-    if (proteinBase) {
+    const foodBase = PROTEIN_KEYWORDS[word] || FRUIT_KEYWORDS[word];
+    if (foodBase) {
       for (const [alias, itemId] of aliasMap) {
-        if (alias === proteinBase || alias.startsWith(proteinBase + " ")) {
+        if (alias === foodBase || alias.startsWith(foodBase + " ")) {
           return itemId;
         }
       }
