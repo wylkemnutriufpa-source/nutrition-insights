@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, lazy, Suspense } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,9 +14,15 @@ import { cn } from "@/lib/utils";
 import {
   Activity, Play, AlertTriangle, CheckCircle2, XCircle,
   Database, Route, Bell, Radio, Cpu, Shield, RefreshCw,
-  BarChart3, Clock, FileText, Copy, History, Filter
+  BarChart3, Clock, FileText, Copy, History, Filter,
+  Gauge, Bug
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+
+const ErrorsTab = lazy(() => import("@/components/diagnostics/ErrorsTab"));
+const PipelinesTab = lazy(() => import("@/components/diagnostics/PipelinesTab"));
+const PerformanceTab = lazy(() => import("@/components/diagnostics/PerformanceTab"));
+const AlertsTab = lazy(() => import("@/components/diagnostics/AlertsTab"));
 
 type LogLevel = "ok" | "warning" | "error" | "info";
 interface DiagLog {
