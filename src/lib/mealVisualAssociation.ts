@@ -108,14 +108,14 @@ function findMatch(title: string, aliasMap: Map<string, string>, description?: s
 
   // If title is generic (e.g. "Almoço"), extract protein from description
   if (GENERIC_TITLES.has(norm) && description) {
-    const protein = extractProteinFromDescription(description);
-    if (protein) {
-      if (aliasMap.has(protein)) return aliasMap.get(protein)!;
+    const food = extractFoodFromDescription(description);
+    if (food) {
+      if (aliasMap.has(food)) return aliasMap.get(food)!;
       for (const [alias, itemId] of aliasMap) {
-        if (alias === protein || alias.startsWith(protein + " ")) return itemId;
+        if (alias === food || alias.startsWith(food + " ")) return itemId;
       }
     }
-    return null; // Don't fallback for generic titles
+    return null;
   }
 
   // Strategy 1: exact alias match
