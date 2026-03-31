@@ -155,6 +155,27 @@ export default function MealVisualLibraryAdmin() {
     setAuditRunning(false);
   };
 
+  const handleServerReprocess = async () => {
+    setAuditRunning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("reprocess-visual-associations");
+      if (error) throw error;
+      setAuditReport({
+        totalAnalyzed: data.totalAnalyzed,
+        totalLinked: data.totalLinked,
+        totalAlreadyLinked: data.totalAlreadyLinked,
+        totalUnlinked: data.totalUnlinked,
+        topUnrecognized: data.topUnrecognized || [],
+        details: { mealPlanItems: { analyzed: data.totalAnalyzed, linked: data.totalLinked, skipped: 0 }, savedMeals: { analyzed: 0, linked: 0, skipped: 0 } },
+      });
+      toast.success(`Reprocessamento server-side concluído! ${data.totalLinked} novos vínculos.`);
+      fetchAll();
+    } catch (e: any) {
+      toast.error("Erro: " + e.message);
+    }
+    setAuditRunning(false);
+  };
+
   const handleBatchUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -206,7 +227,11 @@ export default function MealVisualLibraryAdmin() {
             </Button>
             <Button variant="outline" onClick={handleRunAssociation} disabled={auditRunning} className="gap-2">
               {auditRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
-              Vincular Automaticamente
+              Vincular (Client)
+            </Button>
+            <Button variant="outline" onClick={handleServerReprocess} disabled={auditRunning} className="gap-2">
+              {auditRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              Reprocessar em Massa
             </Button>
             <Dialog open={createOpen} onOpenChange={setCreateOpen}>
               <DialogTrigger asChild>
