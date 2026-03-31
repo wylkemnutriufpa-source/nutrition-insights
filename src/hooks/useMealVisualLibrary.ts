@@ -59,6 +59,7 @@ export function useMealVisualMatch(title: string | null | undefined) {
     // Protein keywords for client-side protein-first matching
     const PROTEIN_MAP: Record<string, string> = {
       frango: "frango", carne: "carne", bife: "carne",
+      picanha: "picanha", costelinha: "costelinha",
       peixe: "peixe", tilapia: "peixe", salmao: "peixe",
       camarao: "camarao", ovo: "ovo", ovos: "ovo", omelete: "ovo",
     };
