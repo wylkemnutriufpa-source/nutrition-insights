@@ -407,8 +407,8 @@ function NutritionistDashboardContent() {
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
       {/* ── Premium Header ── */}
       <motion.div variants={item} className="relative overflow-hidden rounded-2xl gradient-border particles-bg">
-        <div className="glass-premium rounded-2xl p-6 shimmer-sweep">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="glass-premium rounded-2xl p-6 shimmer-sweep relative z-0">
+          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <motion.p
                 initial={{ opacity: 0, x: -10 }}
