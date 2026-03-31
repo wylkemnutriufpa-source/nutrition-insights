@@ -293,17 +293,17 @@ export default function SystemDiagnostics() {
     if ((stalePlans ?? 0) > 0) { warn++; addLog("warning", "Consistency", `${stalePlans} meal plan(s) with NULL status`); }
     else { ok++; addLog("ok", "Consistency", "All meal plans have valid status"); }
 
-    // Plan state dual-truth check
+    // Plan state dual-truth check (approved is valid for active plans awaiting publish)
     const { count: inconsistentPlans } = await (supabase as any).from("meal_plans")
       .select("id", { count: "exact", head: true })
       .eq("is_active", true)
-      .not("plan_status", "in", '("published_to_patient","published")');
+      .not("plan_status", "in", '("approved","published_to_patient","published")');
     if ((inconsistentPlans ?? 0) > 0) {
       crit++;
-      addLog("error", "Consistency", `${inconsistentPlans} plan(s) are is_active=true but NOT published (dual-state inconsistency)`);
+      addLog("error", "Consistency", `${inconsistentPlans} plan(s) are is_active=true but NOT approved/published (dual-state inconsistency)`);
     } else {
       ok++;
-      addLog("ok", "Consistency", "Plan state consistency: all active plans are published");
+      addLog("ok", "Consistency", "Plan state consistency: all active plans are approved or published");
     }
 
     // Orphan pipeline check
