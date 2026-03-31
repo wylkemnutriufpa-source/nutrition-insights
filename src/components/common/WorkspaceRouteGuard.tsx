@@ -87,6 +87,39 @@ const PROFESSIONAL_ONLY_ROUTES = [
   "/personal/workouts",
 ];
 
+/** Routes exclusive to nutritionists/admins — personal trainers CANNOT access */
+const NUTRITIONIST_ONLY_ROUTES = [
+  "/clinical-workspace",
+  "/editor-v2",
+  "/meal-plans",
+  "/diet-templates",
+  "/onboarding-pipeline",
+  "/protocols",
+  "/protocolos-fitoterapicos",
+  "/clinical-automation",
+  "/clinical-brain",
+  "/clinical-orchestration",
+  "/clinical-lab",
+  "/clinical-simulation",
+  "/clinical-predictions",
+  "/therapeutic-intelligence",
+  "/protocol-transitions",
+  "/population-intelligence",
+  "/physiological-intelligence",
+  "/population-nutrition",
+  "/weight-trajectory",
+  "/metabolic-twin",
+  "/clinical-analytics",
+  "/clinical-intelligence",
+  "/clinical-risk",
+  "/coach-bodybuilder",
+  "/branding",
+  "/professional/crm",
+  "/my-public-profile",
+  "/food-database",
+  "/weekly-report",
+];
+
 /** Routes exclusive to patient context (blocked in professional context) */
 const PATIENT_ONLY_ROUTES = [
   "/my-diet",
