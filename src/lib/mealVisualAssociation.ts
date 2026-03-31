@@ -64,6 +64,14 @@ const FRUIT_KEYWORDS: Record<string, string> = {
   abacaxi: "abacaxi", morango: "morango", melao: "melao", goiaba: "goiaba",
   pera: "pera", uva: "uva", laranja: "laranja", melancia: "melancia",
   manga: "manga", maca: "maca", mamao: "mamao", banana: "banana",
+  abacate: "abacate",
+};
+
+/** Misc food keywords mapped to their visual slug */
+const MISC_FOOD_KEYWORDS: Record<string, string> = {
+  gelatina: "gelatina",
+  wrap: "wrap-integral", rap10: "wrap-integral", tortilha: "wrap-integral",
+  azeite: "azeite",
 };
 
 /** Carb keywords to ignore when determining the visual */
@@ -87,11 +95,14 @@ function extractFoodFromDescription(description: string): string | null {
     if (normLine.includes("carne moida")) return "carne moida";
     if (normLine.includes("carne de panela")) return "carne de panela";
     if (normLine.includes("carne assada")) return "carne assada";
+    if (normLine.includes("banana com pasta de amendoim") || normLine.includes("banana com amendoim")) return "banana com pasta de amendoim";
+    if (normLine.includes("wrap integral") || normLine.includes("rap10")) return "wrap integral";
     const words = normLine.split(/\s+/);
     for (const word of words) {
       if (CARB_KEYWORDS.has(word)) continue;
       if (PROTEIN_KEYWORDS[word]) return PROTEIN_KEYWORDS[word];
       if (FRUIT_KEYWORDS[word]) return FRUIT_KEYWORDS[word];
+      if (MISC_FOOD_KEYWORDS[word]) return MISC_FOOD_KEYWORDS[word];
     }
   }
   return null;
@@ -125,7 +136,7 @@ function findMatch(title: string, aliasMap: Map<string, string>, description?: s
   const words = norm.split(/\s+/);
   for (const word of words) {
     if (CARB_KEYWORDS.has(word)) continue;
-    const foodBase = PROTEIN_KEYWORDS[word] || FRUIT_KEYWORDS[word];
+    const foodBase = PROTEIN_KEYWORDS[word] || FRUIT_KEYWORDS[word] || MISC_FOOD_KEYWORDS[word];
     if (foodBase) {
       for (const [alias, itemId] of aliasMap) {
         if (alias === foodBase || alias.startsWith(foodBase + " ")) {
