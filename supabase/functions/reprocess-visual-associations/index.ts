@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
       const words = norm.split(/\s+/);
       for (const word of words) {
         if (CARB_IGNORE.has(word)) continue;
-        const base = PROTEIN_MAP[word];
+        const base = PROTEIN_MAP[word] || FRUIT_MAP[word];
         if (base) {
           for (const [alias, itemId] of aliasMap) {
             if (alias === base || alias.startsWith(base + " ")) return itemId;
