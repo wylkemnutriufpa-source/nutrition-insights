@@ -266,7 +266,7 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
                   onSubmit={handleLogin} className="space-y-4">
                   {/* Premium role indicator */}
                   <div className="relative flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 border border-primary/10">
-                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/10 via-transparent to-accent/10 opacity-50 blur-sm" />
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/10 via-transparent to-accent/10 opacity-50 blur-sm pointer-events-none" />
                     <div className="relative flex items-center gap-1.5 text-xs font-medium text-primary/80">
                       <div className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10">
                         <Stethoscope className="w-3 h-3 text-primary" />
