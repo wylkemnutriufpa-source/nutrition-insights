@@ -5,6 +5,26 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+async function resolveTenantForUser(sb: any, userId: string): Promise<string | null> {
+  const { data: tenantLink } = await sb
+    .from("user_tenants")
+    .select("tenant_id")
+    .eq("user_id", userId)
+    .limit(1)
+    .maybeSingle();
+
+  if (tenantLink?.tenant_id) return tenantLink.tenant_id;
+
+  const { data: profile } = await sb
+    .from("profiles")
+    .select("tenant_id")
+    .eq("user_id", userId)
+    .limit(1)
+    .maybeSingle();
+
+  return profile?.tenant_id || null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -27,23 +47,38 @@ Deno.serve(async (req) => {
     if (callerError) throw new Error("Invalid session");
     if (!caller) throw new Error("Invalid session");
 
-    // Verify caller is admin or nutritionist
+    const { target_user_id, action, payload } = await req.json();
+    if (!target_user_id || !action) throw new Error("target_user_id and action required");
+
+    // Verify caller is admin or professional
     const adminClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
     const { data: callerRoles } = await adminClient.from("user_roles").select("role").eq("user_id", caller.id);
-    const isAuthorized = callerRoles?.some((r: any) => ["admin", "nutritionist", "personal"].includes(r.role));
-    if (!isAuthorized) throw new Error("Unauthorized: only professionals can update user identity");
+    const isAdmin = callerRoles?.some((r: any) => r.role === "admin");
+    const isProfessional = callerRoles?.some((r: any) => ["nutritionist", "personal", "personal_trainer"].includes(r.role));
+    if (!isAdmin && !isProfessional) throw new Error("Unauthorized: only professionals can update user identity");
 
-    const { target_user_id, action, payload } = await req.json();
-    if (!target_user_id || !action) throw new Error("target_user_id and action required");
+    if (!isAdmin && caller.id !== target_user_id) {
+      const { data: patientLink } = await adminClient
+        .from("nutritionist_patients")
+        .select("patient_id")
+        .eq("nutritionist_id", caller.id)
+        .eq("patient_id", target_user_id)
+        .limit(1)
+        .maybeSingle();
+
+      if (!patientLink) {
+        throw new Error("Unauthorized: only linked patients can be updated by this professional");
+      }
+    }
 
     const auditMeta: Record<string, unknown> = { action, target_user_id, performed_by: caller.id };
     let result: Record<string, unknown> = {};
 
-    // Resolve tenant for caller
-    const { data: callerTenantData } = await adminClient.from("user_tenants").select("tenant_id").eq("user_id", caller.id).limit(1).maybeSingle();
-    const callerTenant = callerTenantData?.tenant_id || null;
+    const callerTenant = await resolveTenantForUser(adminClient, caller.id);
+    const targetTenant = await resolveTenantForUser(adminClient, target_user_id);
+    const auditTenant = callerTenant || targetTenant || null;
 
     switch (action) {
       case "update_name": {
@@ -111,7 +146,7 @@ Deno.serve(async (req) => {
           message: "Seu acesso foi reenviado pelo profissional. Verifique seu email.",
           type: "info",
           target_route: "/",
-          tenant_id: callerTenant,
+          tenant_id: auditTenant,
         });
 
         auditMeta.resend = true;
@@ -124,14 +159,18 @@ Deno.serve(async (req) => {
     }
 
     // Audit log
-    await adminClient.from("audit_logs").insert({
-      user_id: caller.id,
-      action: `admin_identity_${action}`,
-      resource_type: "user",
-      resource_id: target_user_id,
-      metadata: auditMeta,
-      tenant_id: callerTenant,
-    });
+    if (auditTenant) {
+      await adminClient.from("audit_logs").insert({
+        user_id: caller.id,
+        action: `admin_identity_${action}`,
+        resource_type: "user",
+        resource_id: target_user_id,
+        metadata: auditMeta,
+        tenant_id: auditTenant,
+      });
+    } else {
+      console.warn("admin-update-user: skipping audit log because tenant could not be resolved", auditMeta);
+    }
 
     return new Response(JSON.stringify({ success: true, ...result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

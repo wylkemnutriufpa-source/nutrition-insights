@@ -22,6 +22,7 @@ import { useNavigate } from "react-router-dom";
 interface Professional {
   user_id: string;
   full_name: string;
+  email: string;
   phone: string | null;
   avatar_url: string | null;
   created_at: string;
@@ -61,11 +62,32 @@ function ProfessionalDialog({
   });
   const [saving, setSaving] = useState(false);
 
+  const invokeAdminIdentityAction = useCallback(async (targetUserId: string, action: string, payload: Record<string, unknown>) => {
+    const { data: { session } } = await supabase.auth.getSession();
+
+    const { data, error } = await supabase.functions.invoke("admin-update-user", {
+      body: {
+        target_user_id: targetUserId,
+        action,
+        payload,
+      },
+      headers: session?.access_token ? {
+        Authorization: `Bearer ${session.access_token}`,
+      } : undefined,
+    });
+
+    if (error || !data?.success) {
+      throw new Error(error?.message || data?.error || "Erro na ação administrativa");
+    }
+
+    return data;
+  }, []);
+
   useEffect(() => {
     if (professional) {
       setForm({
         full_name: professional.full_name || "",
-        email: "",
+        email: professional.email || "",
         password: "",
         phone: professional.phone || "",
         plan_id: professional.plan_id || "",
@@ -85,10 +107,16 @@ function ProfessionalDialog({
     setSaving(true);
     try {
       if (isEditing && professional) {
+        const normalizedEmail = form.email.trim().toLowerCase();
+
         // Update profile
         await supabase.from("profiles")
           .update({ full_name: form.full_name, phone: form.phone || null })
           .eq("user_id", professional.user_id);
+
+        if (normalizedEmail && normalizedEmail !== professional.email) {
+          await invokeAdminIdentityAction(professional.user_id, "update_email", { email: normalizedEmail });
+        }
 
         // Upsert professional_profiles
         const profPayload = {
@@ -106,7 +134,7 @@ function ProfessionalDialog({
           await supabase.from("professional_profiles").insert(profPayload);
         }
 
-        toast.success("Profissional atualizado!");
+        toast.success(normalizedEmail && normalizedEmail !== professional.email ? "Profissional e email atualizados!" : "Profissional atualizado!");
       } else {
         // Create new
         if (!form.email || !form.full_name || !form.password) {
@@ -186,12 +214,12 @@ function ProfessionalDialog({
               <Label className="text-xs">Nome completo *</Label>
               <Input value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} placeholder="Dr. Maria Silva" />
             </div>
+            <div>
+              <Label className="text-xs">Email *</Label>
+              <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="maria@clinica.com" />
+            </div>
             {!isEditing && (
               <>
-                <div>
-                  <Label className="text-xs">Email *</Label>
-                  <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="maria@clinica.com" />
-                </div>
                 <div>
                   <Label className="text-xs">Senha temporária *</Label>
                   <Input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Ex: Fit@2026!" />
@@ -432,6 +460,7 @@ function ProfessionalDetailPanel({ professional, onClose, onRefresh }: { profess
           </div>
           <div>
             <p className="text-lg font-semibold">{professional.full_name}</p>
+            <p className="text-sm text-muted-foreground">{professional.email || "Email não disponível"}</p>
             {professional.clinic_name && (
               <p className="text-sm text-muted-foreground flex items-center gap-1">
                 <Building2 className="w-3.5 h-3.5" /> {professional.clinic_name}
@@ -563,12 +592,18 @@ export default function AdminProfessionals() {
     });
 
     const profProfileMap = new Map((profProfiles || []).map(pp => [pp.user_id, pp]));
+    const { data: emailsData } = await supabase.rpc("get_patient_emails", { _patient_ids: nutIds });
+    const emailMap = new Map<string, string>();
+    ((emailsData as Array<{ user_id: string; email: string }> | null) || []).forEach((item) => {
+      emailMap.set(item.user_id, item.email);
+    });
 
     const result: Professional[] = (profiles || []).map(p => {
       const pp = profProfileMap.get(p.user_id);
       return {
         user_id: p.user_id,
         full_name: p.full_name || "Sem nome",
+        email: emailMap.get(p.user_id) || "",
         phone: p.phone,
         avatar_url: p.avatar_url,
         created_at: p.created_at,
@@ -605,6 +640,7 @@ export default function AdminProfessionals() {
   // Filters
   const filtered = professionals.filter(p => {
     if (search && !p.full_name.toLowerCase().includes(search.toLowerCase()) &&
+        !(p.email || "").toLowerCase().includes(search.toLowerCase()) &&
         !(p.clinic_name || "").toLowerCase().includes(search.toLowerCase())) return false;
     if (filterStatus !== "all" && p.status !== filterStatus) return false;
     if (filterPlan !== "all") {
@@ -669,7 +705,7 @@ export default function AdminProfessionals() {
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Buscar por nome ou clínica..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
+            <Input placeholder="Buscar por nome, email ou clínica..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
           </div>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger className="w-[140px]"><SelectValue placeholder="Status" /></SelectTrigger>
@@ -719,6 +755,7 @@ export default function AdminProfessionals() {
                   </div>
                   <div className="min-w-0">
                     <p className="font-medium text-sm truncate">{prof.full_name}</p>
+                    {prof.email && <p className="text-xs text-muted-foreground truncate">{prof.email}</p>}
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                         {prof.role_type === "personal" ? "Personal" : "Nutricionista"}
