@@ -43,7 +43,27 @@ export function useMealVisualLibrary(options?: { category?: string; search?: str
   return { items, loading, refetch: fetchItems };
 }
 
-export function useMealVisualMatch(title: string | null | undefined) {
+/** Protein keywords mapped to their base slug */
+const PROTEIN_MAP: Record<string, string> = {
+  frango: "frango", peito: "frango", sobrecoxa: "frango",
+  carne: "carne", bife: "carne", alcatra: "carne", patinho: "carne", acem: "carne", maminha: "carne",
+  picanha: "picanha", costelinha: "costelinha",
+  porco: "porco", suino: "porco", lombo: "porco",
+  peixe: "peixe", tilapia: "peixe", salmao: "peixe", pescada: "peixe", merluza: "peixe",
+  camarao: "camarao", ovo: "ovo", ovos: "ovo", omelete: "ovo",
+};
+
+const CARB_IGNORE = new Set([
+  "arroz", "batata", "macarrao", "feijao", "pure", "mandioca",
+  "inhame", "legumes", "salada", "brocolis", "macaxeira",
+]);
+
+const GENERIC_TITLES = new Set([
+  "almoco", "jantar", "cafe da manha", "lanche",
+  "lanche da manha", "lanche da tarde", "ceia",
+]);
+
+export function useMealVisualMatch(title: string | null | undefined, description?: string | null) {
   const [match, setMatch] = useState<MealVisualItem | null>(null);
 
   useEffect(() => {
@@ -56,20 +76,54 @@ export function useMealVisualMatch(title: string | null | undefined) {
       .replace(/[^a-z0-9\s]/g, "")
       .trim();
 
-    // Protein keywords for client-side protein-first matching
-    const PROTEIN_MAP: Record<string, string> = {
-      frango: "frango", carne: "carne", bife: "carne",
-      picanha: "picanha", costelinha: "costelinha",
-      peixe: "peixe", tilapia: "peixe", salmao: "peixe",
-      camarao: "camarao", ovo: "ovo", ovos: "ovo", omelete: "ovo",
+    const isGenericTitle = GENERIC_TITLES.has(normalized);
+
+    /**
+     * Extract the first protein from description text.
+     * Only parses food lines (starting with • or -), stops before substitution section.
+     */
+    const extractProteinFromDescription = (desc: string): string | null => {
+      const lines = desc.split('\n');
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.includes('Substituiç') || trimmed.includes('🔄')) break;
+        if (!trimmed.startsWith('•') && !trimmed.startsWith('-')) continue;
+
+        const normLine = trimmed
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-z0-9\s]/g, "")
+          .trim();
+
+        if (normLine.includes("carne moida")) return "carne moida";
+
+        const words = normLine.split(/\s+/);
+        for (const word of words) {
+          if (CARB_IGNORE.has(word)) continue;
+          if (PROTEIN_MAP[word]) return PROTEIN_MAP[word];
+        }
+      }
+      return null;
     };
 
     const findMatch = async () => {
+      // For generic titles, extract protein from description
+      const searchTerm = isGenericTitle && description
+        ? extractProteinFromDescription(description) || normalized
+        : normalized;
+
+      // If still generic after extraction, don't match
+      if (GENERIC_TITLES.has(searchTerm)) {
+        setMatch(null);
+        return;
+      }
+
       // Strategy 1: exact alias match
       const { data: aliasData } = await supabase
         .from("meal_visual_aliases" as any)
         .select("library_item_id")
-        .eq("normalized_alias", normalized)
+        .eq("normalized_alias", searchTerm)
         .limit(1);
 
       if (aliasData && aliasData.length > 0) {
@@ -83,8 +137,9 @@ export function useMealVisualMatch(title: string | null | undefined) {
       }
 
       // Strategy 2: protein-first keyword extraction
-      const words = normalized.split(/\s+/);
+      const words = searchTerm.split(/\s+/);
       for (const word of words) {
+        if (CARB_IGNORE.has(word)) continue;
         const proteinBase = PROTEIN_MAP[word];
         if (proteinBase) {
           const { data: proteinAlias } = await supabase
@@ -105,23 +160,27 @@ export function useMealVisualMatch(title: string | null | undefined) {
         }
       }
 
-      // Strategy 3: partial name match (fallback)
-      const { data: nameData } = await supabase
-        .from("meal_visual_library" as any)
-        .select("*")
-        .eq("is_active", true)
-        .ilike("name", `%${normalized.split(" ").slice(0, 3).join("%")}%`)
-        .limit(1);
+      // Strategy 3: partial name match (fallback) - only for non-generic titles
+      if (!isGenericTitle) {
+        const { data: nameData } = await supabase
+          .from("meal_visual_library" as any)
+          .select("*")
+          .eq("is_active", true)
+          .ilike("name", `%${searchTerm.split(" ").slice(0, 3).join("%")}%`)
+          .limit(1);
 
-      if (nameData && nameData.length > 0) {
-        setMatch(nameData[0] as unknown as MealVisualItem);
+        if (nameData && nameData.length > 0) {
+          setMatch(nameData[0] as unknown as MealVisualItem);
+        } else {
+          setMatch(null);
+        }
       } else {
         setMatch(null);
       }
     };
 
     findMatch();
-  }, [title]);
+  }, [title, description]);
 
   return match;
 }
