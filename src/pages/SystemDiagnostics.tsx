@@ -102,6 +102,7 @@ export default function SystemDiagnostics() {
   const [progress, setProgress] = useState(0);
   const [historyFilter, setHistoryFilter] = useState<string>("all");
   const logIdRef = useRef(0);
+  const runningRef = useRef(false);
   const logsBufferRef = useRef<DiagLog[]>([]);
 
   const addLog = useCallback((level: LogLevel, module: string, message: string, detail?: string) => {
@@ -249,7 +250,7 @@ export default function SystemDiagnostics() {
         const channel = supabase.channel(`diag-${ch}`);
         channel.on("postgres_changes", { event: "*", schema: "public", table: ch }, () => {});
         const subResult = await new Promise<string>((resolve) => {
-          const timer = setTimeout(() => resolve("timeout"), 5000);
+          const timer = setTimeout(() => resolve("timeout"), 10000);
           channel.subscribe((status) => {
             if (status === "SUBSCRIBED") { clearTimeout(timer); resolve("ok"); }
           });
@@ -292,17 +293,17 @@ export default function SystemDiagnostics() {
     if ((stalePlans ?? 0) > 0) { warn++; addLog("warning", "Consistency", `${stalePlans} meal plan(s) with NULL status`); }
     else { ok++; addLog("ok", "Consistency", "All meal plans have valid status"); }
 
-    // Plan state dual-truth check
+    // Plan state dual-truth check (approved is valid for active plans awaiting publish)
     const { count: inconsistentPlans } = await (supabase as any).from("meal_plans")
       .select("id", { count: "exact", head: true })
       .eq("is_active", true)
-      .not("plan_status", "in", '("published_to_patient","published")');
+      .not("plan_status", "in", '("approved","published_to_patient","published")');
     if ((inconsistentPlans ?? 0) > 0) {
       crit++;
-      addLog("error", "Consistency", `${inconsistentPlans} plan(s) are is_active=true but NOT published (dual-state inconsistency)`);
+      addLog("error", "Consistency", `${inconsistentPlans} plan(s) are is_active=true but NOT approved/published (dual-state inconsistency)`);
     } else {
       ok++;
-      addLog("ok", "Consistency", "Plan state consistency: all active plans are published");
+      addLog("ok", "Consistency", "Plan state consistency: all active plans are approved or published");
     }
 
     // Orphan pipeline check
@@ -342,6 +343,10 @@ export default function SystemDiagnostics() {
 
   // ─── Full Diagnostic Runner ────────────────────────────────────
   const runFullDiagnostic = useCallback(async () => {
+    // Prevent duplicate runs from double-click or StrictMode
+    if (runningRef.current) return;
+    runningRef.current = true;
+
     // Log this diagnostic run as a pipeline execution for observability
     let pipelineRunId: string | null = null;
     try {
@@ -443,6 +448,7 @@ export default function SystemDiagnostics() {
     }
 
     setTestStatus("done");
+    runningRef.current = false;
     void refetchHistory();
     toast.success(`Diagnóstico completo: Score ${score}/100`);
   }, [user, addLog, runAuthTest, runDatabaseTest, runRouteTest, runNotificationTest, runRealtimeTest, runConsistencyTest, persistEntries, refetchHistory]);
