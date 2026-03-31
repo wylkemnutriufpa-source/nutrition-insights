@@ -77,7 +77,7 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
       setTargetFat(p.targetFat);
       setRejectedFoods(p.rejectedFoods.join(", "));
     } else {
-      toast.info("Anamnese não encontrada. Configure manualmente.");
+      toast.info("Anamnese não preenchida para este paciente. Preencha a anamnese ou configure os valores manualmente abaixo.");
     }
     setLoadingProfile(false);
   }, [plan?.patient_id]);
