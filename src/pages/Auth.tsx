@@ -15,6 +15,7 @@ import LanguageSelector from "@/components/common/LanguageSelector";
 import { useTranslation } from "react-i18next";
 
 type AuthMode = "login" | "forgot" | "register";
+type SelectedRole = "nutritionist" | "personal" | "patient" | null;
 
 const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
   const [rememberMe, setRememberMe] = useState(true);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const [registerSuccess, setRegisterSuccess] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<SelectedRole>(null);
 
   // Show error if redirected from no-role sign-out
   useEffect(() => {
