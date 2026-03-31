@@ -242,6 +242,13 @@ export default function WorkspaceRouteGuard() {
       return;
     }
 
+    // ── Nutritionist-only guard (block personal trainers from nutrition routes) ──
+    if (isPersonal && !isNutritionist && !isAdmin && isInList(pathname, NUTRITIONIST_ONLY_ROUTES)) {
+      console.warn("[WorkspaceRouteGuard] Personal trainer accessing nutritionist-only route:", pathname);
+      navigate("/", { replace: true });
+      return;
+    }
+
     // ── Workspace context guards (only for hybrid users) ──
     if (isHybridUser) {
       if (isPatientContext && isInList(pathname, PROFESSIONAL_ONLY_ROUTES)) {
