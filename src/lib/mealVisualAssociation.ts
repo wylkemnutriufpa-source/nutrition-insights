@@ -173,14 +173,13 @@ export async function runAutoAssociation(): Promise<AssociationReport> {
       }
 
       if (match) {
-      if (match) {
         await supabase
           .from("meal_plan_items")
           .update({ visual_library_item_id: match } as any)
           .eq("id", item.id);
         report.totalLinked++;
         report.details.mealPlanItems.linked++;
-      } else {
+      } else if (!GENERIC_TITLES.has(normalize(item.title || ""))) {
         report.totalUnlinked++;
         const norm = normalize(item.title || "");
         unrecognizedMap.set(norm, (unrecognizedMap.get(norm) || 0) + 1);
