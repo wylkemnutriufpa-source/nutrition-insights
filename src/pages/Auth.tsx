@@ -325,7 +325,7 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
                   </Button>
 
                   <div className="pt-2 text-center">
-                    <p className="text-xs text-muted-foreground mb-1">É nutricionista e ainda não tem conta?</p>
+                    <p className="text-xs text-muted-foreground mb-1">É nutricionista ou personal trainer e ainda não tem conta?</p>
                     <button type="button" onClick={() => setMode("register")} className="text-sm text-primary hover:underline font-medium">
                       Criar conta profissional
                     </button>
