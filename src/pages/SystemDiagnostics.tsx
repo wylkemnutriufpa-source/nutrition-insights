@@ -15,7 +15,7 @@ import {
   Activity, Play, AlertTriangle, CheckCircle2, XCircle,
   Database, Route, Bell, Radio, Cpu, Shield, RefreshCw,
   BarChart3, Clock, FileText, Copy, History, Filter,
-  Gauge, Bug
+  Gauge, Bug, FlaskConical
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -23,6 +23,7 @@ const ErrorsTab = lazy(() => import("@/components/diagnostics/ErrorsTab"));
 const PipelinesTab = lazy(() => import("@/components/diagnostics/PipelinesTab"));
 const PerformanceTab = lazy(() => import("@/components/diagnostics/PerformanceTab"));
 const AlertsTab = lazy(() => import("@/components/diagnostics/AlertsTab"));
+const SimulationsTab = lazy(() => import("@/components/diagnostics/SimulationsTab"));
 
 type LogLevel = "ok" | "warning" | "error" | "info";
 interface DiagLog {
@@ -601,6 +602,9 @@ export default function SystemDiagnostics() {
             <TabsTrigger value="cleanup" className="gap-1.5 text-xs">
               <Database className="w-3.5 h-3.5" /> Limpeza
             </TabsTrigger>
+            <TabsTrigger value="simulations" className="gap-1.5 text-xs">
+              <FlaskConical className="w-3.5 h-3.5" /> Simulações
+            </TabsTrigger>
           </TabsList>
 
           {/* Live Logs Tab */}
@@ -841,8 +845,15 @@ export default function SystemDiagnostics() {
               </CardContent>
             </Card>
           </TabsContent>
+          {/* Simulations Tab */}
+          <TabsContent value="simulations">
+            <Suspense fallback={<div className="p-8 text-center text-muted-foreground">Carregando...</div>}>
+              <SimulationsTab />
+            </Suspense>
+          </TabsContent>
         </Tabs>
       </div>
     </DashboardLayout>
   );
 }
+
