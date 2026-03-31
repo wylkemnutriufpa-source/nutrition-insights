@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Eye, EyeOff, ArrowRight, Stethoscope, Users } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Stethoscope, Users, Dumbbell } from "lucide-react";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import LanguageSelector from "@/components/common/LanguageSelector";
 import { useTranslation } from "react-i18next";
