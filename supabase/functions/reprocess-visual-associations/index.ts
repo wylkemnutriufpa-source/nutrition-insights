@@ -97,16 +97,14 @@ Deno.serve(async (req) => {
 
       // If title is a generic meal type, use description to find protein
       if (GENERIC_TITLES.has(norm) && description) {
-        const protein = extractProteinFromDescription(description);
-        if (protein) {
-          // Try exact alias match for the protein
-          if (aliasMap.has(protein)) return aliasMap.get(protein)!;
-          // Try alias prefix match
+        const food = extractFoodFromDescription(description);
+        if (food) {
+          if (aliasMap.has(food)) return aliasMap.get(food)!;
           for (const [alias, itemId] of aliasMap) {
-            if (alias === protein || alias.startsWith(protein + " ")) return itemId;
+            if (alias === food || alias.startsWith(food + " ")) return itemId;
           }
         }
-        return null; // Don't fallback to partial match for generic titles
+        return null;
       }
 
       // Strategy 1: exact alias match
