@@ -32,18 +32,16 @@ export default function SetupWizard() {
       for (const [k, v] of Object.entries(filters)) q = q.eq(k, v);
       return q as Promise<{ count: number | null }>;
     };
-    const [patientsRes, protocolsRes, plansRes, waRes] = await Promise.all([
+    const [patientsRes, protocolsRes, plansRes] = await Promise.all([
       countQuery("nutritionist_patients", { nutritionist_id: user.id }),
       countQuery("nutrition_protocols", { created_by: user.id }),
       countQuery("meal_plans", { nutritionist_id: user.id, plan_status: "published" }),
-      countQuery("whatsapp_integrations", { nutritionist_id: user.id, is_active: true }),
     ]);
 
     const results: Record<string, boolean> = {
       first_patient: (patientsRes.count || 0) > 0,
       first_protocol: (protocolsRes.count || 0) > 0,
       first_plan: (plansRes.count || 0) > 0,
-      whatsapp: (waRes.count || 0) > 0,
     };
 
     setSteps(results);
