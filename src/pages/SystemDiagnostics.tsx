@@ -500,9 +500,9 @@ export default function SystemDiagnostics() {
           <div>
             <h1 className="font-display text-xl sm:text-2xl font-bold flex items-center gap-2">
               <Cpu className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-              System Test Center
+              System Diagnostics & Observability
             </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground">Auto-diagnostic engine with persistent logging</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Diagnóstico, monitoramento e observabilidade operacional em tempo real</p>
           </div>
           <div className="flex gap-2">
             {logs.length > 0 && (
