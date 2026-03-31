@@ -462,9 +462,9 @@ const App = () => (
               <Route path="/programs" element={<NutritionistRoute><LP section="Projetos"><Programs /></LP></NutritionistRoute>} />
               <Route path="/programs/:programId" element={<NutritionistRoute><LP section="Projetos"><ProgramDetail /></LP></NutritionistRoute>} />
               <Route path="/programs/:programId/biquini-branco" element={<NutritionistRoute><LP section="Projetos"><BiquiniBrancoDetail /></LP></NutritionistRoute>} />
-              <Route path="/meal-plans" element={<ProfessionalRoute><LP section="Planos"><MealPlans /></LP></ProfessionalRoute>} />
-              <Route path="/editor-v2" element={<ProfessionalRoute><LP section="Editor Premium V2"><MealPlanEditorV2Entry /></LP></ProfessionalRoute>} />
-              <Route path="/meal-plans/:id" element={<ProfessionalRoute><LP section="Planos"><MealPlanEditorV2 /></LP></ProfessionalRoute>} />
+              <Route path="/meal-plans" element={<NutritionistRoute><LP section="Planos"><MealPlans /></LP></NutritionistRoute>} />
+              <Route path="/editor-v2" element={<NutritionistRoute><LP section="Editor Premium V2"><MealPlanEditorV2Entry /></LP></NutritionistRoute>} />
+              <Route path="/meal-plans/:id" element={<NutritionistRoute><LP section="Planos"><MealPlanEditorV2 /></LP></NutritionistRoute>} />
               <Route path="/meal-plans/:id/legacy" element={<LegacyMealPlanRedirect />} />
               <Route path="/diet-templates" element={<NutritionistRoute><LP section="Templates"><DietTemplates /></LP></NutritionistRoute>} />
               <Route path="/physical-assessment" element={<NutritionistRoute><LP section="Avaliação"><PhysicalAssessment /></LP></NutritionistRoute>} />
