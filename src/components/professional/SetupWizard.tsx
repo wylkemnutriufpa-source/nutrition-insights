@@ -65,7 +65,6 @@ export default function SetupWizard() {
     { key: "first_patient", label: "Cadastrar 1º Paciente", description: "Adicione seu primeiro paciente", icon: Users, route: "/patients" },
     { key: "first_protocol", label: "Criar 1º Protocolo", description: "Monte um protocolo nutricional", icon: FileText, route: "/protocols" },
     { key: "first_plan", label: "Publicar 1º Plano", description: "Crie e publique um plano alimentar", icon: UtensilsCrossed, route: "/meal-plans" },
-    { key: "whatsapp", label: "Ativar WhatsApp", description: "Conecte para automações", icon: MessageSquare, route: "/settings/whatsapp" },
   ];
 
   const completedCount = Object.values(steps).filter(Boolean).length;

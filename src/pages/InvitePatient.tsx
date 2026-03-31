@@ -102,7 +102,7 @@ export default function InvitePatient() {
                 <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="paciente@email.com" />
               </div>
               <div className="space-y-2">
-                <Label>WhatsApp (opcional)</Label>
+                <Label>Telefone (opcional)</Label>
                 <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-9999" />
               </div>
 

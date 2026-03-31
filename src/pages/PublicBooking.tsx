@@ -344,7 +344,7 @@ export default function PublicBooking() {
                       required maxLength={320}
                     />
                     <Input
-                      placeholder="WhatsApp (opcional)"
+                      placeholder="Telefone (opcional)"
                       value={form.phone}
                       onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
                       maxLength={20}
