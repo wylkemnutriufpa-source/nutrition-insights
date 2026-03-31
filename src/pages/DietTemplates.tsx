@@ -18,6 +18,7 @@ import {
   Coffee, Apple, Utensils, Cookie, Moon, Sun, ArrowRight,
   Flame, Beef, Wheat, Droplets, AlertTriangle, Check, RefreshCw
 } from "lucide-react";
+import { TemplateFoodVisual } from "@/components/meal/TemplateFoodVisual";
 
 interface DietTemplate {
   id: string;
