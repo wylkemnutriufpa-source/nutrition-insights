@@ -20,7 +20,6 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // Verify user is admin
     const anonClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!);
     const { data: { user }, error: authError } = await anonClient.auth.getUser(authHeader.replace('Bearer ', ''));
     if (authError || !user) {
@@ -34,7 +33,6 @@ Deno.serve(async (req) => {
       aliasMap.set(a.normalized_alias, a.library_item_id);
     }
 
-    // Normalize function
     const normalize = (text: string): string => {
       return text
         .toLowerCase()
@@ -45,19 +43,68 @@ Deno.serve(async (req) => {
         .trim();
     };
 
-    // Protein keywords
+    // Extended protein map
     const PROTEIN_MAP: Record<string, string> = {
-      frango: "frango", carne: "carne", bife: "carne",
+      frango: "frango", peito: "frango", sobrecoxa: "frango",
+      carne: "carne", bife: "carne", alcatra: "carne", patinho: "carne", acem: "carne", maminha: "carne",
+      "carne moida": "carne moida",
       picanha: "picanha", costelinha: "costelinha",
-      peixe: "peixe", tilapia: "peixe", salmao: "peixe",
-      camarao: "camarao", ovo: "ovo", ovos: "ovo", omelete: "ovo",
+      porco: "porco", suino: "porco", lombo: "porco",
+      peixe: "peixe", tilapia: "peixe", salmao: "peixe", pescada: "peixe", merluza: "peixe",
+      camarao: "camarao",
+      ovo: "ovo", ovos: "ovo", omelete: "ovo",
     };
-    const CARB_IGNORE = new Set(["arroz", "batata", "macarrao", "feijao", "pure", "mandioca", "inhame", "legumes", "salada"]);
+    const CARB_IGNORE = new Set(["arroz", "batata", "macarrao", "feijao", "pure", "mandioca", "inhame", "legumes", "salada", "brocolis", "macaxeira"]);
+    const GENERIC_TITLES = new Set(["almoco", "jantar", "cafe da manha", "lanche", "lanche da manha", "lanche da tarde", "ceia"]);
 
-    const findMatch = (title: string): string | null => {
+    /**
+     * Extract the first protein mentioned in the description.
+     * Only looks at lines that start with "•" (food lines), ignoring substitution lines.
+     */
+    const extractProteinFromDescription = (description: string): string | null => {
+      const lines = description.split('\n');
+      for (const line of lines) {
+        const trimmed = line.trim();
+        // Stop at substitution section
+        if (trimmed.includes('Substituiç') || trimmed.includes('🔄')) break;
+        // Only process food item lines
+        if (!trimmed.startsWith('•') && !trimmed.startsWith('-')) continue;
+
+        const normLine = normalize(trimmed);
+        const words = normLine.split(/\s+/);
+
+        // Check multi-word proteins first
+        if (normLine.includes("carne moida")) return "carne moida";
+
+        for (const word of words) {
+          if (CARB_IGNORE.has(word)) continue;
+          if (PROTEIN_MAP[word]) return PROTEIN_MAP[word];
+        }
+      }
+      return null;
+    };
+
+    const findMatch = (title: string, description?: string): string | null => {
       const norm = normalize(title);
+
+      // If title is a generic meal type, use description to find protein
+      if (GENERIC_TITLES.has(norm) && description) {
+        const protein = extractProteinFromDescription(description);
+        if (protein) {
+          // Try exact alias match for the protein
+          if (aliasMap.has(protein)) return aliasMap.get(protein)!;
+          // Try alias prefix match
+          for (const [alias, itemId] of aliasMap) {
+            if (alias === protein || alias.startsWith(protein + " ")) return itemId;
+          }
+        }
+        return null; // Don't fallback to partial match for generic titles
+      }
+
+      // Strategy 1: exact alias match
       if (aliasMap.has(norm)) return aliasMap.get(norm)!;
 
+      // Strategy 2: protein keyword extraction from title
       const words = norm.split(/\s+/);
       for (const word of words) {
         if (CARB_IGNORE.has(word)) continue;
@@ -69,6 +116,7 @@ Deno.serve(async (req) => {
         }
       }
 
+      // Strategy 3: partial match (fallback)
       for (const [alias, itemId] of aliasMap) {
         if (norm.includes(alias) || alias.includes(norm)) return itemId;
       }
@@ -78,16 +126,16 @@ Deno.serve(async (req) => {
     let totalLinked = 0;
     let totalAnalyzed = 0;
     let totalAlreadyLinked = 0;
+    let totalCorrected = 0;
     const unrecognized = new Map<string, number>();
 
-    // Process meal_plan_items in batches
+    // Process meal_plan_items in batches - including already-linked items to fix wrong links
     let offset = 0;
     const batchSize = 500;
     while (true) {
       const { data: items } = await supabase
         .from('meal_plan_items')
-        .select('id, title, visual_library_item_id')
-        .is('visual_library_item_id', null)
+        .select('id, title, description, visual_library_item_id')
         .not('title', 'is', null)
         .range(offset, offset + batchSize - 1);
 
@@ -95,13 +143,24 @@ Deno.serve(async (req) => {
 
       for (const item of items) {
         totalAnalyzed++;
-        const match = findMatch(item.title || '');
+        const match = findMatch(item.title || '', item.description || '');
+        
         if (match) {
-          await supabase.from('meal_plan_items').update({ visual_library_item_id: match }).eq('id', item.id);
-          totalLinked++;
-        } else {
+          if (item.visual_library_item_id !== match) {
+            await supabase.from('meal_plan_items').update({ visual_library_item_id: match }).eq('id', item.id);
+            if (item.visual_library_item_id) {
+              totalCorrected++;
+            } else {
+              totalLinked++;
+            }
+          } else {
+            totalAlreadyLinked++;
+          }
+        } else if (!item.visual_library_item_id) {
           const norm = normalize(item.title || '');
-          unrecognized.set(norm, (unrecognized.get(norm) || 0) + 1);
+          if (!GENERIC_TITLES.has(norm)) {
+            unrecognized.set(norm, (unrecognized.get(norm) || 0) + 1);
+          }
         }
       }
 
@@ -113,25 +172,17 @@ Deno.serve(async (req) => {
     const { data: savedMeals } = await supabase
       .from('saved_meals')
       .select('id, title, visual_library_item_id')
-      .is('visual_library_item_id', null)
       .not('title', 'is', null)
       .limit(1000);
 
     for (const item of (savedMeals || [])) {
       totalAnalyzed++;
       const match = findMatch(item.title || '');
-      if (match) {
+      if (match && item.visual_library_item_id !== match) {
         await supabase.from('saved_meals').update({ visual_library_item_id: match }).eq('id', item.id);
         totalLinked++;
       }
     }
-
-    // Count already linked
-    const { count: linkedCount } = await supabase
-      .from('meal_plan_items')
-      .select('*', { count: 'exact', head: true })
-      .not('visual_library_item_id', 'is', null);
-    totalAlreadyLinked = linkedCount || 0;
 
     const topUnrecognized = [...unrecognized.entries()]
       .sort((a, b) => b[1] - a[1])
@@ -141,6 +192,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       totalAnalyzed,
       totalLinked,
+      totalCorrected,
       totalAlreadyLinked,
       totalUnlinked: unrecognized.size,
       topUnrecognized,
