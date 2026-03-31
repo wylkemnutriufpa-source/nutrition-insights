@@ -95,7 +95,12 @@ export async function publishMealPlan(
     return { success: false, error: error.message };
   }
 
-  return { success: true, data: data as Record<string, unknown> };
+  const result = data as Record<string, unknown>;
+  if (result && result.success === false) {
+    return { success: false, error: (result.error as string) || "Erro ao publicar", data: result };
+  }
+
+  return { success: true, data: result };
 }
 
 /**
