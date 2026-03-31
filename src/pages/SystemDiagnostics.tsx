@@ -15,7 +15,7 @@ import {
   Activity, Play, AlertTriangle, CheckCircle2, XCircle,
   Database, Route, Bell, Radio, Cpu, Shield, RefreshCw,
   BarChart3, Clock, FileText, Copy, History, Filter,
-  Gauge, Bug
+  Gauge, Bug, FlaskConical
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
