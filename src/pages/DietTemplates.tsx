@@ -40,6 +40,7 @@ interface DietTemplate {
   macro_ratio: { protein: number; carbs: number; fat: number };
   meals: TemplateMeal[];
   tags: string[];
+  template_generation?: string;
 }
 
 interface TemplateFood {
