@@ -227,6 +227,7 @@ function PrePlanTab({ students, prePlanStudent, setPrePlanStudent, handleUseTemp
 // --- Main Component ---
 export default function PersonalWorkouts() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { tenantId } = useTenant();
   const [plans, setPlans] = useState<any[]>([]);
   const [students, setStudents] = useState<{ student_id: string; full_name: string }[]>([]);
