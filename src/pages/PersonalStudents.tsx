@@ -55,10 +55,16 @@ export default function PersonalStudents() {
               {links.length} aluno{links.length !== 1 ? "s" : ""} vinculado{links.length !== 1 ? "s" : ""}
             </p>
           </div>
-          <Button onClick={() => setAddOpen(true)} size="sm" className="gap-1.5 bg-gradient-to-r from-primary to-primary/80">
-            <Plus className="w-4 h-4" />
-            Vincular Aluno
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setLinkOpen(true)} size="sm" variant="outline" className="gap-1.5">
+              <Search className="w-4 h-4" />
+              Vincular Aluno
+            </Button>
+            <Button onClick={() => setAddOpen(true)} size="sm" className="gap-1.5 bg-gradient-to-r from-primary to-primary/80">
+              <Plus className="w-4 h-4" />
+              Adicionar Aluno
+            </Button>
+          </div>
         </div>
 
         <div className="relative">
