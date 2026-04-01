@@ -696,7 +696,7 @@ serve(async (req) => {
     const tmb = calculateTMB(weight, height, age, sex);
     const tdeeFactor = ACTIVITY_MULTIPLIERS[activityLevel] || 1.375;
     const tdee = calculateTDEE(tmb, activityLevel);
-    const kcalTarget = calculateTargetKcal(tdee, goal);
+    const kcalTarget = calculateTargetKcal(tdee, goal, sex);
     const macros = calculateMacros(kcalTarget, goal, weight);
 
     // Physical assessment override
