@@ -102,6 +102,7 @@ export default function AutoFixButton({ mealPlanId, patientId, onFixed, disabled
           onOpenChange={setShowResult}
           result={result}
           onApprove={() => {
+            console.log("[AutoFix] 🟢 Preview APPROVED — calling onFixed with newPlanId =", result.newPlanId);
             setShowResult(false);
             if (result.newPlanId) onFixed?.(result.newPlanId);
           }}
