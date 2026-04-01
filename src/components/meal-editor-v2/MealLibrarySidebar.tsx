@@ -413,10 +413,47 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
                 <p>Nenhum template pré-pronto disponível</p>
               </div>
             ) : (
-              <div className="space-y-2">
-                {filteredDietTemplates.map((dt) => (
-                  <DietTemplateCard key={dt.id} template={dt} onImport={handleImportDietTemplate} />
-                ))}
+              <div className="space-y-4">
+                {/* Official V2 */}
+                {officialDietTemplates.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Badge className="bg-primary/10 text-primary border-primary/30 text-[8px] h-5 gap-0.5">
+                        <Check className="w-2.5 h-2.5" /> Verificados
+                      </Badge>
+                      <span className="text-[10px] text-muted-foreground">{officialDietTemplates.length}</span>
+                    </div>
+                    <div className="space-y-2">
+                      {officialDietTemplates.map((dt) => (
+                        <DietTemplateCard key={dt.id} template={dt} onImport={handleImportDietTemplate} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Legacy */}
+                {legacyDietTemplates.length > 0 && (
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => setShowLegacyDiet(!showLegacyDiet)}
+                      className="flex items-center gap-1.5 mb-2 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Badge variant="outline" className="text-[8px] h-5 gap-0.5 text-muted-foreground">
+                        <AlertTriangle className="w-2.5 h-2.5" /> Legado
+                      </Badge>
+                      <span>{legacyDietTemplates.length} antigos</span>
+                      <ChevronRight className={`w-3 h-3 transition-transform ${showLegacyDiet ? 'rotate-90' : ''}`} />
+                    </button>
+                    {showLegacyDiet && (
+                      <div className="space-y-2 opacity-60">
+                        {legacyDietTemplates.map((dt) => (
+                          <DietTemplateCard key={dt.id} template={dt} onImport={handleImportDietTemplate} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </ScrollArea>
