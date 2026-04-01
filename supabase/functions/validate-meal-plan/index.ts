@@ -349,14 +349,14 @@ function analyzePlanSimplicity(items: any[], goal: string): { score: number; sta
             const hasProtein = BRAZILIAN_PROTEINS.some(p => allText.includes(normalize(p)));
             const hasCarb = BRAZILIAN_CARBS.some(c => allText.includes(normalize(c)));
             if (!hasProtein || !hasCarb) {
-                score -= 10;
+                score -= 5;
                 issues.push({
                     category: "adherence",
-                    severity: "high",
+                    severity: "medium",
                     meal_type: mealType, day,
                     message: `Refeição principal sem base brasileira (${!hasProtein ? "falta proteína" : ""}${!hasProtein && !hasCarb ? " e " : ""}${!hasCarb ? "falta carboidrato" : ""})`,
                     suggested_fix: "Usar: arroz + feijão + frango, macarrão + carne, batata + frango",
-                    penalty: 10,
+                    penalty: 5,
                 });
             }
         }
