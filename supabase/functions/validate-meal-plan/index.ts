@@ -363,7 +363,7 @@ function analyzePlanSimplicity(items: any[], goal: string): { score: number; sta
     }
 
     score = Math.max(0, Math.min(100, score));
-    const status = score >= 75 ? "approved" : "failed";
+    const status = score >= 65 ? "approved" : "failed";
     return { score, status, issues, blocked_foods: uniqueBlocked };
 }
 
