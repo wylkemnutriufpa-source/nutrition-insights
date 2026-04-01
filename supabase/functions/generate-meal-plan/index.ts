@@ -272,7 +272,6 @@ async function loadVisualAliasMap(client: any): Promise<Map<string, string>> {
 
 async function resolveVisualForItems(client: any, planId: string, items: any[]): Promise<number> {
   const aliasMap = await loadVisualAliasMap(client);
-  let resolved = 0;
 
   // Get inserted items with their IDs
   const { data: insertedItems } = await client
@@ -280,20 +279,38 @@ async function resolveVisualForItems(client: any, planId: string, items: any[]):
     .select("id, title, description")
     .eq("meal_plan_id", planId);
 
-  if (!insertedItems) return 0;
+  if (!insertedItems || insertedItems.length === 0) return 0;
 
+  // Batch: resolve all visuals first, then update in bulk groups
+  const updates: { id: string; visual_library_item_id: string }[] = [];
   for (const item of insertedItems) {
     const visualId = resolveVisualFromDescription(item.title || "", item.description || "", aliasMap);
     if (visualId) {
-      await client
-        .from("meal_plan_items")
-        .update({ visual_library_item_id: visualId })
-        .eq("id", item.id);
-      resolved++;
+      updates.push({ id: item.id, visual_library_item_id: visualId });
     }
   }
 
-  return resolved;
+  if (updates.length === 0) return 0;
+
+  // Group by visual_library_item_id to batch updates
+  const groupedByVisual = new Map<string, string[]>();
+  for (const u of updates) {
+    if (!groupedByVisual.has(u.visual_library_item_id)) {
+      groupedByVisual.set(u.visual_library_item_id, []);
+    }
+    groupedByVisual.get(u.visual_library_item_id)!.push(u.id);
+  }
+
+  // Execute batched updates (1 query per unique visual instead of 1 per item)
+  const updatePromises = Array.from(groupedByVisual.entries()).map(([visualId, ids]) =>
+    client
+      .from("meal_plan_items")
+      .update({ visual_library_item_id: visualId })
+      .in("id", ids)
+  );
+  await Promise.all(updatePromises);
+
+  return updates.length;
 }
 
 function isBlockedFood(name: string): boolean {
@@ -329,11 +346,11 @@ function calculateTDEE(tmb: number, activityLevel: string): number {
   return Math.round(tmb * multiplier);
 }
 
-function calculateTargetKcal(tdee: number, goal: string): number {
+function calculateTargetKcal(tdee: number, goal: string, sex: string = "male"): number {
   const adjustment = GOAL_KCAL_ADJUSTMENT[goal] || 0;
   const raw = tdee + adjustment;
-  // Pisos clínicos
-  const minKcal = 1200; // piso absoluto
+  // Pisos clínicos da Constituição: 1200 feminino, 1500 masculino
+  const minKcal = sex === "female" ? 1200 : 1500;
   return Math.max(minKcal, Math.min(3500, raw));
 }
 
@@ -410,7 +427,8 @@ function generateRealisticPlan(
         ? `${selected.description}\n\n🔄 Substituições:\n${subsText}`
         : selected.description;
 
-      const mealMacroRatio = targetKcal / kcalTarget;
+      // Use clamped scale for ALL values (calories + macros) to maintain consistency
+      const scaledKcal = Math.round(selected.kcal * clampedScale);
 
       items.push({
         meal_type: mealType,
@@ -421,7 +439,7 @@ function generateRealisticPlan(
                mealType === "afternoon_snack" ? "Lanche da Tarde" :
                mealType === "dinner" ? "Jantar" : "Ceia",
         description: fullDesc,
-        calories_target: targetKcal,
+        calories_target: scaledKcal,
         protein_target: Math.round(selected.protein * clampedScale),
         carbs_target: Math.round(selected.carbs * clampedScale),
         fat_target: Math.round(selected.fat * clampedScale),
@@ -598,6 +616,12 @@ serve(async (req) => {
     const isPipeline = body.isPipeline || false;
     const planCount = Math.min(Math.max(body.planCount || 1, 1), 3);
 
+    if (!patient_id || typeof patient_id !== "string" || patient_id.length < 10) {
+      return new Response(JSON.stringify({ error: "patient_id é obrigatório", code: "PATIENT_ID_MISSING" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const serviceClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -610,17 +634,40 @@ serve(async (req) => {
       .select("tenant_id")
       .eq("user_id", nutritionistIdForTenant)
       .maybeSingle();
-    const resolvedTenantId = tenantProfile?.tenant_id;
+    let resolvedTenantId = tenantProfile?.tenant_id || null;
+
+    // Fallback: try first active tenant if profile has none
+    if (!resolvedTenantId) {
+      const { data: fallbackTenant } = await serviceClient
+        .from("tenants")
+        .select("id")
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle();
+      resolvedTenantId = fallbackTenant?.id || null;
+      if (resolvedTenantId) {
+        console.log(`[generate-meal-plan] Tenant resolved via fallback: ${resolvedTenantId}`);
+      } else {
+        console.warn("[generate-meal-plan] No tenant_id resolved — trigger must handle resolution");
+      }
+    }
 
     // ── 1. Get completed anamnesis ──
-    const { data: anamnesis } = await serviceClient
+    const { data: anamnesis, error: anamErr } = await serviceClient
       .from("patient_anamnesis")
       .select("*")
       .eq("user_id", patient_id)
       .eq("status", "completed")
       .order("created_at", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
+
+    if (anamErr) {
+      console.error("Anamnesis query error:", anamErr);
+      return new Response(JSON.stringify({ error: "Erro ao buscar anamnese", code: "ANAMNESIS_QUERY_ERROR" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (!anamnesis) {
       return new Response(JSON.stringify({ error: "Anamnese concluída não encontrada", code: "ANAMNESIS_MISSING" }), {
@@ -655,7 +702,7 @@ serve(async (req) => {
     const tmb = calculateTMB(weight, height, age, sex);
     const tdeeFactor = ACTIVITY_MULTIPLIERS[activityLevel] || 1.375;
     const tdee = calculateTDEE(tmb, activityLevel);
-    const kcalTarget = calculateTargetKcal(tdee, goal);
+    const kcalTarget = calculateTargetKcal(tdee, goal, sex);
     const macros = calculateMacros(kcalTarget, goal, weight);
 
     // Physical assessment override
@@ -665,7 +712,7 @@ serve(async (req) => {
       .eq("patient_id", patient_id)
       .order("assessment_date", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     const finalKcal = physicalAssessment?.calories_target || kcalTarget;
     const finalMacros = {
