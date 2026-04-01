@@ -172,6 +172,13 @@ export default function PatientGridDashboard() {
 
       {!blockDashboard && (<>
 
+      {/* BASIC MODE: Show daily meal plan directly */}
+      {expUI.isBasic && (
+        <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+          <DailyMealPlanInline />
+        </Suspense>
+      )}
+
       {/* FitJourney Timeline — hidden in basic mode */}
       {!expUI.isBasic && <FitJourneyTimeline compact maxHeight="400px" />}
 
