@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { scaleMealToTarget, type MealTemplate, type ScaledMeal, type FoodStructureItem } from "@/lib/mealScalingEngine";
+import { buildMealItems, type MealItemInput } from "@/lib/mealItemBuilder";
 import {
   Search, Utensils, Flame, Beef, Wheat, Droplets, Loader2,
   BookOpen, User, Plus, Sparkles, ChevronRight, Zap
@@ -112,20 +113,19 @@ export default function TemplateQuickInsertPanel({
 
     const foods = Array.isArray(template.foods_structure) ? template.foods_structure as FoodStructureItem[] : [];
 
-    // Scale if patient target is available
-    let itemsToInsert: any[];
+    let input: MealItemInput;
+
     if (patientTargetKcal && foods.length > 0) {
       const scaled = scaleMealToTarget(
         { ...template, foods_structure: foods } as MealTemplate,
         { target_kcal: patientTargetKcal, patient_weight_kg: patientWeight }
       );
-      // Build a single grouped item with all foods listed in description
       const foodDesc = scaled.foods.map(f => `• ${f.name} — ${f.portion_grams}g`).join("\n");
       const totalCal = scaled.foods.reduce((s, f) => s + (f.calories || 0), 0);
       const totalP = scaled.foods.reduce((s, f) => s + (f.protein || 0), 0);
       const totalC = scaled.foods.reduce((s, f) => s + (f.carbs || 0), 0);
       const totalF = scaled.foods.reduce((s, f) => s + (f.fat || 0), 0);
-      itemsToInsert = [{
+      input = {
         meal_plan_id: planId,
         title: template.name,
         description: foodDesc,
@@ -135,15 +135,16 @@ export default function TemplateQuickInsertPanel({
         protein_target: totalP,
         carbs_target: totalC,
         fat_target: totalF,
-      }];
+        item_origin: "template",
+        foods: scaled.foods.map(f => f.name),
+      };
     } else if (foods.length > 0) {
-      // Build a single grouped item with all foods listed in description
       const foodDesc = foods.map(f => `• ${f.name} — ${f.portion_grams}g`).join("\n");
       const totalCal = foods.reduce((s, f) => s + (f.calories || 0), 0);
       const totalP = foods.reduce((s, f) => s + (f.protein || 0), 0);
       const totalC = foods.reduce((s, f) => s + (f.carbs || 0), 0);
       const totalF = foods.reduce((s, f) => s + (f.fat || 0), 0);
-      itemsToInsert = [{
+      input = {
         meal_plan_id: planId,
         title: template.name,
         description: foodDesc,
@@ -153,10 +154,11 @@ export default function TemplateQuickInsertPanel({
         protein_target: totalP,
         carbs_target: totalC,
         fat_target: totalF,
-      }];
+        item_origin: "template",
+        foods: foods.map(f => f.name),
+      };
     } else {
-      // Template without food structure → insert as single block with warning
-      itemsToInsert = [{
+      input = {
         meal_plan_id: planId,
         title: template.name,
         description: `⚠️ Template sem alimentos definidos — preencha manualmente`,
@@ -166,7 +168,13 @@ export default function TemplateQuickInsertPanel({
         protein_target: template.protein_base,
         carbs_target: template.carbs_base,
         fat_target: template.fat_base,
-      }];
+        item_origin: "template",
+      };
+    }
+
+    const { items: itemsToInsert, warnings } = buildMealItems([input]);
+    if (warnings.length > 0) {
+      console.warn("[TemplateQuickInsert]", warnings);
     }
 
     const { data, error } = await supabase

@@ -5,6 +5,7 @@ import { Slider } from "@/components/ui/slider";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { buildMealItems, type MealItemInput } from "@/lib/mealItemBuilder";
 import {
   Flame, Beef, Wheat, Droplets, Loader2, Zap, Check,
   Coffee, Apple, Utensils, Cookie, Moon, Sun
@@ -74,10 +75,10 @@ export default function CalorieTemplates({ mealPlanId, onApplied }: CalorieTempl
     setApplying(true);
     const days = applyAllDays ? [0, 1, 2, 3, 4, 5, 6] : [new Date().getDay()];
 
-    const inserts = days.flatMap(day =>
+    const inputs: MealItemInput[] = days.flatMap(day =>
       MEAL_DISTRIBUTION.map(meal => {
         const mealKcal = Math.round(activeKcal * meal.pct);
-        const mealProtein = Math.round(macros.protein * meal.pct / (applyAllDays ? 1 : 1));
+        const mealProtein = Math.round(macros.protein * meal.pct);
         const mealCarbs = Math.round(macros.carbs * meal.pct);
         const mealFat = Math.round(macros.fat * meal.pct);
 
@@ -91,9 +92,15 @@ export default function CalorieTemplates({ mealPlanId, onApplied }: CalorieTempl
           protein_target: mealProtein,
           carbs_target: mealCarbs,
           fat_target: mealFat,
+          item_origin: "template",
         };
       })
     );
+
+    const { items: inserts, warnings } = buildMealItems(inputs);
+    if (warnings.length > 0) {
+      console.warn("[CalorieTemplates]", warnings);
+    }
 
     // Remove existing items for the affected days before inserting
     const { error: deleteError } = await supabase
