@@ -284,7 +284,7 @@ export default function OnboardingPipeline() {
   }
 
   const currentStep = getCurrentStep();
-  const progress = (currentStep / 5) * 100;
+  const progress = (currentStep / 6) * 100;
 
   if (loading) {
     return (
