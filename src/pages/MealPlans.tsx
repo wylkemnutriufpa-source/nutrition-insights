@@ -6,6 +6,29 @@ import { useTenant } from "@/lib/tenantContext";
 import { withTenantFilter, getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import { supabase } from "@/integrations/supabase/client";
 import { activateMealPlan, deactivateMealPlan, resolvePlanState } from "@/lib/serverTransitions";
+import { autoMatchSingle } from "@/lib/mealVisualAssociation";
+
+/** After AI generates a plan, resolve visuals for all its items */
+async function runPostGenVisualMatch(planId: string) {
+  const { data: items } = await supabase
+    .from("meal_plan_items")
+    .select("id, title, description, visual_library_item_id" as any)
+    .eq("meal_plan_id", planId);
+  if (!items) return;
+  await Promise.allSettled(
+    (items as any[])
+      .filter((i) => !i.visual_library_item_id && i.title)
+      .map(async (item) => {
+        const visualId = await autoMatchSingle(item.title, item.description ?? undefined);
+        if (visualId) {
+          await supabase
+            .from("meal_plan_items")
+            .update({ visual_library_item_id: visualId } as any)
+            .eq("id", item.id);
+        }
+      })
+  );
+}
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
