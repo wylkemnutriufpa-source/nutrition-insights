@@ -24,7 +24,7 @@ import { installGlobalErrorHandlers } from "@/lib/monitoring";
 import ExperienceRouteGuard from "@/components/common/ExperienceRouteGuard";
 import WorkspaceRouteGuard from "@/components/common/WorkspaceRouteGuard";
 import { initFeatureFlags } from "@/lib/featureFlags";
-import { useConsentGuard } from "@/hooks/useConsentGuard";
+// useConsentGuard is now used inside OnboardingPipeline, not in route guards
 import { usePaymentGuard } from "@/hooks/usePaymentGuard";
 
 // ── Eager-loaded (critical path) ────────────────────────────
