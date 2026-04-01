@@ -377,8 +377,8 @@ export default function MealPlanEditorV2() {
             patientId={plan.patient_id}
             onApproved={() => store.hydrate(plan.id, user?.id ?? "")}
             onFixed={(newPlanId) => {
-              toast.success("Plano corrigido salvo como draft!");
-              store.hydrate(plan.id, user?.id ?? "");
+              toast.success("Plano corrigido salvo como draft! Redirecionando...");
+              navigate(`/meal-plans/${newPlanId}`, { replace: true });
             }}
           />
         </div>
