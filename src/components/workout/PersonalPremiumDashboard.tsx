@@ -5,7 +5,7 @@ import {
   Layers, CalendarDays, TrendingUp, Heart, Ruler, Trophy,
   ArrowRightLeft, MessageCircle, FileText, Sparkles, BookOpen,
   ClipboardList, BarChart3, Zap, Command, Dumbbell,
-  Users, ArrowRight, Plus, Target, Flame, Activity
+  Users, ArrowRight, Plus, Target, Flame, Activity, Film
 } from "lucide-react";
 
 interface ModuleCard {
