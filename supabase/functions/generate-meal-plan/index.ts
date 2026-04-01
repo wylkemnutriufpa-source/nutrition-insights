@@ -689,7 +689,7 @@ serve(async (req) => {
       .eq("patient_id", patient_id)
       .order("assessment_date", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     const finalKcal = physicalAssessment?.calories_target || kcalTarget;
     const finalMacros = {
