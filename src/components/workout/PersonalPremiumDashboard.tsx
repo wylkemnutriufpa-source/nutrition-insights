@@ -5,7 +5,7 @@ import {
   Layers, CalendarDays, TrendingUp, Heart, Ruler, Trophy,
   ArrowRightLeft, MessageCircle, FileText, Sparkles, BookOpen,
   ClipboardList, BarChart3, Zap, Command, Dumbbell,
-  Users, ArrowRight, Plus, Target, Flame, Activity
+  Users, ArrowRight, Plus, Target, Flame, Activity, Film
 } from "lucide-react";
 
 interface ModuleCard {
@@ -23,6 +23,7 @@ const QUICK_ACTIONS = [
   { id: "create", label: "Novo Plano", icon: Plus, color: "text-emerald-400", bg: "from-emerald-500/20 to-emerald-500/5" },
   { id: "templates", label: "Templates", icon: Sparkles, color: "text-pink-400", bg: "from-pink-500/20 to-pink-500/5" },
   { id: "preplan", label: "Pré-Plano IA", icon: Zap, color: "text-purple-400", bg: "from-purple-500/20 to-purple-500/5" },
+  { id: "videos", label: "Vídeos", icon: Film, color: "text-red-400", bg: "from-red-500/20 to-red-500/5" },
   { id: "library", label: "Biblioteca", icon: BookOpen, color: "text-lime-400", bg: "from-lime-500/20 to-lime-500/5" },
 ];
 
@@ -120,7 +121,7 @@ export default function PersonalPremiumDashboard({ onNavigate, studentsCount, pl
           <Flame className="w-3.5 h-3.5 text-orange-400" />
           Atalhos Rápidos — Elaborar Treino
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {QUICK_ACTIONS.map((action, i) => (
             <motion.button
               key={action.id}
@@ -152,6 +153,9 @@ export default function PersonalPremiumDashboard({ onNavigate, studentsCount, pl
                   )}
                   {action.id === "preplan" && (
                     <p className="text-[10px] text-muted-foreground">Baseado na anamnese</p>
+                  )}
+                  {action.id === "videos" && (
+                    <p className="text-[10px] text-muted-foreground">Drag & drop</p>
                   )}
                   {action.id === "library" && (
                     <p className="text-[10px] text-muted-foreground">Exercícios + vídeos</p>
