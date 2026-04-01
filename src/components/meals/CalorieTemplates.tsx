@@ -5,6 +5,7 @@ import { Slider } from "@/components/ui/slider";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { buildMealItems, type MealItemInput } from "@/lib/mealItemBuilder";
 import {
   Flame, Beef, Wheat, Droplets, Loader2, Zap, Check,
   Coffee, Apple, Utensils, Cookie, Moon, Sun
