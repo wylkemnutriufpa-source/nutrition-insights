@@ -3728,6 +3728,54 @@ export type Database = {
           },
         ]
       }
+      exercise_video_library: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_seconds: number | null
+          id: string
+          is_public: boolean | null
+          muscle_group: string
+          tags: string[] | null
+          tenant_id: string | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          video_url: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          id?: string
+          is_public?: boolean | null
+          muscle_group?: string
+          tags?: string[] | null
+          tenant_id?: string | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          video_url: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          id?: string
+          is_public?: boolean | null
+          muscle_group?: string
+          tags?: string[] | null
+          tenant_id?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          video_url?: string
+        }
+        Relationships: []
+      }
       exercises_library: {
         Row: {
           common_mistakes: string | null
