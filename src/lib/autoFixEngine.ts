@@ -409,7 +409,8 @@ export async function autoFixMealPlan(
   let workingItems: MealPlanItem[] = [...items];
 
   if (personalizationCtx) {
-    const personalized = personalizePlanItems(workingItems, personalizationCtx);
+    // Skip calorie scaling here — AutoFix does its own macro rebalancing in Step 7
+    const personalized = personalizePlanItems(workingItems, personalizationCtx, { skipCalorieScaling: true });
     workingItems = personalized.items as MealPlanItem[];
     warnings.push(...personalized.warnings);
 

@@ -412,6 +412,12 @@ export function slotsToInserts(slots: GeneratedMealSlot[], planId: string) {
     const mealType = slot.mealType as MealTypeEnum;
     const storageDay = normalizeGeneratedDayForStorage(slot.day);
     const foods = Array.isArray(slot.libraryItem.foods) ? slot.libraryItem.foods : [];
+
+    // Calculate scaled macros from TARGET (not base), ensuring daily totals align
+    const scaledProtein = Math.round(slot.libraryItem.protein * slot.scaleFactor);
+    const scaledCarbs = Math.round(slot.libraryItem.carbs * slot.scaleFactor);
+    const scaledFat = Math.round(slot.libraryItem.fat * slot.scaleFactor);
+
     if (foods.length === 0) {
       return [{
         meal_plan_id: planId,
@@ -420,25 +426,35 @@ export function slotsToInserts(slots: GeneratedMealSlot[], planId: string) {
         meal_type: mealType,
         day_of_week: storageDay,
         calories_target: slot.targetKcal,
-        protein_target: Math.round(slot.libraryItem.protein * slot.scaleFactor),
-        carbs_target: Math.round(slot.libraryItem.carbs * slot.scaleFactor),
-        fat_target: Math.round(slot.libraryItem.fat * slot.scaleFactor),
+        protein_target: scaledProtein,
+        carbs_target: scaledCarbs,
+        fat_target: scaledFat,
       }];
     }
 
-    return foods.map((food) => ({
-      meal_plan_id: planId,
-      title: food.name,
-      description: slot.scaleFactor !== 1
-        ? `${food.portion} (×${slot.scaleFactor.toFixed(1)})`
-        : food.portion || null,
-      meal_type: mealType,
-      day_of_week: storageDay,
-      calories_target: Math.round((slot.libraryItem.base_calories / foods.length) * slot.scaleFactor),
-      protein_target: Math.round((slot.libraryItem.protein / foods.length) * slot.scaleFactor),
-      carbs_target: Math.round((slot.libraryItem.carbs / foods.length) * slot.scaleFactor),
-      fat_target: Math.round((slot.libraryItem.fat / foods.length) * slot.scaleFactor),
-    }));
+    // Distribute macros proportionally across foods, ensuring sum matches slot total
+    return foods.map((food, idx) => {
+      const isLast = idx === foods.length - 1;
+      const prevCalSum = Math.round(slot.targetKcal / foods.length) * idx;
+      const prevPSum = Math.round(scaledProtein / foods.length) * idx;
+      const prevCSum = Math.round(scaledCarbs / foods.length) * idx;
+      const prevFSum = Math.round(scaledFat / foods.length) * idx;
+
+      return {
+        meal_plan_id: planId,
+        title: food.name,
+        description: slot.scaleFactor !== 1
+          ? `${food.portion} (×${slot.scaleFactor.toFixed(1)})`
+          : food.portion || null,
+        meal_type: mealType,
+        day_of_week: storageDay,
+        // Last item gets the remainder to ensure exact sum
+        calories_target: isLast ? slot.targetKcal - prevCalSum : Math.round(slot.targetKcal / foods.length),
+        protein_target: isLast ? scaledProtein - prevPSum : Math.round(scaledProtein / foods.length),
+        carbs_target: isLast ? scaledCarbs - prevCSum : Math.round(scaledCarbs / foods.length),
+        fat_target: isLast ? scaledFat - prevFSum : Math.round(scaledFat / foods.length),
+      };
+    });
   });
 }
 
