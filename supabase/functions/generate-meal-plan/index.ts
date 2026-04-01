@@ -599,8 +599,20 @@ serve(async (req) => {
           continue;
         }
 
+        if (planItems.length === 0) {
+          console.error(`Plan option ${tplIdx + 1} generated 0 items — skipping`);
+          await serviceClient.from("meal_plans").delete().eq("id", newPlan.id);
+          continue;
+        }
+
         const itemsToInsert = planItems.map((item: any) => ({ ...item, meal_plan_id: newPlan.id }));
-        await serviceClient.from("meal_plan_items").insert(itemsToInsert);
+        const { error: itemsErr } = await serviceClient.from("meal_plan_items").insert(itemsToInsert);
+
+        if (itemsErr) {
+          console.error(`Failed to insert items for plan ${newPlan.id}:`, itemsErr);
+          await serviceClient.from("meal_plans").delete().eq("id", newPlan.id);
+          continue;
+        }
 
         generatedPlans.push({
           mealPlanId: newPlan.id,
