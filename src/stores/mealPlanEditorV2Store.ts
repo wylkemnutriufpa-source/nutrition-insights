@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
+import { autoMatchSingle } from "@/lib/mealVisualAssociation";
 
 // ── Types ────────────────────────────────────────────────────
 export type MealPlan = Tables<"meal_plans">;
