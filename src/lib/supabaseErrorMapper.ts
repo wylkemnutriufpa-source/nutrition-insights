@@ -53,7 +53,6 @@ const ERROR_MAP: Record<string, MappedError> = {
     errorKey: "unique_violation",
     isSystemError: false,
   },
-  // Edge Function error codes
   ANAMNESIS_MISSING: {
     userMessage: "Anamnese concluída não encontrada. O paciente precisa preencher a anamnese antes de gerar o plano.",
     errorKey: "anamnesis_missing",
@@ -83,6 +82,16 @@ const ERROR_MAP: Record<string, MappedError> = {
     userMessage: "Erro de configuração: clínica não encontrada. Entre em contato com o suporte.",
     errorKey: "tenant_not_found",
     isSystemError: true,
+  },
+  PLAN_AUTH_FORBIDDEN: {
+    userMessage: "Sem permissão para gerar plano para este paciente.",
+    errorKey: "plan_auth_forbidden",
+    isSystemError: false,
+  },
+  PATIENT_LINK_MISSING: {
+    userMessage: "Este paciente não está vinculado ao profissional responsável. Verifique o vínculo antes de gerar o plano.",
+    errorKey: "patient_link_missing",
+    isSystemError: false,
   },
 };
 

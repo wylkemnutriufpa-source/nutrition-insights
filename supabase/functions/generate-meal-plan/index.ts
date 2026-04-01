@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireUser } from "../_shared/auth-guard.ts";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 
 const corsHeaders = {
@@ -591,21 +592,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader || "" } } }
-    );
-
-    const { data: { user: authUser }, error: authErr } = await supabase.auth.getUser();
-    if (authErr || !authUser) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const userId = authUser.id;
+    const caller = await requireUser(req);
+    const userId = caller.id;
 
     const rl = await checkRateLimit("generate-meal-plan", userId, 10, 10);
     if (!rl.allowed) return rateLimitResponse();
@@ -615,6 +603,7 @@ serve(async (req) => {
     const meal_plan_id = body.meal_plan_id;
     const isPipeline = body.isPipeline || false;
     const planCount = Math.min(Math.max(body.planCount || 1, 1), 3);
+    const requestedNutritionistId = body.nutritionistId || userId;
 
     if (!patient_id || typeof patient_id !== "string" || patient_id.length < 10) {
       return new Response(JSON.stringify({ error: "patient_id é obrigatório", code: "PATIENT_ID_MISSING" }), {
@@ -628,13 +617,48 @@ serve(async (req) => {
     );
 
     // Resolve tenant_id for meal_plans (NOT NULL constraint)
-    const nutritionistIdForTenant = body.nutritionistId || userId;
+    const nutritionistIdForTenant = requestedNutritionistId;
     const { data: tenantProfile } = await serviceClient
       .from("profiles")
       .select("tenant_id")
       .eq("user_id", nutritionistIdForTenant)
       .maybeSingle();
     let resolvedTenantId = tenantProfile?.tenant_id || null;
+
+    // Authorization guard: caller must be the patient, the responsible professional, or admin
+    if (!caller.roles.includes("admin")) {
+      const callerIsPatient = userId === patient_id;
+      const callerIsResponsibleProfessional = userId === requestedNutritionistId;
+
+      if (!callerIsPatient && !callerIsResponsibleProfessional) {
+        return new Response(JSON.stringify({
+          error: "Usuário não autorizado para gerar plano deste paciente",
+          code: "PLAN_AUTH_FORBIDDEN",
+        }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: activeLink } = await serviceClient
+        .from("nutritionist_patients")
+        .select("id")
+        .eq("patient_id", patient_id)
+        .eq("nutritionist_id", requestedNutritionistId)
+        .eq("status", "active")
+        .limit(1)
+        .maybeSingle();
+
+      if (!activeLink) {
+        return new Response(JSON.stringify({
+          error: "Paciente não está vinculado ao profissional responsável",
+          code: "PATIENT_LINK_MISSING",
+        }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     // Fallback: try first active tenant if profile has none
     if (!resolvedTenantId) {
@@ -723,14 +747,14 @@ serve(async (req) => {
     const dataSource = physicalAssessment?.calories_target ? "physical_assessment" : "anamnesis_calculated";
 
     // Pipeline overrides
-    const pipelineOverrides = isPipeline ? {
+    const pipelineOverrides: Record<string, unknown> = isPipeline ? {
       cooking_preference: body.cookingPreference,
       food_preferences: body.foodPreferences,
       wake_time: body.wakeTime,
       sleep_time: body.sleepTime,
       meal_count: body.mealCount,
     } : {};
-    const mergedAnswers = { ...answers, ...pipelineOverrides };
+    const mergedAnswers = { ...(answers as Record<string, unknown>), ...pipelineOverrides } as Record<string, any>;
 
     const restrictions = mergedAnswers.restrictions || [];
     const medicalConditions = mergedAnswers.medical_conditions || mergedAnswers.health_conditions || [];
@@ -741,7 +765,7 @@ serve(async (req) => {
     // ── Multi-plan flow ──
     if (isPipeline && planCount > 1 && !meal_plan_id) {
       const generatedPlans: any[] = [];
-      const nutritionistId = body.nutritionistId;
+      const nutritionistId = requestedNutritionistId;
 
       for (let tplIdx = 0; tplIdx < planCount; tplIdx++) {
         const rawItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked, tplIdx);
@@ -890,7 +914,7 @@ serve(async (req) => {
     let finalMealPlanId = meal_plan_id;
 
     if (isPipeline && !meal_plan_id) {
-      const nutritionistId = body.nutritionistId;
+      const nutritionistId = requestedNutritionistId;
       const endDate = new Date();
       endDate.setDate(endDate.getDate() + 30);
 
