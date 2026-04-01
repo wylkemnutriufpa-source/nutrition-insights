@@ -627,7 +627,23 @@ serve(async (req) => {
       .select("tenant_id")
       .eq("user_id", nutritionistIdForTenant)
       .maybeSingle();
-    const resolvedTenantId = tenantProfile?.tenant_id;
+    let resolvedTenantId = tenantProfile?.tenant_id || null;
+
+    // Fallback: try first active tenant if profile has none
+    if (!resolvedTenantId) {
+      const { data: fallbackTenant } = await serviceClient
+        .from("tenants")
+        .select("id")
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle();
+      resolvedTenantId = fallbackTenant?.id || null;
+      if (resolvedTenantId) {
+        console.log(`[generate-meal-plan] Tenant resolved via fallback: ${resolvedTenantId}`);
+      } else {
+        console.warn("[generate-meal-plan] No tenant_id resolved — trigger must handle resolution");
+      }
+    }
 
     // ── 1. Get completed anamnesis ──
     const { data: anamnesis, error: anamErr } = await serviceClient
