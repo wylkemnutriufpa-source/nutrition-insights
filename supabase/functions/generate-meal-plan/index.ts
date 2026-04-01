@@ -832,7 +832,7 @@ serve(async (req) => {
 
     // ── Single plan flow ──
     const rawPlanItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked);
-    const planItems = reconcileDailyMacros(rawPlanItems, finalKcal, finalMacros);
+    const planItems = reconcileDailyMacros(rawPlanItems, finalKcal, finalMacros, goal);
 
     const generationMetadata = buildGenerationMetadata(
       tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
