@@ -698,7 +698,7 @@ serve(async (req) => {
 
       for (let tplIdx = 0; tplIdx < planCount; tplIdx++) {
         const rawItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked, tplIdx);
-        const planItems = reconcileDailyMacros(rawItems, finalKcal, finalMacros);
+        const planItems = reconcileDailyMacros(rawItems, finalKcal, finalMacros, goal);
 
         const genMeta = buildGenerationMetadata(
           tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
