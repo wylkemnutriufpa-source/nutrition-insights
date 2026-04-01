@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import {
   Dumbbell, Plus, Search, ChevronDown, Pause, Play,
   BookOpen, Layers, ClipboardList, Sparkles,
-  TrendingUp, Heart, Ruler, Trophy, ArrowRightLeft, BarChart3,
+  TrendingUp, Heart, Ruler, Trophy, ArrowRightLeft, BarChart3, Film,
   CalendarDays, MessageCircle, FileText, Zap, Timer, Command, ArrowLeft
 } from "lucide-react";
 import WorkoutEditor from "@/components/workout/WorkoutEditor";
