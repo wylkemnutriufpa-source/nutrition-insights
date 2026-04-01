@@ -121,7 +121,7 @@ export default function PersonalPremiumDashboard({ onNavigate, studentsCount, pl
           <Flame className="w-3.5 h-3.5 text-orange-400" />
           Atalhos Rápidos — Elaborar Treino
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {QUICK_ACTIONS.map((action, i) => (
             <motion.button
               key={action.id}
