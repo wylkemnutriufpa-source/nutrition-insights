@@ -48,11 +48,15 @@ export default function PersonalStudents() {
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Dumbbell className="w-6 h-6 text-primary" />
-              Meus Alunos
-            </h1>
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => navigate("/personal/dashboard")}>
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold flex items-center gap-2">
+                <Dumbbell className="w-6 h-6 text-primary" />
+                Meus Alunos
+              </h1>
             <p className="text-muted-foreground text-sm">
               {links.length} aluno{links.length !== 1 ? "s" : ""} vinculado{links.length !== 1 ? "s" : ""}
             </p>
