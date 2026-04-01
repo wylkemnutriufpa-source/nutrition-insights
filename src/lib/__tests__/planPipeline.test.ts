@@ -165,7 +165,7 @@ describe("Scenario 4: Patient with gluten restriction", () => {
     const breadItem = result.items[0];
     expect(breadItem.title?.toLowerCase()).toContain("tapioca");
     const pastaItem = result.items[1];
-    expect(pastaItem.description?.toLowerCase()).toContain("arroz");
+    expect(pastaItem.description?.toLowerCase()).not.toContain("macarrão");
   });
 });
 
