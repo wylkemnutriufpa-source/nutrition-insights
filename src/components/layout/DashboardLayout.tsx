@@ -519,9 +519,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [location.pathname]);
 
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [location.pathname]);
+  // Removed: no longer auto-close sidebar on route change
+  // The user wants to close it only via the menu button
 
   useEffect(() => {
     setCollapsed(isTablet);
@@ -556,15 +555,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <div className="min-h-screen bg-background">
         <div className="fixed top-0 left-0 right-0 z-50 h-14 bg-card border-b border-border flex items-center justify-between px-4">
           <div className="flex items-center gap-3">
-            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <Sheet open={mobileOpen} onOpenChange={(open) => { if (!open) return; setMobileOpen(open); }}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-10 w-10">
+                <Button variant="ghost" size="icon" className="h-10 w-10" onClick={() => setMobileOpen(!mobileOpen)}>
                   <Menu className="w-5 h-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="p-0 w-[min(280px,85vw)] flex flex-col">
+              <SheetContent side="left" className="p-0 w-[min(280px,85vw)] flex flex-col" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
                 <ErrorBoundary section="Layout:MobileSidebar" fallback={<SidebarFallback onLinkClick={() => setMobileOpen(false)} />}>
-                  <DynamicSidebar {...sidebarProps} collapsed={false} onLinkClick={() => setMobileOpen(false)} />
+                  <DynamicSidebar {...sidebarProps} collapsed={false} onLinkClick={() => {}} />
                 </ErrorBoundary>
               </SheetContent>
             </Sheet>
