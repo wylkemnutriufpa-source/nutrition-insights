@@ -22,12 +22,6 @@ const STATUS_CONFIG: Record<string, { icon: React.ElementType; title: string; de
     description: "Seu acesso será liberado assim que o pagamento for confirmado pelo seu profissional. Entre em contato caso já tenha efetuado o pagamento.",
     action: { label: "Aguardando confirmação", route: "/payment-required" },
   },
-  awaiting_consent: {
-    icon: Stethoscope,
-    title: "Próximo passo: consentimento",
-    description: "Seu pagamento já foi confirmado. Agora você só precisa aceitar o consentimento para iniciar o onboarding.",
-    action: { label: "Continuar", route: "/consent-required" },
-  },
   awaiting_onboarding_release: {
     icon: Stethoscope,
     title: "Aguardando liberação do profissional",
