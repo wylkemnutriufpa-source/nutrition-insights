@@ -12,10 +12,11 @@
  * 5. Substituições apenas dentro da mesma categoria
  */
 
-// ── Alimentos bloqueados (caros, importados ou pouco acessíveis) ──
+// ── Alimentos bloqueados (caros, importados, pouco acessíveis ou fora do banco validado) ──
 export const BLOCKED_FOODS = [
   "salmão", "salmon", "atum fresco",
-  "kefir", "cottage", "ricota importada",
+  "kefir", "cottage", "queijo cottage", "ricota", "ricota importada",
+  "queijo minas", "peito de peru", "peru defumado", "blanquet", "blanquet de peru",
   "quinoa", "quinua", "amaranto",
   "castanha-do-pará", "castanha do pará", "macadâmia", "pistache",
   "framboesa", "mirtilo", "blueberry", "cranberry", "açaí premium",
