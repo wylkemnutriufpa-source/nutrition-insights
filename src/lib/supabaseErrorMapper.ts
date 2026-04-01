@@ -53,6 +53,37 @@ const ERROR_MAP: Record<string, MappedError> = {
     errorKey: "unique_violation",
     isSystemError: false,
   },
+  // Edge Function error codes
+  ANAMNESIS_MISSING: {
+    userMessage: "Anamnese concluída não encontrada. O paciente precisa preencher a anamnese antes de gerar o plano.",
+    errorKey: "anamnesis_missing",
+    isSystemError: false,
+  },
+  ANAMNESIS_QUERY_ERROR: {
+    userMessage: "Erro ao buscar dados da anamnese. Tente novamente.",
+    errorKey: "anamnesis_query_error",
+    isSystemError: true,
+  },
+  BODY_DATA_MISSING: {
+    userMessage: "Peso e altura válidos são obrigatórios para gerar o plano. Verifique a anamnese do paciente.",
+    errorKey: "body_data_missing",
+    isSystemError: false,
+  },
+  GOAL_MISSING: {
+    userMessage: "Objetivo do paciente não definido. Verifique a anamnese do paciente.",
+    errorKey: "goal_missing",
+    isSystemError: false,
+  },
+  PATIENT_ID_MISSING: {
+    userMessage: "ID do paciente não informado. Tente novamente.",
+    errorKey: "patient_id_missing",
+    isSystemError: false,
+  },
+  TENANT_NOT_FOUND: {
+    userMessage: "Erro de configuração: clínica não encontrada. Entre em contato com o suporte.",
+    errorKey: "tenant_not_found",
+    isSystemError: true,
+  },
 };
 
 /**
