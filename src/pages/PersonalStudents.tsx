@@ -15,6 +15,7 @@ import AddStudentModal from "@/components/professional/AddStudentModal";
 import { useProfessionalLinks } from "@/hooks/useProfessionalLinks";
 
 export default function PersonalStudents() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { links, loading, refetch, revokeLink } = useProfessionalLinks("trainer");
   const [profiles, setProfiles] = useState<Record<string, any>>({});
