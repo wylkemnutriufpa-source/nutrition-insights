@@ -163,7 +163,10 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
       },
     });
 
-    if (error) throw error;
+    if (error) {
+      const msg = await friendlyEdgeFunctionError(error, "Falha na geração do plano");
+      throw new Error(msg);
+    }
     if (!data?.success) throw new Error(data?.error || "Falha na geração do plano");
 
     const planId = data?.mealPlanId || targetPlanId;
