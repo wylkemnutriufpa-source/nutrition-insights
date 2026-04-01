@@ -77,17 +77,18 @@ export default function MealPlans() {
     const handleOnboardingSource = async () => {
       try {
         // Check if there's an existing pipeline with a generated plan
-        const { data: pipeline } = await supabase
+        const { data: pipeline } = await (supabase
           .from("onboarding_pipelines" as any)
           .select("generated_plan_id, plan_generated")
           .eq("patient_id", patientId)
           .order("created_at", { ascending: false })
           .limit(1)
-          .maybeSingle();
+          .maybeSingle() as any);
 
-        if (pipeline?.generated_plan_id && pipeline?.plan_generated) {
-          // Plan already generated from onboarding — go directly to editor
-          navigate(`/meal-plans/${pipeline.generated_plan_id}`, { replace: true });
+        const pipelineData = pipeline as { generated_plan_id?: string; plan_generated?: boolean } | null;
+
+        if (pipelineData?.generated_plan_id && pipelineData?.plan_generated) {
+          navigate(`/meal-plans/${pipelineData.generated_plan_id}`, { replace: true });
           return;
         }
 
