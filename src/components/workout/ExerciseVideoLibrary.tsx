@@ -166,6 +166,7 @@ export default function ExerciseVideoLibrary({ draggable = false, onDragStart }:
     setUploadDescription("");
     setUploadTags("");
     setUploadFile(null);
+    setUploadDuration(null);
   };
 
   const handleDragStart = (e: React.DragEvent, video: ExerciseVideo) => {
