@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { Users, Plus, Search, UserX, Dumbbell, TrendingUp, Sparkles } from "lucide-react";
 import LinkStudentModal from "@/components/professional/LinkStudentModal";
+import AddStudentModal from "@/components/professional/AddStudentModal";
 import { useProfessionalLinks } from "@/hooks/useProfessionalLinks";
 
 export default function PersonalStudents() {
@@ -18,6 +19,7 @@ export default function PersonalStudents() {
   const [profiles, setProfiles] = useState<Record<string, any>>({});
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
 
   useEffect(() => {
     if (links.length > 0) {
