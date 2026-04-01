@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
