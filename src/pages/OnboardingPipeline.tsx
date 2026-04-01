@@ -54,11 +54,15 @@ const STEPS = [
 export default function OnboardingPipeline() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const planStatus = usePatientPlanStatus();
+  const { hasConsent, loading: consentLoading } = useConsentGuard();
   const [pipeline, setPipeline] = useState<Pipeline | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [consentAccepted, setConsentAccepted] = useState(false);
+  const [consentSubmitting, setConsentSubmitting] = useState(false);
 
   // Body data form
   const [bodyForm, setBodyForm] = useState({ weight: "", height: "" });
