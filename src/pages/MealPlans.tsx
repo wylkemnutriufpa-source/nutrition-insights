@@ -58,7 +58,7 @@ export default function MealPlans() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [patients, setPatients] = useState<{ id: string; name: string }[]>([]);
-  const onboardingHandled = useRef(false);
+  const onboardingHandled = useRef<string | null>(null);
 
   const fetchPlans = async () => {
     if (!user) return;
@@ -113,16 +113,18 @@ export default function MealPlans() {
 
   // Handle source=onboarding: find existing plan from onboarding pipeline or generate
   useEffect(() => {
-    if (!user?.id || onboardingHandled.current) return;
+    if (!user?.id) return;
     const source = searchParams.get("source");
     const patientId = searchParams.get("patientId");
     if (source !== "onboarding" || !patientId) return;
 
-    onboardingHandled.current = true;
+    // Prevent duplicate handling for the same patientId
+    if (onboardingHandled.current === patientId) return;
+    onboardingHandled.current = patientId;
 
     const handleOnboardingSource = async () => {
       try {
-        // Check if there's an existing pipeline with a generated usable plan
+        // 1. Check if pipeline has a usable generated plan
         const { data: pipeline } = await (supabase
           .from("onboarding_pipelines" as any)
           .select("generated_plan_id, plan_generated")
@@ -139,10 +141,10 @@ export default function MealPlans() {
             navigate(`/meal-plans/${pipelineData.generated_plan_id}`, { replace: true });
             return;
           }
-          console.warn("Pipeline points to stale/invalid plan, regenerating from onboarding...");
+          console.warn("Pipeline plan is stale/archived, looking for alternatives...");
         }
 
-        // Check if patient has any current usable plan before generating a new one
+        // 2. Check if patient has any current usable draft/approved plan
         const { data: existingPlan } = await supabase
           .from("meal_plans")
           .select("id, overall_validation_status")
@@ -158,7 +160,7 @@ export default function MealPlans() {
           return;
         }
 
-        // No usable plan exists — generate from onboarding
+        // 3. No usable plan exists — generate from onboarding
         toast.info("Gerando plano a partir do onboarding...");
         const { data: genData, error: genError } = await supabase.functions.invoke("generate-meal-plan", {
           body: {
@@ -168,20 +170,35 @@ export default function MealPlans() {
           },
         });
 
-        if (genError || !genData?.success) {
-          toast.error("Erro ao gerar plano: " + (genError?.message || genData?.error || "Tente novamente"));
+        if (genError) {
+          console.error("Generate plan error:", genError);
+          toast.error("Erro ao gerar plano: " + (genError.message || "Tente novamente"));
+          // Allow retry
+          onboardingHandled.current = null;
+          return;
+        }
+
+        if (!genData?.success) {
+          console.error("Generate plan failed:", genData);
+          toast.error("Erro ao gerar plano: " + (genData?.error || "Resposta inválida"));
+          onboardingHandled.current = null;
           return;
         }
 
         const newPlanId = genData.mealPlanId;
         if (newPlanId) {
           toast.success(`Plano gerado com ${genData.items_count || 0} itens!`);
-          // Auto-resolve visuals for newly generated items
           runPostGenVisualMatch(newPlanId).catch(() => {});
           navigate(`/meal-plans/${newPlanId}`, { replace: true });
+        } else {
+          toast.error("Plano gerado mas sem ID retornado. Tente novamente.");
+          onboardingHandled.current = null;
         }
       } catch (err: any) {
+        console.error("Onboarding source error:", err);
         toast.error("Erro ao processar onboarding: " + (err.message || "Tente novamente"));
+        // Allow retry on error
+        onboardingHandled.current = null;
       }
     };
 
