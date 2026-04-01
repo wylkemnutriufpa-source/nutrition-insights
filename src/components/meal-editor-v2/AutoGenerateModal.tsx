@@ -132,7 +132,7 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
 
     try {
       // 1. Generate inserts from generated slots
-      const inserts = slotsToInserts(result.slots, planId);
+      const inserts = await slotsToInserts(result.slots, planId);
 
       // 2. Insert new items FIRST (safe: if this fails, old plan remains intact)
       const { data: savedItems, error: insertError } = await supabase
