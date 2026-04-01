@@ -137,23 +137,29 @@ export default function TemplateQuickInsertPanel({
         fat_target: totalF,
       }];
     } else if (foods.length > 0) {
-      itemsToInsert = foods.map(food => ({
-        meal_plan_id: planId,
-        title: food.name,
-        description: `${food.portion_grams}g`,
-        meal_type: mealType,
-        day_of_week: dayOfWeek,
-        calories_target: food.calories,
-        protein_target: food.protein,
-        carbs_target: food.carbs,
-        fat_target: food.fat,
-      }));
-    } else {
-      // Template without food structure → insert as single block
+      // Build a single grouped item with all foods listed in description
+      const foodDesc = foods.map(f => `• ${f.name} — ${f.portion_grams}g`).join("\n");
+      const totalCal = foods.reduce((s, f) => s + (f.calories || 0), 0);
+      const totalP = foods.reduce((s, f) => s + (f.protein || 0), 0);
+      const totalC = foods.reduce((s, f) => s + (f.carbs || 0), 0);
+      const totalF = foods.reduce((s, f) => s + (f.fat || 0), 0);
       itemsToInsert = [{
         meal_plan_id: planId,
         title: template.name,
-        description: null,
+        description: foodDesc,
+        meal_type: mealType,
+        day_of_week: dayOfWeek,
+        calories_target: totalCal,
+        protein_target: totalP,
+        carbs_target: totalC,
+        fat_target: totalF,
+      }];
+    } else {
+      // Template without food structure → insert as single block with warning
+      itemsToInsert = [{
+        meal_plan_id: planId,
+        title: template.name,
+        description: `⚠️ Template sem alimentos definidos — preencha manualmente`,
         meal_type: mealType,
         day_of_week: dayOfWeek,
         calories_target: template.kcal_base,
