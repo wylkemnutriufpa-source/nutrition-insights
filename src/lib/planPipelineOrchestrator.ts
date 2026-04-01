@@ -176,6 +176,15 @@ export async function runPlanPipeline(input: PipelineInput): Promise<PipelineRes
   const distributionCheck = validateMealDistribution(items);
   warnings.push(...distributionCheck.warnings);
 
+  // ── Step 2.6: Validate descriptions (prevent blank visuals)
+  for (const item of items) {
+    if (!item.description || item.description.trim().length < 3) {
+      warnings.push(
+        `[Pipeline] Dia ${item.day_of_week ?? '?'}, "${item.title}": item sem descrição — resolução visual impossível`
+      );
+    }
+  }
+
   // ── Step 3: Build audit log
   const auditLog: PipelineAuditLog = {
     pipeline_version: PIPELINE_VERSION,
