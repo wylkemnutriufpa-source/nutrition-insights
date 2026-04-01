@@ -899,6 +899,10 @@ serve(async (req) => {
       throw new Error("Falha ao inserir itens: " + insertErr.message);
     }
 
+    // Resolve visual associations for single plan
+    const visualResolved = await resolveVisualForItems(serviceClient, finalMealPlanId, planItems);
+    console.log(`Single plan ${finalMealPlanId}: ${visualResolved}/${planItems.length} items visually resolved`);
+
     await serviceClient.from("patient_anamnesis").update({
       computed_tmb: tmb,
       computed_kcal_target: finalKcal,
