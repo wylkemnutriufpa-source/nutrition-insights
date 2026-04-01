@@ -253,20 +253,33 @@ export default function MealPlans() {
                     {patients.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
                 </div>
-                <div>
-                  <Label>Título</Label>
-                  <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Ex: Plano de emagrecimento" required />
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                  <input type="checkbox" id="autoGen" checked={form.autoGenerate}
+                    onChange={(e) => setForm({ ...form, autoGenerate: e.target.checked })}
+                    className="h-4 w-4 rounded border-primary text-primary" />
+                  <label htmlFor="autoGen" className="text-sm flex-1">
+                    <span className="font-medium">🤖 Gerar automaticamente</span>
+                    <span className="block text-xs text-muted-foreground">Protocolo FitJourney gera refeições com base na anamnese do paciente</span>
+                  </label>
                 </div>
-                <div>
-                  <Label>Descrição</Label>
-                  <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-                </div>
-                <div>
-                  <Label>Data de início</Label>
-                  <Input type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} required />
-                </div>
+                {!form.autoGenerate && (
+                  <>
+                    <div>
+                      <Label>Título</Label>
+                      <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Ex: Plano de emagrecimento" required={!form.autoGenerate} />
+                    </div>
+                    <div>
+                      <Label>Descrição</Label>
+                      <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label>Data de início</Label>
+                      <Input type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} required />
+                    </div>
+                  </>
+                )}
                 <Button type="submit" className="w-full gradient-primary" disabled={submitting}>
-                  {submitting ? "Criando..." : "Criar Plano"}
+                  {submitting ? "Gerando..." : form.autoGenerate ? "🚀 Gerar Plano Automático" : "Criar Plano Manual"}
                 </Button>
               </form>
             </DialogContent>
