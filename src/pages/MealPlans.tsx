@@ -88,8 +88,18 @@ export default function MealPlans() {
         const pipelineData = pipeline as { generated_plan_id?: string; plan_generated?: boolean } | null;
 
         if (pipelineData?.generated_plan_id && pipelineData?.plan_generated) {
-          navigate(`/meal-plans/${pipelineData.generated_plan_id}`, { replace: true });
-          return;
+          // Verify the plan actually has items before redirecting
+          const { count: itemCount } = await supabase
+            .from("meal_plan_items")
+            .select("id", { count: "exact", head: true })
+            .eq("meal_plan_id", pipelineData.generated_plan_id);
+
+          if (itemCount && itemCount > 0) {
+            navigate(`/meal-plans/${pipelineData.generated_plan_id}`, { replace: true });
+            return;
+          }
+          // Plan is empty — fall through to generate a new one
+          console.warn("Pipeline plan has 0 items, regenerating...");
         }
 
         // Check if patient has any existing draft/active plan
