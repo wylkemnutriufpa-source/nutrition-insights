@@ -88,8 +88,8 @@ const COMPLEX_PREP_KEYWORDS = [
 
 export const BRAZILIAN_REPLACEMENTS: Record<string, { replacement: string; reason: string }> = {
   "kefir": { replacement: "iogurte natural", reason: "Mais acessível e popular" },
-  "cottage": { replacement: "queijo minas", reason: "Queijo brasileiro equivalente" },
-  "queijo cottage": { replacement: "queijo minas", reason: "Queijo brasileiro equivalente" },
+  "cottage": { replacement: "queijo coalho", reason: "Queijo brasileiro equivalente" },
+  "queijo cottage": { replacement: "queijo coalho", reason: "Queijo brasileiro equivalente" },
   "salmão": { replacement: "tilápia grelhada", reason: "Peixe popular e acessível" },
   "salmon": { replacement: "tilápia grelhada", reason: "Peixe popular e acessível" },
   "atum fresco": { replacement: "sardinha assada", reason: "Peixe mais acessível" },
