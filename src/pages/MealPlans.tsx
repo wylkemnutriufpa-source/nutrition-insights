@@ -162,7 +162,7 @@ export default function MealPlans() {
     else {
       toast.success("Plano criado!");
       setOpen(false);
-      setForm({ title: "", description: "", patient_id: "", start_date: new Date().toISOString().split("T")[0] });
+      setForm({ title: "", description: "", patient_id: "", start_date: new Date().toISOString().split("T")[0], autoGenerate: true });
       fetchPlans();
     }
     setSubmitting(false);
