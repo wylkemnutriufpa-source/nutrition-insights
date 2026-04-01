@@ -43,6 +43,7 @@ interface Pipeline {
 }
 
 const STEPS = [
+  { id: "consent", label: "Consentimento", icon: Shield, description: "Aceite o consentimento clínico (LGPD)" },
   { id: "anamnesis", label: "Anamnese", icon: ClipboardCheck, description: "Preencha seu questionário de saúde" },
   { id: "body_data", label: "Dados Corporais", icon: Scale, description: "Peso, altura e fotos" },
   { id: "preferences", label: "Preferências", icon: Utensils, description: "Horários e alimentos favoritos" },
