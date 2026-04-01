@@ -168,21 +168,34 @@ html[data-experience-role="professional"][data-experience-mode="basic"].dark {
 /* ── Pro Professional — black + dark blue refined ── */
 html[data-experience-role="professional"][data-experience-mode="pro"] {
   --primary: 215 65% 42%;
+  --primary-foreground: 0 0% 100%;
   --ring: 215 65% 42%;
   --sidebar-primary: 215 65% 42%;
+  --sidebar-primary-foreground: 0 0% 100%;
   --accent: 210 70% 48%;
+  --accent-foreground: 0 0% 100%;
   --shadow-glow: 0 0 16px hsl(215 65% 42% / 0.12);
   --gradient-primary: linear-gradient(135deg, hsl(215, 65%, 42%), hsl(225, 60%, 48%));
 }
 html[data-experience-role="professional"][data-experience-mode="pro"].dark {
   --background: 222 35% 5%;
+  --foreground: 210 18% 94%;
   --card: 222 30% 8%;
+  --card-foreground: 210 18% 94%;
   --sidebar-background: 222 35% 6%;
+  --sidebar-foreground: 210 18% 94%;
+  --sidebar-primary: 215 65% 50%;
+  --sidebar-primary-foreground: 0 0% 100%;
   --border: 222 22% 14%;
   --primary: 215 65% 50%;
+  --primary-foreground: 0 0% 100%;
   --ring: 215 65% 50%;
-  --sidebar-primary: 215 65% 50%;
   --accent: 210 70% 52%;
+  --accent-foreground: 0 0% 100%;
+  --muted: 222 22% 12%;
+  --muted-foreground: 215 15% 52%;
+  --secondary: 222 22% 14%;
+  --secondary-foreground: 210 18% 94%;
   --shadow-glow: 0 0 20px hsl(215 65% 50% / 0.15);
   --gradient-primary: linear-gradient(135deg, hsl(215, 65%, 50%), hsl(225, 60%, 55%));
 }
