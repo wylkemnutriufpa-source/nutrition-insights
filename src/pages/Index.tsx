@@ -39,6 +39,7 @@ import ChatDashboardWidget from "@/components/chat/ChatDashboardWidget";
 import { TreatmentInsightsPanel } from "@/components/dashboard/TreatmentInsightsPanel";
 import ExpandablePanel from "@/components/common/ExpandablePanel";
 import PatientMomentumSummary from "@/components/dashboard/PatientMomentumSummary";
+import InlineExperienceToggle from "@/components/dashboard/InlineExperienceToggle";
 import {
   UtensilsCrossed, Users, TrendingUp, Target, Plus,
   CheckCircle2, AlertTriangle, Activity, FileText, Rocket,
@@ -1136,6 +1137,8 @@ export default function Index() {
     // Professional / Admin view with toggle
     return (
       <div className="space-y-6">
+        {/* Experience mode inline toggle */}
+        <InlineExperienceToggle />
         {/* View mode toggle — PRO+ only */}
         {minMode("pro") && (
           <div className="flex items-center justify-end">

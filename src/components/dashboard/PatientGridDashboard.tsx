@@ -5,16 +5,19 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useLayoutPreference } from "@/hooks/useLayoutPreference";
 import { useExperienceUI } from "@/hooks/useExperienceUI";
 import FitJourneyTimeline from "@/components/timeline/FitJourneyTimeline";
+import InlineExperienceToggle from "@/components/dashboard/InlineExperienceToggle";
 import {
   UtensilsCrossed, CheckCircle2, Calendar, Dumbbell,
   TrendingUp, Brain, Camera, Target,
   LayoutGrid, List, ArrowRight, Sparkles, Rocket, ChevronRight, ChefHat,
 } from "lucide-react";
 import NewFeatureBadge from "@/components/common/NewFeatureBadge";
+
+const DailyMealPlanInline = lazy(() => import("@/components/patient/DailyMealPlanInline"));
 
 type MinMode = "basic" | "pro" | "advanced";
 
@@ -123,6 +126,9 @@ export default function PatientGridDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Experience Mode Toggle — top of dashboard */}
+      <InlineExperienceToggle />
+
       {/* Onboarding Card — top priority */}
       {showOnboardingCard && (
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
@@ -165,6 +171,13 @@ export default function PatientGridDashboard() {
       )}
 
       {!blockDashboard && (<>
+
+      {/* BASIC MODE: Show daily meal plan directly */}
+      {expUI.isBasic && (
+        <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+          <DailyMealPlanInline />
+        </Suspense>
+      )}
 
       {/* FitJourney Timeline — hidden in basic mode */}
       {!expUI.isBasic && <FitJourneyTimeline compact maxHeight="400px" />}
