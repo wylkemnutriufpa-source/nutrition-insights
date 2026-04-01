@@ -151,7 +151,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
 
     try {
       // 1. Prepare new items
-      const inserts = slotsToInserts(selectedOption.slots, planId);
+      const inserts = await slotsToInserts(selectedOption.slots, planId);
 
       // 2. Insert new items FIRST (safe: if this fails, old plan remains)
       const { data: savedItems, error: insertError } = await supabase

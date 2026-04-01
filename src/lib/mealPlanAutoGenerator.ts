@@ -17,7 +17,9 @@ import {
   MEAL_LIMITS,
   BLOCKED_FOODS,
 } from "./mealPlanFoodRules";
-import { isExplicitlyBanned } from "./validatedFoodDatabase";
+import { isExplicitlyBanned, getClosestValidatedFood } from "./validatedFoodDatabase";
+import { buildMealItems } from "./mealItemBuilder";
+import { autoMatchSingle } from "./mealVisualAssociation";
 
 // ── Types ────────────────────────────────────────────────────
 export interface MealLibraryItem {
@@ -407,56 +409,63 @@ function normalizeGeneratedDayForStorage(day: number) {
   return ((day % 7) + 7) % 7;
 }
 
-export function slotsToInserts(slots: GeneratedMealSlot[], planId: string) {
+export async function slotsToInserts(slots: GeneratedMealSlot[], planId: string) {
   type MealTypeEnum = "breakfast" | "morning_snack" | "lunch" | "afternoon_snack" | "dinner" | "evening_snack";
-  return slots.flatMap((slot) => {
-    const mealType = slot.mealType as MealTypeEnum;
-    const storageDay = normalizeGeneratedDayForStorage(slot.day);
-    const foods = Array.isArray(slot.libraryItem.foods) ? slot.libraryItem.foods : [];
 
-    // Calculate scaled macros from TARGET (not base), ensuring daily totals align
-    const scaledProtein = Math.round(slot.libraryItem.protein * slot.scaleFactor);
-    const scaledCarbs = Math.round(slot.libraryItem.carbs * slot.scaleFactor);
-    const scaledFat = Math.round(slot.libraryItem.fat * slot.scaleFactor);
+  const nested = await Promise.all(
+    slots.map(async (slot) => {
+      const mealType = slot.mealType as MealTypeEnum;
+      const storageDay = normalizeGeneratedDayForStorage(slot.day);
+      const foods = Array.isArray(slot.libraryItem.foods) ? slot.libraryItem.foods : [];
 
-    if (foods.length === 0) {
-      return [{
-        meal_plan_id: planId,
-        title: slot.libraryItem.title,
-        description: null as string | null,
-        meal_type: mealType,
-        day_of_week: storageDay,
-        calories_target: slot.targetKcal,
-        protein_target: scaledProtein,
-        carbs_target: scaledCarbs,
-        fat_target: scaledFat,
-      }];
-    }
+      const scaledProtein = Math.round(slot.libraryItem.protein * slot.scaleFactor);
+      const scaledCarbs = Math.round(slot.libraryItem.carbs * slot.scaleFactor);
+      const scaledFat = Math.round(slot.libraryItem.fat * slot.scaleFactor);
 
-    // Distribute macros proportionally across foods, ensuring sum matches slot total
-    return foods.map((food, idx) => {
-      const isLast = idx === foods.length - 1;
-      const prevCalSum = Math.round(slot.targetKcal / foods.length) * idx;
-      const prevPSum = Math.round(scaledProtein / foods.length) * idx;
-      const prevCSum = Math.round(scaledCarbs / foods.length) * idx;
-      const prevFSum = Math.round(scaledFat / foods.length) * idx;
+      const scaledFoods = foods.map((food) => {
+        const portion = food.portion
+          ? slot.scaleFactor !== 1
+            ? `${food.portion} (×${slot.scaleFactor.toFixed(1)})`
+            : food.portion
+          : undefined;
 
-      return {
-        meal_plan_id: planId,
-        title: food.name,
-        description: slot.scaleFactor !== 1
-          ? `${food.portion} (×${slot.scaleFactor.toFixed(1)})`
-          : food.portion || null,
-        meal_type: mealType,
-        day_of_week: storageDay,
-        // Last item gets the remainder to ensure exact sum
-        calories_target: isLast ? slot.targetKcal - prevCalSum : Math.round(slot.targetKcal / foods.length),
-        protein_target: isLast ? scaledProtein - prevPSum : Math.round(scaledProtein / foods.length),
-        carbs_target: isLast ? scaledCarbs - prevCSum : Math.round(scaledCarbs / foods.length),
-        fat_target: isLast ? scaledFat - prevFSum : Math.round(scaledFat / foods.length),
-      };
-    });
-  });
+        return {
+          name: food.name,
+          portion,
+        };
+      });
+
+      const description = scaledFoods.length > 0
+        ? scaledFoods
+            .map((food) => (food.portion ? `• ${food.name} — ${food.portion}` : `• ${food.name}`))
+            .join("\n")
+        : null;
+
+      const resolvedTitle = await getClosestValidatedFood(slot.libraryItem.title) || slot.libraryItem.title;
+      const visualLibraryItemId = await autoMatchSingle(resolvedTitle, description || undefined);
+
+      const { items } = buildMealItems([
+        {
+          meal_plan_id: planId,
+          title: resolvedTitle,
+          description,
+          meal_type: mealType,
+          day_of_week: storageDay,
+          calories_target: slot.targetKcal,
+          protein_target: scaledProtein,
+          carbs_target: scaledCarbs,
+          fat_target: scaledFat,
+          visual_library_item_id: visualLibraryItemId,
+          item_origin: "auto_generated",
+          foods: scaledFoods.map((food) => (food.portion ? `${food.name} — ${food.portion}` : food.name)),
+        },
+      ]);
+
+      return items;
+    })
+  );
+
+  return nested.flat();
 }
 
 // ── Load patient profile ─────────────────────────────────────
