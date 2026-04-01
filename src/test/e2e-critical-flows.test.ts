@@ -76,7 +76,7 @@ describe("E2E Flow: Payment Confirmation", () => {
   });
 
   it("idempotent: double confirmation returns same result", async () => {
-    const response = { data: { success: true, new_status: "awaiting_consent" }, error: null };
+    const response = { data: { success: true, new_status: "onboarding_active" }, error: null };
     mockRpc.mockResolvedValue(response);
 
     const { supabase } = await import("@/integrations/supabase/client");
