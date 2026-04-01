@@ -455,6 +455,7 @@ function reconcileDailyMacros(
   items: any[],
   dailyKcalTarget: number,
   dailyMacros: { protein: number; carbs: number; fat: number },
+  goal: string = "",
 ): any[] {
   const byDay = new Map<number, any[]>();
   for (const item of items) {
@@ -462,6 +463,9 @@ function reconcileDailyMacros(
     if (!byDay.has(day)) byDay.set(day, []);
     byDay.get(day)!.push(item);
   }
+
+  const isLoss = isLossGoal(goal);
+  const breakfastProteinCap = isLoss ? 30 : 45;
 
   const reconciled: any[] = [];
   for (const [, dayItems] of byDay) {
@@ -476,13 +480,20 @@ function reconcileDailyMacros(
     const fFactor = totalF > 0 ? dailyMacros.fat / totalF : 1;
 
     for (const item of dayItems) {
-      reconciled.push({
+      const scaledItem = {
         ...item,
         calories_target: Math.round((item.calories_target || 0) * calFactor),
         protein_target: Math.round((item.protein_target || 0) * pFactor),
         carbs_target: Math.round((item.carbs_target || 0) * cFactor),
         fat_target: Math.round((item.fat_target || 0) * fFactor),
-      });
+      };
+
+      // Cap breakfast protein to avoid simplicity validation failure
+      if (scaledItem.meal_type === "breakfast" && scaledItem.protein_target > breakfastProteinCap) {
+        scaledItem.protein_target = breakfastProteinCap;
+      }
+
+      reconciled.push(scaledItem);
     }
   }
   return reconciled;
