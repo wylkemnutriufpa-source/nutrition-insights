@@ -40,7 +40,7 @@ describe("personalizePlanItems — Restrições", () => {
     const result = personalizePlanItems(items, ctx);
 
     // Iogurte deve ter sido substituído
-    const snack = result.items.find(i => i.meal_type === "snack");
+    const snack = result.items.find(i => i.meal_type === "afternoon_snack");
     expect(snack?.title?.toLowerCase()).not.toContain("iogurte");
     expect(result.changes.some(c => c.type === "restriction_removed")).toBe(true);
   });
