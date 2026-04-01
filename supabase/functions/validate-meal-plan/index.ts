@@ -95,7 +95,9 @@ const BRAZILIAN_CARBS = ["arroz", "macarrão", "batata", "batata doce", "macaxei
 const ALLOWED_FRUITS = ["banana", "maçã", "mamão", "melão", "manga", "abacaxi", "laranja", "morango", "uva", "melancia", "goiaba", "acerola", "pera"];
 
 function normalize(text: string): string {
-    return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    // Strip AutoFix annotations like [Proteína: 38→33g, ×0.87] before normalizing
+    return text.replace(/\[[\w\sáàãâéêíóôõúç:→×.,\-\/]+\]/gi, "")
+        .toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 
 function splitPrimaryDescription(raw: string): { primary: string; substitutions: string } {
