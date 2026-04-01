@@ -70,7 +70,7 @@ describe("personalizePlanItems — Restrições", () => {
   it("não modifica itens protegidos (is_locked)", () => {
     const ctx = makeContext({ restrictions: ["lactose"] });
     const items = [
-      { title: "Iogurte especial", description: "Iogurte grego", meal_type: "snack" as const, day_of_week: 1, calories_target: 200, protein_target: 10, carbs_target: 20, fat_target: 8, is_locked: true },
+      { title: "Iogurte especial", description: "Iogurte grego", meal_type: "afternoon_snack" as const, day_of_week: 1, calories_target: 200, protein_target: 10, carbs_target: 20, fat_target: 8, is_locked: true },
     ];
     const result = personalizePlanItems(items as any, ctx);
     expect(result.items[0].title).toBe("Iogurte especial");
