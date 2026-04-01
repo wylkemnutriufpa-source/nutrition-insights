@@ -84,7 +84,16 @@ const ERROR_MAP: Record<string, MappedError> = {
     errorKey: "tenant_not_found",
     isSystemError: true,
   },
-};
+  PLAN_AUTH_FORBIDDEN: {
+    userMessage: "Sem permissão para gerar plano para este paciente.",
+    errorKey: "plan_auth_forbidden",
+    isSystemError: false,
+  },
+  PATIENT_LINK_MISSING: {
+    userMessage: "Este paciente não está vinculado ao profissional responsável. Verifique o vínculo antes de gerar o plano.",
+    errorKey: "patient_link_missing",
+    isSystemError: false,
+  },
 
 /**
  * Parses a Supabase/Postgres error and returns a user-friendly mapped error if recognized.

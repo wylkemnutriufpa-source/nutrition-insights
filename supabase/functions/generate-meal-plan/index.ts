@@ -747,14 +747,14 @@ serve(async (req) => {
     const dataSource = physicalAssessment?.calories_target ? "physical_assessment" : "anamnesis_calculated";
 
     // Pipeline overrides
-    const pipelineOverrides = isPipeline ? {
+    const pipelineOverrides: Record<string, unknown> = isPipeline ? {
       cooking_preference: body.cookingPreference,
       food_preferences: body.foodPreferences,
       wake_time: body.wakeTime,
       sleep_time: body.sleepTime,
       meal_count: body.mealCount,
     } : {};
-    const mergedAnswers = { ...answers, ...pipelineOverrides };
+    const mergedAnswers = { ...(answers as Record<string, unknown>), ...pipelineOverrides } as Record<string, any>;
 
     const restrictions = mergedAnswers.restrictions || [];
     const medicalConditions = mergedAnswers.medical_conditions || mergedAnswers.health_conditions || [];
