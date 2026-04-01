@@ -191,6 +191,9 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     });
 
     writeCache(planId, planData, patientName, items);
+
+    // Silently resolve missing visuals for items without images
+    resolveVisualsForItems(items);
   },
 
   reset: () => {
