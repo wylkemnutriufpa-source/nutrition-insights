@@ -28,7 +28,6 @@ interface QueuePatient {
 
 const QUEUE_TABS = [
   { value: "awaiting_payment", label: "Aguardando Pgto", icon: CreditCard, color: "text-warning" },
-  { value: "awaiting_consent", label: "Aguardando Consent.", icon: Clock, color: "text-orange-500" },
   { value: "onboarding_active", label: "Onboarding Ativo", icon: Play, color: "text-primary" },
   { value: "draft_ready_for_review", label: "Aguardando Revisão", icon: CheckCircle2, color: "text-blue-500" },
   { value: "lead_created", label: "Leads", icon: UserCheck, color: "text-muted-foreground" },
