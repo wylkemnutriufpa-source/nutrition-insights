@@ -600,10 +600,7 @@ export async function autoFixMealPlan(
         if (item.protein_target) item.protein_target = Math.round(item.protein_target * factor);
         if (item.carbs_target) item.carbs_target = Math.round(item.carbs_target * factor);
         if (item.fat_target) item.fat_target = Math.round(item.fat_target * factor);
-        // REGRA C: Update description with correction
-        if (factor !== 1 && item.description) {
-          item.description = `${item.description} [ajuste proporcional ×${factor.toFixed(2)}]`;
-        }
+        // Track in change log only, not in description
       }
       macroRebalanced = true;
       allChanges.push({
