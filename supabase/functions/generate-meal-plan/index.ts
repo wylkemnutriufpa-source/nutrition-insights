@@ -630,14 +630,21 @@ serve(async (req) => {
     const resolvedTenantId = tenantProfile?.tenant_id;
 
     // ── 1. Get completed anamnesis ──
-    const { data: anamnesis } = await serviceClient
+    const { data: anamnesis, error: anamErr } = await serviceClient
       .from("patient_anamnesis")
       .select("*")
       .eq("user_id", patient_id)
       .eq("status", "completed")
       .order("created_at", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
+
+    if (anamErr) {
+      console.error("Anamnesis query error:", anamErr);
+      return new Response(JSON.stringify({ error: "Erro ao buscar anamnese", code: "ANAMNESIS_QUERY_ERROR" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (!anamnesis) {
       return new Response(JSON.stringify({ error: "Anamnese concluída não encontrada", code: "ANAMNESIS_MISSING" }), {
