@@ -463,6 +463,11 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
                     </motion.button>
                   ))}
                 </div>
+
+                {/* Smart Actions — role-aware shortcuts */}
+                <Suspense fallback={null}>
+                  <IFJSmartActions role={detectedRole} />
+                </Suspense>
               </motion.div>
             )}
 
