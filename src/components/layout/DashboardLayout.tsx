@@ -555,15 +555,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <div className="min-h-screen bg-background">
         <div className="fixed top-0 left-0 right-0 z-50 h-14 bg-card border-b border-border flex items-center justify-between px-4">
           <div className="flex items-center gap-3">
-            <Sheet open={mobileOpen} onOpenChange={(open) => { if (!open) return; setMobileOpen(open); }}>
+            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-10 w-10" onClick={() => setMobileOpen(!mobileOpen)}>
+                <Button variant="ghost" size="icon" className="h-10 w-10">
                   <Menu className="w-5 h-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="p-0 w-[min(280px,85vw)] flex flex-col" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+              <SheetContent side="left" className="p-0 w-[min(280px,85vw)] flex flex-col">
                 <ErrorBoundary section="Layout:MobileSidebar" fallback={<SidebarFallback onLinkClick={() => setMobileOpen(false)} />}>
-                  <DynamicSidebar {...sidebarProps} collapsed={false} onLinkClick={() => {}} />
+                  <DynamicSidebar {...sidebarProps} collapsed={false} onLinkClick={() => setMobileOpen(false)} />
                 </ErrorBoundary>
               </SheetContent>
             </Sheet>
