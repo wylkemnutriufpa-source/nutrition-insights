@@ -626,13 +626,13 @@ export default function OnboardingPipeline() {
               </Card>
             )}
 
-            {/* Step 4: Waiting Approval */}
-            {currentStep === 4 && (
+            {/* Step 5: Waiting Approval */}
+            {currentStep === 5 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <ThumbsUp className="w-5 h-5 text-primary" />
-                    Etapa 5: Aguardando Aprovação
+                    Etapa 6: Aguardando Aprovação
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 text-center">
