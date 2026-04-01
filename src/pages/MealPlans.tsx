@@ -31,6 +31,7 @@ export default function MealPlans() {
   const [form, setForm] = useState({
     title: "", description: "", patient_id: "",
     start_date: new Date().toISOString().split("T")[0],
+    autoGenerate: true,
   });
   const [submitting, setSubmitting] = useState(false);
   const [patients, setPatients] = useState<{ id: string; name: string }[]>([]);
@@ -152,17 +153,40 @@ export default function MealPlans() {
     e.preventDefault();
     if (!user || !form.patient_id) return;
     setSubmitting(true);
-    const { error } = await supabase.from("meal_plans").insert({
-      nutritionist_id: user.id, patient_id: form.patient_id,
-      title: form.title, description: form.description || null, start_date: form.start_date,
-      ...getTenantIdForInsert(tenantId),
-    } as any);
-    if (error) { toast.error("Erro: " + error.message); }
-    else {
-      toast.success("Plano criado!");
-      setOpen(false);
-      setForm({ title: "", description: "", patient_id: "", start_date: new Date().toISOString().split("T")[0] });
-      fetchPlans();
+    try {
+      if (form.autoGenerate) {
+        // Use the generate-meal-plan edge function
+        toast.info("Gerando plano automaticamente...");
+        const { data: genData, error: genError } = await supabase.functions.invoke("generate-meal-plan", {
+          body: {
+            patientId: form.patient_id,
+            nutritionistId: user.id,
+            isPipeline: false,
+          },
+        });
+        if (genError || !genData?.success) {
+          toast.error("Erro ao gerar: " + (genError?.message || genData?.error || "Tente novamente"));
+        } else {
+          toast.success(`Plano gerado com ${genData.items_count || 0} refeições!`);
+          setOpen(false);
+          navigate(`/meal-plans/${genData.mealPlanId}`);
+        }
+      } else {
+        const { error } = await supabase.from("meal_plans").insert({
+          nutritionist_id: user.id, patient_id: form.patient_id,
+          title: form.title || "Plano Alimentar", description: form.description || null, start_date: form.start_date,
+          ...getTenantIdForInsert(tenantId),
+        } as any);
+        if (error) { toast.error("Erro: " + error.message); }
+        else {
+          toast.success("Plano criado!");
+          setOpen(false);
+          fetchPlans();
+        }
+      }
+      setForm({ title: "", description: "", patient_id: "", start_date: new Date().toISOString().split("T")[0], autoGenerate: true });
+    } catch (err: any) {
+      toast.error("Erro: " + (err.message || "Tente novamente"));
     }
     setSubmitting(false);
   };
@@ -229,20 +253,33 @@ export default function MealPlans() {
                     {patients.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
                 </div>
-                <div>
-                  <Label>Título</Label>
-                  <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Ex: Plano de emagrecimento" required />
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                  <input type="checkbox" id="autoGen" checked={form.autoGenerate}
+                    onChange={(e) => setForm({ ...form, autoGenerate: e.target.checked })}
+                    className="h-4 w-4 rounded border-primary text-primary" />
+                  <label htmlFor="autoGen" className="text-sm flex-1">
+                    <span className="font-medium">🤖 Gerar automaticamente</span>
+                    <span className="block text-xs text-muted-foreground">Protocolo FitJourney gera refeições com base na anamnese do paciente</span>
+                  </label>
                 </div>
-                <div>
-                  <Label>Descrição</Label>
-                  <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-                </div>
-                <div>
-                  <Label>Data de início</Label>
-                  <Input type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} required />
-                </div>
+                {!form.autoGenerate && (
+                  <>
+                    <div>
+                      <Label>Título</Label>
+                      <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Ex: Plano de emagrecimento" required={!form.autoGenerate} />
+                    </div>
+                    <div>
+                      <Label>Descrição</Label>
+                      <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label>Data de início</Label>
+                      <Input type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} required />
+                    </div>
+                  </>
+                )}
                 <Button type="submit" className="w-full gradient-primary" disabled={submitting}>
-                  {submitting ? "Criando..." : "Criar Plano"}
+                  {submitting ? "Gerando..." : form.autoGenerate ? "🚀 Gerar Plano Automático" : "Criar Plano Manual"}
                 </Button>
               </form>
             </DialogContent>
