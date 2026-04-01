@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { Users, Plus, Search, UserX, Dumbbell, TrendingUp, Sparkles } from "lucide-react";
 import LinkStudentModal from "@/components/professional/LinkStudentModal";
+import AddStudentModal from "@/components/professional/AddStudentModal";
 import { useProfessionalLinks } from "@/hooks/useProfessionalLinks";
 
 export default function PersonalStudents() {
@@ -18,6 +19,7 @@ export default function PersonalStudents() {
   const [profiles, setProfiles] = useState<Record<string, any>>({});
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
 
   useEffect(() => {
     if (links.length > 0) {
@@ -53,10 +55,16 @@ export default function PersonalStudents() {
               {links.length} aluno{links.length !== 1 ? "s" : ""} vinculado{links.length !== 1 ? "s" : ""}
             </p>
           </div>
-          <Button onClick={() => setAddOpen(true)} size="sm" className="gap-1.5 bg-gradient-to-r from-primary to-primary/80">
-            <Plus className="w-4 h-4" />
-            Vincular Aluno
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setLinkOpen(true)} size="sm" variant="outline" className="gap-1.5">
+              <Search className="w-4 h-4" />
+              Vincular Aluno
+            </Button>
+            <Button onClick={() => setAddOpen(true)} size="sm" className="gap-1.5 bg-gradient-to-r from-primary to-primary/80">
+              <Plus className="w-4 h-4" />
+              Adicionar Aluno
+            </Button>
+          </div>
         </div>
 
         <div className="relative">
@@ -118,10 +126,16 @@ export default function PersonalStudents() {
         </div>
 
         <LinkStudentModal
-          open={addOpen}
-          onOpenChange={setAddOpen}
+          open={linkOpen}
+          onOpenChange={setLinkOpen}
           onLinked={() => refetch()}
           professionalRole="trainer"
+        />
+
+        <AddStudentModal
+          open={addOpen}
+          onOpenChange={setAddOpen}
+          onAdded={() => refetch()}
         />
       </div>
     </DashboardLayout>
