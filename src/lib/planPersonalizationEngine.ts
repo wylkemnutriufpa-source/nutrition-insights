@@ -243,30 +243,31 @@ export function personalizePlanItems(
   }
 
   // 3. Adjust calories to match patient TMB/TED
-  const currentTotalCal = personalizedItems.reduce((s, i) => s + (i.calories_target || 0), 0);
-  // Calculate per-day calories (items are for 7 days)
-  const days = new Set(personalizedItems.map(i => i.day_of_week ?? 0));
-  const numDays = Math.max(days.size, 1);
-  const currentDailyCal = currentTotalCal / numDays;
+  // Skip if caller explicitly requested no calorie scaling (e.g., AutoFix does its own rebalancing)
+  if (!options?.skipCalorieScaling) {
+    const currentTotalCal = personalizedItems.reduce((s, i) => s + (i.calories_target || 0), 0);
+    const days = new Set(personalizedItems.map(i => i.day_of_week ?? 0));
+    const numDays = Math.max(days.size, 1);
+    const currentDailyCal = currentTotalCal / numDays;
 
-  if (context.targetCalories > 0 && currentDailyCal > 0) {
-    const deviation = Math.abs(currentDailyCal - context.targetCalories) / context.targetCalories;
-    // Only adjust if deviation > 10%
-    if (deviation > 0.10) {
-      const factor = context.targetCalories / currentDailyCal;
-      personalizedItems = personalizedItems.map(item => ({
-        ...item,
-        calories_target: item.calories_target ? Math.round(item.calories_target * factor) : item.calories_target,
-        protein_target: item.protein_target ? Math.round(item.protein_target * factor) : item.protein_target,
-        carbs_target: item.carbs_target ? Math.round(item.carbs_target * factor) : item.carbs_target,
-        fat_target: item.fat_target ? Math.round(item.fat_target * factor) : item.fat_target,
-      }));
+    if (context.targetCalories > 0 && currentDailyCal > 0) {
+      const deviation = Math.abs(currentDailyCal - context.targetCalories) / context.targetCalories;
+      if (deviation > 0.10) {
+        const factor = context.targetCalories / currentDailyCal;
+        personalizedItems = personalizedItems.map(item => ({
+          ...item,
+          calories_target: item.calories_target ? Math.round(item.calories_target * factor) : item.calories_target,
+          protein_target: item.protein_target ? Math.round(item.protein_target * factor) : item.protein_target,
+          carbs_target: item.carbs_target ? Math.round(item.carbs_target * factor) : item.carbs_target,
+          fat_target: item.fat_target ? Math.round(item.fat_target * factor) : item.fat_target,
+        }));
 
-      const newDailyCal = Math.round(context.targetCalories);
-      changes.push({
-        type: "calorie_adjusted",
-        detail: `Calorias ajustadas: ${Math.round(currentDailyCal)}kcal/dia → ${newDailyCal}kcal/dia (TMB/TED do paciente)`,
-      });
+        const newDailyCal = Math.round(context.targetCalories);
+        changes.push({
+          type: "calorie_adjusted",
+          detail: `Calorias ajustadas: ${Math.round(currentDailyCal)}kcal/dia → ${newDailyCal}kcal/dia (TMB/TED do paciente)`,
+        });
+      }
     }
   }
 
