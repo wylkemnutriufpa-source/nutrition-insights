@@ -519,13 +519,13 @@ export default function OnboardingPipeline() {
               </Card>
             )}
 
-            {/* Step 2: Preferences */}
-            {currentStep === 2 && (
+            {/* Step 3: Preferences */}
+            {currentStep === 3 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Utensils className="w-5 h-5 text-primary" />
-                    Etapa 3: Preferências Alimentares
+                    Etapa 4: Preferências Alimentares
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
