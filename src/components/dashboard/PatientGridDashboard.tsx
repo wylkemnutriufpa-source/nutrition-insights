@@ -5,16 +5,19 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useLayoutPreference } from "@/hooks/useLayoutPreference";
 import { useExperienceUI } from "@/hooks/useExperienceUI";
 import FitJourneyTimeline from "@/components/timeline/FitJourneyTimeline";
+import InlineExperienceToggle from "@/components/dashboard/InlineExperienceToggle";
 import {
   UtensilsCrossed, CheckCircle2, Calendar, Dumbbell,
   TrendingUp, Brain, Camera, Target,
   LayoutGrid, List, ArrowRight, Sparkles, Rocket, ChevronRight, ChefHat,
 } from "lucide-react";
 import NewFeatureBadge from "@/components/common/NewFeatureBadge";
+
+const DailyMealPlanInline = lazy(() => import("@/components/patient/DailyMealPlanInline"));
 
 type MinMode = "basic" | "pro" | "advanced";
 
