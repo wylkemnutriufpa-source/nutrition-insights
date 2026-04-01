@@ -53,7 +53,7 @@ describe("E2E Flow: Payment Confirmation", () => {
     expect(result.error).toBeNull();
     const data = result.data as any;
     expect(data.success).toBe(true);
-    expect(data.new_status).toBe("awaiting_consent");
+    expect(data.new_status).toBe("onboarding_active");
     expect(mockRpc).toHaveBeenCalledWith("confirm_patient_payment", {
       _patient_id: "patient-1",
       _nutritionist_id: "nutri-1",
