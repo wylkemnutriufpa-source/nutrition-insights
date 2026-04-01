@@ -128,6 +128,7 @@ export default function DietTemplates() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [showLegacy, setShowLegacy] = useState(false);
 
   // Preview dialog
   const [previewTemplate, setPreviewTemplate] = useState<DietTemplate | null>(null);
