@@ -53,7 +53,6 @@ const ERROR_MAP: Record<string, MappedError> = {
     errorKey: "unique_violation",
     isSystemError: false,
   },
-  // Edge Function error codes
   ANAMNESIS_MISSING: {
     userMessage: "Anamnese concluída não encontrada. O paciente precisa preencher a anamnese antes de gerar o plano.",
     errorKey: "anamnesis_missing",
@@ -94,6 +93,7 @@ const ERROR_MAP: Record<string, MappedError> = {
     errorKey: "patient_link_missing",
     isSystemError: false,
   },
+};
 
 /**
  * Parses a Supabase/Postgres error and returns a user-friendly mapped error if recognized.
