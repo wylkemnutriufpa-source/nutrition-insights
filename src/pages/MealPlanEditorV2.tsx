@@ -136,6 +136,14 @@ export default function MealPlanEditorV2() {
 
   const handlePublish = async () => {
     if (!user) return;
+
+    // Guard: check validation status before attempting publish
+    const validationStatus = plan.overall_validation_status;
+    if (!validationStatus || validationStatus !== "aprovado") {
+      toast.error("⚠️ O plano precisa ser validado pelo Motor Clínico antes de ser publicado. Clique em 'Validar' primeiro.", { duration: 6000 });
+      return;
+    }
+
     setPublishing(true);
     try {
       const pendingOps = useMealPlanEditorV2Store.getState().pendingOps;
@@ -152,10 +160,19 @@ export default function MealPlanEditorV2() {
       if (!result.success) {
         const rpcData = result.data as Record<string, unknown> | undefined;
         const rpcMessage = rpcData?.message as string | undefined;
-        throw new Error(rpcMessage || result.error || "Erro ao publicar");
+        const errorCode = rpcData?.error as string | undefined;
+
+        if (errorCode === "VALIDATION_REQUIRED") {
+          toast.error("⚠️ Validação obrigatória! Clique em 'Validar' antes de publicar.", { duration: 6000 });
+        } else if (errorCode === "EMPTY_PLAN") {
+          toast.error("❌ O plano não possui refeições. Adicione itens antes de publicar.", { duration: 5000 });
+        } else {
+          throw new Error(rpcMessage || result.error || "Erro ao publicar");
+        }
+        return;
       }
-      store.updatePlan({ plan_status: "published_to_patient", is_active: true, updated_at: new Date().toISOString() } as any);
-      toast.success("Plano publicado para o paciente!");
+      store.updatePlan({ plan_status: "published_to_patient", is_active: true, overall_validation_status: "aprovado", updated_at: new Date().toISOString() } as any);
+      toast.success("✅ Plano publicado para o paciente!");
     } catch (err: any) {
       console.error("[Publish] Error:", err);
       toast.error(err?.message || "Erro ao publicar. Tente novamente.");
