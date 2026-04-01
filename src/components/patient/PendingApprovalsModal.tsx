@@ -230,17 +230,30 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
     if (!selectedPipeline || !user) return;
     setProcessing(true);
     try {
-      const { count, error: countError } = await supabase
-        .from("meal_plan_items")
-        .select("id", { count: "exact", head: true })
-        .eq("meal_plan_id", planId);
+      const [{ count, error: countError }, { data: plan, error: planError }] = await Promise.all([
+        supabase
+          .from("meal_plan_items")
+          .select("id", { count: "exact", head: true })
+          .eq("meal_plan_id", planId),
+        supabase
+          .from("meal_plans")
+          .select("id, plan_status, overall_validation_status")
+          .eq("id", planId)
+          .maybeSingle(),
+      ]);
 
       if (countError) throw countError;
+      if (planError) throw planError;
 
       let resolvedPlanId = planId;
-      if (!count || count === 0) {
-        toast.info("Plano sem refeições detectado. Gerando itens automaticamente...");
-        const regenerated = await generateOrRegeneratePlan(planId);
+      const stalePlan = !plan || ["archived", "rejected"].includes(plan.plan_status || "") || plan.overall_validation_status === "reprovado";
+      const emptyPlan = !count || count === 0;
+
+      if (stalePlan || emptyPlan) {
+        toast.info(stalePlan
+          ? "Plano antigo/reprovado detectado. Gerando uma versão nova..."
+          : "Plano sem refeições detectado. Gerando itens automaticamente...");
+        const regenerated = await generateOrRegeneratePlan(emptyPlan && !stalePlan ? planId : undefined);
         resolvedPlanId = regenerated.planId;
       }
 
