@@ -519,9 +519,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [location.pathname]);
 
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [location.pathname]);
+  // Removed: no longer auto-close sidebar on route change
+  // The user wants to close it only via the menu button
 
   useEffect(() => {
     setCollapsed(isTablet);
