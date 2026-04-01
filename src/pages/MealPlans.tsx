@@ -7,6 +7,7 @@ import { withTenantFilter, getTenantIdForInsert } from "@/lib/tenantQueryHelpers
 import { supabase } from "@/integrations/supabase/client";
 import { activateMealPlan, deactivateMealPlan, resolvePlanState } from "@/lib/serverTransitions";
 import { autoMatchSingle } from "@/lib/mealVisualAssociation";
+import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
 
 /** After AI generates a plan, resolve visuals for all its items */
 async function runPostGenVisualMatch(planId: string) {
