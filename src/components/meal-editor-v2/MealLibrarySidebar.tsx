@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Search, Coffee, Apple, Utensils, Cookie, Moon, Sun,
   Flame, Beef, Loader2, Plus, BookOpen, User, Zap,
-  Library, FileDown, Wheat, Droplets,
+  Library, FileDown, Wheat, Droplets, Check, AlertTriangle, ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -51,6 +51,7 @@ interface DietTemplate {
   clinical_tags: string[];
   complexity_level: string;
   icon: string;
+  template_generation?: string;
 }
 
 const MEAL_ICONS: Record<string, React.ReactNode> = {
@@ -154,15 +155,22 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
 
   // Filter diet templates
   const filteredDietTemplates = useMemo(() => {
-    if (!search.trim()) return dietTemplates;
-    const q = search.toLowerCase();
-    return dietTemplates.filter((t) =>
-      t.name.toLowerCase().includes(q) ||
-      t.diet_style?.toLowerCase().includes(q) ||
-      t.goal_category?.toLowerCase().includes(q) ||
-      (Array.isArray(t.clinical_tags) && t.clinical_tags.some((tag) => tag.toLowerCase().includes(q)))
-    );
+    let list = dietTemplates;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter((t) =>
+        t.name.toLowerCase().includes(q) ||
+        t.diet_style?.toLowerCase().includes(q) ||
+        t.goal_category?.toLowerCase().includes(q) ||
+        (Array.isArray(t.clinical_tags) && t.clinical_tags.some((tag) => tag.toLowerCase().includes(q)))
+      );
+    }
+    return list;
   }, [dietTemplates, search]);
+
+  const officialDietTemplates = useMemo(() => filteredDietTemplates.filter(t => t.template_generation === 'official_v2'), [filteredDietTemplates]);
+  const legacyDietTemplates = useMemo(() => filteredDietTemplates.filter(t => t.template_generation !== 'official_v2'), [filteredDietTemplates]);
+  const [showLegacyDiet, setShowLegacyDiet] = useState(false);
 
   // Insert nutritionist template (1-click)
   const handleInsertTemplate = useCallback((template: TemplateRow) => {
@@ -405,10 +413,47 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
                 <p>Nenhum template pré-pronto disponível</p>
               </div>
             ) : (
-              <div className="space-y-2">
-                {filteredDietTemplates.map((dt) => (
-                  <DietTemplateCard key={dt.id} template={dt} onImport={handleImportDietTemplate} />
-                ))}
+              <div className="space-y-4">
+                {/* Official V2 */}
+                {officialDietTemplates.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Badge className="bg-primary/10 text-primary border-primary/30 text-[8px] h-5 gap-0.5">
+                        <Check className="w-2.5 h-2.5" /> Verificados
+                      </Badge>
+                      <span className="text-[10px] text-muted-foreground">{officialDietTemplates.length}</span>
+                    </div>
+                    <div className="space-y-2">
+                      {officialDietTemplates.map((dt) => (
+                        <DietTemplateCard key={dt.id} template={dt} onImport={handleImportDietTemplate} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Legacy */}
+                {legacyDietTemplates.length > 0 && (
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => setShowLegacyDiet(!showLegacyDiet)}
+                      className="flex items-center gap-1.5 mb-2 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Badge variant="outline" className="text-[8px] h-5 gap-0.5 text-muted-foreground">
+                        <AlertTriangle className="w-2.5 h-2.5" /> Legado
+                      </Badge>
+                      <span>{legacyDietTemplates.length} antigos</span>
+                      <ChevronRight className={`w-3 h-3 transition-transform ${showLegacyDiet ? 'rotate-90' : ''}`} />
+                    </button>
+                    {showLegacyDiet && (
+                      <div className="space-y-2 opacity-60">
+                        {legacyDietTemplates.map((dt) => (
+                          <DietTemplateCard key={dt.id} template={dt} onImport={handleImportDietTemplate} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </ScrollArea>
