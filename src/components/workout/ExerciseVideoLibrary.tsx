@@ -378,7 +378,29 @@ export default function ExerciseVideoLibrary({ draggable = false, onDragStart }:
                 type="file"
                 accept="video/*"
                 className="hidden"
-                onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null;
+                  setUploadFile(file);
+                  if (file && !uploadTitle.trim()) {
+                    // Auto-name from filename: "supino-reto-barra.mp4" → "Supino reto barra"
+                    const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
+                    const humanName = nameWithoutExt
+                      .replace(/[-_]+/g, " ")
+                      .replace(/\b\w/g, c => c.toUpperCase())
+                      .trim();
+                    setUploadTitle(humanName);
+                  }
+                  // Auto-detect duration
+                  if (file) {
+                    const video = document.createElement("video");
+                    video.preload = "metadata";
+                    video.onloadedmetadata = () => {
+                      setUploadDuration(Math.round(video.duration));
+                      URL.revokeObjectURL(video.src);
+                    };
+                    video.src = URL.createObjectURL(file);
+                  }
+                }}
               />
             </div>
 
