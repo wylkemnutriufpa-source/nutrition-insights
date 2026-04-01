@@ -148,12 +148,9 @@ function findMatch(title: string, aliasMap: Map<string, string>, description?: s
     }
   }
 
-  // Strategy 3: partial match (fallback)
-  for (const [alias, itemId] of aliasMap) {
-    if (norm.includes(alias) || alias.includes(norm)) {
-      return itemId;
-    }
-  }
+  // Strategy 3: REMOVED — partial match was causing incorrect visual associations
+  // (e.g. "pão" matching "camarão", "carne" matching wrong proteins)
+  // Items without exact or keyword match will remain without image.
 
   return null;
 }
