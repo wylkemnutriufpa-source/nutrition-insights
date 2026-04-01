@@ -134,7 +134,7 @@ export const BRAZILIAN_REPLACEMENTS: Record<string, { replacement: string; reaso
   "pão artesanal": { replacement: "pão integral", reason: "Mais acessível" },
   "manteiga de amêndoa": { replacement: "pasta de amendoim", reason: "Mais acessível" },
   "pasta de amendoim importada": { replacement: "amendoim torrado", reason: "Mais acessível" },
-  "ricota importada": { replacement: "queijo minas", reason: "Queijo brasileiro" },
+  "ricota importada": { replacement: "queijo coalho", reason: "Queijo brasileiro" },
   "chia importada": { replacement: "linhaça", reason: "Semente acessível" },
   "hemp seed": { replacement: "linhaça", reason: "Semente acessível" },
   "açaí premium": { replacement: "banana", reason: "Fruta barata e nutritiva" },
