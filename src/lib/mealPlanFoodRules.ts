@@ -254,7 +254,7 @@ export const SUBSTITUTION_GROUPS = {
   protein_main: ["frango", "carne moída", "bife", "tilápia", "porco", "sardinha"],
   carb_main: ["arroz", "macarrão", "batata", "macaxeira", "batata doce", "inhame"],
   carb_breakfast: ["pão integral", "tapioca", "cuscuz", "pão francês"],
-  protein_breakfast: ["ovo mexido", "ovo cozido", "queijo minas", "queijo coalho"],
+  protein_breakfast: ["ovo mexido", "ovo cozido", "queijo coalho", "queijo muçarela"],
   fruit: ["banana", "maçã", "mamão", "laranja", "goiaba", "morango", "tangerina"],
   dairy: ["iogurte natural", "leite", "queijo minas"],
   legume: ["feijão", "lentilha", "feijão verde"],
