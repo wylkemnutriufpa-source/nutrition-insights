@@ -765,7 +765,7 @@ serve(async (req) => {
     // ── Multi-plan flow ──
     if (isPipeline && planCount > 1 && !meal_plan_id) {
       const generatedPlans: any[] = [];
-      const nutritionistId = body.nutritionistId;
+      const nutritionistId = requestedNutritionistId;
 
       for (let tplIdx = 0; tplIdx < planCount; tplIdx++) {
         const rawItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked, tplIdx);
