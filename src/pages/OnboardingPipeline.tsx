@@ -478,13 +478,13 @@ export default function OnboardingPipeline() {
               </Card>
             )}
 
-            {/* Step 1: Body Data */}
-            {currentStep === 1 && (
+            {/* Step 2: Body Data */}
+            {currentStep === 2 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Scale className="w-5 h-5 text-primary" />
-                    Etapa 2: Dados Corporais
+                    Etapa 3: Dados Corporais
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
