@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -237,7 +238,10 @@ export default function OnboardingPipeline() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        const msg = await friendlyEdgeFunctionError(error, "Falha na geração do plano");
+        throw new Error(msg);
+      }
       if (!data?.success) throw new Error(data?.error || "Falha na geração");
 
       // Update pipeline — handle both multi-plan and single-plan responses

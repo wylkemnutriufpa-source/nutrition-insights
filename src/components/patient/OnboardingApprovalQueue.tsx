@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
@@ -282,7 +283,10 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
           planCount: 3,
         },
       });
-      if (error) throw error;
+      if (error) {
+        const msg = await friendlyEdgeFunctionError(error, "Falha na geração do plano");
+        throw new Error(msg);
+      }
       if (!data?.success) throw new Error(data?.error || "Falha na geração");
 
       if (data.multiPlan && data.plans?.length > 0) {
@@ -367,7 +371,10 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
           },
         });
 
-        if (error) throw error;
+        if (error) {
+          const msg = await friendlyEdgeFunctionError(error, "Falha ao regenerar plano");
+          throw new Error(msg);
+        }
         if (!data?.success) throw new Error(data?.error || "Falha ao regenerar plano");
 
         resolvedPlanId = data?.mealPlanId || planId;

@@ -7,6 +7,7 @@ import { withTenantFilter, getTenantIdForInsert } from "@/lib/tenantQueryHelpers
 import { supabase } from "@/integrations/supabase/client";
 import { activateMealPlan, deactivateMealPlan, resolvePlanState } from "@/lib/serverTransitions";
 import { autoMatchSingle } from "@/lib/mealVisualAssociation";
+import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
 
 /** After AI generates a plan, resolve visuals for all its items */
 async function runPostGenVisualMatch(planId: string) {
@@ -172,15 +173,21 @@ export default function MealPlans() {
 
         if (genError) {
           console.error("Generate plan error:", genError);
-          toast.error("Erro ao gerar plano: " + (genError.message || "Tente novamente"));
-          // Allow retry
+          const friendlyMsg = await friendlyEdgeFunctionError(genError, "Erro ao gerar plano. Tente novamente.");
+          toast.error(friendlyMsg);
           onboardingHandled.current = null;
           return;
         }
 
         if (!genData?.success) {
           console.error("Generate plan failed:", genData);
-          toast.error("Erro ao gerar plano: " + (genData?.error || "Resposta inválida"));
+          // Try to map the error code from response
+          const errorCode = genData?.code || genData?.error || "Resposta inválida";
+          const friendlyMsg = await friendlyEdgeFunctionError(
+            { message: errorCode },
+            genData?.error || "Erro ao gerar plano. Tente novamente."
+          );
+          toast.error(friendlyMsg);
           onboardingHandled.current = null;
           return;
         }
@@ -196,7 +203,8 @@ export default function MealPlans() {
         }
       } catch (err: any) {
         console.error("Onboarding source error:", err);
-        toast.error("Erro ao processar onboarding: " + (err.message || "Tente novamente"));
+        const friendlyMsg = await friendlyEdgeFunctionError(err, "Erro ao processar onboarding. Tente novamente.");
+        toast.error(friendlyMsg);
         // Allow retry on error
         onboardingHandled.current = null;
       }
@@ -223,7 +231,10 @@ export default function MealPlans() {
           },
         });
         if (genError || !genData?.success) {
-          toast.error("Erro ao gerar: " + (genError?.message || genData?.error || "Tente novamente"));
+          const msg = genError 
+            ? await friendlyEdgeFunctionError(genError, "Erro ao gerar plano") 
+            : (genData?.error || "Tente novamente");
+          toast.error(msg);
         } else {
           toast.success(`Plano gerado com ${genData.items_count || 0} refeições!`);
           runPostGenVisualMatch(genData.mealPlanId).catch(() => {});

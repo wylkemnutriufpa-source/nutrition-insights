@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -162,7 +163,10 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
       },
     });
 
-    if (error) throw error;
+    if (error) {
+      const msg = await friendlyEdgeFunctionError(error, "Falha na geração do plano");
+      throw new Error(msg);
+    }
     if (!data?.success) throw new Error(data?.error || "Falha na geração do plano");
 
     const planId = data?.mealPlanId || targetPlanId;
