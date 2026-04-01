@@ -137,12 +137,12 @@ export async function generateMealPlanFromLibrary(
 
   let allItems = (rawItems || []) as unknown as MealLibraryItem[];
   
-  // 2. FILTER: Remove items with blocked foods
+  // 2. FILTER: Remove items with blocked or banned foods
   allItems = allItems.filter(item => {
     if (!Array.isArray(item.foods)) return true;
-    const hasBlocked = item.foods.some(f => isBlockedFood(f.name || ""));
+    const hasBlocked = item.foods.some(f => isBlockedFood(f.name || "") || isExplicitlyBanned(f.name || ""));
     if (hasBlocked) {
-      warnings.push(`Item "${item.title}" removido: contém alimento bloqueado`);
+      warnings.push(`Item "${item.title}" removido: contém alimento bloqueado/banido`);
     }
     return !hasBlocked;
   });
