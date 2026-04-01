@@ -737,6 +737,10 @@ serve(async (req) => {
           continue;
         }
 
+        // Resolve visual associations for this plan
+        const visualResolved = await resolveVisualForItems(serviceClient, newPlan.id, planItems);
+        console.log(`Plan ${newPlan.id}: ${visualResolved}/${planItems.length} items visually resolved`);
+
         generatedPlans.push({
           mealPlanId: newPlan.id,
           templateName: optionLabels[tplIdx] || "Extra",
