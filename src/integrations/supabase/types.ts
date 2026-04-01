@@ -3554,6 +3554,7 @@ export type Database = {
           name: string
           slug: string
           tags: string[]
+          template_generation: string
           updated_at: string
           version: number
           weekly_variation_strategy: Json
@@ -3579,6 +3580,7 @@ export type Database = {
           name: string
           slug: string
           tags?: string[]
+          template_generation?: string
           updated_at?: string
           version?: number
           weekly_variation_strategy?: Json
@@ -3604,6 +3606,7 @@ export type Database = {
           name?: string
           slug?: string
           tags?: string[]
+          template_generation?: string
           updated_at?: string
           version?: number
           weekly_variation_strategy?: Json

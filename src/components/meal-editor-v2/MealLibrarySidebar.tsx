@@ -122,8 +122,9 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
 
     supabase
       .from("diet_templates")
-      .select("id,name,slug,category,diet_style,goal_category,base_calories,macro_ratio,meals,meal_distribution,clinical_tags,complexity_level,icon")
+      .select("id,name,slug,category,diet_style,goal_category,base_calories,macro_ratio,meals,meal_distribution,clinical_tags,complexity_level,icon,template_generation")
       .eq("is_active", true)
+      .order("template_generation", { ascending: false })
       .order("name")
       .then(({ data }) => {
         if (!cancelled) {

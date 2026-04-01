@@ -40,6 +40,7 @@ interface DietTemplate {
   macro_ratio: { protein: number; carbs: number; fat: number };
   meals: TemplateMeal[];
   tags: string[];
+  template_generation?: string;
 }
 
 interface TemplateFood {
@@ -115,6 +116,85 @@ const CATEGORY_LABELS: Record<string, string> = {
   clinico_especifico: "Clínico Específico",
 };
 
+const TemplateCard = memo(({ template, getAdjustedCalories, anamnesis, physicalAssessment, CATEGORY_COLORS, CATEGORY_LABELS, onPreview, isLegacy }: {
+  template: DietTemplate;
+  getAdjustedCalories: (t: DietTemplate) => number;
+  anamnesis: AnamnesisData | null;
+  physicalAssessment: PhysicalAssessmentData | null;
+  CATEGORY_COLORS: Record<string, string>;
+  CATEGORY_LABELS: Record<string, string>;
+  onPreview: (t: DietTemplate) => void;
+  isLegacy?: boolean;
+}) => {
+  const adjustedCal = getAdjustedCalories(template);
+  const isAdjusted = (anamnesis || physicalAssessment) && adjustedCal !== template.base_calories;
+
+  return (
+    <motion.div
+      whileHover={{ y: -3 }}
+      className="glass rounded-xl p-5 shadow-card cursor-pointer group relative"
+      onClick={() => onPreview(template)}
+    >
+      {isLegacy && (
+        <Badge variant="outline" className="absolute top-2 right-2 text-[9px] text-muted-foreground">
+          Legado
+        </Badge>
+      )}
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-3xl">{template.icon}</span>
+          <div>
+            <h3 className="font-display font-semibold group-hover:text-primary transition-colors">
+              {template.name}
+            </h3>
+            <Badge variant="outline" className={`text-[10px] mt-1 ${CATEGORY_COLORS[template.goal_category || template.category] || ""}`}>
+              {CATEGORY_LABELS[template.goal_category || template.category] || template.goal_category || template.category}
+            </Badge>
+            {template.diet_style && (
+              <Badge variant="outline" className="text-[10px] mt-1 ml-1">
+                {template.diet_style.replace(/_/g, " ")}
+              </Badge>
+            )}
+          </div>
+        </div>
+        <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+      </div>
+
+      <p className="text-xs text-muted-foreground mt-3 line-clamp-2">{template.description}</p>
+
+      <div className="flex items-center gap-3 mt-3 text-xs">
+        <span className="flex items-center gap-1 text-orange-400">
+          <Flame className="w-3 h-3" />
+          {isAdjusted ? (
+            <span>
+              <s className="text-muted-foreground">{template.base_calories}</s> → <span className="font-bold text-primary">{adjustedCal}</span> kcal
+            </span>
+          ) : (
+            <span>{template.base_calories} kcal</span>
+          )}
+        </span>
+        <span className="flex items-center gap-1 text-red-400">
+          <Beef className="w-3 h-3" /> P{template.macro_ratio.protein}%
+        </span>
+        <span className="flex items-center gap-1 text-amber-400">
+          <Wheat className="w-3 h-3" /> C{template.macro_ratio.carbs}%
+        </span>
+        <span className="flex items-center gap-1 text-blue-400">
+          <Droplets className="w-3 h-3" /> G{template.macro_ratio.fat}%
+        </span>
+      </div>
+
+      <div className="flex flex-wrap gap-1 mt-3">
+        {(template.tags || []).slice(0, 4).map((tag) => (
+          <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+            {tag.replace(/_/g, " ")}
+          </span>
+        ))}
+      </div>
+    </motion.div>
+  );
+});
+
 export default function DietTemplates() {
   const { user } = useAuth();
   const { tenantId } = useTenant();
@@ -127,6 +207,7 @@ export default function DietTemplates() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [showLegacy, setShowLegacy] = useState(false);
 
   // Preview dialog
   const [previewTemplate, setPreviewTemplate] = useState<DietTemplate | null>(null);
@@ -221,7 +302,6 @@ export default function DietTemplates() {
   const filtered = useMemo(() => {
     let result = templates.map(t => {
       const raw = t.macro_ratio && typeof t.macro_ratio === 'object' ? t.macro_ratio : { protein: 30, carbs: 45, fat: 25 };
-      // Normalize: if values are decimals (< 1), convert to percentage
       const macro_ratio = {
         protein: raw.protein <= 1 ? Math.round(raw.protein * 100) : raw.protein,
         carbs: raw.carbs <= 1 ? Math.round(raw.carbs * 100) : raw.carbs,
@@ -250,6 +330,9 @@ export default function DietTemplates() {
     }
     return result;
   }, [templates, search, categoryFilter]);
+
+  const officialTemplates = useMemo(() => filtered.filter(t => t.template_generation === 'official_v2'), [filtered]);
+  const legacyTemplates = useMemo(() => filtered.filter(t => t.template_generation !== 'official_v2'), [filtered]);
 
   const categories = useMemo(() => {
     const cats = new Set(templates.map((t) => t.goal_category || t.category));
@@ -551,80 +634,65 @@ export default function DietTemplates() {
             <p className="text-muted-foreground">Tente ajustar os filtros de busca.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filtered.map((template) => {
-              const adjustedCal = getAdjustedCalories(template);
-              const isAdjusted = (anamnesis || physicalAssessment) && adjustedCal !== template.base_calories;
-               const totalTemplateCals = (template.meals || []).reduce(
-                (s, m) => s + (m.foods || []).reduce((fs, f) => fs + (f.calories || 0), 0),
-                0
-               );
+          <div className="space-y-8">
+            {/* Official V2 Templates */}
+            {officialTemplates.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <Badge className="bg-primary/10 text-primary border-primary/30 gap-1">
+                    <Check className="w-3 h-3" /> Verificados
+                  </Badge>
+                  <span className="text-sm text-muted-foreground">{officialTemplates.length} modelos com visual verificado</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {officialTemplates.map((template) => (
+                    <TemplateCard
+                      key={template.id}
+                      template={template}
+                      getAdjustedCalories={getAdjustedCalories}
+                      anamnesis={anamnesis}
+                      physicalAssessment={physicalAssessment}
+                      CATEGORY_COLORS={CATEGORY_COLORS}
+                      CATEGORY_LABELS={CATEGORY_LABELS}
+                      onPreview={(t) => { setPreviewTemplate(t); setPreviewOpen(true); setActiveSubstitutions({}); }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
 
-              return (
-                <motion.div
-                  key={template.id}
-                  whileHover={{ y: -3 }}
-                  className="glass rounded-xl p-5 shadow-card cursor-pointer group"
-                  onClick={() => {
-                    setPreviewTemplate(template);
-                    setPreviewOpen(true);
-                    setActiveSubstitutions({});
-                  }}
+            {/* Legacy Templates */}
+            {legacyTemplates.length > 0 && (
+              <div>
+                <button
+                  onClick={() => setShowLegacy(!showLegacy)}
+                  className="flex items-center gap-2 mb-4 text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl">{template.icon}</span>
-                      <div>
-                        <h3 className="font-display font-semibold group-hover:text-primary transition-colors">
-                          {template.name}
-                        </h3>
-                        <Badge variant="outline" className={`text-[10px] mt-1 ${CATEGORY_COLORS[template.goal_category || template.category] || ""}`}>
-                          {CATEGORY_LABELS[template.goal_category || template.category] || template.goal_category || template.category}
-                        </Badge>
-                        {template.diet_style && (
-                          <Badge variant="outline" className="text-[10px] mt-1 ml-1">
-                            {template.diet_style.replace(/_/g, " ")}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                  </div>
-
-                  <p className="text-xs text-muted-foreground mt-3 line-clamp-2">{template.description}</p>
-
-                  <div className="flex items-center gap-3 mt-3 text-xs">
-                    <span className="flex items-center gap-1 text-orange-400">
-                      <Flame className="w-3 h-3" />
-                      {isAdjusted ? (
-                        <span>
-                          <s className="text-muted-foreground">{template.base_calories}</s> → <span className="font-bold text-primary">{adjustedCal}</span> kcal
-                        </span>
-                      ) : (
-                        <span>{template.base_calories} kcal</span>
-                      )}
-                    </span>
-                    <span className="flex items-center gap-1 text-red-400">
-                      <Beef className="w-3 h-3" /> P{template.macro_ratio.protein}%
-                    </span>
-                    <span className="flex items-center gap-1 text-amber-400">
-                      <Wheat className="w-3 h-3" /> C{template.macro_ratio.carbs}%
-                    </span>
-                    <span className="flex items-center gap-1 text-blue-400">
-                      <Droplets className="w-3 h-3" /> G{template.macro_ratio.fat}%
-                    </span>
-                  </div>
-
-                  <div className="flex flex-wrap gap-1 mt-3">
-                    {template.tags.slice(0, 4).map((tag) => (
-                      <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                        {tag.replace(/_/g, " ")}
-                      </span>
+                  <Badge variant="outline" className="gap-1 text-muted-foreground">
+                    <AlertTriangle className="w-3 h-3" /> Legado
+                  </Badge>
+                  <span>{legacyTemplates.length} modelos antigos</span>
+                  <ChevronRight className={`w-4 h-4 transition-transform ${showLegacy ? 'rotate-90' : ''}`} />
+                </button>
+                {showLegacy && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 opacity-70">
+                    {legacyTemplates.map((template) => (
+                      <TemplateCard
+                        key={template.id}
+                        template={template}
+                        getAdjustedCalories={getAdjustedCalories}
+                        anamnesis={anamnesis}
+                        physicalAssessment={physicalAssessment}
+                        CATEGORY_COLORS={CATEGORY_COLORS}
+                        CATEGORY_LABELS={CATEGORY_LABELS}
+                        onPreview={(t) => { setPreviewTemplate(t); setPreviewOpen(true); setActiveSubstitutions({}); }}
+                        isLegacy
+                      />
                     ))}
                   </div>
-                </motion.div>
-              );
-            })}
+                )}
+              </div>
+            )}
           </div>
         )}
 
