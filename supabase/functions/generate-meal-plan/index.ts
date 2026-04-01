@@ -427,7 +427,8 @@ function generateRealisticPlan(
         ? `${selected.description}\n\n🔄 Substituições:\n${subsText}`
         : selected.description;
 
-      const mealMacroRatio = targetKcal / kcalTarget;
+      // Use clamped scale for ALL values (calories + macros) to maintain consistency
+      const scaledKcal = Math.round(selected.kcal * clampedScale);
 
       items.push({
         meal_type: mealType,
@@ -438,7 +439,7 @@ function generateRealisticPlan(
                mealType === "afternoon_snack" ? "Lanche da Tarde" :
                mealType === "dinner" ? "Jantar" : "Ceia",
         description: fullDesc,
-        calories_target: targetKcal,
+        calories_target: scaledKcal,
         protein_target: Math.round(selected.protein * clampedScale),
         carbs_target: Math.round(selected.carbs * clampedScale),
         fat_target: Math.round(selected.fat * clampedScale),
