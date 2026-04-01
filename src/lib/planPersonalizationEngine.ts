@@ -60,31 +60,32 @@ const RESTRICTION_FOODS: Record<string, string[]> = {
 };
 
 // Simple replacements for restricted foods
+// IMPORTANT: replacements must ONLY use foods from ALLOWED lists (never blocked foods)
 const RESTRICTION_REPLACEMENTS: Record<string, Record<string, string>> = {
   lactose: {
-    leite: "leite vegetal",
-    queijo: "queijo vegano",
-    iogurte: "iogurte de coco",
+    leite: "suco natural",
+    queijo: "ovo cozido",
+    iogurte: "banana amassada",
     "requeijão": "pasta de amendoim",
-    manteiga: "azeite",
-    whey: "proteína vegetal",
-    ricota: "tofu",
-    mussarela: "queijo vegano",
-    cottage: "tofu amassado",
+    manteiga: "azeite de oliva",
+    whey: "ovo cozido",
+    ricota: "ovo mexido",
+    mussarela: "ovo cozido",
+    cottage: "ovo mexido",
   },
   gluten: {
     "pão": "tapioca",
-    "macarrão": "macarrão de arroz",
-    espaguete: "macarrão sem glúten",
-    torrada: "tapioca crocante",
-    aveia: "aveia sem glúten",
+    "macarrão": "batata cozida",
+    espaguete: "batata doce",
+    torrada: "tapioca",
+    aveia: "cuscuz de milho",
     cuscuz: "cuscuz de milho",
   },
   ovo: {
-    ovo: "tofu mexido",
-    ovos: "tofu mexido",
-    omelete: "crepioca sem ovo",
-    "ovo cozido": "grão-de-bico",
+    ovo: "queijo minas",
+    ovos: "queijo minas",
+    omelete: "tapioca com queijo",
+    "ovo cozido": "queijo coalho",
   },
 };
 
