@@ -223,7 +223,6 @@ export default function DietTemplates() {
   const filtered = useMemo(() => {
     let result = templates.map(t => {
       const raw = t.macro_ratio && typeof t.macro_ratio === 'object' ? t.macro_ratio : { protein: 30, carbs: 45, fat: 25 };
-      // Normalize: if values are decimals (< 1), convert to percentage
       const macro_ratio = {
         protein: raw.protein <= 1 ? Math.round(raw.protein * 100) : raw.protein,
         carbs: raw.carbs <= 1 ? Math.round(raw.carbs * 100) : raw.carbs,
@@ -252,6 +251,9 @@ export default function DietTemplates() {
     }
     return result;
   }, [templates, search, categoryFilter]);
+
+  const officialTemplates = useMemo(() => filtered.filter(t => t.template_generation === 'official_v2'), [filtered]);
+  const legacyTemplates = useMemo(() => filtered.filter(t => t.template_generation !== 'official_v2'), [filtered]);
 
   const categories = useMemo(() => {
     const cats = new Set(templates.map((t) => t.goal_category || t.category));
