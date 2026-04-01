@@ -364,7 +364,9 @@ export default function MealPlanEditorV2() {
             <Button
               size="sm"
               onClick={handlePublish}
-              disabled={publishing || store.syncStatus === "saving"}
+              disabled={publishing || store.syncStatus === "saving" || plan.overall_validation_status !== "aprovado"}
+              title={plan.overall_validation_status !== "aprovado" ? "Valide o plano primeiro clicando em 'Validar'" : "Publicar plano para o paciente"}
+              className={plan.overall_validation_status !== "aprovado" ? "opacity-60" : ""}
             >
               {publishing ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Send className="w-4 h-4 mr-1" />}
               Publicar
