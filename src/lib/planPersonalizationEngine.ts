@@ -157,6 +157,7 @@ export async function loadPersonalizationContext(patientId: string): Promise<Per
 export function personalizePlanItems(
   items: Partial<MealPlanItem>[],
   context: PersonalizationContext,
+  options?: { skipCalorieScaling?: boolean },
 ): PersonalizationResult {
   const changes: PersonalizationChange[] = [];
   const warnings: string[] = [];
