@@ -51,6 +51,7 @@ interface DietTemplate {
   clinical_tags: string[];
   complexity_level: string;
   icon: string;
+  template_generation?: string;
 }
 
 const MEAL_ICONS: Record<string, React.ReactNode> = {
