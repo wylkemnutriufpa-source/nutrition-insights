@@ -5,29 +5,130 @@
    PATIENT THEMES
    ════════════════════════════════════════════ */
 
-/* Patient Basic — ultra clean, minimal */
+/* Patient Basic — ultra clean, minimal — FULL RESET to base palette */
 html[data-experience-role="patient"][data-experience-mode="basic"] {
+  --background: 220 20% 97%;
+  --foreground: 220 25% 10%;
   --card: 0 0% 100%;
+  --card-foreground: 220 25% 10%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 25% 10%;
+  --primary: 152 58% 42%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 14% 92%;
+  --secondary-foreground: 220 25% 10%;
+  --muted: 220 14% 95%;
+  --muted-foreground: 220 10% 46%;
+  --accent: 36 95% 55%;
+  --accent-foreground: 0 0% 100%;
   --border: 220 13% 91%;
+  --ring: 152 58% 42%;
   --shadow-card: 0 1px 2px hsl(220 25% 10% / 0.03);
   --shadow-glow: none;
 }
-html[data-experience-role="patient"][data-experience-mode="basic"] .dark {
+html[data-experience-role="patient"][data-experience-mode="basic"].dark {
+  --background: 222 30% 8%;
+  --foreground: 210 20% 95%;
   --card: 222 20% 12%;
+  --card-foreground: 210 20% 95%;
+  --popover: 222 25% 11%;
+  --popover-foreground: 210 20% 95%;
+  --primary: 152 58% 48%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 222 20% 16%;
+  --secondary-foreground: 210 20% 95%;
+  --muted: 222 20% 14%;
+  --muted-foreground: 215 15% 55%;
+  --accent: 36 95% 55%;
+  --accent-foreground: 0 0% 100%;
   --border: 222 15% 20%;
+  --ring: 152 58% 48%;
   --shadow-card: 0 1px 2px hsl(0 0% 0% / 0.1);
   --shadow-glow: none;
 }
 
-/* Patient Pro — slightly richer, soft accents */
+/* Patient Pro — slightly richer, soft accents — FULL RESET */
 html[data-experience-role="patient"][data-experience-mode="pro"] {
+  --background: 220 20% 97%;
+  --foreground: 220 25% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 25% 10%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 25% 10%;
+  --primary: 152 58% 42%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 14% 92%;
+  --secondary-foreground: 220 25% 10%;
+  --muted: 220 14% 95%;
+  --muted-foreground: 220 10% 46%;
+  --accent: 36 95% 55%;
+  --accent-foreground: 0 0% 100%;
+  --border: 220 13% 88%;
+  --ring: 152 58% 42%;
   --shadow-card: 0 1px 3px hsl(220 25% 10% / 0.05), 0 8px 20px hsl(220 25% 10% / 0.04);
+  --shadow-glow: none;
+}
+html[data-experience-role="patient"][data-experience-mode="pro"].dark {
+  --background: 222 30% 8%;
+  --foreground: 210 20% 95%;
+  --card: 222 25% 11%;
+  --card-foreground: 210 20% 95%;
+  --popover: 222 25% 11%;
+  --popover-foreground: 210 20% 95%;
+  --primary: 152 58% 48%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 222 20% 16%;
+  --secondary-foreground: 210 20% 95%;
+  --muted: 222 20% 14%;
+  --muted-foreground: 215 15% 55%;
+  --accent: 36 95% 55%;
+  --accent-foreground: 0 0% 100%;
+  --border: 222 20% 18%;
+  --ring: 152 58% 48%;
+  --shadow-card: 0 1px 3px hsl(0 0% 0% / 0.12), 0 8px 20px hsl(0 0% 0% / 0.08);
+  --shadow-glow: none;
 }
 
-/* Patient Advanced — premium feel, subtle glow */
+/* Patient Advanced — premium feel, subtle glow — FULL RESET */
 html[data-experience-role="patient"][data-experience-mode="advanced"] {
+  --background: 220 20% 97%;
+  --foreground: 220 25% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 25% 10%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 25% 10%;
+  --primary: 152 58% 42%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 14% 92%;
+  --secondary-foreground: 220 25% 10%;
+  --muted: 220 14% 95%;
+  --muted-foreground: 220 10% 46%;
+  --accent: 36 95% 55%;
+  --accent-foreground: 0 0% 100%;
+  --border: 220 13% 88%;
+  --ring: 152 58% 42%;
   --shadow-card: 0 1px 3px hsl(220 25% 10% / 0.06), 0 10px 30px hsl(152 58% 42% / 0.06);
   --shadow-glow: 0 0 16px hsl(152 58% 42% / 0.1);
+}
+html[data-experience-role="patient"][data-experience-mode="advanced"].dark {
+  --background: 222 30% 8%;
+  --foreground: 210 20% 95%;
+  --card: 222 25% 11%;
+  --card-foreground: 210 20% 95%;
+  --popover: 222 25% 11%;
+  --popover-foreground: 210 20% 95%;
+  --primary: 152 58% 48%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 222 20% 16%;
+  --secondary-foreground: 210 20% 95%;
+  --muted: 222 20% 14%;
+  --muted-foreground: 215 15% 55%;
+  --accent: 36 95% 55%;
+  --accent-foreground: 0 0% 100%;
+  --border: 222 20% 18%;
+  --ring: 152 58% 48%;
+  --shadow-card: 0 2px 4px hsl(0 0% 0% / 0.15), 0 10px 30px hsl(152 58% 48% / 0.08);
+  --shadow-glow: 0 0 16px hsl(152 58% 48% / 0.12);
 }
 
 /* ════════════════════════════════════════════
@@ -42,7 +143,7 @@ html[data-experience-role="professional"][data-experience-mode="basic"] {
   --shadow-glow: none;
   --shadow-card: 0 1px 2px hsl(220 10% 10% / 0.04);
 }
-html[data-experience-role="professional"][data-experience-mode="basic"] .dark {
+html[data-experience-role="professional"][data-experience-mode="basic"].dark {
   --primary: 220 15% 55%;
   --ring: 220 15% 55%;
   --sidebar-primary: 220 15% 55%;
@@ -57,7 +158,7 @@ html[data-experience-role="professional"][data-experience-mode="pro"] {
   --shadow-glow: 0 0 16px hsl(210 70% 50% / 0.12);
   --gradient-primary: linear-gradient(135deg, hsl(210, 70%, 50%), hsl(220, 65%, 55%));
 }
-html[data-experience-role="professional"][data-experience-mode="pro"] .dark {
+html[data-experience-role="professional"][data-experience-mode="pro"].dark {
   --primary: 210 70% 55%;
   --ring: 210 70% 55%;
   --sidebar-primary: 210 70% 55%;
@@ -73,7 +174,7 @@ html[data-experience-role="professional"][data-experience-mode="advanced"] {
   --shadow-card: 0 1px 4px hsl(0 0% 0% / 0.08), 0 12px 36px hsl(152 58% 42% / 0.08);
   --gradient-primary: linear-gradient(135deg, hsl(152, 58%, 42%), hsl(40, 65%, 55%));
 }
-html[data-experience-role="professional"][data-experience-mode="advanced"] .dark {
+html[data-experience-role="professional"][data-experience-mode="advanced"].dark {
   --background: 220 30% 6%;
   --card: 220 28% 9%;
   --sidebar-background: 220 30% 7%;
@@ -94,4 +195,9 @@ html[data-experience-role="professional"][data-experience-mode="advanced"].dark 
   z-index: 0;
   background: radial-gradient(ellipse at 20% 50%, hsl(152 58% 48% / 0.03), transparent 60%),
               radial-gradient(ellipse at 80% 20%, hsl(40 65% 55% / 0.02), transparent 50%);
+}
+
+/* Remove energy background when NOT in professional advanced dark */
+html:not([data-experience-role="professional"][data-experience-mode="advanced"].dark) body::before {
+  content: none;
 }
