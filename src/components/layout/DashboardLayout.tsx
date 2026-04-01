@@ -563,7 +563,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               </SheetTrigger>
               <SheetContent side="left" className="p-0 w-[min(280px,85vw)] flex flex-col">
                 <ErrorBoundary section="Layout:MobileSidebar" fallback={<SidebarFallback onLinkClick={() => setMobileOpen(false)} />}>
-                  <DynamicSidebar {...sidebarProps} collapsed={false} onLinkClick={() => setMobileOpen(false)} />
+                  <DynamicSidebar {...sidebarProps} collapsed={false} onLinkClick={() => {}} />
                 </ErrorBoundary>
               </SheetContent>
             </Sheet>
