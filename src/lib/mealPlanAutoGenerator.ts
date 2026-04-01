@@ -17,6 +17,7 @@ import {
   MEAL_LIMITS,
   BLOCKED_FOODS,
 } from "./mealPlanFoodRules";
+import { isExplicitlyBanned } from "./validatedFoodDatabase";
 
 // ── Types ────────────────────────────────────────────────────
 export interface MealLibraryItem {
