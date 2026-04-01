@@ -170,7 +170,130 @@ const SUBSTITUTION_GROUPS: Record<string, string[]> = {
 // ═══════════════════════════════════════════════════════════════
 
 function normalize(t: string): string {
-  return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s]/g, "").trim().replace(/\s+/g, " ");
+}
+
+// ── Visual Resolution Engine (server-side) ──
+const VISUAL_CARB_KEYWORDS = new Set([
+  "arroz", "batata", "macarrao", "feijao", "pure", "mandioca", "inhame",
+  "legumes", "salada", "brocolis", "macaxeira", "farinha", "farofa",
+]);
+
+const VISUAL_GENERIC_TITLES = new Set([
+  "almoco", "jantar", "cafe da manha", "lanche",
+  "lanche da manha", "lanche da tarde", "ceia",
+  "refeicao", "marmita", "almoco reforcado", "cafe da manha reforcado",
+  "lanche reforcado",
+]);
+
+function resolveVisualFromDescription(
+  title: string,
+  description: string,
+  aliasMap: Map<string, string>,
+): string | null {
+  const normTitle = normalize(title);
+
+  // Skip generic titles — go straight to description
+  if (!VISUAL_GENERIC_TITLES.has(normTitle)) {
+    // Try exact title match first
+    if (aliasMap.has(normTitle)) return aliasMap.get(normTitle)!;
+
+    // Try longest sub-phrase in title
+    const titleMatch = findBestVisualAlias(normTitle, aliasMap);
+    if (titleMatch) return titleMatch;
+  }
+
+  // Extract from description (bullet points)
+  const lines = description.split('\n');
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.includes('Substituiç') || trimmed.includes('🔄')) break;
+    if (!trimmed.startsWith('•') && !trimmed.startsWith('-')) continue;
+
+    const normLine = normalize(trimmed);
+    const phraseMatch = findBestVisualAlias(normLine, aliasMap);
+    if (phraseMatch) return phraseMatch;
+  }
+
+  // Single keyword from description (protein priority)
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.includes('Substituiç') || trimmed.includes('🔄')) break;
+    if (!trimmed.startsWith('•') && !trimmed.startsWith('-')) continue;
+
+    const words = normalize(trimmed).split(/\s+/);
+    for (const word of words) {
+      if (VISUAL_CARB_KEYWORDS.has(word) || word.length < 3) continue;
+      if (aliasMap.has(word)) return aliasMap.get(word)!;
+    }
+  }
+
+  return null;
+}
+
+function findBestVisualAlias(text: string, aliasMap: Map<string, string>): string | null {
+  let bestAlias: string | null = null;
+  let bestLength = 0;
+
+  for (const [alias, itemId] of aliasMap) {
+    if (alias.length < 3) continue;
+    if (text === alias) return itemId;
+    if (alias.length > bestLength) {
+      const idx = text.indexOf(alias);
+      if (idx !== -1) {
+        const before = idx === 0 || text[idx - 1] === ' ';
+        const after = (idx + alias.length) >= text.length || text[idx + alias.length] === ' ';
+        if (before && after) {
+          bestAlias = alias;
+          bestLength = alias.length;
+        }
+      }
+    }
+  }
+
+  return bestAlias ? aliasMap.get(bestAlias)! : null;
+}
+
+async function loadVisualAliasMap(client: any): Promise<Map<string, string>> {
+  const { data } = await client
+    .from("meal_visual_aliases")
+    .select("library_item_id, normalized_alias");
+
+  const map = new Map<string, string>();
+  if (data) {
+    for (const row of data) {
+      if (!map.has(row.normalized_alias)) {
+        map.set(row.normalized_alias, row.library_item_id);
+      }
+    }
+  }
+  return map;
+}
+
+async function resolveVisualForItems(client: any, planId: string, items: any[]): Promise<number> {
+  const aliasMap = await loadVisualAliasMap(client);
+  let resolved = 0;
+
+  // Get inserted items with their IDs
+  const { data: insertedItems } = await client
+    .from("meal_plan_items")
+    .select("id, title, description")
+    .eq("meal_plan_id", planId);
+
+  if (!insertedItems) return 0;
+
+  for (const item of insertedItems) {
+    const visualId = resolveVisualFromDescription(item.title || "", item.description || "", aliasMap);
+    if (visualId) {
+      await client
+        .from("meal_plan_items")
+        .update({ visual_library_item_id: visualId })
+        .eq("id", item.id);
+      resolved++;
+    }
+  }
+
+  return resolved;
 }
 
 function isBlockedFood(name: string): boolean {
