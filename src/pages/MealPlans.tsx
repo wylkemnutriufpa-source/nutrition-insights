@@ -137,6 +137,8 @@ export default function MealPlans() {
         const newPlanId = genData.mealPlanId;
         if (newPlanId) {
           toast.success(`Plano gerado com ${genData.items_count || 0} itens!`);
+          // Auto-resolve visuals for newly generated items
+          runPostGenVisualMatch(newPlanId).catch(() => {});
           navigate(`/meal-plans/${newPlanId}`, { replace: true });
         }
       } catch (err: any) {
