@@ -488,27 +488,115 @@ export async function autoFixMealPlan(
     }
   }
 
-  // ─── STEP 7: Rebalance macros ──────────────────────────
+  // ─── STEP 7: Rebalance macros against PATIENT CLINICAL TARGETS ──
   onStep?.("rebalancing_macros");
   let macroRebalanced = false;
-  const afterCal = sumMacro(finalItems, "calories_target");
-  if (beforeCal > 0 && Math.abs(afterCal - beforeCal) / beforeCal > 0.10) {
-    const factor = beforeCal / (afterCal || 1);
-    for (const item of finalItems) {
-      if (item.calories_target) item.calories_target = Math.round(item.calories_target * factor);
-      if (item.protein_target) item.protein_target = Math.round(item.protein_target * factor);
-      if (item.carbs_target) item.carbs_target = Math.round(item.carbs_target * factor);
-      if (item.fat_target) item.fat_target = Math.round(item.fat_target * factor);
+
+  // Load patient clinical targets (same source as the validator)
+  const TOLERANCE = { calories: 0.05, protein: 0.05, carbs: 0.10, fat: 0.10 };
+  let targetCals = 0, targetProt = 0, targetCarbs = 0, targetFat = 0;
+  let targetSource = "none";
+
+  try {
+    const { data: assessment } = await supabase
+      .from("physical_assessments")
+      .select("calories_target, protein_target, carbs_target, fat_target")
+      .eq("patient_id", patientId)
+      .order("assessment_date", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (assessment?.calories_target) {
+      targetCals = assessment.calories_target;
+      targetProt = assessment.protein_target || 0;
+      targetCarbs = assessment.carbs_target || 0;
+      targetFat = assessment.fat_target || 0;
+      targetSource = "physical_assessment";
+    } else {
+      const { data: anamnesis } = await supabase
+        .from("patient_anamnesis")
+        .select("computed_kcal_target, computed_protein, computed_carbs, computed_fat")
+        .eq("user_id", patientId)
+        .eq("status", "completed")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (anamnesis?.computed_kcal_target) {
+        targetCals = anamnesis.computed_kcal_target;
+        targetProt = anamnesis.computed_protein || 0;
+        targetCarbs = anamnesis.computed_carbs || 0;
+        targetFat = anamnesis.computed_fat || 0;
+        targetSource = "anamnesis";
+      }
     }
-    macroRebalanced = true;
-    allChanges.push({
-      type: "macro_rebalanced",
-      mealType: "all",
-      dayOfWeek: -1,
-      from: `${afterCal} kcal`,
-      to: `${sumMacro(finalItems, "calories_target")} kcal`,
-      detail: `Fator de correção: ${factor.toFixed(2)}`,
-    });
+  } catch { /* fallback: no targets available */ }
+
+  // Calculate current daily averages (same as validator)
+  const days = new Set(finalItems.map(i => i.day_of_week ?? 0));
+  const numDays = days.size || 1;
+  const dailyCals = sumMacro(finalItems, "calories_target") / numDays;
+  const dailyProt = sumMacro(finalItems, "protein_target") / numDays;
+  const dailyCarbs = sumMacro(finalItems, "carbs_target") / numDays;
+  const dailyFat = sumMacro(finalItems, "fat_target") / numDays;
+
+  if (targetCals > 0) {
+    // Check each macro against clinical target and scale if outside tolerance
+    const macroChecks = [
+      { key: "calories_target" as const, daily: dailyCals, target: targetCals, tol: TOLERANCE.calories, label: "Calorias" },
+      { key: "protein_target" as const, daily: dailyProt, target: targetProt, tol: TOLERANCE.protein, label: "Proteína" },
+      { key: "carbs_target" as const, daily: dailyCarbs, target: targetCarbs, tol: TOLERANCE.carbs, label: "Carboidrato" },
+      { key: "fat_target" as const, daily: dailyFat, target: targetFat, tol: TOLERANCE.fat, label: "Gordura" },
+    ];
+
+    for (const mc of macroChecks) {
+      if (!mc.target || mc.target === 0) continue;
+      const diffPct = (mc.daily - mc.target) / mc.target;
+      if (Math.abs(diffPct) > mc.tol) {
+        // Scale this macro across all items to hit the target
+        const totalMacro = sumMacro(finalItems, mc.key);
+        const desiredTotal = mc.target * numDays;
+        if (totalMacro > 0) {
+          const factor = desiredTotal / totalMacro;
+          for (const item of finalItems) {
+            if (item[mc.key]) {
+              item[mc.key] = Math.round(item[mc.key]! * factor);
+            }
+          }
+          macroRebalanced = true;
+          allChanges.push({
+            type: "macro_rebalanced",
+            mealType: "all",
+            dayOfWeek: -1,
+            from: `${mc.label}: ${Math.round(mc.daily)}/${mc.target} (${diffPct > 0 ? "+" : ""}${Math.round(diffPct * 100)}%)`,
+            to: `${mc.label}: ${mc.target}/${mc.target} (0%)`,
+            detail: `Rebalanceado contra meta clínica do paciente (fonte: ${targetSource})`,
+          });
+        }
+      }
+    }
+  } else {
+    // Fallback: no clinical target — preserve original plan totals
+    const afterCal = sumMacro(finalItems, "calories_target");
+    if (beforeCal > 0 && Math.abs(afterCal - beforeCal) / beforeCal > 0.10) {
+      const factor = beforeCal / (afterCal || 1);
+      for (const item of finalItems) {
+        if (item.calories_target) item.calories_target = Math.round(item.calories_target * factor);
+        if (item.protein_target) item.protein_target = Math.round(item.protein_target * factor);
+        if (item.carbs_target) item.carbs_target = Math.round(item.carbs_target * factor);
+        if (item.fat_target) item.fat_target = Math.round(item.fat_target * factor);
+      }
+      macroRebalanced = true;
+      allChanges.push({
+        type: "macro_rebalanced",
+        mealType: "all",
+        dayOfWeek: -1,
+        from: `${afterCal} kcal`,
+        to: `${sumMacro(finalItems, "calories_target")} kcal`,
+        detail: `Fator de correção proporcional (sem meta clínica disponível)`,
+      });
+    }
+    warnings.push("Sem meta clínica do paciente — rebalanceamento proporcional ao plano original");
   }
 
   // ─── STEP 8: Calculate AFTER scores ────────────────────
