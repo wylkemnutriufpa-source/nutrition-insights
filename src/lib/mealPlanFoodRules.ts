@@ -208,7 +208,7 @@ export const GANHO_MASSA_STRUCTURES: RealisticMealStructure[] = [
 // ── Opções realistas de café da manhã (exemplos concretos) ──
 export const BREAKFAST_OPTIONS_EMAG = [
   { name: "Pão integral com ovo mexido", foods: ["1 fatia de pão integral", "1 ovo mexido"], kcal: 230, protein: 12, carbs: 22, fat: 10 },
-  { name: "Tapioca com ovo e queijo", foods: ["1 tapioca média", "1 ovo", "1 fatia queijo minas"], kcal: 280, protein: 15, carbs: 30, fat: 11 },
+  { name: "Tapioca com ovo e queijo", foods: ["1 tapioca média", "1 ovo", "1 fatia queijo coalho"], kcal: 280, protein: 15, carbs: 30, fat: 11 },
   { name: "Cuscuz com ovo cozido", foods: ["1 fatia de cuscuz", "1 ovo cozido"], kcal: 240, protein: 11, carbs: 32, fat: 8 },
   { name: "Pão com queijo e café", foods: ["1 pão francês", "1 fatia queijo muçarela", "café s/ açúcar"], kcal: 250, protein: 10, carbs: 28, fat: 10 },
   { name: "Aveia com banana", foods: ["3 col. sopa de aveia", "1 banana"], kcal: 220, protein: 6, carbs: 40, fat: 4 },
