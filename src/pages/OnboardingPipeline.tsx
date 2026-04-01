@@ -327,7 +327,7 @@ export default function OnboardingPipeline() {
     );
   }
 
-  if (currentStep >= 5) {
+  if (currentStep >= 6) {
     return (
       <DashboardLayout>
         <div className="max-w-2xl mx-auto py-12 text-center space-y-4">
