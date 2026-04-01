@@ -80,7 +80,7 @@ export const ALLOWED_FRUITS = [
 export const ALLOWED_DAIRY = [
   "leite", "leite integral", "leite desnatado",
   "iogurte natural", "iogurte desnatado",
-  "queijo minas", "queijo coalho", "queijo muçarela",
+  "queijo coalho", "queijo muçarela",
   "requeijão", "requeijão light",
   "manteiga",
 ];
