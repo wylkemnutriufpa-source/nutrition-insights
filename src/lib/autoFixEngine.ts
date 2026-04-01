@@ -24,6 +24,7 @@ import {
 import { BLOCKED_FOODS } from "./mealPlanFoodRules";
 import { loadPersonalizationContext, personalizePlanItems, type PersonalizationChange } from "./planPersonalizationEngine";
 import { isItemProtected } from "./planPipelineOrchestrator";
+import { isExplicitlyBanned } from "./validatedFoodDatabase";
 
 type MealPlanItem = Tables<"meal_plan_items">;
 
