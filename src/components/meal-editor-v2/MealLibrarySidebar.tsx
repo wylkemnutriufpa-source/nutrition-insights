@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Search, Coffee, Apple, Utensils, Cookie, Moon, Sun,
   Flame, Beef, Loader2, Plus, BookOpen, User, Zap,
-  Library, FileDown, Wheat, Droplets,
+  Library, FileDown, Wheat, Droplets, Check, AlertTriangle, ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 
