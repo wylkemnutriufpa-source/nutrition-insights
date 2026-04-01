@@ -56,6 +56,7 @@ export default function ExerciseVideoLibrary({ draggable = false, onDragStart }:
   const [uploadDescription, setUploadDescription] = useState("");
   const [uploadTags, setUploadTags] = useState("");
   const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadDuration, setUploadDuration] = useState<number | null>(null);
 
   const loadVideos = async () => {
     if (!user) return;
