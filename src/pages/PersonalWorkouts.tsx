@@ -428,6 +428,9 @@ export default function PersonalWorkouts() {
           <TabsContent value="preplan" className="mt-4">
             <PrePlanTab students={students} prePlanStudent={prePlanStudent} setPrePlanStudent={setPrePlanStudent} handleUseTemplate={handleUseTemplate} />
           </TabsContent>
+          <TabsContent value="videos" className="mt-4">
+            <ExerciseVideoLibrary draggable />
+          </TabsContent>
         </Tabs>
 
         {anamnesisStudent && (
