@@ -346,11 +346,11 @@ function calculateTDEE(tmb: number, activityLevel: string): number {
   return Math.round(tmb * multiplier);
 }
 
-function calculateTargetKcal(tdee: number, goal: string): number {
+function calculateTargetKcal(tdee: number, goal: string, sex: string = "male"): number {
   const adjustment = GOAL_KCAL_ADJUSTMENT[goal] || 0;
   const raw = tdee + adjustment;
-  // Pisos clínicos
-  const minKcal = 1200; // piso absoluto
+  // Pisos clínicos da Constituição: 1200 feminino, 1500 masculino
+  const minKcal = sex === "female" ? 1200 : 1500;
   return Math.max(minKcal, Math.min(3500, raw));
 }
 
