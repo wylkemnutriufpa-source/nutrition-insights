@@ -272,7 +272,6 @@ async function loadVisualAliasMap(client: any): Promise<Map<string, string>> {
 
 async function resolveVisualForItems(client: any, planId: string, items: any[]): Promise<number> {
   const aliasMap = await loadVisualAliasMap(client);
-  let resolved = 0;
 
   // Get inserted items with their IDs
   const { data: insertedItems } = await client
@@ -280,20 +279,38 @@ async function resolveVisualForItems(client: any, planId: string, items: any[]):
     .select("id, title, description")
     .eq("meal_plan_id", planId);
 
-  if (!insertedItems) return 0;
+  if (!insertedItems || insertedItems.length === 0) return 0;
 
+  // Batch: resolve all visuals first, then update in bulk groups
+  const updates: { id: string; visual_library_item_id: string }[] = [];
   for (const item of insertedItems) {
     const visualId = resolveVisualFromDescription(item.title || "", item.description || "", aliasMap);
     if (visualId) {
-      await client
-        .from("meal_plan_items")
-        .update({ visual_library_item_id: visualId })
-        .eq("id", item.id);
-      resolved++;
+      updates.push({ id: item.id, visual_library_item_id: visualId });
     }
   }
 
-  return resolved;
+  if (updates.length === 0) return 0;
+
+  // Group by visual_library_item_id to batch updates
+  const groupedByVisual = new Map<string, string[]>();
+  for (const u of updates) {
+    if (!groupedByVisual.has(u.visual_library_item_id)) {
+      groupedByVisual.set(u.visual_library_item_id, []);
+    }
+    groupedByVisual.get(u.visual_library_item_id)!.push(u.id);
+  }
+
+  // Execute batched updates (1 query per unique visual instead of 1 per item)
+  const updatePromises = Array.from(groupedByVisual.entries()).map(([visualId, ids]) =>
+    client
+      .from("meal_plan_items")
+      .update({ visual_library_item_id: visualId })
+      .in("id", ids)
+  );
+  await Promise.all(updatePromises);
+
+  return updates.length;
 }
 
 function isBlockedFood(name: string): boolean {
