@@ -116,6 +116,85 @@ const CATEGORY_LABELS: Record<string, string> = {
   clinico_especifico: "Clínico Específico",
 };
 
+const TemplateCard = memo(({ template, getAdjustedCalories, anamnesis, physicalAssessment, CATEGORY_COLORS, CATEGORY_LABELS, onPreview, isLegacy }: {
+  template: DietTemplate;
+  getAdjustedCalories: (t: DietTemplate) => number;
+  anamnesis: AnamnesisData | null;
+  physicalAssessment: PhysicalAssessmentData | null;
+  CATEGORY_COLORS: Record<string, string>;
+  CATEGORY_LABELS: Record<string, string>;
+  onPreview: (t: DietTemplate) => void;
+  isLegacy?: boolean;
+}) => {
+  const adjustedCal = getAdjustedCalories(template);
+  const isAdjusted = (anamnesis || physicalAssessment) && adjustedCal !== template.base_calories;
+
+  return (
+    <motion.div
+      whileHover={{ y: -3 }}
+      className="glass rounded-xl p-5 shadow-card cursor-pointer group relative"
+      onClick={() => onPreview(template)}
+    >
+      {isLegacy && (
+        <Badge variant="outline" className="absolute top-2 right-2 text-[9px] text-muted-foreground">
+          Legado
+        </Badge>
+      )}
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-3xl">{template.icon}</span>
+          <div>
+            <h3 className="font-display font-semibold group-hover:text-primary transition-colors">
+              {template.name}
+            </h3>
+            <Badge variant="outline" className={`text-[10px] mt-1 ${CATEGORY_COLORS[template.goal_category || template.category] || ""}`}>
+              {CATEGORY_LABELS[template.goal_category || template.category] || template.goal_category || template.category}
+            </Badge>
+            {template.diet_style && (
+              <Badge variant="outline" className="text-[10px] mt-1 ml-1">
+                {template.diet_style.replace(/_/g, " ")}
+              </Badge>
+            )}
+          </div>
+        </div>
+        <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+      </div>
+
+      <p className="text-xs text-muted-foreground mt-3 line-clamp-2">{template.description}</p>
+
+      <div className="flex items-center gap-3 mt-3 text-xs">
+        <span className="flex items-center gap-1 text-orange-400">
+          <Flame className="w-3 h-3" />
+          {isAdjusted ? (
+            <span>
+              <s className="text-muted-foreground">{template.base_calories}</s> → <span className="font-bold text-primary">{adjustedCal}</span> kcal
+            </span>
+          ) : (
+            <span>{template.base_calories} kcal</span>
+          )}
+        </span>
+        <span className="flex items-center gap-1 text-red-400">
+          <Beef className="w-3 h-3" /> P{template.macro_ratio.protein}%
+        </span>
+        <span className="flex items-center gap-1 text-amber-400">
+          <Wheat className="w-3 h-3" /> C{template.macro_ratio.carbs}%
+        </span>
+        <span className="flex items-center gap-1 text-blue-400">
+          <Droplets className="w-3 h-3" /> G{template.macro_ratio.fat}%
+        </span>
+      </div>
+
+      <div className="flex flex-wrap gap-1 mt-3">
+        {(template.tags || []).slice(0, 4).map((tag) => (
+          <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+            {tag.replace(/_/g, " ")}
+          </span>
+        ))}
+      </div>
+    </motion.div>
+  );
+});
+
 export default function DietTemplates() {
   const { user } = useAuth();
   const { tenantId } = useTenant();
