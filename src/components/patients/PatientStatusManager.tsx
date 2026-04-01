@@ -74,7 +74,7 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
     }
     // ⚡ Optimistic UI — hide button + update status IMMEDIATELY
     setConfirmedPayments(prev => new Set(prev).add(patientId));
-    updatePatientJourneyInCache(queryClient, patientId, "awaiting_consent");
+    updatePatientJourneyInCache(queryClient, patientId, "onboarding_active");
     setProcessingId(patientId);
     try {
       const { data, error } = await supabase.rpc("confirm_patient_payment", { _patient_id: patientId, _nutritionist_id: user!.id });
