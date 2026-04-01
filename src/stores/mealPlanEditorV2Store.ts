@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
+import { autoMatchSingle } from "@/lib/mealVisualAssociation";
 
 // ── Types ────────────────────────────────────────────────────
 export type MealPlan = Tables<"meal_plans">;
@@ -101,6 +102,32 @@ function writeCache(planId: string, plan: MealPlan, patientName: string, items: 
 let tempCounter = 0;
 const tempId = () => `temp-${Date.now()}-${++tempCounter}`;
 
+// ── Silent visual resolution for new/unlinked items ─────────
+async function resolveVisualsForItems(items: MealPlanItem[]) {
+  const unlinked = items.filter((i) => !(i as any).visual_library_item_id && i.title);
+  if (unlinked.length === 0) return;
+
+  await Promise.allSettled(
+    unlinked.map(async (item) => {
+      try {
+        const visualId = await autoMatchSingle(item.title, item.description ?? undefined);
+        if (visualId) {
+          await supabase
+            .from("meal_plan_items")
+            .update({ visual_library_item_id: visualId } as any)
+            .eq("id", item.id);
+          // Update local state
+          useMealPlanEditorV2Store.setState((s) => ({
+            items: s.items.map((i) =>
+              i.id === item.id ? { ...i, visual_library_item_id: visualId } as any : i
+            ),
+          }));
+        }
+      } catch { /* best-effort, don't break flow */ }
+    })
+  );
+}
+
 // ── Store ────────────────────────────────────────────────────
 export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
   planId: null,
@@ -164,6 +191,9 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     });
 
     writeCache(planId, planData, patientName, items);
+
+    // Silently resolve missing visuals for items without images
+    resolveVisualsForItems(items);
   },
 
   reset: () => {
@@ -224,6 +254,9 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
             return idx >= 0 && rows[idx] ? rows[idx] : item;
           }),
         }));
+
+        // Auto-resolve visual images silently
+        resolveVisualsForItems(rows);
       },
       rollback: () => {
         set((s) => ({ items: s.items.filter((i) => !tIds.includes(i.id)) }));
