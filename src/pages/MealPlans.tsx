@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useExperienceUI } from "@/hooks/useExperienceUI";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { ClipboardList, Plus, Calendar, ToggleLeft, ToggleRight, PencilLine, Trash2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
 
 type MealPlan = Tables<"meal_plans">;
@@ -23,6 +23,7 @@ export default function MealPlans() {
   const { user } = useAuth();
   const { tenantId } = useTenant();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { showSimplifiedActions, showProtocols } = useExperienceUI();
   const [plans, setPlans] = useState<(MealPlan & { patient_name?: string })[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,6 +34,7 @@ export default function MealPlans() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [patients, setPatients] = useState<{ id: string; name: string }[]>([]);
+  const onboardingHandled = useRef(false);
 
   const fetchPlans = async () => {
     if (!user) return;
@@ -62,6 +64,76 @@ export default function MealPlans() {
       setPatients(pts);
     }
   };
+
+  // Handle source=onboarding: find existing plan from onboarding pipeline or generate
+  useEffect(() => {
+    if (!user?.id || onboardingHandled.current) return;
+    const source = searchParams.get("source");
+    const patientId = searchParams.get("patientId");
+    if (source !== "onboarding" || !patientId) return;
+
+    onboardingHandled.current = true;
+
+    const handleOnboardingSource = async () => {
+      try {
+        // Check if there's an existing pipeline with a generated plan
+        const { data: pipeline } = await supabase
+          .from("onboarding_pipelines" as any)
+          .select("generated_plan_id, plan_generated")
+          .eq("patient_id", patientId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (pipeline?.generated_plan_id && pipeline?.plan_generated) {
+          // Plan already generated from onboarding — go directly to editor
+          navigate(`/meal-plans/${pipeline.generated_plan_id}`, { replace: true });
+          return;
+        }
+
+        // Check if patient has any existing draft/active plan
+        const { data: existingPlan } = await supabase
+          .from("meal_plans")
+          .select("id")
+          .eq("patient_id", patientId)
+          .eq("nutritionist_id", user.id)
+          .in("plan_status", ["draft", "in_review", "approved"])
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (existingPlan?.id) {
+          navigate(`/meal-plans/${existingPlan.id}`, { replace: true });
+          return;
+        }
+
+        // No plan exists — generate from onboarding
+        toast.info("Gerando plano a partir do onboarding...");
+        const { data: genData, error: genError } = await supabase.functions.invoke("generate-meal-plan", {
+          body: {
+            patientId,
+            nutritionistId: user.id,
+            isPipeline: true,
+          },
+        });
+
+        if (genError || !genData?.success) {
+          toast.error("Erro ao gerar plano: " + (genError?.message || genData?.error || "Tente novamente"));
+          return;
+        }
+
+        const newPlanId = genData.mealPlanId;
+        if (newPlanId) {
+          toast.success(`Plano gerado com ${genData.items_count || 0} itens!`);
+          navigate(`/meal-plans/${newPlanId}`, { replace: true });
+        }
+      } catch (err: any) {
+        toast.error("Erro ao processar onboarding: " + (err.message || "Tente novamente"));
+      }
+    };
+
+    handleOnboardingSource();
+  }, [user?.id, searchParams, navigate]);
 
   useEffect(() => { fetchPlans(); fetchPatients(); }, [user]);
 
