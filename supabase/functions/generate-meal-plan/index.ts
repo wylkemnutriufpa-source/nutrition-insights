@@ -592,21 +592,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader || "" } } }
-    );
-
-    const { data: { user: authUser }, error: authErr } = await supabase.auth.getUser();
-    if (authErr || !authUser) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const userId = authUser.id;
+    const caller = await requireUser(req);
+    const userId = caller.id;
 
     const rl = await checkRateLimit("generate-meal-plan", userId, 10, 10);
     if (!rl.allowed) return rateLimitResponse();
@@ -616,6 +603,7 @@ serve(async (req) => {
     const meal_plan_id = body.meal_plan_id;
     const isPipeline = body.isPipeline || false;
     const planCount = Math.min(Math.max(body.planCount || 1, 1), 3);
+    const requestedNutritionistId = body.nutritionistId || userId;
 
     if (!patient_id || typeof patient_id !== "string" || patient_id.length < 10) {
       return new Response(JSON.stringify({ error: "patient_id é obrigatório", code: "PATIENT_ID_MISSING" }), {
