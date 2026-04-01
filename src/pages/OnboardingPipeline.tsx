@@ -9,13 +9,17 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { usePatientPlanStatus } from "@/hooks/usePatientPlanStatus";
+import { useConsentGuard, TERMS_VERSION } from "@/hooks/useConsentGuard";
+import { logAudit } from "@/lib/auditLog";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ClipboardCheck, Scale, Camera, Clock, Utensils, Sparkles,
   CheckCircle2, ArrowRight, ArrowLeft, Loader2, AlertCircle,
-  ChefHat, Heart, Zap, ThumbsUp
+  ChefHat, Heart, Zap, ThumbsUp, Shield
 } from "lucide-react";
 
 interface Pipeline {
