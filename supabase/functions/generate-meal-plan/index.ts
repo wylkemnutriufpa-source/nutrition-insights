@@ -622,6 +622,15 @@ serve(async (req) => {
         });
       }
 
+      // GUARD: If no plans were successfully generated, return error
+      if (generatedPlans.length === 0) {
+        console.error("All plan options failed to generate items");
+        return new Response(
+          JSON.stringify({ success: false, error: "Nenhuma opção de plano foi gerada com sucesso. Tente novamente." }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       // Save tips
       const tips = generateTips(mergedAnswers);
       await serviceClient.from("patient_tips").delete().eq("user_id", patient_id);
