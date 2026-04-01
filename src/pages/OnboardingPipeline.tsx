@@ -408,13 +408,50 @@ export default function OnboardingPipeline() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
           >
-            {/* Step 0: Anamnesis */}
+            {/* Step 0: Consent (LGPD) */}
             {currentStep === 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-primary" />
+                    Etapa 1: Consentimento Clínico
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-muted-foreground">
+                    Antes de iniciar, precisamos do seu consentimento para o tratamento seguro dos seus dados de saúde conforme a LGPD.
+                  </p>
+                  <div className="bg-muted/30 border border-border/30 rounded-xl p-4 space-y-3 text-sm text-muted-foreground">
+                    <p>• Seus dados serão processados para gerar insights e recomendações personalizadas.</p>
+                    <p>• Todos os dados são criptografados e acessíveis apenas ao seu profissional.</p>
+                    <p>• Você pode visualizar, exportar ou solicitar exclusão a qualquer momento.</p>
+                    <p className="text-xs"><strong>Base Legal:</strong> Art. 7º e Art. 11 da LGPD (Lei nº 13.709/2018). Versão: {TERMS_VERSION}</p>
+                  </div>
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <Checkbox
+                      checked={consentAccepted}
+                      onCheckedChange={(v) => setConsentAccepted(v === true)}
+                      className="mt-0.5"
+                    />
+                    <span className="text-sm text-foreground leading-relaxed">
+                      Li e compreendi. <strong>Autorizo o tratamento dos meus dados clínicos</strong> para fins de acompanhamento nutricional personalizado.
+                    </span>
+                  </label>
+                  <Button onClick={handleAcceptConsent} className="w-full" size="lg" disabled={!consentAccepted || consentSubmitting}>
+                    {consentSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
+                    Aceitar e Continuar <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Step 1: Anamnesis */}
+            {currentStep === 1 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
                     <ClipboardCheck className="w-5 h-5 text-primary" />
-                    Etapa 1: Anamnese
+                    Etapa 2: Anamnese
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
