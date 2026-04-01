@@ -193,6 +193,7 @@ export default function MealPlans() {
           toast.error("Erro ao gerar: " + (genError?.message || genData?.error || "Tente novamente"));
         } else {
           toast.success(`Plano gerado com ${genData.items_count || 0} refeições!`);
+          runPostGenVisualMatch(genData.mealPlanId).catch(() => {});
           setOpen(false);
           navigate(`/meal-plans/${genData.mealPlanId}`);
         }
