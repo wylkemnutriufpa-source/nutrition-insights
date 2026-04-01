@@ -8,7 +8,7 @@
  * - RLS-scoped data access per role
  * - Admin gets full access but critical actions still need confirmation
  */
-import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
+const IFJSmartActions = lazy(() => import("./IFJSmartActions"));
 
 /* ─── Types ─── */
 type ActionType = "navigate" | "confirm" | "disambiguate";
@@ -462,6 +463,11 @@ export default function IFJCommandCenter({ role: roleProp }: IFJCommandCenterPro
                     </motion.button>
                   ))}
                 </div>
+
+                {/* Smart Actions — role-aware shortcuts */}
+                <Suspense fallback={null}>
+                  <IFJSmartActions role={detectedRole} />
+                </Suspense>
               </motion.div>
             )}
 
