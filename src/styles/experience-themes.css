@@ -190,19 +190,35 @@ html[data-experience-role="professional"][data-experience-mode="pro"].dark {
 /* ── Pro Advanced — premium gold + elaborate ── */
 html[data-experience-role="professional"][data-experience-mode="advanced"] {
   --primary: 38 75% 45%;
+  --primary-foreground: 0 0% 100%;
   --ring: 38 75% 45%;
   --accent: 32 85% 50%;
+  --accent-foreground: 0 0% 100%;
+  --sidebar-primary: 38 75% 45%;
+  --sidebar-primary-foreground: 0 0% 100%;
   --shadow-glow: 0 0 24px hsl(38 75% 45% / 0.15);
   --shadow-card: 0 1px 4px hsl(0 0% 0% / 0.08), 0 12px 36px hsl(38 75% 45% / 0.08);
   --gradient-primary: linear-gradient(135deg, hsl(38, 75%, 45%), hsl(32, 85%, 50%));
 }
 html[data-experience-role="professional"][data-experience-mode="advanced"].dark {
   --background: 30 20% 4%;
+  --foreground: 38 15% 92%;
   --card: 30 18% 7%;
+  --card-foreground: 38 15% 92%;
   --sidebar-background: 30 20% 5%;
+  --sidebar-foreground: 38 15% 92%;
+  --sidebar-primary: 38 75% 50%;
+  --sidebar-primary-foreground: 0 0% 100%;
   --border: 30 15% 13%;
   --primary: 38 75% 50%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 38 75% 50%;
   --accent: 32 85% 55%;
+  --accent-foreground: 0 0% 100%;
+  --muted: 30 15% 11%;
+  --muted-foreground: 38 10% 50%;
+  --secondary: 30 15% 13%;
+  --secondary-foreground: 38 15% 92%;
   --shadow-glow: 0 0 30px hsl(38 75% 50% / 0.2);
   --shadow-card: 0 2px 6px hsl(0 0% 0% / 0.3), 0 16px 40px hsl(38 75% 50% / 0.1);
   --gradient-primary: linear-gradient(135deg, hsl(38, 75%, 50%), hsl(32, 85%, 55%));
