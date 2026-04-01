@@ -265,6 +265,81 @@ function generatePlanFromTemplate(
   return items;
 }
 
+// ──── Visual Resolution Engine (server-side, same as generate-meal-plan) ────
+const VISUAL_CARB_KEYWORDS = new Set([
+  "arroz", "batata", "macarrao", "feijao", "pure", "mandioca", "inhame",
+  "legumes", "salada", "brocolis", "macaxeira", "farinha", "farofa",
+]);
+
+const VISUAL_GENERIC_TITLES = new Set([
+  "almoco", "jantar", "cafe da manha", "lanche",
+  "lanche da manha", "lanche da tarde", "ceia",
+  "refeicao", "marmita", "almoco reforcado", "cafe da manha reforcado",
+  "lanche reforcado",
+]);
+
+function normalize(t: string): string {
+  return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s]/g, "").trim().replace(/\s+/g, " ");
+}
+
+function findBestVisualAliasBB(text: string, aliasMap: Map<string, string>): string | null {
+  let bestAlias: string | null = null;
+  let bestLength = 0;
+  for (const [alias, itemId] of aliasMap) {
+    if (alias.length < 3) continue;
+    if (text === alias) return itemId;
+    if (alias.length > bestLength) {
+      const idx = text.indexOf(alias);
+      if (idx !== -1) {
+        const before = idx === 0 || text[idx - 1] === ' ';
+        const after = (idx + alias.length) >= text.length || text[idx + alias.length] === ' ';
+        if (before && after) { bestAlias = alias; bestLength = alias.length; }
+      }
+    }
+  }
+  return bestAlias ? aliasMap.get(bestAlias)! : null;
+}
+
+function resolveVisualFromDescriptionBB(title: string, description: string, aliasMap: Map<string, string>): string | null {
+  const normTitle = normalize(title);
+  if (!VISUAL_GENERIC_TITLES.has(normTitle)) {
+    if (aliasMap.has(normTitle)) return aliasMap.get(normTitle)!;
+    const titleMatch = findBestVisualAliasBB(normTitle, aliasMap);
+    if (titleMatch) return titleMatch;
+  }
+  const lines = description.split('\n');
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.includes('Substituiç') || trimmed.includes('🔄')) break;
+    if (!trimmed.startsWith('•') && !trimmed.startsWith('-')) continue;
+    const normLine = normalize(trimmed);
+    const phraseMatch = findBestVisualAliasBB(normLine, aliasMap);
+    if (phraseMatch) return phraseMatch;
+  }
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.includes('Substituiç') || trimmed.includes('🔄')) break;
+    if (!trimmed.startsWith('•') && !trimmed.startsWith('-')) continue;
+    const words = normalize(trimmed).split(/\s+/);
+    for (const word of words) {
+      if (VISUAL_CARB_KEYWORDS.has(word) || word.length < 3) continue;
+      if (aliasMap.has(word)) return aliasMap.get(word)!;
+    }
+  }
+  return null;
+}
+
+async function loadVisualAliasMap(client: any): Promise<Map<string, string>> {
+  const { data } = await client.from("meal_visual_aliases").select("library_item_id, normalized_alias");
+  const map = new Map<string, string>();
+  if (data) {
+    for (const row of data) {
+      if (!map.has(row.normalized_alias)) map.set(row.normalized_alias, row.library_item_id);
+    }
+  }
+  return map;
+}
+
 // ──── Main handler ────
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
