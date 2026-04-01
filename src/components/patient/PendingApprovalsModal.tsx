@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
