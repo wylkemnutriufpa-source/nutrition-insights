@@ -83,8 +83,8 @@ export default function CalorieTemplates({ mealPlanId, onApplied }: CalorieTempl
 
         return {
           meal_plan_id: mealPlanId,
-          title: `${meal.label} (~${mealKcal} kcal)`,
-          description: `Meta: ${mealProtein}g prot | ${mealCarbs}g carb | ${mealFat}g gord`,
+          title: meal.label,
+          description: `• ${meal.label}\n• Meta: ${mealKcal}kcal | ${mealProtein}g prot | ${mealCarbs}g carb | ${mealFat}g gord\n\n⚠️ Refeição modelo — preencha os alimentos reais`,
           meal_type: meal.type,
           day_of_week: day,
           calories_target: mealKcal,
