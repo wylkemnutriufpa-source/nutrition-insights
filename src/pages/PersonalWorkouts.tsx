@@ -350,6 +350,7 @@ export default function PersonalWorkouts() {
             <TabsTrigger value="templates" className="gap-1.5 text-xs"><Sparkles className="w-3.5 h-3.5" /> Templates</TabsTrigger>
             <TabsTrigger value="library" className="gap-1.5 text-xs"><BookOpen className="w-3.5 h-3.5" /> Biblioteca</TabsTrigger>
             <TabsTrigger value="anamnesis" className="gap-1.5 text-xs"><ClipboardList className="w-3.5 h-3.5" /> Anamnese</TabsTrigger>
+            <TabsTrigger value="videos" className="gap-1.5 text-xs"><Film className="w-3.5 h-3.5" /> Vídeos</TabsTrigger>
             <TabsTrigger value="preplan" className="gap-1.5 text-xs"><Sparkles className="w-3.5 h-3.5" /> Pré-Plano IA</TabsTrigger>
             <TabsTrigger value="ifj" className="gap-1.5 text-xs bg-gradient-to-r data-[state=active]:from-amber-500/20 data-[state=active]:to-yellow-500/10 data-[state=active]:text-amber-500"><Command className="w-3.5 h-3.5" /> Meu Painel IFJ</TabsTrigger>
           </TabsList>
