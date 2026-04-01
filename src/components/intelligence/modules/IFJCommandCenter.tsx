@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
+const IFJSmartActions = lazy(() => import("./IFJSmartActions"));
 
 /* ─── Types ─── */
 type ActionType = "navigate" | "confirm" | "disambiguate";
