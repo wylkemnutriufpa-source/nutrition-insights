@@ -914,7 +914,7 @@ serve(async (req) => {
     let finalMealPlanId = meal_plan_id;
 
     if (isPipeline && !meal_plan_id) {
-      const nutritionistId = body.nutritionistId;
+      const nutritionistId = requestedNutritionistId;
       const endDate = new Date();
       endDate.setDate(endDate.getDate() + 30);
 
