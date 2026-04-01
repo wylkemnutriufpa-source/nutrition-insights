@@ -574,18 +574,8 @@ export async function autoFixMealPlan(
               const newValue = Math.round(oldValue * factor);
               item[mc.key] = newValue;
 
-              // REGRA C: Correção macro REAL — atualizar a descrição com a porção real
-              if (mc.key !== "calories_target" && factor !== 1) {
-                const portionFactor = factor.toFixed(2);
-                const currentDesc = item.description || "";
-                // Append real portion change to description
-                const portionNote = `[${mc.label}: ${oldValue}→${newValue}g, ×${portionFactor}]`;
-                if (!currentDesc.includes(portionNote)) {
-                  item.description = currentDesc
-                    ? `${currentDesc} ${portionNote}`
-                    : portionNote;
-                }
-              }
+              // REGRA C: Macro correction is tracked in change log, NOT in description
+              // Annotations in descriptions break the validator's text matching
             }
           }
           macroRebalanced = true;
