@@ -38,9 +38,9 @@ beforeEach(() => {
 // FLOW 1: Payment Confirmation
 // ═══════════════════════════════════════════════════════════
 describe("E2E Flow: Payment Confirmation", () => {
-  it("confirm_patient_payment RPC transitions to awaiting_consent", async () => {
+  it("confirm_patient_payment RPC transitions to onboarding_active", async () => {
     mockRpc.mockResolvedValueOnce({
-      data: { success: true, new_status: "awaiting_consent" },
+      data: { success: true, new_status: "onboarding_active" },
       error: null,
     });
 

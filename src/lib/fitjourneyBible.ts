@@ -99,7 +99,6 @@ export function releaseActionLock(action: CriticalAction, entityId: string): voi
 export const JOURNEY_PROGRESSION = [
   "invited",
   "awaiting_payment",
-  "awaiting_consent",
   "onboarding_active",
   "onboarding_completed",
   "draft_ready_for_review",
