@@ -154,6 +154,9 @@ export default function PersonalPremiumDashboard({ onNavigate, studentsCount, pl
                   {action.id === "preplan" && (
                     <p className="text-[10px] text-muted-foreground">Baseado na anamnese</p>
                   )}
+                  {action.id === "videos" && (
+                    <p className="text-[10px] text-muted-foreground">Drag & drop</p>
+                  )}
                   {action.id === "library" && (
                     <p className="text-[10px] text-muted-foreground">Exercícios + vídeos</p>
                   )}
