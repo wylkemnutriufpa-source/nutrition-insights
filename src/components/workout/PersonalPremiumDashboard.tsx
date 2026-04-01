@@ -23,6 +23,7 @@ const QUICK_ACTIONS = [
   { id: "create", label: "Novo Plano", icon: Plus, color: "text-emerald-400", bg: "from-emerald-500/20 to-emerald-500/5" },
   { id: "templates", label: "Templates", icon: Sparkles, color: "text-pink-400", bg: "from-pink-500/20 to-pink-500/5" },
   { id: "preplan", label: "Pré-Plano IA", icon: Zap, color: "text-purple-400", bg: "from-purple-500/20 to-purple-500/5" },
+  { id: "videos", label: "Vídeos", icon: Film, color: "text-red-400", bg: "from-red-500/20 to-red-500/5" },
   { id: "library", label: "Biblioteca", icon: BookOpen, color: "text-lime-400", bg: "from-lime-500/20 to-lime-500/5" },
 ];
 
