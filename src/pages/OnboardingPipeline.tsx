@@ -116,13 +116,43 @@ export default function OnboardingPipeline() {
   }
 
   function getCurrentStep(): number {
+    // Step 0: Consent
+    if (!hasConsent && !consentLoading) return 0;
     if (!pipeline) return 0;
-    if (!pipeline.anamnesis_completed) return 0;
-    if (!pipeline.body_data_completed) return 1;
-    if (!pipeline.preferences_completed) return 2;
-    if (!pipeline.plan_generated) return 3;
-    if (!pipeline.plan_approved) return 4;
-    return 5;
+    if (!pipeline.anamnesis_completed) return 1;
+    if (!pipeline.body_data_completed) return 2;
+    if (!pipeline.preferences_completed) return 3;
+    if (!pipeline.plan_generated) return 4;
+    if (!pipeline.plan_approved) return 5;
+    return 6;
+  }
+
+  async function handleAcceptConsent() {
+    if (!consentAccepted || !user) return;
+    setConsentSubmitting(true);
+    try {
+      const deviceInfo = `${navigator.userAgent.slice(0, 200)}`;
+      const { error } = await (supabase as any)
+        .from("clinical_consents")
+        .insert({
+          patient_id: user.id,
+          accepted_terms_version: TERMS_VERSION,
+          device_info: deviceInfo,
+        });
+      if (error) throw error;
+
+      await supabase.rpc("accept_patient_consent" as any, { _patient_id: user.id });
+
+      logAudit("consent_accepted", "clinical_consents", user.id, { version: TERMS_VERSION });
+
+      await queryClient.invalidateQueries({ queryKey: ["clinical-consent"] });
+      toast.success("Consentimento registrado! Vamos continuar.");
+    } catch (err) {
+      console.error("Consent error:", err);
+      toast.error("Erro ao registrar consentimento. Tente novamente.");
+    } finally {
+      setConsentSubmitting(false);
+    }
   }
 
   async function handleGoToAnamnesis() {
