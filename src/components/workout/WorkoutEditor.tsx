@@ -457,7 +457,28 @@ export default function WorkoutEditor({ students, onSaved, onCancel }: WorkoutEd
                           </div>
                         )}
 
-                        <div className="grid grid-cols-12 gap-1 items-center py-1 px-1 hover:bg-muted/30 rounded-md group">
+                        <div
+                          className="grid grid-cols-12 gap-1 items-center py-1 px-1 hover:bg-muted/30 rounded-md group"
+                          onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("ring-2", "ring-primary/40", "bg-primary/5"); }}
+                          onDragLeave={(e) => { e.currentTarget.classList.remove("ring-2", "ring-primary/40", "bg-primary/5"); }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            e.currentTarget.classList.remove("ring-2", "ring-primary/40", "bg-primary/5");
+                            const videoData = e.dataTransfer.getData("application/exercise-video");
+                            if (videoData) {
+                              try {
+                                const video = JSON.parse(videoData);
+                                const u = [...routines];
+                                const ex = u[rIdx].exercises[eIdx];
+                                if (!ex.name.trim()) ex.name = video.title;
+                                ex.video_url = video.video_url;
+                                ex.muscle_group = video.muscle_group;
+                                setRoutines(u);
+                                toast.success(`Vídeo "${video.title}" vinculado ao exercício!`);
+                              } catch {}
+                            }
+                          }}
+                        >
                           {/* Drag handle */}
                           <div className="col-span-1 flex items-center gap-0.5">
                             <GripVertical className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 cursor-grab" />
