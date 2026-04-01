@@ -180,7 +180,7 @@ export default function PatientDetail() {
     }
     setConfirmingPayment(true);
     // ⚡ Optimistic UI
-    if (patientId) updatePatientJourneyInCache(queryClient, patientId, "awaiting_consent");
+    if (patientId) updatePatientJourneyInCache(queryClient, patientId, "onboarding_active");
     try {
       const { data, error } = await supabase.rpc("confirm_patient_payment", {
         _patient_id: patientId,

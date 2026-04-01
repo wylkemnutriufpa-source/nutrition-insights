@@ -9,13 +9,17 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { usePatientPlanStatus } from "@/hooks/usePatientPlanStatus";
+import { useConsentGuard, TERMS_VERSION } from "@/hooks/useConsentGuard";
+import { logAudit } from "@/lib/auditLog";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ClipboardCheck, Scale, Camera, Clock, Utensils, Sparkles,
   CheckCircle2, ArrowRight, ArrowLeft, Loader2, AlertCircle,
-  ChefHat, Heart, Zap, ThumbsUp
+  ChefHat, Heart, Zap, ThumbsUp, Shield
 } from "lucide-react";
 
 interface Pipeline {
@@ -39,6 +43,7 @@ interface Pipeline {
 }
 
 const STEPS = [
+  { id: "consent", label: "Consentimento", icon: Shield, description: "Aceite o consentimento clínico (LGPD)" },
   { id: "anamnesis", label: "Anamnese", icon: ClipboardCheck, description: "Preencha seu questionário de saúde" },
   { id: "body_data", label: "Dados Corporais", icon: Scale, description: "Peso, altura e fotos" },
   { id: "preferences", label: "Preferências", icon: Utensils, description: "Horários e alimentos favoritos" },
@@ -49,11 +54,15 @@ const STEPS = [
 export default function OnboardingPipeline() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const planStatus = usePatientPlanStatus();
+  const { hasConsent, loading: consentLoading } = useConsentGuard();
   const [pipeline, setPipeline] = useState<Pipeline | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [consentAccepted, setConsentAccepted] = useState(false);
+  const [consentSubmitting, setConsentSubmitting] = useState(false);
 
   // Body data form
   const [bodyForm, setBodyForm] = useState({ weight: "", height: "" });
@@ -107,13 +116,43 @@ export default function OnboardingPipeline() {
   }
 
   function getCurrentStep(): number {
+    // Step 0: Consent
+    if (!hasConsent && !consentLoading) return 0;
     if (!pipeline) return 0;
-    if (!pipeline.anamnesis_completed) return 0;
-    if (!pipeline.body_data_completed) return 1;
-    if (!pipeline.preferences_completed) return 2;
-    if (!pipeline.plan_generated) return 3;
-    if (!pipeline.plan_approved) return 4;
-    return 5;
+    if (!pipeline.anamnesis_completed) return 1;
+    if (!pipeline.body_data_completed) return 2;
+    if (!pipeline.preferences_completed) return 3;
+    if (!pipeline.plan_generated) return 4;
+    if (!pipeline.plan_approved) return 5;
+    return 6;
+  }
+
+  async function handleAcceptConsent() {
+    if (!consentAccepted || !user) return;
+    setConsentSubmitting(true);
+    try {
+      const deviceInfo = `${navigator.userAgent.slice(0, 200)}`;
+      const { error } = await (supabase as any)
+        .from("clinical_consents")
+        .insert({
+          patient_id: user.id,
+          accepted_terms_version: TERMS_VERSION,
+          device_info: deviceInfo,
+        });
+      if (error) throw error;
+
+      await supabase.rpc("accept_patient_consent" as any, { _patient_id: user.id });
+
+      logAudit("consent_accepted", "clinical_consents", user.id, { version: TERMS_VERSION });
+
+      await queryClient.invalidateQueries({ queryKey: ["clinical-consent"] });
+      toast.success("Consentimento registrado! Vamos continuar.");
+    } catch (err) {
+      console.error("Consent error:", err);
+      toast.error("Erro ao registrar consentimento. Tente novamente.");
+    } finally {
+      setConsentSubmitting(false);
+    }
   }
 
   async function handleGoToAnamnesis() {
@@ -245,7 +284,7 @@ export default function OnboardingPipeline() {
   }
 
   const currentStep = getCurrentStep();
-  const progress = (currentStep / 5) * 100;
+  const progress = (currentStep / 6) * 100;
 
   if (loading) {
     return (
@@ -288,7 +327,7 @@ export default function OnboardingPipeline() {
     );
   }
 
-  if (currentStep >= 5) {
+  if (currentStep >= 6) {
     return (
       <DashboardLayout>
         <div className="max-w-2xl mx-auto py-12 text-center space-y-4">
@@ -369,13 +408,50 @@ export default function OnboardingPipeline() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
           >
-            {/* Step 0: Anamnesis */}
+            {/* Step 0: Consent (LGPD) */}
             {currentStep === 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-primary" />
+                    Etapa 1: Consentimento Clínico
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-muted-foreground">
+                    Antes de iniciar, precisamos do seu consentimento para o tratamento seguro dos seus dados de saúde conforme a LGPD.
+                  </p>
+                  <div className="bg-muted/30 border border-border/30 rounded-xl p-4 space-y-3 text-sm text-muted-foreground">
+                    <p>• Seus dados serão processados para gerar insights e recomendações personalizadas.</p>
+                    <p>• Todos os dados são criptografados e acessíveis apenas ao seu profissional.</p>
+                    <p>• Você pode visualizar, exportar ou solicitar exclusão a qualquer momento.</p>
+                    <p className="text-xs"><strong>Base Legal:</strong> Art. 7º e Art. 11 da LGPD (Lei nº 13.709/2018). Versão: {TERMS_VERSION}</p>
+                  </div>
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <Checkbox
+                      checked={consentAccepted}
+                      onCheckedChange={(v) => setConsentAccepted(v === true)}
+                      className="mt-0.5"
+                    />
+                    <span className="text-sm text-foreground leading-relaxed">
+                      Li e compreendi. <strong>Autorizo o tratamento dos meus dados clínicos</strong> para fins de acompanhamento nutricional personalizado.
+                    </span>
+                  </label>
+                  <Button onClick={handleAcceptConsent} className="w-full" size="lg" disabled={!consentAccepted || consentSubmitting}>
+                    {consentSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
+                    Aceitar e Continuar <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Step 1: Anamnesis */}
+            {currentStep === 1 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
                     <ClipboardCheck className="w-5 h-5 text-primary" />
-                    Etapa 1: Anamnese
+                    Etapa 2: Anamnese
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -402,13 +478,13 @@ export default function OnboardingPipeline() {
               </Card>
             )}
 
-            {/* Step 1: Body Data */}
-            {currentStep === 1 && (
+            {/* Step 2: Body Data */}
+            {currentStep === 2 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Scale className="w-5 h-5 text-primary" />
-                    Etapa 2: Dados Corporais
+                    Etapa 3: Dados Corporais
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -443,13 +519,13 @@ export default function OnboardingPipeline() {
               </Card>
             )}
 
-            {/* Step 2: Preferences */}
-            {currentStep === 2 && (
+            {/* Step 3: Preferences */}
+            {currentStep === 3 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Utensils className="w-5 h-5 text-primary" />
-                    Etapa 3: Preferências Alimentares
+                    Etapa 4: Preferências Alimentares
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -514,13 +590,13 @@ export default function OnboardingPipeline() {
               </Card>
             )}
 
-            {/* Step 3: Plan Generation */}
-            {currentStep === 3 && (
+            {/* Step 4: Plan Generation */}
+            {currentStep === 4 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-primary" />
-                    Etapa 4: Geração do Pré-Plano
+                    Etapa 5: Geração do Pré-Plano
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -550,13 +626,13 @@ export default function OnboardingPipeline() {
               </Card>
             )}
 
-            {/* Step 4: Waiting Approval */}
-            {currentStep === 4 && (
+            {/* Step 5: Waiting Approval */}
+            {currentStep === 5 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <ThumbsUp className="w-5 h-5 text-primary" />
-                    Etapa 5: Aguardando Aprovação
+                    Etapa 6: Aguardando Aprovação
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 text-center">
