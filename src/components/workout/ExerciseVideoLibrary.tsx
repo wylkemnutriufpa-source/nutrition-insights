@@ -414,6 +414,11 @@ export default function ExerciseVideoLibrary({ draggable = false, onDragStart }:
                 value={uploadTitle}
                 onChange={(e) => setUploadTitle(e.target.value)}
               />
+              {uploadTitle && (
+                <p className="text-[10px] text-emerald-500 mt-1 flex items-center gap-1">
+                  <Check className="w-3 h-3" /> {uploadDuration ? `Detectado: ${uploadDuration}s de duração` : "Nome preenchido automaticamente"}
+                </p>
+              )}
             </div>
 
             <div>
