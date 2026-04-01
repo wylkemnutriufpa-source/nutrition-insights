@@ -117,6 +117,7 @@ export default function ExerciseVideoLibrary({ draggable = false, onDragStart }:
           description: uploadDescription || null,
           tags,
           is_public: false,
+          duration_seconds: uploadDuration,
         });
 
       if (insertError) throw insertError;
