@@ -153,17 +153,40 @@ export default function MealPlans() {
     e.preventDefault();
     if (!user || !form.patient_id) return;
     setSubmitting(true);
-    const { error } = await supabase.from("meal_plans").insert({
-      nutritionist_id: user.id, patient_id: form.patient_id,
-      title: form.title, description: form.description || null, start_date: form.start_date,
-      ...getTenantIdForInsert(tenantId),
-    } as any);
-    if (error) { toast.error("Erro: " + error.message); }
-    else {
-      toast.success("Plano criado!");
-      setOpen(false);
+    try {
+      if (form.autoGenerate) {
+        // Use the generate-meal-plan edge function
+        toast.info("Gerando plano automaticamente...");
+        const { data: genData, error: genError } = await supabase.functions.invoke("generate-meal-plan", {
+          body: {
+            patientId: form.patient_id,
+            nutritionistId: user.id,
+            isPipeline: false,
+          },
+        });
+        if (genError || !genData?.success) {
+          toast.error("Erro ao gerar: " + (genError?.message || genData?.error || "Tente novamente"));
+        } else {
+          toast.success(`Plano gerado com ${genData.items_count || 0} refeições!`);
+          setOpen(false);
+          navigate(`/meal-plans/${genData.mealPlanId}`);
+        }
+      } else {
+        const { error } = await supabase.from("meal_plans").insert({
+          nutritionist_id: user.id, patient_id: form.patient_id,
+          title: form.title || "Plano Alimentar", description: form.description || null, start_date: form.start_date,
+          ...getTenantIdForInsert(tenantId),
+        } as any);
+        if (error) { toast.error("Erro: " + error.message); }
+        else {
+          toast.success("Plano criado!");
+          setOpen(false);
+          fetchPlans();
+        }
+      }
       setForm({ title: "", description: "", patient_id: "", start_date: new Date().toISOString().split("T")[0], autoGenerate: true });
-      fetchPlans();
+    } catch (err: any) {
+      toast.error("Erro: " + (err.message || "Tente novamente"));
     }
     setSubmitting(false);
   };
