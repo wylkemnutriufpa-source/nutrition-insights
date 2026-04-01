@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck, Shield, Activity, LayoutDashboard, Dumbbell, Lock } from "lucide-react";
+import { LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck, Shield, Activity, LayoutDashboard, Dumbbell, Lock, Rocket } from "lucide-react";
 import { Search } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { openCommandPalette } from "@/components/common/CommandPalette";
@@ -379,7 +379,21 @@ function DynamicSidebar({
       )}
 
       {!effectiveProRole && (
-        <div className="px-3 mb-1">
+        <div className="px-3 mb-1 space-y-1">
+          <Link
+            to="/onboarding"
+            onClick={onLinkClick}
+            className={`flex items-center gap-2 w-full rounded-xl border border-primary/30 bg-primary/10 hover:bg-primary/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
+          >
+            <div className="relative flex-shrink-0">
+              <Rocket className="w-4 h-4 text-primary relative z-10" />
+            </div>
+            {!collapsed && (
+              <span className="text-xs font-semibold text-primary truncate group-hover:text-primary/80 transition-colors">
+                Onboarding
+              </span>
+            )}
+          </Link>
           <Link
             to="/patient-overview"
             onClick={onLinkClick}
