@@ -238,13 +238,13 @@ Deno.serve(async (req) => {
         if (patients) {
           for (const p of patients) {
             try {
-              await supabase.from("nutritionist_patients").update({ journey_status: "awaiting_consent" }).eq("id", p.id);
+              await supabase.from("nutritionist_patients").update({ journey_status: "onboarding_active" }).eq("id", p.id);
               successCount++;
             } catch { errorCount++; }
           }
           affectedCount = patients.length;
         }
-        summary = `${successCount} pacientes liberados para consentimento`;
+        summary = `${successCount} pacientes liberados para onboarding`;
         break;
       }
 

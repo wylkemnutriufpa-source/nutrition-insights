@@ -28,7 +28,6 @@ interface QueuePatient {
 
 const QUEUE_TABS = [
   { value: "awaiting_payment", label: "Aguardando Pgto", icon: CreditCard, color: "text-warning" },
-  { value: "awaiting_consent", label: "Aguardando Consent.", icon: Clock, color: "text-orange-500" },
   { value: "onboarding_active", label: "Onboarding Ativo", icon: Play, color: "text-primary" },
   { value: "draft_ready_for_review", label: "Aguardando Revisão", icon: CheckCircle2, color: "text-blue-500" },
   { value: "lead_created", label: "Leads", icon: UserCheck, color: "text-muted-foreground" },
@@ -53,7 +52,7 @@ export default function PatientQueueTabs() {
 
   const fetchCounts = async () => {
     if (!user) return;
-    const statuses = ["awaiting_payment", "awaiting_consent", "onboarding_active", "draft_ready_for_review", "lead_created"];
+    const statuses = ["awaiting_payment", "onboarding_active", "draft_ready_for_review", "lead_created"];
     const results: Record<string, number> = {};
     await Promise.all(
       statuses.map(async (s) => {

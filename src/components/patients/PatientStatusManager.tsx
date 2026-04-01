@@ -25,7 +25,7 @@ import type { PatientInfo } from "@/hooks/queries/usePatientsList";
 const JOURNEY_LABELS: Record<string, { label: string; color: string }> = {
   invited: { label: "Convidado", color: "bg-muted text-muted-foreground" },
   awaiting_payment: { label: "Aguard. Pagamento", color: "bg-warning/15 text-warning" },
-  awaiting_consent: { label: "Aguard. Consentimento", color: "bg-orange-500/15 text-orange-600" },
+  awaiting_consent: { label: "Onboarding", color: "bg-primary/15 text-primary" }, // legacy → treated as onboarding
   onboarding_active: { label: "Onboarding", color: "bg-primary/15 text-primary" },
   onboarding_completed: { label: "Onboard. Completo", color: "bg-blue-500/15 text-blue-600" },
   draft_ready_for_review: { label: "Aguard. Revisão", color: "bg-violet-500/15 text-violet-600" },
@@ -218,7 +218,7 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
 
                 // Determine which actions to show
                 const showConfirmPayment = isActive && !confirmedPayments.has(p.patient_id) && (journey === "awaiting_payment" || journey === "invited" || journey === "active");
-                const showReleaseOnboarding = isActive && !releasedOnboarding.has(p.patient_id) && (journey === "awaiting_consent" || journey === "active") && !completed;
+                const showReleaseOnboarding = isActive && !releasedOnboarding.has(p.patient_id) && (journey === "active") && !completed;
                 const showReviewPlan = journey === "draft_ready_for_review" || journey === "onboarding_completed";
 
                 return (

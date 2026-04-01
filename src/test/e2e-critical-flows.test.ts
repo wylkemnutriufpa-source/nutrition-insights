@@ -38,9 +38,9 @@ beforeEach(() => {
 // FLOW 1: Payment Confirmation
 // ═══════════════════════════════════════════════════════════
 describe("E2E Flow: Payment Confirmation", () => {
-  it("confirm_patient_payment RPC transitions to awaiting_consent", async () => {
+  it("confirm_patient_payment RPC transitions to onboarding_active", async () => {
     mockRpc.mockResolvedValueOnce({
-      data: { success: true, new_status: "awaiting_consent" },
+      data: { success: true, new_status: "onboarding_active" },
       error: null,
     });
 
@@ -53,7 +53,7 @@ describe("E2E Flow: Payment Confirmation", () => {
     expect(result.error).toBeNull();
     const data = result.data as any;
     expect(data.success).toBe(true);
-    expect(data.new_status).toBe("awaiting_consent");
+    expect(data.new_status).toBe("onboarding_active");
     expect(mockRpc).toHaveBeenCalledWith("confirm_patient_payment", {
       _patient_id: "patient-1",
       _nutritionist_id: "nutri-1",
@@ -76,7 +76,7 @@ describe("E2E Flow: Payment Confirmation", () => {
   });
 
   it("idempotent: double confirmation returns same result", async () => {
-    const response = { data: { success: true, new_status: "awaiting_consent" }, error: null };
+    const response = { data: { success: true, new_status: "onboarding_active" }, error: null };
     mockRpc.mockResolvedValue(response);
 
     const { supabase } = await import("@/integrations/supabase/client");
@@ -370,8 +370,6 @@ describe("E2E Flow: Lifecycle State Machine", () => {
   const VALID_STATUSES = [
     "lead",
     "awaiting_payment",
-    "awaiting_consent",
-    "awaiting_onboarding_release",
     "onboarding_active",
     "onboarding_completed",
     "draft_ready_for_review",
@@ -382,15 +380,15 @@ describe("E2E Flow: Lifecycle State Machine", () => {
   ];
 
   it("all lifecycle statuses are well-defined", () => {
-    expect(VALID_STATUSES.length).toBeGreaterThanOrEqual(8);
+    expect(VALID_STATUSES.length).toBeGreaterThanOrEqual(7);
     expect(VALID_STATUSES).toContain("active");
     expect(VALID_STATUSES).toContain("awaiting_payment");
     expect(VALID_STATUSES).toContain("onboarding_active");
   });
 
-  it("payment → consent is the correct order", () => {
+  it("payment → onboarding is the correct order", () => {
     const fromIdx = VALID_STATUSES.indexOf("awaiting_payment");
-    const toIdx = VALID_STATUSES.indexOf("awaiting_consent");
+    const toIdx = VALID_STATUSES.indexOf("onboarding_active");
     expect(toIdx).toBeGreaterThan(fromIdx);
   });
 
