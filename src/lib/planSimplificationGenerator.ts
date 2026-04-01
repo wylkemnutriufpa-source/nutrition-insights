@@ -196,6 +196,17 @@ export async function generateSimplifiedMealPlanVersion(
     };
   }
 
+  if (preview.projectedScore.total < 75) {
+    return {
+      success: false,
+      originalScore: preview.originalScore,
+      simplifiedScore: preview.projectedScore,
+      replacements: [],
+      issues: preview.originalScore.issues,
+      warnings: ["A simplificação automática não atingiu nível suficiente para revalidação segura; use o AutoFix do auditor ou ajuste manualmente."],
+    };
+  }
+
   // 4. Create new draft plan
   const newPlanInsert: TablesInsert<"meal_plans"> = {
     title: `${plan.title} (Simplificado)`,
