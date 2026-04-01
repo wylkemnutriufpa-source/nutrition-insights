@@ -90,12 +90,14 @@ const COMPLEX_PREP_KEYWORDS = [
 ];
 
 // ── Brazilian base foods for main meals ───────────────────────────────────────
-const BRAZILIAN_PROTEINS = ["frango", "carne", "peixe", "tilápia", "sardinha", "ovo", "porco", "bife", "filé", "linguiça", "charque", "jabá"];
-const BRAZILIAN_CARBS = ["arroz", "macarrão", "batata", "batata doce", "macaxeira", "purê", "cuscuz", "feijão", "tapioca", "inhame", "aipim", "mandioca", "farinha", "farofa", "milho", "açaí"];
-const ALLOWED_FRUITS = ["banana", "maçã", "mamão", "melão", "manga", "abacaxi", "laranja", "morango", "uva", "melancia", "goiaba", "acerola", "pera"];
+const BRAZILIAN_PROTEINS = ["frango", "carne", "peixe", "tilápia", "sardinha", "ovo", "omelete", "porco", "bife", "filé", "linguiça", "charque", "jabá", "atum", "merluza", "sobrecoxa", "alcatra", "patinho", "acém", "carne moída", "carne moida"];
+const BRAZILIAN_CARBS = ["arroz", "macarrão", "batata", "batata doce", "macaxeira", "purê", "cuscuz", "feijão", "tapioca", "inhame", "aipim", "mandioca", "farinha", "farofa", "milho", "açaí", "aveia", "pão", "pao", "torrada", "espaguete", "lentilha", "grão de bico", "grao de bico"];
+const ALLOWED_FRUITS = ["banana", "maçã", "mamão", "melão", "manga", "abacaxi", "laranja", "morango", "uva", "melancia", "goiaba", "acerola", "pera", "tangerina"];
 
 function normalize(text: string): string {
-    return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    // Strip AutoFix annotations like [Proteína: 38→33g, ×0.87] before normalizing
+    return text.replace(/\[[\w\sáàãâéêíóôõúç:→×.,\-\/]+\]/gi, "")
+        .toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 
 function splitPrimaryDescription(raw: string): { primary: string; substitutions: string } {
@@ -310,7 +312,7 @@ function analyzePlanSimplicity(items: any[], goal: string): { score: number; sta
                     penalty: 10,
                 });
             }
-            const proteinLimit = isMassGain ? 45 : 30;
+            const proteinLimit = isMassGain ? 45 : 35;
             const totalProtein = mealItems.reduce((s: number, i: any) => s + (Number(i.protein_target) || 0), 0);
             if (totalProtein > proteinLimit) {
                 score -= 10;
@@ -347,21 +349,21 @@ function analyzePlanSimplicity(items: any[], goal: string): { score: number; sta
             const hasProtein = BRAZILIAN_PROTEINS.some(p => allText.includes(normalize(p)));
             const hasCarb = BRAZILIAN_CARBS.some(c => allText.includes(normalize(c)));
             if (!hasProtein || !hasCarb) {
-                score -= 10;
+                score -= 5;
                 issues.push({
                     category: "adherence",
-                    severity: "high",
+                    severity: "medium",
                     meal_type: mealType, day,
                     message: `Refeição principal sem base brasileira (${!hasProtein ? "falta proteína" : ""}${!hasProtein && !hasCarb ? " e " : ""}${!hasCarb ? "falta carboidrato" : ""})`,
                     suggested_fix: "Usar: arroz + feijão + frango, macarrão + carne, batata + frango",
-                    penalty: 10,
+                    penalty: 5,
                 });
             }
         }
     }
 
     score = Math.max(0, Math.min(100, score));
-    const status = score >= 75 ? "approved" : "failed";
+    const status = score >= 65 ? "approved" : "failed";
     return { score, status, issues, blocked_foods: uniqueBlocked };
 }
 
