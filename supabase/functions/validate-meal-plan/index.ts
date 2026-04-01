@@ -312,7 +312,7 @@ function analyzePlanSimplicity(items: any[], goal: string): { score: number; sta
                     penalty: 10,
                 });
             }
-            const proteinLimit = isMassGain ? 45 : 30;
+            const proteinLimit = isMassGain ? 45 : 35;
             const totalProtein = mealItems.reduce((s: number, i: any) => s + (Number(i.protein_target) || 0), 0);
             if (totalProtein > proteinLimit) {
                 score -= 10;
