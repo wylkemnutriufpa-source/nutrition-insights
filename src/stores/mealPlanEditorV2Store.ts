@@ -225,6 +225,9 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
             return idx >= 0 && rows[idx] ? rows[idx] : item;
           }),
         }));
+
+        // Auto-resolve visual images silently
+        resolveVisualsForItems(rows);
       },
       rollback: () => {
         set((s) => ({ items: s.items.filter((i) => !tIds.includes(i.id)) }));
