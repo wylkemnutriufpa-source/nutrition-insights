@@ -802,6 +802,19 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
             {useScheduling && <Badge variant="outline"><CalendarClock className="w-3 h-3 mr-1" /> Programação automática ativa</Badge>}
           </div>
         )}
+
+        {/* Dead-end recovery: all plans rejected / no active plan */}
+        {pipeline.plan_generated && !pipeline.plan_approved && pipeline.status !== "completed" && !pipeline.generated_plan_data?.plans?.some((p: any) => p) && (
+          <div className="text-center py-4 space-y-3 border-t">
+            <AlertTriangle className="w-8 h-8 text-amber-500 mx-auto" />
+            <p className="text-sm font-medium">Todos os planos foram rejeitados</p>
+            <p className="text-xs text-muted-foreground">Você pode gerar novas opções de plano para este paciente.</p>
+            <Button onClick={handleGenerateNewPlan} disabled={openingEditor}>
+              {openingEditor ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
+              Gerar Novas Opções de Plano
+            </Button>
+          </div>
+        )}
       </CardContent>
 
       {/* Reject dialog */}
