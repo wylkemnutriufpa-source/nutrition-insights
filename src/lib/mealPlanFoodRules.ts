@@ -12,10 +12,11 @@
  * 5. Substituições apenas dentro da mesma categoria
  */
 
-// ── Alimentos bloqueados (caros, importados ou pouco acessíveis) ──
+// ── Alimentos bloqueados (caros, importados, pouco acessíveis ou fora do banco validado) ──
 export const BLOCKED_FOODS = [
   "salmão", "salmon", "atum fresco",
-  "kefir", "cottage", "ricota importada",
+  "kefir", "cottage", "queijo cottage", "ricota", "ricota importada",
+  "queijo minas", "peito de peru", "peru defumado", "blanquet", "blanquet de peru",
   "quinoa", "quinua", "amaranto",
   "castanha-do-pará", "castanha do pará", "macadâmia", "pistache",
   "framboesa", "mirtilo", "blueberry", "cranberry", "açaí premium",
@@ -79,7 +80,7 @@ export const ALLOWED_FRUITS = [
 export const ALLOWED_DAIRY = [
   "leite", "leite integral", "leite desnatado",
   "iogurte natural", "iogurte desnatado",
-  "queijo minas", "queijo coalho", "queijo muçarela",
+  "queijo coalho", "queijo muçarela",
   "requeijão", "requeijão light",
   "manteiga",
 ];
@@ -207,14 +208,14 @@ export const GANHO_MASSA_STRUCTURES: RealisticMealStructure[] = [
 // ── Opções realistas de café da manhã (exemplos concretos) ──
 export const BREAKFAST_OPTIONS_EMAG = [
   { name: "Pão integral com ovo mexido", foods: ["1 fatia de pão integral", "1 ovo mexido"], kcal: 230, protein: 12, carbs: 22, fat: 10 },
-  { name: "Tapioca com ovo e queijo", foods: ["1 tapioca média", "1 ovo", "1 fatia queijo minas"], kcal: 280, protein: 15, carbs: 30, fat: 11 },
+  { name: "Tapioca com ovo e queijo", foods: ["1 tapioca média", "1 ovo", "1 fatia queijo coalho"], kcal: 280, protein: 15, carbs: 30, fat: 11 },
   { name: "Cuscuz com ovo cozido", foods: ["1 fatia de cuscuz", "1 ovo cozido"], kcal: 240, protein: 11, carbs: 32, fat: 8 },
   { name: "Pão com queijo e café", foods: ["1 pão francês", "1 fatia queijo muçarela", "café s/ açúcar"], kcal: 250, protein: 10, carbs: 28, fat: 10 },
   { name: "Aveia com banana", foods: ["3 col. sopa de aveia", "1 banana"], kcal: 220, protein: 6, carbs: 40, fat: 4 },
 ];
 
 export const BREAKFAST_OPTIONS_MASSA = [
-  { name: "Pão com 2 ovos e queijo", foods: ["2 fatias pão integral", "2 ovos mexidos", "1 fatia queijo minas"], kcal: 420, protein: 24, carbs: 35, fat: 18 },
+  { name: "Pão com 2 ovos e queijo", foods: ["2 fatias pão integral", "2 ovos mexidos", "1 fatia queijo coalho"], kcal: 420, protein: 24, carbs: 35, fat: 18 },
   { name: "Omelete com pão", foods: ["Omelete 3 ovos", "1 pão francês"], kcal: 450, protein: 26, carbs: 28, fat: 22 },
   { name: "Tapioca reforçada", foods: ["1 tapioca grande", "2 ovos", "queijo coalho"], kcal: 430, protein: 22, carbs: 38, fat: 16 },
   { name: "Cuscuz com ovo e queijo", foods: ["2 fatias cuscuz", "2 ovos", "requeijão"], kcal: 440, protein: 20, carbs: 45, fat: 15 },
@@ -253,9 +254,9 @@ export const SUBSTITUTION_GROUPS = {
   protein_main: ["frango", "carne moída", "bife", "tilápia", "porco", "sardinha"],
   carb_main: ["arroz", "macarrão", "batata", "macaxeira", "batata doce", "inhame"],
   carb_breakfast: ["pão integral", "tapioca", "cuscuz", "pão francês"],
-  protein_breakfast: ["ovo mexido", "ovo cozido", "queijo minas", "queijo coalho"],
+  protein_breakfast: ["ovo mexido", "ovo cozido", "queijo coalho", "queijo muçarela"],
   fruit: ["banana", "maçã", "mamão", "laranja", "goiaba", "morango", "tangerina"],
-  dairy: ["iogurte natural", "leite", "queijo minas"],
+  dairy: ["iogurte natural", "leite", "queijo coalho"],
   legume: ["feijão", "lentilha", "feijão verde"],
   vegetable: ["alface", "tomate", "brócolis", "cenoura", "couve"],
 };

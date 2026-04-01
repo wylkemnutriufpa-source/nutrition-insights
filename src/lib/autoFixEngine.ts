@@ -24,6 +24,7 @@ import {
 import { BLOCKED_FOODS } from "./mealPlanFoodRules";
 import { loadPersonalizationContext, personalizePlanItems, type PersonalizationChange } from "./planPersonalizationEngine";
 import { isItemProtected } from "./planPipelineOrchestrator";
+import { isExplicitlyBanned } from "./validatedFoodDatabase";
 
 type MealPlanItem = Tables<"meal_plan_items">;
 
@@ -138,20 +139,28 @@ function replaceBlockedFoods(text: string): { result: string; changes: Array<{ f
   let result = text;
   const changes: Array<{ from: string; to: string }> = [];
 
-  for (const [key, value] of Object.entries(BRAZILIAN_REPLACEMENTS)) {
-    const regex = new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+  // Check explicitly banned foods first
+  for (const banned of BLOCKED_FOODS) {
+    const regex = new RegExp(banned.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
     if (regex.test(result)) {
-      result = result.replace(regex, value.replacement);
-      changes.push({ from: key, to: value.replacement });
+      const replacement = BRAZILIAN_REPLACEMENTS[normalize(banned)];
+      if (replacement && replacement.replacement !== "remover" && !isExplicitlyBanned(replacement.replacement)) {
+        result = result.replace(regex, replacement.replacement);
+        changes.push({ from: banned, to: replacement.replacement });
+      } else {
+        result = result.replace(regex, "").replace(/,\s*,/g, ",").replace(/^\s*,|,\s*$/g, "").trim();
+        changes.push({ from: banned, to: "(removido)" });
+      }
     }
   }
 
-  // Blocked foods without explicit replacement → remove
-  for (const blocked of BLOCKED_FOODS) {
-    const regex = new RegExp(blocked.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
-    if (regex.test(result) && !changes.some(c => normalize(c.from) === normalize(blocked))) {
-      result = result.replace(regex, "").replace(/,\s*,/g, ",").replace(/^\s*,|,\s*$/g, "").trim();
-      changes.push({ from: blocked, to: "(removido)" });
+  // Then apply BRAZILIAN_REPLACEMENTS for other terms
+  for (const [key, value] of Object.entries(BRAZILIAN_REPLACEMENTS)) {
+    if (isExplicitlyBanned(value.replacement)) continue; // Don't replace WITH banned food
+    const regex = new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+    if (regex.test(result) && !changes.some(c => normalize(c.from) === normalize(key))) {
+      result = result.replace(regex, value.replacement);
+      changes.push({ from: key, to: value.replacement });
     }
   }
 
@@ -561,7 +570,22 @@ export async function autoFixMealPlan(
           const factor = desiredTotal / totalMacro;
           for (const item of finalItems) {
             if (item[mc.key]) {
-              item[mc.key] = Math.round(item[mc.key]! * factor);
+              const oldValue = item[mc.key]!;
+              const newValue = Math.round(oldValue * factor);
+              item[mc.key] = newValue;
+
+              // REGRA C: Correção macro REAL — atualizar a descrição com a porção real
+              if (mc.key !== "calories_target" && factor !== 1) {
+                const portionFactor = factor.toFixed(2);
+                const currentDesc = item.description || "";
+                // Append real portion change to description
+                const portionNote = `[${mc.label}: ${oldValue}→${newValue}g, ×${portionFactor}]`;
+                if (!currentDesc.includes(portionNote)) {
+                  item.description = currentDesc
+                    ? `${currentDesc} ${portionNote}`
+                    : portionNote;
+                }
+              }
             }
           }
           macroRebalanced = true;
@@ -571,7 +595,7 @@ export async function autoFixMealPlan(
             dayOfWeek: -1,
             from: `${mc.label}: ${Math.round(mc.daily)}/${mc.target} (${diffPct > 0 ? "+" : ""}${Math.round(diffPct * 100)}%)`,
             to: `${mc.label}: ${mc.target}/${mc.target} (0%)`,
-            detail: `Rebalanceado contra meta clínica do paciente (fonte: ${targetSource})`,
+            detail: `Rebalanceado contra meta clínica do paciente (fonte: ${targetSource}). Fator real: ×${(desiredTotal / totalMacro).toFixed(2)} aplicado a ${finalItems.filter(i => i[mc.key]).length} itens.`,
           });
         }
       }
@@ -586,6 +610,10 @@ export async function autoFixMealPlan(
         if (item.protein_target) item.protein_target = Math.round(item.protein_target * factor);
         if (item.carbs_target) item.carbs_target = Math.round(item.carbs_target * factor);
         if (item.fat_target) item.fat_target = Math.round(item.fat_target * factor);
+        // REGRA C: Update description with correction
+        if (factor !== 1 && item.description) {
+          item.description = `${item.description} [ajuste proporcional ×${factor.toFixed(2)}]`;
+        }
       }
       macroRebalanced = true;
       allChanges.push({
@@ -594,7 +622,7 @@ export async function autoFixMealPlan(
         dayOfWeek: -1,
         from: `${afterCal} kcal`,
         to: `${sumMacro(finalItems, "calories_target")} kcal`,
-        detail: `Fator de correção proporcional (sem meta clínica disponível)`,
+        detail: `Fator de correção proporcional ×${factor.toFixed(2)} (sem meta clínica disponível)`,
       });
     }
     warnings.push("Sem meta clínica do paciente — rebalanceamento proporcional ao plano original");
