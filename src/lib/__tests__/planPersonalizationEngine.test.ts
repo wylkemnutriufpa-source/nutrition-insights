@@ -92,7 +92,7 @@ describe("personalizePlanItems — Alimentos rejeitados", () => {
     const items = makeItems();
     const result = personalizePlanItems(items, ctx);
 
-    const snack = result.items.find(i => i.meal_type === "snack");
+    const snack = result.items.find(i => i.meal_type === "afternoon_snack");
     expect(snack?.description?.toLowerCase()).not.toContain("banana");
     expect(result.changes.some(c => c.type === "rejected_removed")).toBe(true);
   });
