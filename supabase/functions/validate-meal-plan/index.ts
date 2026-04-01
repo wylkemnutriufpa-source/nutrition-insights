@@ -98,6 +98,34 @@ function normalize(text: string): string {
     return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 
+function splitPrimaryDescription(raw: string): { primary: string; substitutions: string } {
+    const lines = (raw || "").split("\n");
+    const primaryLines: string[] = [];
+    const substitutionLines: string[] = [];
+    let inSubstitutions = false;
+
+    for (const line of lines) {
+        const n = normalize(line);
+        if (n.includes("substituic") || n.includes("substitui") || line.includes("🔄")) {
+            inSubstitutions = true;
+            continue;
+        }
+
+        if (inSubstitutions) substitutionLines.push(line);
+        else primaryLines.push(line);
+    }
+
+    return {
+        primary: primaryLines.join("\n"),
+        substitutions: substitutionLines.join("\n"),
+    };
+}
+
+function getPrimaryMealText(item: any): string {
+    const description = splitPrimaryDescription(item.description || "").primary;
+    return normalize(`${item.title || ""} ${description || ""}`);
+}
+
 function findBlockedFoods(text: string): string[] {
     const n = normalize(text);
     return BLOCKED_FOODS.filter(blocked => n.includes(normalize(blocked)));
@@ -157,7 +185,7 @@ function analyzePlanSimplicity(items: any[], goal: string): { score: number; sta
 
     // 1. Blocked foods scan (hard fail -20 each, deduplicated per food+day+meal)
     for (const item of items) {
-        const desc = normalize(`${item.title || ""} ${item.description || ""}`);
+        const desc = getPrimaryMealText(item);
         const found = findBlockedFoods(desc);
         for (const food of found) {
             const dedupKey = `blocked_${normalize(food)}_${item.day_of_week ?? 0}_${item.meal_type}`;
@@ -253,7 +281,7 @@ function analyzePlanSimplicity(items: any[], goal: string): { score: number; sta
 
         // Excess fruits (>2)
         const fruitCount = mealItems.filter((item: any) => {
-            const text = normalize(`${item.title || ""} ${item.description || ""}`);
+            const text = getPrimaryMealText(item);
             return ALLOWED_FRUITS.some(f => text.includes(normalize(f)));
         }).length;
         if (fruitCount > 2) {
@@ -315,7 +343,7 @@ function analyzePlanSimplicity(items: any[], goal: string): { score: number; sta
 
         // Main meals (lunch/dinner) - must have Brazilian base
         if (["lunch", "almoco", "dinner", "jantar"].includes(mealType)) {
-            const allText = mealItems.map((i: any) => normalize(`${i.title || ""} ${i.description || ""}`)).join(" ");
+            const allText = mealItems.map((i: any) => getPrimaryMealText(i)).join(" ");
             const hasProtein = BRAZILIAN_PROTEINS.some(p => allText.includes(normalize(p)));
             const hasCarb = BRAZILIAN_CARBS.some(c => allText.includes(normalize(c)));
             if (!hasProtein || !hasCarb) {
@@ -441,7 +469,8 @@ serve(async (req) => {
             totalP += Number(item.protein_target) || 0;
             totalC += Number(item.carbs_target) || 0;
             totalF += Number(item.fat_target) || 0;
-            allDescriptions += " " + normalize(item.description || "");
+            const primaryDescription = splitPrimaryDescription(item.description || "").primary;
+            allDescriptions += " " + normalize(primaryDescription || "");
         }
 
         const dailyCals = totalCals / numDays;
