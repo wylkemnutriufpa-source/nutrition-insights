@@ -36,14 +36,24 @@ export async function loadValidatedFoods(): Promise<Set<string>> {
   const foods = new Set<string>();
   const foodMap = new Map<string, string>();
 
-  // Load from meal_visual_library
+  // Load ONLY production-ready items from meal_visual_library:
+  // is_active = true AND has image AND has macros
   const { data: items } = await supabase
     .from("meal_visual_library" as any)
-    .select("name, display_name")
+    .select("name, display_name, image_url, image_path, default_calories, default_protein, default_carbs, default_fat")
     .eq("is_active", true);
 
   if (items) {
     for (const item of items as any[]) {
+      // PRODUCTION-READY FILTER: must have image + all 4 macros
+      const hasImage = !!(item.image_url || item.image_path);
+      const hasMacros = item.default_calories != null && item.default_protein != null 
+        && item.default_carbs != null && item.default_fat != null;
+      if (!hasImage || !hasMacros) {
+        console.warn(`[ValidatedFoodDB] Skipping incomplete item: ${item.display_name || item.name} (image=${hasImage}, macros=${hasMacros})`);
+        continue;
+      }
+
       const n = normalize(item.display_name || item.name);
       foods.add(n);
       foodMap.set(n, item.display_name || item.name);
