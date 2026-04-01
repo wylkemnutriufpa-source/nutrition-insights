@@ -371,7 +371,10 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
           },
         });
 
-        if (error) throw error;
+        if (error) {
+          const msg = await friendlyEdgeFunctionError(error, "Falha ao regenerar plano");
+          throw new Error(msg);
+        }
         if (!data?.success) throw new Error(data?.error || "Falha ao regenerar plano");
 
         resolvedPlanId = data?.mealPlanId || planId;

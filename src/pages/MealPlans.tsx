@@ -231,7 +231,10 @@ export default function MealPlans() {
           },
         });
         if (genError || !genData?.success) {
-          toast.error("Erro ao gerar: " + (genError?.message || genData?.error || "Tente novamente"));
+          const msg = genError 
+            ? await friendlyEdgeFunctionError(genError, "Erro ao gerar plano") 
+            : (genData?.error || "Tente novamente");
+          toast.error(msg);
         } else {
           toast.success(`Plano gerado com ${genData.items_count || 0} refeições!`);
           runPostGenVisualMatch(genData.mealPlanId).catch(() => {});
