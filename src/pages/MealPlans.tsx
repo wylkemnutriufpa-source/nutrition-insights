@@ -58,7 +58,7 @@ export default function MealPlans() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [patients, setPatients] = useState<{ id: string; name: string }[]>([]);
-  const onboardingHandled = useRef(false);
+  const onboardingHandled = useRef<string | null>(null);
 
   const fetchPlans = async () => {
     if (!user) return;
