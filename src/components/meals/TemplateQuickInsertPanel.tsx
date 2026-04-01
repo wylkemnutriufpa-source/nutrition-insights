@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { scaleMealToTarget, type MealTemplate, type ScaledMeal, type FoodStructureItem } from "@/lib/mealScalingEngine";
+import { buildMealItems, type MealItemInput } from "@/lib/mealItemBuilder";
 import {
   Search, Utensils, Flame, Beef, Wheat, Droplets, Loader2,
   BookOpen, User, Plus, Sparkles, ChevronRight, Zap
