@@ -1136,6 +1136,8 @@ export default function Index() {
     // Professional / Admin view with toggle
     return (
       <div className="space-y-6">
+        {/* Experience mode inline toggle */}
+        <InlineExperienceToggle />
         {/* View mode toggle — PRO+ only */}
         {minMode("pro") && (
           <div className="flex items-center justify-end">
