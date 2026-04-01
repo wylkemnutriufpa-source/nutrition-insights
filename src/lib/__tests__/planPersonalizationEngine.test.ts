@@ -28,7 +28,7 @@ function makeItems() {
   return [
     { title: "Pão com ovo", description: "2 fatias de pão integral, 2 ovos mexidos", meal_type: "breakfast" as const, day_of_week: 1, calories_target: 350, protein_target: 20, carbs_target: 40, fat_target: 12 },
     { title: "Arroz com frango", description: "Arroz branco, peito de frango grelhado, feijão", meal_type: "lunch" as const, day_of_week: 1, calories_target: 550, protein_target: 40, carbs_target: 60, fat_target: 15 },
-    { title: "Iogurte com banana", description: "Iogurte natural, banana, granola", meal_type: "snack" as const, day_of_week: 1, calories_target: 250, protein_target: 10, carbs_target: 35, fat_target: 8 },
+    { title: "Iogurte com banana", description: "Iogurte natural, banana, granola", meal_type: "afternoon_snack" as const, day_of_week: 1, calories_target: 250, protein_target: 10, carbs_target: 35, fat_target: 8 },
     { title: "Carne moída com batata", description: "Carne moída refogada, batata doce cozida", meal_type: "dinner" as const, day_of_week: 1, calories_target: 450, protein_target: 30, carbs_target: 45, fat_target: 14 },
   ];
 }
