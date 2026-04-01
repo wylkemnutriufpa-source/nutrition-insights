@@ -360,7 +360,9 @@ export default function MealPlanEditorV2() {
           <ValidationCorrectionPanel
             result={validationResult}
             onClose={() => setValidationResult(null)}
-            onCorrectionApplied={() => {}}
+            onCorrectionApplied={async () => {
+              await handleSave();
+            }}
           />
         )}
 

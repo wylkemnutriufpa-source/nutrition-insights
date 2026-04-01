@@ -40,7 +40,7 @@ export interface ValidationResult {
 interface Props {
   result: ValidationResult;
   onClose: () => void;
-  onCorrectionApplied: () => void;
+  onCorrectionApplied: () => void | Promise<void>;
 }
 
 interface CorrectionSuggestion {
@@ -92,6 +92,10 @@ export function ValidationCorrectionPanel({ result, onClose, onCorrectionApplied
 
   const suggestions = generateSuggestions(result);
 
+  const persistAfterCorrection = async () => {
+    await onCorrectionApplied();
+  };
+
   const applyMacroScale = async (suggestion: CorrectionSuggestion) => {
     if (!suggestion.scaleFactor || !suggestion.macro) return;
     setApplying(suggestion.label);
@@ -125,8 +129,8 @@ export function ValidationCorrectionPanel({ result, onClose, onCorrectionApplied
         }
       }
 
-      toast.success(`${suggestion.label}: ${updatedCount} itens ajustados automaticamente. Clique em Validar novamente!`);
-      onCorrectionApplied();
+      await persistAfterCorrection();
+      toast.success(`${suggestion.label}: ${updatedCount} itens ajustados e salvos automaticamente. Agora valide novamente.`);
     } catch (e: any) {
       toast.error("Erro ao aplicar correção: " + e.message);
     } finally {
@@ -154,12 +158,12 @@ export function ValidationCorrectionPanel({ result, onClose, onCorrectionApplied
         }
       }
 
+      await persistAfterCorrection();
       if (removed > 0) {
-        toast.success(`${removed} item(ns) com "${keyword}" removido(s). Adicione substitutos e re-valide!`);
+        toast.success(`${removed} item(ns) com "${keyword}" removido(s) e o plano foi salvo. Agora valide novamente.`);
       } else {
-        toast.info("Nenhum item encontrado com esse ingrediente.");
+        toast.info("Nenhum item encontrado com esse ingrediente, mas o plano atual foi salvo.");
       }
-      onCorrectionApplied();
     } catch (e: any) {
       toast.error("Erro ao remover itens: " + e.message);
     } finally {
