@@ -155,15 +155,22 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
 
   // Filter diet templates
   const filteredDietTemplates = useMemo(() => {
-    if (!search.trim()) return dietTemplates;
-    const q = search.toLowerCase();
-    return dietTemplates.filter((t) =>
-      t.name.toLowerCase().includes(q) ||
-      t.diet_style?.toLowerCase().includes(q) ||
-      t.goal_category?.toLowerCase().includes(q) ||
-      (Array.isArray(t.clinical_tags) && t.clinical_tags.some((tag) => tag.toLowerCase().includes(q)))
-    );
+    let list = dietTemplates;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter((t) =>
+        t.name.toLowerCase().includes(q) ||
+        t.diet_style?.toLowerCase().includes(q) ||
+        t.goal_category?.toLowerCase().includes(q) ||
+        (Array.isArray(t.clinical_tags) && t.clinical_tags.some((tag) => tag.toLowerCase().includes(q)))
+      );
+    }
+    return list;
   }, [dietTemplates, search]);
+
+  const officialDietTemplates = useMemo(() => filteredDietTemplates.filter(t => t.template_generation === 'official_v2'), [filteredDietTemplates]);
+  const legacyDietTemplates = useMemo(() => filteredDietTemplates.filter(t => t.template_generation !== 'official_v2'), [filteredDietTemplates]);
+  const [showLegacyDiet, setShowLegacyDiet] = useState(false);
 
   // Insert nutritionist template (1-click)
   const handleInsertTemplate = useCallback((template: TemplateRow) => {
