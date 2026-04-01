@@ -61,7 +61,7 @@ export default function ConsentRequired() {
 
       if (error) throw error;
 
-      // Advance lifecycle: awaiting_consent → onboarding_active
+      // Advance lifecycle: consent accepted → onboarding_active
       await supabase.rpc("accept_patient_consent" as any, { _patient_id: user.id });
 
       logAudit("consent_accepted", "clinical_consents", user.id, {

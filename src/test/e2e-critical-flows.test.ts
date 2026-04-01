@@ -370,8 +370,6 @@ describe("E2E Flow: Lifecycle State Machine", () => {
   const VALID_STATUSES = [
     "lead",
     "awaiting_payment",
-    "awaiting_consent",
-    "awaiting_onboarding_release",
     "onboarding_active",
     "onboarding_completed",
     "draft_ready_for_review",
@@ -382,15 +380,15 @@ describe("E2E Flow: Lifecycle State Machine", () => {
   ];
 
   it("all lifecycle statuses are well-defined", () => {
-    expect(VALID_STATUSES.length).toBeGreaterThanOrEqual(8);
+    expect(VALID_STATUSES.length).toBeGreaterThanOrEqual(7);
     expect(VALID_STATUSES).toContain("active");
     expect(VALID_STATUSES).toContain("awaiting_payment");
     expect(VALID_STATUSES).toContain("onboarding_active");
   });
 
-  it("payment → consent is the correct order", () => {
+  it("payment → onboarding is the correct order", () => {
     const fromIdx = VALID_STATUSES.indexOf("awaiting_payment");
-    const toIdx = VALID_STATUSES.indexOf("awaiting_consent");
+    const toIdx = VALID_STATUSES.indexOf("onboarding_active");
     expect(toIdx).toBeGreaterThan(fromIdx);
   });
 
