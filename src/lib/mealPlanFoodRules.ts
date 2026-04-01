@@ -215,7 +215,7 @@ export const BREAKFAST_OPTIONS_EMAG = [
 ];
 
 export const BREAKFAST_OPTIONS_MASSA = [
-  { name: "Pão com 2 ovos e queijo", foods: ["2 fatias pão integral", "2 ovos mexidos", "1 fatia queijo minas"], kcal: 420, protein: 24, carbs: 35, fat: 18 },
+  { name: "Pão com 2 ovos e queijo", foods: ["2 fatias pão integral", "2 ovos mexidos", "1 fatia queijo coalho"], kcal: 420, protein: 24, carbs: 35, fat: 18 },
   { name: "Omelete com pão", foods: ["Omelete 3 ovos", "1 pão francês"], kcal: 450, protein: 26, carbs: 28, fat: 22 },
   { name: "Tapioca reforçada", foods: ["1 tapioca grande", "2 ovos", "queijo coalho"], kcal: 430, protein: 22, carbs: 38, fat: 16 },
   { name: "Cuscuz com ovo e queijo", foods: ["2 fatias cuscuz", "2 ovos", "requeijão"], kcal: 440, protein: 20, carbs: 45, fat: 15 },
