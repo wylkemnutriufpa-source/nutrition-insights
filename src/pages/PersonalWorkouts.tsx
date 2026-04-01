@@ -37,6 +37,7 @@ import WorkoutPDFExport from "@/components/workout/WorkoutPDFExport";
 import PTStudentChat from "@/components/workout/PTStudentChat";
 import PTChallenges from "@/components/workout/PTChallenges";
 import WorkoutRestTimer from "@/components/workout/WorkoutRestTimer";
+import ExerciseVideoLibrary from "@/components/workout/ExerciseVideoLibrary";
 import IFJCommandCenter from "@/components/intelligence/modules/IFJCommandCenter";
 import PersonalPremiumDashboard from "@/components/workout/PersonalPremiumDashboard";
 
