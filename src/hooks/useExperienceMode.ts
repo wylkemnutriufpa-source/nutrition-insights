@@ -93,7 +93,7 @@ export function checkMinMode(current: ExperienceMode, min: ExperienceMode): bool
 export function useExperienceModeState() {
   const [mode, setModeState] = useState<ExperienceMode>(() => {
     const saved = localStorage.getItem(STORAGE_KEY) as ExperienceMode;
-    return saved && ["basic", "pro", "advanced"].includes(saved) ? saved : "pro";
+    return saved && ["basic", "pro", "advanced"].includes(saved) ? saved : "basic";
   });
 
   const setMode = useCallback((m: ExperienceMode) => {
