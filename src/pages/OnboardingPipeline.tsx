@@ -590,13 +590,13 @@ export default function OnboardingPipeline() {
               </Card>
             )}
 
-            {/* Step 3: Plan Generation */}
-            {currentStep === 3 && (
+            {/* Step 4: Plan Generation */}
+            {currentStep === 4 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-primary" />
-                    Etapa 4: Geração do Pré-Plano
+                    Etapa 5: Geração do Pré-Plano
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
