@@ -31,6 +31,7 @@ export default function MealPlans() {
   const [form, setForm] = useState({
     title: "", description: "", patient_id: "",
     start_date: new Date().toISOString().split("T")[0],
+    autoGenerate: true,
   });
   const [submitting, setSubmitting] = useState(false);
   const [patients, setPatients] = useState<{ id: string; name: string }[]>([]);
