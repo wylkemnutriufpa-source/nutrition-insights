@@ -18,7 +18,7 @@
  * 
  * PRINCÍPIO 3 — ORIGEM NÃO MUDA REGRA
  *   - Cadastro manual, importação, convite, auto-cadastro → mesmo pipeline
- *   - invited → awaiting_payment → awaiting_consent → onboarding_active → 
+ *   - invited → awaiting_payment → onboarding_active (consent é etapa 1 do onboarding) → 
  *     onboarding_completed → draft_ready_for_review → plan_published → active_followup
  *   - Nunca pular estados
  * 
