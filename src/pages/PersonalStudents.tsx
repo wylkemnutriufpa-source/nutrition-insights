@@ -126,10 +126,16 @@ export default function PersonalStudents() {
         </div>
 
         <LinkStudentModal
-          open={addOpen}
-          onOpenChange={setAddOpen}
+          open={linkOpen}
+          onOpenChange={setLinkOpen}
           onLinked={() => refetch()}
           professionalRole="trainer"
+        />
+
+        <AddStudentModal
+          open={addOpen}
+          onOpenChange={setAddOpen}
+          onAdded={() => refetch()}
         />
       </div>
     </DashboardLayout>
