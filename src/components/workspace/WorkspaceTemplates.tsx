@@ -15,8 +15,10 @@ export default function WorkspaceTemplates({ search }: Props) {
     if (!user?.id) return;
     const fetch = async () => {
       const { data } = await supabase
-        .from("meal_plan_templates" as any)
+        .from("diet_templates")
         .select("*")
+        .eq("is_active", true)
+        .order("template_generation", { ascending: false })
         .order("created_at", { ascending: false })
         .limit(50);
       setTemplates(data || []);

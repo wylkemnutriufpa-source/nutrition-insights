@@ -475,10 +475,22 @@ serve(async (req) => {
     const dataSource = physicalAssessment?.calories_target ? "physical_assessment_bb_override" : "bb_phase_calculated";
 
     // ── 6. Fetch and score templates ──
-    const { data: templates, error: tplErr } = await serviceClient
+    // Prioritize official_v2 templates; fall back to all active if none exist
+    let { data: templates, error: tplErr } = await serviceClient
       .from("diet_templates")
       .select("*")
-      .eq("is_active", true);
+      .eq("is_active", true)
+      .eq("template_generation", "official_v2");
+
+    if (!tplErr && (!templates || templates.length === 0)) {
+      // Fallback: use all active templates if no official_v2 exist
+      const fallback = await serviceClient
+        .from("diet_templates")
+        .select("*")
+        .eq("is_active", true);
+      templates = fallback.data;
+      tplErr = fallback.error;
+    }
 
     if (tplErr || !templates || templates.length === 0) {
       return new Response(JSON.stringify({ error: "Nenhum template de dieta ativo", code: "NO_TEMPLATES" }), {
