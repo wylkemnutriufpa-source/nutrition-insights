@@ -57,9 +57,10 @@ export default function PersonalStudents() {
                 <Dumbbell className="w-6 h-6 text-primary" />
                 Meus Alunos
               </h1>
-            <p className="text-muted-foreground text-sm">
-              {links.length} aluno{links.length !== 1 ? "s" : ""} vinculado{links.length !== 1 ? "s" : ""}
-            </p>
+              <p className="text-muted-foreground text-sm">
+                {links.length} aluno{links.length !== 1 ? "s" : ""} vinculado{links.length !== 1 ? "s" : ""}
+              </p>
+            </div>
           </div>
           <div className="flex gap-2">
             <Button onClick={() => setLinkOpen(true)} size="sm" variant="outline" className="gap-1.5">
