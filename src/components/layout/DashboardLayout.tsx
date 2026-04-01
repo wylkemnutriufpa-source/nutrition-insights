@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck, Shield, Activity, LayoutDashboard, Dumbbell, Lock } from "lucide-react";
+import { LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck, Shield, Activity, LayoutDashboard, Dumbbell, Lock, Rocket } from "lucide-react";
 import { Search } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { openCommandPalette } from "@/components/common/CommandPalette";
