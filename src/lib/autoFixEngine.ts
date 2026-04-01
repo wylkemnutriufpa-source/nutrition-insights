@@ -562,7 +562,22 @@ export async function autoFixMealPlan(
           const factor = desiredTotal / totalMacro;
           for (const item of finalItems) {
             if (item[mc.key]) {
-              item[mc.key] = Math.round(item[mc.key]! * factor);
+              const oldValue = item[mc.key]!;
+              const newValue = Math.round(oldValue * factor);
+              item[mc.key] = newValue;
+
+              // REGRA C: Correção macro REAL — atualizar a descrição com a porção real
+              if (mc.key !== "calories_target" && factor !== 1) {
+                const portionFactor = factor.toFixed(2);
+                const currentDesc = item.description || "";
+                // Append real portion change to description
+                const portionNote = `[${mc.label}: ${oldValue}→${newValue}g, ×${portionFactor}]`;
+                if (!currentDesc.includes(portionNote)) {
+                  item.description = currentDesc
+                    ? `${currentDesc} ${portionNote}`
+                    : portionNote;
+                }
+              }
             }
           }
           macroRebalanced = true;
@@ -572,7 +587,7 @@ export async function autoFixMealPlan(
             dayOfWeek: -1,
             from: `${mc.label}: ${Math.round(mc.daily)}/${mc.target} (${diffPct > 0 ? "+" : ""}${Math.round(diffPct * 100)}%)`,
             to: `${mc.label}: ${mc.target}/${mc.target} (0%)`,
-            detail: `Rebalanceado contra meta clínica do paciente (fonte: ${targetSource})`,
+            detail: `Rebalanceado contra meta clínica do paciente (fonte: ${targetSource}). Fator real: ×${(desiredTotal / totalMacro).toFixed(2)} aplicado a ${finalItems.filter(i => i[mc.key]).length} itens.`,
           });
         }
       }
@@ -587,6 +602,10 @@ export async function autoFixMealPlan(
         if (item.protein_target) item.protein_target = Math.round(item.protein_target * factor);
         if (item.carbs_target) item.carbs_target = Math.round(item.carbs_target * factor);
         if (item.fat_target) item.fat_target = Math.round(item.fat_target * factor);
+        // REGRA C: Update description with correction
+        if (factor !== 1 && item.description) {
+          item.description = `${item.description} [ajuste proporcional ×${factor.toFixed(2)}]`;
+        }
       }
       macroRebalanced = true;
       allChanges.push({
@@ -595,7 +614,7 @@ export async function autoFixMealPlan(
         dayOfWeek: -1,
         from: `${afterCal} kcal`,
         to: `${sumMacro(finalItems, "calories_target")} kcal`,
-        detail: `Fator de correção proporcional (sem meta clínica disponível)`,
+        detail: `Fator de correção proporcional ×${factor.toFixed(2)} (sem meta clínica disponível)`,
       });
     }
     warnings.push("Sem meta clínica do paciente — rebalanceamento proporcional ao plano original");
