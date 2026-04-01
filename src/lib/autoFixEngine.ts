@@ -139,20 +139,28 @@ function replaceBlockedFoods(text: string): { result: string; changes: Array<{ f
   let result = text;
   const changes: Array<{ from: string; to: string }> = [];
 
-  for (const [key, value] of Object.entries(BRAZILIAN_REPLACEMENTS)) {
-    const regex = new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+  // Check explicitly banned foods first
+  for (const banned of BLOCKED_FOODS) {
+    const regex = new RegExp(banned.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
     if (regex.test(result)) {
-      result = result.replace(regex, value.replacement);
-      changes.push({ from: key, to: value.replacement });
+      const replacement = BRAZILIAN_REPLACEMENTS[normalize(banned)];
+      if (replacement && replacement.replacement !== "remover" && !isExplicitlyBanned(replacement.replacement)) {
+        result = result.replace(regex, replacement.replacement);
+        changes.push({ from: banned, to: replacement.replacement });
+      } else {
+        result = result.replace(regex, "").replace(/,\s*,/g, ",").replace(/^\s*,|,\s*$/g, "").trim();
+        changes.push({ from: banned, to: "(removido)" });
+      }
     }
   }
 
-  // Blocked foods without explicit replacement → remove
-  for (const blocked of BLOCKED_FOODS) {
-    const regex = new RegExp(blocked.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
-    if (regex.test(result) && !changes.some(c => normalize(c.from) === normalize(blocked))) {
-      result = result.replace(regex, "").replace(/,\s*,/g, ",").replace(/^\s*,|,\s*$/g, "").trim();
-      changes.push({ from: blocked, to: "(removido)" });
+  // Then apply BRAZILIAN_REPLACEMENTS for other terms
+  for (const [key, value] of Object.entries(BRAZILIAN_REPLACEMENTS)) {
+    if (isExplicitlyBanned(value.replacement)) continue; // Don't replace WITH banned food
+    const regex = new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+    if (regex.test(result) && !changes.some(c => normalize(c.from) === normalize(key))) {
+      result = result.replace(regex, value.replacement);
+      changes.push({ from: key, to: value.replacement });
     }
   }
 
