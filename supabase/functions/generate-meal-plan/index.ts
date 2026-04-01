@@ -617,13 +617,48 @@ serve(async (req) => {
     );
 
     // Resolve tenant_id for meal_plans (NOT NULL constraint)
-    const nutritionistIdForTenant = body.nutritionistId || userId;
+    const nutritionistIdForTenant = requestedNutritionistId;
     const { data: tenantProfile } = await serviceClient
       .from("profiles")
       .select("tenant_id")
       .eq("user_id", nutritionistIdForTenant)
       .maybeSingle();
     let resolvedTenantId = tenantProfile?.tenant_id || null;
+
+    // Authorization guard: caller must be the patient, the responsible professional, or admin
+    if (!caller.roles.includes("admin")) {
+      const callerIsPatient = userId === patient_id;
+      const callerIsResponsibleProfessional = userId === requestedNutritionistId;
+
+      if (!callerIsPatient && !callerIsResponsibleProfessional) {
+        return new Response(JSON.stringify({
+          error: "Usuário não autorizado para gerar plano deste paciente",
+          code: "PLAN_AUTH_FORBIDDEN",
+        }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: activeLink } = await serviceClient
+        .from("nutritionist_patients")
+        .select("id")
+        .eq("patient_id", patient_id)
+        .eq("nutritionist_id", requestedNutritionistId)
+        .eq("status", "active")
+        .limit(1)
+        .maybeSingle();
+
+      if (!activeLink) {
+        return new Response(JSON.stringify({
+          error: "Paciente não está vinculado ao profissional responsável",
+          code: "PATIENT_LINK_MISSING",
+        }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     // Fallback: try first active tenant if profile has none
     if (!resolvedTenantId) {
