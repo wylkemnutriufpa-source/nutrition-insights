@@ -511,7 +511,28 @@ serve(async (req) => {
       throw new Error("Falha ao inserir itens BB: " + insertErr.message);
     }
 
-    // ── 11. Update anamnesis computed values ──
+    // ── 10.5. Resolve visual associations ──
+    const aliasMap = await loadVisualAliasMap(serviceClient);
+    const { data: insertedItems } = await serviceClient
+      .from("meal_plan_items")
+      .select("id, title, description")
+      .eq("meal_plan_id", newPlan.id);
+
+    let visualResolved = 0;
+    if (insertedItems) {
+      for (const item of insertedItems) {
+        const visualId = resolveVisualFromDescriptionBB(item.title || "", item.description || "", aliasMap);
+        if (visualId) {
+          await serviceClient
+            .from("meal_plan_items")
+            .update({ visual_library_item_id: visualId })
+            .eq("id", item.id);
+          visualResolved++;
+        }
+      }
+    }
+    console.log(`BB Plan ${newPlan.id}: ${visualResolved}/${planItems.length} items visually resolved`);
+
     await serviceClient.from("patient_anamnesis").update({
       computed_tmb: tmb,
       computed_kcal_target: finalKcal,
