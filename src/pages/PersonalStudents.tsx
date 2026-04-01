@@ -8,12 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { Users, Plus, Search, UserX, Dumbbell, TrendingUp, Sparkles } from "lucide-react";
+import { Users, Plus, Search, UserX, Dumbbell, TrendingUp, Sparkles, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import LinkStudentModal from "@/components/professional/LinkStudentModal";
 import AddStudentModal from "@/components/professional/AddStudentModal";
 import { useProfessionalLinks } from "@/hooks/useProfessionalLinks";
 
 export default function PersonalStudents() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { links, loading, refetch, revokeLink } = useProfessionalLinks("trainer");
   const [profiles, setProfiles] = useState<Record<string, any>>({});
@@ -46,14 +48,19 @@ export default function PersonalStudents() {
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Dumbbell className="w-6 h-6 text-primary" />
-              Meus Alunos
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              {links.length} aluno{links.length !== 1 ? "s" : ""} vinculado{links.length !== 1 ? "s" : ""}
-            </p>
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => navigate("/personal/dashboard")}>
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold flex items-center gap-2">
+                <Dumbbell className="w-6 h-6 text-primary" />
+                Meus Alunos
+              </h1>
+              <p className="text-muted-foreground text-sm">
+                {links.length} aluno{links.length !== 1 ? "s" : ""} vinculado{links.length !== 1 ? "s" : ""}
+              </p>
+            </div>
           </div>
           <div className="flex gap-2">
             <Button onClick={() => setLinkOpen(true)} size="sm" variant="outline" className="gap-1.5">

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/lib/tenantContext";
@@ -14,7 +15,7 @@ import {
   Dumbbell, Plus, Search, ChevronDown, Pause, Play,
   BookOpen, Layers, ClipboardList, Sparkles,
   TrendingUp, Heart, Ruler, Trophy, ArrowRightLeft, BarChart3,
-  CalendarDays, MessageCircle, FileText, Zap, Timer, Command
+  CalendarDays, MessageCircle, FileText, Zap, Timer, Command, ArrowLeft
 } from "lucide-react";
 import WorkoutEditor from "@/components/workout/WorkoutEditor";
 import ExerciseLibrary from "@/components/workout/ExerciseLibrary";
@@ -226,6 +227,7 @@ function PrePlanTab({ students, prePlanStudent, setPrePlanStudent, handleUseTemp
 // --- Main Component ---
 export default function PersonalWorkouts() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { tenantId } = useTenant();
   const [plans, setPlans] = useState<any[]>([]);
   const [students, setStudents] = useState<{ student_id: string; full_name: string }[]>([]);
@@ -304,6 +306,9 @@ export default function PersonalWorkouts() {
       <div className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => navigate("/personal/dashboard")}>
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
             {activeTab !== "dashboard" && (
               <Button variant="ghost" size="icon" className="h-8 w-8 mr-1" onClick={() => setActiveTab("dashboard")}>
                 <ArrowRightLeft className="w-4 h-4 rotate-180" />
