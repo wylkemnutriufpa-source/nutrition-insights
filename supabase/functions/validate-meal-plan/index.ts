@@ -765,14 +765,11 @@ function groupByBucketInternal(issues: PrioritizedIssue[]) {
 
 function computeFinalDecisionInternal(overallScore: number, overallPassed: boolean, issues: PrioritizedIssue[]) {
     const hasCritical = issues.some(i => i.severity === "critical");
-    const blockingCount = issues.filter(i => i.correction_bucket === "bloquear_publicacao").length;
     if (overallPassed && !hasCritical) {
         return { decision: "publish_now" as const, reason: "Plano aprovado em todas as dimensões.", confidence: (overallScore >= 85 ? "high" : overallScore >= 75 ? "medium" : "low") as const };
     }
-    if (overallScore < 50) {
-        return { decision: "rebuild_plan" as const, reason: `Score muito baixo (${overallScore}/100) com ${blockingCount} bloqueante(s). Refazer o plano.`, confidence: "high" as const };
-    }
-    return { decision: "fix_and_revalidate" as const, reason: `${blockingCount} problema(s) bloqueante(s). Corrija e revalide.`, confidence: (hasCritical ? "high" : "medium") as const };
+    const blockingCount = issues.filter(i => i.correction_bucket === "bloquear_publicacao").length;
+    return { decision: "suggest_corrections" as const, reason: `${blockingCount} sugestão(ões) de melhoria encontrada(s). Aplique as correções ou publique como está.`, confidence: (hasCritical ? "high" : "medium") as const };
 }
 
 function generateExecutiveSummaryInternal(
@@ -792,8 +789,8 @@ function generateExecutiveSummaryInternal(
     if (simplicityScore < 75) { reasons.push("complexidade acima do aceitável"); strategy.push("Simplificar café da manhã e lanches"); }
     if (adherenceScore < 65) { reasons.push("previsão de adesão baixa"); strategy.push("Reduzir complexidade geral"); }
     return {
-        summary: `Plano reprovado (${overallScore}/100) por: ${reasons.join(", ")}. ${criticalCount} crítico(s), ${highCount} alto(s).`,
-        recommendation: overallScore < 50 ? "refazer_plano" : "corrigir_e_revalidar",
+        summary: `Plano com sugestões de melhoria (${overallScore}/100): ${reasons.join(", ")}. ${criticalCount} prioritária(s), ${highCount} alto(s).`,
+        recommendation: "aplicar_sugestoes",
         strategy,
     };
 }

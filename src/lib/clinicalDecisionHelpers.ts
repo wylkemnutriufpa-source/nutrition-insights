@@ -223,8 +223,8 @@ export function generateExecutiveSummary(
     strategy.push("Reduzir complexidade geral para aumentar adesão");
   }
 
-  const summary = `Plano reprovado (${overallScore}/100) por conter ${reasons.join(", ")}. ${criticalCount} problema(s) crítico(s) e ${highCount} problema(s) de alta prioridade encontrados.`;
-  const recommendation = overallScore < 50 ? "refazer_plano" : "corrigir_e_revalidar";
+  const summary = `Plano com sugestões de melhoria (${overallScore}/100): ${reasons.join(", ")}. ${criticalCount} sugestão(ões) prioritária(s) e ${highCount} de alta prioridade.`;
+  const recommendation = "aplicar_sugestoes";
 
   return { summary, recommendation, strategy };
 }
