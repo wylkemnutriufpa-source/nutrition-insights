@@ -226,7 +226,7 @@ export default function PlanAuditPanel({ mealPlanId, patientId, onApproved, onFi
         toast.success("Motor Clínico Unificado: Plano APROVADO! ✅");
         onApproved?.();
       } else {
-        toast.error(`Motor Clínico Unificado: Plano REPROVADO. Score: ${data?.score ?? 0}/100`);
+        toast.info(`Motor Clínico: ${data?.score ?? 0}/100 — Sugestões de melhoria disponíveis`);
       }
     } catch (e: any) {
       toast.error(e.message || "Erro ao contactar o Motor Clínico");
@@ -255,15 +255,15 @@ export default function PlanAuditPanel({ mealPlanId, patientId, onApproved, onFi
       <AnimatePresence>
         {result && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className={`glass rounded-xl border ${result.success ? "border-emerald-500/30" : "border-red-500/30"} p-5 space-y-5`}
+            className={`glass rounded-xl border ${result.success ? "border-emerald-500/30" : "border-amber-500/30"} p-5 space-y-5`}
           >
             {/* Header */}
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-3">
-                {result.success ? <CheckCircle2 className="w-7 h-7 text-emerald-400 shrink-0" /> : <XCircle className="w-7 h-7 text-red-400 shrink-0" />}
+                {result.success ? <CheckCircle2 className="w-7 h-7 text-emerald-400 shrink-0" /> : <AlertTriangle className="w-7 h-7 text-amber-400 shrink-0" />}
                 <div>
-                  <h3 className={`font-display font-bold text-lg ${result.success ? "text-emerald-400" : "text-red-400"}`}>
-                    Plano {result.success ? "APROVADO" : "REPROVADO"}
+                  <h3 className={`font-display font-bold text-lg ${result.success ? "text-emerald-400" : "text-amber-400"}`}>
+                    {result.success ? "Plano APROVADO" : "Sugestões de Melhoria"}
                   </h3>
                   <p className="text-xs text-muted-foreground">
                     Motor Clínico Unificado v5 • {new Date(result.audit?.run_at).toLocaleString("pt-BR")}
