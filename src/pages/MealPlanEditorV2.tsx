@@ -332,13 +332,24 @@ export default function MealPlanEditorV2() {
                 try {
                   const { data, error } = await supabase.functions.invoke("validate-meal-plan", { body: { meal_plan_id: plan.id } });
                   if (error) throw error;
+
+                  const nextValidationStatus = data?.overall_status || data?.status || (data?.success ? "aprovado" : "reprovado");
+                  store.updatePlan({
+                    overall_validation_status: nextValidationStatus,
+                    overall_score: typeof data?.score === "number" ? data.score : plan.overall_score,
+                    last_validated_at: new Date().toISOString(),
+                    validation_engine_version: "unified_v5",
+                    updated_at: new Date().toISOString(),
+                  } as any);
+
+                  await store.hydrate(plan.id, user?.id ?? "");
+
                   if (!data?.success) {
                     setValidationResult(data as ValidationResult);
-                    toast.error("Motor Clínico: Plano Reprovado! Veja as sugestões abaixo.", { duration: 5000 }); 
-                  } else { 
+                    toast.error("Motor Clínico: Plano Reprovado! Veja as sugestões abaixo.", { duration: 5000 });
+                  } else {
                     setValidationResult(null);
-                    toast.success(data.message || "Motor Clínico: Plano Válido! Pode ser ativado. ✅"); 
-                    store.hydrate(plan.id, user?.id ?? "");
+                    toast.success(data.message || "Motor Clínico: Plano Válido! Pode ser ativado. ✅");
                   }
                 } catch (e: any) { toast.error(e.message || "Erro de conexão com o Motor Clínico"); }
                 setValidating(false);

@@ -144,22 +144,33 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
   // ── Hydrate from cache then server ────────────────────────
   hydrate: async (planId, userId) => {
     const state = get();
-    // Already hydrated for this plan
-    if (state.hydrated && state.planId === planId) return;
+    const isSamePlan = state.planId === planId;
 
-    // Try cache first for instant mount
-    const cached = readCache(planId);
-    if (cached) {
+    // Avoid duplicate in-flight fetches for the same plan
+    if (state.hydrating && isSamePlan) return;
+
+    // Refresh same plan from server truth without discarding current UI state
+    if (state.hydrated && isSamePlan && state.plan) {
       set({
         planId,
-        plan: cached.plan,
-        patientName: cached.patientName,
-        items: cached.items,
+        hydrating: true,
         hydrated: true,
-        hydrating: true, // still fetching server truth
       });
     } else {
-      set({ planId, hydrating: true, hydrated: false });
+      // Try cache first for instant mount
+      const cached = readCache(planId);
+      if (cached) {
+        set({
+          planId,
+          plan: cached.plan,
+          patientName: cached.patientName,
+          items: cached.items,
+          hydrated: true,
+          hydrating: true, // still fetching server truth
+        });
+      } else {
+        set({ planId, hydrating: true, hydrated: false });
+      }
     }
 
     // Fetch server truth
