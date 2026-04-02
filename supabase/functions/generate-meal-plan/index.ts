@@ -87,9 +87,9 @@ const BREAKFAST_EMAG: RealisticMeal[] = [
   { title: "Café da Manhã", description: "• 1 tapioca média\n• 1 ovo\n• 1 fatia queijo minas", foods: ["tapioca", "ovo", "queijo minas"], kcal: 280, protein: 15, carbs: 30, fat: 11 },
   { title: "Café da Manhã", description: "• 1 fatia cuscuz\n• 1 ovo cozido\n• Café sem açúcar", foods: ["cuscuz", "ovo", "café"], kcal: 240, protein: 11, carbs: 32, fat: 8 },
   { title: "Café da Manhã", description: "• 1 pão francês\n• 1 fatia queijo muçarela\n• Café sem açúcar", foods: ["pão", "queijo", "café"], kcal: 250, protein: 10, carbs: 28, fat: 10 },
-  { title: "Café da Manhã", description: "• 3 col. sopa aveia\n• 1 banana picada\n• Café sem açúcar", foods: ["aveia", "banana", "café"], kcal: 220, protein: 6, carbs: 40, fat: 4 },
+  { title: "Café da Manhã", description: "• 3 col. sopa aveia\n• 1 banana picada\n• 1 ovo cozido\n• Café sem açúcar", foods: ["aveia", "banana", "ovo", "café"], kcal: 290, protein: 12, carbs: 40, fat: 8 },
   { title: "Café da Manhã", description: "• 1 fatia pão integral\n• 1 col. requeijão light\n• 1 fatia queijo minas", foods: ["pão integral", "requeijão", "queijo"], kcal: 230, protein: 11, carbs: 24, fat: 9 },
-  { title: "Café da Manhã", description: "• 1 tapioca média\n• 1 col. requeijão\n• Café sem açúcar", foods: ["tapioca", "requeijão", "café"], kcal: 210, protein: 5, carbs: 32, fat: 7 },
+  { title: "Café da Manhã", description: "• 1 tapioca média\n• 1 ovo cozido\n• 1 col. requeijão\n• Café sem açúcar", foods: ["tapioca", "ovo", "requeijão", "café"], kcal: 280, protein: 11, carbs: 32, fat: 10 },
 ];
 
 // CAFÉ DA MANHÃ — Ganho de massa
