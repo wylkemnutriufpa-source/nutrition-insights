@@ -38,18 +38,17 @@ export async function requireUser(req: Request): Promise<AuthUser> {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const token = authHeader.replace("Bearer ", "");
-  const { data, error } = await authClient.auth.getClaims(token);
+  const { data: userData, error } = await authClient.auth.getUser();
 
-  if (error || !data?.claims?.sub) {
+  if (error || !userData?.user?.id) {
     throw new Response(
       JSON.stringify({ error: "Unauthorized — invalid token" }),
       { status: 401, headers: corsHeaders }
     );
   }
 
-  const userId = data.claims.sub as string;
-  const email = (data.claims.email as string) || "";
+  const userId = userData.user.id;
+  const email = userData.user.email || "";
 
   // Fetch roles from user_roles table using service role for reliability
   const serviceClient = createClient(
