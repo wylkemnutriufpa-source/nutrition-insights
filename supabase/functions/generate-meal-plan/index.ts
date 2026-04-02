@@ -1247,15 +1247,29 @@ serve(async (req) => {
       await serviceClient.from("patient_tips").insert(tips.map((t) => ({ user_id: patient_id, ...t })));
     }
 
+    // Save as template if requested
+    if (saveAsTemplate && finalMealPlanId) {
+      try {
+        await serviceClient.from("meal_plans").update({
+          template_slug: `auto_${generationMode}_${Date.now()}`,
+          template_version: 1,
+        }).eq("id", finalMealPlanId);
+        console.log(`[generate-meal-plan] Plan ${finalMealPlanId} saved as reusable template`);
+      } catch (tplErr) {
+        console.warn("[generate-meal-plan] Failed to save as template:", tplErr);
+      }
+    }
+
     await serviceClient.from("patient_timeline").insert({
       patient_id,
       event_type: "meal_plan",
-      title: "Plano Alimentar Realista Gerado",
-      description: `Protocolo FitJourney v${ENGINE_VERSION} | Meta: ${finalKcal}kcal/dia | ${finalMacros.protein}g prot / ${finalMacros.carbs}g carb / ${finalMacros.fat}g gord | Comida brasileira popular`,
+      title: `${planTitle} Gerado`,
+      description: `Protocolo FitJourney v${ENGINE_VERSION} (${generationMode}) | Meta: ${finalKcal}kcal/dia | ${finalMacros.protein}g prot / ${finalMacros.carbs}g carb / ${finalMacros.fat}g gord`,
       metadata: {
         type: "plan_generated",
         protocol: PROTOCOL_VERSION,
         engine_version: ENGINE_VERSION,
+        generation_mode: generationMode,
         meal_plan_id: finalMealPlanId,
         items_count: planItems.length,
         data_source: dataSource,
