@@ -193,7 +193,7 @@ export function ValidationCorrectionPanel({ result, onClose, onCorrectionApplied
           <AlertTriangle className="w-5 h-5 text-destructive" />
           <div>
             <h3 className="font-display font-semibold text-sm">
-              Plano Reprovado — Score: <span className={scoreColor}>{result.score}/100</span>
+              Sugestões de Melhoria — Score: <span className={scoreColor}>{result.score}/100</span>
             </h3>
             <p className="text-xs text-muted-foreground">
               {result.errors.length} divergência(s) encontrada(s) • {suggestions.length} sugestão(ões) de correção
