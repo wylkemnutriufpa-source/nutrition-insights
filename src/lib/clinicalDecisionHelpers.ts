@@ -13,7 +13,7 @@ export type CorrectionBucket =
   | "corrigir_depois"
   | "opcional";
 
-export type FinalDecision = "publish_now" | "fix_and_revalidate" | "rebuild_plan";
+export type FinalDecision = "publish_now" | "suggest_corrections";
 export type ConfidenceLevel = "high" | "medium" | "low";
 export type IssueSeverity = "critical" | "high" | "medium" | "low";
 
@@ -156,9 +156,6 @@ export function computeFinalDecision(
   prioritizedIssues: PrioritizedIssue[]
 ): { decision: FinalDecision; reason: string; confidence: ConfidenceLevel } {
   const hasCritical = prioritizedIssues.some((i) => i.severity === "critical");
-  const blockingCount = prioritizedIssues.filter(
-    (i) => i.correction_bucket === "bloquear_publicacao"
-  ).length;
 
   if (overallPassed && !hasCritical) {
     return {
@@ -168,17 +165,13 @@ export function computeFinalDecision(
     };
   }
 
-  if (overallScore < 50) {
-    return {
-      decision: "rebuild_plan",
-      reason: `Score geral muito baixo (${overallScore}/100) com ${blockingCount} problema(s) bloqueante(s). Recomenda-se refazer o plano.`,
-      confidence: "high",
-    };
-  }
+  const blockingCount = prioritizedIssues.filter(
+    (i) => i.correction_bucket === "bloquear_publicacao"
+  ).length;
 
   return {
-    decision: "fix_and_revalidate",
-    reason: `${blockingCount} problema(s) bloqueante(s) encontrado(s). Corrija e revalide o plano.`,
+    decision: "suggest_corrections",
+    reason: `${blockingCount} sugestão(ões) de melhoria encontrada(s). Aplique as correções sugeridas ou publique como está.`,
     confidence: hasCritical ? "high" : "medium",
   };
 }
@@ -230,8 +223,8 @@ export function generateExecutiveSummary(
     strategy.push("Reduzir complexidade geral para aumentar adesão");
   }
 
-  const summary = `Plano reprovado (${overallScore}/100) por conter ${reasons.join(", ")}. ${criticalCount} problema(s) crítico(s) e ${highCount} problema(s) de alta prioridade encontrados.`;
-  const recommendation = overallScore < 50 ? "refazer_plano" : "corrigir_e_revalidar";
+  const summary = `Plano com sugestões de melhoria (${overallScore}/100): ${reasons.join(", ")}. ${criticalCount} sugestão(ões) prioritária(s) e ${highCount} de alta prioridade.`;
+  const recommendation = "aplicar_sugestoes";
 
   return { summary, recommendation, strategy };
 }

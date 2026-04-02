@@ -139,11 +139,11 @@ export default function MealPlanEditorV2() {
   const handlePublish = async () => {
     if (!user) return;
 
-    // Guard: check validation status before attempting publish
+    // Advisory: warn if not validated but allow publishing
     const validationStatus = plan.overall_validation_status;
     if (!validationStatus || validationStatus !== "aprovado") {
-      toast.error("⚠️ O plano precisa ser validado pelo Motor Clínico antes de ser publicado. Clique em 'Validar' primeiro.", { duration: 6000 });
-      return;
+      const proceed = confirm("⚠️ O plano ainda não foi validado pelo Motor Clínico. Deseja publicar mesmo assim?");
+      if (!proceed) return;
     }
 
     setPublishing(true);
@@ -333,7 +333,7 @@ export default function MealPlanEditorV2() {
                   const { data, error } = await supabase.functions.invoke("validate-meal-plan", { body: { meal_plan_id: plan.id } });
                   if (error) throw error;
 
-                  const nextValidationStatus = data?.overall_status || data?.status || (data?.success ? "aprovado" : "reprovado");
+                  const nextValidationStatus = data?.overall_status || data?.status || (data?.success ? "aprovado" : "sugestoes_pendentes");
                   store.updatePlan({
                     overall_validation_status: nextValidationStatus,
                     overall_score: typeof data?.score === "number" ? data.score : plan.overall_score,
@@ -346,10 +346,10 @@ export default function MealPlanEditorV2() {
 
                   if (!data?.success) {
                     setValidationResult(data as ValidationResult);
-                    toast.error("Motor Clínico: Plano Reprovado! Veja as sugestões abaixo.", { duration: 5000 });
+                    toast.info("Motor Clínico: Sugestões de melhoria disponíveis. Você pode aplicá-las ou publicar como está.", { duration: 5000 });
                   } else {
                     setValidationResult(null);
-                    toast.success(data.message || "Motor Clínico: Plano Válido! Pode ser ativado. ✅");
+                    toast.success(data.message || "Motor Clínico: Plano Válido! Pode ser publicado. ✅");
                   }
                 } catch (e: any) { toast.error(e.message || "Erro de conexão com o Motor Clínico"); }
                 setValidating(false);
@@ -363,9 +363,8 @@ export default function MealPlanEditorV2() {
             <Button
               size="sm"
               onClick={handlePublish}
-              disabled={publishing || store.syncStatus === "saving" || plan.overall_validation_status !== "aprovado"}
-              title={plan.overall_validation_status !== "aprovado" ? "Valide o plano primeiro clicando em 'Validar'" : "Publicar plano para o paciente"}
-              className={plan.overall_validation_status !== "aprovado" ? "opacity-60" : ""}
+              disabled={publishing || store.syncStatus === "saving"}
+              title="Publicar plano para o paciente"
             >
               {publishing ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Send className="w-4 h-4 mr-1" />}
               Publicar

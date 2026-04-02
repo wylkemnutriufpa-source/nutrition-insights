@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, lazy, Suspense } from "react";
 import { useExperienceUI } from "@/hooks/useExperienceUI";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -42,9 +42,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ClipboardList, Plus, Calendar, ToggleLeft, ToggleRight, PencilLine, Trash2 } from "lucide-react";
+import { ClipboardList, Plus, Calendar, ToggleLeft, ToggleRight, PencilLine, Trash2, Zap } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
+import SmartPlanGenerator from "@/components/plans/SmartPlanGenerator";
 
 type MealPlan = Tables<"meal_plans">;
 
@@ -292,7 +293,8 @@ export default function MealPlans() {
               <DialogHeader>
                 <DialogTitle className="font-display">Criar Plano Alimentar</DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Patient selector */}
+              <div className="space-y-4">
                 <div>
                   <Label>Paciente</Label>
                   <select value={form.patient_id} onChange={(e) => setForm({ ...form, patient_id: e.target.value })}
@@ -301,35 +303,24 @@ export default function MealPlans() {
                     {patients.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
                 </div>
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
-                  <input type="checkbox" id="autoGen" checked={form.autoGenerate}
-                    onChange={(e) => setForm({ ...form, autoGenerate: e.target.checked })}
-                    className="h-4 w-4 rounded border-primary text-primary" />
-                  <label htmlFor="autoGen" className="text-sm flex-1">
-                    <span className="font-medium">🤖 Gerar automaticamente</span>
-                    <span className="block text-xs text-muted-foreground">Protocolo FitJourney gera refeições com base na anamnese do paciente</span>
-                  </label>
-                </div>
-                {!form.autoGenerate && (
-                  <>
-                    <div>
-                      <Label>Título</Label>
-                      <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Ex: Plano de emagrecimento" required={!form.autoGenerate} />
-                    </div>
-                    <div>
-                      <Label>Descrição</Label>
-                      <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-                    </div>
-                    <div>
-                      <Label>Data de início</Label>
-                      <Input type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} required />
-                    </div>
-                  </>
+                {form.patient_id ? (
+                  <SmartPlanGenerator
+                    patientId={form.patient_id}
+                    patientName={patients.find(p => p.id === form.patient_id)?.name}
+                    onGenerated={(planId) => {
+                      runPostGenVisualMatch(planId).catch(() => {});
+                      setOpen(false);
+                      navigate(`/meal-plans/${planId}`);
+                    }}
+                    onClose={() => setOpen(false)}
+                  />
+                ) : (
+                  <div className="text-center py-6 text-muted-foreground text-sm">
+                    <Zap className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                    Selecione um paciente para gerar o plano
+                  </div>
                 )}
-                <Button type="submit" className="w-full gradient-primary" disabled={submitting}>
-                  {submitting ? "Gerando..." : form.autoGenerate ? "🚀 Gerar Plano Automático" : "Criar Plano Manual"}
-                </Button>
-              </form>
+              </div>
             </DialogContent>
           </Dialog>
         </div>
