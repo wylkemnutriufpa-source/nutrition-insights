@@ -128,24 +128,28 @@ function detectIntentFromDB(
   };
 
   // Food substitution patterns — check FIRST (high priority regex)
-  const subPatterns = [
-    /(?:substituir?|trocar?|no lugar d[eao]|em vez d[eao]|outra? opcao para|o que (?:posso |pode )?(?:comer|usar|colocar) (?:no lugar|em vez|ao inves))\s*(?:d[eao]\s+)?(.+)/,
-    /(?:posso trocar|posso substituir|tem substitut|quero trocar)\s*(?:o\s+|a\s+)?(.+?)(?:\s+por\s+|$)/,
-    /(?:nao tenho|acabou|sem)\s+(.+?)(?:,|\s+o que|\s+que|\s+posso|$)/,
-    /(?:me de|da|sugira)\s+(?:outra?s?\s+)?(?:opcao|opcoes|alternativa)\s+(?:para|d[eao]|ao)\s+(.+)/,
-  ];
-  for (const p of subPatterns) {
-    const m = n.match(p);
-    if (m && m[1]?.trim()) {
-      const foodIntent = intents.find(i => i.intent_key === "food_substitution");
-      if (foodIntent) {
-        return {
-          ...base, intent: "food_substitution", target_name: m[1].trim(),
-          module: foodIntent.module, confidence: 0.93, response_mode: "substitution",
-          requires_context: foodIntent.requires_context, requires_active_plan: foodIntent.requires_active_plan,
-          requires_permission_key: foodIntent.requires_permission_key, action_type: foodIntent.action_type,
-          executor_key: foodIntent.executor_key, scope: foodIntent.scope,
-        };
+  // GUARD: Skip food substitution if input is clearly a portfolio/patient query
+  const isPortfolioQuery = /^(?:quem|quantos|quais|lista)\s/.test(n);
+  if (!isPortfolioQuery) {
+    const subPatterns = [
+      /(?:substituir?|trocar?|no lugar d[eao]|em vez d[eao]|outra? opcao para|o que (?:posso |pode )?(?:comer|usar|colocar) (?:no lugar|em vez|ao inves))\s*(?:d[eao]\s+)?(.+)/,
+      /(?:posso trocar|posso substituir|tem substitut|quero trocar)\s*(?:o\s+|a\s+)?(.+?)(?:\s+por\s+|$)/,
+      /(?:nao tenho|acabou|sem)\s+(.+?)(?:,|\s+o que|\s+que|\s+posso|$)/,
+      /(?:me de|da|sugira)\s+(?:outra?s?\s+)?(?:opcao|opcoes|alternativa)\s+(?:para|d[eao]|ao)\s+(.+)/,
+    ];
+    for (const p of subPatterns) {
+      const m = n.match(p);
+      if (m && m[1]?.trim()) {
+        const foodIntent = intents.find(i => i.intent_key === "food_substitution");
+        if (foodIntent) {
+          return {
+            ...base, intent: "food_substitution", target_name: m[1].trim(),
+            module: foodIntent.module, confidence: 0.93, response_mode: "substitution",
+            requires_context: foodIntent.requires_context, requires_active_plan: foodIntent.requires_active_plan,
+            requires_permission_key: foodIntent.requires_permission_key, action_type: foodIntent.action_type,
+            executor_key: foodIntent.executor_key, scope: foodIntent.scope,
+          };
+        }
       }
     }
   }
