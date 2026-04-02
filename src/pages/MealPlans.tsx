@@ -8,6 +8,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { activateMealPlan, deactivateMealPlan, resolvePlanState } from "@/lib/serverTransitions";
 import { autoMatchSingle } from "@/lib/mealVisualAssociation";
 import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
+import {
+  inspectOnboardingPlan,
+  resolveLatestUsableOnboardingPlan,
+  syncPipelineGeneratedPlan,
+} from "@/lib/onboardingPlanResolver";
 
 /** After AI generates a plan, resolve visuals for all its items */
 async function runPostGenVisualMatch(planId: string) {
@@ -90,28 +95,6 @@ export default function MealPlans() {
     }
   };
 
-  const isPlanUsableForOnboarding = async (planId: string) => {
-    const [{ data: plan }, { count: itemCount }] = await Promise.all([
-      supabase
-        .from("meal_plans")
-        .select("id, plan_status, overall_validation_status")
-        .eq("id", planId)
-        .maybeSingle(),
-      supabase
-        .from("meal_plan_items")
-        .select("id", { count: "exact", head: true })
-        .eq("meal_plan_id", planId),
-    ]);
-
-    if (!plan) return false;
-
-    const invalidStatuses = new Set(["archived", "rejected"]);
-    if (invalidStatuses.has(plan.plan_status || "")) return false;
-    if (plan.overall_validation_status === "reprovado") return false;
-
-    return Boolean(itemCount && itemCount > 0);
-  };
-
   // Handle source=onboarding: find existing plan from onboarding pipeline or generate
   useEffect(() => {
     if (!user?.id) return;
@@ -128,35 +111,30 @@ export default function MealPlans() {
         // 1. Check if pipeline has a usable generated plan
         const { data: pipeline } = await (supabase
           .from("onboarding_pipelines" as any)
-          .select("generated_plan_id, plan_generated")
+          .select("id, generated_plan_id, plan_generated")
           .eq("patient_id", patientId)
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle() as any);
 
-        const pipelineData = pipeline as { generated_plan_id?: string; plan_generated?: boolean } | null;
+        const pipelineData = pipeline as { id?: string; generated_plan_id?: string; plan_generated?: boolean } | null;
 
         if (pipelineData?.generated_plan_id && pipelineData?.plan_generated) {
-          const isUsable = await isPlanUsableForOnboarding(pipelineData.generated_plan_id);
-          if (isUsable) {
+          const pipelinePlan = await inspectOnboardingPlan(pipelineData.generated_plan_id);
+          if (pipelinePlan?.isUsable) {
             navigate(`/meal-plans/${pipelineData.generated_plan_id}`, { replace: true });
             return;
           }
           console.warn("Pipeline plan is stale/archived, looking for alternatives...");
         }
 
-        // 2. Check if patient has any current usable draft/approved plan
-        const { data: existingPlan } = await supabase
-          .from("meal_plans")
-          .select("id, overall_validation_status")
-          .eq("patient_id", patientId)
-          .eq("nutritionist_id", user.id)
-          .in("plan_status", ["draft", "draft_auto_generated", "draft_auto_corrected", "under_professional_review", "approved"])
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
+        // 2. Check if patient has any current usable plan and re-link pipeline if needed
+        const existingPlan = await resolveLatestUsableOnboardingPlan(patientId, user.id);
 
-        if (existingPlan?.id && existingPlan.overall_validation_status !== "reprovado") {
+        if (existingPlan?.id) {
+          if (pipelineData?.id && pipelineData.generated_plan_id !== existingPlan.id) {
+            await syncPipelineGeneratedPlan(pipelineData.id, existingPlan.id);
+          }
           navigate(`/meal-plans/${existingPlan.id}`, { replace: true });
           return;
         }

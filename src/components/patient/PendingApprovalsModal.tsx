@@ -5,6 +5,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { rejectMealPlan, transitionPlanToReview } from "@/lib/serverTransitions";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  inspectOnboardingPlan,
+  resolveLatestUsableOnboardingPlan,
+  syncPipelineGeneratedPlan,
+} from "@/lib/onboardingPlanResolver";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -234,34 +239,34 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
     if (!selectedPipeline || !user) return;
     setProcessing(true);
     try {
-      const [{ count, error: countError }, { data: plan, error: planError }] = await Promise.all([
-        supabase
-          .from("meal_plan_items")
-          .select("id", { count: "exact", head: true })
-          .eq("meal_plan_id", planId),
-        supabase
-          .from("meal_plans")
-          .select("id, plan_status, overall_validation_status")
-          .eq("id", planId)
-          .maybeSingle(),
-      ]);
-
-      if (countError) throw countError;
-      if (planError) throw planError;
-
       let resolvedPlanId = planId;
-      const stalePlan = !plan || ["archived", "rejected"].includes(plan.plan_status || "") || plan.overall_validation_status === "reprovado";
-      const emptyPlan = !count || count === 0;
+      let resolvedPlan = await inspectOnboardingPlan(planId);
 
-      if (stalePlan || emptyPlan) {
-        toast.info(stalePlan
-          ? "Plano antigo/reprovado detectado. Gerando uma versão nova..."
-          : "Plano sem refeições detectado. Gerando itens automaticamente...");
-        const regenerated = await generateOrRegeneratePlan(emptyPlan && !stalePlan ? planId : undefined);
-        resolvedPlanId = regenerated.planId;
+      if (!resolvedPlan?.isUsable) {
+        const fallbackPlan = await resolveLatestUsableOnboardingPlan(selectedPipeline.patient_id, user.id);
+
+        if (fallbackPlan?.id && fallbackPlan.id !== planId) {
+          resolvedPlan = fallbackPlan;
+          resolvedPlanId = fallbackPlan.id;
+          toast.info("Plano válido mais recente encontrado. Abrindo plano correto...");
+        } else {
+          toast.info(resolvedPlan && !resolvedPlan.hasItems
+            ? "Plano sem refeições detectado. Gerando itens automaticamente..."
+            : "Plano antigo/reprovado detectado. Gerando uma versão nova...");
+          const regenerated = await generateOrRegeneratePlan(resolvedPlan && !resolvedPlan.hasItems ? planId : undefined);
+          resolvedPlanId = regenerated.planId;
+          resolvedPlan = await inspectOnboardingPlan(resolvedPlanId);
+        }
       }
 
-      await transitionPlanToReview(resolvedPlanId, user.id);
+      if (!selectedPipeline.generated_plan_id || selectedPipeline.generated_plan_id !== resolvedPlanId) {
+        await syncPipelineGeneratedPlan(selectedPipeline.id, resolvedPlanId);
+      }
+
+      const requiresReviewTransition = !["approved", "published_to_patient"].includes(resolvedPlan?.plan_status || "");
+      if (requiresReviewTransition) {
+        await transitionPlanToReview(resolvedPlanId, user.id);
+      }
 
       onOpenChange(false);
       navigate(`/meal-plans/${resolvedPlanId}`);
