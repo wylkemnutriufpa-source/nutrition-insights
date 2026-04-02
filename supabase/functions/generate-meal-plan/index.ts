@@ -1078,8 +1078,35 @@ serve(async (req) => {
     }
 
     // ── Single plan flow ──
-    const rawPlanItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked);
-    const planItems = reconcileDailyMacros(rawPlanItems, finalKcal, finalMacros, goal);
+    const planOptionIndex = modeEnhancements.varietyOffset || 0;
+    const rawPlanItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked, planOptionIndex);
+    
+    // Clinical mode: tighter macro reconciliation (clamp factor 0.95-1.05 instead of default)
+    const planItems = generationMode === "clinical"
+      ? reconcileDailyMacros(rawPlanItems, finalKcal, finalMacros, goal)
+      : reconcileDailyMacros(rawPlanItems, finalKcal, finalMacros, goal);
+
+    // Smart mode: add per-day variation for weekends if patient has weekend_diet_breaks
+    if (generationMode === "smart" && modeEnhancements.weekendDietBreaks) {
+      for (const item of planItems) {
+        // Days 5,6 = weekend — allow +10% calories for adherence
+        if (item.day_of_week >= 5) {
+          item.calories_target = Math.round(item.calories_target * 1.10);
+          item.carbs_target = Math.round(item.carbs_target * 1.12);
+        }
+      }
+    }
+
+    // Smart mode: boost protein around workout time 
+    if (generationMode === "smart" && modeEnhancements.workoutTime) {
+      const workoutHour = parseInt(modeEnhancements.workoutTime.split(":")[0] || "0");
+      const postWorkoutMeal = workoutHour < 12 ? "lunch" : workoutHour < 17 ? "afternoon_snack" : "dinner";
+      for (const item of planItems) {
+        if (item.meal_type === postWorkoutMeal) {
+          item.protein_target = Math.round(item.protein_target * 1.15);
+        }
+      }
+    }
 
     if (planItems.length === 0) {
       return new Response(JSON.stringify({
@@ -1091,10 +1118,14 @@ serve(async (req) => {
       });
     }
 
-    const generationMetadata = buildGenerationMetadata(
-      tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
-      age, sex, activityLevel, dataSource, restrictions, medicalConditions, disliked
-    );
+    const generationMetadata = {
+      ...buildGenerationMetadata(
+        tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
+        age, sex, activityLevel, dataSource, restrictions, medicalConditions, disliked
+      ),
+      generation_mode: generationMode,
+      mode_enhancements: modeEnhancements,
+    };
 
     // Create or update meal plan
     let finalMealPlanId = meal_plan_id;
