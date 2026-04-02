@@ -47,8 +47,8 @@ export async function requireUser(req: Request): Promise<AuthUser> {
     );
   }
 
-  const userId = data.claims.sub as string;
-  const email = (data.claims.email as string) || "";
+  const userId = userData.user.id;
+  const email = userData.user.email || "";
 
   // Fetch roles from user_roles table using service role for reliability
   const serviceClient = createClient(
