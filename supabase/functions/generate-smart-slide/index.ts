@@ -52,6 +52,9 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    // LLM Gate — admin control
+    if (!(await isLLMEnabled())) return llmBlockedResponse(corsHeaders);
+
     const { slide_type, theme, tone, custom_context } = await req.json();
 
     // Gather real system data for context

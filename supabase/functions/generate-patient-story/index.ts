@@ -10,6 +10,9 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // LLM Gate — admin control
+    if (!(await isLLMEnabled())) return llmBlockedResponse(corsHeaders);
+
     const authHeader = req.headers.get("Authorization");
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
