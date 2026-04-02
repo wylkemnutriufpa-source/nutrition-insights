@@ -677,7 +677,7 @@ export default function PlanBatchAudit() {
           <TabsContent value="overview" className="space-y-4">
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
               <StatCard label="Total Auditados" value={report.total} />
-              <StatCard label="Reprovados" value={report.rejected} color="text-destructive" sub={`${Math.round((report.rejected / report.total) * 100)}%`} />
+              <StatCard label="Com Sugestões" value={report.rejected} color="text-amber-500" sub={`${Math.round((report.rejected / report.total) * 100)}%`} />
               <StatCard label="Score Médio" value={report.avgScore} color={report.avgScore >= 80 ? "text-emerald-500" : "text-orange-500"} />
               <StatCard label="Pacientes" value={report.patientsImpacted} color="text-amber-500" />
               <StatCard label="Alim. Únicos" value={report.topBlocked.length} color="text-orange-500" />
@@ -751,7 +751,7 @@ export default function PlanBatchAudit() {
                     onClick={() => { setFilter(f); setSelected(new Set()); }} className="text-xs gap-1">
                     {f === "critical" && <div className="w-2 h-2 rounded-full bg-destructive" />}
                     {f === "high" && <div className="w-2 h-2 rounded-full bg-orange-500" />}
-                    {f === "all" ? "Todos" : f === "critical" ? "Crítico" : f === "high" ? "Alto" : f === "rejected" ? "Reprovados" : "Publicados"}
+                    {f === "all" ? "Todos" : f === "critical" ? "Crítico" : f === "high" ? "Alto" : f === "rejected" ? "Com Sugestões" : "Publicados"}
                   </Button>
                 ))}
               </div>
@@ -827,7 +827,7 @@ export default function PlanBatchAudit() {
                 <p className="text-xs text-muted-foreground">
                   {selectedCount > 0
                     ? `${selectedCount} plano(s) selecionado(s) para reformulação.`
-                    : `Processa todos os ${report.rejected} planos reprovados.`}
+                    : `Processa todos os ${report.rejected} planos com sugestões.`}
                   {" "}Cada plano reformulado é salvo como <strong>nova versão draft</strong>.
                 </p>
                 <div className="flex gap-3 flex-wrap">

@@ -37,7 +37,6 @@ export async function inspectOnboardingPlan(planId: string): Promise<OnboardingP
 
   const hasItems = Boolean(count && count > 0);
   const isUsable = !INVALID_PLAN_STATUSES.has(plan.plan_status || "")
-    && plan.overall_validation_status !== "reprovado"
     && hasItems;
 
   return {
