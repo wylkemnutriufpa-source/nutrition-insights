@@ -526,6 +526,13 @@ function buildSubstitutionText(foods: string[], mealType: string): string {
   return subs.join("\n");
 }
 
+async function safeDeletePlan(client: any, planId: string) {
+  const { error } = await client.from("meal_plans").delete().eq("id", planId);
+  if (error) {
+    console.error(`[generate-meal-plan] Failed to rollback orphan plan ${planId}:`, error);
+  }
+}
+
 // ──── Post-generation macro reconciliation ────
 function reconcileDailyMacros(
   items: any[],
@@ -999,6 +1006,16 @@ serve(async (req) => {
     const rawPlanItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked);
     const planItems = reconcileDailyMacros(rawPlanItems, finalKcal, finalMacros, goal);
 
+    if (planItems.length === 0) {
+      return new Response(JSON.stringify({
+        error: "Nenhuma refeição foi gerada para este paciente. Revise os dados clínicos e tente novamente.",
+        code: "NO_PLAN_ITEMS_GENERATED",
+      }), {
+        status: 422,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const generationMetadata = buildGenerationMetadata(
       tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
       age, sex, activityLevel, dataSource, restrictions, medicalConditions, disliked
@@ -1063,16 +1080,33 @@ serve(async (req) => {
       });
     }
 
-    await serviceClient.from("meal_plan_items").delete().eq("meal_plan_id", finalMealPlanId);
-
     const itemsToInsert = planItems.map((item: any) => ({ ...item, meal_plan_id: finalMealPlanId }));
+    const { data: existingItems } = await serviceClient
+      .from("meal_plan_items")
+      .select("id")
+      .eq("meal_plan_id", finalMealPlanId);
+
+    const previousItemIds = (existingItems || []).map((item: any) => item.id).filter(Boolean);
     const { error: insertErr } = await serviceClient.from("meal_plan_items").insert(itemsToInsert);
+
     if (insertErr) {
-      await serviceClient.from("meal_plans").update({
-        plan_status: "draft",
-        description: "ERRO: Itens falharam ao inserir. Regenere o plano.",
-      }).eq("id", finalMealPlanId);
-      throw new Error("Falha ao inserir itens: " + insertErr.message);
+      if (isPipeline && !meal_plan_id) {
+        await safeDeletePlan(serviceClient, finalMealPlanId);
+      }
+
+      throw new Error(`Falha ao inserir itens do plano ${finalMealPlanId}: ${insertErr.message}`);
+    }
+
+    if (previousItemIds.length > 0) {
+      const { error: deleteErr } = await serviceClient
+        .from("meal_plan_items")
+        .delete()
+        .in("id", previousItemIds);
+
+      if (deleteErr) {
+        console.error(`[generate-meal-plan] Failed to delete previous items for plan ${finalMealPlanId}:`, deleteErr);
+        throw new Error(`Novos itens foram gerados, mas a limpeza dos itens antigos falhou no plano ${finalMealPlanId}: ${deleteErr.message}`);
+      }
     }
 
     // Resolve visual associations for single plan
