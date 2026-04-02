@@ -607,7 +607,7 @@ serve(async (req) => {
         patientName: profile?.full_name,
       };
 
-      if (lovableKey) {
+      if (lovableKey && (await isLLMEnabled())) {
         // Generate both narratives in parallel
         const [patientResult, professionalResult] = await Promise.allSettled([
           generatePatientNarrative(narrativeInput, lovableKey),
