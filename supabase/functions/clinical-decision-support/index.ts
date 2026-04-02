@@ -202,6 +202,9 @@ function generateClinicalAnalysis(name: string, metrics: any, anamnesis: any, bo
 // Only runs when useCopilot=true AND feature flag is enabled
 
 async function generateAICopilotAnalysis(patientData: any, engineResult: any): Promise<string | null> {
+  // LLM Gate — admin control
+  if (!(await isLLMEnabled())) return null;
+
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) return null;
 

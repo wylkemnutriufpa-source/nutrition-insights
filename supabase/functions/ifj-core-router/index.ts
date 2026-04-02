@@ -1188,6 +1188,10 @@ async function runNutritionEngine(supabaseAdmin: any, intent: IFJIntent, userId:
     if (!profile?.goal && !anam && !plan)
       return fmt("Consulte seu nutricionista", "📋", "info", "Dados insuficientes.", "📋 **Consulte seu nutricionista** — não há dados suficientes para responder com segurança.", [], intent, "nutrition", ctx);
 
+    // LLM Gate — admin control
+    if (!(await isLLMEnabled()))
+      return fmt("IA LLM desativada", "🔒", "info", "IA LLM desativada pelo admin.", "🔒 **IA LLM desativada** pelo administrador.\n\n💡 Para substituições simples, diga: *\"trocar pistache\"* ou *\"no lugar de arroz\"*", [], intent, "nutrition", ctx);
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) return fmt("Consulte seu nutricionista", "📋", "info", "Recurso indisponível.", "📋 **Consulte seu nutricionista** para orientação personalizada.", [], intent, "nutrition", ctx);
 

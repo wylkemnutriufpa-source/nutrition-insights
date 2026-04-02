@@ -421,6 +421,11 @@ serve(async (req) => {
 
     // ═══ LAYER 2: AI Fallback (only if needed) ═══
     if (needsAIFallback) {
+      // LLM Gate — admin control: if LLM disabled, return deterministic only
+      if (!(await isLLMEnabled())) {
+        return returnDeterministicResult(matchedFoods, unmatchedItems, items.length);
+      }
+
       const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
       if (!LOVABLE_API_KEY) {
         return returnDeterministicResult(matchedFoods, unmatchedItems, items.length);
