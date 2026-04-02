@@ -43,7 +43,7 @@ Calcule macros por porção com precisão.`;
           type: "function",
           function: {
             name: "create_recipe",
-            description: "Create a structured recipe with nutritional info",
+            description: "Create a structured recipe with nutritional info. All macro values are per serving and foods must include grams for engine scaling.",
             parameters: {
               type: "object",
               properties: {
@@ -51,6 +51,22 @@ Calcule macros por porção com precisão.`;
                 description: { type: "string" },
                 ingredients: { type: "array", items: { type: "string" } },
                 instructions: { type: "array", items: { type: "string" } },
+                foods: {
+                  type: "array",
+                  description: "Structured food items with grams and per-gram macros for scaling engine",
+                  items: {
+                    type: "object",
+                    properties: {
+                      name: { type: "string" },
+                      grams_reference: { type: "number" },
+                      calories_per_gram: { type: "number" },
+                      protein_per_gram: { type: "number" },
+                      carbs_per_gram: { type: "number" },
+                      fat_per_gram: { type: "number" },
+                    },
+                    required: ["name", "grams_reference", "calories_per_gram", "protein_per_gram", "carbs_per_gram", "fat_per_gram"],
+                  },
+                },
                 prep_time_minutes: { type: "number" },
                 cook_time_minutes: { type: "number" },
                 servings: { type: "number" },
@@ -61,7 +77,7 @@ Calcule macros por porção com precisão.`;
                 carbs_per_serving: { type: "number" },
                 fat_per_serving: { type: "number" },
               },
-              required: ["title", "description", "ingredients", "instructions", "prep_time_minutes", "cook_time_minutes", "servings", "difficulty", "category", "calories_per_serving", "protein_per_serving", "carbs_per_serving", "fat_per_serving"],
+              required: ["title", "description", "ingredients", "instructions", "foods", "prep_time_minutes", "cook_time_minutes", "servings", "difficulty", "category", "calories_per_serving", "protein_per_serving", "carbs_per_serving", "fat_per_serving"],
               additionalProperties: false,
             },
           },
@@ -106,6 +122,18 @@ Calcule macros por porção com precisão.`;
     }).select().single();
 
     if (error) throw error;
+
+    // Save structured recipe_items for scaling engine
+    if (recipe.foods && recipe.foods.length > 0 && data) {
+      const recipeItems = recipe.foods.map((f: any, i: number) => ({
+        recipe_id: data.id,
+        food_name: f.name,
+        grams_reference: f.grams_reference,
+        is_scalable: true,
+        display_order: i,
+      }));
+      await supabase.from("recipe_items").insert(recipeItems);
+    }
 
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
