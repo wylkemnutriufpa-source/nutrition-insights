@@ -38,10 +38,9 @@ export async function requireUser(req: Request): Promise<AuthUser> {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const token = authHeader.replace("Bearer ", "");
-  const { data, error } = await authClient.auth.getClaims(token);
+  const { data: userData, error } = await authClient.auth.getUser();
 
-  if (error || !data?.claims?.sub) {
+  if (error || !userData?.user?.id) {
     throw new Response(
       JSON.stringify({ error: "Unauthorized — invalid token" }),
       { status: 401, headers: corsHeaders }
