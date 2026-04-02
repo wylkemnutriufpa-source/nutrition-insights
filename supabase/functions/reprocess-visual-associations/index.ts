@@ -38,6 +38,9 @@ Deno.serve(async (req) => {
         .toLowerCase()
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
+        // Remove measurement phrases containing food-like words (e.g. "col. sopa" = tablespoon)
+        .replace(/col\.?\s*de?\s*sopa/gi, "")
+        .replace(/colher(es)?\s*de?\s*sopa/gi, "")
         .replace(/[^a-z0-9\s]/g, "")
         .replace(/\s+/g, " ")
         .trim();
