@@ -60,6 +60,9 @@ function normalizeText(text: string): string {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
+    // Remove measurement phrases that contain food-like words (e.g. "col. sopa" = tablespoon)
+    .replace(/col\.?\s*de?\s*sopa/gi, "")
+    .replace(/colher(es)?\s*de?\s*sopa/gi, "")
     .replace(/[^a-z0-9\s]/g, "")
     .trim()
     .replace(/\s+/g, " ");
