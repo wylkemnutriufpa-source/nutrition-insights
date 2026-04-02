@@ -1140,6 +1140,8 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
+    // Auth guard throws Response objects — pass them through
+    if (e instanceof Response) return e;
     console.error("generate-meal-plan error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
