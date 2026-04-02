@@ -1130,7 +1130,21 @@ serve(async (req) => {
     // Create or update meal plan
     let finalMealPlanId = meal_plan_id;
 
-    if (isPipeline && !meal_plan_id) {
+    const MODE_TITLES: Record<string, string> = {
+      quick: "Plano Rápido",
+      smart: "Plano Inteligente",
+      clinical: "Plano Clínico",
+    };
+    const MODE_SOURCES: Record<string, string> = {
+      quick: "smart_quick_v3",
+      smart: "smart_intelligent_v3",
+      clinical: "smart_clinical_v3",
+    };
+    const planTitle = MODE_TITLES[generationMode] || "Plano Alimentar";
+    const genSource = MODE_SOURCES[generationMode] || "protocol_fitjourney_v3";
+
+    if (!meal_plan_id) {
+      // Create new plan (both pipeline and SmartPlanGenerator flows)
       const nutritionistId = requestedNutritionistId;
       const endDate = new Date();
       endDate.setDate(endDate.getDate() + 30);
@@ -1138,15 +1152,15 @@ serve(async (req) => {
       const { data: newPlan, error: planErr } = await serviceClient
         .from("meal_plans")
         .insert({
-          title: `Plano Alimentar Realista`,
-          description: `Gerado pelo Protocolo FitJourney v${ENGINE_VERSION}. Meta: ${finalKcal}kcal/dia. Comida brasileira popular e acessível.`,
+          title: planTitle,
+          description: `Gerado pelo Protocolo FitJourney v${ENGINE_VERSION} (${generationMode}). Meta: ${finalKcal}kcal/dia. Comida brasileira popular e acessível.`,
           patient_id,
           nutritionist_id: nutritionistId,
           start_date: startDate,
           end_date: endDate.toISOString().split("T")[0],
           is_active: false,
           plan_status: "draft_auto_generated",
-          generation_source: "protocol_fitjourney_v3",
+          generation_source: genSource,
           generated_by: userId,
           generation_metadata: generationMetadata,
           tenant_id: resolvedTenantId,
