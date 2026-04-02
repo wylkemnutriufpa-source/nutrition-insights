@@ -134,6 +134,12 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
       // 1. Generate inserts from generated slots
       const inserts = await slotsToInserts(result.slots, planId);
 
+      // Guard: block empty generation
+      if (!inserts || inserts.length === 0) {
+        toast.error("Nenhuma refeição foi gerada. Verifique os dados do paciente e tente novamente.");
+        return;
+      }
+
       // 2. Insert new items FIRST (safe: if this fails, old plan remains intact)
       const { data: savedItems, error: insertError } = await supabase
         .from("meal_plan_items")
