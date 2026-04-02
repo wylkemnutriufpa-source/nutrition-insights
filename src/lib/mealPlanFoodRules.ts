@@ -211,7 +211,7 @@ export const BREAKFAST_OPTIONS_EMAG = [
   { name: "Tapioca com ovo e queijo", foods: ["1 tapioca média", "1 ovo", "1 fatia queijo coalho"], kcal: 280, protein: 15, carbs: 30, fat: 11 },
   { name: "Cuscuz com ovo cozido", foods: ["1 fatia de cuscuz", "1 ovo cozido"], kcal: 240, protein: 11, carbs: 32, fat: 8 },
   { name: "Pão com queijo e café", foods: ["1 pão francês", "1 fatia queijo muçarela", "café s/ açúcar"], kcal: 250, protein: 10, carbs: 28, fat: 10 },
-  { name: "Aveia com banana", foods: ["3 col. sopa de aveia", "1 banana"], kcal: 220, protein: 6, carbs: 40, fat: 4 },
+  { name: "Aveia com banana e ovo", foods: ["3 col. sopa de aveia", "1 banana", "1 ovo cozido"], kcal: 290, protein: 12, carbs: 40, fat: 8 },
 ];
 
 export const BREAKFAST_OPTIONS_MASSA = [
@@ -325,6 +325,22 @@ export function getRealisticOptions(mealType: string, goal: string) {
     default:
       return SNACK_OPTIONS;
   }
+}
+
+/**
+ * Ensures breakfast always has a protein source.
+ * If only fruits/carbs, adds "1 ovo cozido".
+ */
+export function ensureBreakfastProtein(foods: string[]): string[] {
+  const proteinKeywords = ["ovo", "queijo", "requeijão", "omelete", "presunto", "iogurte", "leite"];
+  const hasProtein = foods.some(f => {
+    const n = normalize(f);
+    return proteinKeywords.some(p => n.includes(p));
+  });
+  if (!hasProtein) {
+    return [...foods, "1 ovo cozido"];
+  }
+  return foods;
 }
 
 /**

@@ -16,6 +16,7 @@ import {
   getSubstitutionsFor,
   MEAL_LIMITS,
   BLOCKED_FOODS,
+  ensureBreakfastProtein,
 } from "./mealPlanFoodRules";
 import { isExplicitlyBanned, getClosestValidatedFood } from "./validatedFoodDatabase";
 import { buildMealItems } from "./mealItemBuilder";
@@ -416,7 +417,17 @@ export async function slotsToInserts(slots: GeneratedMealSlot[], planId: string)
     slots.map(async (slot) => {
       const mealType = slot.mealType as MealTypeEnum;
       const storageDay = normalizeGeneratedDayForStorage(slot.day);
-      const foods = Array.isArray(slot.libraryItem.foods) ? slot.libraryItem.foods : [];
+      let foodNames = Array.isArray(slot.libraryItem.foods) ? slot.libraryItem.foods.map(f => f.name || "") : [];
+      
+      // Enforce breakfast protein rule globally
+      if (mealType === "breakfast") {
+        foodNames = ensureBreakfastProtein(foodNames);
+      }
+      
+      const foods = foodNames.map(name => {
+        const original = (slot.libraryItem.foods || []).find(f => f.name === name);
+        return original || { name, portion: name };
+      });
 
       const scaledProtein = Math.round(slot.libraryItem.protein * slot.scaleFactor);
       const scaledCarbs = Math.round(slot.libraryItem.carbs * slot.scaleFactor);
