@@ -156,9 +156,6 @@ export function computeFinalDecision(
   prioritizedIssues: PrioritizedIssue[]
 ): { decision: FinalDecision; reason: string; confidence: ConfidenceLevel } {
   const hasCritical = prioritizedIssues.some((i) => i.severity === "critical");
-  const blockingCount = prioritizedIssues.filter(
-    (i) => i.correction_bucket === "bloquear_publicacao"
-  ).length;
 
   if (overallPassed && !hasCritical) {
     return {
@@ -168,17 +165,13 @@ export function computeFinalDecision(
     };
   }
 
-  if (overallScore < 50) {
-    return {
-      decision: "rebuild_plan",
-      reason: `Score geral muito baixo (${overallScore}/100) com ${blockingCount} problema(s) bloqueante(s). Recomenda-se refazer o plano.`,
-      confidence: "high",
-    };
-  }
+  const blockingCount = prioritizedIssues.filter(
+    (i) => i.correction_bucket === "bloquear_publicacao"
+  ).length;
 
   return {
-    decision: "fix_and_revalidate",
-    reason: `${blockingCount} problema(s) bloqueante(s) encontrado(s). Corrija e revalide o plano.`,
+    decision: "suggest_corrections",
+    reason: `${blockingCount} sugestão(ões) de melhoria encontrada(s). Aplique as correções sugeridas ou publique como está.`,
     confidence: hasCritical ? "high" : "medium",
   };
 }
