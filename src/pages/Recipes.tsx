@@ -83,6 +83,7 @@ const emptyForm = {
 function NutritionistRecipes() {
   const { user } = useAuth();
   const aiUsage = useAIUsage("generate_recipe");
+  const { enabled: llmEnabled } = useFeatureFlag("llm_global_enabled");
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
