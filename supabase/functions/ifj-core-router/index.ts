@@ -1714,7 +1714,8 @@ serve(async (req) => {
         } else {
           // ── AI FALLBACK — Last resort for truly unknown commands ──
           const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-          if (LOVABLE_API_KEY && (role === "admin" || role === "nutritionist" || role === "personal")) {
+          const llmEnabled = await isLLMEnabled();
+          if (LOVABLE_API_KEY && llmEnabled && (role === "admin" || role === "nutritionist" || role === "personal")) {
             try {
               const patientSummary = patients.slice(0, 20).map(p => `${p.full_name} (${p.goal || "sem objetivo"}, status: ${p.journey_status || p.status || "ativo"})`).join("; ");
               const aiSystemPrompt = `Você é o IFJ (Inteligência FitJourney), assistente clínico integrado para profissionais de saúde.
