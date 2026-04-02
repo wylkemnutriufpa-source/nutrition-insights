@@ -354,7 +354,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
         } else {
           toast.info(resolvedPlan && !resolvedPlan.hasItems
             ? "Plano sem refeições detectado. Gerando itens automaticamente..."
-            : "Plano antigo/reprovado detectado. Gerando uma versão nova...");
+            : "Plano sem itens detectado. Gerando uma versão nova...");
 
           const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
             body: {

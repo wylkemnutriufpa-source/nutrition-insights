@@ -449,8 +449,8 @@ serve(async (req) => {
         if (!items || items.length === 0) {
             return new Response(JSON.stringify({
                 success: false,
-                overall_status: "reprovado",
-                clinical_status: "reprovado", simplicity_status: "failed", practical_status: "failed",
+                overall_status: "suggest_corrections",
+                clinical_status: "suggest_corrections", simplicity_status: "failed", practical_status: "failed",
                 clinical_score: 0, simplicity_score: 0, adherence_score_prediction: 0,
                 score: 0,
                 errors: [{ rule: "plano_vazio", message: "O plano não tem refeições cadastradas.", weight: 100 }],
@@ -559,7 +559,7 @@ serve(async (req) => {
         const clinicalDeduction = clinicalErrors.reduce((s, e) => s + e.weight, 0);
         const clinicalScore = Math.max(0, 100 - clinicalDeduction);
         const clinicalPassed = clinicalErrors.length === 0;
-        const clinicalStatus = clinicalPassed ? "approved" : "reprovado";
+        const clinicalStatus = clinicalPassed ? "approved" : "suggest_corrections";
 
         // ── 2. Simplicity Validation ──────────────────────────────────────
         const patientGoal = (answers?.primary_goal || answers?.objective || answers?.goal || "emagrecimento") as string;
@@ -570,7 +570,7 @@ serve(async (req) => {
 
         // ── Overall Status ───────────────────────────────────────────────────
         const overallPassed = clinicalPassed && simplicityResult.status !== "failed" && adherenceResult.status !== "failed";
-        const overallStatus = overallPassed ? "aprovado" : "reprovado";
+        const overallStatus = overallPassed ? "aprovado" : "sugestoes_melhoria";
         const overallScore = Math.round((clinicalScore * 0.4) + (simplicityResult.score * 0.35) + (adherenceResult.score * 0.25));
 
         // Merge all errors
@@ -639,7 +639,7 @@ serve(async (req) => {
         // Timeline
         const timelineTitle = overallPassed
             ? "Plano Aprovado pelo Motor Clínico Unificado ✅"
-            : "Plano Reprovado pelo Motor Clínico Unificado ❌";
+            : "Plano com Sugestões de Melhoria — Motor Clínico Unificado 📋";
         const timelineDesc = `Score: ${overallScore}/100 (Clínico: ${clinicalScore} | Simplicidade: ${simplicityResult.score} | Adesão: ${adherenceResult.score}) | Decisão: ${finalDecision}`;
 
         await supabase.from("patient_timeline").insert({

@@ -252,7 +252,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
         } else {
           toast.info(resolvedPlan && !resolvedPlan.hasItems
             ? "Plano sem refeições detectado. Gerando itens automaticamente..."
-            : "Plano antigo/reprovado detectado. Gerando uma versão nova...");
+            : "Plano sem itens detectado. Gerando uma versão nova...");
           const regenerated = await generateOrRegeneratePlan(resolvedPlan && !resolvedPlan.hasItems ? planId : undefined);
           resolvedPlanId = regenerated.planId;
           resolvedPlan = await inspectOnboardingPlan(resolvedPlanId);
