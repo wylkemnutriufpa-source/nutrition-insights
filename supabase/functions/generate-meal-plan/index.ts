@@ -174,6 +174,63 @@ function normalize(t: string): string {
   return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s]/g, "").trim().replace(/\s+/g, " ");
 }
 
+function toFiniteNumber(value: unknown): number | null {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+
+  if (typeof value === "string") {
+    const cleaned = value.replace(",", ".").trim();
+    if (!cleaned) return null;
+    const parsed = Number(cleaned);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  return null;
+}
+
+function normalizeWeightKg(value: unknown): number | null {
+  const parsed = toFiniteNumber(value);
+  if (parsed === null || parsed <= 0) return null;
+
+  // Legacy guard: some historical records may have been saved in grams.
+  if (parsed > 300) return parsed / 1000;
+
+  return parsed;
+}
+
+function normalizeHeightCm(value: unknown): number | null {
+  const parsed = toFiniteNumber(value);
+  if (parsed === null || parsed <= 0) return null;
+
+  // Legacy guard: some onboarding/anamnesis records stored height in meters.
+  if (parsed > 0 && parsed < 3) return parsed * 100;
+
+  return parsed;
+}
+
+function normalizeAge(value: unknown, fallback = 30): number {
+  const parsed = toFiniteNumber(value);
+  if (parsed === null) return fallback;
+
+  const rounded = Math.round(parsed);
+  if (rounded < 1 || rounded > 120) return fallback;
+
+  return rounded;
+}
+
+function normalizeActivityLevel(value: unknown): string {
+  const raw = normalize(String(value || "light"));
+
+  if (["sedentary", "sedentario"].includes(raw)) return "sedentary";
+  if (["light", "leve"].includes(raw)) return "light";
+  if (["moderate", "moderado"].includes(raw)) return "moderate";
+  if (["active", "ativo", "intense", "intenso"].includes(raw)) return "active";
+  if (["very_active", "very active", "muito ativo", "muito_ativo"].includes(raw)) return "very_active";
+
+  return "light";
+}
+
 // ── Visual Resolution Engine (server-side) ──
 const VISUAL_CARB_KEYWORDS = new Set([
   "arroz", "batata", "macarrao", "feijao", "pure", "mandioca", "inhame",
@@ -676,8 +733,18 @@ serve(async (req) => {
       }
     }
 
+    const { data: latestPipeline } = isPipeline
+      ? await serviceClient
+          .from("onboarding_pipelines")
+          .select("id, weight, height, meal_count, cooking_preference, food_preferences, wake_time, sleep_time, status")
+          .eq("patient_id", patient_id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      : { data: null };
+
     // ── 1. Get completed anamnesis ──
-    const { data: anamnesis, error: anamErr } = await serviceClient
+    let { data: anamnesis, error: anamErr } = await serviceClient
       .from("patient_anamnesis")
       .select("*")
       .eq("user_id", patient_id)
@@ -693,6 +760,23 @@ serve(async (req) => {
       });
     }
 
+    if (!anamnesis && isPipeline) {
+      const { data: fallbackAnamnesis, error: fallbackAnamErr } = await serviceClient
+        .from("patient_anamnesis")
+        .select("*")
+        .eq("user_id", patient_id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (fallbackAnamErr) {
+        console.error("Fallback anamnesis query error:", fallbackAnamErr);
+      } else if (fallbackAnamnesis?.answers) {
+        anamnesis = fallbackAnamnesis;
+        console.warn(`[generate-meal-plan] Using fallback anamnesis with status=${fallbackAnamnesis.status} for patient ${patient_id}`);
+      }
+    }
+
     if (!anamnesis) {
       return new Response(JSON.stringify({ error: "Anamnese concluída não encontrada", code: "ANAMNESIS_MISSING" }), {
         status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -702,16 +786,26 @@ serve(async (req) => {
     const answers = (anamnesis.answers || {}) as Record<string, any>;
 
     // ── 2. Validate weight + height ──
-    const weight = body.weight || answers.weight;
-    const height = body.height || answers.height;
+    const weight = normalizeWeightKg(body.weight ?? latestPipeline?.weight ?? answers.weight);
+    const height = normalizeHeightCm(body.height ?? latestPipeline?.height ?? answers.height);
     if (!weight || weight < 20 || !height || height < 80) {
+      console.warn(`[generate-meal-plan] Invalid body data for patient ${patient_id}`, {
+        rawBodyWeight: body.weight ?? null,
+        rawBodyHeight: body.height ?? null,
+        pipelineWeight: latestPipeline?.weight ?? null,
+        pipelineHeight: latestPipeline?.height ?? null,
+        anamnesisWeight: answers.weight ?? null,
+        anamnesisHeight: answers.height ?? null,
+        normalizedWeight: weight,
+        normalizedHeight: height,
+      });
       return new Response(JSON.stringify({ error: "Peso e altura válidos são obrigatórios", code: "BODY_DATA_MISSING" }), {
         status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     // ── 3. Goal ──
-    const goal = body.goal || answers.goal || answers.objective;
+    const goal = body.goal || answers.goal || answers.objective || answers.main_goal;
     if (!goal) {
       return new Response(JSON.stringify({ error: "Objetivo do paciente não definido", code: "GOAL_MISSING" }), {
         status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -719,9 +813,9 @@ serve(async (req) => {
     }
 
     // ── 4. Calculate TMB / TDEE / macros ──
-    const age = answers.age || 30;
-    const sex = answers.sex || answers.gender || "male";
-    const activityLevel = answers.activity_level || "light";
+    const age = normalizeAge(answers.age, 30);
+    const sex = String(answers.sex || answers.gender || "male").toLowerCase() === "female" ? "female" : "male";
+    const activityLevel = normalizeActivityLevel(answers.activity_level || body.activityLevel || latestPipeline?.food_preferences?.activity_level);
 
     const tmb = calculateTMB(weight, height, age, sex);
     const tdeeFactor = ACTIVITY_MULTIPLIERS[activityLevel] || 1.375;
@@ -748,11 +842,11 @@ serve(async (req) => {
 
     // Pipeline overrides
     const pipelineOverrides: Record<string, unknown> = isPipeline ? {
-      cooking_preference: body.cookingPreference,
-      food_preferences: body.foodPreferences,
-      wake_time: body.wakeTime,
-      sleep_time: body.sleepTime,
-      meal_count: body.mealCount,
+      cooking_preference: body.cookingPreference ?? latestPipeline?.cooking_preference,
+      food_preferences: body.foodPreferences ?? latestPipeline?.food_preferences,
+      wake_time: body.wakeTime ?? latestPipeline?.wake_time,
+      sleep_time: body.sleepTime ?? latestPipeline?.sleep_time,
+      meal_count: body.mealCount ?? latestPipeline?.meal_count,
     } : {};
     const mergedAnswers = { ...(answers as Record<string, unknown>), ...pipelineOverrides } as Record<string, any>;
 
