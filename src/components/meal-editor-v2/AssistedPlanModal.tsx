@@ -153,6 +153,13 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
       // 1. Prepare new items
       const inserts = await slotsToInserts(selectedOption.slots, planId);
 
+      // Guard: block empty generation
+      if (!inserts || inserts.length === 0) {
+        toast.error("Nenhuma refeição foi gerada. Verifique os dados e tente novamente.");
+        setApplying(false);
+        return;
+      }
+
       // 2. Insert new items FIRST (safe: if this fails, old plan remains)
       const { data: savedItems, error: insertError } = await supabase
         .from("meal_plan_items")

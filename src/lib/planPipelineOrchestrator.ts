@@ -260,7 +260,26 @@ export async function runPlanPipeline(input: PipelineInput): Promise<PipelineRes
     }).eq("id", planId);
   }
 
-  // ── Step 5: Insert items with state flags
+  // ── Step 5: Guard against empty plans ──
+  if (items.length === 0) {
+    console.error("[Pipeline] BLOCKED: 0 items generated — refusing to create empty plan");
+    // Cleanup orphaned plan if we just created it
+    if (!input.existingPlanId && planId) {
+      await supabase.from("meal_plans").delete().eq("id", planId);
+      console.warn(`[Pipeline] Rolled back empty plan ${planId}`);
+    }
+    return {
+      success: false,
+      items: [],
+      personalization: personalizationResult,
+      context: personalizationCtx,
+      auditLog: { ...auditLog, warnings: [...warnings, "CRITICAL: 0 itens gerados — plano não foi salvo"] },
+      warnings: [...warnings, "Nenhum item de refeição foi gerado. Verifique os dados do paciente e tente novamente."],
+      pipelineVersion: PIPELINE_VERSION,
+    };
+  }
+
+  // ── Step 6: Insert items with state flags
   const itemInserts: TablesInsert<"meal_plan_items">[] = items.map(item => ({
     meal_plan_id: planId!,
     title: item.title || "",
@@ -284,7 +303,20 @@ export async function runPlanPipeline(input: PipelineInput): Promise<PipelineRes
 
   if (itemsErr) {
     console.error("[Pipeline] Failed to insert items:", itemsErr);
-    warnings.push("Erro ao salvar itens do plano");
+    // Cleanup orphaned plan if we just created it
+    if (!input.existingPlanId && planId) {
+      await supabase.from("meal_plans").delete().eq("id", planId);
+      console.warn(`[Pipeline] Rolled back plan ${planId} after item insert failure`);
+    }
+    return {
+      success: false,
+      items: [],
+      personalization: personalizationResult,
+      context: personalizationCtx,
+      auditLog,
+      warnings: [...warnings, "Erro ao salvar itens do plano: " + itemsErr.message],
+      pipelineVersion: PIPELINE_VERSION,
+    };
   }
 
   return {
