@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useFeatureFlag } from "@/lib/featureFlags";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
@@ -89,8 +90,11 @@ export default function MagicSlideGenerator({ open, onOpenChange }: Props) {
   const [customContext, setCustomContext] = useState("");
   const [generated, setGenerated] = useState<GeneratedSlide | null>(null);
 
+  const { enabled: llmEnabled } = useFeatureFlag("llm_global_enabled");
+
   const generateMutation = useMutation({
     mutationFn: async () => {
+      if (!llmEnabled) throw new Error("IA LLM desativada pelo administrador");
       const { data, error } = await supabase.functions.invoke("generate-smart-slide", {
         body: { slide_type: slideType, theme, tone, custom_context: customContext || undefined },
       });

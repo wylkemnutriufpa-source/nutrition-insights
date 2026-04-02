@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/lib/tenantContext";
+import { useFeatureFlag } from "@/lib/featureFlags";
 import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
