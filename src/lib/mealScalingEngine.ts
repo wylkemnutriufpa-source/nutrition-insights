@@ -10,6 +10,13 @@ export interface FoodStructureItem {
   protein: number;
   carbs: number;
   fat: number;
+  /** Per-gram macros — when present, engine uses these for precise scaling */
+  protein_per_gram?: number;
+  carbs_per_gram?: number;
+  fat_per_gram?: number;
+  calories_per_gram?: number;
+  /** Link to ifj_food_database for dynamic lookups */
+  food_id?: string;
   substitutions?: string[];
 }
 
@@ -91,12 +98,28 @@ export function scaleMealToTarget(
   scaleFactor = Math.max(CLINICAL_LIMITS.MIN_SCALE_FACTOR, 
     Math.min(CLINICAL_LIMITS.MAX_SCALE_FACTOR, scaleFactor));
 
-  // 3. Scale each food proportionally
+  // 3. Scale each food — use per-gram macros when available for precision
   const scaledFoods: ScaledFoodItem[] = template.foods_structure.map(food => {
     let newPortion = Math.round(food.portion_grams * scaleFactor);
     newPortion = Math.max(CLINICAL_LIMITS.MIN_PORTION_GRAMS, 
       Math.min(CLINICAL_LIMITS.MAX_SINGLE_PORTION_GRAMS, newPortion));
 
+    // Prefer per-gram macros (dynamic) over ratio-based scaling (legacy)
+    const hasPerGram = food.calories_per_gram != null && food.calories_per_gram > 0;
+
+    if (hasPerGram) {
+      return {
+        name: food.name,
+        portion_grams: newPortion,
+        calories: Math.round(newPortion * (food.calories_per_gram || 0)),
+        protein: Math.round(newPortion * (food.protein_per_gram || 0) * 10) / 10,
+        carbs: Math.round(newPortion * (food.carbs_per_gram || 0) * 10) / 10,
+        fat: Math.round(newPortion * (food.fat_per_gram || 0) * 10) / 10,
+        original_portion: food.portion_grams,
+      };
+    }
+
+    // Fallback: ratio-based scaling for legacy data without per-gram values
     const portionRatio = newPortion / food.portion_grams;
     return {
       name: food.name,

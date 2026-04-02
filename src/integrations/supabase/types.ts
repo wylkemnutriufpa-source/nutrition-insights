@@ -4691,9 +4691,12 @@ export type Database = {
       ifj_food_database: {
         Row: {
           calories: number | null
+          calories_per_gram: number | null
           carbs: number | null
+          carbs_per_gram: number | null
           category: string
           created_at: string | null
+          fat_per_gram: number | null
           fats: number | null
           fiber: number | null
           food_name: string
@@ -4702,8 +4705,10 @@ export type Database = {
           is_active: boolean | null
           meal_tags_json: Json | null
           normalized_name: string
+          portion_grams: number | null
           portion_reference: string | null
           protein: number | null
+          protein_per_gram: number | null
           restriction_tags_json: Json | null
           subcategory: string | null
           synonyms: string[] | null
@@ -4711,9 +4716,12 @@ export type Database = {
         }
         Insert: {
           calories?: number | null
+          calories_per_gram?: number | null
           carbs?: number | null
+          carbs_per_gram?: number | null
           category: string
           created_at?: string | null
+          fat_per_gram?: number | null
           fats?: number | null
           fiber?: number | null
           food_name: string
@@ -4722,8 +4730,10 @@ export type Database = {
           is_active?: boolean | null
           meal_tags_json?: Json | null
           normalized_name: string
+          portion_grams?: number | null
           portion_reference?: string | null
           protein?: number | null
+          protein_per_gram?: number | null
           restriction_tags_json?: Json | null
           subcategory?: string | null
           synonyms?: string[] | null
@@ -4731,9 +4741,12 @@ export type Database = {
         }
         Update: {
           calories?: number | null
+          calories_per_gram?: number | null
           carbs?: number | null
+          carbs_per_gram?: number | null
           category?: string
           created_at?: string | null
+          fat_per_gram?: number | null
           fats?: number | null
           fiber?: number | null
           food_name?: string
@@ -4742,8 +4755,10 @@ export type Database = {
           is_active?: boolean | null
           meal_tags_json?: Json | null
           normalized_name?: string
+          portion_grams?: number | null
           portion_reference?: string | null
           protein?: number | null
+          protein_per_gram?: number | null
           restriction_tags_json?: Json | null
           subcategory?: string | null
           synonyms?: string[] | null
@@ -14043,6 +14058,54 @@ export type Database = {
           status?: string
         }
         Relationships: []
+      }
+      recipe_items: {
+        Row: {
+          created_at: string
+          display_order: number | null
+          food_id: string | null
+          food_name: string
+          grams_reference: number
+          id: string
+          is_scalable: boolean
+          recipe_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number | null
+          food_id?: string | null
+          food_name: string
+          grams_reference?: number
+          id?: string
+          is_scalable?: boolean
+          recipe_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number | null
+          food_id?: string | null
+          food_name?: string
+          grams_reference?: number
+          id?: string
+          is_scalable?: boolean
+          recipe_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_items_food_id_fkey"
+            columns: ["food_id"]
+            isOneToOne: false
+            referencedRelation: "ifj_food_database"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recipe_items_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       recipes: {
         Row: {
