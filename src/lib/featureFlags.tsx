@@ -81,8 +81,13 @@ const DEFAULT_FLAGS: Record<string, FeatureFlag> = {
     description: "Transições semi-autônomas de protocolo",
     gracefulDegradation: true,
   },
+  llm_global_enabled: {
+    key: "llm_global_enabled",
+    enabled: false,
+    description: "Controle master de IA LLM — somente admin pode ativar",
+    gracefulDegradation: true,
+  },
 };
-
 // ========== Runtime State ==========
 
 const CACHE_KEY = "fj_feature_flags";

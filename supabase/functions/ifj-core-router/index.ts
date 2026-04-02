@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isLLMEnabled } from "../_shared/llm-gate.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1187,6 +1188,10 @@ async function runNutritionEngine(supabaseAdmin: any, intent: IFJIntent, userId:
     if (!profile?.goal && !anam && !plan)
       return fmt("Consulte seu nutricionista", "📋", "info", "Dados insuficientes.", "📋 **Consulte seu nutricionista** — não há dados suficientes para responder com segurança.", [], intent, "nutrition", ctx);
 
+    // LLM Gate — admin control
+    if (!(await isLLMEnabled()))
+      return fmt("IA LLM desativada", "🔒", "info", "IA LLM desativada pelo admin.", "🔒 **IA LLM desativada** pelo administrador.\n\n💡 Para substituições simples, diga: *\"trocar pistache\"* ou *\"no lugar de arroz\"*", [], intent, "nutrition", ctx);
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) return fmt("Consulte seu nutricionista", "📋", "info", "Recurso indisponível.", "📋 **Consulte seu nutricionista** para orientação personalizada.", [], intent, "nutrition", ctx);
 
@@ -1709,7 +1714,8 @@ serve(async (req) => {
         } else {
           // ── AI FALLBACK — Last resort for truly unknown commands ──
           const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-          if (LOVABLE_API_KEY && (role === "admin" || role === "nutritionist" || role === "personal")) {
+          const llmEnabled = await isLLMEnabled();
+          if (LOVABLE_API_KEY && llmEnabled && (role === "admin" || role === "nutritionist" || role === "personal")) {
             try {
               const patientSummary = patients.slice(0, 20).map(p => `${p.full_name} (${p.goal || "sem objetivo"}, status: ${p.journey_status || p.status || "ativo"})`).join("; ");
               const aiSystemPrompt = `Você é o IFJ (Inteligência FitJourney), assistente clínico integrado para profissionais de saúde.

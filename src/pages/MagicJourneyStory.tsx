@@ -7,6 +7,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Sparkles, ChevronLeft, ChevronRight, Share2, Utensils, ArrowRight, Loader2, Volume2, VolumeX } from "lucide-react";
 import { useAmbientAudio } from "@/hooks/useAmbientAudio";
+import { useFeatureFlag } from "@/lib/featureFlags";
 
 interface StoryData {
   narrative_opening: string;
@@ -43,9 +44,11 @@ export default function MagicJourneyStory() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [selectedProjection, setSelectedProjection] = useState(0);
   const { isMuted, toggleMute } = useAmbientAudio({ src: "/audio/ambient-floating.mp3" });
+  const { enabled: llmEnabled } = useFeatureFlag("llm_global_enabled");
 
   const generateStory = useCallback(async () => {
     if (!user) return;
+    if (!llmEnabled) { toast.error("IA LLM desativada pelo administrador"); return; }
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-patient-story", {

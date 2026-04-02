@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isLLMEnabled, llmBlockedResponse } from "../_shared/llm-gate.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -50,6 +51,9 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+
+    // LLM Gate — admin control
+    if (!(await isLLMEnabled())) return llmBlockedResponse(corsHeaders);
 
     const { slide_type, theme, tone, custom_context } = await req.json();
 

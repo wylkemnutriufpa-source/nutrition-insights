@@ -25,6 +25,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isLLMEnabled } from "../_shared/llm-gate.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -606,7 +607,7 @@ serve(async (req) => {
         patientName: profile?.full_name,
       };
 
-      if (lovableKey) {
+      if (lovableKey && (await isLLMEnabled())) {
         // Generate both narratives in parallel
         const [patientResult, professionalResult] = await Promise.allSettled([
           generatePatientNarrative(narrativeInput, lovableKey),

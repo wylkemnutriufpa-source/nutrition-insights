@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isLLMEnabled } from "../_shared/llm-gate.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -201,6 +202,9 @@ function generateClinicalAnalysis(name: string, metrics: any, anamnesis: any, bo
 // Only runs when useCopilot=true AND feature flag is enabled
 
 async function generateAICopilotAnalysis(patientData: any, engineResult: any): Promise<string | null> {
+  // LLM Gate — admin control
+  if (!(await isLLMEnabled())) return null;
+
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) return null;
 

@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { ChefHat, Plus, Pencil, Trash2, Clock, Users, Heart, Sparkles, Search, Share2 } from "lucide-react";
 import { useAIUsage } from "@/hooks/useAIUsage";
+import { useFeatureFlag } from "@/lib/featureFlags";
 import AIUsageBadge from "@/components/common/AIUsageBadge";
 import PremiumRecipeModal from "@/components/recipe/PremiumRecipeModal";
 import EmptyState from "@/components/common/EmptyState";
@@ -82,6 +83,7 @@ const emptyForm = {
 function NutritionistRecipes() {
   const { user } = useAuth();
   const aiUsage = useAIUsage("generate_recipe");
+  const { enabled: llmEnabled } = useFeatureFlag("llm_global_enabled");
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -161,6 +163,10 @@ function NutritionistRecipes() {
 
   const generateRecipe = async () => {
     if (!user || !aiPrompt.trim()) return;
+    if (!llmEnabled) {
+      toast.error("IA LLM desativada pelo administrador");
+      return;
+    }
     if (!aiUsage.allowed) {
       toast.error(aiUsage.nextAvailableLabel || "Limite de geração atingido");
       return;

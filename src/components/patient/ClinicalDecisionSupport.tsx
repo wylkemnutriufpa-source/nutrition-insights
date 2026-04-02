@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/lib/tenantContext";
+import { useFeatureFlag } from "@/lib/featureFlags";
 import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +35,7 @@ export default function ClinicalDecisionSupport({ patientId, nutritionistId }: P
   const [expandedSection, setExpandedSection] = useState<string | null>("analysis");
   const [useCopilot, setUseCopilot] = useState(false);
   const { tenantId } = useTenant();
+  const { enabled: llmEnabled } = useFeatureFlag("llm_global_enabled");
 
   const gatherAndAnalyze = useCallback(async () => {
     setLoading(true);
@@ -91,8 +93,11 @@ export default function ClinicalDecisionSupport({ patientId, nutritionistId }: P
         availableProtocols: availableProtocols.map((p: any) => ({ title: p.title, category: p.category, description: p.description })),
       };
 
+      // Block copilot if LLM disabled by admin
+      const effectiveCopilot = useCopilot && llmEnabled;
+
       const { data, error } = await supabase.functions.invoke("clinical-decision-support", {
-        body: { patientData, useCopilot },
+        body: { patientData, useCopilot: effectiveCopilot },
       });
 
       if (error) throw error;
@@ -149,9 +154,9 @@ export default function ClinicalDecisionSupport({ patientId, nutritionistId }: P
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <Switch id="copilot" checked={useCopilot} onCheckedChange={setUseCopilot} />
+            <Switch id="copilot" checked={useCopilot} onCheckedChange={setUseCopilot} disabled={!llmEnabled} />
             <Label htmlFor="copilot" className="text-xs flex items-center gap-1 cursor-pointer">
-              <Sparkles className="w-3 h-3 text-primary" /> Copiloto IA
+              <Sparkles className="w-3 h-3 text-primary" /> Copiloto IA {!llmEnabled && "(desativado pelo admin)"}
             </Label>
           </div>
           <Button onClick={gatherAndAnalyze} disabled={loading} size="sm" className="gap-2">
