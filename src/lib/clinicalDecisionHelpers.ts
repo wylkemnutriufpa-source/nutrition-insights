@@ -13,7 +13,7 @@ export type CorrectionBucket =
   | "corrigir_depois"
   | "opcional";
 
-export type FinalDecision = "publish_now" | "fix_and_revalidate" | "rebuild_plan";
+export type FinalDecision = "publish_now" | "suggest_corrections";
 export type ConfidenceLevel = "high" | "medium" | "low";
 export type IssueSeverity = "critical" | "high" | "medium" | "low";
 
