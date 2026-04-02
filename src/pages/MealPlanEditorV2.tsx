@@ -5,6 +5,8 @@ import {
   ArrowLeft, Loader2, AlertTriangle, Zap, Save, Send, CheckCircle2,
   Wand2, Trash2, Library, LayoutGrid, List, Minimize2, Maximize2, Sparkles, Utensils
 } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MoreHorizontal } from "lucide-react";
 import { useTenant } from "@/lib/tenantContext";
 import SimplifyPlanButton from "@/components/meal-simplification/SimplifyPlanButton";
 import { useAuth } from "@/lib/auth";
@@ -220,7 +222,7 @@ export default function MealPlanEditorV2() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap justify-end">
             {store.hydrating && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -267,15 +269,39 @@ export default function MealPlanEditorV2() {
                 : <Maximize2 className="w-4 h-4" />}
             </Button>
 
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => setAssistedOpen(true)}
-              className="gap-1.5 shadow-sm"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span className="hidden sm:inline">Plano Assistido</span>
-            </Button>
+            {/* Secondary tools dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1.5">
+                  <MoreHorizontal className="w-4 h-4" />
+                  <span className="hidden sm:inline">Ferramentas</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuItem onClick={() => setAssistedOpen(true)} className="gap-2">
+                  <Sparkles className="w-4 h-4" /> Plano Assistido
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setAutoGenOpen(true)} className="gap-2">
+                  <Wand2 className="w-4 h-4" /> Gerar Automático
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setMealLibModalOpen(true)} className="gap-2">
+                  <Utensils className="w-4 h-4" /> Banco de Refeições
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLibraryOpen(true)} className="gap-2">
+                  <Library className="w-4 h-4" /> Meus Modelos
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    if (!confirm("Tem certeza que deseja apagar TODAS as refeições deste plano? Esta ação não pode ser desfeita.")) return;
+                    store.clearAllItems();
+                    toast.success("Todas as refeições foram removidas do plano.");
+                  }}
+                  className="gap-2 text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="w-4 h-4" /> Apagar Plano
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             {plan && tenantId && (
               <SimplifyPlanButton
                 planId={plan.id}
@@ -286,46 +312,8 @@ export default function MealPlanEditorV2() {
                 onSimplified={(newId) => navigate(`/meal-plan-editor/${newId}`)}
               />
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setAutoGenOpen(true)}
-              className="gap-1.5"
-            >
-              <Wand2 className="w-4 h-4" />
-              <span className="hidden sm:inline">Gerar Automático</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setMealLibModalOpen(true)}
-              className="gap-1.5"
-            >
-              <Utensils className="w-4 h-4" />
-              <span className="hidden sm:inline">Banco de Refeições</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setLibraryOpen(true)}
-              className="gap-1.5"
-            >
-              <Library className="w-4 h-4" />
-              <span className="hidden sm:inline">Meus Modelos</span>
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => {
-                if (!confirm("Tem certeza que deseja apagar TODAS as refeições deste plano? Esta ação não pode ser desfeita.")) return;
-                store.clearAllItems();
-                toast.success("Todas as refeições foram removidas do plano.");
-              }}
-              className="gap-1.5"
-            >
-              <Trash2 className="w-4 h-4" />
-              <span className="hidden sm:inline">Apagar Plano</span>
-            </Button>
+
+            {/* Critical action buttons — always visible */}
             <Button
               variant="outline"
               size="sm"
