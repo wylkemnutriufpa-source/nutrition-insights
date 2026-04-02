@@ -35,6 +35,7 @@ export default function ClinicalDecisionSupport({ patientId, nutritionistId }: P
   const [expandedSection, setExpandedSection] = useState<string | null>("analysis");
   const [useCopilot, setUseCopilot] = useState(false);
   const { tenantId } = useTenant();
+  const { enabled: llmEnabled } = useFeatureFlag("llm_global_enabled");
 
   const gatherAndAnalyze = useCallback(async () => {
     setLoading(true);
