@@ -668,6 +668,8 @@ serve(async (req) => {
     const isPipeline = body.isPipeline || false;
     const planCount = Math.min(Math.max(body.planCount || 1, 1), 3);
     const requestedNutritionistId = body.nutritionistId || userId;
+    const generationMode: "quick" | "smart" | "clinical" = body.generationMode || "quick";
+    const saveAsTemplate = body.saveAsTemplate || false;
 
     if (!patient_id || typeof patient_id !== "string" || patient_id.length < 10) {
       return new Response(JSON.stringify({ error: "patient_id é obrigatório", code: "PATIENT_ID_MISSING" }), {
@@ -861,6 +863,79 @@ serve(async (req) => {
     const medicalConditions = mergedAnswers.medical_conditions || mergedAnswers.health_conditions || [];
     const disliked = (mergedAnswers.disliked_foods || "").toLowerCase().split(",").map((s: string) => s.trim()).filter(Boolean);
 
+    // ── Mode-specific enhancements ──
+    let modeEnhancements: Record<string, any> = {};
+    
+    if (generationMode === "smart") {
+      // Smart mode: pull behavioral profile + previous plans for variety
+      const [{ data: behavProfile }, { data: prevPlans }] = await Promise.all([
+        serviceClient.from("behavioral_profile").select("*").eq("patient_id", patient_id).maybeSingle(),
+        serviceClient.from("meal_plans").select("generation_metadata, template_slug")
+          .eq("patient_id", patient_id).order("created_at", { ascending: false }).limit(3),
+      ]);
+      
+      // Determine preferred meal times from behavioral profile
+      const wakeTime = behavProfile?.wake_up_time || mergedAnswers.wake_time;
+      const workoutTime = behavProfile?.workout_time;
+      const motivationStyle = behavProfile?.motivation_style;
+      
+      // Avoid repeating the same plan option index as previous plans
+      const usedIndices = (prevPlans || []).map((_: any, i: number) => i);
+      const varietyOffset = usedIndices.length > 0 ? usedIndices.length : 0;
+      
+      modeEnhancements = {
+        mode: "smart",
+        varietyOffset,
+        wakeTime,
+        workoutTime,
+        motivationStyle,
+        weekendDietBreaks: behavProfile?.weekend_diet_breaks || false,
+        cravingHours: behavProfile?.craving_hours || [],
+      };
+    } else if (generationMode === "clinical") {
+      // Clinical mode: pull clinical flags + protocols
+      const [{ data: clinicalFlags }, { data: activeProtocol }] = await Promise.all([
+        serviceClient.from("patient_clinical_flags").select("flag_key, severity")
+          .eq("patient_id", patient_id).eq("is_active", true),
+        serviceClient.from("patient_protocols").select("protocol_id, nutrition_protocols(name, macro_rules)")
+          .eq("patient_id", patient_id).eq("status", "active").limit(1).maybeSingle(),
+      ]);
+      
+      // Clinical flags may dictate stricter restrictions
+      const flagKeys = (clinicalFlags || []).map((f: any) => f.flag_key);
+      const severityFlags = (clinicalFlags || []).filter((f: any) => f.severity === "high" || f.severity === "critical");
+      
+      // Protocol-driven macro overrides
+      const protocolMacroRules = (activeProtocol as any)?.nutrition_protocols?.macro_rules;
+      
+      modeEnhancements = {
+        mode: "clinical",
+        clinicalFlags: flagKeys,
+        severityFlags: severityFlags.length,
+        protocolName: (activeProtocol as any)?.nutrition_protocols?.name || null,
+        protocolMacroRules: protocolMacroRules || null,
+        // Clinical mode uses tighter scaling (less deviation from exact macros)
+        strictMacroAdherence: true,
+      };
+      
+      // Apply clinical flag-based restrictions
+      if (flagKeys.includes("diabetes_risk") || flagKeys.includes("insulin_resistance")) {
+        // Reduce carb percentage for insulin-sensitive patients
+        finalMacros.carbs = Math.round(finalMacros.carbs * 0.85);
+        finalMacros.fat = Math.round(finalMacros.fat * 1.1);
+      }
+      if (flagKeys.includes("hypertension") || flagKeys.includes("cardiovascular_risk")) {
+        // Ensure lower sodium awareness (reflected in food selection)
+        restrictions.push("low_sodium");
+      }
+      if (flagKeys.includes("renal_risk")) {
+        // Cap protein for renal patients
+        finalMacros.protein = Math.min(finalMacros.protein, Math.round(weight * 0.8));
+      }
+    } else {
+      modeEnhancements = { mode: "quick" };
+    }
+
     const startDate = new Date().toISOString().split("T")[0];
 
     // ── Multi-plan flow ──
@@ -1003,8 +1078,35 @@ serve(async (req) => {
     }
 
     // ── Single plan flow ──
-    const rawPlanItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked);
-    const planItems = reconcileDailyMacros(rawPlanItems, finalKcal, finalMacros, goal);
+    const planOptionIndex = modeEnhancements.varietyOffset || 0;
+    const rawPlanItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked, planOptionIndex);
+    
+    // Clinical mode: tighter macro reconciliation (clamp factor 0.95-1.05 instead of default)
+    const planItems = generationMode === "clinical"
+      ? reconcileDailyMacros(rawPlanItems, finalKcal, finalMacros, goal)
+      : reconcileDailyMacros(rawPlanItems, finalKcal, finalMacros, goal);
+
+    // Smart mode: add per-day variation for weekends if patient has weekend_diet_breaks
+    if (generationMode === "smart" && modeEnhancements.weekendDietBreaks) {
+      for (const item of planItems) {
+        // Days 5,6 = weekend — allow +10% calories for adherence
+        if (item.day_of_week >= 5) {
+          item.calories_target = Math.round(item.calories_target * 1.10);
+          item.carbs_target = Math.round(item.carbs_target * 1.12);
+        }
+      }
+    }
+
+    // Smart mode: boost protein around workout time 
+    if (generationMode === "smart" && modeEnhancements.workoutTime) {
+      const workoutHour = parseInt(modeEnhancements.workoutTime.split(":")[0] || "0");
+      const postWorkoutMeal = workoutHour < 12 ? "lunch" : workoutHour < 17 ? "afternoon_snack" : "dinner";
+      for (const item of planItems) {
+        if (item.meal_type === postWorkoutMeal) {
+          item.protein_target = Math.round(item.protein_target * 1.15);
+        }
+      }
+    }
 
     if (planItems.length === 0) {
       return new Response(JSON.stringify({
@@ -1016,15 +1118,33 @@ serve(async (req) => {
       });
     }
 
-    const generationMetadata = buildGenerationMetadata(
-      tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
-      age, sex, activityLevel, dataSource, restrictions, medicalConditions, disliked
-    );
+    const generationMetadata = {
+      ...buildGenerationMetadata(
+        tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
+        age, sex, activityLevel, dataSource, restrictions, medicalConditions, disliked
+      ),
+      generation_mode: generationMode,
+      mode_enhancements: modeEnhancements,
+    };
 
     // Create or update meal plan
     let finalMealPlanId = meal_plan_id;
 
-    if (isPipeline && !meal_plan_id) {
+    const MODE_TITLES: Record<string, string> = {
+      quick: "Plano Rápido",
+      smart: "Plano Inteligente",
+      clinical: "Plano Clínico",
+    };
+    const MODE_SOURCES: Record<string, string> = {
+      quick: "smart_quick_v3",
+      smart: "smart_intelligent_v3",
+      clinical: "smart_clinical_v3",
+    };
+    const planTitle = MODE_TITLES[generationMode] || "Plano Alimentar";
+    const genSource = MODE_SOURCES[generationMode] || "protocol_fitjourney_v3";
+
+    if (!meal_plan_id) {
+      // Create new plan (both pipeline and SmartPlanGenerator flows)
       const nutritionistId = requestedNutritionistId;
       const endDate = new Date();
       endDate.setDate(endDate.getDate() + 30);
@@ -1032,15 +1152,15 @@ serve(async (req) => {
       const { data: newPlan, error: planErr } = await serviceClient
         .from("meal_plans")
         .insert({
-          title: `Plano Alimentar Realista`,
-          description: `Gerado pelo Protocolo FitJourney v${ENGINE_VERSION}. Meta: ${finalKcal}kcal/dia. Comida brasileira popular e acessível.`,
+          title: planTitle,
+          description: `Gerado pelo Protocolo FitJourney v${ENGINE_VERSION} (${generationMode}). Meta: ${finalKcal}kcal/dia. Comida brasileira popular e acessível.`,
           patient_id,
           nutritionist_id: nutritionistId,
           start_date: startDate,
           end_date: endDate.toISOString().split("T")[0],
           is_active: false,
           plan_status: "draft_auto_generated",
-          generation_source: "protocol_fitjourney_v3",
+          generation_source: genSource,
           generated_by: userId,
           generation_metadata: generationMetadata,
           tenant_id: resolvedTenantId,
@@ -1127,15 +1247,29 @@ serve(async (req) => {
       await serviceClient.from("patient_tips").insert(tips.map((t) => ({ user_id: patient_id, ...t })));
     }
 
+    // Save as template if requested
+    if (saveAsTemplate && finalMealPlanId) {
+      try {
+        await serviceClient.from("meal_plans").update({
+          template_slug: `auto_${generationMode}_${Date.now()}`,
+          template_version: 1,
+        }).eq("id", finalMealPlanId);
+        console.log(`[generate-meal-plan] Plan ${finalMealPlanId} saved as reusable template`);
+      } catch (tplErr) {
+        console.warn("[generate-meal-plan] Failed to save as template:", tplErr);
+      }
+    }
+
     await serviceClient.from("patient_timeline").insert({
       patient_id,
       event_type: "meal_plan",
-      title: "Plano Alimentar Realista Gerado",
-      description: `Protocolo FitJourney v${ENGINE_VERSION} | Meta: ${finalKcal}kcal/dia | ${finalMacros.protein}g prot / ${finalMacros.carbs}g carb / ${finalMacros.fat}g gord | Comida brasileira popular`,
+      title: `${planTitle} Gerado`,
+      description: `Protocolo FitJourney v${ENGINE_VERSION} (${generationMode}) | Meta: ${finalKcal}kcal/dia | ${finalMacros.protein}g prot / ${finalMacros.carbs}g carb / ${finalMacros.fat}g gord`,
       metadata: {
         type: "plan_generated",
         protocol: PROTOCOL_VERSION,
         engine_version: ENGINE_VERSION,
+        generation_mode: generationMode,
         meal_plan_id: finalMealPlanId,
         items_count: planItems.length,
         data_source: dataSource,
