@@ -863,6 +863,79 @@ serve(async (req) => {
     const medicalConditions = mergedAnswers.medical_conditions || mergedAnswers.health_conditions || [];
     const disliked = (mergedAnswers.disliked_foods || "").toLowerCase().split(",").map((s: string) => s.trim()).filter(Boolean);
 
+    // ── Mode-specific enhancements ──
+    let modeEnhancements: Record<string, any> = {};
+    
+    if (generationMode === "smart") {
+      // Smart mode: pull behavioral profile + previous plans for variety
+      const [{ data: behavProfile }, { data: prevPlans }] = await Promise.all([
+        serviceClient.from("behavioral_profile").select("*").eq("patient_id", patient_id).maybeSingle(),
+        serviceClient.from("meal_plans").select("generation_metadata, template_slug")
+          .eq("patient_id", patient_id).order("created_at", { ascending: false }).limit(3),
+      ]);
+      
+      // Determine preferred meal times from behavioral profile
+      const wakeTime = behavProfile?.wake_up_time || mergedAnswers.wake_time;
+      const workoutTime = behavProfile?.workout_time;
+      const motivationStyle = behavProfile?.motivation_style;
+      
+      // Avoid repeating the same plan option index as previous plans
+      const usedIndices = (prevPlans || []).map((_: any, i: number) => i);
+      const varietyOffset = usedIndices.length > 0 ? usedIndices.length : 0;
+      
+      modeEnhancements = {
+        mode: "smart",
+        varietyOffset,
+        wakeTime,
+        workoutTime,
+        motivationStyle,
+        weekendDietBreaks: behavProfile?.weekend_diet_breaks || false,
+        cravingHours: behavProfile?.craving_hours || [],
+      };
+    } else if (generationMode === "clinical") {
+      // Clinical mode: pull clinical flags + protocols
+      const [{ data: clinicalFlags }, { data: activeProtocol }] = await Promise.all([
+        serviceClient.from("patient_clinical_flags").select("flag_key, severity")
+          .eq("patient_id", patient_id).eq("is_active", true),
+        serviceClient.from("patient_protocols").select("protocol_id, nutrition_protocols(name, macro_rules)")
+          .eq("patient_id", patient_id).eq("status", "active").limit(1).maybeSingle(),
+      ]);
+      
+      // Clinical flags may dictate stricter restrictions
+      const flagKeys = (clinicalFlags || []).map((f: any) => f.flag_key);
+      const severityFlags = (clinicalFlags || []).filter((f: any) => f.severity === "high" || f.severity === "critical");
+      
+      // Protocol-driven macro overrides
+      const protocolMacroRules = (activeProtocol as any)?.nutrition_protocols?.macro_rules;
+      
+      modeEnhancements = {
+        mode: "clinical",
+        clinicalFlags: flagKeys,
+        severityFlags: severityFlags.length,
+        protocolName: (activeProtocol as any)?.nutrition_protocols?.name || null,
+        protocolMacroRules: protocolMacroRules || null,
+        // Clinical mode uses tighter scaling (less deviation from exact macros)
+        strictMacroAdherence: true,
+      };
+      
+      // Apply clinical flag-based restrictions
+      if (flagKeys.includes("diabetes_risk") || flagKeys.includes("insulin_resistance")) {
+        // Reduce carb percentage for insulin-sensitive patients
+        finalMacros.carbs = Math.round(finalMacros.carbs * 0.85);
+        finalMacros.fat = Math.round(finalMacros.fat * 1.1);
+      }
+      if (flagKeys.includes("hypertension") || flagKeys.includes("cardiovascular_risk")) {
+        // Ensure lower sodium awareness (reflected in food selection)
+        restrictions.push("low_sodium");
+      }
+      if (flagKeys.includes("renal_risk")) {
+        // Cap protein for renal patients
+        finalMacros.protein = Math.min(finalMacros.protein, Math.round(weight * 0.8));
+      }
+    } else {
+      modeEnhancements = { mode: "quick" };
+    }
+
     const startDate = new Date().toISOString().split("T")[0];
 
     // ── Multi-plan flow ──
