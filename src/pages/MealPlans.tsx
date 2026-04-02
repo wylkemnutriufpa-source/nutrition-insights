@@ -96,12 +96,19 @@ export default function MealPlans() {
     }
   };
 
-  // Handle source=onboarding: find existing plan from onboarding pipeline or generate
+  // Handle patientId param: auto-open dialog for "Do Zero" or resolve onboarding plan
   useEffect(() => {
     if (!user?.id) return;
     const source = searchParams.get("source");
     const patientId = searchParams.get("patientId");
-    if (source !== "onboarding" || !patientId) return;
+    if (!patientId) return;
+
+    // "Do Zero": open create dialog with patient pre-selected
+    if (source !== "onboarding") {
+      setForm(f => ({ ...f, patient_id: patientId }));
+      setOpen(true);
+      return;
+    }
 
     // Prevent duplicate handling for the same patientId
     if (onboardingHandled.current === patientId) return;
