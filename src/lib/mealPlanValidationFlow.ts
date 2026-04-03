@@ -6,6 +6,7 @@ export interface ClinicalValidationResult {
   status?: string;
   overall_status?: string;
   score?: number;
+  message?: string;
   [key: string]: unknown;
 }
 

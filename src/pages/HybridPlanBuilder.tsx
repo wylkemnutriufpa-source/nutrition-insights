@@ -232,10 +232,14 @@ export default function HybridPlanBuilder() {
           setValidationResult(null);
           toast.success("✅ Plano corrigido e revalidado com sucesso!");
         } else {
-          setValidationResult(data as ValidationResult);
+          setValidationResult(data as unknown as ValidationResult);
           toast.info("Correção aplicada, mas ainda existem ajustes pendentes.");
         }
         return;
+      }
+
+      if (outcome.kind !== "redirect") {
+        throw new Error("Fluxo de correção retornou um estado inesperado.");
       }
 
       toast.success("Plano corrigido salvo como novo draft. Redirecionando...");

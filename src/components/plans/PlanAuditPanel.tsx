@@ -226,7 +226,7 @@ export default function PlanAuditPanel({ mealPlanId, patientId, onApproved, onFi
       }
 
       const data = await validateMealPlan(mealPlanId);
-      setResult(data as AuditResult);
+      setResult(data as unknown as AuditResult);
       if (data?.success) {
         toast.success("Motor Clínico Unificado: Plano APROVADO! ✅");
         onApproved?.();
@@ -249,7 +249,7 @@ export default function PlanAuditPanel({ mealPlanId, patientId, onApproved, onFi
       }
 
       const data = await validateMealPlan(mealPlanId);
-      setResult(data as AuditResult);
+      setResult(data as unknown as AuditResult);
 
       if (data?.success) {
         toast.success("Motor Clínico Unificado: Plano já está APROVADO! ✅");
@@ -341,7 +341,7 @@ export default function PlanAuditPanel({ mealPlanId, patientId, onApproved, onFi
 
             {/* Decision CTA */}
             {result.final_decision && (
-              <DecisionCTA decision={result.final_decision} onFix={patientId ? handleTriggerAutoFix : undefined} />
+              <DecisionCTA decision={result.final_decision} onFix={patientId ? () => setAutoRunSignal((current) => current + 1) : undefined} />
             )}
 
             {/* 3 Scores */}
