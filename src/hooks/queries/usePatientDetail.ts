@@ -7,6 +7,51 @@ import { queryKeys } from "./queryKeys";
 import { toast } from "sonner";
 import type { PrestigePlan } from "@/hooks/usePrestige";
 
+const HIDDEN_MEAL_PLAN_STATUSES = new Set(["archived", "rejected"]);
+const CANONICAL_MEAL_PLAN_STATUSES = new Set(["approved", "published", "published_to_patient"]);
+const TRANSIENT_MEAL_PLAN_STATUSES = new Set([
+  "draft",
+  "draft_auto_generated",
+  "draft_auto_corrected",
+  "under_professional_review",
+]);
+
+function getVisibleMealPlans(plans: any[]) {
+  const sortedPlans = [...plans].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+
+  const hasCanonicalPlan = sortedPlans.some((plan) => {
+    const status = plan.plan_status || "draft";
+    return plan.is_active || CANONICAL_MEAL_PLAN_STATUSES.has(status);
+  });
+
+  let transientPlanKept = false;
+
+  return sortedPlans.filter((plan) => {
+    const status = plan.plan_status || "draft";
+
+    if (HIDDEN_MEAL_PLAN_STATUSES.has(status)) {
+      return false;
+    }
+
+    if (plan.is_active || CANONICAL_MEAL_PLAN_STATUSES.has(status)) {
+      return true;
+    }
+
+    if (!hasCanonicalPlan && TRANSIENT_MEAL_PLAN_STATUSES.has(status)) {
+      if (transientPlanKept) {
+        return false;
+      }
+
+      transientPlanKept = true;
+      return true;
+    }
+
+    return !TRANSIENT_MEAL_PLAN_STATUSES.has(status);
+  });
+}
+
 export function usePatientDetail(patientId: string | undefined) {
   const { user, isAdmin } = useAuth();
   const { tenantId } = useTenant();
@@ -84,7 +129,7 @@ export function usePatientDetail(patientId: string | undefined) {
         },
         patientSubscription: subRes.data?.[0] || null,
         pricingPlans: plansRes.data || [],
-        mealPlans: mealPlansRes.data || [],
+        mealPlans: getVisibleMealPlans(mealPlansRes.data || []),
         recipes: recipesRes.data || [],
         mealPlanDocs: (docs || []).filter((d: any) => d.document_type === "meal_plan"),
         assessmentDocs: (docs || []).filter((d: any) => d.document_type === "assessment"),
