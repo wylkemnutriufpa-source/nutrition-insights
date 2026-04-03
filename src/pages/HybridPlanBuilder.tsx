@@ -329,7 +329,7 @@ export default function HybridPlanBuilder() {
             saving={saving}
             publishing={publishing}
             validating={validating}
-            onBack={() => navigate("/meal-plans")}
+            onBack={() => plan?.patient_id ? navigate(`/patients/${plan.patient_id}`) : navigate("/meal-plans")}
             onSave={handleSave}
             onValidate={handleValidate}
             onPublish={handlePublish}
