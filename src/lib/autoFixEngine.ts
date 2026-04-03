@@ -25,6 +25,7 @@ import { BLOCKED_FOODS } from "./mealPlanFoodRules";
 import { loadPersonalizationContext, personalizePlanItems, type PersonalizationChange } from "./planPersonalizationEngine";
 import { isItemProtected } from "./planPipelineOrchestrator";
 import { isExplicitlyBanned } from "./validatedFoodDatabase";
+import { compareMealPlanCollections, haveMealPlanCollectionsChanged } from "./mealPlanPersistenceGuards";
 
 type MealPlanItem = Tables<"meal_plan_items">;
 
@@ -694,6 +695,14 @@ export async function autoFixMealPlan(
   // ─── STEP 8: Calculate AFTER scores ────────────────────
   const afterAudit = toAuditItems(finalItems);
   const afterScore = calculatePlanSimplicityScore(afterAudit);
+  const afterCal = sumMacro(finalItems, "calories_target");
+  const afterProt = sumMacro(finalItems, "protein_target");
+  const afterCarbs = sumMacro(finalItems, "carbs_target");
+  const afterFat = sumMacro(finalItems, "fat_target");
+
+  if (!haveMealPlanCollectionsChanged(items, finalItems)) {
+    return emptyResult("Nenhuma alteração foi aplicada.");
+  }
 
   // ─── STEP 9: Apply fix (in-place or new draft) ─────────
   onStep?.("creating_draft");
@@ -736,10 +745,10 @@ export async function autoFixMealPlan(
       is_active: false,
       generation_source: "auto_fix_engine_v1",
       previous_plan_id: planId,
-      total_target_calories: plan.total_target_calories,
-      total_target_protein: plan.total_target_protein,
-      total_target_carbs: plan.total_target_carbs,
-      total_target_fat: plan.total_target_fat,
+      total_target_calories: afterCal,
+      total_target_protein: afterProt,
+      total_target_carbs: afterCarbs,
+      total_target_fat: afterFat,
       editor_version: "v2",
       generation_metadata: genMeta as unknown as Tables<"meal_plans">["generation_metadata"],
     };
@@ -777,7 +786,7 @@ export async function autoFixMealPlan(
     const { error: insertErr } = await supabase.from("meal_plan_items").insert(newItems);
     if (insertErr) {
       console.error("[AutoFix] Failed to insert items:", insertErr);
-      warnings.push("Alguns itens podem não ter sido salvos");
+      return emptyResult("Falha ao persistir os itens corrigidos no banco.");
     }
   } else {
     // Draft/review plan → apply fix IN-PLACE (replace items on same plan)
@@ -815,14 +824,39 @@ export async function autoFixMealPlan(
     const { error: insertErr } = await supabase.from("meal_plan_items").insert(fixedItems);
     if (insertErr) {
       console.error("[AutoFix] Failed to insert corrected items:", insertErr);
-      warnings.push("Alguns itens podem não ter sido salvos");
+      return emptyResult("Falha ao persistir os itens corrigidos no banco.");
     }
 
     // Update plan metadata (keep same status, just update metadata)
-    await supabase.from("meal_plans").update({
+    const { error: updatePlanErr } = await supabase.from("meal_plans").update({
       generation_metadata: genMeta as unknown as Tables<"meal_plans">["generation_metadata"],
       generation_source: "auto_fix_engine_v1",
+      total_target_calories: afterCal,
+      total_target_protein: afterProt,
+      total_target_carbs: afterCarbs,
+      total_target_fat: afterFat,
     } as any).eq("id", planId);
+
+    if (updatePlanErr) {
+      console.error("[AutoFix] Failed to update plan totals:", updatePlanErr);
+      return emptyResult("Falha ao atualizar os totais do plano corrigido.");
+    }
+  }
+
+  const { data: persistedItems, error: persistedItemsErr } = await supabase
+    .from("meal_plan_items")
+    .select("title, description, meal_type, day_of_week, calories_target, protein_target, carbs_target, fat_target")
+    .eq("meal_plan_id", resultPlanId);
+
+  if (persistedItemsErr) {
+    console.error("[AutoFix] Failed to reload persisted items:", persistedItemsErr);
+    return emptyResult("Falha ao confirmar a persistência do plano corrigido.");
+  }
+
+  const persistenceCheck = compareMealPlanCollections(finalItems, persistedItems || []);
+  if (!persistenceCheck.matches) {
+    console.error("[AutoFix] Persisted diff mismatch:", persistenceCheck);
+    return emptyResult("Correção não confirmada no banco. Nenhuma alteração foi aplicada.");
   }
 
   // Record timeline
@@ -859,10 +893,10 @@ export async function autoFixMealPlan(
     },
     after: {
       score: afterScore,
-      totalCalories: sumMacro(finalItems, "calories_target"),
-      totalProtein: sumMacro(finalItems, "protein_target"),
-      totalCarbs: sumMacro(finalItems, "carbs_target"),
-      totalFat: sumMacro(finalItems, "fat_target"),
+      totalCalories: afterCal,
+      totalProtein: afterProt,
+      totalCarbs: afterCarbs,
+      totalFat: afterFat,
     },
     warnings,
     summary: changeSummary,

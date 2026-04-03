@@ -72,6 +72,7 @@ const STORAGE_PREFIX = "mpev2:";
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
 let syncBadgeTimer: ReturnType<typeof setTimeout> | null = null;
 let isFlushing = false;
+let activeFlushPromise: Promise<void> | null = null;
 
 // ── Session cache helpers ────────────────────────────────────
 function readCache(planId: string): Pick<EditorV2State, "plan" | "patientName" | "items"> | null {
@@ -462,60 +463,72 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     // Schedule auto-save
     if (flushTimer) clearTimeout(flushTimer);
     flushTimer = setTimeout(() => {
-      void get()._flushQueue();
+      void get()._flushQueue().catch(() => undefined);
     }, AUTOSAVE_DELAY);
   },
 
   // ── Internal: flush pending operations ────────────────────
   _flushQueue: async () => {
-    if (isFlushing) return;
+    if (activeFlushPromise) return activeFlushPromise;
+
     const ops = [...get().pendingOps];
     if (ops.length === 0) {
       if (get().syncStatus === "saving") get()._setSyncStatus("saved");
       return;
     }
 
-    isFlushing = true;
+    activeFlushPromise = (async () => {
+      isFlushing = true;
 
-    const results = await Promise.allSettled(
-      ops.map(async (op) => {
-        try {
-          await op.persist();
-          return { key: op.key, ok: true, itemIds: op.itemIds };
-        } catch (err) {
-          op.rollback?.();
-          return { key: op.key, ok: false, itemIds: op.itemIds, err };
-        }
-      })
-    );
+      const results = await Promise.allSettled(
+        ops.map(async (op) => {
+          try {
+            await op.persist();
+            return { key: op.key, ok: true, itemIds: op.itemIds };
+          } catch (err) {
+            op.rollback?.();
+            return { key: op.key, ok: false, itemIds: op.itemIds, err };
+          }
+        })
+      );
 
-    const processed = results.map((r) =>
-      r.status === "fulfilled" ? r.value : { key: "", ok: false, itemIds: [] as string[] }
-    );
-    const processedKeys = processed.map((p) => p.key).filter(Boolean);
+      const processed = results.map((r) =>
+        r.status === "fulfilled" ? r.value : { key: "", ok: false, itemIds: [] as string[] }
+      );
+      const processedKeys = processed.map((p) => p.key).filter(Boolean);
 
-    set((s) => {
-      const remaining = s.pendingOps.filter((p) => !processedKeys.includes(p.key));
-      const stillPendingIds = new Set(remaining.flatMap((p) => p.itemIds));
-      const syncing = { ...s.syncingMap };
-      processed.flatMap((p) => p.itemIds).forEach((id) => {
-        if (!stillPendingIds.has(id)) delete syncing[id];
+      set((s) => {
+        const remaining = s.pendingOps.filter((p) => !processedKeys.includes(p.key));
+        const stillPendingIds = new Set(remaining.flatMap((p) => p.itemIds));
+        const syncing = { ...s.syncingMap };
+        processed.flatMap((p) => p.itemIds).forEach((id) => {
+          if (!stillPendingIds.has(id)) delete syncing[id];
+        });
+
+        return { pendingOps: remaining, syncingMap: syncing };
       });
 
-      return { pendingOps: remaining, syncingMap: syncing };
-    });
+      const failed = processed.find((p) => !p.ok) as ({ err?: unknown } & { ok: boolean }) | undefined;
+      const hasError = Boolean(failed);
+      get()._setSyncStatus(hasError ? "error" : "saved");
+      set({ lastSavedAt: Date.now() });
+      get()._persistSnapshot();
 
-    const hasError = processed.some((p) => !p.ok);
-    get()._setSyncStatus(hasError ? "error" : "saved");
-    set({ lastSavedAt: Date.now() });
-    get()._persistSnapshot();
+      if (hasError) {
+        throw failed?.err instanceof Error ? failed.err : new Error("Falha ao persistir alterações do plano.");
+      }
+    })();
 
-    isFlushing = false;
+    try {
+      await activeFlushPromise;
+    } finally {
+      activeFlushPromise = null;
+      isFlushing = false;
 
-    // If more ops arrived during flush, re-schedule
-    if (get().pendingOps.length > 0) {
-      if (flushTimer) clearTimeout(flushTimer);
-      flushTimer = setTimeout(() => void get()._flushQueue(), AUTOSAVE_DELAY);
+      if (get().pendingOps.length > 0) {
+        if (flushTimer) clearTimeout(flushTimer);
+        flushTimer = setTimeout(() => void get()._flushQueue().catch(() => undefined), AUTOSAVE_DELAY);
+      }
     }
   },
 
