@@ -483,7 +483,7 @@ export async function slotsToInserts(slots: GeneratedMealSlot[], planId: string)
   const CROSS_DAY_TOL_PROTEIN = 0.03; // 3%
   const CROSS_DAY_TOL_DEFAULT = 0.05; // 5%
   const macroKeys = ["calories_target", "protein_target", "carbs_target", "fat_target"] as const;
-  const uniqueDays = [...new Set(allItems.map(i => i.day_of_week ?? 0))];
+  const uniqueDays = Array.from(new Set(allItems.map(i => i.day_of_week ?? 0)));
 
   if (uniqueDays.length >= 2) {
     for (const macroKey of macroKeys) {
