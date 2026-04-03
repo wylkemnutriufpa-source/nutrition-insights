@@ -36,6 +36,7 @@ export default function HybridPlanBuilder() {
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
+  const [composerMode, setComposerMode] = useState<ComposerMode>("quick");
 
   // DnD sensors
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
