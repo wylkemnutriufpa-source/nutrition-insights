@@ -3,11 +3,12 @@ import { useExperienceUI } from "@/hooks/useExperienceUI";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { useTenant } from "@/lib/tenantContext";
-import { withTenantFilter, getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
+import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { supabase } from "@/integrations/supabase/client";
 import { activateMealPlan, deactivateMealPlan, resolvePlanState } from "@/lib/serverTransitions";
 import { autoMatchSingle } from "@/lib/mealVisualAssociation";
 import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
+import { createMealPlanDraft } from "@/lib/createMealPlanDraft";
 import {
   inspectOnboardingPlan,
   resolveLatestUsableOnboardingPlan,
@@ -228,16 +229,19 @@ export default function MealPlans() {
           navigate(`/plan-builder/${genData.mealPlanId}`);
         }
       } else {
-        const { data: newPlan, error } = await supabase.from("meal_plans").insert({
-          nutritionist_id: user.id, patient_id: form.patient_id,
-          title: form.title || "Plano Alimentar", description: form.description || null, start_date: form.start_date,
-          ...getTenantIdForInsert(tenantId),
-        } as any).select("id").single();
+        const { data: newPlan, error } = await createMealPlanDraft({
+          nutritionistId: user.id,
+          patientId: form.patient_id,
+          tenantId,
+          title: form.title || "Plano Alimentar",
+          description: form.description || null,
+          startDate: form.start_date,
+        });
         if (error) { toast.error("Erro: " + error.message); }
         else if (newPlan) {
           toast.success("Plano criado! Abrindo Builder...");
           setOpen(false);
-          navigate(`/plan-builder/${newPlan.id}`);
+          navigate(`/plan-builder/${newPlan.id}`, { replace: true });
         }
       }
       setForm({ title: "", description: "", patient_id: "", start_date: new Date().toISOString().split("T")[0], autoGenerate: true });
