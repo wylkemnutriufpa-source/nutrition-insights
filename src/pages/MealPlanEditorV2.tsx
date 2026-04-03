@@ -333,6 +333,9 @@ export default function MealPlanEditorV2() {
                 if (!plan) return; setValidating(true);
                 setValidationResult(null);
                 try {
+                  // CRITICAL: flush any pending changes BEFORE validating against DB
+                  await store._flushQueue();
+
                   const { data, error } = await supabase.functions.invoke("validate-meal-plan", { body: { meal_plan_id: plan.id } });
                   if (error) throw error;
 
@@ -381,7 +384,8 @@ export default function MealPlanEditorV2() {
             result={validationResult}
             onClose={() => setValidationResult(null)}
             onCorrectionApplied={async () => {
-              await handleSave();
+              // Only flush pending ops — do NOT change plan status to approved
+              await store._flushQueue();
             }}
           />
         )}

@@ -200,6 +200,9 @@ export default function HybridPlanBuilder() {
     setValidating(true);
     setValidationResult(null);
     try {
+      // CRITICAL: flush any pending changes BEFORE validating against DB
+      await store._flushQueue();
+
       const { data, error } = await supabase.functions.invoke("validate-meal-plan", { body: { meal_plan_id: plan.id } });
       if (error) throw error;
       const nextStatus = data?.overall_status || (data?.success ? "aprovado" : "sugestoes_pendentes");
@@ -310,7 +313,10 @@ export default function HybridPlanBuilder() {
             <ValidationCorrectionPanel
               result={validationResult}
               onClose={() => setValidationResult(null)}
-              onCorrectionApplied={handleSave}
+              onCorrectionApplied={async () => {
+                // Only flush pending ops — do NOT change plan status to approved
+                await store._flushQueue();
+              }}
             />
           )}
 
