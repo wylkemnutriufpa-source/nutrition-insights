@@ -213,6 +213,11 @@ function BucketSection({ title, icon, issues, colorClass }: { title: string; ico
 export default function PlanAuditPanel({ mealPlanId, patientId, onApproved, onFixed }: Props) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AuditResult | null>(null);
+  const autoFixTriggerRef = useRef<(() => void) | null>(null);
+
+  const handleTriggerAutoFix = useCallback(() => {
+    autoFixTriggerRef.current?.();
+  }, []);
 
   const runAudit = async () => {
     setLoading(true);
@@ -241,6 +246,38 @@ export default function PlanAuditPanel({ mealPlanId, patientId, onApproved, onFi
     setLoading(false);
   };
 
+  const runValidateAndFix = async () => {
+    setLoading(true);
+    setResult(null);
+    try {
+      const editorState = useMealPlanEditorV2Store.getState();
+      if (editorState.planId === mealPlanId && editorState.hydrated) {
+        await editorState._flushQueue();
+      }
+
+      const { data, error } = await supabase.functions.invoke("validate-meal-plan", {
+        body: { meal_plan_id: mealPlanId },
+      });
+      if (error) throw error;
+      setResult(data as AuditResult);
+
+      if (data?.success) {
+        toast.success("Motor Clínico Unificado: Plano já está APROVADO! ✅");
+        onApproved?.();
+      } else {
+        // Plan needs corrections — trigger AutoFix automatically
+        toast.info("Divergências encontradas. Iniciando correção automática...", { duration: 2000 });
+        setLoading(false);
+        // Small delay to let the UI update, then trigger AutoFix
+        setTimeout(() => handleTriggerAutoFix(), 500);
+        return;
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao contactar o Motor Clínico");
+    }
+    setLoading(false);
+  };
+
   const hasBuckets = result?.buckets && (
     result.buckets.bloquear_publicacao.length > 0 ||
     result.buckets.corrigir_agora.length > 0 ||
@@ -250,13 +287,25 @@ export default function PlanAuditPanel({ mealPlanId, patientId, onApproved, onFi
 
   return (
     <div className="space-y-4">
-      <Button onClick={runAudit} disabled={loading} variant="outline" className="w-full gap-2 border-primary/40 hover:border-primary hover:bg-primary/5">
-        {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Auditando (Clínico + Simplicidade + Adesão)...</> : <><ShieldCheck className="w-4 h-4 text-primary" /> Auditar / Validar Plano</>}
-      </Button>
+      <div className="flex gap-2">
+        <Button onClick={runAudit} disabled={loading} variant="outline" className="flex-1 gap-2 border-primary/40 hover:border-primary hover:bg-primary/5">
+          {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Auditando...</> : <><ShieldCheck className="w-4 h-4 text-primary" /> Validar Plano</>}
+        </Button>
+        {patientId && (
+          <Button onClick={runValidateAndFix} disabled={loading} className="flex-1 gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg">
+            {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Analisando...</> : <><Hammer className="w-4 h-4" /> Validar e Corrigir</>}
+          </Button>
+        )}
+      </div>
 
       {/* Auto-fix button — shows only when plan has been audited and failed */}
       {patientId && result && !result.success && (
-        <AutoFixButton mealPlanId={mealPlanId} patientId={patientId} onFixed={onFixed} />
+        <AutoFixButton
+          mealPlanId={mealPlanId}
+          patientId={patientId}
+          onFixed={onFixed}
+          triggerRef={autoFixTriggerRef}
+        />
       )}
 
       <AnimatePresence>
