@@ -183,6 +183,7 @@ const WorkspaceEditor = lazy(() => import("./pages/WorkspaceEditor"));
 const IntelligenceSettings = lazy(() => import("./pages/IntelligenceSettings"));
 const PatientIntelligence = lazy(() => import("./pages/PatientIntelligence"));
 const RealtimeDebugCenter = lazy(() => import("./pages/RealtimeDebugCenter"));
+const CockpitPremium = lazy(() => import("./pages/CockpitPremium"));
 
 // Install global error handlers once at module load
 installGlobalErrorHandlers();
