@@ -3,340 +3,16 @@ import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
 import { approveAndPublishPlan, rejectMealPlan, transitionPlanToReview } from "@/lib/serverTransitions";
 import { supabase } from "@/integrations/supabase/client";
+import { finalizeGeneratedMealPlan } from "@/lib/finalizeGeneratedMealPlan";
 import {
   inspectOnboardingPlan,
   resolveLatestUsableOnboardingPlan,
   syncPipelineGeneratedPlan,
 } from "@/lib/onboardingPlanResolver";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Input } from "@/components/ui/input";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { toast } from "sonner";
-import {
-  CheckCircle2, XCircle, Clock, Sparkles, Edit2, ChevronDown,
-  Scale, Target, MessageSquare, Loader2, CalendarClock, Zap,
-  ClipboardCheck, FileText, AlertTriangle
-} from "lucide-react";
-
-interface OnboardingPipeline {
-  id: string;
-  patient_id: string;
-  status: string;
-  anamnesis_completed: boolean;
-  body_data_completed: boolean;
-  preferences_completed: boolean;
-  plan_generated: boolean;
-  plan_approved: boolean;
-  weight: number | null;
-  height: number | null;
-  wake_time: string | null;
-  sleep_time: string | null;
-  meal_count: number;
-  cooking_preference: string | null;
-  food_preferences: any;
-  generated_plan_id: string | null;
-  generated_plan_data: any;
-  use_scheduling_criteria: boolean;
-  scheduling_criteria: any;
-  rejection_reason: string | null;
-  created_at: string;
-}
-
-interface Props {
-  patientId: string;
-  patientName: string;
-}
-
-const DEFAULT_CRITERIA = {
-  auto_deactivate_previous: true,
-  weight_enabled: false,
-  weight_loss_kg: 1,
-  checklist_enabled: true,
-  checklist_min_adherence: 80,
-  checklist_days: 14,
-  feedback_enabled: true,
-  feedback_interval_days: 15,
-  extension_days: 15,
-  max_extensions: 2,
-  current_extensions: 0,
-  manual_only: false,
-};
-
-export default function OnboardingApprovalQueue({ patientId, patientName }: Props) {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const [pipeline, setPipeline] = useState<OnboardingPipeline | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [rejectDialog, setRejectDialog] = useState(false);
-  const [rejectReason, setRejectReason] = useState("");
-  const [processing, setProcessing] = useState(false);
-  const [criteriaOpen, setCriteriaOpen] = useState(false);
-  const [useScheduling, setUseScheduling] = useState(false);
-  const [criteria, setCriteria] = useState(DEFAULT_CRITERIA);
-  const [creating, setCreating] = useState(false);
-  const [openingEditor, setOpeningEditor] = useState(false);
-  const [planOptions, setPlanOptions] = useState<any[]>([]);
-  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchPipeline();
-  }, [patientId]);
-
-  // Realtime
-  useEffect(() => {
-    const ch = supabase
-      .channel(`onboarding-${patientId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "onboarding_pipelines", filter: `patient_id=eq.${patientId}` }, () => fetchPipeline())
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
-  }, [patientId]);
-
-  async function fetchPipeline() {
-    const { data } = await supabase
-      .from("onboarding_pipelines" as any)
-      .select("*")
-      .eq("patient_id", patientId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (data) {
-      const p = data as any;
-      console.log("[OnboardingApproval] Pipeline loaded:", { id: p.id, status: p.status, plan_generated: p.plan_generated, plan_approved: p.plan_approved, generated_plan_id: p.generated_plan_id });
-      setPipeline(p);
-      setUseScheduling(p.use_scheduling_criteria || false);
-      setCriteria(p.scheduling_criteria || DEFAULT_CRITERIA);
-
-      // Restore plan options from saved data
-      if (p.generated_plan_data?.multiPlan && p.generated_plan_data?.plans?.length > 0) {
-        setPlanOptions(p.generated_plan_data.plans);
-        setSelectedPlanId(p.generated_plan_id || p.generated_plan_data.plans[0].mealPlanId);
-      } else {
-        setPlanOptions([]);
-      }
-
-      // Auto-fix: if plan is generated but status isn't pending_approval, fix it
-      if (p.plan_generated && !p.plan_approved && p.status !== "pending_approval" && p.status !== "completed" && p.status !== "rejected") {
-        await supabase
-          .from("onboarding_pipelines" as any)
-          .update({ status: "pending_approval" } as any)
-          .eq("id", p.id);
-        setPipeline({ ...p, status: "pending_approval" });
-      }
-    }
-    setLoading(false);
-  }
-
-  async function handleCreatePipeline() {
-    if (!user) return;
-    setCreating(true);
-    const { error } = await supabase
-      .from("onboarding_pipelines" as any)
-      .insert({
-        patient_id: patientId,
-        nutritionist_id: user.id,
-        status: "pending_anamnesis",
-      } as any);
-    if (error) {
-      if (error.code === "23505") toast.info("Pipeline já existe para este paciente");
-      else toast.error("Erro ao criar pipeline");
-    } else {
-      toast.success("Onboarding ativado! Paciente receberá o fluxo automático.");
-      // Notify patient
-      await supabase.from("notifications").insert({
-        user_id: patientId,
-        title: "Onboarding Ativado! 🚀",
-        message: "Seu nutricionista ativou o fluxo automático de onboarding. Complete as etapas para receber seu plano alimentar personalizado.",
-        type: "success",
-        action_url: "/onboarding",
-      } as any);
-      fetchPipeline();
-    }
-    setCreating(false);
-  }
-
-  async function handleApprove() {
-    if (!pipeline || !user) return;
-
-    // Use selected plan or fallback
-    const planId = selectedPlanId || pipeline.generated_plan_id || pipeline.generated_plan_data?.mealPlanId;
-    if (!planId) {
-      toast.error("Nenhum plano encontrado. Gere o plano primeiro antes de aprovar.");
-      return;
-    }
-
-    setProcessing(true);
-
-    // Update pipeline as approved
-    await supabase
-      .from("onboarding_pipelines" as any)
-      .update({
-        plan_approved: true,
-        approved_by: user.id,
-        approved_at: new Date().toISOString(),
-        status: "completed",
-        use_scheduling_criteria: useScheduling,
-        scheduling_criteria: criteria,
-      } as any)
-      .eq("id", pipeline.id);
-
-      // Use server-authoritative RPC to approve + publish atomically
-      if (planId) {
-        const result = await approveAndPublishPlan(planId, user.id);
-        if (!result.success) {
-          toast.error("Erro ao aprovar plano: " + (result.error || ""));
-          setProcessing(false);
-          return;
-        }
-
-      // Schedule criteria if enabled
-      if (useScheduling) {
-        const activateDate = new Date();
-        activateDate.setDate(activateDate.getDate() + (criteria.checklist_days || 14));
-        await supabase
-          .from("plan_schedules" as any)
-          .insert({
-            meal_plan_id: planId,
-            activate_at: activateDate.toISOString().split("T")[0],
-            criteria: criteria,
-            status: "scheduled",
-          } as any);
-      }
-    }
-
-    // Notify patient
-    await supabase.from("notifications").insert({
-      user_id: patientId,
-      title: "Plano Alimentar Aprovado! 🎉",
-      message: "Seu plano foi revisado e aprovado. Acesse em 'Minha Dieta'. Validade: 30 dias.",
-      type: "success",
-      action_url: "/my-diet",
-    } as any);
-
-    // Clean up non-selected plan options
-    if (planOptions.length > 1) {
-      const otherPlanIds = planOptions
-        .filter((p: any) => p.mealPlanId !== planId)
-        .map((p: any) => p.mealPlanId);
-      for (const otherId of otherPlanIds) {
-        await rejectMealPlan(otherId, user.id, "Opção não selecionada");
-      }
-    }
-
-    toast.success("Plano aprovado e publicado com sucesso!");
-    setPlanOptions([]);
-    fetchPipeline();
-    setProcessing(false);
-  }
-
-  async function handleReject() {
-    if (!pipeline || !rejectReason.trim()) {
-      toast.error("Informe o motivo da rejeição");
-      return;
-    }
-    setProcessing(true);
-
-    await supabase
-      .from("onboarding_pipelines" as any)
-      .update({
-        status: "rejected",
-        rejection_reason: rejectReason,
-        plan_generated: false,
-      } as any)
-      .eq("id", pipeline.id);
-
-    // Archive the generated plan via server-authoritative RPC
-    if (pipeline.generated_plan_id) {
-      await rejectMealPlan(pipeline.generated_plan_id, user.id, rejectReason);
-    }
-
-    // Notify patient
-    await supabase.from("notifications").insert({
-      user_id: patientId,
-      title: "Plano Precisa de Ajustes",
-      message: `Seu plano não foi aprovado: ${rejectReason}. Ajuste seus dados e gere um novo.`,
-      type: "warning",
-      action_url: "/onboarding",
-    } as any);
-
-    toast.success("Plano rejeitado. Paciente foi notificado.");
-    setRejectDialog(false);
-    setRejectReason("");
-    fetchPipeline();
-    setProcessing(false);
-  }
-
-  async function handleGenerateNewPlan() {
-    if (!pipeline || !user) return;
-    setOpeningEditor(true);
-    try {
-      toast.info("Gerando opções de plano... Aguarde.");
-      const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
-        body: {
-          patientId: pipeline.patient_id,
-          nutritionistId: user.id,
-          weight: pipeline.weight,
-          height: pipeline.height,
-          mealCount: pipeline.meal_count,
-          cookingPreference: pipeline.cooking_preference,
-          isPipeline: true,
-          planCount: 3,
-        },
-      });
-      if (error) {
-        const msg = await friendlyEdgeFunctionError(error, "Falha na geração do plano");
-        throw new Error(msg);
-      }
-      if (!data?.success) throw new Error(data?.error || "Falha na geração");
-
-      if (data.multiPlan && data.plans?.length > 0) {
-        // Multi-plan: show options for selection
-        setPlanOptions(data.plans);
-        setSelectedPlanId(data.plans[0].mealPlanId);
-
-        // Save first plan as default in pipeline
-        await supabase
-          .from("onboarding_pipelines" as any)
-          .update({
-            generated_plan_id: data.plans[0].mealPlanId,
-            generated_plan_data: { ...data, selectedIndex: 0 },
-            plan_generated: true,
-          } as any)
-          .eq("id", pipeline.id);
-
-        toast.success(`${data.plans.length} opções de plano geradas! Escolha a melhor opção.`);
-        fetchPipeline();
-      } else {
-        // Single plan fallback
-        const newPlanId = data.mealPlanId;
-        await supabase
-          .from("onboarding_pipelines" as any)
-          .update({
-            generated_plan_id: newPlanId,
-            generated_plan_data: data,
-            plan_generated: true,
-          } as any)
-          .eq("id", pipeline.id);
-
-        await transitionPlanToReview(newPlanId, user.id);
-
-        toast.success(`Plano gerado com ${data.items_count} itens! Revise e aprove.`);
-        navigate(`/plan-builder/${newPlanId}`);
-      }
-    } catch (err: any) {
-      toast.error("Erro ao gerar plano: " + (err.message || "Tente novamente"));
-    } finally {
-      setOpeningEditor(false);
-    }
-  }
-
+...
   async function ensurePlanReadyAndOpen(planId: string) {
     if (!pipeline || !user) return;
     setOpeningEditor(true);
@@ -386,6 +62,23 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
               plan_generated: true,
             } as any)
             .eq("id", pipeline.id);
+        }
+      }
+
+      const requiresFinalize = !["approved", "published_to_patient"].includes(resolvedPlan?.plan_status || "")
+        || resolvedPlan?.overall_validation_status !== "aprovado";
+
+      if (requiresFinalize) {
+        const finalized = await finalizeGeneratedMealPlan({
+          planId: resolvedPlanId,
+          patientId: pipeline.patient_id,
+          userId: user.id,
+          tenantId,
+        });
+        resolvedPlanId = finalized.finalPlanId;
+        resolvedPlan = await inspectOnboardingPlan(resolvedPlanId);
+        if (finalized.corrected) {
+          toast.success("Plano validado e ajustado automaticamente.");
         }
       }
 

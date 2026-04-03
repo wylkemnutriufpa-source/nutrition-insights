@@ -9,6 +9,7 @@ import { activateMealPlan, deactivateMealPlan, resolvePlanState } from "@/lib/se
 import { autoMatchSingle } from "@/lib/mealVisualAssociation";
 import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
 import { createMealPlanDraft } from "@/lib/createMealPlanDraft";
+import { finalizeGeneratedMealPlan } from "@/lib/finalizeGeneratedMealPlan";
 import {
   inspectOnboardingPlan,
   resolveLatestUsableOnboardingPlan,
@@ -37,87 +38,24 @@ async function runPostGenVisualMatch(planId: string) {
   );
 }
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { toast } from "sonner";
-import { ClipboardList, Plus, Calendar, ToggleLeft, ToggleRight, PencilLine, Trash2, Zap } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import type { Tables } from "@/integrations/supabase/types";
-import SmartPlanGenerator from "@/components/plans/SmartPlanGenerator";
-
-type MealPlan = Tables<"meal_plans">;
-
-export default function MealPlans() {
-  const { user } = useAuth();
-  const { tenantId } = useTenant();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { showSimplifiedActions, showProtocols } = useExperienceUI();
-  const [plans, setPlans] = useState<(MealPlan & { patient_name?: string })[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({
-    title: "", description: "", patient_id: "",
-    start_date: new Date().toISOString().split("T")[0],
-    autoGenerate: true,
-  });
-  const [submitting, setSubmitting] = useState(false);
-  const [patients, setPatients] = useState<{ id: string; name: string }[]>([]);
-  const onboardingHandled = useRef<string | null>(null);
-
-  const fetchPlans = async () => {
-    if (!user) return;
-    let query = supabase.from("meal_plans").select("*")
-      .eq("nutritionist_id", user.id).order("created_at", { ascending: false });
-    const { data } = await withTenantFilter(query, tenantId);
-    if (data) {
-      const enriched = await Promise.all(data.map(async (p) => {
-        const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", p.patient_id).single();
-        return { ...p, patient_name: profile?.full_name || "Paciente" };
-      }));
-      setPlans(enriched);
-    }
-    setLoading(false);
-  };
-
-  const fetchPatients = async () => {
-    if (!user) return;
-    let npQuery = supabase.from("nutritionist_patients").select("patient_id")
-      .eq("nutritionist_id", user.id).eq("status", "active");
-    const { data } = await withTenantFilter(npQuery, tenantId);
-    if (data) {
-      const pts = await Promise.all(data.map(async (d) => {
-        const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", d.patient_id).single();
-        return { id: d.patient_id, name: profile?.full_name || "Paciente" };
-      }));
-      setPatients(pts);
-    }
-  };
-
-  // Handle patientId param: auto-open dialog for "Do Zero" or resolve onboarding plan
+...
   useEffect(() => {
     if (!user?.id) return;
     const source = searchParams.get("source");
     const patientId = searchParams.get("patientId");
     if (!patientId) return;
 
-    // "Do Zero": open create dialog with patient pre-selected
     if (source !== "onboarding") {
       setForm(f => ({ ...f, patient_id: patientId }));
       setOpen(true);
       return;
     }
 
-    // Prevent duplicate handling for the same patientId
     if (onboardingHandled.current === patientId) return;
     onboardingHandled.current = patientId;
 
     const handleOnboardingSource = async () => {
       try {
-        // 1. Check if pipeline has a usable generated plan
         const { data: pipeline } = await (supabase
           .from("onboarding_pipelines" as any)
           .select("id, generated_plan_id, plan_generated")
@@ -137,7 +75,6 @@ export default function MealPlans() {
           console.warn("Pipeline plan is stale/archived, looking for alternatives...");
         }
 
-        // 2. Check if patient has any current usable plan and re-link pipeline if needed
         const existingPlan = await resolveLatestUsableOnboardingPlan(patientId, user.id);
 
         if (existingPlan?.id) {
@@ -148,7 +85,6 @@ export default function MealPlans() {
           return;
         }
 
-        // 3. No usable plan exists — generate from onboarding
         toast.info("Gerando plano a partir do onboarding...");
         const { data: genData, error: genError } = await supabase.functions.invoke("generate-meal-plan", {
           body: {
@@ -168,7 +104,6 @@ export default function MealPlans() {
 
         if (!genData?.success) {
           console.error("Generate plan failed:", genData);
-          // Try to map the error code from response
           const errorCode = genData?.code || genData?.error || "Resposta inválida";
           const friendlyMsg = await friendlyEdgeFunctionError(
             { message: errorCode },
@@ -181,9 +116,23 @@ export default function MealPlans() {
 
         const newPlanId = genData.mealPlanId;
         if (newPlanId) {
-          toast.success(`Plano gerado com ${genData.items_count || 0} itens!`);
-          runPostGenVisualMatch(newPlanId).catch(() => {});
-          navigate(`/meal-plans/${newPlanId}`, { replace: true });
+          const finalized = await finalizeGeneratedMealPlan({
+            planId: newPlanId,
+            patientId,
+            userId: user.id,
+            tenantId,
+          });
+          const resolvedPlanId = finalized.finalPlanId;
+
+          if (pipelineData?.id && pipelineData.generated_plan_id !== resolvedPlanId) {
+            await syncPipelineGeneratedPlan(pipelineData.id, resolvedPlanId);
+          }
+
+          toast.success(finalized.corrected
+            ? `Plano gerado e ajustado automaticamente!`
+            : `Plano gerado com ${genData.items_count || 0} itens!`);
+          runPostGenVisualMatch(resolvedPlanId).catch(() => {});
+          navigate(`/meal-plans/${resolvedPlanId}`, { replace: true });
         } else {
           toast.error("Plano gerado mas sem ID retornado. Tente novamente.");
           onboardingHandled.current = null;
@@ -192,13 +141,12 @@ export default function MealPlans() {
         console.error("Onboarding source error:", err);
         const friendlyMsg = await friendlyEdgeFunctionError(err, "Erro ao processar onboarding. Tente novamente.");
         toast.error(friendlyMsg);
-        // Allow retry on error
         onboardingHandled.current = null;
       }
     };
 
     handleOnboardingSource();
-  }, [user?.id, searchParams, navigate]);
+  }, [navigate, searchParams, tenantId, user?.id]);
 
   useEffect(() => { fetchPlans(); fetchPatients(); }, [user]);
 

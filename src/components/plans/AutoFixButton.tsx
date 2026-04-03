@@ -42,6 +42,8 @@ export default function AutoFixButton({ mealPlanId, patientId, onFixed, disabled
       return;
     }
 
+    const shouldAutoCommit = autoRunSignal !== undefined;
+
     setLoading(true);
     setShowProgress(true);
     setCurrentStep("loading_context");
@@ -65,6 +67,11 @@ export default function AutoFixButton({ mealPlanId, patientId, onFixed, disabled
           toast.success(`Plano corrigido! ${res.changes.length} correções aplicadas.`);
         }
 
+        if (shouldAutoCommit) {
+          onFixed?.(res.newPlanId, res.inPlace);
+          return;
+        }
+
         setShowResult(true);
       } else {
         toast.error(res.warnings[0] || "Erro ao corrigir plano");
@@ -75,7 +82,7 @@ export default function AutoFixButton({ mealPlanId, patientId, onFixed, disabled
     } finally {
       setLoading(false);
     }
-  }, [handleStep, mealPlanId, patientId, tenantId, user]);
+  }, [autoRunSignal, handleStep, mealPlanId, onFixed, patientId, tenantId, user]);
 
   useEffect(() => {
     if (!autoRunSignal) return;
