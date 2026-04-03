@@ -131,8 +131,20 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
       </div>
 
       {items.length === 0 ? (
-        <div className="flex items-center justify-center py-6 text-xs text-muted-foreground border border-dashed border-border rounded-lg">
-          <Plus className="w-3.5 h-3.5 mr-1" /> Arraste uma refeição aqui
+        <div className="flex flex-col items-center justify-center py-4 gap-2 border border-dashed border-border rounded-lg">
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <Plus className="w-3.5 h-3.5" /> Arraste uma refeição aqui
+          </span>
+          {patientContext && mealMacroTarget && (
+            <button
+              onClick={handleCompose}
+              disabled={composing}
+              className="flex items-center gap-1 text-[10px] font-medium text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
+            >
+              {composing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+              Compor automaticamente
+            </button>
+          )}
         </div>
       ) : (
         <div className="space-y-1.5">
