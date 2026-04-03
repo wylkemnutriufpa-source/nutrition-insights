@@ -144,7 +144,7 @@ export default function MealPlans() {
           if (pipelineData?.id && pipelineData.generated_plan_id !== existingPlan.id) {
             await syncPipelineGeneratedPlan(pipelineData.id, existingPlan.id);
           }
-          navigate(`/plan-builder/${existingPlan.id}`, { replace: true });
+          navigate(`/meal-plans/${existingPlan.id}`, { replace: true });
           return;
         }
 
