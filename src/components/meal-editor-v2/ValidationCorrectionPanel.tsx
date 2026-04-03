@@ -27,6 +27,17 @@ interface RestrictionViolation {
   keyword_found: string;
 }
 
+export interface CrossDayInconsistency {
+  macro: string;
+  unit: string;
+  avg: number;
+  min_day: number;
+  min_val: number;
+  max_day: number;
+  max_val: number;
+  variance_pct: number;
+}
+
 export interface ValidationResult {
   success: boolean;
   status: string;
@@ -34,6 +45,8 @@ export interface ValidationResult {
   macros: MacroResult[] | null;
   restrictions_violated: RestrictionViolation[];
   errors: ValidationError[];
+  cross_day_inconsistencies?: CrossDayInconsistency[];
+  per_day_macros?: Record<string, { cals: number; prot: number; carbs: number; fat: number }>;
   audit: any;
 }
 
