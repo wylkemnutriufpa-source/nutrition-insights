@@ -79,6 +79,7 @@ export default function PatientDetail() {
 
   // Derived data from query
   const profile = data?.profile ?? null;
+  const resolvedPatientId = data?.resolvedPatientId ?? patientId!;
   const timeline = data?.timeline ?? [];
   const anamnesis = data?.anamnesis ?? null;
   const patientProtocols = data?.patientProtocols ?? [];
