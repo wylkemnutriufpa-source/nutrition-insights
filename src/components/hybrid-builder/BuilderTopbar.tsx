@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft, Save, Send, Sparkles, Loader2, CheckCircle2,
-  Zap, Target, Flame, Beef, Wheat, Droplets,
+  Zap, Flame, Beef, Wheat, Droplets,
 } from "lucide-react";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 
@@ -29,17 +29,16 @@ export default function BuilderTopbar({
 }: Props) {
   const { plan, items, syncStatus } = useMealPlanEditorV2Store();
 
-  const totalKcal = items.reduce((s, i) => s + (i.calories || 0), 0);
-  const totalProt = items.reduce((s, i) => s + (i.protein || 0), 0);
-  const totalCarbs = items.reduce((s, i) => s + (i.carbs || 0), 0);
-  const totalFat = items.reduce((s, i) => s + (i.fat || 0), 0);
+  const totalKcal = items.reduce((s, i) => s + (i.calories_target || 0), 0);
+  const totalProt = items.reduce((s, i) => s + (i.protein_target || 0), 0);
+  const totalCarbs = items.reduce((s, i) => s + (i.carbs_target || 0), 0);
+  const totalFat = items.reduce((s, i) => s + (i.fat_target || 0), 0);
 
   const status = plan?.plan_status;
   const isPublished = status === "published_to_patient";
 
   return (
     <div className="bg-card/80 backdrop-blur-sm border border-border rounded-xl p-3 space-y-2">
-      {/* Row 1: Patient + Status + Actions */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3 min-w-0">
           <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0 h-8 w-8">
@@ -52,7 +51,7 @@ export default function BuilderTopbar({
                 <Zap className="w-3 h-3 mr-1" /> Builder Híbrido
               </Badge>
               {isPublished && (
-                <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30 text-[10px]">
+                <Badge className="text-[10px] bg-emerald-500/15 text-emerald-600 border-emerald-500/30">
                   <CheckCircle2 className="w-3 h-3 mr-1" /> Publicado
                 </Badge>
               )}
@@ -79,12 +78,11 @@ export default function BuilderTopbar({
         </div>
       </div>
 
-      {/* Row 2: Macro summary */}
       <div className="flex items-center gap-4 text-xs overflow-x-auto pb-1">
-        <MacroChip icon={<Flame className="w-3 h-3 text-orange-500" />} label="Kcal" current={totalKcal} target={targetKcal} />
-        <MacroChip icon={<Beef className="w-3 h-3 text-red-500" />} label="Prot" current={totalProt} target={targetProtein} unit="g" />
-        <MacroChip icon={<Wheat className="w-3 h-3 text-amber-500" />} label="Carb" current={totalCarbs} target={targetCarbs} unit="g" />
-        <MacroChip icon={<Droplets className="w-3 h-3 text-blue-500" />} label="Gord" current={totalFat} target={targetFat} unit="g" />
+        <MacroChip icon={<Flame className="w-3 h-3" />} label="Kcal" current={totalKcal} target={targetKcal} />
+        <MacroChip icon={<Beef className="w-3 h-3" />} label="Prot" current={totalProt} target={targetProtein} unit="g" />
+        <MacroChip icon={<Wheat className="w-3 h-3" />} label="Carb" current={totalCarbs} target={targetCarbs} unit="g" />
+        <MacroChip icon={<Droplets className="w-3 h-3" />} label="Gord" current={totalFat} target={targetFat} unit="g" />
         <div className="ml-auto text-muted-foreground">
           {items.length} refeições
         </div>
@@ -98,7 +96,7 @@ function MacroChip({ icon, label, current, target, unit = "" }: {
 }) {
   const delta = target ? current - target : 0;
   const overUnder = target ? (Math.abs(delta) / target > 0.1 ? (delta > 0 ? "over" : "under") : "ok") : "ok";
-  const colorClass = overUnder === "over" ? "text-red-500" : overUnder === "under" ? "text-amber-500" : "text-emerald-500";
+  const colorClass = overUnder === "over" ? "text-destructive" : overUnder === "under" ? "text-warning" : "text-primary";
 
   return (
     <div className="flex items-center gap-1.5 shrink-0">

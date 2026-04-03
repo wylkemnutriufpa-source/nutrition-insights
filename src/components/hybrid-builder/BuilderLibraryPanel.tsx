@@ -1,38 +1,35 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
 import { useDraggable } from "@dnd-kit/core";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
 import {
-  Search, Utensils, ChefHat, Apple, BookOpen, Star,
+  Search, ChefHat, Apple,
   Flame, Beef, Wheat, Droplets, Loader2, GripVertical,
 } from "lucide-react";
 
 interface FoodRow {
   id: string;
-  name: string;
+  food_name: string;
   calories_per_gram: number | null;
   protein_per_gram: number | null;
   carbs_per_gram: number | null;
   fat_per_gram: number | null;
-  default_quantity_grams: number | null;
-  image_url: string | null;
+  portion_grams: number | null;
   meal_tags_json: any;
-  category: string | null;
+  category: string;
 }
 
 interface RecipeRow {
   id: string;
   title: string;
-  total_calories: number | null;
-  total_protein: number | null;
-  total_carbs: number | null;
-  total_fat: number | null;
+  calories_per_serving: number | null;
+  protein_per_serving: number | null;
+  carbs_per_serving: number | null;
+  fat_per_serving: number | null;
   image_url: string | null;
-  meal_type: string | null;
+  category: string | null;
 }
 
 const MEAL_FILTERS = [
@@ -44,7 +41,6 @@ const MEAL_FILTERS = [
 ];
 
 export default function BuilderLibraryPanel() {
-  const { user } = useAuth();
   const [foods, setFoods] = useState<FoodRow[]>([]);
   const [recipes, setRecipes] = useState<RecipeRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,18 +54,17 @@ export default function BuilderLibraryPanel() {
       const [foodsRes, recipesRes] = await Promise.all([
         supabase
           .from("ifj_food_database")
-          .select("id, name, calories_per_gram, protein_per_gram, carbs_per_gram, fat_per_gram, default_quantity_grams, image_url, meal_tags_json, category")
+          .select("id, food_name, calories_per_gram, protein_per_gram, carbs_per_gram, fat_per_gram, portion_grams, meal_tags_json, category")
           .eq("is_active", true)
-          .order("name"),
+          .order("food_name"),
         supabase
           .from("recipes")
-          .select("id, title, total_calories, total_protein, total_carbs, total_fat, image_url, meal_type")
-          .eq("is_active", true)
+          .select("id, title, calories_per_serving, protein_per_serving, carbs_per_serving, fat_per_serving, image_url, category")
           .order("title"),
       ]);
 
-      setFoods((foodsRes.data || []) as FoodRow[]);
-      setRecipes((recipesRes.data || []) as RecipeRow[]);
+      setFoods((foodsRes.data || []) as unknown as FoodRow[]);
+      setRecipes((recipesRes.data || []) as unknown as RecipeRow[]);
       setLoading(false);
     };
     loadLibrary();
@@ -80,13 +75,13 @@ export default function BuilderLibraryPanel() {
     if (search) {
       const q = search.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       result = result.filter((f) =>
-        f.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(q)
+        f.food_name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(q)
       );
     }
     if (mealFilter !== "all") {
       result = result.filter((f) => {
         const tags: string[] = Array.isArray(f.meal_tags_json) ? f.meal_tags_json : [];
-        return tags.some((t) => t.toLowerCase().includes(mealFilter));
+        return tags.some((t: string) => t.toLowerCase().includes(mealFilter));
       });
     }
     return result.slice(0, 50);
@@ -101,14 +96,13 @@ export default function BuilderLibraryPanel() {
       );
     }
     if (mealFilter !== "all") {
-      result = result.filter((r) => r.meal_type?.toLowerCase().includes(mealFilter));
+      result = result.filter((r) => r.category?.toLowerCase().includes(mealFilter));
     }
     return result.slice(0, 50);
   }, [recipes, search, mealFilter]);
 
   return (
     <div className="flex flex-col h-full">
-      {/* Search */}
       <div className="p-3 border-b border-border space-y-2">
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
@@ -119,7 +113,6 @@ export default function BuilderLibraryPanel() {
             className="pl-8 h-8 text-xs"
           />
         </div>
-        {/* Meal filter chips */}
         <div className="flex gap-1 flex-wrap">
           {MEAL_FILTERS.map((f) => (
             <button
@@ -137,7 +130,6 @@ export default function BuilderLibraryPanel() {
         </div>
       </div>
 
-      {/* Tabs */}
       <Tabs value={tab} onValueChange={setTab} className="flex-1 flex flex-col min-h-0">
         <TabsList className="mx-3 mt-2 h-8">
           <TabsTrigger value="foods" className="text-xs gap-1 h-7">
@@ -158,9 +150,7 @@ export default function BuilderLibraryPanel() {
               ) : filteredFoods.length === 0 ? (
                 <p className="text-xs text-muted-foreground text-center py-8">Nenhum alimento encontrado</p>
               ) : (
-                filteredFoods.map((food) => (
-                  <DraggableFoodItem key={food.id} food={food} />
-                ))
+                filteredFoods.map((food) => <DraggableFoodItem key={food.id} food={food} />)
               )}
             </div>
           </ScrollArea>
@@ -176,9 +166,7 @@ export default function BuilderLibraryPanel() {
               ) : filteredRecipes.length === 0 ? (
                 <p className="text-xs text-muted-foreground text-center py-8">Nenhuma receita encontrada</p>
               ) : (
-                filteredRecipes.map((recipe) => (
-                  <DraggableRecipeItem key={recipe.id} recipe={recipe} />
-                ))
+                filteredRecipes.map((recipe) => <DraggableRecipeItem key={recipe.id} recipe={recipe} />)
               )}
             </div>
           </ScrollArea>
@@ -189,7 +177,7 @@ export default function BuilderLibraryPanel() {
 }
 
 function DraggableFoodItem({ food }: { food: FoodRow }) {
-  const qty = food.default_quantity_grams || 100;
+  const qty = food.portion_grams || 100;
   const kcal = Math.round((food.calories_per_gram || 0) * qty);
   const prot = Math.round((food.protein_per_gram || 0) * qty * 10) / 10;
   const carbs = Math.round((food.carbs_per_gram || 0) * qty * 10) / 10;
@@ -213,15 +201,11 @@ function DraggableFoodItem({ food }: { food: FoodRow }) {
       }`}
     >
       <GripVertical className="w-3 h-3 text-muted-foreground/40 shrink-0" />
-      {food.image_url ? (
-        <img src={food.image_url} alt="" className="w-8 h-8 rounded-md object-cover shrink-0" />
-      ) : (
-        <div className="w-8 h-8 rounded-md bg-muted flex items-center justify-center shrink-0">
-          <Apple className="w-4 h-4 text-muted-foreground" />
-        </div>
-      )}
+      <div className="w-8 h-8 rounded-md bg-muted flex items-center justify-center shrink-0">
+        <Apple className="w-4 h-4 text-muted-foreground" />
+      </div>
       <div className="flex-1 min-w-0">
-        <p className="font-medium truncate">{food.name}</p>
+        <p className="font-medium truncate">{food.food_name}</p>
         <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground mt-0.5">
           <span>{qty}g</span>
           <span>•</span>
@@ -264,10 +248,10 @@ function DraggableRecipeItem({ recipe }: { recipe: RecipeRow }) {
           <ChefHat className="w-3 h-3 text-primary shrink-0" />
         </div>
         <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground mt-0.5">
-          <Flame className="w-2.5 h-2.5" /> {Math.round(recipe.total_calories || 0)}
-          <Beef className="w-2.5 h-2.5" /> {Math.round(recipe.total_protein || 0)}
-          <Wheat className="w-2.5 h-2.5" /> {Math.round(recipe.total_carbs || 0)}
-          <Droplets className="w-2.5 h-2.5" /> {Math.round(recipe.total_fat || 0)}
+          <Flame className="w-2.5 h-2.5" /> {Math.round(recipe.calories_per_serving || 0)}
+          <Beef className="w-2.5 h-2.5" /> {Math.round(recipe.protein_per_serving || 0)}
+          <Wheat className="w-2.5 h-2.5" /> {Math.round(recipe.carbs_per_serving || 0)}
+          <Droplets className="w-2.5 h-2.5" /> {Math.round(recipe.fat_per_serving || 0)}
         </div>
       </div>
     </div>
