@@ -888,7 +888,7 @@ function generatePersonalizedPlan(
 ): any[] {
   const items: any[] = [];
   const mealTypes = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
-  const patientSeed = seedHash(patientId) + planOptionIndex * 997;
+  const patientSeed = generationSeed(patientId, planOptionIndex);
 
   for (let day = 0; day < 7; day++) {
     for (const mealType of mealTypes) {
