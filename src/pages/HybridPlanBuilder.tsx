@@ -6,7 +6,6 @@ import { useTenant } from "@/lib/tenantContext";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import { supabase } from "@/integrations/supabase/client";
 import { publishMealPlan, savePlanAsApproved } from "@/lib/serverTransitions";
-import { autoFixMealPlan } from "@/lib/autoFixEngine";
 import { toast } from "sonner";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import BuilderTopbar from "@/components/hybrid-builder/BuilderTopbar";
@@ -23,6 +22,7 @@ import { Loader2, AlertTriangle, PanelLeftOpen, PanelRightOpen } from "lucide-re
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { MealType } from "@/stores/mealPlanEditorV2Store";
+import { resolveOverallValidationStatus, runValidateAndFixMealPlan } from "@/lib/mealPlanValidationFlow";
 
 export default function HybridPlanBuilder() {
   // Recipe expansion: load recipe_items → match foods → create individual meal_plan_items
@@ -202,60 +202,54 @@ export default function HybridPlanBuilder() {
     setValidating(true);
     setValidationResult(null);
     try {
-      await store._flushQueue();
+      const outcome = await runValidateAndFixMealPlan({
+        planId: plan.id,
+        patientId: plan.patient_id,
+        userId: user?.id ?? "",
+        tenantId,
+        flush: store._flushQueue,
+      });
 
-      const { data, error } = await supabase.functions.invoke("validate-meal-plan", { body: { meal_plan_id: plan.id } });
-      if (error) throw error;
-
-      const nextStatus = data?.overall_status || (data?.success ? "aprovado" : "sugestoes_pendentes");
+      const data = outcome.validationResult;
+      const nextStatus = resolveOverallValidationStatus(data);
       store.updatePlan({
         overall_validation_status: nextStatus,
         overall_score: typeof data?.score === "number" ? data.score : plan.overall_score,
         last_validated_at: new Date().toISOString(),
+        validation_engine_version: "unified_v5",
         updated_at: new Date().toISOString(),
       } as any);
-      await store.hydrate(plan.id, user?.id ?? "");
 
-      if (data?.success) {
+      if (outcome.kind === "validated") {
+        await store.hydrate(plan.id, user?.id ?? "");
         toast.success("Plano válido! ✅");
         return;
       }
 
-      setValidationResult(data as ValidationResult);
-      toast.info("Divergências encontradas. Aplicando correção automática...");
-
-      if (!user || !tenantId) {
-        throw new Error("Contexto da clínica não carregado para corrigir o plano.");
-      }
-
-      const fixed = await autoFixMealPlan(plan.id, plan.patient_id, user.id, tenantId);
-      if (!fixed.success || !fixed.newPlanId) {
-        throw new Error(fixed.warnings[0] || "A correção automática não conseguiu persistir mudanças.");
-      }
-
-      if (fixed.inPlace) {
+      if (outcome.kind === "fixed_and_validated" || outcome.kind === "fixed_but_pending") {
         await store.hydrate(plan.id, user.id);
-        const { data: revalidated, error: revalidateError } = await supabase.functions.invoke("validate-meal-plan", {
-          body: { meal_plan_id: plan.id },
-        });
-        if (revalidateError) throw revalidateError;
-
-        if (revalidated?.success) {
+        if (outcome.kind === "fixed_and_validated") {
           setValidationResult(null);
           toast.success("✅ Plano corrigido e revalidado com sucesso!");
         } else {
-          setValidationResult(revalidated as ValidationResult);
+          setValidationResult(data as unknown as ValidationResult);
           toast.info("Correção aplicada, mas ainda existem ajustes pendentes.");
         }
-      } else {
-        toast.success("Plano corrigido salvo como novo draft. Redirecionando...");
-        navigate(`/plan-builder/${fixed.newPlanId}`, { replace: true });
         return;
       }
+
+      if (outcome.kind !== "redirect") {
+        throw new Error("Fluxo de correção retornou um estado inesperado.");
+      }
+
+      toast.success("Plano corrigido salvo como novo draft. Redirecionando...");
+      navigate(`/plan-builder/${outcome.newPlanId}`, { replace: true });
+      return;
     } catch (e: any) {
       toast.error(e.message || "Erro na validação");
+    } finally {
+      setValidating(false);
     }
-    setValidating(false);
   };
 
   const handlePublish = async () => {

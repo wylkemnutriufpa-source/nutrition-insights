@@ -1,6 +1,5 @@
-import { useState, useRef, useCallback } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import { toast } from "sonner";
 import {
@@ -11,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import AutoFixButton from "./AutoFixButton";
+import { validateMealPlan } from "@/lib/mealPlanValidationFlow";
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -213,11 +213,7 @@ function BucketSection({ title, icon, issues, colorClass }: { title: string; ico
 export default function PlanAuditPanel({ mealPlanId, patientId, onApproved, onFixed }: Props) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AuditResult | null>(null);
-  const autoFixTriggerRef = useRef<(() => void) | null>(null);
-
-  const handleTriggerAutoFix = useCallback(() => {
-    autoFixTriggerRef.current?.();
-  }, []);
+  const [autoRunSignal, setAutoRunSignal] = useState(0);
 
   const runAudit = async () => {
     setLoading(true);
@@ -229,11 +225,8 @@ export default function PlanAuditPanel({ mealPlanId, patientId, onApproved, onFi
         await editorState._flushQueue();
       }
 
-      const { data, error } = await supabase.functions.invoke("validate-meal-plan", {
-        body: { meal_plan_id: mealPlanId },
-      });
-      if (error) throw error;
-      setResult(data as AuditResult);
+      const data = await validateMealPlan(mealPlanId);
+      setResult(data as unknown as AuditResult);
       if (data?.success) {
         toast.success("Motor Clínico Unificado: Plano APROVADO! ✅");
         onApproved?.();
@@ -255,21 +248,16 @@ export default function PlanAuditPanel({ mealPlanId, patientId, onApproved, onFi
         await editorState._flushQueue();
       }
 
-      const { data, error } = await supabase.functions.invoke("validate-meal-plan", {
-        body: { meal_plan_id: mealPlanId },
-      });
-      if (error) throw error;
-      setResult(data as AuditResult);
+      const data = await validateMealPlan(mealPlanId);
+      setResult(data as unknown as AuditResult);
 
       if (data?.success) {
         toast.success("Motor Clínico Unificado: Plano já está APROVADO! ✅");
         onApproved?.();
       } else {
-        // Plan needs corrections — trigger AutoFix automatically
         toast.info("Divergências encontradas. Iniciando correção automática...", { duration: 2000 });
+        setAutoRunSignal((current) => current + 1);
         setLoading(false);
-        // Small delay to let the UI update, then trigger AutoFix
-        setTimeout(() => handleTriggerAutoFix(), 500);
         return;
       }
     } catch (e: any) {
@@ -304,7 +292,7 @@ export default function PlanAuditPanel({ mealPlanId, patientId, onApproved, onFi
           mealPlanId={mealPlanId}
           patientId={patientId}
           onFixed={onFixed}
-          triggerRef={autoFixTriggerRef}
+          autoRunSignal={autoRunSignal}
         />
       )}
 
@@ -353,7 +341,7 @@ export default function PlanAuditPanel({ mealPlanId, patientId, onApproved, onFi
 
             {/* Decision CTA */}
             {result.final_decision && (
-              <DecisionCTA decision={result.final_decision} onFix={patientId ? handleTriggerAutoFix : undefined} />
+              <DecisionCTA decision={result.final_decision} onFix={patientId ? () => setAutoRunSignal((current) => current + 1) : undefined} />
             )}
 
             {/* 3 Scores */}
