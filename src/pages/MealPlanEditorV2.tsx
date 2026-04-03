@@ -431,9 +431,9 @@ export default function MealPlanEditorV2() {
                 toast.success("✅ Plano corrigido! Recarregando...");
                 store.hydrate(plan.id, user?.id ?? "");
               } else {
-                // New draft created: navigate to it
+                // New draft created: navigate to builder (not listing page)
                 toast.success("Plano corrigido salvo como draft! Redirecionando...");
-                navigate(`/meal-plans/${newPlanId}`, { replace: true });
+                navigate(`/plan-builder/${newPlanId}`, { replace: true });
               }
             }}
           />

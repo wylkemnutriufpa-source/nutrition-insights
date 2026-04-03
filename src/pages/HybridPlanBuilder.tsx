@@ -314,8 +314,31 @@ export default function HybridPlanBuilder() {
               result={validationResult}
               onClose={() => setValidationResult(null)}
               onCorrectionApplied={async () => {
-                // Only flush pending ops — do NOT change plan status to approved
+                // Flush pending ops, then auto-revalidate with fresh DB data
                 await store._flushQueue();
+                await store.hydrate(plan.id, user?.id ?? "");
+                try {
+                  const { data } = await supabase.functions.invoke("validate-meal-plan", { body: { meal_plan_id: plan.id } });
+                  if (data) {
+                    const nextStatus = data.overall_status || (data.success ? "aprovado" : "sugestoes_pendentes");
+                    store.updatePlan({
+                      overall_validation_status: nextStatus,
+                      overall_score: typeof data.score === "number" ? data.score : plan.overall_score,
+                      last_validated_at: new Date().toISOString(),
+                      updated_at: new Date().toISOString(),
+                    } as any);
+                    await store.hydrate(plan.id, user?.id ?? "");
+                    if (data.success) {
+                      setValidationResult(null);
+                      toast.success("✅ Correção aplicada e plano revalidado com sucesso!");
+                    } else {
+                      setValidationResult(data as ValidationResult);
+                      toast.info("Correção aplicada. Ainda há sugestões pendentes.");
+                    }
+                  }
+                } catch {
+                  toast.info("Correção salva. Clique em Validar para revalidar.");
+                }
               }}
             />
           )}
