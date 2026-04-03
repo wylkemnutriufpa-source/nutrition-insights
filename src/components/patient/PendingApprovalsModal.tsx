@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import {
   AlertTriangle, CheckCircle2, XCircle, Loader2, User,
   Target, Sparkles, ChevronRight, Scale,
-  FileText, Zap, Search
+  FileText, Zap, Search, Trash2
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { EditorVersionPicker } from "@/components/common/EditorVersionPicker";
@@ -102,8 +102,8 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
 
     const patientIds = items.map((p: any) => p.patient_id);
 
-    // Fetch profiles + check which patients have active/valid nutritionist links
-    const [{ data: profiles }, { data: activeLinks }] = await Promise.all([
+    // Fetch profiles + active links + already-published plans
+    const [{ data: profiles }, { data: activeLinks }, { data: publishedPlans }] = await Promise.all([
       supabase
         .from("profiles")
         .select("user_id, full_name, avatar_url")
@@ -114,15 +114,28 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
         .eq("nutritionist_id", user.id)
         .in("patient_id", patientIds)
         .eq("status", "active"),
+      supabase
+        .from("meal_plans")
+        .select("patient_id")
+        .in("patient_id", patientIds)
+        .in("plan_status", ["approved", "published_to_patient"])
+        .eq("is_active", true),
     ]);
 
     const activeLinkMap = new Map((activeLinks || []).map((l: any) => [l.patient_id, l]));
+    const patientsWithActivePlan = new Set((publishedPlans || []).map((p: any) => p.patient_id));
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    // BUSINESS RULE: Only show pipelines where patient has an active link
-    // with a valid commercial journey status (not legacy/orphan)
+    // BUSINESS RULES:
+    // 1. Must have active nutritionist link
+    // 2. Patient must NOT already have an active published plan
+    // 3. Pipeline must be less than 30 days old
     const eligibleItems = items.filter((pipeline: any) => {
       const link = activeLinkMap.get(pipeline.patient_id);
-      if (!link) return false; // No active link = legacy/orphan
+      if (!link) return false;
+      if (patientsWithActivePlan.has(pipeline.patient_id)) return false;
+      if (new Date(pipeline.created_at) < thirtyDaysAgo) return false;
       return true;
     });
 
@@ -318,6 +331,22 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
     if (pipelines.length <= 1) onOpenChange(false);
   }
 
+  async function handleDismissPipeline(pipelineId: string, patientName: string) {
+    if (!user) return;
+    try {
+      await supabase
+        .from("onboarding_pipelines" as any)
+        .update({ status: "dismissed" } as any)
+        .eq("id", pipelineId);
+
+      setPipelines((prev) => prev.filter((p) => p.id !== pipelineId));
+      toast.success(`Pipeline de ${patientName} removido.`);
+      if (pipelines.length <= 1) onOpenChange(false);
+    } catch {
+      toast.error("Erro ao remover pipeline");
+    }
+  }
+
   const pendingCount = pipelines.length;
 
   return (
@@ -381,9 +410,10 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
                   >
                     <Card
                       className="cursor-pointer hover:border-primary/50 transition-colors"
-                      onClick={() => { setSelectedPipeline(p); setRejectMode(false); }}
                     >
-                      <CardContent className="py-4 flex items-center gap-4">
+                      <CardContent className="py-4 flex items-center gap-4"
+                        onClick={() => { setSelectedPipeline(p); setRejectMode(false); }}
+                      >
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                           <User className="w-5 h-5 text-primary" />
                         </div>
@@ -415,7 +445,20 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
                             )}
                           </div>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDismissPipeline(p.id, p.patient_name || "Paciente");
+                            }}
+                            className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                            title="Remover pipeline"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                          <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                        </div>
                       </CardContent>
                     </Card>
                   </motion.div>
@@ -593,15 +636,31 @@ export function usePendingApprovals() {
       }
 
       const patientIds = (pipelines as any[]).map((p: any) => p.patient_id);
-      const { data: activeLinks } = await supabase
-        .from("nutritionist_patients")
-        .select("patient_id")
-        .eq("nutritionist_id", user.id)
-        .in("patient_id", patientIds)
-        .eq("status", "active");
+      const [{ data: activeLinks }, { data: publishedPlans }] = await Promise.all([
+        supabase
+          .from("nutritionist_patients")
+          .select("patient_id")
+          .eq("nutritionist_id", user.id)
+          .in("patient_id", patientIds)
+          .eq("status", "active"),
+        supabase
+          .from("meal_plans")
+          .select("patient_id")
+          .in("patient_id", patientIds)
+          .in("plan_status", ["approved", "published_to_patient"])
+          .eq("is_active", true),
+      ]);
 
       const activeSet = new Set((activeLinks || []).map((l: any) => l.patient_id));
-      const validPipelines = (pipelines as any[]).filter((p: any) => activeSet.has(p.patient_id));
+      const publishedSet = new Set((publishedPlans || []).map((p: any) => p.patient_id));
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const validPipelines = (pipelines as any[]).filter((p: any) =>
+        activeSet.has(p.patient_id) &&
+        !publishedSet.has(p.patient_id) &&
+        new Date(p.created_at) >= thirtyDaysAgo
+      );
       setCount(validPipelines.length);
     };
 
