@@ -353,7 +353,7 @@ export default function PlanAuditPanel({ mealPlanId, patientId, onApproved, onFi
 
             {/* Decision CTA */}
             {result.final_decision && (
-              <DecisionCTA decision={result.final_decision} />
+              <DecisionCTA decision={result.final_decision} onFix={patientId ? handleTriggerAutoFix : undefined} />
             )}
 
             {/* 3 Scores */}
