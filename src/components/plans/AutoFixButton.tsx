@@ -30,6 +30,16 @@ export default function AutoFixButton({ mealPlanId, patientId, onFixed, disabled
     setCurrentStep(step);
   }, []);
 
+  // Allow external trigger (e.g., from "Validar e Corrigir" flow)
+  useEffect(() => {
+    if (triggerRef) {
+      triggerRef.current = handleAutoFix;
+    }
+    return () => {
+      if (triggerRef) triggerRef.current = null;
+    };
+  });
+
   const handleAutoFix = async () => {
     if (!user || !tenantId) return;
     setLoading(true);
