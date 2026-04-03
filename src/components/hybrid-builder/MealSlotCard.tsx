@@ -22,11 +22,12 @@ interface Props {
   composerMode?: ComposerMode;
 }
 
-export default function MealSlotCard({ day, mealType, label, icon, items }: Props) {
+export default function MealSlotCard({ day, mealType, label, icon, items, patientContext, mealMacroTarget, composerMode = "quick" }: Props) {
   const store = useMealPlanEditorV2Store();
   const { setNodeRef, isOver } = useDroppable({ id: `slot-${day}-${mealType}` });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editGrams, setEditGrams] = useState("");
+  const [composing, setComposing] = useState(false);
 
   const totalKcal = items.reduce((s, i) => s + (i.calories_target || 0), 0);
   const totalProt = items.reduce((s, i) => s + (i.protein_target || 0), 0);
