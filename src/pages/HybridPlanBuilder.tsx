@@ -390,7 +390,17 @@ export default function HybridPlanBuilder() {
             )}
 
             {/* Center: Canvas */}
-            <MealPlanCanvas patientContext={patientContext} composerMode={composerMode} />
+            <MealPlanCanvas
+              patientContext={patientContext}
+              composerMode={composerMode}
+              onRequestGenerate={() => {
+                setRightPanelOpen(true);
+                // Scroll generation section into view
+                setTimeout(() => {
+                  document.getElementById("generation-mode-selector")?.scrollIntoView({ behavior: "smooth" });
+                }, 200);
+              }}
+            />
 
             {/* Right: Clinical + Generation */}
             {rightPanelOpen ? (
