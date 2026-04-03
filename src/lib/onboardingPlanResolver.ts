@@ -117,7 +117,7 @@ export async function resolveLatestOnboardingPipeline(
 
   if (error) throw error;
 
-  return (data as OnboardingPipelineSnapshot | null) ?? null;
+  return (data as unknown as OnboardingPipelineSnapshot | null) ?? null;
 }
 
 export async function syncPipelineGeneratedPlan(pipelineId: string, planId: string) {
