@@ -390,7 +390,17 @@ export default function HybridPlanBuilder() {
             )}
 
             {/* Center: Canvas */}
-            <MealPlanCanvas patientContext={patientContext} composerMode={composerMode} />
+            <MealPlanCanvas
+              patientContext={patientContext}
+              composerMode={composerMode}
+              onRequestGenerate={() => {
+                setRightPanelOpen(true);
+                // Scroll generation section into view
+                setTimeout(() => {
+                  document.getElementById("generation-mode-selector")?.scrollIntoView({ behavior: "smooth" });
+                }, 200);
+              }}
+            />
 
             {/* Right: Clinical + Generation */}
             {rightPanelOpen ? (
@@ -422,7 +432,7 @@ export default function HybridPlanBuilder() {
                         }}
                       />
                     </div>
-                    <div className="border-t border-border pt-4">
+                    <div id="generation-mode-selector" className="border-t border-border pt-4">
                       <GenerationModeSelector
                         patientId={plan.patient_id}
                         onGenerated={() => {
