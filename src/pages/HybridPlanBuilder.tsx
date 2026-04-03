@@ -23,6 +23,107 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import type { MealType } from "@/stores/mealPlanEditorV2Store";
 
 export default function HybridPlanBuilder() {
+  // Recipe expansion: load recipe_items → match foods → create individual meal_plan_items
+  const expandRecipeToItems = async (
+    recipe: { id: string; title: string; calories_per_serving?: number | null; protein_per_serving?: number | null; carbs_per_serving?: number | null; fat_per_serving?: number | null; image_url?: string | null },
+    planId: string,
+    day: number,
+    mealType: MealType,
+    tenantIdVal: string | null,
+  ) => {
+    try {
+      // 1. Load recipe_items
+      const { data: recipeItems } = await supabase
+        .from("recipe_items")
+        .select("food_name, grams_reference, display_order")
+        .eq("recipe_id", recipe.id)
+        .order("display_order");
+
+      if (!recipeItems || recipeItems.length === 0) {
+        // Fallback: add as summary item if no recipe_items exist
+        store.addItem({
+          meal_plan_id: planId,
+          title: recipe.title,
+          description: recipe.title,
+          day_of_week: day,
+          meal_type: mealType,
+          calories_target: recipe.calories_per_serving || 0,
+          protein_target: recipe.protein_per_serving || 0,
+          carbs_target: recipe.carbs_per_serving || 0,
+          fat_target: recipe.fat_per_serving || 0,
+          image_url: recipe.image_url || null,
+          item_origin: "builder_drag_recipe" as any,
+          tenant_id: tenantIdVal,
+        });
+        toast.success(`Receita "${recipe.title}" adicionada (resumo)`);
+        return;
+      }
+
+      // 2. Load all foods for macro matching
+      const { data: allFoods } = await supabase
+        .from("ifj_food_database")
+        .select("food_name, calories_per_gram, protein_per_gram, carbs_per_gram, fat_per_gram")
+        .eq("is_active", true);
+
+      const foodsDb = (allFoods || []) as Array<{
+        food_name: string;
+        calories_per_gram: number | null;
+        protein_per_gram: number | null;
+        carbs_per_gram: number | null;
+        fat_per_gram: number | null;
+      }>;
+
+      // 3. Create individual items for each ingredient
+      const normalize = (s: string) =>
+        s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+
+      const findFood = (name: string) => {
+        const n = normalize(name);
+        // Exact match first
+        let match = foodsDb.find(f => normalize(f.food_name) === n);
+        if (match) return match;
+        // Contains match
+        match = foodsDb.find(f => normalize(f.food_name).includes(n) || n.includes(normalize(f.food_name)));
+        if (match) return match;
+        // Word match
+        const words = n.split(/\s+/).filter(w => w.length >= 4);
+        for (const word of words) {
+          match = foodsDb.find(f => normalize(f.food_name).includes(word));
+          if (match) return match;
+        }
+        return null;
+      };
+
+      const inserts = recipeItems.map((ri) => {
+        const grams = Number(ri.grams_reference) || 100;
+        const matched = findFood(ri.food_name);
+        const kcal = matched ? Math.round((matched.calories_per_gram || 0) * grams) : 0;
+        const prot = matched ? Math.round((matched.protein_per_gram || 0) * grams * 10) / 10 : 0;
+        const carbs = matched ? Math.round((matched.carbs_per_gram || 0) * grams * 10) / 10 : 0;
+        const fat = matched ? Math.round((matched.fat_per_gram || 0) * grams * 10) / 10 : 0;
+
+        return {
+          meal_plan_id: planId,
+          title: `${ri.food_name}`,
+          description: `${ri.food_name} ${grams}g (${recipe.title})`,
+          day_of_week: day,
+          meal_type: mealType,
+          calories_target: kcal,
+          protein_target: prot,
+          carbs_target: carbs,
+          fat_target: fat,
+          item_origin: "builder_recipe_item" as any,
+          tenant_id: tenantIdVal,
+        };
+      });
+
+      store.addItems(inserts);
+      toast.success(`Receita "${recipe.title}" expandida: ${inserts.length} ingredientes`);
+    } catch (err) {
+      console.error("Error expanding recipe:", err);
+      toast.error("Erro ao expandir receita");
+    }
+  };
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -183,21 +284,8 @@ export default function HybridPlanBuilder() {
       toast.success(`${food.food_name} adicionado!`);
     } else if (dragData.type === "recipe") {
       const { recipe } = dragData;
-      store.addItem({
-        meal_plan_id: plan.id,
-        title: recipe.title,
-        description: recipe.title,
-        day_of_week: day,
-        meal_type: mealType,
-        calories_target: recipe.calories_per_serving || 0,
-        protein_target: recipe.protein_per_serving || 0,
-        carbs_target: recipe.carbs_per_serving || 0,
-        fat_target: recipe.fat_per_serving || 0,
-        image_url: recipe.image_url || null,
-        item_origin: "builder_drag_recipe",
-        tenant_id: tenantId || null,
-      });
-      toast.success(`Receita "${recipe.title}" adicionada!`);
+      // Phase 2: load recipe_items and expand into individual ingredients
+      expandRecipeToItems(recipe, plan.id, day, mealType, tenantId || null);
     }
   };
 
