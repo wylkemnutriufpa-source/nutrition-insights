@@ -163,6 +163,136 @@ function scaleDescriptionQuantities(description: string | null | undefined, fact
     .replace(/(\d+(?:[.,]\d+)?)\s*(col\.?\s*(?:sopa|cha|chá))\b/gi, (_, value: string, unit: string) => scaleToken(value, unit, " "));
 }
 
+const BEVERAGE_KEYWORDS = ["cafe", "chá", "cha", "leite", "suco", "vitamina"];
+const MAIN_PROTEIN_KEYWORDS = ["frango", "carne", "bife", "alcatra", "patinho", "tilapia", "tilápia", "peixe", "porco", "lombo", "sobrecoxa", "sardinha"];
+
+function hasBeverage(description: string): boolean {
+  const text = normalize(description);
+  return BEVERAGE_KEYWORDS.some((keyword) => text.includes(normalize(keyword)));
+}
+
+function defaultBeverageLine(mealType: string): string | null {
+  if (mealType === "breakfast") return "• Café com leite";
+  if (mealType === "afternoon_snack") return "• Chá sem açúcar";
+  return null;
+}
+
+function standardProteinPortion(mealType: string, isGainGoal: boolean): number {
+  if (mealType === "lunch") return isGainGoal ? 180 : 150;
+  if (mealType === "dinner") return isGainGoal ? 170 : 140;
+  return isGainGoal ? 180 : 150;
+}
+
+function isProteinLine(line: string): boolean {
+  const text = normalize(line);
+  return MAIN_PROTEIN_KEYWORDS.some((keyword) => text.includes(normalize(keyword)));
+}
+
+function syncMealDescription(description: string | null | undefined, mealType: string, isGainGoal: boolean): string | null | undefined {
+  if (!description) return description;
+
+  const [mainSection, substitutionsSection] = description.split(/\n\n🔄 Substituições:\n/);
+  const lines = (mainSection || "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  let proteinNormalized = false;
+  const normalizedLines = lines.map((line) => {
+    if (!proteinNormalized && isMainMeal(mealType) && isProteinLine(line) && /(\d+(?:[.,]\d+)?)\s*g\b/i.test(line)) {
+      proteinNormalized = true;
+      return line.replace(/(\d+(?:[.,]\d+)?)\s*g\b/i, `${standardProteinPortion(mealType, isGainGoal)}g`);
+    }
+    return line;
+  });
+
+  const beverage = defaultBeverageLine(mealType);
+  if (beverage && !hasBeverage(normalizedLines.join("\n"))) {
+    normalizedLines.push(beverage);
+  }
+
+  return normalizedLines.join("\n") + (substitutionsSection ? `\n\n🔄 Substituições:\n${substitutionsSection}` : "");
+}
+
+function rebalanceProteinTargetsByMeal(dayItems: MealPlanItem[], dailyProteinTarget: number, isGainGoal: boolean): void {
+  if (!Number.isFinite(dailyProteinTarget) || dailyProteinTarget <= 0 || dayItems.length === 0) return;
+
+  const proteinShares: Record<string, number> = isGainGoal
+    ? { breakfast: 0.16, morning_snack: 0.10, lunch: 0.26, afternoon_snack: 0.10, dinner: 0.24, evening_snack: 0.14 }
+    : { breakfast: 0.15, morning_snack: 0.08, lunch: 0.27, afternoon_snack: 0.08, dinner: 0.27, evening_snack: 0.15 };
+  const proteinCaps: Record<string, number> = isGainGoal
+    ? { breakfast: 45, morning_snack: 24, lunch: 65, afternoon_snack: 24, dinner: 60, evening_snack: 35 }
+    : { breakfast: 30, morning_snack: 18, lunch: 55, afternoon_snack: 18, dinner: 55, evening_snack: 30 };
+  const mealOrder = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
+  const residualPriority = ["lunch", "dinner", "evening_snack", "breakfast", "morning_snack", "afternoon_snack"];
+
+  const mealTargets = new Map<string, number>();
+  let assigned = 0;
+
+  for (const mealType of mealOrder) {
+    const items = dayItems.filter((item) => item.meal_type === mealType);
+    if (items.length === 0) continue;
+    const baseTarget = Math.round(dailyProteinTarget * (proteinShares[mealType] || 0));
+    const target = Math.min(proteinCaps[mealType] ?? baseTarget, baseTarget);
+    mealTargets.set(mealType, target);
+    assigned += target;
+  }
+
+  let residual = Math.round(dailyProteinTarget - assigned);
+  for (const mealType of residualPriority) {
+    if (residual <= 0) break;
+    if (!mealTargets.has(mealType)) continue;
+    const current = mealTargets.get(mealType) || 0;
+    const cap = proteinCaps[mealType] ?? current;
+    const room = Math.max(0, cap - current);
+    if (room <= 0) continue;
+    const add = Math.min(room, residual);
+    mealTargets.set(mealType, current + add);
+    residual -= add;
+  }
+
+  if (residual !== 0) {
+    const fallbackMeal = residualPriority.find((mealType) => mealTargets.has(mealType)) || mealOrder.find((mealType) => mealTargets.has(mealType));
+    if (fallbackMeal) {
+      mealTargets.set(fallbackMeal, (mealTargets.get(fallbackMeal) || 0) + residual);
+    }
+  }
+
+  for (const [mealType, target] of mealTargets.entries()) {
+    const items = dayItems.filter((item) => item.meal_type === mealType && !isItemProtected(item));
+    if (items.length === 0) continue;
+    const currentTotal = items.reduce((sum, item) => sum + (Number(item.protein_target) || 0), 0);
+
+    if (currentTotal <= 0) {
+      const base = Math.floor(target / items.length);
+      let remaining = target;
+      items.forEach((item, index) => {
+        const next = index === items.length - 1 ? remaining : base;
+        item.protein_target = next;
+        remaining -= next;
+      });
+      continue;
+    }
+
+    let scaledSum = 0;
+    let largestIndex = 0;
+    let largestValue = 0;
+    items.forEach((item, index) => {
+      const current = Number(item.protein_target) || 0;
+      const next = Math.round(current * (target / currentTotal));
+      item.protein_target = next;
+      scaledSum += next;
+      if (current > largestValue) {
+        largestValue = current;
+        largestIndex = index;
+      }
+    });
+
+    const correction = target - scaledSum;
+    items[largestIndex].protein_target = (Number(items[largestIndex].protein_target) || 0) + correction;
+  }
+}
+
 // ── Fix: Replace blocked foods ──────────────────────────────
 
 function replaceBlockedFoods(text: string): { result: string; changes: Array<{ from: string; to: string }> } {
@@ -764,11 +894,18 @@ export async function autoFixMealPlan(
     }
   }
 
+  for (const day of uniqueDays) {
+    const dayItems = finalItems.filter(i => (i.day_of_week ?? 0) === day);
+    const dailyProteinTarget = targetProt > 0 ? targetProt : dayItems.reduce((sum, item) => sum + (Number(item.protein_target) || 0), 0);
+    rebalanceProteinTargetsByMeal(dayItems, dailyProteinTarget, isGainGoal);
+  }
+
   for (const item of finalItems as Array<MealPlanItem & { _baseCaloriesTarget?: number }>) {
     const baseCalories = Number(item._baseCaloriesTarget) || Number(item.calories_target) || 0;
     const currentCalories = Number(item.calories_target) || 0;
     if (baseCalories <= 0 || currentCalories <= 0) continue;
     item.description = scaleDescriptionQuantities(item.description, currentCalories / baseCalories) ?? item.description;
+    item.description = syncMealDescription(item.description, item.meal_type, isGainGoal) ?? item.description;
   }
 
   // ─── STEP 8: Calculate AFTER scores ────────────────────

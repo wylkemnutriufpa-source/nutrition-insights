@@ -433,6 +433,179 @@ function getMealOptions(mealType: string, goal: string): RealisticMeal[] {
   }
 }
 
+const BEVERAGE_KEYWORDS = ["cafe", "chá", "cha", "leite", "suco", "vitamina"];
+const MAIN_PROTEIN_KEYWORDS = [
+  "frango", "carne", "bife", "alcatra", "patinho", "tilapia", "tilápia", "peixe", "porco", "lombo", "sobrecoxa", "sardinha",
+];
+
+function roundScaledQuantity(value: number, unit: string): number {
+  if (!Number.isFinite(value) || value <= 0) return 0;
+  const normalizedUnit = normalize(unit);
+
+  if (normalizedUnit === "g" || normalizedUnit === "ml") {
+    return value >= 20 ? Math.max(5, Math.round(value / 5) * 5) : Math.max(1, Math.round(value));
+  }
+
+  return value >= 10 ? Math.max(1, Math.round(value)) : Math.max(0.5, Math.round(value * 2) / 2);
+}
+
+function scaleDescriptionQuantities(description: string | null | undefined, factor: number): string | null | undefined {
+  if (!description || !Number.isFinite(factor) || factor <= 0 || Math.abs(factor - 1) < 0.08) return description;
+
+  const scaleToken = (rawValue: string, unit: string, spacer = "") => {
+    const parsed = Number(rawValue.replace(",", "."));
+    if (!Number.isFinite(parsed) || parsed <= 0) return `${rawValue}${spacer}${unit}`;
+    const scaled = roundScaledQuantity(parsed * factor, unit);
+    const formatted = Number.isInteger(scaled)
+      ? String(Math.trunc(scaled))
+      : scaled.toFixed(1).replace(".0", "").replace(".", ",");
+    return `${formatted}${spacer}${unit}`;
+  };
+
+  return description
+    .replace(/(\d+(?:[.,]\d+)?)\s*(g|ml)\b/gi, (_, value: string, unit: string) => scaleToken(value, unit))
+    .replace(/(\d+(?:[.,]\d+)?)\s*(col\.?\s*(?:sopa|cha|chá))\b/gi, (_, value: string, unit: string) => scaleToken(value, unit, " "));
+}
+
+function isMainMealType(mealType: string): boolean {
+  return mealType === "lunch" || mealType === "dinner";
+}
+
+function hasBeverage(description: string): boolean {
+  const normalized = normalize(description);
+  return BEVERAGE_KEYWORDS.some(keyword => normalized.includes(normalize(keyword)));
+}
+
+function getDefaultBeverageLine(mealType: string): string | null {
+  if (mealType === "breakfast") return "• Café com leite";
+  if (mealType === "afternoon_snack") return "• Chá sem açúcar";
+  return null;
+}
+
+function standardMainProteinPortion(mealType: string, goal: string): number {
+  const loss = isLossGoal(goal);
+  if (mealType === "lunch") return loss ? 150 : 180;
+  if (mealType === "dinner") return loss ? 140 : 170;
+  return loss ? 150 : 180;
+}
+
+function isProteinLine(line: string): boolean {
+  const normalized = normalize(line);
+  return MAIN_PROTEIN_KEYWORDS.some(keyword => normalized.includes(normalize(keyword)));
+}
+
+function normalizeMainMealProteinLine(line: string, mealType: string, goal: string): string {
+  if (!isMainMealType(mealType) || !isProteinLine(line)) return line;
+  const targetGrams = standardMainProteinPortion(mealType, goal);
+  if (!/(\d+(?:[.,]\d+)?)\s*g\b/i.test(line)) return line;
+  return line.replace(/(\d+(?:[.,]\d+)?)\s*g\b/i, `${targetGrams}g`);
+}
+
+function finalizeMealDescription(description: string, mealType: string, goal: string): string {
+  const sections = description.split(/\n\n🔄 Substituições:\n/);
+  const mainLines = sections[0]
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  let normalizedProteinApplied = false;
+  const normalizedLines = mainLines.map((line) => {
+    if (!normalizedProteinApplied && isMainMealType(mealType) && isProteinLine(line)) {
+      normalizedProteinApplied = true;
+      return normalizeMainMealProteinLine(line, mealType, goal);
+    }
+    return line;
+  });
+
+  const beverageLine = getDefaultBeverageLine(mealType);
+  if (beverageLine && !hasBeverage(normalizedLines.join("\n"))) {
+    normalizedLines.push(beverageLine);
+  }
+
+  return normalizedLines.join("\n") + (sections[1] ? `\n\n🔄 Substituições:\n${sections[1]}` : "");
+}
+
+function rebalanceProteinTargetsByMeal(dayItems: any[], dailyProteinTarget: number, goal: string) {
+  if (!Number.isFinite(dailyProteinTarget) || dailyProteinTarget <= 0 || dayItems.length === 0) return;
+
+  const loss = isLossGoal(goal);
+  const proteinShares: Record<string, number> = loss
+    ? { breakfast: 0.15, morning_snack: 0.08, lunch: 0.27, afternoon_snack: 0.08, dinner: 0.27, evening_snack: 0.15 }
+    : { breakfast: 0.16, morning_snack: 0.10, lunch: 0.26, afternoon_snack: 0.10, dinner: 0.24, evening_snack: 0.14 };
+  const proteinCaps: Record<string, number> = loss
+    ? { breakfast: 30, morning_snack: 18, lunch: 55, afternoon_snack: 18, dinner: 55, evening_snack: 30 }
+    : { breakfast: 45, morning_snack: 24, lunch: 65, afternoon_snack: 24, dinner: 60, evening_snack: 35 };
+  const mealOrder = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
+  const residualPriority = ["lunch", "dinner", "evening_snack", "breakfast", "morning_snack", "afternoon_snack"];
+
+  const mealTargets = new Map<string, number>();
+  let assigned = 0;
+
+  for (const mealType of mealOrder) {
+    const mealGroup = dayItems.filter((item) => item.meal_type === mealType);
+    if (mealGroup.length === 0) continue;
+    const baseTarget = Math.round(dailyProteinTarget * (proteinShares[mealType] || 0));
+    const target = Math.min(proteinCaps[mealType] ?? baseTarget, baseTarget);
+    mealTargets.set(mealType, target);
+    assigned += target;
+  }
+
+  let residual = Math.round(dailyProteinTarget - assigned);
+  for (const mealType of residualPriority) {
+    if (residual <= 0) break;
+    if (!mealTargets.has(mealType)) continue;
+    const current = mealTargets.get(mealType) || 0;
+    const cap = proteinCaps[mealType] ?? current;
+    const room = Math.max(0, cap - current);
+    if (room <= 0) continue;
+    const add = Math.min(room, residual);
+    mealTargets.set(mealType, current + add);
+    residual -= add;
+  }
+
+  if (residual !== 0 && mealTargets.size > 0) {
+    const fallbackMeal = residualPriority.find((mealType) => mealTargets.has(mealType)) || mealOrder.find((mealType) => mealTargets.has(mealType));
+    if (fallbackMeal) {
+      mealTargets.set(fallbackMeal, (mealTargets.get(fallbackMeal) || 0) + residual);
+    }
+  }
+
+  for (const [mealType, target] of mealTargets.entries()) {
+    const mealGroup = dayItems.filter((item) => item.meal_type === mealType);
+    if (mealGroup.length === 0) continue;
+    const currentTotal = mealGroup.reduce((sum, item) => sum + (Number(item.protein_target) || 0), 0);
+
+    if (currentTotal <= 0) {
+      const base = Math.floor(target / mealGroup.length);
+      let remaining = target;
+      mealGroup.forEach((item, index) => {
+        const next = index === mealGroup.length - 1 ? remaining : base;
+        item.protein_target = next;
+        remaining -= next;
+      });
+      continue;
+    }
+
+    let scaledSum = 0;
+    let largestIndex = 0;
+    let largestValue = 0;
+
+    mealGroup.forEach((item, index) => {
+      const current = Number(item.protein_target) || 0;
+      const next = Math.round(current * (target / currentTotal));
+      item.protein_target = next;
+      scaledSum += next;
+      if (current > largestValue) {
+        largestValue = current;
+        largestIndex = index;
+      }
+    });
+
+    const correction = target - scaledSum;
+    mealGroup[largestIndex].protein_target = (Number(mealGroup[largestIndex].protein_target) || 0) + correction;
+  }
+}
+
 // ──── TMB Calculator (Mifflin-St Jeor) ────
 function calculateTMB(weight: number, height: number, age: number, sex: string): number {
   if (sex === "female") return Math.round(10 * weight + 6.25 * height - 5 * age - 161);
@@ -651,8 +824,12 @@ function buildMealFromDBFoods(
 
   const descriptionLines = foods.map(f => {
     const grams = Math.round((f.portion_grams || 100) * clampedScale);
-    const portionText = f.portion_reference || `${grams}g`;
-    return `• ${f.food_name} — ${portionText} (×${clampedScale.toFixed(1)})`;
+    const basePortion = (f.portion_reference || `${f.portion_grams || 100}g`).trim();
+    const scaledPortion = scaleDescriptionQuantities(basePortion, clampedScale) || basePortion;
+    const resolvedPortion = scaledPortion === basePortion && !/(\d+(?:[.,]\d+)?)\s*(g|ml|col\.?)/i.test(basePortion)
+      ? `${grams}g`
+      : scaledPortion;
+    return `• ${f.food_name} — ${resolvedPortion}`;
   });
 
   // Build substitution text from same categories
@@ -672,8 +849,8 @@ function buildMealFromDBFoods(
     }
   }
 
-  const description = descriptionLines.join("\n") + 
-    (subLines.length > 0 ? `\n\n🔄 Substituições:\n${subLines.join("\n")}` : "");
+  const baseDescription = finalizeMealDescription(descriptionLines.join("\n"), mealType, goal);
+  const description = baseDescription + (subLines.length > 0 ? `\n\n🔄 Substituições:\n${subLines.join("\n")}` : "");
 
   return {
     title: mealTitles[mealType] || "Refeição",
@@ -769,8 +946,10 @@ function generateRealisticPlan(
       const scaleFactor = targetKcal / (selected.kcal || 1);
       const clampedScale = Math.max(0.6, Math.min(1.8, scaleFactor));
 
+      const scaledBaseDescription = scaleDescriptionQuantities(selected.description, clampedScale) || selected.description;
+      const finalizedBaseDescription = finalizeMealDescription(scaledBaseDescription, mealType, goal);
       const subs = buildSubstitutionText(selected.foods, mealType);
-      const description = selected.description + (subs ? `\n\n🔄 Substituições:\n${subs}` : "");
+      const description = finalizedBaseDescription + (subs ? `\n\n🔄 Substituições:\n${subs}` : "");
 
       items.push({
         title: selected.title,
@@ -827,9 +1006,6 @@ function reconcileDailyMacros(
     byDay.get(day)!.push(item);
   }
 
-  const isLoss = isLossGoal(goal);
-  const breakfastProteinCap = isLoss ? 30 : 45;
-
   const reconciled: any[] = [];
   for (const [, dayItems] of byDay) {
     // Step 1: Scale all items proportionally to hit daily targets
@@ -854,29 +1030,11 @@ function reconcileDailyMacros(
       });
     }
 
-    // Step 2: Cap breakfast protein and REDISTRIBUTE excess to other meals
-    const breakfastItems = scaledItems.filter(i => i.meal_type === "breakfast");
-    const nonBreakfastItems = scaledItems.filter(i => i.meal_type !== "breakfast");
-    let excessProtein = 0;
-
-    for (const bItem of breakfastItems) {
-      if (bItem.protein_target > breakfastProteinCap) {
-        excessProtein += bItem.protein_target - breakfastProteinCap;
-        bItem.protein_target = breakfastProteinCap;
-      }
-    }
-
-    // Redistribute excess protein proportionally to non-breakfast meals
-    if (excessProtein > 0 && nonBreakfastItems.length > 0) {
-      const nonBreakfastProteinTotal = nonBreakfastItems.reduce((s: number, i: any) => s + (i.protein_target || 0), 0);
-      for (const item of nonBreakfastItems) {
-        const share = nonBreakfastProteinTotal > 0 ? (item.protein_target || 0) / nonBreakfastProteinTotal : 1 / nonBreakfastItems.length;
-        item.protein_target = Math.round((item.protein_target || 0) + excessProtein * share);
-      }
-    }
+    // Step 2: Redistribute protein by meal role instead of inflating lunch/dinner blindly
+    rebalanceProteinTargetsByMeal(scaledItems, dailyMacros.protein, goal);
 
     // Step 3: Final rounding correction — ensure daily total matches target exactly
-    const finalItems = [...breakfastItems, ...nonBreakfastItems];
+    const finalItems = [...scaledItems];
     const finalProteinSum = finalItems.reduce((s: number, i: any) => s + (i.protein_target || 0), 0);
     const proteinDiff = dailyMacros.protein - finalProteinSum;
     if (proteinDiff !== 0 && finalItems.length > 0) {
