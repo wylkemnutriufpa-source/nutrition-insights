@@ -480,6 +480,56 @@ serve(async (req) => {
         const dailyC = totalC / numDays;
         const dailyF = totalF / numDays;
 
+        // ── Cross-day consistency check ──────────────────────────────────────
+        // Detect when individual days deviate >10% from the plan average
+        const CROSS_DAY_TOLERANCE = 0.10; // 10% max variance between days
+        const perDayMacros = new Map<number, { cals: number; prot: number; carbs: number; fat: number }>();
+        for (const item of items) {
+            const d = item.day_of_week ?? 0;
+            if (!perDayMacros.has(d)) perDayMacros.set(d, { cals: 0, prot: 0, carbs: 0, fat: 0 });
+            const m = perDayMacros.get(d)!;
+            m.cals += item.calories_target || 0;
+            m.prot += Number(item.protein_target) || 0;
+            m.carbs += Number(item.carbs_target) || 0;
+            m.fat += Number(item.fat_target) || 0;
+        }
+
+        interface CrossDayInconsistency {
+            macro: string;
+            unit: string;
+            avg: number;
+            min_day: number;
+            min_val: number;
+            max_day: number;
+            max_val: number;
+            variance_pct: number;
+        }
+        const crossDayInconsistencies: CrossDayInconsistency[] = [];
+        const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+        function checkCrossDayConsistency(macroLabel: string, unit: string, key: "cals" | "prot" | "carbs" | "fat", avg: number) {
+            if (avg <= 0 || numDays < 2) return;
+            let minVal = Infinity, maxVal = -Infinity, minDay = 0, maxDay = 0;
+            for (const [day, m] of perDayMacros.entries()) {
+                const val = m[key];
+                if (val < minVal) { minVal = val; minDay = day; }
+                if (val > maxVal) { maxVal = val; maxDay = day; }
+            }
+            const variancePct = (maxVal - minVal) / avg;
+            if (variancePct > CROSS_DAY_TOLERANCE) {
+                crossDayInconsistencies.push({
+                    macro: macroLabel, unit, avg: Math.round(avg),
+                    min_day: minDay, min_val: Math.round(minVal),
+                    max_day: maxDay, max_val: Math.round(maxVal),
+                    variance_pct: Math.round(variancePct * 100),
+                });
+            }
+        }
+        checkCrossDayConsistency("Proteína", "g", "prot", dailyP);
+        checkCrossDayConsistency("Calorias", "kcal", "cals", dailyCals);
+        checkCrossDayConsistency("Carboidrato", "g", "carbs", dailyC);
+        checkCrossDayConsistency("Gordura", "g", "fat", dailyF);
+
         // ── 1. Clinical Validation (existing) ────────────────────────────────
         const { data: assessment } = await supabase
             .from("physical_assessments")
@@ -572,6 +622,16 @@ serve(async (req) => {
         const overallPassed = clinicalPassed && simplicityResult.status !== "failed" && adherenceResult.status !== "failed";
         const overallStatus = overallPassed ? "aprovado" : "sugestoes_melhoria";
         const overallScore = Math.round((clinicalScore * 0.4) + (simplicityResult.score * 0.35) + (adherenceResult.score * 0.25));
+
+        // Cross-day consistency errors
+        for (const inc of crossDayInconsistencies) {
+            const weight = inc.macro === "Proteína" || inc.macro === "Calorias" ? 25 : 15;
+            clinicalErrors.push({
+                rule: `inconsistencia_diaria_${inc.macro.toLowerCase()}`,
+                message: `Inconsistência de ${inc.macro} entre dias: ${dayNames[inc.min_day]} tem ${inc.min_val}${inc.unit} vs ${dayNames[inc.max_day]} tem ${inc.max_val}${inc.unit} (variação ${inc.variance_pct}%, tolerância: ±${CROSS_DAY_TOLERANCE * 100}%).`,
+                weight,
+            });
+        }
 
         // Merge all errors
         const allErrors = [
@@ -689,6 +749,8 @@ serve(async (req) => {
 
             simplicity_issues: simplicityResult.issues,
             adherence_factors: adherenceResult.factors,
+            cross_day_inconsistencies: crossDayInconsistencies,
+            per_day_macros: Object.fromEntries([...perDayMacros.entries()].map(([d, m]) => [d, { cals: Math.round(m.cals), prot: Math.round(m.prot), carbs: Math.round(m.carbs), fat: Math.round(m.fat) }])),
             suggestions: uniqueSuggestions,
             audit,
         }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

@@ -615,6 +615,79 @@ export async function autoFixMealPlan(
     warnings.push("Sem meta clínica do paciente — rebalanceamento proporcional ao plano original");
   }
 
+  // ─── STEP 7.5: Cross-day macro normalization ─────────────
+  // Ensure each day has the SAME macro totals (eliminate day-to-day variance)
+  onStep?.("rebalancing_macros");
+  const CROSS_DAY_TOL = 0.10;
+  const uniqueDays = [...new Set(finalItems.map(i => i.day_of_week ?? 0))];
+  
+  if (uniqueDays.length >= 2) {
+    const macroKeys = ["calories_target", "protein_target", "carbs_target", "fat_target"] as const;
+    
+    for (const macroKey of macroKeys) {
+      // Calculate per-day totals
+      const dayTotals = new Map<number, number>();
+      for (const day of uniqueDays) {
+        const dayItems = finalItems.filter(i => (i.day_of_week ?? 0) === day);
+        dayTotals.set(day, dayItems.reduce((s, i) => s + (Number(i[macroKey]) || 0), 0));
+      }
+      
+      // Calculate target (use clinical target if available, otherwise average)
+      let targetPerDay: number;
+      if (macroKey === "calories_target" && targetCals > 0) targetPerDay = targetCals;
+      else if (macroKey === "protein_target" && targetProt > 0) targetPerDay = targetProt;
+      else if (macroKey === "carbs_target" && targetCarbs > 0) targetPerDay = targetCarbs;
+      else if (macroKey === "fat_target" && targetFat > 0) targetPerDay = targetFat;
+      else {
+        // Use average across days as target
+        const vals = [...dayTotals.values()];
+        targetPerDay = vals.reduce((a, b) => a + b, 0) / vals.length;
+      }
+      
+      if (targetPerDay <= 0) continue;
+      
+      // Check if any day deviates more than tolerance
+      const minVal = Math.min(...dayTotals.values());
+      const maxVal = Math.max(...dayTotals.values());
+      const variance = (maxVal - minVal) / targetPerDay;
+      
+      if (variance > CROSS_DAY_TOL) {
+        // Scale each day's items to hit targetPerDay
+        for (const day of uniqueDays) {
+          const dayTotal = dayTotals.get(day) || 0;
+          if (dayTotal <= 0) continue;
+          const diffPct = Math.abs(dayTotal - targetPerDay) / targetPerDay;
+          if (diffPct <= 0.02) continue; // Already close enough
+          
+          const factor = targetPerDay / dayTotal;
+          const dayItems = finalItems.filter(i => (i.day_of_week ?? 0) === day);
+          
+          for (const item of dayItems) {
+            if (isItemProtected(item)) continue;
+            const oldVal = Number(item[macroKey]) || 0;
+            if (oldVal > 0) {
+              (item as any)[macroKey] = Math.round(oldVal * factor);
+            }
+          }
+        }
+        
+        const macroLabel = macroKey === "calories_target" ? "Calorias" : 
+          macroKey === "protein_target" ? "Proteína" :
+          macroKey === "carbs_target" ? "Carboidrato" : "Gordura";
+        
+        macroRebalanced = true;
+        allChanges.push({
+          type: "macro_rebalanced",
+          mealType: "all",
+          dayOfWeek: -1,
+          from: `${macroLabel}: ${Math.round(minVal)}–${Math.round(maxVal)} (variação ${Math.round(variance * 100)}%)`,
+          to: `${macroLabel}: ${Math.round(targetPerDay)} uniforme/dia`,
+          detail: `Normalização cross-day: todos os dias ajustados para ${Math.round(targetPerDay)} ${macroKey === "calories_target" ? "kcal" : "g"}/dia`,
+        });
+      }
+    }
+  }
+
   // ─── STEP 8: Calculate AFTER scores ────────────────────
   const afterAudit = toAuditItems(finalItems);
   const afterScore = calculatePlanSimplicityScore(afterAudit);
