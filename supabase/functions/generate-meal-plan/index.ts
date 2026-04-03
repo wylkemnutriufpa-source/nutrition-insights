@@ -1069,6 +1069,49 @@ function reconcileDailyMacros(
   return reconciled;
 }
 
+// ──── Cross-day consistency enforcement (3% protein, 5% other macros) ────
+function enforceCrossDayConsistency(items: any[], dailyMacros: { protein: number; carbs: number; fat: number }, dailyKcal: number): any[] {
+  const byDay = new Map<number, any[]>();
+  for (const item of items) {
+    const d = item.day_of_week;
+    if (!byDay.has(d)) byDay.set(d, []);
+    byDay.get(d)!.push(item);
+  }
+
+  for (const [, dayItems] of byDay) {
+    const totalP = dayItems.reduce((s: number, i: any) => s + (i.protein_target || 0), 0);
+    const totalC = dayItems.reduce((s: number, i: any) => s + (i.carbs_target || 0), 0);
+    const totalF = dayItems.reduce((s: number, i: any) => s + (i.fat_target || 0), 0);
+    const totalCal = dayItems.reduce((s: number, i: any) => s + (i.calories_target || 0), 0);
+
+    const corrections = [
+      { macro: "protein_target", actual: totalP, target: dailyMacros.protein, tolerance: 0.03 },
+      { macro: "carbs_target", actual: totalC, target: dailyMacros.carbs, tolerance: 0.05 },
+      { macro: "fat_target", actual: totalF, target: dailyMacros.fat, tolerance: 0.05 },
+      { macro: "calories_target", actual: totalCal, target: dailyKcal, tolerance: 0.03 },
+    ];
+
+    for (const c of corrections) {
+      const deviation = c.target > 0 ? Math.abs(c.actual - c.target) / c.target : 0;
+      if (deviation > c.tolerance) {
+        // Scale all items proportionally to hit target
+        const factor = c.target / (c.actual || 1);
+        for (const item of dayItems) {
+          item[c.macro] = Math.round((item[c.macro] || 0) * factor);
+        }
+        // Fix rounding on largest item
+        const newSum = dayItems.reduce((s: number, i: any) => s + (i[c.macro] || 0), 0);
+        const diff = c.target - newSum;
+        if (diff !== 0 && dayItems.length > 0) {
+          const largest = dayItems.reduce((a: any, b: any) => ((b[c.macro] || 0) > (a[c.macro] || 0) ? b : a));
+          largest[c.macro] += diff;
+        }
+      }
+    }
+  }
+  return items;
+}
+
 // ──── Deterministic tips engine ────
 function generateTips(answers: Record<string, any>): { tip: string; category: string; icon: string }[] {
   const tips: { tip: string; category: string; icon: string }[] = [];
