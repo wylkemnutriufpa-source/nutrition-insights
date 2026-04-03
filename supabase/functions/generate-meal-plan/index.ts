@@ -262,6 +262,7 @@ function normalizeActivityLevel(value: unknown): string {
 }
 
 // ── Seeded pseudo-random for patient-specific variety ──
+// Uses time-based entropy so each generation produces different results
 function seedHash(str: string): number {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -270,6 +271,14 @@ function seedHash(str: string): number {
     hash |= 0;
   }
   return Math.abs(hash);
+}
+
+/** Generate a unique seed per generation call — combines patient identity with current time */
+function generationSeed(patientId: string, optionOffset: number = 0): number {
+  const base = seedHash(patientId);
+  // Use minutes since epoch so each call (even seconds apart) gets a different seed
+  const timePart = Math.floor(Date.now() / 60000);
+  return base + timePart * 31 + optionOffset * 997;
 }
 
 function seededShuffle<T>(arr: T[], seed: number): T[] {
@@ -879,7 +888,7 @@ function generatePersonalizedPlan(
 ): any[] {
   const items: any[] = [];
   const mealTypes = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
-  const patientSeed = seedHash(patientId) + planOptionIndex * 997;
+  const patientSeed = generationSeed(patientId, planOptionIndex);
 
   for (let day = 0; day < 7; day++) {
     for (const mealType of mealTypes) {
@@ -939,8 +948,9 @@ function generateRealisticPlan(
 
       if (validOptions.length === 0) validOptions = options;
 
-      // Use planOptionIndex to offset the starting selection
-      const idx = (day + planOptionIndex * 3) % validOptions.length;
+      // Use time-based seed for variety across regenerations
+      const regenSeed = generationSeed(String(planOptionIndex), day);
+      const idx = (regenSeed + day) % validOptions.length;
       const selected = validOptions[idx];
 
       const scaleFactor = targetKcal / (selected.kcal || 1);
