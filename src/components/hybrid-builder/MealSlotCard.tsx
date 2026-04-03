@@ -5,9 +5,11 @@ import { useMealPlanEditorV2Store, type MealType, type MealPlanItem } from "@/st
 import { Input } from "@/components/ui/input";
 import {
   Plus, Trash2, Copy, Lock, Unlock, GripVertical,
-  Flame, Beef, Wheat, Droplets, Check, X,
+  Flame, Beef, Wheat, Droplets, Check, X, Sparkles, Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { composeMealForTarget, type ComposerMode, type MacroTarget } from "@/lib/mealComposer";
+import type { PatientContext } from "@/lib/mealComposer";
 
 interface Props {
   day: number;
@@ -15,13 +17,17 @@ interface Props {
   label: string;
   icon: React.ReactNode;
   items: MealPlanItem[];
+  patientContext?: PatientContext | null;
+  mealMacroTarget?: MacroTarget | null;
+  composerMode?: ComposerMode;
 }
 
-export default function MealSlotCard({ day, mealType, label, icon, items }: Props) {
+export default function MealSlotCard({ day, mealType, label, icon, items, patientContext, mealMacroTarget, composerMode = "quick" }: Props) {
   const store = useMealPlanEditorV2Store();
   const { setNodeRef, isOver } = useDroppable({ id: `slot-${day}-${mealType}` });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editGrams, setEditGrams] = useState("");
+  const [composing, setComposing] = useState(false);
 
   const totalKcal = items.reduce((s, i) => s + (i.calories_target || 0), 0);
   const totalProt = items.reduce((s, i) => s + (i.protein_target || 0), 0);
@@ -62,6 +68,43 @@ export default function MealSlotCard({ day, mealType, label, icon, items }: Prop
     toast.success("Gramagem atualizada — macros recalculados");
   };
 
+  const handleCompose = async () => {
+    if (!patientContext || !mealMacroTarget) {
+      toast.error("Contexto do paciente não disponível");
+      return;
+    }
+    setComposing(true);
+    try {
+      const meal = await composeMealForTarget(mealType as any, mealMacroTarget, patientContext, composerMode);
+      if (meal.items.length === 0) {
+        toast.error("Não foi possível compor a refeição");
+        return;
+      }
+      const planId = store.plan?.id;
+      if (!planId) return;
+
+      for (const ci of meal.items) {
+        store.addItem({
+          meal_plan_id: planId,
+          title: ci.food_name,
+          description: `${ci.food_name} ${ci.grams}g`,
+          day_of_week: day,
+          meal_type: mealType,
+          calories_target: ci.calories,
+          protein_target: ci.protein,
+          carbs_target: ci.carbs,
+          fat_target: ci.fat,
+          item_origin: "composer_auto",
+        });
+      }
+      toast.success(`Refeição composta: ${meal.items.length} itens • ${Math.round(meal.totalCalories)} kcal`);
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao compor refeição");
+    } finally {
+      setComposing(false);
+    }
+  };
+
   const handleToggleLock = (item: MealPlanItem) => {
     store.updateItem(item.id, { is_locked: !item.is_locked });
     toast.info(item.is_locked ? "Item desbloqueado" : "Item travado");
@@ -88,8 +131,20 @@ export default function MealSlotCard({ day, mealType, label, icon, items }: Prop
       </div>
 
       {items.length === 0 ? (
-        <div className="flex items-center justify-center py-6 text-xs text-muted-foreground border border-dashed border-border rounded-lg">
-          <Plus className="w-3.5 h-3.5 mr-1" /> Arraste uma refeição aqui
+        <div className="flex flex-col items-center justify-center py-4 gap-2 border border-dashed border-border rounded-lg">
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <Plus className="w-3.5 h-3.5" /> Arraste uma refeição aqui
+          </span>
+          {patientContext && mealMacroTarget && (
+            <button
+              onClick={handleCompose}
+              disabled={composing}
+              className="flex items-center gap-1 text-[10px] font-medium text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
+            >
+              {composing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+              Compor automaticamente
+            </button>
+          )}
         </div>
       ) : (
         <div className="space-y-1.5">

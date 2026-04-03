@@ -14,6 +14,8 @@ import BuilderLibraryPanel from "@/components/hybrid-builder/BuilderLibraryPanel
 import ClinicalMacroPanel from "@/components/hybrid-builder/ClinicalMacroPanel";
 import GenerationModeSelector from "@/components/hybrid-builder/GenerationModeSelector";
 import { ValidationCorrectionPanel, type ValidationResult } from "@/components/meal-editor-v2/ValidationCorrectionPanel";
+import { usePatientComposerContext } from "@/hooks/usePatientComposerContext";
+import type { ComposerMode } from "@/lib/mealComposer";
 
 import { Loader2, AlertTriangle, PanelLeftOpen, PanelRightOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -34,9 +36,14 @@ export default function HybridPlanBuilder() {
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
+  const [composerMode, setComposerMode] = useState<ComposerMode>("quick");
 
   // DnD sensors
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+
+  // Patient composer context (must be before early returns)
+  const patientId = store.plan?.patient_id;
+  const { ctx: patientContext } = usePatientComposerContext(patientId || null);
 
   // Hydrate store
   useEffect(() => {
@@ -239,7 +246,7 @@ export default function HybridPlanBuilder() {
             )}
 
             {/* Center: Canvas */}
-            <MealPlanCanvas />
+            <MealPlanCanvas patientContext={patientContext} composerMode={composerMode} />
 
             {/* Right: Clinical + Generation */}
             {rightPanelOpen ? (
