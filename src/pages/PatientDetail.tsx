@@ -1323,6 +1323,7 @@ export default function PatientDetail() {
                             patient_id: patientId,
                             title: "Plano Alimentar",
                             start_date: new Date().toISOString().split("T")[0],
+                            ...getTenantIdForInsert(tenantId),
                           } as any).select("id").single();
                           if (error) throw error;
                           toast.success("Plano criado! Abrindo Builder...");
