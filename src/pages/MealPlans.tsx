@@ -225,7 +225,7 @@ export default function MealPlans() {
           toast.success(`Plano gerado com ${genData.items_count || 0} refeições!`);
           runPostGenVisualMatch(genData.mealPlanId).catch(() => {});
           setOpen(false);
-          navigate(`/meal-plans/${genData.mealPlanId}`);
+          navigate(`/plan-builder/${genData.mealPlanId}`);
         }
       } else {
         const { data: newPlan, error } = await supabase.from("meal_plans").insert({
