@@ -368,7 +368,8 @@ export async function autoFixMealPlan(
     return emptyResult("Plano não encontrado");
   }
 
-  if (["approved", "published", "published_to_patient"].includes(plan.plan_status)) {
+  const isImmutable = ["approved", "published", "published_to_patient"].includes(plan.plan_status);
+  if (isImmutable) {
     warnings.push("Plano imutável — nova versão será criada como draft");
   }
 
