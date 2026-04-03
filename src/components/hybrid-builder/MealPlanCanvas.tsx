@@ -35,10 +35,10 @@ export default function MealPlanCanvas({ patientContext, composerMode = "quick" 
   const dayItems = items.filter((i) => i.day_of_week === activeDay);
 
   // Derive per-meal macro targets from plan targets
-  const planCalories = plan?.calories_target || 2000;
-  const planProtein = plan?.protein_target || 120;
-  const planCarbs = plan?.carbs_target || 250;
-  const planFat = plan?.fat_target || 65;
+  const planCalories = (plan as any)?.calories_target || plan?.overall_score || 2000;
+  const planProtein = (plan as any)?.protein_target || 120;
+  const planCarbs = (plan as any)?.carbs_target || 250;
+  const planFat = (plan as any)?.fat_target || 65;
 
   function getMealTarget(calShare: number): MacroTarget {
     return {
