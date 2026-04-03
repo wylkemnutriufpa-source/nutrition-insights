@@ -127,8 +127,11 @@ export default function PatientGridDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Experience Mode Toggle — top of dashboard */}
-      <InlineExperienceToggle />
+      {/* Experience Mode Toggle + Plan Request */}
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <InlineExperienceToggle />
+        <PlanRequestButton />
+      </div>
 
       {/* Onboarding Card — top priority */}
       {showOnboardingCard && (
