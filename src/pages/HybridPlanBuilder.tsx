@@ -242,8 +242,8 @@ export default function HybridPlanBuilder() {
         throw new Error("Fluxo de correção retornou um estado inesperado.");
       }
 
-      toast.success("Plano corrigido salvo como novo draft. Redirecionando...");
-      navigate(`/plan-builder/${outcome.newPlanId}`, { replace: true });
+      toast.success("Plano corrigido salvo como novo draft. Abrindo no editor clínico...");
+      navigate(`/meal-plans/${outcome.newPlanId}`, { replace: true });
       return;
     } catch (e: any) {
       toast.error(e.message || "Erro na validação");
@@ -426,8 +426,8 @@ export default function HybridPlanBuilder() {
                             store.hydrate(plan.id, user?.id ?? "");
                             setValidationResult(null);
                           } else {
-                            toast.success("Plano corrigido salvo como draft! Redirecionando...");
-                            navigate(`/plan-builder/${newPlanId}`, { replace: true });
+                            toast.success("Plano corrigido salvo como draft! Abrindo no editor clínico...");
+                            navigate(`/meal-plans/${newPlanId}`, { replace: true });
                           }
                         }}
                       />

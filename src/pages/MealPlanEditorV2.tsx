@@ -233,8 +233,8 @@ export default function MealPlanEditorV2() {
         throw new Error("Fluxo de correção retornou um estado inesperado.");
       }
 
-      toast.success("Plano corrigido salvo como draft! Redirecionando...");
-      navigate(`/plan-builder/${outcome.newPlanId}`, { replace: true });
+      toast.success("Plano corrigido salvo como draft! Abrindo no editor clínico...");
+      navigate(`/meal-plans/${outcome.newPlanId}`, { replace: true });
     } catch (e: any) {
       toast.error(e.message || "Erro de conexão com o Motor Clínico");
     } finally {
@@ -460,9 +460,8 @@ export default function MealPlanEditorV2() {
                 toast.success("✅ Plano corrigido! Recarregando...");
                 store.hydrate(plan.id, user?.id ?? "");
               } else {
-                // New draft created: navigate to builder (not listing page)
-                toast.success("Plano corrigido salvo como draft! Redirecionando...");
-                navigate(`/plan-builder/${newPlanId}`, { replace: true });
+                toast.success("Plano corrigido salvo como draft! Abrindo no editor clínico...");
+                navigate(`/meal-plans/${newPlanId}`, { replace: true });
               }
             }}
           />
