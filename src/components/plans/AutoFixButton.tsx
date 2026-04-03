@@ -49,7 +49,9 @@ export default function AutoFixButton({ mealPlanId, patientId, onFixed, disabled
     setCurrentStep("loading_context");
 
     try {
+      console.info("[AutoFixButton] Running AutoFix", { mealPlanId, patientId, shouldAutoCommit });
       const res = await autoFixMealPlan(mealPlanId, patientId, user.id, tenantId, handleStep);
+      console.info("[AutoFixButton] AutoFix result", { success: res.success, newPlanId: res.newPlanId, inPlace: res.inPlace, changesCount: res.changes.length, warnings: res.warnings });
       setResult(res);
       setShowProgress(false);
 
@@ -68,13 +70,16 @@ export default function AutoFixButton({ mealPlanId, patientId, onFixed, disabled
         }
 
         if (shouldAutoCommit) {
+          console.info("[AutoFixButton] Auto-committing, calling onFixed", { newPlanId: res.newPlanId, inPlace: res.inPlace });
           onFixed?.(res.newPlanId, res.inPlace);
           return;
         }
 
         setShowResult(true);
       } else {
-        toast.error(res.warnings[0] || "Erro ao corrigir plano");
+        const warningMsg = res.warnings[0] || "Nenhuma correção necessária";
+        console.warn("[AutoFixButton] AutoFix did not produce changes", { warnings: res.warnings });
+        toast.warning(warningMsg);
       }
     } catch (e: any) {
       setShowProgress(false);
