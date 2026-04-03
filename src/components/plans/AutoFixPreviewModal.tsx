@@ -149,24 +149,26 @@ export default function AutoFixPreviewModal({ open, onOpenChange, result, onAppr
               onClick={onApprove}
               className="flex-1 gap-2 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white"
             >
-              <CheckCircle2 className="w-4 h-4" /> Aprovar versão corrigida
+              <CheckCircle2 className="w-4 h-4" /> {result.inPlace ? "OK, recarregar plano" : "Aprovar versão corrigida"}
             </Button>
-            <Button
-              variant="outline"
-              className="flex-1 gap-2"
-              onClick={() => {
-                onOpenChange(false);
-                if (result.newPlanId) navigate(`/meal-plans/${result.newPlanId}`);
-              }}
-            >
-              <PencilLine className="w-4 h-4" /> Editar manualmente
-            </Button>
+            {!result.inPlace && (
+              <Button
+                variant="outline"
+                className="flex-1 gap-2"
+                onClick={() => {
+                  onOpenChange(false);
+                  if (result.newPlanId) navigate(`/meal-plans/${result.newPlanId}`);
+                }}
+              >
+                <PencilLine className="w-4 h-4" /> Editar manualmente
+              </Button>
+            )}
             <Button
               variant="ghost"
               className="gap-2 text-muted-foreground"
               onClick={() => onOpenChange(false)}
             >
-              <X className="w-4 h-4" /> Descartar
+              <X className="w-4 h-4" /> Fechar
             </Button>
           </div>
         </div>
