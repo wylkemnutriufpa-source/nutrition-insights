@@ -68,7 +68,44 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
     toast.success("Gramagem atualizada — macros recalculados");
   };
 
-  const handleToggleLock = (item: MealPlanItem) => {
+  const handleCompose = async () => {
+    if (!patientContext || !mealMacroTarget) {
+      toast.error("Contexto do paciente não disponível");
+      return;
+    }
+    setComposing(true);
+    try {
+      const meal = await composeMealForTarget(mealType as any, mealMacroTarget, patientContext, composerMode);
+      if (meal.items.length === 0) {
+        toast.error("Não foi possível compor a refeição");
+        return;
+      }
+      const planId = store.plan?.id;
+      if (!planId) return;
+
+      for (const ci of meal.items) {
+        store.addItem({
+          meal_plan_id: planId,
+          title: ci.food_name,
+          description: `${ci.food_name} ${ci.grams}g`,
+          day_of_week: day,
+          meal_type: mealType,
+          calories_target: ci.calories,
+          protein_target: ci.protein,
+          carbs_target: ci.carbs,
+          fat_target: ci.fat,
+          item_origin: "composer_auto",
+        });
+      }
+      toast.success(`Refeição composta: ${meal.items.length} itens • ${Math.round(meal.totalCalories)} kcal`);
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao compor refeição");
+    } finally {
+      setComposing(false);
+    }
+  };
+
+
     store.updateItem(item.id, { is_locked: !item.is_locked });
     toast.info(item.is_locked ? "Item desbloqueado" : "Item travado");
   };
