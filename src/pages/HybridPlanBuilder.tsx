@@ -14,6 +14,8 @@ import BuilderLibraryPanel from "@/components/hybrid-builder/BuilderLibraryPanel
 import ClinicalMacroPanel from "@/components/hybrid-builder/ClinicalMacroPanel";
 import GenerationModeSelector from "@/components/hybrid-builder/GenerationModeSelector";
 import { ValidationCorrectionPanel, type ValidationResult } from "@/components/meal-editor-v2/ValidationCorrectionPanel";
+import { usePatientComposerContext } from "@/hooks/usePatientComposerContext";
+import type { ComposerMode } from "@/lib/mealComposer";
 
 import { Loader2, AlertTriangle, PanelLeftOpen, PanelRightOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
