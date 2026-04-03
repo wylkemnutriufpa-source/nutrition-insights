@@ -421,12 +421,13 @@ export default function HybridPlanBuilder() {
                         patientId={plan.patient_id}
                         onApproved={() => store.hydrate(plan.id, user?.id ?? "")}
                         onFixed={(newPlanId, inPlace) => {
+                          toast.success("✅ Plano corrigido! Recarregando...");
+                          setValidationResult(null);
                           if (inPlace) {
-                            toast.success("✅ Plano corrigido! Recarregando...");
                             store.hydrate(plan.id, user?.id ?? "");
-                            setValidationResult(null);
                           } else {
-                            toast.success("Plano corrigido salvo como draft! Abrindo no editor clínico...");
+                            // Load corrected draft in the same editor instead of navigating away
+                            store.hydrate(newPlanId, user?.id ?? "");
                             navigate(`/meal-plans/${newPlanId}`, { replace: true });
                           }
                         }}

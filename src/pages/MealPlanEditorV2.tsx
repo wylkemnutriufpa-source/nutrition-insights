@@ -455,12 +455,12 @@ export default function MealPlanEditorV2() {
             patientId={plan.patient_id}
             onApproved={() => store.hydrate(plan.id, user?.id ?? "")}
             onFixed={(newPlanId, inPlace) => {
+              toast.success("✅ Plano corrigido! Recarregando...");
               if (inPlace) {
-                // In-place fix: reload the same plan
-                toast.success("✅ Plano corrigido! Recarregando...");
                 store.hydrate(plan.id, user?.id ?? "");
               } else {
-                toast.success("Plano corrigido salvo como draft! Abrindo no editor clínico...");
+                // Load the corrected draft in-place instead of navigating away
+                store.hydrate(newPlanId, user?.id ?? "");
                 navigate(`/meal-plans/${newPlanId}`, { replace: true });
               }
             }}
