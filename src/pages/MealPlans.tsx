@@ -131,7 +131,7 @@ export default function MealPlans() {
         if (pipelineData?.generated_plan_id && pipelineData?.plan_generated) {
           const pipelinePlan = await inspectOnboardingPlan(pipelineData.generated_plan_id);
           if (pipelinePlan?.isUsable) {
-            navigate(`/plan-builder/${pipelineData.generated_plan_id}`, { replace: true });
+            navigate(`/meal-plans/${pipelineData.generated_plan_id}`, { replace: true });
             return;
           }
           console.warn("Pipeline plan is stale/archived, looking for alternatives...");
@@ -144,7 +144,7 @@ export default function MealPlans() {
           if (pipelineData?.id && pipelineData.generated_plan_id !== existingPlan.id) {
             await syncPipelineGeneratedPlan(pipelineData.id, existingPlan.id);
           }
-          navigate(`/plan-builder/${existingPlan.id}`, { replace: true });
+          navigate(`/meal-plans/${existingPlan.id}`, { replace: true });
           return;
         }
 
@@ -183,7 +183,7 @@ export default function MealPlans() {
         if (newPlanId) {
           toast.success(`Plano gerado com ${genData.items_count || 0} itens!`);
           runPostGenVisualMatch(newPlanId).catch(() => {});
-          navigate(`/plan-builder/${newPlanId}`, { replace: true });
+          navigate(`/meal-plans/${newPlanId}`, { replace: true });
         } else {
           toast.error("Plano gerado mas sem ID retornado. Tente novamente.");
           onboardingHandled.current = null;
