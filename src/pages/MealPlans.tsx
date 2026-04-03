@@ -182,9 +182,23 @@ export default function MealPlans() {
 
         const newPlanId = genData.mealPlanId;
         if (newPlanId) {
-          toast.success(`Plano gerado com ${genData.items_count || 0} itens!`);
-          runPostGenVisualMatch(newPlanId).catch(() => {});
-          navigate(`/meal-plans/${newPlanId}`, { replace: true });
+          const finalized = await finalizeGeneratedMealPlan({
+            planId: newPlanId,
+            patientId,
+            userId: user.id,
+            tenantId,
+          });
+          const resolvedPlanId = finalized.finalPlanId;
+
+          if (pipelineData?.id && pipelineData.generated_plan_id !== resolvedPlanId) {
+            await syncPipelineGeneratedPlan(pipelineData.id, resolvedPlanId);
+          }
+
+          toast.success(finalized.corrected
+            ? `Plano gerado e ajustado automaticamente!`
+            : `Plano gerado com ${genData.items_count || 0} itens!`);
+          runPostGenVisualMatch(resolvedPlanId).catch(() => {});
+          navigate(`/meal-plans/${resolvedPlanId}`, { replace: true });
         } else {
           toast.error("Plano gerado mas sem ID retornado. Tente novamente.");
           onboardingHandled.current = null;
