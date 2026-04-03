@@ -1380,7 +1380,23 @@ export default function PatientDetail() {
                         <UtensilsCrossed className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
                         <h3 className="font-display text-lg font-semibold mb-2">Nenhum plano alimentar</h3>
                         <p className="text-sm text-muted-foreground mb-4">Crie um plano alimentar para este paciente.</p>
-                        <Button onClick={() => { setOpenSection(null); navigate(`/meal-plans?patientId=${patientId}`); }} className="gradient-primary">
+                        <Button onClick={async () => {
+                          setOpenSection(null);
+                          try {
+                            const { data: newPlan, error } = await supabase.from("meal_plans").insert({
+                              nutritionist_id: user?.id,
+                              patient_id: patientId,
+                              title: "Plano Alimentar",
+                              start_date: new Date().toISOString().split("T")[0],
+                              ...getTenantIdForInsert(tenantId),
+                            } as any).select("id").single();
+                            if (error) throw error;
+                            toast.success("Plano criado! Abrindo Builder...");
+                            navigate(`/plan-builder/${newPlan.id}`);
+                          } catch (err: any) {
+                            toast.error(err.message || "Erro ao criar plano");
+                          }
+                        }} className="gradient-primary">
                           <Plus className="w-4 h-4 mr-2" /> Criar Primeiro Plano
                         </Button>
                       </div>
