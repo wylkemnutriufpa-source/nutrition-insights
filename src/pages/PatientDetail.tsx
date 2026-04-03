@@ -961,7 +961,7 @@ export default function PatientDetail() {
               <Dialog open={openSection === "ai-insights"} onOpenChange={(v) => !v && setOpenSection(null)}>
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">IA Insights</DialogTitle></DialogHeader>
-                  <AnamnesisInsightsFull userId={patientId!} />
+                  <AnamnesisInsightsFull userId={resolvedPatientId} />
                 </DialogContent>
               </Dialog>
 
