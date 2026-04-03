@@ -57,7 +57,11 @@ export async function runValidateAndFixMealPlan({
 }: RunValidateAndFixParams): Promise<ValidateAndFixOutcome> {
   await flush();
 
+  console.info("[ValidateAndFix] Starting", { planId, patientId, userId, tenantId });
+
   const validationResult = await validateMealPlan(planId);
+  console.info("[ValidateAndFix] Validation result", { planId, success: validationResult.success, score: validationResult.score, status: validationResult.overall_status });
+
   if (validationResult.success) {
     return {
       kind: "validated",
@@ -70,6 +74,8 @@ export async function runValidateAndFixMealPlan({
   }
 
   const fixedResult = await autoFixMealPlan(planId, patientId, userId, tenantId);
+  console.info("[ValidateAndFix] AutoFix result", { planId, success: fixedResult.success, newPlanId: fixedResult.newPlanId, inPlace: fixedResult.inPlace, changesCount: fixedResult.changes.length, warnings: fixedResult.warnings });
+
   if (!fixedResult.success || !fixedResult.newPlanId) {
     throw new Error(fixedResult.warnings[0] || "A correção automática não conseguiu persistir mudanças.");
   }
@@ -84,6 +90,7 @@ export async function runValidateAndFixMealPlan({
   }
 
   const revalidatedResult = await validateMealPlan(planId);
+  console.info("[ValidateAndFix] Re-validation result", { planId, success: revalidatedResult.success, score: revalidatedResult.score });
   return {
     kind: revalidatedResult.success ? "fixed_and_validated" : "fixed_but_pending",
     validationResult: revalidatedResult,

@@ -243,12 +243,14 @@ export default function PlanAuditPanel({ mealPlanId, patientId, onApproved, onFi
     setLoading(true);
     setResult(null);
     try {
+      console.info("[PlanAuditPanel] runValidateAndFix starting", { mealPlanId, patientId });
       const editorState = useMealPlanEditorV2Store.getState();
       if (editorState.planId === mealPlanId && editorState.hydrated) {
         await editorState._flushQueue();
       }
 
       const data = await validateMealPlan(mealPlanId);
+      console.info("[PlanAuditPanel] Validation result", { mealPlanId, success: data?.success, score: data?.score, finalDecision: (data as any)?.final_decision });
       setResult(data as unknown as AuditResult);
 
       if (data?.success) {
@@ -261,6 +263,7 @@ export default function PlanAuditPanel({ mealPlanId, patientId, onApproved, onFi
         return;
       }
     } catch (e: any) {
+      console.error("[PlanAuditPanel] Error in runValidateAndFix", e);
       toast.error(e.message || "Erro ao contactar o Motor Clínico");
     }
     setLoading(false);
