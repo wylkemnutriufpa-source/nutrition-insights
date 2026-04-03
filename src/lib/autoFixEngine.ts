@@ -762,8 +762,11 @@ export async function autoFixMealPlan(
   const afterFat = sumMacro(finalItems, "fat_target");
 
   if (!haveMealPlanCollectionsChanged(items, finalItems)) {
-    return emptyResult("Nenhuma alteração foi aplicada.");
+    console.info("[AutoFix] No changes detected after processing", { planId, changesCount: allChanges.length });
+    return emptyResult("Nenhuma alteração necessária — o plano já está otimizado.");
   }
+
+  console.info("[AutoFix] Changes computed", { planId, changesCount: allChanges.length, isImmutable });
 
   // ─── STEP 9: Apply fix (in-place or new draft) ─────────
   onStep?.("creating_draft");
