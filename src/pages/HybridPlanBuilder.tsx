@@ -183,21 +183,8 @@ export default function HybridPlanBuilder() {
       toast.success(`${food.food_name} adicionado!`);
     } else if (dragData.type === "recipe") {
       const { recipe } = dragData;
-      store.addItem({
-        meal_plan_id: plan.id,
-        title: recipe.title,
-        description: recipe.title,
-        day_of_week: day,
-        meal_type: mealType,
-        calories_target: recipe.calories_per_serving || 0,
-        protein_target: recipe.protein_per_serving || 0,
-        carbs_target: recipe.carbs_per_serving || 0,
-        fat_target: recipe.fat_per_serving || 0,
-        image_url: recipe.image_url || null,
-        item_origin: "builder_drag_recipe",
-        tenant_id: tenantId || null,
-      });
-      toast.success(`Receita "${recipe.title}" adicionada!`);
+      // Phase 2: load recipe_items and expand into individual ingredients
+      expandRecipeToItems(recipe, plan.id, day, mealType, tenantId || null);
     }
   };
 
