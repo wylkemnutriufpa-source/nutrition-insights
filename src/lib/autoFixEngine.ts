@@ -136,6 +136,33 @@ function isMainMeal(mealType: string): boolean {
   return isMealType(mealType, "lunch", "dinner", "almoco", "jantar");
 }
 
+function roundScaledQuantity(value: number, unit: string): number {
+  if (!Number.isFinite(value) || value <= 0) return 0;
+  const normalizedUnit = normalize(unit);
+
+  if (normalizedUnit === "g" || normalizedUnit === "ml") {
+    return value >= 20 ? Math.max(5, Math.round(value / 5) * 5) : Math.max(1, Math.round(value));
+  }
+
+  return value >= 10 ? Math.max(1, Math.round(value)) : Math.max(0.5, Math.round(value * 2) / 2);
+}
+
+function scaleDescriptionQuantities(description: string | null | undefined, factor: number): string | null | undefined {
+  if (!description || !Number.isFinite(factor) || factor <= 0 || Math.abs(factor - 1) < 0.08) return description;
+
+  const scaleToken = (rawValue: string, unit: string, spacer = "") => {
+    const parsed = Number(rawValue.replace(",", "."));
+    if (!Number.isFinite(parsed) || parsed <= 0) return `${rawValue}${spacer}${unit}`;
+    const scaled = roundScaledQuantity(parsed * factor, unit);
+    const formatted = Number.isInteger(scaled) ? String(Math.trunc(scaled)) : scaled.toFixed(1).replace(".0", "").replace(".", ",");
+    return `${formatted}${spacer}${unit}`;
+  };
+
+  return description
+    .replace(/(\d+(?:[.,]\d+)?)\s*(g|ml)\b/gi, (_, value: string, unit: string) => scaleToken(value, unit))
+    .replace(/(\d+(?:[.,]\d+)?)\s*(col\.?\s*(?:sopa|cha|chá))\b/gi, (_, value: string, unit: string) => scaleToken(value, unit, " "));
+}
+
 // ── Fix: Replace blocked foods ──────────────────────────────
 
 function replaceBlockedFoods(text: string): { result: string; changes: Array<{ from: string; to: string }> } {
@@ -386,27 +413,8 @@ export async function autoFixMealPlan(
       .maybeSingle();
 
     if (existingDraft) {
-      console.info("[AutoFix] Existing draft_auto_corrected found, redirecting", { existingDraftId: existingDraft.id });
-      // Validate the existing corrected draft
-      const { data: draftItems } = await supabase
-        .from("meal_plan_items")
-        .select("*")
-        .eq("meal_plan_id", existingDraft.id);
-
-      if (draftItems && draftItems.length > 0) {
-        const draftAudit = toAuditItems(draftItems);
-        const draftScore = calculatePlanSimplicityScore(draftAudit);
-        return {
-          success: true,
-          newPlanId: existingDraft.id,
-          inPlace: false,
-          changes: [{ type: "macro_rebalanced", mealType: "all", dayOfWeek: -1, from: "Plano original", to: "Versão corrigida já existente", detail: "Draft corrigido já disponível — redirecionando" }],
-          before: { score: draftScore, totalCalories: 0, totalProtein: 0, totalCarbs: 0, totalFat: 0 },
-          after: { score: draftScore, totalCalories: sumMacro(draftItems, "calories_target"), totalProtein: sumMacro(draftItems, "protein_target"), totalCarbs: sumMacro(draftItems, "carbs_target"), totalFat: sumMacro(draftItems, "fat_target") },
-          warnings: ["Versão corrigida já existia — redirecionando para ela"],
-          summary: { blocked_removed: 0, meals_simplified: 0, snacks_fixed: 0, breakfasts_fixed: 0, main_meals_standardized: 0, macro_rebalanced: true },
-        };
-      }
+      console.info("[AutoFix] Existing draft_auto_corrected found, regenerating synchronized draft", { existingDraftId: existingDraft.id });
+      warnings.push("Versão corrigida anterior encontrada — gerando uma nova versão com descrições sincronizadas.");
     }
 
     warnings.push("Plano imutável — nova versão será criada como draft");
@@ -457,7 +465,10 @@ export async function autoFixMealPlan(
   const allChanges: AutoFixChange[] = [];
 
   const personalizationCtx = await loadPersonalizationContext(patientId);
-  let workingItems: MealPlanItem[] = [...items];
+  let workingItems: MealPlanItem[] = items.map(item => ({
+    ...item,
+    _baseCaloriesTarget: Number(item.calories_target) || 0,
+  } as MealPlanItem));
 
   if (personalizationCtx) {
     // Skip calorie scaling here — AutoFix does its own macro rebalancing in Step 7
@@ -751,6 +762,13 @@ export async function autoFixMealPlan(
         });
       }
     }
+  }
+
+  for (const item of finalItems as Array<MealPlanItem & { _baseCaloriesTarget?: number }>) {
+    const baseCalories = Number(item._baseCaloriesTarget) || Number(item.calories_target) || 0;
+    const currentCalories = Number(item.calories_target) || 0;
+    if (baseCalories <= 0 || currentCalories <= 0) continue;
+    item.description = scaleDescriptionQuantities(item.description, currentCalories / baseCalories) ?? item.description;
   }
 
   // ─── STEP 8: Calculate AFTER scores ────────────────────
