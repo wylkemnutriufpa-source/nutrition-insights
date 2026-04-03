@@ -10,6 +10,7 @@ import { useLayoutPreference } from "@/hooks/useLayoutPreference";
 import { useExperienceUI } from "@/hooks/useExperienceUI";
 import FitJourneyTimeline from "@/components/timeline/FitJourneyTimeline";
 import InlineExperienceToggle from "@/components/dashboard/InlineExperienceToggle";
+import PlanRequestButton from "@/components/patient/PlanRequestButton";
 import {
   UtensilsCrossed, CheckCircle2, Calendar, Dumbbell,
   TrendingUp, Brain, Camera, Target,
