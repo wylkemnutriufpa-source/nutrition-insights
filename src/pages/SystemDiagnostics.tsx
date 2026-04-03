@@ -603,6 +603,9 @@ export default function SystemDiagnostics() {
             <TabsTrigger value="cleanup" className="gap-1.5 text-xs">
               <Database className="w-3.5 h-3.5" /> Limpeza
             </TabsTrigger>
+            <TabsTrigger value="audit" className="gap-1.5 text-xs">
+              <Shield className="w-3.5 h-3.5" /> Auditoria
+            </TabsTrigger>
             <TabsTrigger value="simulations" className="gap-1.5 text-xs">
               <FlaskConical className="w-3.5 h-3.5" /> Simulações
             </TabsTrigger>
