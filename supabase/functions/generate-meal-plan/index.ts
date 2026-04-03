@@ -948,8 +948,9 @@ function generateRealisticPlan(
 
       if (validOptions.length === 0) validOptions = options;
 
-      // Use planOptionIndex to offset the starting selection
-      const idx = (day + planOptionIndex * 3) % validOptions.length;
+      // Use time-based seed for variety across regenerations
+      const regenSeed = generationSeed(String(planOptionIndex), day);
+      const idx = (regenSeed + day) % validOptions.length;
       const selected = validOptions[idx];
 
       const scaleFactor = targetKcal / (selected.kcal || 1);
