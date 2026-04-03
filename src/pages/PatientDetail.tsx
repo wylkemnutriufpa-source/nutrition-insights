@@ -1308,7 +1308,39 @@ export default function PatientDetail() {
                     {/* Fast Plan Actions Panel */}
                     <div className="flex flex-wrap gap-2 p-3 rounded-lg bg-muted/30 border border-border">
                       <span className="text-xs font-medium text-muted-foreground self-center mr-2">Ações Rápidas:</span>
-                      <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={() => { setOpenSection(null); navigate(`/meal-plans?patientId=${patientId}&source=onboarding`); }}>
+                      <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={async () => {
+                        setOpenSection(null);
+                        // Try to find existing onboarding plan, or create new and open builder
+                        try {
+                          const { data: pipeline } = await (supabase
+                            .from("onboarding_pipelines" as any)
+                            .select("generated_plan_id, plan_generated")
+                            .eq("patient_id", patientId)
+                            .order("created_at", { ascending: false })
+                            .limit(1)
+                            .maybeSingle() as any);
+                          const pd = pipeline as { generated_plan_id?: string; plan_generated?: boolean } | null;
+                          if (pd?.generated_plan_id && pd?.plan_generated) {
+                            navigate(`/plan-builder/${pd.generated_plan_id}`);
+                            return;
+                          }
+                          // No onboarding plan — generate one
+                          toast.info("Gerando plano a partir do onboarding...");
+                          const { data: genData, error: genError } = await supabase.functions.invoke("generate-meal-plan", {
+                            body: { patientId, nutritionistId: user?.id, isPipeline: true },
+                          });
+                          if (genError || !genData?.success) {
+                            toast.error(genData?.error || "Erro ao gerar plano");
+                            return;
+                          }
+                          if (genData.mealPlanId) {
+                            toast.success(`Plano gerado com ${genData.items_count || 0} itens!`);
+                            navigate(`/plan-builder/${genData.mealPlanId}`);
+                          }
+                        } catch (err: any) {
+                          toast.error(err.message || "Erro ao processar onboarding");
+                        }
+                      }}>
                         <Zap className="w-3 h-3" /> A partir do Onboarding
                       </Button>
                       <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={() => { setOpenSection(null); navigate(`/diet-templates?patientId=${patientId}`); }}>

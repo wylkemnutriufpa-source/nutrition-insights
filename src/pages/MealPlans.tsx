@@ -317,7 +317,7 @@ export default function MealPlans() {
                     onGenerated={(planId) => {
                       runPostGenVisualMatch(planId).catch(() => {});
                       setOpen(false);
-                      navigate(`/meal-plans/${planId}`);
+                      navigate(`/plan-builder/${planId}`);
                     }}
                     onClose={() => setOpen(false)}
                   />
