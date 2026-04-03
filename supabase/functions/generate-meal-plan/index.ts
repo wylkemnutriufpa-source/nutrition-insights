@@ -262,6 +262,7 @@ function normalizeActivityLevel(value: unknown): string {
 }
 
 // ── Seeded pseudo-random for patient-specific variety ──
+// Uses time-based entropy so each generation produces different results
 function seedHash(str: string): number {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -270,6 +271,14 @@ function seedHash(str: string): number {
     hash |= 0;
   }
   return Math.abs(hash);
+}
+
+/** Generate a unique seed per generation call — combines patient identity with current time */
+function generationSeed(patientId: string, optionOffset: number = 0): number {
+  const base = seedHash(patientId);
+  // Use minutes since epoch so each call (even seconds apart) gets a different seed
+  const timePart = Math.floor(Date.now() / 60000);
+  return base + timePart * 31 + optionOffset * 997;
 }
 
 function seededShuffle<T>(arr: T[], seed: number): T[] {
