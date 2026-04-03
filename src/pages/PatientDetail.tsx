@@ -1491,6 +1491,7 @@ export default function PatientDetail() {
                             {!isPending && (
                               <div className="p-5 bg-secondary/20">
                                 <PlanScheduler mealPlanId={plan.id} planTitle={plan.title} />
+                                <PatientFeedbackSummary mealPlanId={plan.id} />
                               </div>
                             )}
                           </motion.div>
