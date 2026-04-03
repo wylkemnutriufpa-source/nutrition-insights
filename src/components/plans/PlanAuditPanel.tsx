@@ -71,7 +71,7 @@ interface AuditResult {
   audit: Record<string, any>;
 }
 
-interface Props { mealPlanId: string; patientId?: string; onApproved?: () => void; onFixed?: (newPlanId: string) => void; }
+interface Props { mealPlanId: string; patientId?: string; onApproved?: () => void; onFixed?: (newPlanId: string, inPlace?: boolean) => void; }
 
 // ── Sub-components ─────────────────────────────────────────────
 
