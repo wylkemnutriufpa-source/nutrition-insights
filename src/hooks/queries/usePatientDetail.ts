@@ -21,6 +21,8 @@ function getVisibleMealPlans(plans: any[]) {
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
 
+  const latestAutoCorrectedDraftId = sortedPlans.find((plan) => plan.plan_status === "draft_auto_corrected")?.id;
+
   const hasCanonicalPlan = sortedPlans.some((plan) => {
     const status = plan.plan_status || "draft";
     return plan.is_active || CANONICAL_MEAL_PLAN_STATUSES.has(status);
@@ -36,6 +38,10 @@ function getVisibleMealPlans(plans: any[]) {
     }
 
     if (plan.is_active || CANONICAL_MEAL_PLAN_STATUSES.has(status)) {
+      return true;
+    }
+
+    if (plan.id === latestAutoCorrectedDraftId) {
       return true;
     }
 
