@@ -12,7 +12,7 @@ import AutoFixProgressModal from "./AutoFixProgressModal";
 interface Props {
   mealPlanId: string;
   patientId: string;
-  onFixed?: (newPlanId: string) => void;
+  onFixed?: (newPlanId: string, inPlace?: boolean) => void;
   disabled?: boolean;
 }
 
@@ -30,47 +30,42 @@ export default function AutoFixButton({ mealPlanId, patientId, onFixed, disabled
   }, []);
 
   const handleAutoFix = async () => {
-    console.log("[AutoFix] 🟡 handleAutoFix CALLED", { mealPlanId, patientId, userId: user?.id, tenantId, disabled, loading });
-    if (!user || !tenantId) {
-      console.error("[AutoFix] ❌ BLOCKED — missing user or tenantId", { user: !!user, tenantId });
-      return;
-    }
+    if (!user || !tenantId) return;
     setLoading(true);
     setShowProgress(true);
     setCurrentStep("loading_context");
 
     try {
-      console.log("[AutoFix] 🔄 Calling autoFixMealPlan...");
       const res = await autoFixMealPlan(mealPlanId, patientId, user.id, tenantId, handleStep);
-      console.log("[AutoFix] ✅ autoFixMealPlan returned", { success: res.success, newPlanId: res.newPlanId, changesCount: res.changes.length, warnings: res.warnings });
       setResult(res);
       setShowProgress(false);
 
       if (res.success && res.newPlanId) {
-        // Auto-validate the new plan
+        // Auto-validate the fixed plan
         try {
-          console.log("[AutoFix] 🔄 Validating new plan...", res.newPlanId);
           const { data: valData } = await supabase.functions.invoke("validate-meal-plan", {
             body: { meal_plan_id: res.newPlanId },
           });
-          console.log("[AutoFix] ✅ Validation result", valData);
           if (valData?.success) {
             toast.success(`Plano corrigido e APROVADO! Score: ${valData.score}/100 ✅`);
           } else {
-            toast.success(`Plano corrigido! ${res.changes.length} correções. Score: ${valData?.score ?? "?"}/100 — revise antes de publicar.`);
+            toast.success(`Plano corrigido! ${res.changes.length} correções. Score: ${valData?.score ?? "?"}/100`);
           }
-        } catch (valErr) {
-          console.warn("[AutoFix] ⚠️ Validation call failed", valErr);
+        } catch {
           toast.success(`Plano corrigido! ${res.changes.length} correções aplicadas.`);
         }
-        console.log("[AutoFix] 🟢 Showing preview modal, newPlanId =", res.newPlanId);
-        setShowResult(true);
+
+        if (res.inPlace) {
+          // In-place fix: just show preview and reload the current editor
+          setShowResult(true);
+        } else {
+          // New draft created: show preview modal for navigation
+          setShowResult(true);
+        }
       } else {
-        console.error("[AutoFix] ❌ AutoFix failed", res.warnings);
         toast.error(res.warnings[0] || "Erro ao corrigir plano");
       }
     } catch (e: any) {
-      console.error("[AutoFix] 💥 Exception", e);
       setShowProgress(false);
       toast.error(e.message || "Erro inesperado");
     }
@@ -102,9 +97,8 @@ export default function AutoFixButton({ mealPlanId, patientId, onFixed, disabled
           onOpenChange={setShowResult}
           result={result}
           onApprove={() => {
-            console.log("[AutoFix] 🟢 Preview APPROVED — calling onFixed with newPlanId =", result.newPlanId);
             setShowResult(false);
-            if (result.newPlanId) onFixed?.(result.newPlanId);
+            if (result.newPlanId) onFixed?.(result.newPlanId, result.inPlace);
           }}
         />
       )}
