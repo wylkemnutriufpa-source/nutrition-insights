@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import { toast } from "sonner";
 import {
   CheckCircle2, XCircle, AlertTriangle, Loader2, ShieldCheck,
