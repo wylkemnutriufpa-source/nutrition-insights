@@ -246,7 +246,7 @@ export default function HybridPlanBuilder() {
             )}
 
             {/* Center: Canvas */}
-            <MealPlanCanvas />
+            <MealPlanCanvas patientContext={patientContext} composerMode={composerMode} />
 
             {/* Right: Clinical + Generation */}
             {rightPanelOpen ? (
