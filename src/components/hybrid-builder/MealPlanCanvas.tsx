@@ -2,14 +2,15 @@ import { useMealPlanEditorV2Store, type MealType } from "@/stores/mealPlanEditor
 import MealSlotCard from "./MealSlotCard";
 import { Coffee, Apple, Utensils, Cookie, Moon, Sun } from "lucide-react";
 import { useState } from "react";
+import type { PatientContext, ComposerMode, MacroTarget } from "@/lib/mealComposer";
 
-const MEAL_SLOTS: { key: MealType; label: string; icon: React.ReactNode }[] = [
-  { key: "breakfast", label: "Café da Manhã", icon: <Coffee className="w-4 h-4 text-amber-500" /> },
-  { key: "morning_snack", label: "Lanche Manhã", icon: <Apple className="w-4 h-4 text-green-500" /> },
-  { key: "lunch", label: "Almoço", icon: <Utensils className="w-4 h-4 text-orange-500" /> },
-  { key: "afternoon_snack", label: "Lanche Tarde", icon: <Cookie className="w-4 h-4 text-pink-500" /> },
-  { key: "dinner", label: "Jantar", icon: <Moon className="w-4 h-4 text-indigo-500" /> },
-  { key: "evening_snack", label: "Ceia", icon: <Sun className="w-4 h-4 text-purple-500" /> },
+const MEAL_SLOTS: { key: MealType; label: string; icon: React.ReactNode; calShare: number }[] = [
+  { key: "breakfast", label: "Café da Manhã", icon: <Coffee className="w-4 h-4 text-amber-500" />, calShare: 0.20 },
+  { key: "morning_snack", label: "Lanche Manhã", icon: <Apple className="w-4 h-4 text-green-500" />, calShare: 0.10 },
+  { key: "lunch", label: "Almoço", icon: <Utensils className="w-4 h-4 text-orange-500" />, calShare: 0.30 },
+  { key: "afternoon_snack", label: "Lanche Tarde", icon: <Cookie className="w-4 h-4 text-pink-500" />, calShare: 0.10 },
+  { key: "dinner", label: "Jantar", icon: <Moon className="w-4 h-4 text-indigo-500" />, calShare: 0.25 },
+  { key: "evening_snack", label: "Ceia", icon: <Sun className="w-4 h-4 text-purple-500" />, calShare: 0.05 },
 ];
 
 const DAYS = [
@@ -22,11 +23,31 @@ const DAYS = [
   { key: 0, label: "Domingo", short: "Dom" },
 ];
 
-export default function MealPlanCanvas() {
-  const { items } = useMealPlanEditorV2Store();
+interface Props {
+  patientContext?: PatientContext | null;
+  composerMode?: ComposerMode;
+}
+
+export default function MealPlanCanvas({ patientContext, composerMode = "quick" }: Props) {
+  const { items, plan } = useMealPlanEditorV2Store();
   const [activeDay, setActiveDay] = useState(1);
 
   const dayItems = items.filter((i) => i.day_of_week === activeDay);
+
+  // Derive per-meal macro targets from plan targets
+  const planCalories = plan?.calories_target || 2000;
+  const planProtein = plan?.protein_target || 120;
+  const planCarbs = plan?.carbs_target || 250;
+  const planFat = plan?.fat_target || 65;
+
+  function getMealTarget(calShare: number): MacroTarget {
+    return {
+      calories: Math.round(planCalories * calShare),
+      protein: Math.round(planProtein * calShare),
+      carbs: Math.round(planCarbs * calShare),
+      fat: Math.round(planFat * calShare),
+    };
+  }
 
   return (
     <div className="space-y-3 flex-1 min-w-0">
@@ -66,6 +87,9 @@ export default function MealPlanCanvas() {
             label={slot.label}
             icon={slot.icon}
             items={dayItems.filter((i) => i.meal_type === slot.key)}
+            patientContext={patientContext}
+            mealMacroTarget={getMealTarget(slot.calShare)}
+            composerMode={composerMode}
           />
         ))}
       </div>
