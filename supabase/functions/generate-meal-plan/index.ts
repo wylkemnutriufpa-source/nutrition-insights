@@ -1049,8 +1049,9 @@ function reconcileDailyMacros(
     const proteinDiff = dailyMacros.protein - finalProteinSum;
     if (proteinDiff !== 0 && finalItems.length > 0) {
       // Apply rounding correction to the largest non-breakfast meal
-      const correctionTarget = nonBreakfastItems.length > 0
-        ? nonBreakfastItems.reduce((max: any, i: any) => (i.protein_target > (max?.protein_target || 0) ? i : max), nonBreakfastItems[0])
+      const nonBfast = finalItems.filter((i: any) => i.meal_type !== "breakfast");
+      const correctionTarget = nonBfast.length > 0
+        ? nonBfast.reduce((max: any, i: any) => (i.protein_target > (max?.protein_target || 0) ? i : max), nonBfast[0])
         : finalItems[0];
       correctionTarget.protein_target += proteinDiff;
     }
