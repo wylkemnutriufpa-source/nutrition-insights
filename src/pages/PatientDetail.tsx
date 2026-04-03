@@ -4,8 +4,8 @@ import { useExperienceUI } from "@/hooks/useExperienceUI";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { useTenant } from "@/lib/tenantContext";
-import { getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import { supabase } from "@/integrations/supabase/client";
+import { createMealPlanDraft } from "@/lib/createMealPlanDraft";
 import { acquireActionLock, releaseActionLock } from "@/lib/fitjourneyBible";
 import { updatePatientJourneyInCache, invalidateLifecycleQueries } from "@/lib/lifecycleCache";
 import { useQueryClient } from "@tanstack/react-query";
@@ -1350,16 +1350,14 @@ export default function PatientDetail() {
                         setOpenSection(null);
                         // Create plan directly then open builder
                         try {
-                          const { data: newPlan, error } = await supabase.from("meal_plans").insert({
-                            nutritionist_id: user?.id,
-                            patient_id: patientId,
-                            title: "Plano Alimentar",
-                            start_date: new Date().toISOString().split("T")[0],
-                            ...getTenantIdForInsert(tenantId),
-                          } as any).select("id").single();
+                          const { data: newPlan, error } = await createMealPlanDraft({
+                            nutritionistId: user!.id,
+                            patientId: patientId!,
+                            tenantId,
+                          });
                           if (error) throw error;
                           toast.success("Plano criado! Abrindo Builder...");
-                          navigate(`/plan-builder/${newPlan.id}`);
+                          navigate(`/plan-builder/${newPlan.id}`, { replace: true });
                         } catch (err: any) {
                           toast.error(err.message || "Erro ao criar plano");
                         }
@@ -1415,16 +1413,14 @@ export default function PatientDetail() {
                         <Button onClick={async () => {
                           setOpenSection(null);
                           try {
-                            const { data: newPlan, error } = await supabase.from("meal_plans").insert({
-                              nutritionist_id: user?.id,
-                              patient_id: patientId,
-                              title: "Plano Alimentar",
-                              start_date: new Date().toISOString().split("T")[0],
-                              ...getTenantIdForInsert(tenantId),
-                            } as any).select("id").single();
+                            const { data: newPlan, error } = await createMealPlanDraft({
+                              nutritionistId: user!.id,
+                              patientId: patientId!,
+                              tenantId,
+                            });
                             if (error) throw error;
                             toast.success("Plano criado! Abrindo Builder...");
-                            navigate(`/plan-builder/${newPlan.id}`);
+                            navigate(`/plan-builder/${newPlan.id}`, { replace: true });
                           } catch (err: any) {
                             toast.error(err.message || "Erro ao criar plano");
                           }
