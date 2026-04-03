@@ -328,7 +328,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
         await transitionPlanToReview(newPlanId, user.id);
 
         toast.success(`Plano gerado com ${data.items_count} itens! Revise e aprove.`);
-        navigate(`/meal-plans/${newPlanId}`);
+        navigate(`/plan-builder/${newPlanId}`);
       }
     } catch (err: any) {
       toast.error("Erro ao gerar plano: " + (err.message || "Tente novamente"));
