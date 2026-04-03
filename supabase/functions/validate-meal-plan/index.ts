@@ -606,6 +606,17 @@ serve(async (req) => {
             clinicalErrors.push({ rule: "restricao_alimentar", message: `Restrição violada: "${rv.restriction}" — ingrediente "${rv.keyword_found}" encontrado no plano.`, weight: 50 });
         }
 
+        // Cross-day consistency errors — these MUST affect the clinical score
+        // before we decide if the plan passed or failed.
+        for (const inc of crossDayInconsistencies) {
+            const weight = inc.macro === "Proteína" || inc.macro === "Calorias" ? 25 : 15;
+            clinicalErrors.push({
+                rule: `inconsistencia_diaria_${inc.macro.toLowerCase()}`,
+                message: `Inconsistência de ${inc.macro} entre dias: ${dayNames[inc.min_day]} tem ${inc.min_val}${inc.unit} vs ${dayNames[inc.max_day]} tem ${inc.max_val}${inc.unit} (variação ${inc.variance_pct}%, tolerância: ±${CROSS_DAY_TOLERANCE * 100}%).`,
+                weight,
+            });
+        }
+
         const clinicalDeduction = clinicalErrors.reduce((s, e) => s + e.weight, 0);
         const clinicalScore = Math.max(0, 100 - clinicalDeduction);
         const clinicalPassed = clinicalErrors.length === 0;
@@ -622,16 +633,6 @@ serve(async (req) => {
         const overallPassed = clinicalPassed && simplicityResult.status !== "failed" && adherenceResult.status !== "failed";
         const overallStatus = overallPassed ? "aprovado" : "sugestoes_melhoria";
         const overallScore = Math.round((clinicalScore * 0.4) + (simplicityResult.score * 0.35) + (adherenceResult.score * 0.25));
-
-        // Cross-day consistency errors
-        for (const inc of crossDayInconsistencies) {
-            const weight = inc.macro === "Proteína" || inc.macro === "Calorias" ? 25 : 15;
-            clinicalErrors.push({
-                rule: `inconsistencia_diaria_${inc.macro.toLowerCase()}`,
-                message: `Inconsistência de ${inc.macro} entre dias: ${dayNames[inc.min_day]} tem ${inc.min_val}${inc.unit} vs ${dayNames[inc.max_day]} tem ${inc.max_val}${inc.unit} (variação ${inc.variance_pct}%, tolerância: ±${CROSS_DAY_TOLERANCE * 100}%).`,
-                weight,
-            });
-        }
 
         // Merge all errors
         const allErrors = [
