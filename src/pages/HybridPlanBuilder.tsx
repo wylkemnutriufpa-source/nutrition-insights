@@ -380,7 +380,10 @@ export default function HybridPlanBuilder() {
                     <div className="border-t border-border pt-4">
                       <GenerationModeSelector
                         patientId={plan.patient_id}
-                        onGenerated={() => {}}
+                        onGenerated={() => {
+                          // Clear validation result since plan data changed
+                          setValidationResult(null);
+                        }}
                       />
                     </div>
                   </div>

@@ -320,7 +320,7 @@ export function ValidationCorrectionPanel({ result, onClose, onCorrectionApplied
                 ))}
               </div>
               <p className="text-[10px] text-muted-foreground italic">
-                💡 Após aplicar correções, clique em <strong>Salvar</strong> e depois <strong>Validar</strong> novamente.
+                💡 Após aplicar correções, o sistema revalidará automaticamente.
               </p>
             </div>
           )}
