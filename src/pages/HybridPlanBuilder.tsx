@@ -12,6 +12,7 @@ import BuilderTopbar from "@/components/hybrid-builder/BuilderTopbar";
 import MealPlanCanvas from "@/components/hybrid-builder/MealPlanCanvas";
 import BuilderLibraryPanel from "@/components/hybrid-builder/BuilderLibraryPanel";
 import ClinicalMacroPanel from "@/components/hybrid-builder/ClinicalMacroPanel";
+import PlanAuditPanel from "@/components/plans/PlanAuditPanel";
 import GenerationModeSelector from "@/components/hybrid-builder/GenerationModeSelector";
 import { ValidationCorrectionPanel, type ValidationResult } from "@/components/meal-editor-v2/ValidationCorrectionPanel";
 import { usePatientComposerContext } from "@/hooks/usePatientComposerContext";
