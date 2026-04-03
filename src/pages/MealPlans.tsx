@@ -228,16 +228,16 @@ export default function MealPlans() {
           navigate(`/meal-plans/${genData.mealPlanId}`);
         }
       } else {
-        const { error } = await supabase.from("meal_plans").insert({
+        const { data: newPlan, error } = await supabase.from("meal_plans").insert({
           nutritionist_id: user.id, patient_id: form.patient_id,
           title: form.title || "Plano Alimentar", description: form.description || null, start_date: form.start_date,
           ...getTenantIdForInsert(tenantId),
-        } as any);
+        } as any).select("id").single();
         if (error) { toast.error("Erro: " + error.message); }
-        else {
-          toast.success("Plano criado!");
+        else if (newPlan) {
+          toast.success("Plano criado! Abrindo Builder...");
           setOpen(false);
-          fetchPlans();
+          navigate(`/plan-builder/${newPlan.id}`);
         }
       }
       setForm({ title: "", description: "", patient_id: "", start_date: new Date().toISOString().split("T")[0], autoGenerate: true });

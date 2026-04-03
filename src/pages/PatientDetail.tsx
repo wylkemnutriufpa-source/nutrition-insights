@@ -1311,7 +1311,23 @@ export default function PatientDetail() {
                       <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={() => { setOpenSection(null); navigate(`/diet-templates?patientId=${patientId}`); }}>
                         <BookOpen className="w-3 h-3" /> A partir de Template
                       </Button>
-                      <Button size="sm" className="gap-1 text-xs h-7 gradient-primary" onClick={() => { setOpenSection(null); navigate(`/meal-plans?patientId=${patientId}`); }}>
+                      <Button size="sm" className="gap-1 text-xs h-7 gradient-primary" onClick={async () => {
+                        setOpenSection(null);
+                        // Create plan directly then open builder
+                        try {
+                          const { data: newPlan, error } = await supabase.from("meal_plans").insert({
+                            nutritionist_id: user?.id,
+                            patient_id: patientId,
+                            title: "Plano Alimentar",
+                            start_date: new Date().toISOString().split("T")[0],
+                          } as any).select("id").single();
+                          if (error) throw error;
+                          toast.success("Plano criado! Abrindo Builder...");
+                          navigate(`/plan-builder/${newPlan.id}`);
+                        } catch (err: any) {
+                          toast.error(err.message || "Erro ao criar plano");
+                        }
+                      }}>
                         <Plus className="w-3 h-3" /> Do Zero
                       </Button>
                       {mealPlans.some((p: any) => p.is_active) && (
