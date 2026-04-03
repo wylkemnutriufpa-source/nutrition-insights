@@ -8,6 +8,7 @@ import { getCategoryDot } from "@/components/meals/FoodSubstitutions";
 import { useMealDetail } from "@/components/patient/MealDetailContext";
 import { MealPhotoUpload } from "./MealPhotoUpload";
 import { useMealVisualItem } from "@/hooks/useMealVisualItem";
+import { useSignedStorageUrl } from "@/hooks/useSignedStorageUrl";
 
 interface MealItemCardProps {
   item: MealPlanItem;
@@ -32,9 +33,14 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
   const imageUrl = (item as any).image_url as string | null | undefined;
   const visualLibraryItemId = (item as any).visual_library_item_id as string | null | undefined;
   const { item: visualItem } = useMealVisualItem(visualLibraryItemId);
+  const visualImageSource = visualItem?.image_url || visualItem?.image_path || null;
+  const { url: signedVisualImage } = useSignedStorageUrl(visualImageSource, {
+    bucket: "meal-images",
+    enabled: !!visualImageSource && !imageUrl,
+  });
 
   // Resolve image: manual upload > visual library > none
-  const resolvedImage = imageUrl || visualItem?.image_url || visualItem?.image_path || null;
+  const resolvedImage = imageUrl || signedVisualImage || null;
 
   return (
     <motion.div

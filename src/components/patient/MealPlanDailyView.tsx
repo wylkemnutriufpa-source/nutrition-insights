@@ -11,6 +11,7 @@ import {
   Shield, Zap, Award, TrendingUp, UtensilsCrossed, ArrowRightLeft,
 } from "lucide-react";
 import { useMealVisualItem } from "@/hooks/useMealVisualItem";
+import { useSignedStorageUrl } from "@/hooks/useSignedStorageUrl";
 import type { Database } from "@/integrations/supabase/types";
 
 type MealType = Database["public"]["Enums"]["meal_type"];
@@ -149,7 +150,12 @@ const MealItemCard = memo(function MealItemCard({
 }) {
   const impacts = useMemo(() => getImpactTags(item), [item]);
   const { item: visualItem } = useMealVisualItem(item.visual_library_item_id);
-  const resolvedImage = (item as any).image_url || visualItem?.image_url || visualItem?.image_path || null;
+  const visualImageSource = visualItem?.image_url || visualItem?.image_path || null;
+  const { url: signedVisualImage } = useSignedStorageUrl(visualImageSource, {
+    bucket: "meal-images",
+    enabled: !!visualImageSource && !(item as any).image_url,
+  });
+  const resolvedImage = (item as any).image_url || signedVisualImage || null;
   
   const statusColor = status === "followed" ? "border-emerald-500/30 bg-emerald-500/5"
     : status === "partial" ? "border-amber-500/30 bg-amber-500/5"
