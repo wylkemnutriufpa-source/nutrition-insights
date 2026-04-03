@@ -9504,6 +9504,51 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_meal_feedback: {
+        Row: {
+          comment: string | null
+          created_at: string
+          feedback_type: string
+          id: string
+          meal_plan_id: string | null
+          meal_plan_item_id: string | null
+          patient_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          feedback_type?: string
+          id?: string
+          meal_plan_id?: string | null
+          meal_plan_item_id?: string | null
+          patient_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          feedback_type?: string
+          id?: string
+          meal_plan_id?: string | null
+          meal_plan_item_id?: string | null
+          patient_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_meal_feedback_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_resolved_state"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_meal_feedback_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_meal_substitutions: {
         Row: {
           created_at: string
@@ -11692,6 +11737,60 @@ export type Database = {
             columns: ["run_id"]
             isOneToOne: false
             referencedRelation: "pipeline_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plan_audit_results: {
+        Row: {
+          audit_run_id: string
+          audit_type: string
+          created_at: string
+          details: Json | null
+          id: string
+          patient_id: string | null
+          plan_id: string | null
+          resolved: boolean | null
+          resolved_at: string | null
+          severity: string
+        }
+        Insert: {
+          audit_run_id: string
+          audit_type: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          patient_id?: string | null
+          plan_id?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          severity?: string
+        }
+        Update: {
+          audit_run_id?: string
+          audit_type?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          patient_id?: string | null
+          plan_id?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          severity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_audit_results_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_resolved_state"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plan_audit_results_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plans"
             referencedColumns: ["id"]
           },
         ]

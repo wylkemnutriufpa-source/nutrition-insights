@@ -32,6 +32,7 @@ import PatientCheckinsTab from "@/components/patient/PatientCheckinsTab";
 import PatientChecklistView from "@/components/patient/PatientChecklistView";
 import SmartAlertsBanner from "@/components/patient/SmartAlertsBanner";
 import PlanScheduler from "@/components/plans/PlanScheduler";
+import PatientFeedbackSummary from "@/components/patient/PatientFeedbackSummary";
 import DocumentUpload from "@/components/common/DocumentUpload";
 import ClinicalDecisionSupport from "@/components/patient/ClinicalDecisionSupport";
 import OnboardingApprovalQueue from "@/components/patient/OnboardingApprovalQueue";
@@ -1440,6 +1441,10 @@ export default function PatientDetail() {
                           const st = statusConfig[plan.plan_status] || { label: plan.plan_status || "—", color: "bg-muted text-muted-foreground" };
                           const isPending = ["draft_auto_generated", "under_professional_review"].includes(plan.plan_status);
 
+                          // Engine version governance
+                          const planEngineV = plan.generation_metadata?.engine_version || plan.engine_version || null;
+                          const isOutdatedEngine = planEngineV && planEngineV < "4.0.0";
+
                           return (
                           <motion.div key={plan.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`glass rounded-xl overflow-hidden ${isPending ? "ring-2 ring-amber-500/40" : ""}`}>
                             <div className="p-5 border-b border-border">
@@ -1448,8 +1453,13 @@ export default function PatientDetail() {
                                   <div className={`w-3 h-3 rounded-full ${plan.is_active ? "bg-success animate-pulse" : isPending ? "bg-amber-500 animate-pulse" : "bg-muted-foreground"}`} />
                                   <div>
                                     <h3 className="font-display font-semibold">{plan.title}</h3>
-                                    <div className="flex items-center gap-2 mt-1">
+                                    <div className="flex items-center gap-2 mt-1 flex-wrap">
                                       <Badge className={`text-[10px] ${st.color}`}>{st.label}</Badge>
+                                      {isOutdatedEngine && (
+                                        <Badge variant="outline" className="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30">
+                                          ⚠ Motor v{planEngineV} (atual: v4.0.0)
+                                        </Badge>
+                                      )}
                                       <span className="text-xs text-muted-foreground">
                                         Início: {new Date(plan.start_date).toLocaleDateString("pt-BR")}
                                         {plan.end_date && ` • Fim: ${new Date(plan.end_date).toLocaleDateString("pt-BR")}`}
@@ -1482,6 +1492,7 @@ export default function PatientDetail() {
                             {!isPending && (
                               <div className="p-5 bg-secondary/20">
                                 <PlanScheduler mealPlanId={plan.id} planTitle={plan.title} />
+                                <PatientFeedbackSummary mealPlanId={plan.id} />
                               </div>
                             )}
                           </motion.div>

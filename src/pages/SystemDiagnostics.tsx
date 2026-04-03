@@ -24,6 +24,7 @@ const PipelinesTab = lazy(() => import("@/components/diagnostics/PipelinesTab"))
 const PerformanceTab = lazy(() => import("@/components/diagnostics/PerformanceTab"));
 const AlertsTab = lazy(() => import("@/components/diagnostics/AlertsTab"));
 const SimulationsTab = lazy(() => import("@/components/diagnostics/SimulationsTab"));
+const AuditTab = lazy(() => import("@/components/diagnostics/AuditTab"));
 
 type LogLevel = "ok" | "warning" | "error" | "info";
 interface DiagLog {
@@ -602,6 +603,9 @@ export default function SystemDiagnostics() {
             <TabsTrigger value="cleanup" className="gap-1.5 text-xs">
               <Database className="w-3.5 h-3.5" /> Limpeza
             </TabsTrigger>
+            <TabsTrigger value="audit" className="gap-1.5 text-xs">
+              <Shield className="w-3.5 h-3.5" /> Auditoria
+            </TabsTrigger>
             <TabsTrigger value="simulations" className="gap-1.5 text-xs">
               <FlaskConical className="w-3.5 h-3.5" /> Simulações
             </TabsTrigger>
@@ -844,6 +848,12 @@ export default function SystemDiagnostics() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+          {/* Audit Tab */}
+          <TabsContent value="audit">
+            <Suspense fallback={<div className="p-8 text-center text-muted-foreground">Carregando...</div>}>
+              <AuditTab />
+            </Suspense>
           </TabsContent>
           {/* Simulations Tab */}
           <TabsContent value="simulations">
