@@ -183,6 +183,7 @@ const WorkspaceEditor = lazy(() => import("./pages/WorkspaceEditor"));
 const IntelligenceSettings = lazy(() => import("./pages/IntelligenceSettings"));
 const PatientIntelligence = lazy(() => import("./pages/PatientIntelligence"));
 const RealtimeDebugCenter = lazy(() => import("./pages/RealtimeDebugCenter"));
+const CockpitPremium = lazy(() => import("./pages/CockpitPremium"));
 
 // Install global error handlers once at module load
 installGlobalErrorHandlers();
@@ -490,6 +491,7 @@ const App = () => (
               <Route path="/clinical-risk" element={<NutritionistRoute><LP section="Risco Clínico"><ClinicalRiskDashboard /></LP></NutritionistRoute>} />
               <Route path="/control-tower" element={<NutritionistRoute><LP section="Control Tower"><ClinicalControlTower /></LP></NutritionistRoute>} />
               <Route path="/clinical-workspace" element={<NutritionistRoute><LP section="Workspace"><ClinicalWorkspace /></LP></NutritionistRoute>} />
+              <Route path="/cockpit" element={<NutritionistRoute><LP section="Cockpit Premium"><CockpitPremium /></LP></NutritionistRoute>} />
               <Route path="/invite-patient" element={<NutritionistRoute><LP section="Convidar Paciente"><InvitePatient /></LP></NutritionistRoute>} />
               <Route path="/workspace-editor" element={<ProfessionalRoute><LP section="Editor"><WorkspaceEditor /></LP></ProfessionalRoute>} />
               <Route path="/weight-trajectory" element={<NutritionistRoute><LP section="Trajetória de Peso"><WeightTrajectory /></LP></NutritionistRoute>} />

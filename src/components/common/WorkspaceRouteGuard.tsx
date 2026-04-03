@@ -89,6 +89,7 @@ const PROFESSIONAL_ONLY_ROUTES = [
 
 /** Routes exclusive to nutritionists/admins — personal trainers CANNOT access */
 const NUTRITIONIST_ONLY_ROUTES = [
+  "/cockpit",
   "/clinical-workspace",
   "/editor-v2",
   "/meal-plans",
