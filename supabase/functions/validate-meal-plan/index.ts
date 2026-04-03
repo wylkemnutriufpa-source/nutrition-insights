@@ -623,6 +623,16 @@ serve(async (req) => {
         const overallStatus = overallPassed ? "aprovado" : "sugestoes_melhoria";
         const overallScore = Math.round((clinicalScore * 0.4) + (simplicityResult.score * 0.35) + (adherenceResult.score * 0.25));
 
+        // Cross-day consistency errors
+        for (const inc of crossDayInconsistencies) {
+            const weight = inc.macro === "Proteína" || inc.macro === "Calorias" ? 25 : 15;
+            clinicalErrors.push({
+                rule: `inconsistencia_diaria_${inc.macro.toLowerCase()}`,
+                message: `Inconsistência de ${inc.macro} entre dias: ${dayNames[inc.min_day]} tem ${inc.min_val}${inc.unit} vs ${dayNames[inc.max_day]} tem ${inc.max_val}${inc.unit} (variação ${inc.variance_pct}%, tolerância: ±${CROSS_DAY_TOLERANCE * 100}%).`,
+                weight,
+            });
+        }
+
         // Merge all errors
         const allErrors = [
             ...clinicalErrors,
