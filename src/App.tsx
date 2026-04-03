@@ -463,6 +463,7 @@ const App = () => (
               <Route path="/editor-v2" element={<NutritionistRoute><LP section="Editor Premium V2"><MealPlanEditorV2Entry /></LP></NutritionistRoute>} />
               <Route path="/meal-plans/:id" element={<NutritionistRoute><LP section="Planos"><MealPlanEditorV2 /></LP></NutritionistRoute>} />
               <Route path="/meal-plans/:id/legacy" element={<LegacyMealPlanRedirect />} />
+              <Route path="/plan-builder/:id" element={<NutritionistRoute><LP section="Builder Híbrido"><HybridPlanBuilder /></LP></NutritionistRoute>} />
               <Route path="/diet-templates" element={<NutritionistRoute><LP section="Templates"><DietTemplates /></LP></NutritionistRoute>} />
               <Route path="/physical-assessment" element={<NutritionistRoute><LP section="Avaliação"><PhysicalAssessment /></LP></NutritionistRoute>} />
               <Route path="/body-analysis" element={<NutritionistRoute><LP section="Análise Corporal"><BodyAnalysis /></LP></NutritionistRoute>} />
