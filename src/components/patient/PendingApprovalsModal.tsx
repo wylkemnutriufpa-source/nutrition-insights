@@ -3,16 +3,251 @@ import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
-import { useTenant } from "@/lib/tenantContext";
 import { rejectMealPlan, transitionPlanToReview } from "@/lib/serverTransitions";
 import { supabase } from "@/integrations/supabase/client";
-import { finalizeGeneratedMealPlan } from "@/lib/finalizeGeneratedMealPlan";
 import {
   inspectOnboardingPlan,
   resolveLatestUsableOnboardingPlan,
   syncPipelineGeneratedPlan,
 } from "@/lib/onboardingPlanResolver";
-...
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import {
+  AlertTriangle, CheckCircle2, XCircle, Loader2, User,
+  Target, Sparkles, ChevronRight, Scale,
+  FileText, Zap, Search, Trash2
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { EditorVersionPicker } from "@/components/common/EditorVersionPicker";
+
+interface PendingPipeline {
+  id: string;
+  patient_id: string;
+  status: string;
+  generated_plan_id: string | null;
+  generated_plan_data: any;
+  plan_generated?: boolean;
+  weight: number | null;
+  height: number | null;
+  meal_count: number;
+  cooking_preference: string | null;
+  created_at: string;
+  patient_name?: string;
+  patient_avatar?: string;
+}
+
+interface Props {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [pipelines, setPipelines] = useState<PendingPipeline[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedPipeline, setSelectedPipeline] = useState<PendingPipeline | null>(null);
+  
+  const [processing, setProcessing] = useState(false);
+  const [rejectMode, setRejectMode] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [batchGenerating, setBatchGenerating] = useState(false);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    if (open && user) fetchPending();
+  }, [open, user]);
+
+  // Realtime — only refetch when modal is actually open to prevent background noise
+  useEffect(() => {
+    if (!user || !open) return;
+    const ch = supabase
+      .channel("pending-approvals-modal")
+      .on("postgres_changes", {
+        event: "UPDATE",
+        schema: "public",
+        table: "onboarding_pipelines",
+        filter: `nutritionist_id=eq.${user.id}`,
+      }, (payload: any) => {
+        if (payload.new?.status === "pending_approval") {
+          fetchPending();
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user, open]);
+
+  async function fetchPending() {
+    if (!user) return;
+    setLoading(true);
+
+    const { data } = await supabase
+      .from("onboarding_pipelines" as any)
+      .select("*")
+      .eq("nutritionist_id", user.id)
+      .in("status", ["pending_approval", "pending_plan_generation"]);
+
+    const items = (data || []) as any[];
+    if (items.length === 0) {
+      setPipelines([]);
+      setLoading(false);
+      return;
+    }
+
+    const patientIds = items.map((p: any) => p.patient_id);
+
+    // Fetch profiles + active links + already-published plans
+    const [{ data: profiles }, { data: activeLinks }, { data: publishedPlans }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("user_id, full_name, avatar_url")
+        .in("user_id", patientIds),
+      supabase
+        .from("nutritionist_patients")
+        .select("patient_id, status")
+        .eq("nutritionist_id", user.id)
+        .in("patient_id", patientIds)
+        .eq("status", "active"),
+      supabase
+        .from("meal_plans")
+        .select("patient_id")
+        .in("patient_id", patientIds)
+        .in("plan_status", ["approved", "published_to_patient"])
+        .eq("is_active", true),
+    ]);
+
+    const activeLinkMap = new Map((activeLinks || []).map((l: any) => [l.patient_id, l]));
+    const patientsWithActivePlan = new Set((publishedPlans || []).map((p: any) => p.patient_id));
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    // BUSINESS RULES:
+    // 1. Must have active nutritionist link
+    // 2. Patient must NOT already have an active published plan
+    // 3. Pipeline must be less than 30 days old
+    const eligibleItems = items.filter((pipeline: any) => {
+      const link = activeLinkMap.get(pipeline.patient_id);
+      if (!link) return false;
+      if (patientsWithActivePlan.has(pipeline.patient_id)) return false;
+      if (new Date(pipeline.created_at) < thirtyDaysAgo) return false;
+      return true;
+    });
+
+    const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+
+    const enriched = eligibleItems.map((p: any) => ({
+      ...p,
+      patient_name: profileMap.get(p.patient_id)?.full_name || "Paciente",
+      patient_avatar: profileMap.get(p.patient_id)?.avatar_url,
+    }));
+
+    setPipelines(enriched);
+    setLoading(false);
+  }
+
+  function getAlternatives(pipeline: PendingPipeline) {
+    const ex = pipeline.generated_plan_data?.explainability;
+    if (!ex) return [];
+    return ex.alternative_templates || [];
+  }
+
+  function getSelectedTemplate(pipeline: PendingPipeline) {
+    const ex = pipeline.generated_plan_data?.explainability;
+    if (!ex) return null;
+    return ex.selected_template || null;
+  }
+
+  async function generateOrRegeneratePlan(targetPlanId?: string, pipelineOverride?: PendingPipeline) {
+    const pip = pipelineOverride || selectedPipeline;
+    if (!pip || !user) throw new Error("Pipeline inválido");
+
+    const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
+      body: {
+        patientId: pip.patient_id,
+        nutritionistId: user.id,
+        weight: pip.weight,
+        height: pip.height,
+        mealCount: pip.meal_count,
+        cookingPreference: pip.cooking_preference,
+        isPipeline: true,
+        planCount: 3,
+        ...(targetPlanId ? { meal_plan_id: targetPlanId } : {}),
+      },
+    });
+
+    if (error) {
+      const msg = await friendlyEdgeFunctionError(error, "Falha na geração do plano");
+      throw new Error(msg);
+    }
+    if (!data?.success) throw new Error(data?.error || "Falha na geração do plano");
+
+    const planId = data?.mealPlanId || targetPlanId;
+    if (!planId) throw new Error("ID do plano não retornado pela geração");
+
+    await supabase
+      .from("onboarding_pipelines" as any)
+      .update({
+        generated_plan_id: planId,
+        generated_plan_data: data,
+        plan_generated: true,
+        status: "pending_approval",
+      } as any)
+      .eq("id", pip.id);
+
+    return { planId, data };
+  }
+
+
+
+  async function handleBatchGenerate() {
+    if (!user) return;
+    const pendingGen = pipelines.filter(p => p.status === "pending_plan_generation" || (!p.generated_plan_id && !p.plan_generated));
+    if (pendingGen.length === 0) {
+      toast.info("Todos os pipelines já possuem planos gerados.");
+      return;
+    }
+    setBatchGenerating(true);
+    let success = 0;
+    let failed = 0;
+    for (const pip of pendingGen) {
+      try {
+        await generateOrRegeneratePlan(undefined, pip);
+        success++;
+      } catch (err: any) {
+        console.error(`Erro ao gerar plano para ${pip.patient_name}:`, err);
+        failed++;
+      }
+    }
+    setBatchGenerating(false);
+    toast.success(`${success} planos gerados com 3 opções cada!${failed > 0 ? ` ${failed} falharam.` : ""}`);
+    fetchPending();
+  }
+
+  async function handleCreateAndEdit() {
+    if (!selectedPipeline || !user) return;
+    setProcessing(true);
+    try {
+      toast.info("Gerando plano completo com itens... Aguarde.");
+      const { planId, data } = await generateOrRegeneratePlan();
+
+      await transitionPlanToReview(planId, user.id);
+
+      onOpenChange(false);
+      navigate(`/plan-builder/${planId}`);
+      toast.success(`Plano gerado com ${data.items_count} itens! Revise e aprove.`);
+    } catch (err: any) {
+      toast.error("Erro ao gerar plano: " + (err.message || "Tente novamente"));
+    } finally {
+      setProcessing(false);
+    }
+  }
+
   async function handleOpenPlanForReview(planId: string) {
     if (!selectedPipeline || !user) return;
     setProcessing(true);
@@ -35,20 +270,6 @@ import {
           resolvedPlanId = regenerated.planId;
           resolvedPlan = await inspectOnboardingPlan(resolvedPlanId);
         }
-      }
-
-      const requiresFinalize = !["approved", "published_to_patient"].includes(resolvedPlan?.plan_status || "")
-        || resolvedPlan?.overall_validation_status !== "aprovado";
-
-      if (requiresFinalize) {
-        const finalized = await finalizeGeneratedMealPlan({
-          planId: resolvedPlanId,
-          patientId: selectedPipeline.patient_id,
-          userId: user.id,
-          tenantId,
-        });
-        resolvedPlanId = finalized.finalPlanId;
-        resolvedPlan = await inspectOnboardingPlan(resolvedPlanId);
       }
 
       if (!selectedPipeline.generated_plan_id || selectedPipeline.generated_plan_id !== resolvedPlanId) {
