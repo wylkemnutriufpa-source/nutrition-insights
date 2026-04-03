@@ -5,9 +5,11 @@ import { useMealPlanEditorV2Store, type MealType, type MealPlanItem } from "@/st
 import { Input } from "@/components/ui/input";
 import {
   Plus, Trash2, Copy, Lock, Unlock, GripVertical,
-  Flame, Beef, Wheat, Droplets, Check, X,
+  Flame, Beef, Wheat, Droplets, Check, X, Sparkles, Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { composeMealForTarget, type ComposerMode, type MacroTarget } from "@/lib/mealComposer";
+import type { PatientContext } from "@/lib/mealComposer";
 
 interface Props {
   day: number;
@@ -15,6 +17,9 @@ interface Props {
   label: string;
   icon: React.ReactNode;
   items: MealPlanItem[];
+  patientContext?: PatientContext | null;
+  mealMacroTarget?: MacroTarget | null;
+  composerMode?: ComposerMode;
 }
 
 export default function MealSlotCard({ day, mealType, label, icon, items }: Props) {
