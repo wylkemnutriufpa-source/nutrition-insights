@@ -18,6 +18,35 @@ export interface OnboardingPlanSnapshot {
   isUsable: boolean;
 }
 
+export interface ResolvedPatientIdentity {
+  canonicalId: string;
+  profileId: string;
+  allIds: string[];
+}
+
+export interface OnboardingPipelineSnapshot {
+  id: string;
+  patient_id: string;
+  generated_plan_id: string | null;
+  plan_generated: boolean | null;
+}
+
+export async function resolvePatientIdentity(patientId: string): Promise<ResolvedPatientIdentity> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, user_id")
+    .or(`id.eq.${patientId},user_id.eq.${patientId}`)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  return {
+    canonicalId: data?.user_id ?? patientId,
+    profileId: data?.id ?? patientId,
+    allIds: Array.from(new Set([data?.user_id, data?.id, patientId].filter(Boolean))) as string[],
+  };
+}
+
 export async function inspectOnboardingPlan(planId: string): Promise<OnboardingPlanSnapshot | null> {
   const [{ data: plan, error: planError }, { count, error: countError }] = await Promise.all([
     supabase
@@ -52,10 +81,12 @@ export async function resolveLatestUsableOnboardingPlan(
   patientId: string,
   nutritionistId: string,
 ): Promise<OnboardingPlanSnapshot | null> {
+  const patientIdentity = await resolvePatientIdentity(patientId);
+
   const { data: plans, error } = await supabase
     .from("meal_plans")
     .select("id")
-    .eq("patient_id", patientId)
+    .in("patient_id", patientIdentity.allIds)
     .eq("nutritionist_id", nutritionistId)
     .in("plan_status", CANDIDATE_PLAN_STATUSES)
     .order("created_at", { ascending: false })
@@ -69,6 +100,24 @@ export async function resolveLatestUsableOnboardingPlan(
   }
 
   return null;
+}
+
+export async function resolveLatestOnboardingPipeline(
+  patientId: string,
+): Promise<OnboardingPipelineSnapshot | null> {
+  const patientIdentity = await resolvePatientIdentity(patientId);
+
+  const { data, error } = await supabase
+    .from("onboarding_pipelines" as any)
+    .select("id, patient_id, generated_plan_id, plan_generated")
+    .in("patient_id", patientIdentity.allIds)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  return (data as unknown as OnboardingPipelineSnapshot | null) ?? null;
 }
 
 export async function syncPipelineGeneratedPlan(pipelineId: string, planId: string) {

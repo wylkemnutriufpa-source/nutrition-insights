@@ -13,6 +13,8 @@ import { finalizeGeneratedMealPlan } from "@/lib/finalizeGeneratedMealPlan";
 import {
   inspectOnboardingPlan,
   resolveLatestUsableOnboardingPlan,
+  resolveLatestOnboardingPipeline,
+  resolvePatientIdentity,
   syncPipelineGeneratedPlan,
 } from "@/lib/onboardingPlanResolver";
 
@@ -118,16 +120,10 @@ export default function MealPlans() {
 
     const handleOnboardingSource = async () => {
       try {
-        // 1. Check if pipeline has a usable generated plan
-        const { data: pipeline } = await (supabase
-          .from("onboarding_pipelines" as any)
-          .select("id, generated_plan_id, plan_generated")
-          .eq("patient_id", patientId)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle() as any);
+        const patientIdentity = await resolvePatientIdentity(patientId);
 
-        const pipelineData = pipeline as { id?: string; generated_plan_id?: string; plan_generated?: boolean } | null;
+        // 1. Check if pipeline has a usable generated plan
+        const pipelineData = await resolveLatestOnboardingPipeline(patientId);
 
         if (pipelineData?.generated_plan_id && pipelineData?.plan_generated) {
           const pipelinePlan = await inspectOnboardingPlan(pipelineData.generated_plan_id);
@@ -153,7 +149,7 @@ export default function MealPlans() {
         toast.info("Gerando plano a partir do onboarding...");
         const { data: genData, error: genError } = await supabase.functions.invoke("generate-meal-plan", {
           body: {
-            patientId,
+            patientId: patientIdentity.canonicalId,
             nutritionistId: user.id,
             isPipeline: true,
           },
@@ -184,7 +180,7 @@ export default function MealPlans() {
         if (newPlanId) {
           const finalized = await finalizeGeneratedMealPlan({
             planId: newPlanId,
-            patientId,
+            patientId: patientIdentity.canonicalId,
             userId: user.id,
             tenantId,
           });

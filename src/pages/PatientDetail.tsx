@@ -63,6 +63,7 @@ import FitIntelligenceToggle from "@/components/intelligence/FitIntelligenceTogg
 import PatientLabExams from "@/components/patient/PatientLabExams";
 import PatientFeedbacksPanel from "@/components/patient/PatientFeedbacksPanel";
 import { deactivateMealPlan } from "@/lib/serverTransitions";
+import { resolveLatestOnboardingPipeline, resolvePatientIdentity } from "@/lib/onboardingPlanResolver";
 
 export default function PatientDetail() {
   const { patientId } = useParams<{ patientId: string }>();
@@ -1313,14 +1314,9 @@ export default function PatientDetail() {
                         setOpenSection(null);
                         // Try to find existing onboarding plan, or create new and open builder
                         try {
-                          const { data: pipeline } = await (supabase
-                            .from("onboarding_pipelines" as any)
-                            .select("generated_plan_id, plan_generated")
-                            .eq("patient_id", patientId)
-                            .order("created_at", { ascending: false })
-                            .limit(1)
-                            .maybeSingle() as any);
-                          const pd = pipeline as { generated_plan_id?: string; plan_generated?: boolean } | null;
+                          if (!patientId) return;
+                          const patientIdentity = await resolvePatientIdentity(patientId);
+                          const pd = await resolveLatestOnboardingPipeline(patientId);
                           if (pd?.generated_plan_id && pd?.plan_generated) {
                             navigate(`/meal-plans/${pd.generated_plan_id}`);
                             return;
@@ -1328,7 +1324,7 @@ export default function PatientDetail() {
                           // No onboarding plan — generate one
                           toast.info("Gerando plano a partir do onboarding...");
                           const { data: genData, error: genError } = await supabase.functions.invoke("generate-meal-plan", {
-                            body: { patientId, nutritionistId: user?.id, isPipeline: true },
+                            body: { patientId: patientIdentity.canonicalId, nutritionistId: user?.id, isPipeline: true },
                           });
                           if (genError || !genData?.success) {
                             toast.error(genData?.error || "Erro ao gerar plano");
@@ -1619,8 +1615,9 @@ export default function PatientDetail() {
                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
                           <AlertDialogAction onClick={async () => {
                             if (!patientId) return;
-                            await supabase.from("onboarding_pipelines" as any).update({ status: "reset", current_step: null }).eq("patient_id", patientId);
-                            await supabase.from("patient_anamnesis").delete().eq("user_id", patientId);
+                            const patientIdentity = await resolvePatientIdentity(patientId);
+                            await supabase.from("onboarding_pipelines" as any).update({ status: "reset", current_step: null }).in("patient_id", patientIdentity.allIds);
+                            await supabase.from("patient_anamnesis").delete().in("user_id", patientIdentity.allIds);
                             toast.success("Onboarding resetado! Paciente pode refazer.");
                             invalidate();
                           }} className="bg-warning text-warning-foreground hover:bg-warning/90">
@@ -1632,7 +1629,8 @@ export default function PatientDetail() {
                     
                     <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={async () => {
                       if (!patientId || !user) return;
-                      await supabase.from("onboarding_pipelines" as any).update({ status: "active", current_step: "anamnesis" }).eq("patient_id", patientId);
+                      const patientIdentity = await resolvePatientIdentity(patientId);
+                      await supabase.from("onboarding_pipelines" as any).update({ status: "active", current_step: "anamnesis" }).in("patient_id", patientIdentity.allIds);
                       toast.success("Onboarding reiniciado!");
                       invalidate();
                     }}>
@@ -1656,7 +1654,8 @@ export default function PatientDetail() {
                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
                           <AlertDialogAction onClick={async () => {
                             if (!patientId) return;
-                            await supabase.from("onboarding_pipelines" as any).delete().eq("patient_id", patientId);
+                            const patientIdentity = await resolvePatientIdentity(patientId);
+                            await supabase.from("onboarding_pipelines" as any).delete().in("patient_id", patientIdentity.allIds);
                             toast.success("Pipeline de onboarding excluída.");
                             invalidate();
                           }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
