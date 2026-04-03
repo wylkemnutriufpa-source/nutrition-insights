@@ -69,7 +69,7 @@ export default function BuilderTopbar({
           </Button>
           <Button variant="outline" size="sm" onClick={onValidate} disabled={validating} className="h-8 gap-1.5 text-xs gradient-primary text-white border-0">
             {validating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-            Validar
+            Validar e Corrigir
           </Button>
           <Button size="sm" onClick={onPublish} disabled={publishing} className="h-8 gap-1.5 text-xs">
             {publishing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
