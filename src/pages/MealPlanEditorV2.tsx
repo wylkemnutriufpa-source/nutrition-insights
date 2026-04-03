@@ -25,6 +25,7 @@ import { AssistedPlanModal } from "@/components/meal-editor-v2/AssistedPlanModal
 import { ValidationCorrectionPanel, type ValidationResult } from "@/components/meal-editor-v2/ValidationCorrectionPanel";
 import PlanAuditPanel from "@/components/plans/PlanAuditPanel";
 import { toast } from "sonner";
+import { resolveOverallValidationStatus, runValidateAndFixMealPlan } from "@/lib/mealPlanValidationFlow";
 
 type ViewMode = "grid" | "list";
 
@@ -183,6 +184,60 @@ export default function MealPlanEditorV2() {
     }
   };
 
+  const handleValidate = async () => {
+    if (!plan || !user) return;
+
+    setValidating(true);
+    setValidationResult(null);
+
+    try {
+      const outcome = await runValidateAndFixMealPlan({
+        planId: plan.id,
+        patientId: plan.patient_id,
+        userId: user.id,
+        tenantId,
+        flush: store._flushQueue,
+      });
+
+      const data = outcome.validationResult;
+      const nextValidationStatus = resolveOverallValidationStatus(data);
+
+      store.updatePlan({
+        overall_validation_status: nextValidationStatus,
+        overall_score: typeof data?.score === "number" ? data.score : plan.overall_score,
+        last_validated_at: new Date().toISOString(),
+        validation_engine_version: "unified_v5",
+        updated_at: new Date().toISOString(),
+      } as any);
+
+      if (outcome.kind === "validated") {
+        await store.hydrate(plan.id, user.id);
+        setValidationResult(null);
+        toast.success(data.message || "Motor Clínico: Plano válido! Pode ser publicado. ✅");
+        return;
+      }
+
+      if (outcome.kind === "fixed_and_validated" || outcome.kind === "fixed_but_pending") {
+        await store.hydrate(plan.id, user.id);
+        if (outcome.kind === "fixed_and_validated") {
+          setValidationResult(null);
+          toast.success("✅ Plano corrigido e revalidado com sucesso!");
+        } else {
+          setValidationResult(data as ValidationResult);
+          toast.info("Correção aplicada. Ainda há sugestões pendentes.");
+        }
+        return;
+      }
+
+      toast.success("Plano corrigido salvo como draft! Redirecionando...");
+      navigate(`/plan-builder/${outcome.newPlanId}`, { replace: true });
+    } catch (e: any) {
+      toast.error(e.message || "Erro de conexão com o Motor Clínico");
+    } finally {
+      setValidating(false);
+    }
+  };
+
   const editorContent = (
     <>
       <EditorSyncBadge status={store.syncStatus} />
@@ -312,7 +367,7 @@ export default function MealPlanEditorV2() {
                 nutritionistId={plan.nutritionist_id}
                 tenantId={tenantId}
                 items={store.items}
-                onSimplified={(newId) => navigate(`/meal-plan-editor/${newId}`)}
+                onSimplified={(newId) => navigate(`/plan-builder/${newId}`, { replace: true })}
               />
             )}
 
@@ -329,42 +384,12 @@ export default function MealPlanEditorV2() {
             <Button
               variant="outline"
               size="sm"
-              onClick={async () => {
-                if (!plan) return; setValidating(true);
-                setValidationResult(null);
-                try {
-                  // CRITICAL: flush any pending changes BEFORE validating against DB
-                  await store._flushQueue();
-
-                  const { data, error } = await supabase.functions.invoke("validate-meal-plan", { body: { meal_plan_id: plan.id } });
-                  if (error) throw error;
-
-                  const nextValidationStatus = data?.overall_status || data?.status || (data?.success ? "aprovado" : "sugestoes_pendentes");
-                  store.updatePlan({
-                    overall_validation_status: nextValidationStatus,
-                    overall_score: typeof data?.score === "number" ? data.score : plan.overall_score,
-                    last_validated_at: new Date().toISOString(),
-                    validation_engine_version: "unified_v5",
-                    updated_at: new Date().toISOString(),
-                  } as any);
-
-                  await store.hydrate(plan.id, user?.id ?? "");
-
-                  if (!data?.success) {
-                    setValidationResult(data as ValidationResult);
-                    toast.info("Motor Clínico: Sugestões de melhoria disponíveis. Você pode aplicá-las ou publicar como está.", { duration: 5000 });
-                  } else {
-                    setValidationResult(null);
-                    toast.success(data.message || "Motor Clínico: Plano Válido! Pode ser publicado. ✅");
-                  }
-                } catch (e: any) { toast.error(e.message || "Erro de conexão com o Motor Clínico"); }
-                setValidating(false);
-              }}
+              onClick={handleValidate}
               disabled={validating || store.syncStatus === "saving"}
               className="gradient-primary text-white border-0 gap-1.5 shadow-glow"
             >
               {validating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-              <span className="hidden sm:inline">Validar</span>
+              <span className="hidden sm:inline">Validar e Corrigir</span>
             </Button>
             <Button
               size="sm"

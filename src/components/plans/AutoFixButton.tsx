@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, type MutableRefObject } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Wand2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -14,11 +14,10 @@ interface Props {
   patientId: string;
   onFixed?: (newPlanId: string, inPlace?: boolean) => void;
   disabled?: boolean;
-  triggerRef?: MutableRefObject<(() => void) | null>;
   autoRunSignal?: number;
 }
 
-export default function AutoFixButton({ mealPlanId, patientId, onFixed, disabled, triggerRef, autoRunSignal }: Props) {
+export default function AutoFixButton({ mealPlanId, patientId, onFixed, disabled, autoRunSignal }: Props) {
   const { user } = useAuth();
   const { tenantId } = useTenant();
   const [loading, setLoading] = useState(false);
@@ -77,17 +76,6 @@ export default function AutoFixButton({ mealPlanId, patientId, onFixed, disabled
       setLoading(false);
     }
   }, [handleStep, mealPlanId, patientId, tenantId, user]);
-
-  useEffect(() => {
-    if (triggerRef) {
-      triggerRef.current = () => {
-        void handleAutoFix();
-      };
-    }
-    return () => {
-      if (triggerRef) triggerRef.current = null;
-    };
-  }, [handleAutoFix, triggerRef]);
 
   useEffect(() => {
     if (!autoRunSignal) return;
