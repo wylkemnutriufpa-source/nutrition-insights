@@ -636,15 +636,31 @@ export function usePendingApprovals() {
       }
 
       const patientIds = (pipelines as any[]).map((p: any) => p.patient_id);
-      const { data: activeLinks } = await supabase
-        .from("nutritionist_patients")
-        .select("patient_id")
-        .eq("nutritionist_id", user.id)
-        .in("patient_id", patientIds)
-        .eq("status", "active");
+      const [{ data: activeLinks }, { data: publishedPlans }] = await Promise.all([
+        supabase
+          .from("nutritionist_patients")
+          .select("patient_id")
+          .eq("nutritionist_id", user.id)
+          .in("patient_id", patientIds)
+          .eq("status", "active"),
+        supabase
+          .from("meal_plans")
+          .select("patient_id")
+          .in("patient_id", patientIds)
+          .in("plan_status", ["approved", "published_to_patient"])
+          .eq("is_active", true),
+      ]);
 
       const activeSet = new Set((activeLinks || []).map((l: any) => l.patient_id));
-      const validPipelines = (pipelines as any[]).filter((p: any) => activeSet.has(p.patient_id));
+      const publishedSet = new Set((publishedPlans || []).map((p: any) => p.patient_id));
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const validPipelines = (pipelines as any[]).filter((p: any) =>
+        activeSet.has(p.patient_id) &&
+        !publishedSet.has(p.patient_id) &&
+        new Date(p.created_at) >= thirtyDaysAgo
+      );
       setCount(validPipelines.length);
     };
 
