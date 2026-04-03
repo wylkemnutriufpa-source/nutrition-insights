@@ -398,7 +398,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
         await transitionPlanToReview(resolvedPlanId, user.id);
       }
 
-      navigate(`/meal-plans/${resolvedPlanId}`);
+      navigate(`/plan-builder/${resolvedPlanId}`);
     } catch (err: any) {
       toast.error("Erro ao abrir plano: " + (err.message || "Tente novamente"));
     } finally {
