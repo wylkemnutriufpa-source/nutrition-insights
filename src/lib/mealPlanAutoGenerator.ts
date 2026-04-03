@@ -497,7 +497,7 @@ export async function slotsToInserts(slots: GeneratedMealSlot[], planId: string)
       }
 
       // Target = average across all days
-      const vals = [...dayTotals.values()];
+      const vals = Array.from(dayTotals.values());
       const targetPerDay = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
       if (targetPerDay <= 0) continue;
 
