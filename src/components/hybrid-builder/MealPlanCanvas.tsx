@@ -1,7 +1,8 @@
 import { useMealPlanEditorV2Store, type MealType } from "@/stores/mealPlanEditorV2Store";
 import MealSlotCard from "./MealSlotCard";
-import { Coffee, Apple, Utensils, Cookie, Moon, Sun } from "lucide-react";
+import { Coffee, Apple, Utensils, Cookie, Moon, Sun, Zap, Pencil, Sparkles } from "lucide-react";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import type { PatientContext, ComposerMode, MacroTarget } from "@/lib/mealComposer";
 
 const MEAL_SLOTS: { key: MealType; label: string; icon: React.ReactNode; calShare: number }[] = [
@@ -26,11 +27,13 @@ const DAYS = [
 interface Props {
   patientContext?: PatientContext | null;
   composerMode?: ComposerMode;
+  onRequestGenerate?: () => void;
 }
 
-export default function MealPlanCanvas({ patientContext, composerMode = "quick" }: Props) {
+export default function MealPlanCanvas({ patientContext, composerMode = "quick", onRequestGenerate }: Props) {
   const { items, plan } = useMealPlanEditorV2Store();
   const [activeDay, setActiveDay] = useState(1);
+  const [manualMode, setManualMode] = useState(false);
 
   const dayItems = items.filter((i) => i.day_of_week === activeDay);
 
@@ -47,6 +50,56 @@ export default function MealPlanCanvas({ patientContext, composerMode = "quick" 
       carbs: Math.round(planCarbs * calShare),
       fat: Math.round(planFat * calShare),
     };
+  }
+
+  const isEmpty = items.length === 0 && !manualMode;
+
+  if (isEmpty) {
+    return (
+      <div className="flex-1 min-w-0 flex items-center justify-center">
+        <div className="max-w-md w-full space-y-6 text-center p-8">
+          <div className="mx-auto w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <Sparkles className="w-8 h-8 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-lg font-display font-bold">Como deseja montar o plano?</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Escolha gerar automaticamente pelo motor ou montar manualmente arrastando alimentos.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              onClick={() => onRequestGenerate?.()}
+              className="flex flex-col items-center gap-3 p-5 rounded-xl border-2 border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 transition-all text-left"
+            >
+              <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
+                <Zap className="w-5 h-5 text-primary" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-bold">🤖 Gerar pelo Motor</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  O motor clínico gera o plano completo automaticamente com base no paciente.
+                </p>
+              </div>
+            </button>
+            <button
+              onClick={() => setManualMode(true)}
+              className="flex flex-col items-center gap-3 p-5 rounded-xl border-2 border-border hover:border-muted-foreground/40 hover:bg-muted/30 transition-all text-left"
+            >
+              <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                <Pencil className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-bold">✍️ Montar Manualmente</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Arraste alimentos da biblioteca para criar o plano do zero.
+                </p>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
