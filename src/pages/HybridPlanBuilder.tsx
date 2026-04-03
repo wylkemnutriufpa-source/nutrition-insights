@@ -191,7 +191,6 @@ export default function HybridPlanBuilder() {
       toast.success("Plano salvo!");
     } catch (err: any) {
       toast.error(err.message || "Erro ao salvar");
-      throw err;
     } finally {
       setSaving(false);
     }

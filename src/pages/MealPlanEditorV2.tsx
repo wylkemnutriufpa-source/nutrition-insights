@@ -131,7 +131,6 @@ export default function MealPlanEditorV2() {
     } catch (err: any) {
       console.error("[Save] Error:", err);
       toast.error("Erro ao salvar: " + (err?.message || "Tente novamente"));
-      throw err;
     } finally {
       setSaving(false);
     }

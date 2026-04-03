@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { compareMealPlanCollections, haveMealPlanCollectionsChanged } from "./mealPlanPersistenceGuards";
 
+const mealType = "lunch" as const;
+
 const baseItems = [
   {
     title: "Frango 100g",
     description: "grelhado",
-    meal_type: "lunch",
+    meal_type: mealType,
     day_of_week: 1,
     calories_target: 220,
     protein_target: 30,

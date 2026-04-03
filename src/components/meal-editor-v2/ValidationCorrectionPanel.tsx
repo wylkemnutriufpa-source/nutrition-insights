@@ -144,7 +144,8 @@ export function ValidationCorrectionPanel({ result, onClose, onCorrectionApplied
         }
       }
 
-      if (!haveMealPlanCollectionsChanged(beforeItems, store.items)) {
+      const afterItems = useMealPlanEditorV2Store.getState().items;
+      if (!haveMealPlanCollectionsChanged(beforeItems, afterItems)) {
         toast.info("Nenhuma alteração foi aplicada.");
         return;
       }
@@ -183,7 +184,8 @@ export function ValidationCorrectionPanel({ result, onClose, onCorrectionApplied
       if (removed > 0) {
         toast.success(`${removed} item(ns) com "${keyword}" removido(s) e o plano foi salvo. Agora valide novamente.`);
       } else {
-        if (haveMealPlanCollectionsChanged(beforeItems, store.items)) {
+        const afterItems = useMealPlanEditorV2Store.getState().items;
+        if (haveMealPlanCollectionsChanged(beforeItems, afterItems)) {
           toast.info("Plano alterado, mas sem remoção direta desse ingrediente.");
         } else {
           toast.info("Nenhuma alteração foi aplicada.");
