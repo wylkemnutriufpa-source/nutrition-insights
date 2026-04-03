@@ -358,6 +358,7 @@ export async function autoFixMealPlan(
 
   // ─── STEP 1: Load context ───────────────────────────────
   onStep?.("loading_context");
+  console.info("[AutoFix] Starting", { planId, patientId, nutritionistId, tenantId });
 
   const { data: plan, error: planErr } = await supabase
     .from("meal_plans")
@@ -366,11 +367,48 @@ export async function autoFixMealPlan(
     .single();
 
   if (planErr || !plan) {
+    console.error("[AutoFix] Plan not found", { planId, planErr });
     return emptyResult("Plano não encontrado");
   }
 
   const isImmutable = ["approved", "published", "published_to_patient"].includes(plan.plan_status);
+  console.info("[AutoFix] Plan loaded", { planId, status: plan.plan_status, isImmutable, isActive: plan.is_active });
+
   if (isImmutable) {
+    // Check if a draft_auto_corrected already exists for this plan
+    const { data: existingDraft } = await supabase
+      .from("meal_plans")
+      .select("id, created_at")
+      .eq("previous_plan_id", planId)
+      .eq("plan_status", "draft_auto_corrected")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existingDraft) {
+      console.info("[AutoFix] Existing draft_auto_corrected found, redirecting", { existingDraftId: existingDraft.id });
+      // Validate the existing corrected draft
+      const { data: draftItems } = await supabase
+        .from("meal_plan_items")
+        .select("*")
+        .eq("meal_plan_id", existingDraft.id);
+
+      if (draftItems && draftItems.length > 0) {
+        const draftAudit = toAuditItems(draftItems);
+        const draftScore = calculatePlanSimplicityScore(draftAudit);
+        return {
+          success: true,
+          newPlanId: existingDraft.id,
+          inPlace: false,
+          changes: [{ type: "macro_rebalanced", mealType: "all", dayOfWeek: -1, from: "Plano original", to: "Versão corrigida já existente", detail: "Draft corrigido já disponível — redirecionando" }],
+          before: { score: draftScore, totalCalories: 0, totalProtein: 0, totalCarbs: 0, totalFat: 0 },
+          after: { score: draftScore, totalCalories: sumMacro(draftItems, "calories_target"), totalProtein: sumMacro(draftItems, "protein_target"), totalCarbs: sumMacro(draftItems, "carbs_target"), totalFat: sumMacro(draftItems, "fat_target") },
+          warnings: ["Versão corrigida já existia — redirecionando para ela"],
+          summary: { blocked_removed: 0, meals_simplified: 0, snacks_fixed: 0, breakfasts_fixed: 0, main_meals_standardized: 0, macro_rebalanced: true },
+        };
+      }
+    }
+
     warnings.push("Plano imutável — nova versão será criada como draft");
   }
 
