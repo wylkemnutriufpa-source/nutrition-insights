@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import { toast } from "sonner";
+import { haveMealPlanCollectionsChanged } from "@/lib/mealPlanPersistenceGuards";
 
 interface MacroResult {
   label: string;
@@ -115,6 +116,7 @@ export function ValidationCorrectionPanel({ result, onClose, onCorrectionApplied
 
     try {
       const items = store.items;
+      const beforeItems = [...items];
       const factor = suggestion.scaleFactor;
       const macroKey = suggestion.macro;
 
@@ -142,6 +144,12 @@ export function ValidationCorrectionPanel({ result, onClose, onCorrectionApplied
         }
       }
 
+      const afterItems = useMealPlanEditorV2Store.getState().items;
+      if (!haveMealPlanCollectionsChanged(beforeItems, afterItems)) {
+        toast.info("Nenhuma alteração foi aplicada.");
+        return;
+      }
+
       await persistAfterCorrection();
       toast.success(`${suggestion.label}: ${updatedCount} itens ajustados e salvos automaticamente. Agora valide novamente.`);
     } catch (e: any) {
@@ -158,6 +166,7 @@ export function ValidationCorrectionPanel({ result, onClose, onCorrectionApplied
     try {
       const keyword = suggestion.restrictionKeyword;
       const items = store.items;
+      const beforeItems = [...items];
       let removed = 0;
 
       for (const item of items) {
@@ -175,7 +184,12 @@ export function ValidationCorrectionPanel({ result, onClose, onCorrectionApplied
       if (removed > 0) {
         toast.success(`${removed} item(ns) com "${keyword}" removido(s) e o plano foi salvo. Agora valide novamente.`);
       } else {
-        toast.info("Nenhum item encontrado com esse ingrediente, mas o plano atual foi salvo.");
+        const afterItems = useMealPlanEditorV2Store.getState().items;
+        if (haveMealPlanCollectionsChanged(beforeItems, afterItems)) {
+          toast.info("Plano alterado, mas sem remoção direta desse ingrediente.");
+        } else {
+          toast.info("Nenhuma alteração foi aplicada.");
+        }
       }
     } catch (e: any) {
       toast.error("Erro ao remover itens: " + e.message);

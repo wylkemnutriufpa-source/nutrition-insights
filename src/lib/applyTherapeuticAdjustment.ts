@@ -5,6 +5,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { logError, logWarn } from "@/lib/monitoring";
 import type { Json } from "@/integrations/supabase/types";
+import { compareMealPlanCollections, haveMealPlanCollectionsChanged } from "@/lib/mealPlanPersistenceGuards";
 
 interface AdjustmentParams {
   planId: string;
@@ -67,6 +68,18 @@ export async function applyTherapeuticAdjustment(params: AdjustmentParams): Prom
     const beforeCarbs = currentItems.reduce((sum, item) => sum + (item.carbs_target || 0), 0);
     const beforeFat = currentItems.reduce((sum, item) => sum + (item.fat_target || 0), 0);
 
+    const expectedItems = currentItems.map((item) => ({
+      ...item,
+      calories_target: Math.round((item.calories_target || 0) * (1 + (caloricAdjustmentPercent / 100))),
+      protein_target: Math.round(((item.protein_target || 0) * (1 + (caloricAdjustmentPercent / 100))) * 10) / 10,
+      carbs_target: Math.round(((item.carbs_target || 0) * (1 + (caloricAdjustmentPercent / 100))) * 10) / 10,
+      fat_target: Math.round(((item.fat_target || 0) * (1 + (caloricAdjustmentPercent / 100))) * 10) / 10,
+    }));
+
+    if (!haveMealPlanCollectionsChanged(currentItems, expectedItems)) {
+      return { success: false, beforeCalories, afterCalories: beforeCalories, changedFields: [], versionId: null, error: "Nenhuma alteração foi aplicada." };
+    }
+
     // 4. Create version snapshot BEFORE changes
     const { data: version, error: versionError } = await supabase
       .from("meal_plan_versions")
@@ -108,6 +121,7 @@ export async function applyTherapeuticAdjustment(params: AdjustmentParams): Prom
     const failedUpdates = results.filter((r) => r.error);
     if (failedUpdates.length > 0) {
       logError(section, `${failedUpdates.length}/${currentItems.length} itens falharam ao atualizar`, { planId });
+      return { success: false, beforeCalories, afterCalories: beforeCalories, changedFields: [], versionId, error: "Falha ao persistir todos os itens ajustados no banco." };
     }
 
     // 7. Update plan-level totals and therapeutic fields
@@ -131,6 +145,23 @@ export async function applyTherapeuticAdjustment(params: AdjustmentParams): Prom
 
     if (planUpdateError) {
       logError(section, "Falha ao atualizar totais do plano", { planId, error: planUpdateError.message });
+      return { success: false, beforeCalories, afterCalories: beforeCalories, changedFields: [], versionId, error: "Os itens foram alterados, mas os totais do plano não foram confirmados." };
+    }
+
+    const { data: persistedItems, error: persistedItemsError } = await supabase
+      .from("meal_plan_items")
+      .select("title, description, meal_type, day_of_week, calories_target, protein_target, carbs_target, fat_target")
+      .eq("meal_plan_id", planId);
+
+    if (persistedItemsError) {
+      logError(section, "Falha ao reler itens persistidos", { planId, error: persistedItemsError.message });
+      return { success: false, beforeCalories, afterCalories: beforeCalories, changedFields: [], versionId, error: "Falha ao confirmar a persistência do ajuste no banco." };
+    }
+
+    const persistenceCheck = compareMealPlanCollections(expectedItems, persistedItems || []);
+    if (!persistenceCheck.matches) {
+      logError(section, "Diferença entre ajuste esperado e itens persistidos", { planId, persistenceCheck });
+      return { success: false, beforeCalories, afterCalories: beforeCalories, changedFields: [], versionId, error: "O sistema não confirmou o diff real no banco após o ajuste." };
     }
 
     // 8. Log in audit trail
