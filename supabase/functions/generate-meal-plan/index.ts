@@ -1651,7 +1651,7 @@ serve(async (req) => {
       : finalMacros;
 
     // Reconcile with correct per-day targets
-    const planItems = reconcileDailyMacros(rawPlanItems, weekdayKcal, finalMacros, goal);
+    const planItems = enforceCrossDayConsistency(reconcileDailyMacros(rawPlanItems, weekdayKcal, finalMacros, goal), finalMacros, weekdayKcal);
 
     if (planItems.length === 0) {
       return new Response(JSON.stringify({
