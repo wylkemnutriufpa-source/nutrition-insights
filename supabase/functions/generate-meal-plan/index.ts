@@ -10,8 +10,8 @@ const corsHeaders = {
 };
 
 // ──── Constants ────
-const ENGINE_VERSION = "3.0.0";
-const PROTOCOL_VERSION = "fitjourney_realista_v3";
+const ENGINE_VERSION = "4.0.0";
+const PROTOCOL_VERSION = "fitjourney_personalizado_v4";
 
 const MEAL_KCAL_SPLIT: Record<string, number> = {
   breakfast: 0.20,
@@ -48,10 +48,63 @@ const GOAL_STRATEGY: Record<string, { calorie: string; macro: string }> = {
   athletic_performance: { calorie: "calorie_surplus_moderate", macro: "performance_endurance" },
 };
 
-// ═══════════════════════════════════════════════════════════════
-// REGRAS DE ALIMENTOS REALISTAS v3.0
-// Comida brasileira popular, acessível e simples
-// ═══════════════════════════════════════════════════════════════
+// ──── Goal to DB tag mapping ────
+const GOAL_TO_DB_TAG: Record<string, string> = {
+  lose_weight: "emagrecimento",
+  maintain: "manutencao",
+  gain_muscle: "ganho_massa",
+  gain_weight: "ganho_massa",
+  improve_health: "saude_geral",
+  athletic_performance: "performance",
+};
+
+// ──── Meal type to DB tag mapping ────
+const MEAL_TYPE_TO_DB_TAG: Record<string, string[]> = {
+  breakfast: ["cafe_da_manha"],
+  morning_snack: ["lanche_manha", "lanche_tarde"],
+  lunch: ["almoco"],
+  afternoon_snack: ["lanche_tarde", "lanche_manha"],
+  dinner: ["jantar", "almoco"],
+  evening_snack: ["ceia", "lanche_tarde"],
+};
+
+// ──── Restriction to DB tag mapping ────
+const RESTRICTION_TO_DB_EXCLUDE_TAG: Record<string, string[]> = {
+  lactose_free: ["alergia_leite"],
+  gluten_free: ["alergia_gluten"],
+  egg_free: ["alergia_ovo"],
+  nut_free: ["alergia_nozes", "alergia_amendoim"],
+  soy_free: ["alergia_soja"],
+  shellfish_free: ["alergia_crustaceos"],
+};
+
+// ──── Category-based composition rules ────
+const MEAL_COMPOSITION: Record<string, { required: string[]; optional: string[] }> = {
+  breakfast: {
+    required: ["carboidrato", "proteina"],
+    optional: ["fruta", "laticinio", "gordura"],
+  },
+  morning_snack: {
+    required: ["fruta"],
+    optional: ["laticinio", "oleaginosa"],
+  },
+  lunch: {
+    required: ["proteina", "carboidrato", "verdura"],
+    optional: ["gordura"],
+  },
+  afternoon_snack: {
+    required: ["fruta"],
+    optional: ["laticinio", "oleaginosa", "cafe_da_manha"],
+  },
+  dinner: {
+    required: ["proteina", "carboidrato", "verdura"],
+    optional: ["gordura"],
+  },
+  evening_snack: {
+    required: ["laticinio"],
+    optional: ["fruta", "carboidrato"],
+  },
+};
 
 const BLOCKED_FOODS = [
   "salmão", "salmon", "atum fresco", "kefir", "cottage", "ricota importada",
@@ -66,10 +119,9 @@ const BLOCKED_FOODS = [
   "whey protein", "caseína",
 ];
 
-const MAX_FRUITS_PER_MEAL = 2;
-const MAX_EGGS_BREAKFAST = 2;
-
-// ── Refeições realistas pré-definidas ──
+// ═══════════════════════════════════════════════════════════════
+// FALLBACK PRESETS (used when DB query fails or returns too few)
+// ═══════════════════════════════════════════════════════════════
 
 interface RealisticMeal {
   title: string;
@@ -81,7 +133,6 @@ interface RealisticMeal {
   fat: number;
 }
 
-// CAFÉ DA MANHÃ — Emagrecimento
 const BREAKFAST_EMAG: RealisticMeal[] = [
   { title: "Café da Manhã", description: "• 1 fatia pão integral\n• 1 ovo mexido\n• Café sem açúcar", foods: ["pão integral", "ovo", "café"], kcal: 230, protein: 12, carbs: 22, fat: 10 },
   { title: "Café da Manhã", description: "• 1 tapioca média\n• 1 ovo\n• 1 fatia queijo minas", foods: ["tapioca", "ovo", "queijo minas"], kcal: 280, protein: 15, carbs: 30, fat: 11 },
@@ -92,7 +143,6 @@ const BREAKFAST_EMAG: RealisticMeal[] = [
   { title: "Café da Manhã", description: "• 1 tapioca média\n• 1 ovo cozido\n• 1 col. requeijão\n• Café sem açúcar", foods: ["tapioca", "ovo", "requeijão", "café"], kcal: 280, protein: 11, carbs: 32, fat: 10 },
 ];
 
-// CAFÉ DA MANHÃ — Ganho de massa
 const BREAKFAST_MASSA: RealisticMeal[] = [
   { title: "Café da Manhã Reforçado", description: "• 2 fatias pão integral\n• 2 ovos mexidos\n• 1 fatia queijo minas\n• Café com leite", foods: ["pão", "ovos", "queijo", "leite"], kcal: 420, protein: 24, carbs: 35, fat: 18 },
   { title: "Café da Manhã Reforçado", description: "• Omelete 3 ovos com queijo\n• 1 pão francês\n• Café com leite", foods: ["ovos", "queijo", "pão", "leite"], kcal: 450, protein: 26, carbs: 28, fat: 22 },
@@ -101,7 +151,6 @@ const BREAKFAST_MASSA: RealisticMeal[] = [
   { title: "Café da Manhã Reforçado", description: "• 4 col. sopa aveia\n• 1 banana\n• 1 col. pasta de amendoim\n• Leite", foods: ["aveia", "banana", "amendoim", "leite"], kcal: 430, protein: 16, carbs: 52, fat: 14 },
 ];
 
-// LANCHES
 const SNACKS: RealisticMeal[] = [
   { title: "Lanche", description: "• 1 banana média", foods: ["banana"], kcal: 90, protein: 1, carbs: 22, fat: 0 },
   { title: "Lanche", description: "• 1 maçã média", foods: ["maçã"], kcal: 80, protein: 0, carbs: 20, fat: 0 },
@@ -113,7 +162,6 @@ const SNACKS: RealisticMeal[] = [
   { title: "Lanche", description: "• 1 tangerina\n• 5 castanhas de caju", foods: ["tangerina", "castanha"], kcal: 120, protein: 3, carbs: 16, fat: 5 },
 ];
 
-// LANCHES REFORÇADOS (ganho de massa)
 const SNACKS_MASSA: RealisticMeal[] = [
   { title: "Lanche Reforçado", description: "• 1 pão integral\n• 1 ovo cozido\n• 1 banana", foods: ["pão", "ovo", "banana"], kcal: 280, protein: 12, carbs: 38, fat: 8 },
   { title: "Lanche Reforçado", description: "• 1 tapioca\n• 1 fatia queijo\n• Suco natural", foods: ["tapioca", "queijo", "suco"], kcal: 260, protein: 8, carbs: 36, fat: 8 },
@@ -121,7 +169,6 @@ const SNACKS_MASSA: RealisticMeal[] = [
   { title: "Lanche Reforçado", description: "• 2 fatias pão integral\n• Requeijão\n• 1 fruta", foods: ["pão", "requeijão", "fruta"], kcal: 280, protein: 8, carbs: 40, fat: 8 },
 ];
 
-// ALMOÇO/JANTAR — Emagrecimento
 const MAIN_EMAG: RealisticMeal[] = [
   { title: "Almoço", description: "• 150g peito de frango grelhado\n• 3 col. sopa arroz\n• Salada verde", foods: ["frango", "arroz", "salada"], kcal: 380, protein: 38, carbs: 35, fat: 8 },
   { title: "Almoço", description: "• 120g carne moída refogada\n• 2 col. sopa purê de batata\n• Salada", foods: ["carne moída", "purê", "salada"], kcal: 370, protein: 28, carbs: 30, fat: 12 },
@@ -133,7 +180,6 @@ const MAIN_EMAG: RealisticMeal[] = [
   { title: "Almoço", description: "• 150g filé de porco grelhado\n• 100g batata doce\n• Brócolis", foods: ["porco", "batata doce", "brócolis"], kcal: 370, protein: 34, carbs: 30, fat: 10 },
 ];
 
-// ALMOÇO/JANTAR — Ganho de massa
 const MAIN_MASSA: RealisticMeal[] = [
   { title: "Almoço Reforçado", description: "• 200g peito de frango\n• 5 col. sopa arroz\n• 3 col. sopa feijão\n• Salada", foods: ["frango", "arroz", "feijão", "salada"], kcal: 580, protein: 48, carbs: 55, fat: 12 },
   { title: "Almoço Reforçado", description: "• 180g alcatra grelhada\n• 150g batata doce\n• Brócolis refogado", foods: ["alcatra", "batata doce", "brócolis"], kcal: 550, protein: 42, carbs: 45, fat: 16 },
@@ -143,7 +189,6 @@ const MAIN_MASSA: RealisticMeal[] = [
   { title: "Almoço Reforçado", description: "• 180g sobrecoxa assada\n• 5 col. sopa arroz\n• 3 col. sopa feijão\n• Salada", foods: ["sobrecoxa", "arroz", "feijão", "salada"], kcal: 600, protein: 38, carbs: 56, fat: 20 },
 ];
 
-// CEIA
 const CEIA: RealisticMeal[] = [
   { title: "Ceia", description: "• 1 pote iogurte natural", foods: ["iogurte"], kcal: 100, protein: 6, carbs: 8, fat: 4 },
   { title: "Ceia", description: "• 1 copo leite morno", foods: ["leite"], kcal: 120, protein: 6, carbs: 10, fat: 6 },
@@ -157,7 +202,6 @@ const CEIA_MASSA: RealisticMeal[] = [
   { title: "Ceia", description: "• 1 copo leite\n• 1 col. aveia\n• 1 banana", foods: ["leite", "aveia", "banana"], kcal: 230, protein: 8, carbs: 36, fat: 6 },
 ];
 
-// ── Substituições dentro da mesma categoria ──
 const SUBSTITUTION_GROUPS: Record<string, string[]> = {
   protein: ["frango", "carne moída", "bife", "tilápia", "porco", "sardinha", "sobrecoxa"],
   carb: ["arroz", "macarrão", "batata", "macaxeira", "batata doce", "inhame"],
@@ -175,60 +219,68 @@ function normalize(t: string): string {
 }
 
 function toFiniteNumber(value: unknown): number | null {
-  if (typeof value === "number") {
-    return Number.isFinite(value) ? value : null;
-  }
-
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
   if (typeof value === "string") {
     const cleaned = value.replace(",", ".").trim();
     if (!cleaned) return null;
     const parsed = Number(cleaned);
     return Number.isFinite(parsed) ? parsed : null;
   }
-
   return null;
 }
 
 function normalizeWeightKg(value: unknown): number | null {
   const parsed = toFiniteNumber(value);
   if (parsed === null || parsed <= 0) return null;
-
-  // Legacy guard: some historical records may have been saved in grams.
   if (parsed > 300) return parsed / 1000;
-
   return parsed;
 }
 
 function normalizeHeightCm(value: unknown): number | null {
   const parsed = toFiniteNumber(value);
   if (parsed === null || parsed <= 0) return null;
-
-  // Legacy guard: some onboarding/anamnesis records stored height in meters.
   if (parsed > 0 && parsed < 3) return parsed * 100;
-
   return parsed;
 }
 
 function normalizeAge(value: unknown, fallback = 30): number {
   const parsed = toFiniteNumber(value);
   if (parsed === null) return fallback;
-
   const rounded = Math.round(parsed);
   if (rounded < 1 || rounded > 120) return fallback;
-
   return rounded;
 }
 
 function normalizeActivityLevel(value: unknown): string {
   const raw = normalize(String(value || "light"));
-
   if (["sedentary", "sedentario"].includes(raw)) return "sedentary";
   if (["light", "leve"].includes(raw)) return "light";
   if (["moderate", "moderado"].includes(raw)) return "moderate";
   if (["active", "ativo", "intense", "intenso"].includes(raw)) return "active";
   if (["very_active", "very active", "muito ativo", "muito_ativo"].includes(raw)) return "very_active";
-
   return "light";
+}
+
+// ── Seeded pseudo-random for patient-specific variety ──
+function seedHash(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+function seededShuffle<T>(arr: T[], seed: number): T[] {
+  const result = [...arr];
+  let s = seed;
+  for (let i = result.length - 1; i > 0; i--) {
+    s = (s * 1103515245 + 12345) & 0x7fffffff;
+    const j = s % (i + 1);
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
 }
 
 // ── Visual Resolution Engine (server-side) ──
@@ -251,34 +303,26 @@ function resolveVisualFromDescription(
 ): string | null {
   const normTitle = normalize(title);
 
-  // Skip generic titles — go straight to description
   if (!VISUAL_GENERIC_TITLES.has(normTitle)) {
-    // Try exact title match first
     if (aliasMap.has(normTitle)) return aliasMap.get(normTitle)!;
-
-    // Try longest sub-phrase in title
     const titleMatch = findBestVisualAlias(normTitle, aliasMap);
     if (titleMatch) return titleMatch;
   }
 
-  // Extract from description (bullet points)
   const lines = description.split('\n');
   for (const line of lines) {
     const trimmed = line.trim();
     if (trimmed.includes('Substituiç') || trimmed.includes('🔄')) break;
     if (!trimmed.startsWith('•') && !trimmed.startsWith('-')) continue;
-
     const normLine = normalize(trimmed);
     const phraseMatch = findBestVisualAlias(normLine, aliasMap);
     if (phraseMatch) return phraseMatch;
   }
 
-  // Single keyword from description (protein priority)
   for (const line of lines) {
     const trimmed = line.trim();
     if (trimmed.includes('Substituiç') || trimmed.includes('🔄')) break;
     if (!trimmed.startsWith('•') && !trimmed.startsWith('-')) continue;
-
     const words = normalize(trimmed).split(/\s+/);
     for (const word of words) {
       if (VISUAL_CARB_KEYWORDS.has(word) || word.length < 3) continue;
@@ -328,10 +372,9 @@ async function loadVisualAliasMap(client: any): Promise<Map<string, string>> {
   return map;
 }
 
-async function resolveVisualForItems(client: any, planId: string, items: any[]): Promise<number> {
+async function resolveVisualForItems(client: any, planId: string, _items: any[]): Promise<number> {
   const aliasMap = await loadVisualAliasMap(client);
 
-  // Get inserted items with their IDs
   const { data: insertedItems } = await client
     .from("meal_plan_items")
     .select("id, title, description")
@@ -339,7 +382,6 @@ async function resolveVisualForItems(client: any, planId: string, items: any[]):
 
   if (!insertedItems || insertedItems.length === 0) return 0;
 
-  // Batch: resolve all visuals first, then update in bulk groups
   const updates: { id: string; visual_library_item_id: string }[] = [];
   for (const item of insertedItems) {
     const visualId = resolveVisualFromDescription(item.title || "", item.description || "", aliasMap);
@@ -350,7 +392,6 @@ async function resolveVisualForItems(client: any, planId: string, items: any[]):
 
   if (updates.length === 0) return 0;
 
-  // Group by visual_library_item_id to batch updates
   const groupedByVisual = new Map<string, string[]>();
   for (const u of updates) {
     if (!groupedByVisual.has(u.visual_library_item_id)) {
@@ -359,7 +400,6 @@ async function resolveVisualForItems(client: any, planId: string, items: any[]):
     groupedByVisual.get(u.visual_library_item_id)!.push(u.id);
   }
 
-  // Execute batched updates (1 query per unique visual instead of 1 per item)
   const updatePromises = Array.from(groupedByVisual.entries()).map(([visualId, ids]) =>
     client
       .from("meal_plan_items")
@@ -407,7 +447,6 @@ function calculateTDEE(tmb: number, activityLevel: string): number {
 function calculateTargetKcal(tdee: number, goal: string, sex: string = "male"): number {
   const adjustment = GOAL_KCAL_ADJUSTMENT[goal] || 0;
   const raw = tdee + adjustment;
-  // Pisos clínicos da Constituição: 1200 feminino, 1500 masculino
   const minKcal = sex === "female" ? 1200 : 1500;
   return Math.max(minKcal, Math.min(3500, raw));
 }
@@ -434,14 +473,268 @@ function calculateMacros(kcal: number, goal: string, weight: number) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// GERADOR DE PLANO REALISTA v3.0
-// Gera planos com refeições pré-definidas realistas
+// DATABASE-DRIVEN FOOD SELECTION ENGINE v4.0
+// ═══════════════════════════════════════════════════════════════
+
+interface DBFood {
+  id: string;
+  food_name: string;
+  normalized_name: string;
+  category: string;
+  portion_reference: string;
+  portion_grams: number;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+  meal_tags_json: string[];
+  goal_tags_json: string[];
+  restriction_tags_json: string[];
+}
+
+/** Load all active foods from ifj_food_database */
+async function loadFoodDatabase(client: any): Promise<DBFood[]> {
+  const { data, error } = await client
+    .from("ifj_food_database")
+    .select("id, food_name, normalized_name, category, portion_reference, portion_grams, calories, protein, carbs, fats, meal_tags_json, goal_tags_json, restriction_tags_json")
+    .eq("is_active", true);
+
+  if (error || !data) {
+    console.error("[generate-meal-plan] Failed to load food database:", error);
+    return [];
+  }
+  return data as DBFood[];
+}
+
+/** Filter foods based on patient restrictions, allergies, and disliked foods */
+function filterFoodsForPatient(
+  foods: DBFood[],
+  restrictions: string[],
+  dislikedFoods: string[],
+  allergies: string[],
+): DBFood[] {
+  const normalizedDisliked = dislikedFoods.map(d => normalize(d));
+
+  return foods.filter(food => {
+    const normName = normalize(food.food_name);
+
+    // Check blocked foods
+    if (isBlockedFood(food.food_name)) return false;
+
+    // Check disliked foods (fuzzy match)
+    if (normalizedDisliked.some(d => d.length >= 3 && (normName.includes(d) || d.includes(normName)))) return false;
+
+    // Check allergies via restriction_tags
+    const foodRestrTags = food.restriction_tags_json || [];
+    for (const allergy of allergies) {
+      const normAllergy = normalize(allergy);
+      // Direct tag match
+      if (foodRestrTags.some((t: string) => normalize(t).includes(normAllergy))) return false;
+      // Name-based allergy check
+      if (normAllergy.includes("leite") || normAllergy.includes("lactose")) {
+        if (["laticinio"].includes(food.category)) return false;
+        if (normName.includes("leite") || normName.includes("queijo") || normName.includes("iogurte") || normName.includes("requeijao")) return false;
+      }
+      if (normAllergy.includes("gluten")) {
+        if (normName.includes("pao") || normName.includes("macarrao") || normName.includes("aveia") || normName.includes("trigo")) return false;
+      }
+      if (normAllergy.includes("ovo")) {
+        if (normName.includes("ovo") || normName.includes("omelete")) return false;
+      }
+    }
+
+    // Check dietary restrictions
+    for (const restriction of restrictions) {
+      const normRestr = normalize(restriction);
+      if (normRestr.includes("lactose") || normRestr.includes("lactose_free")) {
+        if (["laticinio"].includes(food.category)) return false;
+        if (normName.includes("leite") || normName.includes("queijo") || normName.includes("iogurte") || normName.includes("requeijao")) return false;
+      }
+      if (normRestr.includes("vegetarian") || normRestr.includes("vegetariano")) {
+        if (food.category === "proteina" && (normName.includes("frango") || normName.includes("carne") || normName.includes("bife") || normName.includes("tilapia") || normName.includes("peixe") || normName.includes("porco") || normName.includes("sobrecoxa") || normName.includes("alcatra") || normName.includes("sardinha") || normName.includes("linguica"))) return false;
+      }
+      if (normRestr.includes("vegan") || normRestr.includes("vegano")) {
+        if (["proteina", "laticinio"].includes(food.category) && (normName.includes("frango") || normName.includes("carne") || normName.includes("ovo") || normName.includes("leite") || normName.includes("queijo") || normName.includes("iogurte"))) return false;
+      }
+    }
+
+    return true;
+  });
+}
+
+/** Select foods for a specific meal type using DB tags, with patient-seeded variety */
+function selectFoodsForMeal(
+  availableFoods: DBFood[],
+  mealType: string,
+  goal: string,
+  patientSeed: number,
+  dayIndex: number,
+): DBFood[] {
+  const mealTags = MEAL_TYPE_TO_DB_TAG[mealType] || [];
+  const goalTag = GOAL_TO_DB_TAG[goal] || "";
+  const composition = MEAL_COMPOSITION[mealType] || { required: ["proteina"], optional: [] };
+
+  const selected: DBFood[] = [];
+  const usedCategories = new Set<string>();
+
+  // For each required category, find matching foods
+  for (const requiredCat of composition.required) {
+    const candidates = availableFoods.filter(f => {
+      if (f.category !== requiredCat) return false;
+      // Prefer foods with matching meal tags
+      const hasMealTag = mealTags.length === 0 || f.meal_tags_json.length === 0 || f.meal_tags_json.some((t: string) => mealTags.includes(t));
+      return hasMealTag;
+    });
+
+    if (candidates.length === 0) {
+      // Fallback: any food from this category
+      const fallback = availableFoods.filter(f => f.category === requiredCat);
+      if (fallback.length > 0) {
+        // Sort by goal relevance
+        const sorted = fallback.sort((a, b) => {
+          const aGoal = a.goal_tags_json.includes(goalTag) ? 1 : 0;
+          const bGoal = b.goal_tags_json.includes(goalTag) ? 1 : 0;
+          return bGoal - aGoal;
+        });
+        const shuffled = seededShuffle(sorted, patientSeed + dayIndex * 7 + requiredCat.charCodeAt(0));
+        selected.push(shuffled[0]);
+        usedCategories.add(requiredCat);
+      }
+      continue;
+    }
+
+    // Prioritize goal-matching foods, then shuffle with seed
+    const goalMatching = candidates.filter(f => f.goal_tags_json.includes(goalTag));
+    const pool = goalMatching.length >= 2 ? goalMatching : candidates;
+    const shuffled = seededShuffle(pool, patientSeed + dayIndex * 13 + requiredCat.charCodeAt(0));
+    selected.push(shuffled[0]);
+    usedCategories.add(requiredCat);
+  }
+
+  // Add one optional food if available
+  for (const optCat of composition.optional) {
+    if (usedCategories.has(optCat)) continue;
+    const candidates = availableFoods.filter(f => f.category === optCat);
+    if (candidates.length > 0) {
+      const shuffled = seededShuffle(candidates, patientSeed + dayIndex * 17 + optCat.charCodeAt(0));
+      selected.push(shuffled[0]);
+      usedCategories.add(optCat);
+      break; // only one optional
+    }
+  }
+
+  return selected;
+}
+
+/** Build a meal item from selected DB foods */
+function buildMealFromDBFoods(
+  foods: DBFood[],
+  mealType: string,
+  dayOfWeek: number,
+  mealKcalTarget: number,
+  goal: string,
+): any {
+  if (foods.length === 0) return null;
+
+  const totalKcal = foods.reduce((s, f) => s + (f.calories || 0), 0);
+  const scaleFactor = totalKcal > 0 ? mealKcalTarget / totalKcal : 1;
+  const clampedScale = Math.max(0.5, Math.min(2.0, scaleFactor));
+
+  const mealTitles: Record<string, string> = {
+    breakfast: isLossGoal(goal) ? "Café da Manhã" : "Café da Manhã Reforçado",
+    morning_snack: "Lanche da Manhã",
+    lunch: isLossGoal(goal) ? "Almoço" : "Almoço Reforçado",
+    afternoon_snack: "Lanche da Tarde",
+    dinner: isLossGoal(goal) ? "Jantar" : "Jantar Reforçado",
+    evening_snack: "Ceia",
+  };
+
+  const descriptionLines = foods.map(f => {
+    const grams = Math.round((f.portion_grams || 100) * clampedScale);
+    const portionText = f.portion_reference || `${grams}g`;
+    return `• ${f.food_name} — ${portionText} (×${clampedScale.toFixed(1)})`;
+  });
+
+  // Build substitution text from same categories
+  const subLines: string[] = [];
+  for (const food of foods) {
+    const subs = SUBSTITUTION_GROUPS[
+      food.category === "proteina" ? (mealType === "breakfast" ? "protein_breakfast" : "protein") :
+      food.category === "carboidrato" ? (mealType === "breakfast" ? "carb_breakfast" : "carb") :
+      food.category === "fruta" ? "fruit" : ""
+    ];
+    if (subs) {
+      const normFood = normalize(food.food_name);
+      const alts = subs.filter(s => !normFood.includes(normalize(s))).slice(0, 3);
+      if (alts.length > 0) {
+        subLines.push(`• ${food.food_name} → ${alts.join(", ")}`);
+      }
+    }
+  }
+
+  const description = descriptionLines.join("\n") + 
+    (subLines.length > 0 ? `\n\n🔄 Substituições:\n${subLines.join("\n")}` : "");
+
+  return {
+    title: mealTitles[mealType] || "Refeição",
+    description,
+    meal_type: mealType,
+    day_of_week: dayOfWeek,
+    calories_target: Math.round(totalKcal * clampedScale),
+    protein_target: Math.round(foods.reduce((s, f) => s + (f.protein || 0), 0) * clampedScale),
+    carbs_target: Math.round(foods.reduce((s, f) => s + (f.carbs || 0), 0) * clampedScale),
+    fat_target: Math.round(foods.reduce((s, f) => s + (f.fats || 0), 0) * clampedScale),
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PERSONALIZED PLAN GENERATOR v4.0
+// Uses ifj_food_database with patient-specific seeded selection
+// ═══════════════════════════════════════════════════════════════
+
+function generatePersonalizedPlan(
+  patientFoods: DBFood[],
+  patientId: string,
+  goal: string,
+  kcalTarget: number,
+  macros: { protein: number; carbs: number; fat: number },
+  planOptionIndex: number = 0,
+): any[] {
+  const items: any[] = [];
+  const mealTypes = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
+  const patientSeed = seedHash(patientId) + planOptionIndex * 997;
+
+  for (let day = 0; day < 7; day++) {
+    for (const mealType of mealTypes) {
+      const targetKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT[mealType] || 0.15));
+      
+      const selectedFoods = selectFoodsForMeal(
+        patientFoods,
+        mealType,
+        goal,
+        patientSeed,
+        day,
+      );
+
+      if (selectedFoods.length > 0) {
+        const mealItem = buildMealFromDBFoods(selectedFoods, mealType, day, targetKcal, goal);
+        if (mealItem) items.push(mealItem);
+      }
+    }
+  }
+
+  return items;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LEGACY FALLBACK GENERATOR (preset-based)
+// Used only when DB has insufficient foods
 // ═══════════════════════════════════════════════════════════════
 
 function generateRealisticPlan(
   goal: string,
   kcalTarget: number,
-  macros: { protein: number; carbs: number; fat: number },
+  _macros: { protein: number; carbs: number; fat: number },
   restrictions: string[],
   disliked: string[],
   planOptionIndex: number = 0,
@@ -454,50 +747,37 @@ function generateRealisticPlan(
       const targetKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT[mealType] || 0.15));
       const options = getMealOptions(mealType, goal);
 
-      // Filter by restrictions and disliked
       let validOptions = options.filter(opt => {
         const allText = normalize(opt.description + " " + opt.foods.join(" "));
-        // Check restrictions
         if (restrictions.includes("vegetarian") && /frango|carne|bife|tilapia|peixe|porco|sardinha|sobrecoxa|alcatra|patinho/.test(allText)) return false;
         if (restrictions.includes("vegan") && /frango|carne|bife|tilapia|peixe|porco|ovo|leite|queijo|iogurte|requeijao|manteiga|mel/.test(allText)) return false;
-        if (restrictions.includes("gluten_free") && /pao|torrada|macarrao|aveia|granola|biscoito|trigo/.test(allText)) return false;
         if (restrictions.includes("lactose_free") && /leite|queijo|iogurte|requeijao|manteiga/.test(allText)) return false;
-        // Check disliked
-        if (disliked.some(d => allText.includes(normalize(d)))) return false;
-        // Check blocked
-        if (opt.foods.some(f => isBlockedFood(f))) return false;
+        if (restrictions.includes("gluten_free") && /pao|macarrao|aveia|trigo/.test(allText)) return false;
+        for (const d of disliked) {
+          const nd = normalize(d);
+          if (nd.length >= 3 && allText.includes(nd)) return false;
+        }
         return true;
       });
 
-      if (validOptions.length === 0) validOptions = options; // fallback
+      if (validOptions.length === 0) validOptions = options;
 
-      // Deterministic variety: rotate through options by day + planOptionIndex
-      const pickIdx = (day + planOptionIndex * 3) % validOptions.length;
-      const selected = validOptions[pickIdx];
+      // Use planOptionIndex to offset the starting selection
+      const idx = (day + planOptionIndex * 3) % validOptions.length;
+      const selected = validOptions[idx];
 
-      // Scale to target calories
-      const scaleFactor = selected.kcal > 0 ? targetKcal / selected.kcal : 1;
+      const scaleFactor = targetKcal / (selected.kcal || 1);
       const clampedScale = Math.max(0.6, Math.min(1.8, scaleFactor));
 
-      // Build substitutions text
-      const subsText = buildSubstitutionText(selected.foods, mealType);
-      const fullDesc = subsText
-        ? `${selected.description}\n\n🔄 Substituições:\n${subsText}`
-        : selected.description;
-
-      // Use clamped scale for ALL values (calories + macros) to maintain consistency
-      const scaledKcal = Math.round(selected.kcal * clampedScale);
+      const subs = buildSubstitutionText(selected.foods, mealType);
+      const description = selected.description + (subs ? `\n\n🔄 Substituições:\n${subs}` : "");
 
       items.push({
+        title: selected.title,
+        description,
         meal_type: mealType,
         day_of_week: day,
-        title: mealType === "breakfast" ? "Café da Manhã" :
-               mealType === "morning_snack" ? "Lanche da Manhã" :
-               mealType === "lunch" ? "Almoço" :
-               mealType === "afternoon_snack" ? "Lanche da Tarde" :
-               mealType === "dinner" ? "Jantar" : "Ceia",
-        description: fullDesc,
-        calories_target: scaledKcal,
+        calories_target: Math.round(selected.kcal * clampedScale),
         protein_target: Math.round(selected.protein * clampedScale),
         carbs_target: Math.round(selected.carbs * clampedScale),
         fat_target: Math.round(selected.fat * clampedScale),
@@ -508,11 +788,11 @@ function generateRealisticPlan(
   return items;
 }
 
-function buildSubstitutionText(foods: string[], mealType: string): string {
+function buildSubstitutionText(foods: string[], _mealType: string): string {
   const subs: string[] = [];
   for (const food of foods) {
     const n = normalize(food);
-    for (const [groupName, group] of Object.entries(SUBSTITUTION_GROUPS)) {
+    for (const [, group] of Object.entries(SUBSTITUTION_GROUPS)) {
       const match = group.find(item => n.includes(normalize(item)));
       if (match) {
         const alternatives = group.filter(item => normalize(item) !== normalize(match)).slice(0, 3);
@@ -571,7 +851,6 @@ function reconcileDailyMacros(
         fat_target: Math.round((item.fat_target || 0) * fFactor),
       };
 
-      // Cap breakfast protein to avoid simplicity validation failure
       if (scaledItem.meal_type === "breakfast" && scaledItem.protein_target > breakfastProteinCap) {
         scaledItem.protein_target = breakfastProteinCap;
       }
@@ -611,13 +890,14 @@ function buildGenerationMetadata(
   tmb: number, tdee: number, tdeeFactor: number, kcalTarget: number, goal: string,
   macros: { protein: number; carbs: number; fat: number }, weight: number, height: number,
   age: number, sex: string, activityLevel: string, dataSource: string,
-  restrictions: string[], medicalConditions: string[], disliked: string[]
+  restrictions: string[], medicalConditions: string[], disliked: string[],
+  usedDBFoods: boolean,
 ): Record<string, any> {
   const strategy = GOAL_STRATEGY[goal] || { calorie: "unknown", macro: "unknown" };
   return {
     engine_version: ENGINE_VERSION,
     protocol_version: PROTOCOL_VERSION,
-    generation_method: "realistic_preset_meals_v3",
+    generation_method: usedDBFoods ? "db_personalized_v4" : "realistic_preset_meals_v3",
     bmr_formula: "mifflin_st_jeor",
     bmr_value: tmb,
     tdee_factor: tdeeFactor,
@@ -640,9 +920,8 @@ function buildGenerationMetadata(
     disliked_foods: disliked,
     food_rules: {
       blocked_foods_enforced: true,
-      max_fruits_per_meal: MAX_FRUITS_PER_MEAL,
-      max_eggs_breakfast: MAX_EGGS_BREAKFAST,
       regional_focus: "brasil_popular",
+      db_driven: usedDBFoods,
     },
     generated_at: new Date().toISOString(),
   };
@@ -682,16 +961,15 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Resolve tenant_id for meal_plans (NOT NULL constraint)
-    const nutritionistIdForTenant = requestedNutritionistId;
+    // Resolve tenant_id
     const { data: tenantProfile } = await serviceClient
       .from("profiles")
       .select("tenant_id")
-      .eq("user_id", nutritionistIdForTenant)
+      .eq("user_id", requestedNutritionistId)
       .maybeSingle();
     let resolvedTenantId = tenantProfile?.tenant_id || null;
 
-    // Authorization guard: caller must be the patient, the responsible professional, or admin
+    // Authorization guard
     if (!caller.roles.includes("admin")) {
       const callerIsPatient = userId === patient_id;
       const callerIsResponsibleProfessional = userId === requestedNutritionistId;
@@ -726,7 +1004,7 @@ serve(async (req) => {
       }
     }
 
-    // Fallback: try first active tenant if profile has none
+    // Fallback tenant
     if (!resolvedTenantId) {
       const { data: fallbackTenant } = await serviceClient
         .from("tenants")
@@ -735,11 +1013,6 @@ serve(async (req) => {
         .limit(1)
         .maybeSingle();
       resolvedTenantId = fallbackTenant?.id || null;
-      if (resolvedTenantId) {
-        console.log(`[generate-meal-plan] Tenant resolved via fallback: ${resolvedTenantId}`);
-      } else {
-        console.warn("[generate-meal-plan] No tenant_id resolved — trigger must handle resolution");
-      }
     }
 
     const { data: latestPipeline } = isPipeline
@@ -799,14 +1072,10 @@ serve(async (req) => {
     const height = normalizeHeightCm(body.height ?? latestPipeline?.height ?? answers.height);
     if (!weight || weight < 20 || !height || height < 80) {
       console.warn(`[generate-meal-plan] Invalid body data for patient ${patient_id}`, {
-        rawBodyWeight: body.weight ?? null,
-        rawBodyHeight: body.height ?? null,
-        pipelineWeight: latestPipeline?.weight ?? null,
-        pipelineHeight: latestPipeline?.height ?? null,
-        anamnesisWeight: answers.weight ?? null,
-        anamnesisHeight: answers.height ?? null,
-        normalizedWeight: weight,
-        normalizedHeight: height,
+        rawBodyWeight: body.weight ?? null, rawBodyHeight: body.height ?? null,
+        pipelineWeight: latestPipeline?.weight ?? null, pipelineHeight: latestPipeline?.height ?? null,
+        anamnesisWeight: answers.weight ?? null, anamnesisHeight: answers.height ?? null,
+        normalizedWeight: weight, normalizedHeight: height,
       });
       return new Response(JSON.stringify({ error: "Peso e altura válidos são obrigatórios", code: "BODY_DATA_MISSING" }), {
         status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -859,27 +1128,35 @@ serve(async (req) => {
     } : {};
     const mergedAnswers = { ...(answers as Record<string, unknown>), ...pipelineOverrides } as Record<string, any>;
 
-    const restrictions = mergedAnswers.restrictions || [];
+    // ── Parse restrictions, allergies, disliked foods ──
+    const rawRestrictions = mergedAnswers.restrictions || [];
+    const restrictions: string[] = Array.isArray(rawRestrictions) 
+      ? rawRestrictions.filter((r: string) => r !== "none") 
+      : [];
     const medicalConditions = mergedAnswers.medical_conditions || mergedAnswers.health_conditions || [];
-    const disliked = (mergedAnswers.disliked_foods || "").toLowerCase().split(",").map((s: string) => s.trim()).filter(Boolean);
+    const rawDisliked = mergedAnswers.disliked_foods || "";
+    const disliked = (typeof rawDisliked === "string" ? rawDisliked : "").toLowerCase().split(",").map((s: string) => s.trim()).filter(Boolean);
+    const rawAllergies = mergedAnswers.allergies || [];
+    const allergies: string[] = Array.isArray(rawAllergies) 
+      ? rawAllergies.filter((a: string) => a !== "none")
+      : [];
+
+    console.log(`[generate-meal-plan] Patient ${patient_id} | Mode: ${generationMode} | Goal: ${goal} | Kcal: ${finalKcal} | Restrictions: ${restrictions.join(",")} | Disliked: ${disliked.join(",")} | Allergies: ${allergies.join(",")}`);
 
     // ── Mode-specific enhancements ──
     let modeEnhancements: Record<string, any> = {};
     
     if (generationMode === "smart") {
-      // Smart mode: pull behavioral profile + previous plans for variety
       const [{ data: behavProfile }, { data: prevPlans }] = await Promise.all([
         serviceClient.from("behavioral_profile").select("*").eq("patient_id", patient_id).maybeSingle(),
         serviceClient.from("meal_plans").select("generation_metadata, template_slug")
           .eq("patient_id", patient_id).order("created_at", { ascending: false }).limit(3),
       ]);
       
-      // Determine preferred meal times from behavioral profile
       const wakeTime = behavProfile?.wake_up_time || mergedAnswers.wake_time;
       const workoutTime = behavProfile?.workout_time;
       const motivationStyle = behavProfile?.motivation_style;
       
-      // Avoid repeating the same plan option index as previous plans
       const usedIndices = (prevPlans || []).map((_: any, i: number) => i);
       const varietyOffset = usedIndices.length > 0 ? usedIndices.length : 0;
       
@@ -893,7 +1170,6 @@ serve(async (req) => {
         cravingHours: behavProfile?.craving_hours || [],
       };
     } else if (generationMode === "clinical") {
-      // Clinical mode: pull clinical flags + protocols
       const [{ data: clinicalFlags }, { data: activeProtocol }] = await Promise.all([
         serviceClient.from("patient_clinical_flags").select("flag_key, severity")
           .eq("patient_id", patient_id).eq("is_active", true),
@@ -901,11 +1177,8 @@ serve(async (req) => {
           .eq("patient_id", patient_id).eq("status", "active").limit(1).maybeSingle(),
       ]);
       
-      // Clinical flags may dictate stricter restrictions
       const flagKeys = (clinicalFlags || []).map((f: any) => f.flag_key);
       const severityFlags = (clinicalFlags || []).filter((f: any) => f.severity === "high" || f.severity === "critical");
-      
-      // Protocol-driven macro overrides
       const protocolMacroRules = (activeProtocol as any)?.nutrition_protocols?.macro_rules;
       
       modeEnhancements = {
@@ -914,22 +1187,18 @@ serve(async (req) => {
         severityFlags: severityFlags.length,
         protocolName: (activeProtocol as any)?.nutrition_protocols?.name || null,
         protocolMacroRules: protocolMacroRules || null,
-        // Clinical mode uses tighter scaling (less deviation from exact macros)
         strictMacroAdherence: true,
       };
       
-      // Apply clinical flag-based restrictions
+      // Apply clinical flag-based macro overrides
       if (flagKeys.includes("diabetes_risk") || flagKeys.includes("insulin_resistance")) {
-        // Reduce carb percentage for insulin-sensitive patients
         finalMacros.carbs = Math.round(finalMacros.carbs * 0.85);
         finalMacros.fat = Math.round(finalMacros.fat * 1.1);
       }
       if (flagKeys.includes("hypertension") || flagKeys.includes("cardiovascular_risk")) {
-        // Ensure lower sodium awareness (reflected in food selection)
         restrictions.push("low_sodium");
       }
       if (flagKeys.includes("renal_risk")) {
-        // Cap protein for renal patients
         finalMacros.protein = Math.min(finalMacros.protein, Math.round(weight * 0.8));
       }
     } else {
@@ -938,18 +1207,43 @@ serve(async (req) => {
 
     const startDate = new Date().toISOString().split("T")[0];
 
+    // ═══════════════════════════════════════════════════════════
+    // LOAD FOOD DATABASE FOR SMART/CLINICAL MODES
+    // Quick mode uses presets for speed; smart/clinical use DB
+    // ═══════════════════════════════════════════════════════════
+    
+    let dbFoods: DBFood[] = [];
+    let useDBDriven = false;
+
+    if (generationMode !== "quick") {
+      dbFoods = await loadFoodDatabase(serviceClient);
+      if (dbFoods.length >= 30) {
+        // Filter for this patient's restrictions/allergies/disliked
+        dbFoods = filterFoodsForPatient(dbFoods, restrictions, disliked, allergies);
+        useDBDriven = dbFoods.length >= 20;
+        console.log(`[generate-meal-plan] DB foods loaded: ${dbFoods.length} (after patient filtering). DB-driven: ${useDBDriven}`);
+      } else {
+        console.warn(`[generate-meal-plan] DB has only ${dbFoods.length} foods — falling back to presets`);
+      }
+    }
+
     // ── Multi-plan flow ──
     if (isPipeline && planCount > 1 && !meal_plan_id) {
       const generatedPlans: any[] = [];
       const nutritionistId = requestedNutritionistId;
 
       for (let tplIdx = 0; tplIdx < planCount; tplIdx++) {
-        const rawItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked, tplIdx);
+        let rawItems: any[];
+        if (useDBDriven) {
+          rawItems = generatePersonalizedPlan(dbFoods, patient_id, goal, finalKcal, finalMacros, tplIdx);
+        } else {
+          rawItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked, tplIdx);
+        }
         const planItems = reconcileDailyMacros(rawItems, finalKcal, finalMacros, goal);
 
         const genMeta = buildGenerationMetadata(
           tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
-          age, sex, activityLevel, dataSource, restrictions, medicalConditions, disliked
+          age, sex, activityLevel, dataSource, restrictions, medicalConditions, disliked, useDBDriven
         );
 
         const optionLabels = ["Simples", "Variada", "Alternativa"];
@@ -960,14 +1254,14 @@ serve(async (req) => {
           .from("meal_plans")
           .insert({
             title: `Opção ${tplIdx + 1} — ${optionLabels[tplIdx] || "Extra"}`,
-            description: `Plano realista gerado pelo Protocolo FitJourney v${ENGINE_VERSION}. Meta: ${finalKcal}kcal/dia. Comida brasileira popular.`,
+            description: `Plano personalizado v${ENGINE_VERSION}. Meta: ${finalKcal}kcal/dia. Comida brasileira popular.`,
             patient_id,
             nutritionist_id: nutritionistId,
             start_date: startDate,
             end_date: endDate.toISOString().split("T")[0],
             is_active: false,
             plan_status: "draft_auto_generated",
-            generation_source: "protocol_fitjourney_v3",
+            generation_source: "protocol_fitjourney_v4",
             generated_by: userId,
             generation_metadata: genMeta,
             tenant_id: resolvedTenantId,
@@ -981,7 +1275,6 @@ serve(async (req) => {
         }
 
         if (planItems.length === 0) {
-          console.error(`Plan option ${tplIdx + 1} generated 0 items — skipping`);
           await serviceClient.from("meal_plans").delete().eq("id", newPlan.id);
           continue;
         }
@@ -990,12 +1283,10 @@ serve(async (req) => {
         const { error: itemsErr } = await serviceClient.from("meal_plan_items").insert(itemsToInsert);
 
         if (itemsErr) {
-          console.error(`Failed to insert items for plan ${newPlan.id}:`, itemsErr);
           await serviceClient.from("meal_plans").delete().eq("id", newPlan.id);
           continue;
         }
 
-        // Resolve visual associations for this plan
         const visualResolved = await resolveVisualForItems(serviceClient, newPlan.id, planItems);
         console.log(`Plan ${newPlan.id}: ${visualResolved}/${planItems.length} items visually resolved`);
 
@@ -1007,60 +1298,39 @@ serve(async (req) => {
         });
       }
 
-      // GUARD: If no plans were successfully generated, return error
       if (generatedPlans.length === 0) {
-        console.error("All plan options failed to generate items");
         return new Response(
           JSON.stringify({ success: false, error: "Nenhuma opção de plano foi gerada com sucesso. Tente novamente." }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      // Save tips
       const tips = generateTips(mergedAnswers);
       await serviceClient.from("patient_tips").delete().eq("user_id", patient_id);
       if (tips.length > 0) {
         await serviceClient.from("patient_tips").insert(tips.map((t) => ({ user_id: patient_id, ...t })));
       }
 
-      // Save computed values
       await serviceClient.from("patient_anamnesis").update({
-        computed_tmb: tmb,
-        computed_kcal_target: finalKcal,
-        computed_protein: finalMacros.protein,
-        computed_carbs: finalMacros.carbs,
-        computed_fat: finalMacros.fat,
+        computed_tmb: tmb, computed_kcal_target: finalKcal,
+        computed_protein: finalMacros.protein, computed_carbs: finalMacros.carbs, computed_fat: finalMacros.fat,
       }).eq("id", anamnesis.id);
 
-      // Timeline
       await serviceClient.from("patient_timeline").insert({
         patient_id,
         event_type: "meal_plan",
-        title: "Planos Alimentares Realistas Gerados",
-        description: `${generatedPlans.length} opções geradas pelo Protocolo FitJourney v${ENGINE_VERSION}. Meta: ${finalKcal}kcal/dia. Comida brasileira popular.`,
+        title: "Planos Alimentares Personalizados Gerados",
+        description: `${generatedPlans.length} opções geradas pelo Protocolo FitJourney v${ENGINE_VERSION}. Meta: ${finalKcal}kcal/dia.`,
         metadata: {
           type: "multi_plan_generated",
           protocol: PROTOCOL_VERSION,
           engine_version: ENGINE_VERSION,
           plan_count: generatedPlans.length,
+          db_driven: useDBDriven,
           plans: generatedPlans.map(p => ({ id: p.mealPlanId, template: p.templateName })),
         },
         created_by: userId,
       });
-
-      const explainability = {
-        engine_version: ENGINE_VERSION,
-        protocol_version: PROTOCOL_VERSION,
-        generation_method: "realistic_preset_meals_v3",
-        calculation: {
-          bmr_formula: "mifflin_st_jeor",
-          tmb, tdee_factor: tdeeFactor, tdee,
-          goal_adjustment: GOAL_KCAL_ADJUSTMENT[goal] || 0,
-          final_kcal: finalKcal, data_source: dataSource,
-        },
-        macros: { protein: finalMacros.protein, carbs: finalMacros.carbs, fat: finalMacros.fat },
-        food_rules: { blocked_foods_enforced: true, regional_focus: "brasil_popular" },
-      };
 
       return new Response(
         JSON.stringify({
@@ -1071,7 +1341,6 @@ serve(async (req) => {
           plan_status: "draft_auto_generated",
           items_count: generatedPlans.reduce((s: number, p: any) => s + p.itemsCount, 0),
           tips_count: tips.length,
-          explainability,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -1079,17 +1348,21 @@ serve(async (req) => {
 
     // ── Single plan flow ──
     const planOptionIndex = modeEnhancements.varietyOffset || 0;
-    const rawPlanItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked, planOptionIndex);
     
-    // Clinical mode: tighter macro reconciliation (clamp factor 0.95-1.05 instead of default)
-    const planItems = generationMode === "clinical"
-      ? reconcileDailyMacros(rawPlanItems, finalKcal, finalMacros, goal)
-      : reconcileDailyMacros(rawPlanItems, finalKcal, finalMacros, goal);
+    let rawPlanItems: any[];
+    if (useDBDriven) {
+      rawPlanItems = generatePersonalizedPlan(dbFoods, patient_id, goal, finalKcal, finalMacros, planOptionIndex);
+      console.log(`[generate-meal-plan] DB-driven plan generated: ${rawPlanItems.length} items`);
+    } else {
+      rawPlanItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked, planOptionIndex);
+      console.log(`[generate-meal-plan] Preset-based plan generated: ${rawPlanItems.length} items`);
+    }
+    
+    const planItems = reconcileDailyMacros(rawPlanItems, finalKcal, finalMacros, goal);
 
-    // Smart mode: add per-day variation for weekends if patient has weekend_diet_breaks
+    // Smart mode: weekend diet breaks
     if (generationMode === "smart" && modeEnhancements.weekendDietBreaks) {
       for (const item of planItems) {
-        // Days 5,6 = weekend — allow +10% calories for adherence
         if (item.day_of_week >= 5) {
           item.calories_target = Math.round(item.calories_target * 1.10);
           item.carbs_target = Math.round(item.carbs_target * 1.12);
@@ -1097,7 +1370,7 @@ serve(async (req) => {
       }
     }
 
-    // Smart mode: boost protein around workout time 
+    // Smart mode: boost protein around workout time
     if (generationMode === "smart" && modeEnhancements.workoutTime) {
       const workoutHour = parseInt(modeEnhancements.workoutTime.split(":")[0] || "0");
       const postWorkoutMeal = workoutHour < 12 ? "lunch" : workoutHour < 17 ? "afternoon_snack" : "dinner";
@@ -1121,13 +1394,12 @@ serve(async (req) => {
     const generationMetadata = {
       ...buildGenerationMetadata(
         tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
-        age, sex, activityLevel, dataSource, restrictions, medicalConditions, disliked
+        age, sex, activityLevel, dataSource, restrictions, medicalConditions, disliked, useDBDriven
       ),
       generation_mode: generationMode,
       mode_enhancements: modeEnhancements,
     };
 
-    // Create or update meal plan
     let finalMealPlanId = meal_plan_id;
 
     const MODE_TITLES: Record<string, string> = {
@@ -1136,16 +1408,14 @@ serve(async (req) => {
       clinical: "Plano Clínico",
     };
     const MODE_SOURCES: Record<string, string> = {
-      quick: "smart_quick_v3",
-      smart: "smart_intelligent_v3",
-      clinical: "smart_clinical_v3",
+      quick: "smart_quick_v4",
+      smart: "smart_intelligent_v4",
+      clinical: "smart_clinical_v4",
     };
     const planTitle = MODE_TITLES[generationMode] || "Plano Alimentar";
-    const genSource = MODE_SOURCES[generationMode] || "protocol_fitjourney_v3";
+    const genSource = MODE_SOURCES[generationMode] || "protocol_fitjourney_v4";
 
     if (!meal_plan_id) {
-      // Create new plan (both pipeline and SmartPlanGenerator flows)
-      const nutritionistId = requestedNutritionistId;
       const endDate = new Date();
       endDate.setDate(endDate.getDate() + 30);
 
@@ -1153,9 +1423,9 @@ serve(async (req) => {
         .from("meal_plans")
         .insert({
           title: planTitle,
-          description: `Gerado pelo Protocolo FitJourney v${ENGINE_VERSION} (${generationMode}). Meta: ${finalKcal}kcal/dia. Comida brasileira popular e acessível.`,
+          description: `Gerado pelo Protocolo FitJourney v${ENGINE_VERSION} (${generationMode}). Meta: ${finalKcal}kcal/dia. ${useDBDriven ? "Personalizado com banco alimentar." : "Comida brasileira popular."}`,
           patient_id,
-          nutritionist_id: nutritionistId,
+          nutritionist_id: requestedNutritionistId,
           start_date: startDate,
           end_date: endDate.toISOString().split("T")[0],
           is_active: false,
@@ -1188,7 +1458,7 @@ serve(async (req) => {
 
       await serviceClient.from("meal_plans").update({
         plan_status: "draft_auto_generated",
-        generation_source: "protocol_fitjourney_v3",
+        generation_source: genSource,
         generated_by: userId,
         generation_metadata: generationMetadata,
       }).eq("id", finalMealPlanId);
@@ -1213,7 +1483,6 @@ serve(async (req) => {
       if (isPipeline && !meal_plan_id) {
         await safeDeletePlan(serviceClient, finalMealPlanId);
       }
-
       throw new Error(`Falha ao inserir itens do plano ${finalMealPlanId}: ${insertErr.message}`);
     }
 
@@ -1229,16 +1498,12 @@ serve(async (req) => {
       }
     }
 
-    // Resolve visual associations for single plan
     const visualResolved = await resolveVisualForItems(serviceClient, finalMealPlanId, planItems);
     console.log(`Single plan ${finalMealPlanId}: ${visualResolved}/${planItems.length} items visually resolved`);
 
     await serviceClient.from("patient_anamnesis").update({
-      computed_tmb: tmb,
-      computed_kcal_target: finalKcal,
-      computed_protein: finalMacros.protein,
-      computed_carbs: finalMacros.carbs,
-      computed_fat: finalMacros.fat,
+      computed_tmb: tmb, computed_kcal_target: finalKcal,
+      computed_protein: finalMacros.protein, computed_carbs: finalMacros.carbs, computed_fat: finalMacros.fat,
     }).eq("id", anamnesis.id);
 
     const tips = generateTips(mergedAnswers);
@@ -1247,14 +1512,12 @@ serve(async (req) => {
       await serviceClient.from("patient_tips").insert(tips.map((t) => ({ user_id: patient_id, ...t })));
     }
 
-    // Save as template if requested
     if (saveAsTemplate && finalMealPlanId) {
       try {
         await serviceClient.from("meal_plans").update({
           template_slug: `auto_${generationMode}_${Date.now()}`,
           template_version: 1,
         }).eq("id", finalMealPlanId);
-        console.log(`[generate-meal-plan] Plan ${finalMealPlanId} saved as reusable template`);
       } catch (tplErr) {
         console.warn("[generate-meal-plan] Failed to save as template:", tplErr);
       }
@@ -1273,28 +1536,11 @@ serve(async (req) => {
         meal_plan_id: finalMealPlanId,
         items_count: planItems.length,
         data_source: dataSource,
-        generation_method: "realistic_preset_meals_v3",
+        generation_method: useDBDriven ? "db_personalized_v4" : "realistic_preset_meals_v3",
+        db_driven: useDBDriven,
       },
       created_by: userId,
     });
-
-    const explainability = {
-      engine_version: ENGINE_VERSION,
-      protocol_version: PROTOCOL_VERSION,
-      generation_method: "realistic_preset_meals_v3",
-      calculation: {
-        bmr_formula: "mifflin_st_jeor",
-        tmb, tdee_factor: tdeeFactor, tdee,
-        goal_adjustment: GOAL_KCAL_ADJUSTMENT[goal] || 0,
-        final_kcal: finalKcal, data_source: dataSource,
-      },
-      macros: { protein: finalMacros.protein, carbs: finalMacros.carbs, fat: finalMacros.fat },
-      food_rules: {
-        blocked_foods_enforced: true,
-        max_fruits_per_meal: MAX_FRUITS_PER_MEAL,
-        regional_focus: "brasil_popular",
-      },
-    };
 
     return new Response(
       JSON.stringify({
@@ -1303,12 +1549,12 @@ serve(async (req) => {
         plan_status: "draft_auto_generated",
         items_count: planItems.length,
         tips_count: tips.length,
-        explainability,
+        generation_mode: generationMode,
+        db_driven: useDBDriven,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
-    // Auth guard throws Response objects — pass them through
     if (e instanceof Response) return e;
     console.error("generate-meal-plan error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
