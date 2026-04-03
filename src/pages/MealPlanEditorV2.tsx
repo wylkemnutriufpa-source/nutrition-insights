@@ -278,6 +278,9 @@ export default function MealPlanEditorV2() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuItem onClick={() => navigate(`/plan-builder/${id}`)} className="gap-2 text-primary">
+                  <Zap className="w-4 h-4" /> Builder Híbrido
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setAssistedOpen(true)} className="gap-2">
                   <Sparkles className="w-4 h-4" /> Plano Assistido
                 </DropdownMenuItem>
