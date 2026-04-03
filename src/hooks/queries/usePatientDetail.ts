@@ -170,6 +170,8 @@ export function usePatientDetail(patientId: string | undefined) {
       const adherenceRows = dedupeBySignature(adherenceRes.data, (row: any) => `${row.date}-${row.adherence_status}`);
 
       return {
+        /** Canonical user_id — use this for all child component queries */
+        resolvedPatientId: patientUserId,
         profile: resolvedProfile,
         timeline: dedupeById(timelineRes.data),
         anamnesis: anamnesisRes.data?.[0] || null,
