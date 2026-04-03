@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth";
 import { useTenant } from "@/lib/tenantContext";
 import { approveAndPublishPlan, rejectMealPlan, transitionPlanToReview } from "@/lib/serverTransitions";
 import { supabase } from "@/integrations/supabase/client";
+import { finalizeGeneratedMealPlan } from "@/lib/finalizeGeneratedMealPlan";
 import {
   inspectOnboardingPlan,
   resolveLatestUsableOnboardingPlan,
