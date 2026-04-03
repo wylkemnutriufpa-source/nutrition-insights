@@ -68,6 +68,7 @@ export default function PatientDetail() {
   const { patientId } = useParams<{ patientId: string }>();
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
+  const { tenantId } = useTenant();
   const queryClient = useQueryClient();
   const expUI = useExperienceUI();
 
