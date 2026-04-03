@@ -481,8 +481,12 @@ serve(async (req) => {
         const dailyF = totalF / numDays;
 
         // ── Cross-day consistency check ──────────────────────────────────────
-        // Detect when individual days deviate >10% from the plan average
-        const CROSS_DAY_TOLERANCE = 0.10; // 10% max variance between days
+        // Must stay aligned with AutoFix: protein is stricter because clinicians
+        // perceive even small day-to-day swings as a real inconsistency.
+        const CROSS_DAY_TOLERANCE = {
+            protein: 0.03,
+            default: 0.05,
+        } as const;
         const perDayMacros = new Map<number, { cals: number; prot: number; carbs: number; fat: number }>();
         for (const item of items) {
             const d = item.day_of_week ?? 0;
@@ -503,11 +507,18 @@ serve(async (req) => {
             max_day: number;
             max_val: number;
             variance_pct: number;
+            tolerance_pct: number;
         }
         const crossDayInconsistencies: CrossDayInconsistency[] = [];
         const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-        function checkCrossDayConsistency(macroLabel: string, unit: string, key: "cals" | "prot" | "carbs" | "fat", avg: number) {
+        function checkCrossDayConsistency(
+            macroLabel: string,
+            unit: string,
+            key: "cals" | "prot" | "carbs" | "fat",
+            avg: number,
+            tolerancePct: number,
+        ) {
             if (avg <= 0 || numDays < 2) return;
             let minVal = Infinity, maxVal = -Infinity, minDay = 0, maxDay = 0;
             for (const [day, m] of perDayMacros.entries()) {
@@ -516,19 +527,24 @@ serve(async (req) => {
                 if (val > maxVal) { maxVal = val; maxDay = day; }
             }
             const variancePct = (maxVal - minVal) / avg;
-            if (variancePct > CROSS_DAY_TOLERANCE) {
+            if (variancePct > tolerancePct) {
                 crossDayInconsistencies.push({
-                    macro: macroLabel, unit, avg: Math.round(avg),
-                    min_day: minDay, min_val: Math.round(minVal),
-                    max_day: maxDay, max_val: Math.round(maxVal),
+                    macro: macroLabel,
+                    unit,
+                    avg: Math.round(avg),
+                    min_day: minDay,
+                    min_val: Math.round(minVal),
+                    max_day: maxDay,
+                    max_val: Math.round(maxVal),
                     variance_pct: Math.round(variancePct * 100),
+                    tolerance_pct: Math.round(tolerancePct * 100),
                 });
             }
         }
-        checkCrossDayConsistency("Proteína", "g", "prot", dailyP);
-        checkCrossDayConsistency("Calorias", "kcal", "cals", dailyCals);
-        checkCrossDayConsistency("Carboidrato", "g", "carbs", dailyC);
-        checkCrossDayConsistency("Gordura", "g", "fat", dailyF);
+        checkCrossDayConsistency("Proteína", "g", "prot", dailyP, CROSS_DAY_TOLERANCE.protein);
+        checkCrossDayConsistency("Calorias", "kcal", "cals", dailyCals, CROSS_DAY_TOLERANCE.default);
+        checkCrossDayConsistency("Carboidrato", "g", "carbs", dailyC, CROSS_DAY_TOLERANCE.default);
+        checkCrossDayConsistency("Gordura", "g", "fat", dailyF, CROSS_DAY_TOLERANCE.default);
 
         // ── 1. Clinical Validation (existing) ────────────────────────────────
         const { data: assessment } = await supabase
@@ -612,7 +628,7 @@ serve(async (req) => {
             const weight = inc.macro === "Proteína" || inc.macro === "Calorias" ? 25 : 15;
             clinicalErrors.push({
                 rule: `inconsistencia_diaria_${inc.macro.toLowerCase()}`,
-                message: `Inconsistência de ${inc.macro} entre dias: ${dayNames[inc.min_day]} tem ${inc.min_val}${inc.unit} vs ${dayNames[inc.max_day]} tem ${inc.max_val}${inc.unit} (variação ${inc.variance_pct}%, tolerância: ±${CROSS_DAY_TOLERANCE * 100}%).`,
+                message: `Inconsistência de ${inc.macro} entre dias: ${dayNames[inc.min_day]} tem ${inc.min_val}${inc.unit} vs ${dayNames[inc.max_day]} tem ${inc.max_val}${inc.unit} (variação ${inc.variance_pct}%, tolerância: ±${inc.tolerance_pct}%).`,
                 weight,
             });
         }
