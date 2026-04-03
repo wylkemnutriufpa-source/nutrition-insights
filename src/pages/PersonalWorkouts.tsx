@@ -359,6 +359,7 @@ export default function PersonalWorkouts() {
             <WorkoutRestTimer />
             <PersonalPremiumDashboard
               onNavigate={setActiveTab}
+              onStartCreating={() => { setCreating(true); setActiveTab("plans"); }}
               studentsCount={students.length}
               plansCount={plans.length}
             />
