@@ -832,6 +832,7 @@ function reconcileDailyMacros(
 
   const reconciled: any[] = [];
   for (const [, dayItems] of byDay) {
+    // Step 1: Scale all items proportionally to hit daily targets
     const totalCals = dayItems.reduce((s: number, i: any) => s + (i.calories_target || 0), 0);
     const totalP = dayItems.reduce((s: number, i: any) => s + (i.protein_target || 0), 0);
     const totalC = dayItems.reduce((s: number, i: any) => s + (i.carbs_target || 0), 0);
@@ -842,21 +843,59 @@ function reconcileDailyMacros(
     const cFactor = totalC > 0 ? dailyMacros.carbs / totalC : 1;
     const fFactor = totalF > 0 ? dailyMacros.fat / totalF : 1;
 
+    const scaledItems: any[] = [];
     for (const item of dayItems) {
-      const scaledItem = {
+      scaledItems.push({
         ...item,
         calories_target: Math.round((item.calories_target || 0) * calFactor),
         protein_target: Math.round((item.protein_target || 0) * pFactor),
         carbs_target: Math.round((item.carbs_target || 0) * cFactor),
         fat_target: Math.round((item.fat_target || 0) * fFactor),
-      };
-
-      if (scaledItem.meal_type === "breakfast" && scaledItem.protein_target > breakfastProteinCap) {
-        scaledItem.protein_target = breakfastProteinCap;
-      }
-
-      reconciled.push(scaledItem);
+      });
     }
+
+    // Step 2: Cap breakfast protein and REDISTRIBUTE excess to other meals
+    const breakfastItems = scaledItems.filter(i => i.meal_type === "breakfast");
+    const nonBreakfastItems = scaledItems.filter(i => i.meal_type !== "breakfast");
+    let excessProtein = 0;
+
+    for (const bItem of breakfastItems) {
+      if (bItem.protein_target > breakfastProteinCap) {
+        excessProtein += bItem.protein_target - breakfastProteinCap;
+        bItem.protein_target = breakfastProteinCap;
+      }
+    }
+
+    // Redistribute excess protein proportionally to non-breakfast meals
+    if (excessProtein > 0 && nonBreakfastItems.length > 0) {
+      const nonBreakfastProteinTotal = nonBreakfastItems.reduce((s: number, i: any) => s + (i.protein_target || 0), 0);
+      for (const item of nonBreakfastItems) {
+        const share = nonBreakfastProteinTotal > 0 ? (item.protein_target || 0) / nonBreakfastProteinTotal : 1 / nonBreakfastItems.length;
+        item.protein_target = Math.round((item.protein_target || 0) + excessProtein * share);
+      }
+    }
+
+    // Step 3: Final rounding correction — ensure daily total matches target exactly
+    const finalItems = [...breakfastItems, ...nonBreakfastItems];
+    const finalProteinSum = finalItems.reduce((s: number, i: any) => s + (i.protein_target || 0), 0);
+    const proteinDiff = dailyMacros.protein - finalProteinSum;
+    if (proteinDiff !== 0 && finalItems.length > 0) {
+      // Apply rounding correction to the largest non-breakfast meal
+      const correctionTarget = nonBreakfastItems.length > 0
+        ? nonBreakfastItems.reduce((max: any, i: any) => (i.protein_target > (max?.protein_target || 0) ? i : max), nonBreakfastItems[0])
+        : finalItems[0];
+      correctionTarget.protein_target += proteinDiff;
+    }
+
+    // Same rounding correction for calories
+    const finalCalSum = finalItems.reduce((s: number, i: any) => s + (i.calories_target || 0), 0);
+    const calDiff = dailyKcalTarget - finalCalSum;
+    if (calDiff !== 0 && finalItems.length > 0) {
+      const largestMeal = finalItems.reduce((max: any, i: any) => (i.calories_target > (max?.calories_target || 0) ? i : max), finalItems[0]);
+      largestMeal.calories_target += calDiff;
+    }
+
+    reconciled.push(...finalItems);
   }
   return reconciled;
 }
