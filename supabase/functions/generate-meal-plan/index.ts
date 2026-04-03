@@ -1502,7 +1502,7 @@ serve(async (req) => {
         } else {
           rawItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked, tplIdx);
         }
-        const planItems = reconcileDailyMacros(rawItems, finalKcal, finalMacros, goal);
+        const planItems = enforceCrossDayConsistency(reconcileDailyMacros(rawItems, finalKcal, finalMacros, goal), finalMacros, finalKcal);
 
         const genMeta = buildGenerationMetadata(
           tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
