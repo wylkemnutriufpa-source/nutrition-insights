@@ -24,6 +24,7 @@ const PipelinesTab = lazy(() => import("@/components/diagnostics/PipelinesTab"))
 const PerformanceTab = lazy(() => import("@/components/diagnostics/PerformanceTab"));
 const AlertsTab = lazy(() => import("@/components/diagnostics/AlertsTab"));
 const SimulationsTab = lazy(() => import("@/components/diagnostics/SimulationsTab"));
+const AuditTab = lazy(() => import("@/components/diagnostics/AuditTab"));
 
 type LogLevel = "ok" | "warning" | "error" | "info";
 interface DiagLog {
