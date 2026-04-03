@@ -476,7 +476,74 @@ export async function slotsToInserts(slots: GeneratedMealSlot[], planId: string)
     })
   );
 
-  return nested.flat();
+  const allItems = nested.flat();
+
+  // ── Cross-day macro normalization ──────────────────────────
+  // Ensure all days have the same macro totals (eliminate day-to-day variance)
+  const CROSS_DAY_TOL_PROTEIN = 0.03; // 3%
+  const CROSS_DAY_TOL_DEFAULT = 0.05; // 5%
+  const macroKeys = ["calories_target", "protein_target", "carbs_target", "fat_target"] as const;
+  const uniqueDays = [...new Set(allItems.map(i => i.day_of_week ?? 0))];
+
+  if (uniqueDays.length >= 2) {
+    for (const macroKey of macroKeys) {
+      const tol = macroKey === "protein_target" ? CROSS_DAY_TOL_PROTEIN : CROSS_DAY_TOL_DEFAULT;
+
+      // Calculate per-day totals
+      const dayTotals = new Map<number, number>();
+      for (const day of uniqueDays) {
+        const dayItems = allItems.filter(i => (i.day_of_week ?? 0) === day);
+        dayTotals.set(day, dayItems.reduce((s, i) => s + (Number((i as any)[macroKey]) || 0), 0));
+      }
+
+      // Target = average across all days
+      const vals = [...dayTotals.values()];
+      const targetPerDay = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+      if (targetPerDay <= 0) continue;
+
+      const minVal = Math.min(...vals);
+      const maxVal = Math.max(...vals);
+      const variance = (maxVal - minVal) / targetPerDay;
+
+      if (variance > tol) {
+        for (const day of uniqueDays) {
+          const dayTotal = dayTotals.get(day) || 0;
+          if (dayTotal <= 0) continue;
+          const diffPct = Math.abs(dayTotal - targetPerDay) / targetPerDay;
+          if (diffPct <= 0.01) continue; // already close enough
+
+          const factor = targetPerDay / dayTotal;
+          const dayItems = allItems.filter(i => (i.day_of_week ?? 0) === day);
+
+          let scaledSum = 0;
+          let largestIdx = -1;
+          let largestVal = 0;
+
+          for (let idx = 0; idx < dayItems.length; idx++) {
+            const item = dayItems[idx] as any;
+            const oldVal = Number(item[macroKey]) || 0;
+            if (oldVal > 0) {
+              const newVal = Math.round(oldVal * factor);
+              item[macroKey] = newVal;
+              scaledSum += newVal;
+              if (oldVal > largestVal) {
+                largestVal = oldVal;
+                largestIdx = idx;
+              }
+            }
+          }
+
+          // Fix rounding residual
+          const residual = targetPerDay - scaledSum;
+          if (residual !== 0 && largestIdx >= 0) {
+            (dayItems[largestIdx] as any)[macroKey] = ((dayItems[largestIdx] as any)[macroKey] || 0) + residual;
+          }
+        }
+      }
+    }
+  }
+
+  return allItems;
 }
 
 // ── Load patient profile ─────────────────────────────────────
