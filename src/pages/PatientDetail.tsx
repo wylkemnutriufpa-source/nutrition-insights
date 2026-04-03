@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useExperienceUI } from "@/hooks/useExperienceUI";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
+import { useTenant } from "@/lib/tenantContext";
+import { getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import { supabase } from "@/integrations/supabase/client";
 import { acquireActionLock, releaseActionLock } from "@/lib/fitjourneyBible";
 import { updatePatientJourneyInCache, invalidateLifecycleQueries } from "@/lib/lifecycleCache";
@@ -66,6 +68,7 @@ export default function PatientDetail() {
   const { patientId } = useParams<{ patientId: string }>();
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
+  const { tenantId } = useTenant();
   const queryClient = useQueryClient();
   const expUI = useExperienceUI();
 
@@ -1320,6 +1323,7 @@ export default function PatientDetail() {
                             patient_id: patientId,
                             title: "Plano Alimentar",
                             start_date: new Date().toISOString().split("T")[0],
+                            ...getTenantIdForInsert(tenantId),
                           } as any).select("id").single();
                           if (error) throw error;
                           toast.success("Plano criado! Abrindo Builder...");
