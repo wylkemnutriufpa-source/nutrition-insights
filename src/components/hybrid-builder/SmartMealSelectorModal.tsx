@@ -431,16 +431,16 @@ export default function SmartMealSelectorModal({ open, onClose, day, mealType, m
             {primaryOption && (
               <div className="flex items-center gap-4 text-[11px]">
                 <span className="flex items-center gap-1">
-                  <Flame className="w-3 h-3 text-orange-500" /> {primaryOption.calories} kcal
+                  <Flame className="w-3 h-3 text-destructive" /> {primaryOption.calories} kcal
                 </span>
                 <span className="flex items-center gap-1">
-                  <Beef className="w-3 h-3 text-red-500" /> {primaryOption.protein}g P
+                  <Beef className="w-3 h-3 text-primary" /> {primaryOption.protein}g P
                 </span>
                 <span className="flex items-center gap-1">
-                  <Wheat className="w-3 h-3 text-amber-500" /> {primaryOption.carbs}g C
+                  <Wheat className="w-3 h-3 text-accent-foreground" /> {primaryOption.carbs}g C
                 </span>
                 <span className="flex items-center gap-1">
-                  <Droplets className="w-3 h-3 text-blue-500" /> {primaryOption.fat}g G
+                  <Droplets className="w-3 h-3 text-muted-foreground" /> {primaryOption.fat}g G
                 </span>
               </div>
             )}
