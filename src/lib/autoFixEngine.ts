@@ -695,7 +695,7 @@ export async function autoFixMealPlan(
   const afterAudit = toAuditItems(finalItems);
   const afterScore = calculatePlanSimplicityScore(afterAudit);
 
-  // ─── STEP 9: Create new draft plan ─────────────────────
+  // ─── STEP 9: Apply fix (in-place or new draft) ─────────
   onStep?.("creating_draft");
 
   const changeSummary = {
@@ -707,72 +707,122 @@ export async function autoFixMealPlan(
     macro_rebalanced: macroRebalanced,
   };
 
-  const newPlanInsert: TablesInsert<"meal_plans"> = {
-    title: `${plan.title} (Corrigido)`,
-    description: `Versão corrigida automaticamente a partir do plano "${plan.title}"`,
-    patient_id: patientId,
-    nutritionist_id: nutritionistId,
-    tenant_id: tenantId,
-    start_date: plan.start_date,
-    end_date: plan.end_date,
-    plan_status: "draft_auto_corrected",
-    is_active: false,
-    generation_source: "auto_fix_engine_v1",
-    previous_plan_id: planId,
-    total_target_calories: plan.total_target_calories,
-    total_target_protein: plan.total_target_protein,
-    total_target_carbs: plan.total_target_carbs,
-    total_target_fat: plan.total_target_fat,
-    editor_version: "v2",
-    generation_metadata: {
-      engine: "auto_fix_engine_v1",
-      original_plan_id: planId,
-      original_score: beforeScore.total,
-      fixed_score: afterScore.total,
-      changes_count: allChanges.length,
-      patient_goal: patientGoal,
-      is_gain_goal: isGainGoal,
-      changes_summary: changeSummary,
-      generated_at: new Date().toISOString(),
-    } as unknown as Tables<"meal_plans">["generation_metadata"],
+  const genMeta = {
+    engine: "auto_fix_engine_v1",
+    original_plan_id: planId,
+    original_score: beforeScore.total,
+    fixed_score: afterScore.total,
+    changes_count: allChanges.length,
+    patient_goal: patientGoal,
+    is_gain_goal: isGainGoal,
+    changes_summary: changeSummary,
+    generated_at: new Date().toISOString(),
   };
 
-  const { data: newPlan, error: newPlanErr } = await supabase
-    .from("meal_plans")
-    .insert(newPlanInsert)
-    .select("id")
-    .single();
+  let resultPlanId = planId;
+  let wasInPlace = false;
 
-  if (newPlanErr || !newPlan) {
-    console.error("[AutoFix] Failed to create draft:", newPlanErr);
-    return emptyResult("Falha ao criar plano corrigido");
-  }
+  if (isImmutable) {
+    // Published/approved plan → create new draft (preserve original)
+    const newPlanInsert: TablesInsert<"meal_plans"> = {
+      title: `${plan.title} (Corrigido)`,
+      description: `Versão corrigida automaticamente a partir do plano "${plan.title}"`,
+      patient_id: patientId,
+      nutritionist_id: nutritionistId,
+      tenant_id: tenantId,
+      start_date: plan.start_date,
+      end_date: plan.end_date,
+      plan_status: "draft_auto_corrected",
+      is_active: false,
+      generation_source: "auto_fix_engine_v1",
+      previous_plan_id: planId,
+      total_target_calories: plan.total_target_calories,
+      total_target_protein: plan.total_target_protein,
+      total_target_carbs: plan.total_target_carbs,
+      total_target_fat: plan.total_target_fat,
+      editor_version: "v2",
+      generation_metadata: genMeta as unknown as Tables<"meal_plans">["generation_metadata"],
+    };
 
-  // Insert fixed items
-  const newItems: TablesInsert<"meal_plan_items">[] = finalItems.map(fi => ({
-    meal_plan_id: newPlan.id,
-    title: fi.title,
-    description: fi.description,
-    meal_type: fi.meal_type,
-    day_of_week: fi.day_of_week,
-    calories_target: fi.calories_target,
-    protein_target: fi.protein_target,
-    carbs_target: fi.carbs_target,
-    fat_target: fi.fat_target,
-    tenant_id: tenantId,
-    item_origin: (fi as any).is_manually_edited ? "manual" : "auto_corrected",
-    is_manually_edited: (fi as any).is_manually_edited || false,
-    is_locked: (fi as any).is_locked || false,
-    was_auto_corrected: !isItemProtected(fi),
-  }));
+    const { data: newPlan, error: newPlanErr } = await supabase
+      .from("meal_plans")
+      .insert(newPlanInsert)
+      .select("id")
+      .single();
 
-  const { error: insertErr } = await supabase
-    .from("meal_plan_items")
-    .insert(newItems);
+    if (newPlanErr || !newPlan) {
+      console.error("[AutoFix] Failed to create draft:", newPlanErr);
+      return emptyResult("Falha ao criar plano corrigido");
+    }
 
-  if (insertErr) {
-    console.error("[AutoFix] Failed to insert items:", insertErr);
-    warnings.push("Alguns itens podem não ter sido salvos");
+    resultPlanId = newPlan.id;
+
+    const newItems: TablesInsert<"meal_plan_items">[] = finalItems.map(fi => ({
+      meal_plan_id: newPlan.id,
+      title: fi.title,
+      description: fi.description,
+      meal_type: fi.meal_type,
+      day_of_week: fi.day_of_week,
+      calories_target: fi.calories_target,
+      protein_target: fi.protein_target,
+      carbs_target: fi.carbs_target,
+      fat_target: fi.fat_target,
+      tenant_id: tenantId,
+      item_origin: (fi as any).is_manually_edited ? "manual" : "auto_corrected",
+      is_manually_edited: (fi as any).is_manually_edited || false,
+      is_locked: (fi as any).is_locked || false,
+      was_auto_corrected: !isItemProtected(fi),
+    }));
+
+    const { error: insertErr } = await supabase.from("meal_plan_items").insert(newItems);
+    if (insertErr) {
+      console.error("[AutoFix] Failed to insert items:", insertErr);
+      warnings.push("Alguns itens podem não ter sido salvos");
+    }
+  } else {
+    // Draft/review plan → apply fix IN-PLACE (replace items on same plan)
+    wasInPlace = true;
+
+    // Delete old items
+    const { error: delErr } = await supabase
+      .from("meal_plan_items")
+      .delete()
+      .eq("meal_plan_id", planId);
+
+    if (delErr) {
+      console.error("[AutoFix] Failed to delete old items:", delErr);
+      return emptyResult("Falha ao limpar itens antigos");
+    }
+
+    // Insert corrected items on the SAME plan
+    const fixedItems: TablesInsert<"meal_plan_items">[] = finalItems.map(fi => ({
+      meal_plan_id: planId,
+      title: fi.title,
+      description: fi.description,
+      meal_type: fi.meal_type,
+      day_of_week: fi.day_of_week,
+      calories_target: fi.calories_target,
+      protein_target: fi.protein_target,
+      carbs_target: fi.carbs_target,
+      fat_target: fi.fat_target,
+      tenant_id: tenantId,
+      item_origin: (fi as any).is_manually_edited ? "manual" : "auto_corrected",
+      is_manually_edited: (fi as any).is_manually_edited || false,
+      is_locked: (fi as any).is_locked || false,
+      was_auto_corrected: !isItemProtected(fi),
+    }));
+
+    const { error: insertErr } = await supabase.from("meal_plan_items").insert(fixedItems);
+    if (insertErr) {
+      console.error("[AutoFix] Failed to insert corrected items:", insertErr);
+      warnings.push("Alguns itens podem não ter sido salvos");
+    }
+
+    // Update plan metadata (keep same status, just update metadata)
+    await supabase.from("meal_plans").update({
+      generation_metadata: genMeta as unknown as Tables<"meal_plans">["generation_metadata"],
+      generation_source: "auto_fix_engine_v1",
+    } as any).eq("id", planId);
   }
 
   // Record timeline
@@ -780,10 +830,11 @@ export async function autoFixMealPlan(
     patient_id: patientId,
     event_type: "plan_auto_fixed",
     title: "Plano alimentar corrigido automaticamente",
-    description: `Score: ${beforeScore.total} → ${afterScore.total}. ${allChanges.length} correções. Objetivo: ${patientGoal}.`,
+    description: `Score: ${beforeScore.total} → ${afterScore.total}. ${allChanges.length} correções${wasInPlace ? " (in-place)" : ""}. Objetivo: ${patientGoal}.`,
     metadata: {
       original_plan_id: planId,
-      new_plan_id: newPlan.id,
+      new_plan_id: resultPlanId,
+      in_place: wasInPlace,
       score_before: beforeScore.total,
       score_after: afterScore.total,
       changes_count: allChanges.length,
@@ -796,7 +847,8 @@ export async function autoFixMealPlan(
 
   return {
     success: true,
-    newPlanId: newPlan.id,
+    newPlanId: resultPlanId,
+    inPlace: wasInPlace,
     changes: allChanges,
     before: {
       score: beforeScore,
