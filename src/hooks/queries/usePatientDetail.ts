@@ -41,7 +41,13 @@ function getVisibleMealPlans(plans: any[]) {
       return true;
     }
 
-    if (plan.id === latestAutoCorrectedDraftId) {
+    // If there is already a canonical/active plan, drafts must stay out of the main patient view.
+    // This avoids newer auto-corrected drafts visually overriding the published source of truth.
+    if (hasCanonicalPlan && status === "draft_auto_corrected") {
+      return false;
+    }
+
+    if (plan.id === latestAutoCorrectedDraftId && !hasCanonicalPlan) {
       return true;
     }
 
