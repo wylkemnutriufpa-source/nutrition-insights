@@ -1023,10 +1023,22 @@ serve(async (req) => {
         });
       }
 
+      const { data: patientProfile } = await serviceClient
+        .from("profiles")
+        .select("id, user_id")
+        .or(`id.eq.${patient_id},user_id.eq.${patient_id}`)
+        .maybeSingle();
+
+      const patientIdentityIds = Array.from(new Set([
+        patient_id,
+        patientProfile?.id,
+        patientProfile?.user_id,
+      ].filter(Boolean)));
+
       const { data: activeLink } = await serviceClient
         .from("nutritionist_patients")
         .select("id")
-        .eq("patient_id", patient_id)
+        .in("patient_id", patientIdentityIds)
         .eq("nutritionist_id", requestedNutritionistId)
         .eq("status", "active")
         .limit(1)
