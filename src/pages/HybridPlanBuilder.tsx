@@ -12,6 +12,7 @@ import BuilderTopbar from "@/components/hybrid-builder/BuilderTopbar";
 import MealPlanCanvas from "@/components/hybrid-builder/MealPlanCanvas";
 import BuilderLibraryPanel from "@/components/hybrid-builder/BuilderLibraryPanel";
 import ClinicalMacroPanel from "@/components/hybrid-builder/ClinicalMacroPanel";
+import PlanAuditPanel from "@/components/plans/PlanAuditPanel";
 import GenerationModeSelector from "@/components/hybrid-builder/GenerationModeSelector";
 import { ValidationCorrectionPanel, type ValidationResult } from "@/components/meal-editor-v2/ValidationCorrectionPanel";
 import { usePatientComposerContext } from "@/hooks/usePatientComposerContext";
@@ -378,10 +379,27 @@ export default function HybridPlanBuilder() {
                   <div className="p-3 space-y-6">
                     <ClinicalMacroPanel />
                     <div className="border-t border-border pt-4">
+                      <h4 className="text-xs font-bold mb-2">🧠 Auditoria Clínica</h4>
+                      <PlanAuditPanel
+                        mealPlanId={plan.id}
+                        patientId={plan.patient_id}
+                        onApproved={() => store.hydrate(plan.id, user?.id ?? "")}
+                        onFixed={(newPlanId, inPlace) => {
+                          if (inPlace) {
+                            toast.success("✅ Plano corrigido! Recarregando...");
+                            store.hydrate(plan.id, user?.id ?? "");
+                            setValidationResult(null);
+                          } else {
+                            toast.success("Plano corrigido salvo como draft! Redirecionando...");
+                            navigate(`/plan-builder/${newPlanId}`, { replace: true });
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className="border-t border-border pt-4">
                       <GenerationModeSelector
                         patientId={plan.patient_id}
                         onGenerated={() => {
-                          // Clear validation result since plan data changed
                           setValidationResult(null);
                         }}
                       />
