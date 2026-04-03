@@ -628,7 +628,7 @@ serve(async (req) => {
             const weight = inc.macro === "Proteína" || inc.macro === "Calorias" ? 25 : 15;
             clinicalErrors.push({
                 rule: `inconsistencia_diaria_${inc.macro.toLowerCase()}`,
-                message: `Inconsistência de ${inc.macro} entre dias: ${dayNames[inc.min_day]} tem ${inc.min_val}${inc.unit} vs ${dayNames[inc.max_day]} tem ${inc.max_val}${inc.unit} (variação ${inc.variance_pct}%, tolerância: ±${CROSS_DAY_TOLERANCE * 100}%).`,
+                message: `Inconsistência de ${inc.macro} entre dias: ${dayNames[inc.min_day]} tem ${inc.min_val}${inc.unit} vs ${dayNames[inc.max_day]} tem ${inc.max_val}${inc.unit} (variação ${inc.variance_pct}%, tolerância: ±${inc.tolerance_pct}%).`,
                 weight,
             });
         }

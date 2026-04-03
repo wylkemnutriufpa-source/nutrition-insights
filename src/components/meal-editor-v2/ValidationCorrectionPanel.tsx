@@ -37,6 +37,7 @@ export interface CrossDayInconsistency {
   max_day: number;
   max_val: number;
   variance_pct: number;
+  tolerance_pct?: number;
 }
 
 export interface ValidationResult {
