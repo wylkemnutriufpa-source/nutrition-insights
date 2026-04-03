@@ -621,14 +621,19 @@ export async function autoFixMealPlan(
 
   // ─── STEP 7.5: Cross-day macro normalization ─────────────
   // Ensure each day has the SAME macro totals (eliminate day-to-day variance)
+  // Protein uses tighter tolerance (3%) since even small differences are clinically visible
   onStep?.("rebalancing_macros");
-  const CROSS_DAY_TOL = 0.10;
+  const CROSS_DAY_TOL_DEFAULT = 0.05; // 5% for calories/carbs/fat
+  const CROSS_DAY_TOL_PROTEIN = 0.03; // 3% for protein (clinically sensitive)
+  const SKIP_THRESHOLD = 0.01; // 1% — skip day if already within 1%
   const uniqueDays = [...new Set(finalItems.map(i => i.day_of_week ?? 0))];
   
   if (uniqueDays.length >= 2) {
     const macroKeys = ["calories_target", "protein_target", "carbs_target", "fat_target"] as const;
     
     for (const macroKey of macroKeys) {
+      const crossDayTol = macroKey === "protein_target" ? CROSS_DAY_TOL_PROTEIN : CROSS_DAY_TOL_DEFAULT;
+      
       // Calculate per-day totals
       const dayTotals = new Map<number, number>();
       for (const day of uniqueDays) {
@@ -655,23 +660,41 @@ export async function autoFixMealPlan(
       const maxVal = Math.max(...dayTotals.values());
       const variance = (maxVal - minVal) / targetPerDay;
       
-      if (variance > CROSS_DAY_TOL) {
-        // Scale each day's items to hit targetPerDay
+      if (variance > crossDayTol) {
+        // Scale each day's items to hit targetPerDay using proportional redistribution
         for (const day of uniqueDays) {
           const dayTotal = dayTotals.get(day) || 0;
           if (dayTotal <= 0) continue;
           const diffPct = Math.abs(dayTotal - targetPerDay) / targetPerDay;
-          if (diffPct <= 0.02) continue; // Already close enough
+          if (diffPct <= SKIP_THRESHOLD) continue; // Already close enough
           
           const factor = targetPerDay / dayTotal;
           const dayItems = finalItems.filter(i => (i.day_of_week ?? 0) === day);
           
-          for (const item of dayItems) {
+          // Distribute rounding residual to the largest item to ensure exact sum
+          let scaledSum = 0;
+          let largestIdx = -1;
+          let largestVal = 0;
+          
+          for (let idx = 0; idx < dayItems.length; idx++) {
+            const item = dayItems[idx];
             if (isItemProtected(item)) continue;
             const oldVal = Number(item[macroKey]) || 0;
             if (oldVal > 0) {
-              (item as any)[macroKey] = Math.round(oldVal * factor);
+              const newVal = Math.round(oldVal * factor);
+              (item as any)[macroKey] = newVal;
+              scaledSum += newVal;
+              if (oldVal > largestVal) {
+                largestVal = oldVal;
+                largestIdx = idx;
+              }
             }
+          }
+          
+          // Fix rounding residual on the largest item
+          const residual = Math.round(targetPerDay) - scaledSum;
+          if (residual !== 0 && largestIdx >= 0 && !isItemProtected(dayItems[largestIdx])) {
+            (dayItems[largestIdx] as any)[macroKey] = ((dayItems[largestIdx] as any)[macroKey] || 0) + residual;
           }
         }
         
