@@ -1071,6 +1071,20 @@ function reconcileDailyMacros(
 
 // ──── Cross-day consistency enforcement (3% protein, 5% other macros) ────
 function enforceCrossDayConsistency(items: any[], dailyMacros: { protein: number; carbs: number; fat: number }, dailyKcal: number): any[] {
+  // ── Pre-check: detect per-item calorie inflation (e.g. daily total on each item) ──
+  const MAX_SINGLE_ITEM_KCAL = 1200;
+  const mealShares: Record<string, number> = {
+    breakfast: 0.20, morning_snack: 0.10, lunch: 0.30,
+    afternoon_snack: 0.10, dinner: 0.25, evening_snack: 0.05,
+  };
+  for (const item of items) {
+    if ((item.calories_target || 0) > MAX_SINGLE_ITEM_KCAL) {
+      console.warn(`[enforceCDC] Inflated calories_target=${item.calories_target} on "${item.title}". Fixing.`);
+      const share = mealShares[item.meal_type] || 0.20;
+      item.calories_target = Math.round(dailyKcal * share);
+    }
+  }
+
   const byDay = new Map<number, any[]>();
   for (const item of items) {
     const d = item.day_of_week;
@@ -1094,12 +1108,10 @@ function enforceCrossDayConsistency(items: any[], dailyMacros: { protein: number
     for (const c of corrections) {
       const deviation = c.target > 0 ? Math.abs(c.actual - c.target) / c.target : 0;
       if (deviation > c.tolerance) {
-        // Scale all items proportionally to hit target
         const factor = c.target / (c.actual || 1);
         for (const item of dayItems) {
           item[c.macro] = Math.round((item[c.macro] || 0) * factor);
         }
-        // Fix rounding on largest item
         const newSum = dayItems.reduce((s: number, i: any) => s + (i[c.macro] || 0), 0);
         const diff = c.target - newSum;
         if (diff !== 0 && dayItems.length > 0) {

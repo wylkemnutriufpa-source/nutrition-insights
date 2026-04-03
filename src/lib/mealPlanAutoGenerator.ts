@@ -478,6 +478,25 @@ export async function slotsToInserts(slots: GeneratedMealSlot[], planId: string)
 
   const allItems = nested.flat();
 
+  // ── Sanity guardrail: detect per-item calorie inflation ────
+  // If any single item has calories_target above 1200, it's likely set to the
+  // daily total instead of the per-meal target. Fix by redistributing.
+  const MAX_SINGLE_ITEM_KCAL = 1200;
+  for (const item of allItems) {
+    const cal = Number((item as any).calories_target) || 0;
+    if (cal > MAX_SINGLE_ITEM_KCAL) {
+      console.warn(`[slotsToInserts] Item "${(item as any).title}" has inflated calories_target=${cal}. Clamping.`);
+      // Estimate correct value based on meal type share
+      const mealShares: Record<string, number> = {
+        breakfast: 0.20, morning_snack: 0.10, lunch: 0.30,
+        afternoon_snack: 0.10, dinner: 0.25, evening_snack: 0.05,
+      };
+      const share = mealShares[(item as any).meal_type] || 0.20;
+      // Use the inflated value as the daily total and compute the per-meal target
+      (item as any).calories_target = Math.round(cal * share);
+    }
+  }
+
   // ── Cross-day macro normalization ──────────────────────────
   // Ensure all days have the same macro totals (eliminate day-to-day variance)
   const CROSS_DAY_TOL_PROTEIN = 0.03; // 3%
