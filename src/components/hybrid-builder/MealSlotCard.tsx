@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/input";
 import {
   Plus, Trash2, Copy, Lock, Unlock, GripVertical,
   Flame, Beef, Wheat, Droplets, Check, X, Sparkles, Loader2,
+  Clipboard, ClipboardPaste, Scissors,
 } from "lucide-react";
 import { toast } from "sonner";
 import { composeMealForTarget, type ComposerMode, type MacroTarget } from "@/lib/mealComposer";
 import type { PatientContext } from "@/lib/mealComposer";
+import SmartMealSelectorModal from "./SmartMealSelectorModal";
 
 interface Props {
   day: number;
@@ -22,12 +24,16 @@ interface Props {
   composerMode?: ComposerMode;
 }
 
+// ── Clipboard singleton ──────────────────────────────────────
+let clipboard: { items: MealPlanItem[]; cut: boolean; sourceDay: number; sourceMeal: MealType } | null = null;
+
 export default function MealSlotCard({ day, mealType, label, icon, items, patientContext, mealMacroTarget, composerMode = "quick" }: Props) {
   const store = useMealPlanEditorV2Store();
   const { setNodeRef, isOver } = useDroppable({ id: `slot-${day}-${mealType}` });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editGrams, setEditGrams] = useState("");
   const [composing, setComposing] = useState(false);
+  const [selectorOpen, setSelectorOpen] = useState(false);
 
   const totalKcal = items.reduce((s, i) => s + (i.calories_target || 0), 0);
   const totalProt = items.reduce((s, i) => s + (i.protein_target || 0), 0);
@@ -42,7 +48,6 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
     toast.success("Item duplicado");
   };
 
-  // Parse quantity from description (e.g., "Frango grelhado 120g")
   const parseQuantity = (item: MealPlanItem): number => {
     const match = item.description?.match(/(\d+)\s*g/i);
     return match ? parseInt(match[1]) : 100;
@@ -110,117 +115,220 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
     toast.info(item.is_locked ? "Item desbloqueado" : "Item travado");
   };
 
+  // ── Copy / Cut / Paste ─────────────────────────────────────
+  const handleCopySlot = () => {
+    clipboard = { items: [...items], cut: false, sourceDay: day, sourceMeal: mealType };
+    toast.success("Refeição copiada");
+  };
+
+  const handleCutSlot = () => {
+    clipboard = { items: [...items], cut: true, sourceDay: day, sourceMeal: mealType };
+    toast.success("Refeição recortada");
+  };
+
+  const handlePasteSlot = () => {
+    if (!clipboard || clipboard.items.length === 0) {
+      toast.error("Nada na área de transferência");
+      return;
+    }
+    const planId = store.plan?.id;
+    if (!planId) return;
+
+    // Clear current slot
+    store.deleteItemsInCell(day, mealType);
+
+    // Paste items
+    clipboard.items.forEach((item) => {
+      store.addItem({
+        meal_plan_id: planId,
+        title: item.title,
+        description: item.description,
+        day_of_week: day,
+        meal_type: mealType,
+        calories_target: item.calories_target,
+        protein_target: item.protein_target,
+        carbs_target: item.carbs_target,
+        fat_target: item.fat_target,
+        item_origin: (item as any).item_origin || "manual",
+      });
+    });
+
+    // If cut, remove from source
+    if (clipboard.cut) {
+      store.deleteItemsInCell(clipboard.sourceDay, clipboard.sourceMeal);
+      clipboard = null;
+    }
+
+    toast.success("Refeição colada");
+  };
+
   return (
-    <div
-      ref={setNodeRef}
-      className={`rounded-xl border p-3 transition-all min-h-[100px] ${
-        isOver
-          ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
-          : "border-border bg-card/50 hover:border-border/80"
-      }`}
-    >
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          {icon}
-          <span className="text-xs font-semibold">{label}</span>
+    <>
+      <div
+        ref={setNodeRef}
+        className={`rounded-xl border p-3 transition-all min-h-[100px] ${
+          isOver
+            ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
+            : "border-border bg-card/50 hover:border-border/80"
+        }`}
+      >
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            {icon}
+            <span className="text-xs font-semibold">{label}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            {/* Clipboard actions */}
+            {items.length > 0 && (
+              <>
+                <button onClick={handleCopySlot} className="p-1 rounded hover:bg-muted" title="Copiar refeição">
+                  <Clipboard className="w-3 h-3 text-muted-foreground" />
+                </button>
+                <button onClick={handleCutSlot} className="p-1 rounded hover:bg-muted" title="Recortar refeição">
+                  <Scissors className="w-3 h-3 text-muted-foreground" />
+                </button>
+              </>
+            )}
+            {clipboard && clipboard.items.length > 0 && (
+              <button onClick={handlePasteSlot} className="p-1 rounded hover:bg-muted" title="Colar refeição">
+                <ClipboardPaste className="w-3 h-3 text-primary" />
+              </button>
+            )}
+            <div className="flex items-center gap-2 text-[10px] text-muted-foreground ml-1">
+              <Flame className="w-3 h-3" /> {Math.round(totalKcal)} kcal
+              <Beef className="w-3 h-3 ml-1" /> {Math.round(totalProt)}g
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-          <Flame className="w-3 h-3" /> {Math.round(totalKcal)} kcal
-          <Beef className="w-3 h-3 ml-1" /> {Math.round(totalProt)}g
-        </div>
+
+        {items.length === 0 ? (
+          <div
+            className="flex flex-col items-center justify-center py-4 gap-2 border border-dashed border-border rounded-lg cursor-pointer hover:border-primary/40 hover:bg-primary/5 transition-colors"
+            onClick={() => setSelectorOpen(true)}
+          >
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Plus className="w-3.5 h-3.5" /> Selecionar refeição
+            </span>
+            <div className="flex items-center gap-2">
+              {patientContext && mealMacroTarget && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleCompose(); }}
+                  disabled={composing}
+                  className="flex items-center gap-1 text-[10px] font-medium text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
+                >
+                  {composing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                  Compor IA
+                </button>
+              )}
+              {clipboard && clipboard.items.length > 0 && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); handlePasteSlot(); }}
+                  className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <ClipboardPaste className="w-3 h-3" /> Colar
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-1.5">
+            {items.map((item) => {
+              const qty = parseQuantity(item);
+              const isSub = item.description?.startsWith("[Substituição]");
+              return (
+                <motion.div
+                  key={item.id}
+                  layout
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`group flex items-center gap-2 p-2 rounded-lg text-xs transition-colors ${
+                    item.is_locked
+                      ? "bg-warning/5 border border-warning/20"
+                      : isSub
+                      ? "bg-accent/30 border border-accent/20"
+                      : "bg-muted/30 hover:bg-muted/60"
+                  }`}
+                >
+                  <GripVertical className="w-3 h-3 text-muted-foreground/40 shrink-0 cursor-grab" />
+
+                  {item.image_url && (
+                    <img src={item.image_url} alt="" className="w-8 h-8 rounded-md object-cover shrink-0" />
+                  )}
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1">
+                      {isSub && <span className="text-[9px] bg-accent text-accent-foreground px-1 rounded">Sub</span>}
+                      <p className="font-medium truncate">{item.title}</p>
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
+                      {editingId === item.id ? (
+                        <div className="flex items-center gap-1">
+                          <Input
+                            type="number"
+                            value={editGrams}
+                            onChange={(e) => setEditGrams(e.target.value)}
+                            className="h-5 w-16 text-[10px] px-1"
+                            autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleGramsChange(item);
+                              if (e.key === "Escape") setEditingId(null);
+                            }}
+                          />
+                          <button onClick={() => handleGramsChange(item)} className="text-primary hover:text-primary/80">
+                            <Check className="w-3 h-3" />
+                          </button>
+                          <button onClick={() => setEditingId(null)} className="text-muted-foreground hover:text-foreground">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => { setEditingId(item.id); setEditGrams(String(qty)); }}
+                          className="hover:text-foreground underline-offset-2 hover:underline"
+                        >
+                          {qty}g
+                        </button>
+                      )}
+                      <span>•</span>
+                      <Flame className="w-2.5 h-2.5" /> {Math.round(item.calories_target || 0)}
+                      <Beef className="w-2.5 h-2.5" /> {Math.round(item.protein_target || 0)}
+                      <Wheat className="w-2.5 h-2.5" /> {Math.round(item.carbs_target || 0)}
+                      <Droplets className="w-2.5 h-2.5" /> {Math.round(item.fat_target || 0)}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                    <button onClick={() => handleToggleLock(item)} className="p-1 rounded hover:bg-muted" title={item.is_locked ? "Desbloquear" : "Travar"}>
+                      {item.is_locked ? <Lock className="w-3 h-3 text-warning" /> : <Unlock className="w-3 h-3 text-muted-foreground" />}
+                    </button>
+                    <button onClick={() => handleDuplicate(item.id)} className="p-1 rounded hover:bg-muted" title="Duplicar">
+                      <Copy className="w-3 h-3 text-muted-foreground" />
+                    </button>
+                    <button onClick={() => handleDelete(item.id)} className="p-1 rounded hover:bg-destructive/10" title="Remover">
+                      <Trash2 className="w-3 h-3 text-destructive" />
+                    </button>
+                  </div>
+                </motion.div>
+              );
+            })}
+            {/* Add more button */}
+            <button
+              onClick={() => setSelectorOpen(true)}
+              className="w-full py-1.5 rounded-lg border border-dashed border-border text-[10px] text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-1"
+            >
+              <Plus className="w-3 h-3" /> Adicionar
+            </button>
+          </div>
+        )}
       </div>
 
-      {items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-4 gap-2 border border-dashed border-border rounded-lg">
-          <span className="text-xs text-muted-foreground flex items-center gap-1">
-            <Plus className="w-3.5 h-3.5" /> Arraste uma refeição aqui
-          </span>
-          {patientContext && mealMacroTarget && (
-            <button
-              onClick={handleCompose}
-              disabled={composing}
-              className="flex items-center gap-1 text-[10px] font-medium text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
-            >
-              {composing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-              Compor automaticamente
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="space-y-1.5">
-          {items.map((item) => {
-            const qty = parseQuantity(item);
-            return (
-              <motion.div
-                key={item.id}
-                layout
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`group flex items-center gap-2 p-2 rounded-lg text-xs transition-colors ${
-                  item.is_locked ? "bg-warning/5 border border-warning/20" : "bg-muted/30 hover:bg-muted/60"
-                }`}
-              >
-                <GripVertical className="w-3 h-3 text-muted-foreground/40 shrink-0 cursor-grab" />
-
-                {item.image_url && (
-                  <img src={item.image_url} alt="" className="w-8 h-8 rounded-md object-cover shrink-0" />
-                )}
-
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{item.title}</p>
-                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
-                    {editingId === item.id ? (
-                      <div className="flex items-center gap-1">
-                        <Input
-                          type="number"
-                          value={editGrams}
-                          onChange={(e) => setEditGrams(e.target.value)}
-                          className="h-5 w-16 text-[10px] px-1"
-                          autoFocus
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") handleGramsChange(item);
-                            if (e.key === "Escape") setEditingId(null);
-                          }}
-                        />
-                        <button onClick={() => handleGramsChange(item)} className="text-primary hover:text-primary/80">
-                          <Check className="w-3 h-3" />
-                        </button>
-                        <button onClick={() => setEditingId(null)} className="text-muted-foreground hover:text-foreground">
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => { setEditingId(item.id); setEditGrams(String(qty)); }}
-                        className="hover:text-foreground underline-offset-2 hover:underline"
-                      >
-                        {qty}g
-                      </button>
-                    )}
-                    <span>•</span>
-                    <Flame className="w-2.5 h-2.5" /> {Math.round(item.calories_target || 0)}
-                    <Beef className="w-2.5 h-2.5" /> {Math.round(item.protein_target || 0)}
-                    <Wheat className="w-2.5 h-2.5" /> {Math.round(item.carbs_target || 0)}
-                    <Droplets className="w-2.5 h-2.5" /> {Math.round(item.fat_target || 0)}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                  <button onClick={() => handleToggleLock(item)} className="p-1 rounded hover:bg-muted" title={item.is_locked ? "Desbloquear" : "Travar"}>
-                    {item.is_locked ? <Lock className="w-3 h-3 text-warning" /> : <Unlock className="w-3 h-3 text-muted-foreground" />}
-                  </button>
-                  <button onClick={() => handleDuplicate(item.id)} className="p-1 rounded hover:bg-muted" title="Duplicar">
-                    <Copy className="w-3 h-3 text-muted-foreground" />
-                  </button>
-                  <button onClick={() => handleDelete(item.id)} className="p-1 rounded hover:bg-destructive/10" title="Remover">
-                    <Trash2 className="w-3 h-3 text-destructive" />
-                  </button>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      )}
-    </div>
+      <SmartMealSelectorModal
+        open={selectorOpen}
+        onClose={() => setSelectorOpen(false)}
+        day={day}
+        mealType={mealType}
+        mealLabel={label}
+      />
+    </>
   );
 }
