@@ -270,8 +270,6 @@ export default function HybridPlanBuilder() {
           </div>
         </div>
       </DndContext>
-
-      <SaveTemplateDialog open={saveTemplateOpen} onOpenChange={setSaveTemplateOpen} />
     </DashboardLayout>
   );
 }
