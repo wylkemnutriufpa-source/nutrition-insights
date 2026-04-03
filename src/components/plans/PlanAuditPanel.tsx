@@ -218,6 +218,12 @@ export default function PlanAuditPanel({ mealPlanId, patientId, onApproved, onFi
     setLoading(true);
     setResult(null);
     try {
+      // CRITICAL: flush any pending editor changes before validating against DB
+      const editorState = useMealPlanEditorV2Store.getState();
+      if (editorState.planId === mealPlanId && editorState.hydrated) {
+        await editorState._flushQueue();
+      }
+
       const { data, error } = await supabase.functions.invoke("validate-meal-plan", {
         body: { meal_plan_id: mealPlanId },
       });
