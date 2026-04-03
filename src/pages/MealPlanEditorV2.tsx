@@ -398,11 +398,16 @@ export default function MealPlanEditorV2() {
             mealPlanId={plan.id}
             patientId={plan.patient_id}
             onApproved={() => store.hydrate(plan.id, user?.id ?? "")}
-            onFixed={(newPlanId) => {
-              console.log("[AutoFix] 🚀 onFixed CALLED — newPlanId =", newPlanId);
-              console.log("[AutoFix] 🚀 Navigating to /meal-plans/" + newPlanId);
-              toast.success("Plano corrigido salvo como draft! Redirecionando...");
-              navigate(`/meal-plans/${newPlanId}`, { replace: true });
+            onFixed={(newPlanId, inPlace) => {
+              if (inPlace) {
+                // In-place fix: reload the same plan
+                toast.success("✅ Plano corrigido! Recarregando...");
+                store.hydrate(plan.id, user?.id ?? "");
+              } else {
+                // New draft created: navigate to it
+                toast.success("Plano corrigido salvo como draft! Redirecionando...");
+                navigate(`/meal-plans/${newPlanId}`, { replace: true });
+              }
             }}
           />
         </div>
