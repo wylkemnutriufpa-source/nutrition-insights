@@ -534,7 +534,7 @@ export default function PatientDetail() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Smart Alerts */}
-        <SmartAlertsBanner patientId={patientId!} onAction={(action) => setOpenSection(action)} />
+        <SmartAlertsBanner patientId={resolvedPatientId} onAction={(action) => setOpenSection(action)} />
         {/* Header */}
         <div className="flex items-center gap-4 flex-wrap">
           <Button variant="ghost" size="icon" onClick={() => navigate("/patients")}>
@@ -556,7 +556,7 @@ export default function PatientDetail() {
                 {patientStatus === "active" ? "Ativo" : "Inativo"}
               </Badge>
               {currentPrestigePlan && <PrestigeBadge plan={currentPrestigePlan} allPlans={prestigePlans} size="sm" />}
-              {patientId && <ActiveProtocolBadge patientId={patientId} compact />}
+              {patientId && <ActiveProtocolBadge patientId={resolvedPatientId} compact />}
             </div>
             <p className="text-sm text-muted-foreground">
               Checklist hoje: {checklistStats.completed}/{checklistStats.total} tarefas •
@@ -576,7 +576,7 @@ export default function PatientDetail() {
             size="md"
           />
           <div className="flex gap-2 flex-wrap">
-            {patientId && <PatientEvolutionPDF patientId={patientId} patientName={profile?.full_name || "Paciente"} />}
+            {patientId && <PatientEvolutionPDF patientId={resolvedPatientId} patientName={profile?.full_name || "Paciente"} />}
             <Button
               variant={patientStatus === "active" ? "outline" : "default"}
               className="gap-2"
@@ -946,12 +946,12 @@ export default function PatientDetail() {
 
                     {/* Clinical Flags */}
                     <div className="glass rounded-xl p-5">
-                      <ClinicalFlagsSummary patientId={patientId!} compact />
+                      <ClinicalFlagsSummary patientId={resolvedPatientId} compact />
                     </div>
 
                     {/* Meal Adherence */}
                     <div className="md:col-span-2">
-                      <MealAdherenceWidget patientId={patientId!} />
+                      <MealAdherenceWidget patientId={resolvedPatientId} />
                     </div>
                   </div>
                 </DialogContent>
@@ -978,16 +978,16 @@ export default function PatientDetail() {
                         <Scale className="w-4 h-4" /> Nova Avaliação
                       </Button>
                     </div>
-                    <BodyEvolutionCard patientId={patientId!} />
+                    <BodyEvolutionCard patientId={resolvedPatientId} />
                     <div className="border-t border-border pt-6">
                       <h3 className="font-display text-lg font-semibold mb-4">Comparativo entre Consultas</h3>
-                      <ConsultationCompare patientId={patientId!} />
+                      <ConsultationCompare patientId={resolvedPatientId} />
                     </div>
                     <div className="border-t border-border pt-6">
                       <h3 className="font-display text-lg font-semibold mb-4 flex items-center gap-2">
                         <Upload className="w-5 h-5 text-accent" /> Documentos da Avaliação
                       </h3>
-                      <DocumentUpload patientId={patientId!} nutritionistId={user!.id} documentType="assessment" documents={assessmentDocs} onUploadComplete={invalidate} />
+                      <DocumentUpload patientId={resolvedPatientId} nutritionistId={user!.id} documentType="assessment" documents={assessmentDocs} onUploadComplete={invalidate} />
                     </div>
                   </div>
                 </DialogContent>
@@ -997,7 +997,7 @@ export default function PatientDetail() {
               <Dialog open={openSection === "agenda"} onOpenChange={(v) => !v && setOpenSection(null)}>
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Agenda</DialogTitle></DialogHeader>
-                  <PatientAgenda patientId={patientId!} />
+                  <PatientAgenda patientId={resolvedPatientId} />
                 </DialogContent>
               </Dialog>
 
@@ -1015,7 +1015,7 @@ export default function PatientDetail() {
                   <DialogHeader><DialogTitle className="font-display">Timeline de Jornada</DialogTitle></DialogHeader>
                   <div className="space-y-4">
                     {/* Momentum Indicator for this patient */}
-                    <MomentumIndicator variant="card" patientId={patientId} />
+                    <MomentumIndicator variant="card" patientId={resolvedPatientId} />
                     
                     <div className="flex justify-end">
                       <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
@@ -1046,7 +1046,7 @@ export default function PatientDetail() {
                     </div>
                     
                     {/* Journey Timeline Feed */}
-                    <JourneyTimelineFeed patientId={patientId} maxEvents={50} showFilters title="Eventos do Paciente" />
+                    <JourneyTimelineFeed patientId={resolvedPatientId} maxEvents={50} showFilters title="Eventos do Paciente" />
                   </div>
                 </DialogContent>
               </Dialog>
@@ -1297,7 +1297,7 @@ export default function PatientDetail() {
               <Dialog open={openSection === "checklist"} onOpenChange={(v) => !v && setOpenSection(null)}>
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Checklist Diário</DialogTitle></DialogHeader>
-                  <PatientChecklistView patientId={patientId!} editable={true} />
+                  <PatientChecklistView patientId={resolvedPatientId} editable={true} />
                 </DialogContent>
               </Dialog>
 
@@ -1497,7 +1497,7 @@ export default function PatientDetail() {
                       <h3 className="font-display text-lg font-semibold mb-4 flex items-center gap-2">
                         <Upload className="w-5 h-5 text-success" /> Documentos do Plano Alimentar
                       </h3>
-                      <DocumentUpload patientId={patientId!} nutritionistId={user!.id} documentType="meal_plan" documents={mealPlanDocs} onUploadComplete={invalidate} />
+                      <DocumentUpload patientId={resolvedPatientId} nutritionistId={user!.id} documentType="meal_plan" documents={mealPlanDocs} onUploadComplete={invalidate} />
                     </div>
                   </div>
                 </DialogContent>
@@ -1550,7 +1550,7 @@ export default function PatientDetail() {
               <Dialog open={openSection === "clinical-decision"} onOpenChange={(v) => !v && setOpenSection(null)}>
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Suporte à Decisão Clínica</DialogTitle></DialogHeader>
-                  <ClinicalDecisionSupport patientId={patientId!} nutritionistId={user!.id} />
+                  <ClinicalDecisionSupport patientId={resolvedPatientId} nutritionistId={user!.id} />
                   <div className="border-t border-border pt-6 space-y-4">
                     <SmartRecommendationsPanel signals={{
                       adherenceScore: data?.adherence7d ?? 0,
@@ -1567,9 +1567,9 @@ export default function PatientDetail() {
               <Dialog open={openSection === "clinical-flags"} onOpenChange={(v) => !v && setOpenSection(null)}>
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Flags Clínicas do Paciente</DialogTitle></DialogHeader>
-                  <ClinicalFlagsSummary patientId={patientId!} />
+                  <ClinicalFlagsSummary patientId={resolvedPatientId} />
                   <div className="mt-6 pt-6 border-t border-border">
-                    <PatientBehavioralManager patientId={patientId!} />
+                    <PatientBehavioralManager patientId={resolvedPatientId} />
                   </div>
                 </DialogContent>
               </Dialog>
@@ -1578,11 +1578,11 @@ export default function PatientDetail() {
               <Dialog open={openSection === "lab-exams"} onOpenChange={(v) => !v && setOpenSection(null)}>
                 <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Exames Laboratoriais</DialogTitle></DialogHeader>
-                  <PatientLabExams patientId={patientId!} />
+                  <PatientLabExams patientId={resolvedPatientId} />
                 </DialogContent>
                 <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Missões do Paciente</DialogTitle></DialogHeader>
-                  <MissionCreator patientId={patientId!} patientName={profile?.full_name || undefined} />
+                  <MissionCreator patientId={resolvedPatientId} patientName={profile?.full_name || undefined} />
                 </DialogContent>
               </Dialog>
 
@@ -1590,7 +1590,7 @@ export default function PatientDetail() {
               <Dialog open={openSection === "body-projection"} onOpenChange={(v) => !v && setOpenSection(null)}>
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display">Projeção Corporal</DialogTitle></DialogHeader>
-                  <BodyProjectionProCard patientId={patientId!} isAdmin={isAdmin} />
+                  <BodyProjectionProCard patientId={resolvedPatientId} isAdmin={isAdmin} />
                 </DialogContent>
               </Dialog>
 
@@ -1667,7 +1667,7 @@ export default function PatientDetail() {
                     </AlertDialog>
                   </div>
                   
-                  <OnboardingApprovalQueue patientId={patientId!} patientName={profile?.full_name || "Paciente"} />
+                  <OnboardingApprovalQueue patientId={resolvedPatientId} patientName={profile?.full_name || "Paciente"} />
                 </DialogContent>
               </Dialog>
 
@@ -1769,7 +1769,7 @@ export default function PatientDetail() {
                     {/* FitJourney Intelligence Toggle */}
                     <div className="border-t pt-3">
                       <FitIntelligenceToggle
-                        patientId={patientId!}
+                        patientId={resolvedPatientId}
                         enabled={(profile as any)?.fit_intelligence_enabled || false}
                         onboarded={(profile as any)?.fit_intelligence_onboarded || false}
                         expiresAt={(profile as any)?.fit_intelligence_expires_at || null}
@@ -1828,7 +1828,7 @@ export default function PatientDetail() {
               <Dialog open={openSection === "feedbacks"} onOpenChange={(v) => !v && setOpenSection(null)}>
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle className="font-display flex items-center gap-2"><MessageSquare className="w-5 h-5 text-amber-500" /> Feedbacks do Paciente</DialogTitle></DialogHeader>
-                  {patientId && <PatientFeedbacksPanel patientId={patientId} />}
+                  {patientId && <PatientFeedbacksPanel patientId={resolvedPatientId} />}
                 </DialogContent>
               </Dialog>
 
@@ -1838,7 +1838,7 @@ export default function PatientDetail() {
                   <DialogHeader><DialogTitle className="font-display flex items-center gap-2"><Rocket className="w-5 h-5 text-primary" /> Projetos & Governança</DialogTitle></DialogHeader>
                   {patientId && (
                     <PatientProjectGovernance
-                      patientId={patientId}
+                      patientId={resolvedPatientId}
                       isProfessionalView={true}
                       onProtocolChanged={invalidate}
                     />
@@ -1851,7 +1851,7 @@ export default function PatientDetail() {
 
         {/* Onboarding Release Dialog */}
         <OnboardingReleaseDialog
-          patientId={patientId!}
+          patientId={resolvedPatientId}
           patientName={profile?.full_name || "Paciente"}
           open={releaseOnboardingOpen}
           onOpenChange={setReleaseOnboardingOpen}
