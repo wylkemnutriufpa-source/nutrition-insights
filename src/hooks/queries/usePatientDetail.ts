@@ -167,7 +167,7 @@ export function usePatientDetail(patientId: string | undefined) {
 
       const uniqueDocs = dedupeById(docs);
       const uniqueMealPlans = getVisibleMealPlans(dedupeById(mealPlansRes.data));
-      const adherenceRows = dedupeById(adherenceRes.data);
+      const adherenceRows = dedupeBySignature(adherenceRes.data, (row: any) => `${row.date}-${row.adherence_status}`);
 
       return {
         profile: resolvedProfile,
