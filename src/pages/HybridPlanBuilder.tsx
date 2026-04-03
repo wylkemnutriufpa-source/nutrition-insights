@@ -6,6 +6,7 @@ import { useTenant } from "@/lib/tenantContext";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import { supabase } from "@/integrations/supabase/client";
 import { publishMealPlan, savePlanAsApproved } from "@/lib/serverTransitions";
+import { autoFixMealPlan } from "@/lib/autoFixEngine";
 import { toast } from "sonner";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import BuilderTopbar from "@/components/hybrid-builder/BuilderTopbar";
@@ -201,11 +202,11 @@ export default function HybridPlanBuilder() {
     setValidating(true);
     setValidationResult(null);
     try {
-      // CRITICAL: flush any pending changes BEFORE validating against DB
       await store._flushQueue();
 
       const { data, error } = await supabase.functions.invoke("validate-meal-plan", { body: { meal_plan_id: plan.id } });
       if (error) throw error;
+
       const nextStatus = data?.overall_status || (data?.success ? "aprovado" : "sugestoes_pendentes");
       store.updatePlan({
         overall_validation_status: nextStatus,
@@ -214,11 +215,42 @@ export default function HybridPlanBuilder() {
         updated_at: new Date().toISOString(),
       } as any);
       await store.hydrate(plan.id, user?.id ?? "");
-      if (!data?.success) {
-        setValidationResult(data as ValidationResult);
-        toast.info("Sugestões de melhoria disponíveis");
-      } else {
+
+      if (data?.success) {
         toast.success("Plano válido! ✅");
+        return;
+      }
+
+      setValidationResult(data as ValidationResult);
+      toast.info("Divergências encontradas. Aplicando correção automática...");
+
+      if (!user || !tenantId) {
+        throw new Error("Contexto da clínica não carregado para corrigir o plano.");
+      }
+
+      const fixed = await autoFixMealPlan(plan.id, plan.patient_id, user.id, tenantId);
+      if (!fixed.success || !fixed.newPlanId) {
+        throw new Error(fixed.warnings[0] || "A correção automática não conseguiu persistir mudanças.");
+      }
+
+      if (fixed.inPlace) {
+        await store.hydrate(plan.id, user.id);
+        const { data: revalidated, error: revalidateError } = await supabase.functions.invoke("validate-meal-plan", {
+          body: { meal_plan_id: plan.id },
+        });
+        if (revalidateError) throw revalidateError;
+
+        if (revalidated?.success) {
+          setValidationResult(null);
+          toast.success("✅ Plano corrigido e revalidado com sucesso!");
+        } else {
+          setValidationResult(revalidated as ValidationResult);
+          toast.info("Correção aplicada, mas ainda existem ajustes pendentes.");
+        }
+      } else {
+        toast.success("Plano corrigido salvo como novo draft. Redirecionando...");
+        navigate(`/plan-builder/${fixed.newPlanId}`, { replace: true });
+        return;
       }
     } catch (e: any) {
       toast.error(e.message || "Erro na validação");
