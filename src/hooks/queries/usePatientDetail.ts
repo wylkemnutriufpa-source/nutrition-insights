@@ -52,6 +52,20 @@ function getVisibleMealPlans(plans: any[]) {
   });
 }
 
+function getUniqueIds(...ids: Array<string | undefined | null>) {
+  return Array.from(new Set(ids.filter((value): value is string => Boolean(value))));
+}
+
+function dedupeById<T extends { id?: string }>(rows: T[] | null | undefined) {
+  const seen = new Set<string>();
+  return (rows || []).filter((row) => {
+    if (!row?.id) return true;
+    if (seen.has(row.id)) return false;
+    seen.add(row.id);
+    return true;
+  });
+}
+
 export function usePatientDetail(patientId: string | undefined) {
   const { user, isAdmin } = useAuth();
   const { tenantId } = useTenant();
@@ -59,50 +73,75 @@ export function usePatientDetail(patientId: string | undefined) {
   return useQuery({
     queryKey: [...queryKeys.patients.detail(patientId ?? ""), tenantId],
     enabled: !!patientId && !!user,
-    staleTime: 10 * 1000, // 10s — fast refresh for lifecycle sync
+    staleTime: 10 * 1000,
     queryFn: async () => {
-      const [profileRes, timelineRes, anamnesisRes, ppRes, protocolsRes, checkRes, subRes, plansRes, mealPlansRes, recipesRes, npRes, adherenceRes] = await Promise.all([
-        withTenantFilter(supabase.from("profiles").select("full_name, avatar_url, phone, fit_intelligence_enabled, fit_intelligence_onboarded, fit_intelligence_access_mode, fit_intelligence_expires_at, fit_intelligence_first_experience_seen").eq("user_id", patientId!), tenantId).maybeSingle(),
-        supabase.from("patient_timeline").select("*").eq("patient_id", patientId!).order("created_at", { ascending: false }).limit(50),
-        supabase.from("patient_anamnesis").select("*").eq("user_id", patientId!).order("created_at", { ascending: false }).limit(1),
-        withTenantFilter(supabase.from("patient_protocols").select("*").eq("patient_id", patientId!).eq("nutritionist_id", user!.id), tenantId).order("created_at", { ascending: false }),
+      const { data: resolvedProfile, error: resolvedProfileError } = await withTenantFilter(
+        supabase
+          .from("profiles")
+          .select("id, user_id, full_name, avatar_url, phone, fit_intelligence_enabled, fit_intelligence_onboarded, fit_intelligence_access_mode, fit_intelligence_expires_at, fit_intelligence_first_experience_seen")
+          .or(`id.eq.${patientId},user_id.eq.${patientId}`),
+        tenantId
+      ).maybeSingle();
+
+      if (resolvedProfileError) {
+        throw resolvedProfileError;
+      }
+
+      const patientUserId = resolvedProfile?.user_id ?? patientId!;
+      const patientProfileId = resolvedProfile?.id ?? patientId!;
+      const patientIds = getUniqueIds(patientUserId, patientProfileId, patientId);
+      const today = new Date().toISOString().split("T")[0];
+      const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0];
+
+      const [timelineRes, anamnesisRes, ppRes, protocolsRes, checkRes, subRes, plansRes, mealPlansRes, recipesRes, npRes, adherenceRes] = await Promise.all([
+        supabase.from("patient_timeline").select("*").in("patient_id", patientIds).order("created_at", { ascending: false }).limit(50),
+        supabase.from("patient_anamnesis").select("*").eq("user_id", patientUserId).order("created_at", { ascending: false }).limit(1),
+        withTenantFilter(supabase.from("patient_protocols").select("*").in("patient_id", patientIds).eq("nutritionist_id", user!.id), tenantId).order("created_at", { ascending: false }),
         supabase.from("protocols").select("id, title, protocol_key").or(`created_by.eq.${user!.id},is_system.eq.true`),
-        withTenantFilter(supabase.from("checklist_tasks").select("id, completed").eq("patient_id", patientId!).eq("date", new Date().toISOString().split("T")[0]), tenantId),
-        supabase.from("subscriptions").select("*").eq("user_id", patientId!).order("created_at", { ascending: false }).limit(1),
+        withTenantFilter(supabase.from("checklist_tasks").select("id, completed").in("patient_id", patientIds).eq("date", today), tenantId),
+        supabase.from("subscriptions").select("*").eq("user_id", patientUserId).order("created_at", { ascending: false }).limit(1),
         supabase.from("pricing_plans").select("*").eq("is_active", true).order("sort_order"),
-        withTenantFilter(supabase.from("meal_plans").select("*").eq("patient_id", patientId!), tenantId).order("created_at", { ascending: false }),
+        withTenantFilter(supabase.from("meal_plans").select("*").in("patient_id", patientIds), tenantId).order("created_at", { ascending: false }),
         supabase.from("recipes").select("*").eq("nutritionist_id", user!.id).eq("is_shared", true).order("created_at", { ascending: false }),
-        withTenantFilter(supabase.from("nutritionist_patients").select("id, status, journey_status").eq("patient_id", patientId!).eq("nutritionist_id", user!.id), tenantId).limit(1).maybeSingle(),
-        supabase.from("meal_item_completions").select("adherence_status, date").eq("patient_id", patientId!).gte("date", new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0]).lte("date", new Date().toISOString().split("T")[0]),
+        withTenantFilter(supabase.from("nutritionist_patients").select("id, status, journey_status").in("patient_id", patientIds).eq("nutritionist_id", user!.id), tenantId).limit(1).maybeSingle(),
+        supabase.from("meal_item_completions").select("adherence_status, date").in("patient_id", patientIds).gte("date", sevenDaysAgo).lte("date", today),
       ]);
 
-      // Enrich protocols with title
       const protocols = protocolsRes.data || [];
-      const patientProtocols = (ppRes.data || []).map((pp: any) => ({
+      const patientProtocols = dedupeById(ppRes.data).map((pp: any) => ({
         ...pp,
         protocol_title: protocols.find((p: any) => p.id === pp.protocol_id)?.title || "Protocolo",
       }));
 
-      // Documents
-      const { data: docs } = await supabase.from("patient_documents")
+      const { data: docs } = await supabase
+        .from("patient_documents")
         .select("*")
-        .eq("patient_id", patientId!)
+        .in("patient_id", patientIds)
         .eq("nutritionist_id", user!.id)
         .order("created_at", { ascending: false });
 
-      // Prestige
       const [prestigePlansRes, patientPrestigeRes] = await Promise.all([
         supabase.from("prestige_plans").select("*").eq("is_active", true).order("display_order"),
-        supabase.from("patient_prestige").select("*, prestige_plans(*)").eq("patient_id", patientId!).eq("is_active", true).maybeSingle(),
+        supabase.from("patient_prestige").select("*, prestige_plans(*)").in("patient_id", patientIds).eq("is_active", true).order("created_at", { ascending: false }).limit(1).maybeSingle(),
       ]);
 
       const mapPlan = (d: any): PrestigePlan => ({
-        id: d.id, name: d.name, slug: d.slug, display_order: d.display_order, color: d.color,
-        badge_icon: d.badge_icon, badge_label: d.badge_label, crown_enabled: d.crown_enabled,
-        effect_type: d.effect_type, ranking_highlight: d.ranking_highlight,
-        ai_usage_multiplier: d.ai_usage_multiplier, features: d.features || [],
-        price_monthly: d.price_monthly, price_quarterly: d.price_quarterly,
-        price_semiannual: d.price_semiannual, price_annual: d.price_annual,
+        id: d.id,
+        name: d.name,
+        slug: d.slug,
+        display_order: d.display_order,
+        color: d.color,
+        badge_icon: d.badge_icon,
+        badge_label: d.badge_label,
+        crown_enabled: d.crown_enabled,
+        effect_type: d.effect_type,
+        ranking_highlight: d.ranking_highlight,
+        ai_usage_multiplier: d.ai_usage_multiplier,
+        features: d.features || [],
+        price_monthly: d.price_monthly,
+        price_quarterly: d.price_quarterly,
+        price_semiannual: d.price_semiannual,
+        price_annual: d.price_annual,
       });
 
       const prestigePlans = (prestigePlansRes.data || []).map(mapPlan);
@@ -110,29 +149,32 @@ export function usePatientDetail(patientId: string | undefined) {
         ? mapPlan(patientPrestigeRes.data.prestige_plans)
         : null;
 
-      // Patient email for admin
       let patientEmail = "";
-      if (isAdmin && patientId) {
-        const { data: emailData } = await supabase.rpc("get_user_email_by_id", { _user_id: patientId });
+      if (isAdmin) {
+        const { data: emailData } = await supabase.rpc("get_user_email_by_id", { _user_id: patientUserId });
         if (emailData) patientEmail = emailData;
       }
 
+      const uniqueDocs = dedupeById(docs);
+      const uniqueMealPlans = getVisibleMealPlans(dedupeById(mealPlansRes.data));
+      const adherenceRows = dedupeById(adherenceRes.data);
+
       return {
-        profile: profileRes.data,
-        timeline: timelineRes.data || [],
+        profile: resolvedProfile,
+        timeline: dedupeById(timelineRes.data),
         anamnesis: anamnesisRes.data?.[0] || null,
         patientProtocols,
         protocols,
         checklistStats: {
-          total: checkRes.data?.length || 0,
-          completed: checkRes.data?.filter((t: any) => t.completed).length || 0,
+          total: dedupeById(checkRes.data).length,
+          completed: dedupeById(checkRes.data).filter((t: any) => t.completed).length,
         },
         patientSubscription: subRes.data?.[0] || null,
         pricingPlans: plansRes.data || [],
-        mealPlans: getVisibleMealPlans(mealPlansRes.data || []),
+        mealPlans: uniqueMealPlans,
         recipes: recipesRes.data || [],
-        mealPlanDocs: (docs || []).filter((d: any) => d.document_type === "meal_plan"),
-        assessmentDocs: (docs || []).filter((d: any) => d.document_type === "assessment"),
+        mealPlanDocs: uniqueDocs.filter((d: any) => d.document_type === "meal_plan"),
+        assessmentDocs: uniqueDocs.filter((d: any) => d.document_type === "assessment"),
         patientStatus: npRes.data?.status || "active",
         journeyStatus: (npRes.data as any)?.journey_status || "active",
         npId: npRes.data?.id || null,
@@ -141,10 +183,9 @@ export function usePatientDetail(patientId: string | undefined) {
         currentPrestigePlanId: patientPrestigeRes.data?.prestige_plans?.id || "",
         patientEmail,
         adherence7d: (() => {
-          const comps = adherenceRes.data || [];
-          const followed = comps.filter((c: any) => c.adherence_status === "followed").length;
-          const partial = comps.filter((c: any) => c.adherence_status === "partial").length;
-          const total = comps.length;
+          const followed = adherenceRows.filter((c: any) => c.adherence_status === "followed").length;
+          const partial = adherenceRows.filter((c: any) => c.adherence_status === "partial").length;
+          const total = adherenceRows.length;
           if (total === 0) return 0;
           return Math.round(((followed * 100 + partial * 50) / (total * 100)) * 100);
         })(),
