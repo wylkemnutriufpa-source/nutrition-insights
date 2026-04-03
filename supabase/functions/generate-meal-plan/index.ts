@@ -1397,28 +1397,37 @@ serve(async (req) => {
       console.log(`[generate-meal-plan] Preset-based plan generated: ${rawPlanItems.length} items`);
     }
     
-    const planItems = reconcileDailyMacros(rawPlanItems, finalKcal, finalMacros, goal);
-
-    // Smart mode: weekend diet breaks
+    // Smart mode: apply adjustments to RAW items BEFORE reconciliation
+    // so that reconcileDailyMacros can normalize the final totals correctly
     if (generationMode === "smart" && modeEnhancements.weekendDietBreaks) {
-      for (const item of planItems) {
+      for (const item of rawPlanItems) {
         if (item.day_of_week >= 5) {
-          item.calories_target = Math.round(item.calories_target * 1.10);
-          item.carbs_target = Math.round(item.carbs_target * 1.12);
+          item.calories_target = Math.round((item.calories_target || 0) * 1.10);
+          item.carbs_target = Math.round((item.carbs_target || 0) * 1.12);
         }
       }
     }
 
-    // Smart mode: boost protein around workout time
     if (generationMode === "smart" && modeEnhancements.workoutTime) {
       const workoutHour = parseInt(modeEnhancements.workoutTime.split(":")[0] || "0");
       const postWorkoutMeal = workoutHour < 12 ? "lunch" : workoutHour < 17 ? "afternoon_snack" : "dinner";
-      for (const item of planItems) {
+      for (const item of rawPlanItems) {
         if (item.meal_type === postWorkoutMeal) {
-          item.protein_target = Math.round(item.protein_target * 1.15);
+          item.protein_target = Math.round((item.protein_target || 0) * 1.15);
         }
       }
     }
+
+    // Determine per-day targets (weekend may differ in smart mode)
+    const weekdayKcal = finalKcal;
+    const weekendKcal = (generationMode === "smart" && modeEnhancements.weekendDietBreaks)
+      ? Math.round(finalKcal * 1.10) : finalKcal;
+    const weekendMacros = (generationMode === "smart" && modeEnhancements.weekendDietBreaks)
+      ? { protein: finalMacros.protein, carbs: Math.round(finalMacros.carbs * 1.12), fat: finalMacros.fat }
+      : finalMacros;
+
+    // Reconcile with correct per-day targets
+    const planItems = reconcileDailyMacros(rawPlanItems, weekdayKcal, finalMacros, goal);
 
     if (planItems.length === 0) {
       return new Response(JSON.stringify({
