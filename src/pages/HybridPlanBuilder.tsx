@@ -41,6 +41,10 @@ export default function HybridPlanBuilder() {
   // DnD sensors
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
+  // Patient composer context (must be before early returns)
+  const patientId = store.plan?.patient_id;
+  const { ctx: patientContext } = usePatientComposerContext(patientId || null);
+
   // Hydrate store
   useEffect(() => {
     if (id && user?.id) {
