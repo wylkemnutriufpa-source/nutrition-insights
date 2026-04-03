@@ -358,7 +358,11 @@ export default function MealPlans() {
                       {p.description && <p className="text-xs text-muted-foreground mt-1">{p.description}</p>}
                     </div>
                     <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="icon" className="h-9 w-9"
+                      <Button variant="ghost" size="icon" className="h-9 w-9" title="Builder Híbrido"
+                        onClick={(e) => { e.stopPropagation(); navigate(`/plan-builder/${p.id}`); }}>
+                        <Zap className="w-4 h-4 text-primary" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-9 w-9" title="Editor"
                         onClick={(e) => { e.stopPropagation(); navigate(`/meal-plans/${p.id}`); }}>
                         <PencilLine className="w-4 h-4" />
                       </Button>
