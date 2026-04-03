@@ -226,7 +226,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
       await transitionPlanToReview(planId, user.id);
 
       onOpenChange(false);
-      navigate(`/meal-plans/${planId}`);
+      navigate(`/plan-builder/${planId}`);
       toast.success(`Plano gerado com ${data.items_count} itens! Revise e aprove.`);
     } catch (err: any) {
       toast.error("Erro ao gerar plano: " + (err.message || "Tente novamente"));
@@ -269,7 +269,7 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
       }
 
       onOpenChange(false);
-      navigate(`/meal-plans/${resolvedPlanId}`);
+      navigate(`/plan-builder/${resolvedPlanId}`);
     } catch (err: any) {
       toast.error("Erro ao abrir plano: " + (err.message || "Tente novamente"));
     } finally {
