@@ -9,6 +9,7 @@ import { activateMealPlan, deactivateMealPlan, resolvePlanState } from "@/lib/se
 import { autoMatchSingle } from "@/lib/mealVisualAssociation";
 import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
 import { createMealPlanDraft } from "@/lib/createMealPlanDraft";
+import { finalizeGeneratedMealPlan } from "@/lib/finalizeGeneratedMealPlan";
 import {
   inspectOnboardingPlan,
   resolveLatestUsableOnboardingPlan,
