@@ -105,7 +105,7 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
     }
   };
 
-
+  const handleToggleLock = (item: MealPlanItem) => {
     store.updateItem(item.id, { is_locked: !item.is_locked });
     toast.info(item.is_locked ? "Item desbloqueado" : "Item travado");
   };
