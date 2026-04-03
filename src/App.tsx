@@ -44,6 +44,7 @@ const MealPlans = lazy(() => import("./pages/MealPlans"));
 // MealPlanEditor (legacy V1) removed — all plans now use V2
 const MealPlanEditorV2 = lazy(() => import("./pages/MealPlanEditorV2"));
 const MealPlanEditorV2Entry = lazy(() => import("./pages/MealPlanEditorV2Entry"));
+const HybridPlanBuilder = lazy(() => import("./pages/HybridPlanBuilder"));
 const Anamnesis = lazy(() => import("./pages/Anamnesis"));
 const AnalyzeMeal = lazy(() => import("./pages/AnalyzeMeal"));
 const Settings = lazy(() => import("./pages/Settings"));
