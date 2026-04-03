@@ -316,6 +316,21 @@ function DynamicSidebar({
               </span>
             )}
           </Link>
+          {/* Cockpit Premium — only for nutritionists and admins */}
+          {(isNutritionist || isAdmin) && (
+            <Link
+              to="/cockpit"
+              onClick={onLinkClick}
+              className={`flex items-center gap-2 w-full rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
+            >
+              <Rocket className="w-4 h-4 text-amber-500 flex-shrink-0" />
+              {!collapsed && (
+                <span className="text-xs font-semibold text-amber-500 truncate group-hover:text-amber-400 transition-colors">
+                  Cockpit Premium
+                </span>
+              )}
+            </Link>
+          )}
           {/* Workspace Clínico — only for nutritionists and admins, NOT personal trainers */}
           {(isNutritionist || isAdmin) && (
             <Link
