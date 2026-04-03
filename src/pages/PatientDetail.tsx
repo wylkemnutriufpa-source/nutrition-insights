@@ -1353,7 +1353,7 @@ export default function PatientDetail() {
                         try {
                           const { data: newPlan, error } = await createMealPlanDraft({
                             nutritionistId: user!.id,
-                            patientId: patientId!,
+                            patientId: resolvedPatientId,
                             tenantId,
                           });
                           if (error) throw error;
@@ -1416,7 +1416,7 @@ export default function PatientDetail() {
                           try {
                             const { data: newPlan, error } = await createMealPlanDraft({
                               nutritionistId: user!.id,
-                              patientId: patientId!,
+                              patientId: resolvedPatientId,
                               tenantId,
                             });
                             if (error) throw error;
