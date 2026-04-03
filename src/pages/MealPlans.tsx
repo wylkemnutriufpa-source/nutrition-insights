@@ -131,7 +131,7 @@ export default function MealPlans() {
         if (pipelineData?.generated_plan_id && pipelineData?.plan_generated) {
           const pipelinePlan = await inspectOnboardingPlan(pipelineData.generated_plan_id);
           if (pipelinePlan?.isUsable) {
-            navigate(`/plan-builder/${pipelineData.generated_plan_id}`, { replace: true });
+            navigate(`/meal-plans/${pipelineData.generated_plan_id}`, { replace: true });
             return;
           }
           console.warn("Pipeline plan is stale/archived, looking for alternatives...");
