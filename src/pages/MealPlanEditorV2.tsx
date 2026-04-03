@@ -253,7 +253,7 @@ export default function MealPlanEditorV2() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => isFullscreen ? setIsFullscreen(false) : navigate("/meal-plans")}
+              onClick={() => isFullscreen ? setIsFullscreen(false) : (plan?.patient_id ? navigate(`/patients/${plan.patient_id}`) : navigate("/meal-plans"))}
               className="shrink-0"
             >
               <ArrowLeft className="w-5 h-5" />
