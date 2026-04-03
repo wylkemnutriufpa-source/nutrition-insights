@@ -53,6 +53,8 @@ export interface AutoFixChange {
 export interface AutoFixResult {
   success: boolean;
   newPlanId?: string;
+  /** When true, fix was applied in-place on the same plan (no new draft created) */
+  inPlace?: boolean;
   changes: AutoFixChange[];
   before: {
     score: SimplicityScore;
