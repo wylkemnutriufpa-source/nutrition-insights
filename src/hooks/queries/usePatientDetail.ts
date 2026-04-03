@@ -66,6 +66,16 @@ function dedupeById<T extends { id?: string }>(rows: T[] | null | undefined) {
   });
 }
 
+function dedupeBySignature<T>(rows: T[] | null | undefined, getSignature: (row: T) => string) {
+  const seen = new Set<string>();
+  return (rows || []).filter((row) => {
+    const signature = getSignature(row);
+    if (seen.has(signature)) return false;
+    seen.add(signature);
+    return true;
+  });
+}
+
 export function usePatientDetail(patientId: string | undefined) {
   const { user, isAdmin } = useAuth();
   const { tenantId } = useTenant();
