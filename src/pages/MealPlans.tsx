@@ -183,7 +183,7 @@ export default function MealPlans() {
         if (newPlanId) {
           toast.success(`Plano gerado com ${genData.items_count || 0} itens!`);
           runPostGenVisualMatch(newPlanId).catch(() => {});
-          navigate(`/plan-builder/${newPlanId}`, { replace: true });
+          navigate(`/meal-plans/${newPlanId}`, { replace: true });
         } else {
           toast.error("Plano gerado mas sem ID retornado. Tente novamente.");
           onboardingHandled.current = null;

@@ -1322,7 +1322,7 @@ export default function PatientDetail() {
                             .maybeSingle() as any);
                           const pd = pipeline as { generated_plan_id?: string; plan_generated?: boolean } | null;
                           if (pd?.generated_plan_id && pd?.plan_generated) {
-                            navigate(`/plan-builder/${pd.generated_plan_id}`);
+                            navigate(`/meal-plans/${pd.generated_plan_id}`);
                             return;
                           }
                           // No onboarding plan — generate one
@@ -1336,7 +1336,7 @@ export default function PatientDetail() {
                           }
                           if (genData.mealPlanId) {
                             toast.success(`Plano gerado com ${genData.items_count || 0} itens!`);
-                            navigate(`/plan-builder/${genData.mealPlanId}`);
+                            navigate(`/meal-plans/${genData.mealPlanId}`);
                           }
                         } catch (err: any) {
                           toast.error(err.message || "Erro ao processar onboarding");
