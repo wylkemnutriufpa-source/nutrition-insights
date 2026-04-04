@@ -18,29 +18,20 @@ const STORAGE_KEY = "fj_intro_seen";
 
 export default function GatewayPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const forceIntro = searchParams.get("intro") === "1";
 
   const [showIntro, setShowIntro] = useState(() => {
-    if (searchParams.get("intro") === "1") return true;
+    if (forceIntro) return true;
     return !sessionStorage.getItem(STORAGE_KEY);
   });
 
-  // Listen for replay event from logo clicks on the same page
   useEffect(() => {
-    const handler = () => {
-      sessionStorage.removeItem(STORAGE_KEY);
-      setShowIntro(true);
-    };
-    window.addEventListener("fj-replay-intro", handler);
-    return () => window.removeEventListener("fj-replay-intro", handler);
-  }, []);
+    if (!forceIntro) return;
 
-  // Clean up ?intro param
-  useEffect(() => {
-    if (searchParams.get("intro")) {
-      searchParams.delete("intro");
-      setSearchParams(searchParams, { replace: true });
-    }
-  }, []);
+    sessionStorage.removeItem(STORAGE_KEY);
+    setShowIntro(true);
+    setSearchParams({}, { replace: true });
+  }, [forceIntro, setSearchParams]);
 
   const handleIntroComplete = () => {
     setShowIntro(false);
