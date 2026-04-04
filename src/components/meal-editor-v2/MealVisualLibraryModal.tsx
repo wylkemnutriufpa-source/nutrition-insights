@@ -30,6 +30,7 @@ interface VisualItem {
 interface MealVisualLibraryModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onDragStartFromLibrary?: () => void;
 }
 
 // ── Category tabs ───────────────────────────────────────────
@@ -42,7 +43,7 @@ const CATEGORIES = [
 ];
 
 // ── Component ───────────────────────────────────────────────
-export function MealVisualLibraryModal({ open, onOpenChange }: MealVisualLibraryModalProps) {
+export function MealVisualLibraryModal({ open, onOpenChange, onDragStartFromLibrary }: MealVisualLibraryModalProps) {
   const [items, setItems] = useState<VisualItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -98,6 +99,11 @@ export function MealVisualLibraryModal({ open, onOpenChange }: MealVisualLibrary
     };
     e.dataTransfer.setData("application/json", JSON.stringify(payload));
     e.dataTransfer.effectAllowed = "copy";
+    // Close modal so user can see the canvas drop zones
+    setTimeout(() => {
+      onOpenChange(false);
+      onDragStartFromLibrary?.();
+    }, 50);
   };
 
   return (
