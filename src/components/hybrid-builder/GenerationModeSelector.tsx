@@ -199,7 +199,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
       await supabase.from("meal_plan_items").delete().eq("meal_plan_id", store.planId);
 
       // Insert chosen items into editor plan
-      const newItems = chosenItems.map(({ id, meal_plan_id, created_at, updated_at, ...rest }) => ({
+      const newItems = chosenItems.map(({ id, meal_plan_id, created_at, ...rest }) => ({
         ...rest,
         meal_plan_id: store.planId!,
       }));
