@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 
 const navLinks = [
-  { label: "Funcionalidades", href: "#features" },
+  { label: "Funcionalidades", href: "#funcionalidades" },
   { label: "Coach Bodybuilder", href: "#coach-bodybuilder" },
   { label: "FAQ", href: "#faq" },
 ];
