@@ -1,6 +1,9 @@
 import { motion } from "framer-motion";
-import { forwardRef, useMemo } from "react";
+import { forwardRef, useMemo, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import logoPng from "@/assets/logo.png";
+
+const STORAGE_KEY = "fj_intro_seen";
 
 interface FitJourneyLogoProps {
   collapsed?: boolean;
