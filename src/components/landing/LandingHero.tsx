@@ -63,44 +63,8 @@ export default function LandingHero() {
           <motion.div
             animate={{ y: [0, -4, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="flex items-center gap-3"
           >
-            {/* Video logo with background removed via blend mode */}
-            <div className="relative w-[100px] h-[100px] md:w-[120px] md:h-[120px] flex-shrink-0 overflow-hidden rounded-full">
-              <video
-                src="/videos/logo-animated.mp4"
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="w-full h-full object-cover"
-                style={{
-                  mixBlendMode: "screen",
-                }}
-              />
-            </div>
-            {/* Text branding */}
-            <div className="font-display font-bold text-2xl md:text-3xl tracking-tight select-none">
-              <span
-                style={{
-                  background: "linear-gradient(180deg, #C9A030 0%, #F5D55A 30%, #FFFBE6 52%, #F5D55A 72%, #B8920A 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  filter: "drop-shadow(0 1px 2px rgba(180,140,20,0.3))",
-                }}
-              >
-                Fit
-              </span>
-              <span
-                style={{
-                  background: "linear-gradient(180deg, hsl(152 58% 35%) 0%, hsl(152 58% 50%) 30%, hsl(170 60% 60%) 60%, hsl(152 58% 38%) 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                }}
-              >
-                Journey
-              </span>
-            </div>
+            <FitJourneyLogo size="lg" />
           </motion.div>
         </motion.div>
 
