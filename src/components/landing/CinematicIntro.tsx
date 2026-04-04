@@ -23,6 +23,10 @@ export default function CinematicIntro({ onComplete }: CinematicIntroProps) {
 
   const skip = useCallback(() => {
     clearTimers();
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
     sessionStorage.setItem(STORAGE_KEY, "1");
     onComplete();
   }, [clearTimers, onComplete]);
