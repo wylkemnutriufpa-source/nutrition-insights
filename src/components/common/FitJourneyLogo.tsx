@@ -86,7 +86,7 @@ const FitJourneyLogo = forwardRef<HTMLDivElement, FitJourneyLogoProps>(function 
     })), [s.particles]);
 
   return (
-    <div ref={ref} className="flex items-center gap-0 cursor-pointer relative z-20" onClick={handleClick} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && handleClick()}>
+    <div ref={ref} className="flex items-center gap-0 cursor-pointer relative z-20 touch-manipulation" onClick={handleClick} role="button" aria-label="Voltar para a entrada do FitJourney" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && handleClick()}>
       <div
         className="relative flex-shrink-0 flex items-center justify-center"
         style={{ width: s.icon, height: s.icon }}
