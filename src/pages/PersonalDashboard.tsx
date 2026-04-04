@@ -25,6 +25,9 @@ export default function PersonalDashboard() {
   const [recentCompletions, setRecentCompletions] = useState<any[]>([]);
   const [allCompletions, setAllCompletions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [addOpen, setAddOpen] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
+  const { refetch: refetchLinks } = useProfessionalLinks("trainer");
 
   useEffect(() => {
     if (!user) return;
