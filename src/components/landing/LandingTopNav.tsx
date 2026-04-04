@@ -86,8 +86,12 @@ export default function LandingTopNav() {
                 <a
                   key={l.label}
                   href={l.href}
-                  onClick={() => setMenuOpen(false)}
-                  className="text-sm text-white/60 hover:text-white py-2.5 px-3 rounded-lg hover:bg-white/[0.04] transition-colors"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setMenuOpen(false);
+                    document.querySelector(l.href)?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                  className="text-sm text-white/60 hover:text-white py-2.5 px-3 rounded-lg hover:bg-white/[0.04] transition-colors cursor-pointer"
                 >
                   {l.label}
                 </a>
