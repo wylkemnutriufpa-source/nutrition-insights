@@ -463,8 +463,12 @@ export default function MealPlanEditorV2() {
           />
         )}
 
-        {/* Editor Content */}
-        {viewMode === "grid" ? <WeeklyGrid /> : <ListView />}
+        {/* Editor Content — Workspace Mode */}
+        {editorLayout === "tabs" ? (
+          <EditorWorkspaceTabs viewMode={viewMode} onViewModeChange={setViewMode} />
+        ) : (
+          <EditorCompactToolbar viewMode={viewMode} onViewModeChange={setViewMode} />
+        )}
 
         {/* Auditoria Clínica — Motor Determinístico */}
         <div className="glass rounded-xl p-5 mt-4">
@@ -480,7 +484,6 @@ export default function MealPlanEditorV2() {
               if (inPlace) {
                 store.hydrate(plan.id, user?.id ?? "");
               } else {
-                // Load the corrected draft in-place instead of navigating away
                 store.hydrate(newPlanId, user?.id ?? "");
                 navigate(`/meal-plans/${newPlanId}`, { replace: true });
               }
@@ -489,7 +492,7 @@ export default function MealPlanEditorV2() {
         </div>
       </div>
 
-      {/* Modals & Sidebars */}
+      {/* Legacy Modals — kept for dropdown tools menu */}
       <MealLibrarySidebar
         open={libraryOpen}
         onOpenChange={setLibraryOpen}
