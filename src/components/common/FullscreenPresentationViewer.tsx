@@ -257,18 +257,55 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
       <AnimatePresence>
         {!allPreloaded && (
           <motion.div
-            className="absolute inset-0 z-[100] flex flex-col items-center justify-center gap-4"
-            style={{ background: "hsl(160 35% 3%)" }}
+            className="absolute inset-0 z-[100] flex items-center justify-center overflow-hidden bg-black"
             exit={{ opacity: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <motion.div
-              className="w-16 h-16 rounded-full border-2 border-t-transparent"
-              style={{ borderColor: `${accent}40`, borderTopColor: "transparent" }}
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            <video
+              className="absolute inset-0 w-full h-full object-cover"
+              src="/videos/loading.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+              style={{ filter: "brightness(0.5) contrast(1.1) saturate(1.2)" }}
             />
-            <p className="text-white/40 text-sm font-light tracking-wide">Preparando apresentação...</p>
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: "radial-gradient(ellipse at 50% 50%, transparent 20%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0.85) 100%)",
+              }}
+            />
+            <motion.div
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none"
+              style={{
+                width: 300,
+                height: 300,
+                background: `radial-gradient(circle, ${accent}26 0%, transparent 70%)`,
+                filter: "blur(50px)",
+              }}
+              animate={{ scale: [1, 1.15, 1], opacity: [0.6, 1, 0.6] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <div className="relative z-10 flex flex-col items-center gap-4">
+              <motion.div
+                className="w-10 h-10 rounded-full border-2"
+                style={{ borderColor: `${accent}66` }}
+                animate={{ scale: [1, 1.4, 1], opacity: [0.7, 0, 0.7] }}
+                transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <div className="w-24 h-[2px] rounded-full overflow-hidden bg-white/10">
+                <motion.div
+                  className="h-full rounded-full"
+                  style={{
+                    background: `linear-gradient(90deg, ${accent}99, ${accent}, ${accentGlow})`,
+                  }}
+                  animate={{ x: ["-100%", "100%"] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                />
+              </div>
+              <p className="text-white/40 text-xs font-light tracking-wider mt-2">Preparando apresentação...</p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
