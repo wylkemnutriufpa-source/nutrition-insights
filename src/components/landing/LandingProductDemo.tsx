@@ -95,7 +95,7 @@ export default function LandingProductDemo() {
             <EnergyBeam className="bottom-4 left-12" angle={20} color="hsl(210,92%,55%)" />
             <PremiumMockupFrame>
               <img
-                src={mockupDashboard}
+                src={screenshotDashboard}
                 alt="Dashboard FitJourney"
                 className="rounded-xl w-full relative z-10"
                 loading="lazy"
