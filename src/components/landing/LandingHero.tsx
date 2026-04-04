@@ -52,16 +52,55 @@ export default function LandingHero() {
       {particles.map((p, i) => <Particle key={i} {...p} />)}
 
       <div className="relative z-10 flex flex-col items-center gap-8">
-        {/* Logo */}
+        {/* Animated Video Logo */}
         <motion.div
           initial={{ opacity: 0, scale: 0.88 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="relative"
         >
-          <div className="absolute -inset-12 rounded-full bg-[radial-gradient(circle,hsl(var(--primary)/0.1)_0%,transparent_65%)] blur-xl pointer-events-none" />
-          <motion.div animate={{ y: [0, -4, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}>
-            <FitJourneyLogo collapsed={false} size="lg" />
+          <div className="absolute -inset-16 rounded-full bg-[radial-gradient(circle,hsl(var(--primary)/0.12)_0%,transparent_65%)] blur-xl pointer-events-none" />
+          <motion.div
+            animate={{ y: [0, -4, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            className="flex items-center gap-3"
+          >
+            {/* Video logo with background removed via blend mode */}
+            <div className="relative w-[100px] h-[100px] md:w-[120px] md:h-[120px] flex-shrink-0 overflow-hidden rounded-full">
+              <video
+                src="/videos/logo-animated.mp4"
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover"
+                style={{
+                  mixBlendMode: "screen",
+                }}
+              />
+            </div>
+            {/* Text branding */}
+            <div className="font-display font-bold text-2xl md:text-3xl tracking-tight select-none">
+              <span
+                style={{
+                  background: "linear-gradient(180deg, #C9A030 0%, #F5D55A 30%, #FFFBE6 52%, #F5D55A 72%, #B8920A 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  filter: "drop-shadow(0 1px 2px rgba(180,140,20,0.3))",
+                }}
+              >
+                Fit
+              </span>
+              <span
+                style={{
+                  background: "linear-gradient(180deg, hsl(152 58% 35%) 0%, hsl(152 58% 50%) 30%, hsl(170 60% 60%) 60%, hsl(152 58% 38%) 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
+              >
+                Journey
+              </span>
+            </div>
           </motion.div>
         </motion.div>
 
