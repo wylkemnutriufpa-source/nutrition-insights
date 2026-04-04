@@ -13,6 +13,7 @@ export default function CinematicIntro({ onComplete }: CinematicIntroProps) {
   const [phase, setPhase] = useState<"video" | "text" | "exit">("video");
   const [videoReady, setVideoReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const timerRef = useRef<NodeJS.Timeout[]>([]);
 
   const clearTimers = useCallback(() => {
