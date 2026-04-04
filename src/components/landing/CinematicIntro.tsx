@@ -89,8 +89,12 @@ export default function CinematicIntro({ onComplete }: CinematicIntroProps) {
         src="/videos/intro.mp4"
         autoPlay
         muted
+        loop
         playsInline
+        preload="auto"
+        onCanPlayThrough={() => { if (!videoReadyRef.current) { videoReadyRef.current = true; setVideoReady(true); } }}
         onCanPlay={() => { if (!videoReadyRef.current) { videoReadyRef.current = true; setVideoReady(true); } }}
+        onLoadedData={() => { if (!videoReadyRef.current) { videoReadyRef.current = true; setVideoReady(true); } }}
         onError={() => { if (!videoReadyRef.current) { videoReadyRef.current = true; setVideoReady(true); } }}
         style={{ filter: "brightness(0.55) contrast(1.1) saturate(1.2)" }}
       />
