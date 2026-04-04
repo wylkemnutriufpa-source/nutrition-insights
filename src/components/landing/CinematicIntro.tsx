@@ -34,6 +34,14 @@ export default function CinematicIntro({ onComplete }: CinematicIntroProps) {
   useEffect(() => {
     if (!videoReady) return;
 
+    // Play intro audio
+    try {
+      const audio = new Audio("/audio/intro.wav");
+      audio.volume = 0.5;
+      audioRef.current = audio;
+      audio.play().catch(() => {});
+    } catch {}
+
     // Show text after 1.5s, start exit at 4s, complete at 5s
     const t1 = setTimeout(() => setPhase("text"), 1500);
     const t2 = setTimeout(() => setPhase("exit"), 4000);
