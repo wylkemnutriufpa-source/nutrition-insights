@@ -25,6 +25,8 @@ import { AutoGenerateModal } from "@/components/meal-editor-v2/AutoGenerateModal
 import { AssistedPlanModal } from "@/components/meal-editor-v2/AssistedPlanModal";
 import { MealVisualLibraryModal } from "@/components/meal-editor-v2/MealVisualLibraryModal";
 import { ValidationCorrectionPanel, type ValidationResult } from "@/components/meal-editor-v2/ValidationCorrectionPanel";
+import EditorWorkspaceTabs from "@/components/meal-editor-v2/EditorWorkspaceTabs";
+import EditorCompactToolbar from "@/components/meal-editor-v2/EditorCompactToolbar";
 import PlanAuditPanel from "@/components/plans/PlanAuditPanel";
 import { toast } from "sonner";
 import { resolveOverallValidationStatus, runValidateAndFixMealPlan } from "@/lib/mealPlanValidationFlow";
