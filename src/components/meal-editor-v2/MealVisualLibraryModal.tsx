@@ -30,6 +30,7 @@ interface VisualItem {
 interface MealVisualLibraryModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onDragStartFromLibrary?: () => void;
 }
 
 // ── Category tabs ───────────────────────────────────────────
