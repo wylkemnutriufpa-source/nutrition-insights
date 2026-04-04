@@ -30,9 +30,11 @@ import { toast } from "sonner";
 import { resolveOverallValidationStatus, runValidateAndFixMealPlan } from "@/lib/mealPlanValidationFlow";
 
 type ViewMode = "grid" | "list";
+type EditorLayout = "tabs" | "compact";
 
 const VIEW_MODE_KEY = "fj_editor_view_mode";
 const FULLSCREEN_KEY = "fj_editor_fullscreen";
+const EDITOR_LAYOUT_KEY = "fj_editor_layout";
 
 export default function MealPlanEditorV2() {
   const { id } = useParams<{ id: string }>();
