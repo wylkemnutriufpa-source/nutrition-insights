@@ -124,7 +124,7 @@ export default function LandingProductDemo() {
               floatDelay={1.5}
             >
               <img
-                src={mockupMealPlan}
+                src={screenshotMealPlan}
                 alt="Editor de Planos Alimentares"
                 className="rounded-xl w-full relative z-10"
                 loading="lazy"
