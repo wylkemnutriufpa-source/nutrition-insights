@@ -11,8 +11,11 @@ import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
 import {
   Users, Dumbbell, TrendingUp, AlertTriangle, Trophy,
-  Plus, BarChart3, ArrowRight, Activity, UserX, Flame
+  Plus, BarChart3, ArrowRight, Activity, UserX, Flame, Search, UserPlus
 } from "lucide-react";
+import AddStudentModal from "@/components/professional/AddStudentModal";
+import LinkStudentModal from "@/components/professional/LinkStudentModal";
+import { useProfessionalLinks } from "@/hooks/useProfessionalLinks";
 
 export default function PersonalDashboard() {
   const { user } = useAuth();
