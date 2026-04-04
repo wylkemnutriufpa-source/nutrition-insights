@@ -90,7 +90,8 @@ export default function CinematicIntro({ onComplete }: CinematicIntroProps) {
         autoPlay
         muted
         playsInline
-        onCanPlay={() => setVideoReady(true)}
+        onCanPlay={() => { if (!videoReadyRef.current) { videoReadyRef.current = true; setVideoReady(true); } }}
+        onError={() => { if (!videoReadyRef.current) { videoReadyRef.current = true; setVideoReady(true); } }}
         style={{ filter: "brightness(0.55) contrast(1.1) saturate(1.2)" }}
       />
 
