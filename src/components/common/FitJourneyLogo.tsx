@@ -53,7 +53,7 @@ const FloatingParticle = forwardRef<HTMLDivElement, FloatingParticleProps>(funct
   );
 });
 
-const FitJourneyLogo = forwardRef<HTMLDivElement, FitJourneyLogoProps>(function FitJourneyLogo(
+const FitJourneyLogo = forwardRef<HTMLButtonElement, FitJourneyLogoProps>(function FitJourneyLogo(
   { collapsed = false, size = "md" },
   ref,
 ) {
@@ -64,29 +64,39 @@ const FitJourneyLogo = forwardRef<HTMLDivElement, FitJourneyLogoProps>(function 
     if (typeof window === "undefined") return;
 
     sessionStorage.removeItem(STORAGE_KEY);
+    const targetUrl = "/?intro=1";
 
-    if (location.pathname === "/") {
-      window.location.href = "/?intro=1";
+    if (location.pathname === "/" && window.location.search === "?intro=1") {
+      window.location.reload();
       return;
     }
 
-    window.location.href = "/?intro=1";
+    window.location.assign(targetUrl);
   }, [location.pathname]);
 
-  const particles = useMemo(() =>
-    Array.from({ length: s.particles }, (_, i) => ({
-      id: i,
-      delay: i * 0.35,
-      x: 15 + Math.random() * 70,
-      y: 15 + Math.random() * 70,
-      size: 2 + Math.random() * 2.5,
-      driftX: (Math.random() - 0.5) * 12,
-      driftY: (Math.random() - 0.5) * 12,
-      duration: 2.5 + Math.random() * 1.5,
-    })), [s.particles]);
+  const particles = useMemo(
+    () =>
+      Array.from({ length: s.particles }, (_, i) => ({
+        id: i,
+        delay: i * 0.35,
+        x: 15 + Math.random() * 70,
+        y: 15 + Math.random() * 70,
+        size: 2 + Math.random() * 2.5,
+        driftX: (Math.random() - 0.5) * 12,
+        driftY: (Math.random() - 0.5) * 12,
+        duration: 2.5 + Math.random() * 1.5,
+      })),
+    [s.particles],
+  );
 
   return (
-    <div ref={ref} className="flex items-center gap-0 cursor-pointer relative z-20 touch-manipulation" onClick={handleClick} role="button" aria-label="Voltar para a entrada do FitJourney" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && handleClick()}>
+    <button
+      ref={ref}
+      type="button"
+      onClick={handleClick}
+      className="relative z-20 flex items-center gap-0 cursor-pointer touch-manipulation bg-transparent border-0 p-0 text-left appearance-none"
+      aria-label="Voltar para a entrada do FitJourney"
+    >
       <div
         className="relative flex-shrink-0 flex items-center justify-center"
         style={{ width: s.icon, height: s.icon }}
@@ -94,7 +104,8 @@ const FitJourneyLogo = forwardRef<HTMLDivElement, FitJourneyLogoProps>(function 
         <motion.div
           className="pointer-events-none absolute -inset-2 rounded-full"
           style={{
-            background: "radial-gradient(circle, hsl(var(--primary) / 0.45) 0%, hsl(var(--primary) / 0.18) 45%, transparent 75%)",
+            background:
+              "radial-gradient(circle, hsl(var(--primary) / 0.45) 0%, hsl(var(--primary) / 0.18) 45%, transparent 75%)",
             filter: "blur(8px)",
           }}
           animate={{ scale: [0.95, 1.15, 0.95], opacity: [0.45, 0.95, 0.45] }}
@@ -104,7 +115,8 @@ const FitJourneyLogo = forwardRef<HTMLDivElement, FitJourneyLogoProps>(function 
         <motion.div
           className="pointer-events-none absolute -inset-3 rounded-full"
           style={{
-            background: "radial-gradient(circle, hsl(var(--accent) / 0.35) 0%, hsl(var(--accent) / 0.12) 50%, transparent 78%)",
+            background:
+              "radial-gradient(circle, hsl(var(--accent) / 0.35) 0%, hsl(var(--accent) / 0.12) 50%, transparent 78%)",
             filter: "blur(12px)",
           }}
           animate={{ scale: [1, 1.22, 1], opacity: [0.3, 0.75, 0.3] }}
@@ -117,11 +129,10 @@ const FitJourneyLogo = forwardRef<HTMLDivElement, FitJourneyLogoProps>(function 
           width={s.icon}
           height={s.icon}
           draggable={false}
-          className="relative z-10 object-cover select-none"
+          className="relative z-10 object-cover select-none pointer-events-none"
           style={{ imageRendering: "auto", willChange: "auto" }}
         />
 
-        {/* Floating neural particles */}
         {particles.map((p) => (
           <FloatingParticle
             key={p.id}
@@ -165,7 +176,7 @@ const FitJourneyLogo = forwardRef<HTMLDivElement, FitJourneyLogoProps>(function 
           </span>
         </motion.div>
       )}
-    </div>
+    </button>
   );
 });
 
