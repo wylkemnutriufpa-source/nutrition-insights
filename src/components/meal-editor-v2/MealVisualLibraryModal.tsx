@@ -43,7 +43,7 @@ const CATEGORIES = [
 ];
 
 // ── Component ───────────────────────────────────────────────
-export function MealVisualLibraryModal({ open, onOpenChange }: MealVisualLibraryModalProps) {
+export function MealVisualLibraryModal({ open, onOpenChange, onDragStartFromLibrary }: MealVisualLibraryModalProps) {
   const [items, setItems] = useState<VisualItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
