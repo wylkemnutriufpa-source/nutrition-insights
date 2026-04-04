@@ -17,7 +17,7 @@ const faqs = [
 
 export default function LandingFAQ() {
   return (
-    <section className="py-24 md:py-32 px-6">
+    <section id="faq" className="py-24 md:py-32 px-6">
       <div className="max-w-3xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
