@@ -57,6 +57,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
           patientId,
           nutritionistId: user.id,
           existingPlanId: store.planId,
+          meal_plan_id: store.planId,
           isPipeline: false,
           generationMode: selectedMode,
           saveAsTemplate,
@@ -69,7 +70,12 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
         toast.error(msg);
         return;
       }
-      await store.hydrate(data.mealPlanId || store.planId, user.id);
+      const resolvedPlanId = store.planId || data.mealPlanId;
+      if (!resolvedPlanId) {
+        throw new Error("A engine retornou sem um plano válido.");
+      }
+
+      await store.hydrate(resolvedPlanId, user.id);
       toast.success(`✅ Plano gerado com ${data.items_count || 0} refeições!`);
       onGenerated();
     } catch (err: any) {
