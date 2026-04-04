@@ -1,83 +1,18 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SkipForward } from "lucide-react";
-import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 
 const EASE_PREMIUM = [0.22, 1, 0.36, 1] as const;
 const STORAGE_KEY = "fj_intro_seen";
-const TOTAL_DURATION = 3000; // 3 seconds
-
-/* ─── Floating particles ─── */
-function IntroParticles() {
-  const particles = Array.from({ length: 30 }, (_, i) => ({
-    x: `${Math.random() * 100}%`,
-    y: `${Math.random() * 100}%`,
-    size: 1 + Math.random() * 3,
-    delay: Math.random() * 1.5,
-    dur: 2 + Math.random() * 3,
-  }));
-
-  return (
-    <>
-      {particles.map((p, i) => (
-        <motion.div
-          key={i}
-          className="absolute rounded-full pointer-events-none"
-          style={{
-            left: p.x,
-            top: p.y,
-            width: p.size,
-            height: p.size,
-            background: "hsl(var(--primary) / 0.4)",
-            boxShadow: "0 0 6px hsl(var(--primary) / 0.3)",
-          }}
-          initial={{ opacity: 0 }}
-          animate={{
-            y: [0, -20, 0],
-            opacity: [0, 0.6, 0],
-            scale: [0.5, 1.2, 0.5],
-          }}
-          transition={{
-            duration: p.dur,
-            repeat: Infinity,
-            delay: p.delay,
-            ease: "easeInOut",
-          }}
-        />
-      ))}
-    </>
-  );
-}
-
-/* ─── Energy ring that pulses from center ─── */
-function EnergyRings() {
-  return (
-    <>
-      {[0, 0.3, 0.6].map((delay, i) => (
-        <motion.div
-          key={i}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none"
-          style={{
-            width: 120,
-            height: 120,
-            border: "1px solid hsl(var(--primary) / 0.3)",
-            boxShadow: `0 0 20px hsl(var(--primary) / 0.1), inset 0 0 20px hsl(var(--primary) / 0.05)`,
-          }}
-          initial={{ opacity: 0, scale: 0.2 }}
-          animate={{ opacity: [0, 0.6, 0], scale: [0.2, 3, 5] }}
-          transition={{ duration: 2, delay: 0.2 + delay, ease: "easeOut" }}
-        />
-      ))}
-    </>
-  );
-}
 
 interface CinematicIntroProps {
   onComplete: () => void;
 }
 
 export default function CinematicIntro({ onComplete }: CinematicIntroProps) {
-  const [phase, setPhase] = useState<"particles" | "logo" | "text" | "exit">("particles");
+  const [phase, setPhase] = useState<"video" | "text" | "exit">("video");
+  const [videoReady, setVideoReady] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const timerRef = useRef<NodeJS.Timeout[]>([]);
 
   const clearTimers = useCallback(() => {
@@ -92,186 +27,168 @@ export default function CinematicIntro({ onComplete }: CinematicIntroProps) {
   }, [clearTimers, onComplete]);
 
   useEffect(() => {
-    // Phase timeline (total ~3s)
-    const t1 = setTimeout(() => setPhase("logo"), 400);
-    const t2 = setTimeout(() => setPhase("text"), 1400);
-    const t3 = setTimeout(() => setPhase("exit"), 2400);
-    const t4 = setTimeout(() => {
+    if (!videoReady) return;
+
+    // Show text after 1.5s, start exit at 4s, complete at 5s
+    const t1 = setTimeout(() => setPhase("text"), 1500);
+    const t2 = setTimeout(() => setPhase("exit"), 4000);
+    const t3 = setTimeout(() => {
       sessionStorage.setItem(STORAGE_KEY, "1");
       onComplete();
-    }, TOTAL_DURATION);
+    }, 5000);
 
-    timerRef.current = [t1, t2, t3, t4];
+    timerRef.current = [t1, t2, t3];
     return clearTimers;
-  }, [onComplete, clearTimers]);
+  }, [videoReady, onComplete, clearTimers]);
 
   return (
     <motion.div
-      className="fixed inset-0 z-[99999] flex flex-col items-center justify-center overflow-hidden"
-      style={{
-        background:
-          "radial-gradient(ellipse at 50% 40%, hsl(152 30% 6%) 0%, hsl(222 40% 4%) 50%, hsl(0 0% 1%) 100%)",
-      }}
+      className="fixed inset-0 z-[99999] flex items-center justify-center overflow-hidden bg-black"
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.6, ease: EASE_PREMIUM }}
+      transition={{ duration: 0.8, ease: EASE_PREMIUM }}
     >
-      {/* Particles always visible */}
-      <IntroParticles />
+      {/* Video background */}
+      <video
+        ref={videoRef}
+        className="absolute inset-0 w-full h-full object-cover"
+        src="/videos/intro.mp4"
+        autoPlay
+        muted
+        playsInline
+        onCanPlay={() => setVideoReady(true)}
+        style={{ filter: "brightness(0.55) contrast(1.1) saturate(1.2)" }}
+      />
 
-      {/* Energy rings appear early */}
-      <EnergyRings />
+      {/* Gradient overlays for cinematic feel */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse at 50% 50%, transparent 20%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0.85) 100%)",
+        }}
+      />
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(0deg, rgba(0,0,0,0.7) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.4) 100%)",
+        }}
+      />
 
-      {/* Volumetric soft light behind logo */}
+      {/* Subtle green glow from center */}
       <motion.div
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none"
         style={{
-          width: 500,
-          height: 500,
+          width: 600,
+          height: 600,
           background:
-            "radial-gradient(circle, hsl(var(--primary) / 0.18) 0%, hsl(var(--primary) / 0.08) 30%, hsl(var(--primary) / 0.03) 55%, transparent 75%)",
-          filter: "blur(30px)",
+            "radial-gradient(circle, hsl(var(--primary) / 0.12) 0%, hsl(var(--primary) / 0.04) 40%, transparent 70%)",
+          filter: "blur(60px)",
         }}
-        initial={{ opacity: 0, scale: 0.2 }}
-        animate={{ opacity: [0, 1, 0.7], scale: [0.2, 1.3, 1.05] }}
-        transition={{ duration: 2, ease: EASE_PREMIUM }}
+        initial={{ opacity: 0, scale: 0.3 }}
+        animate={{ opacity: 1, scale: 1.2 }}
+        transition={{ duration: 3, ease: "easeOut" }}
       />
 
-      {/* Glow pulse layers */}
-      {[0, 0.5, 1].map((delay, i) => (
-        <motion.div
-          key={`glow-${i}`}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none"
-          style={{
-            width: 280 + i * 60,
-            height: 280 + i * 60,
-            background: `radial-gradient(circle, hsl(var(--primary) / ${0.12 - i * 0.03}) 0%, transparent 70%)`,
-            filter: `blur(${16 + i * 8}px)`,
-          }}
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: [0, 0.8, 0.3, 0.8], scale: [0.5, 1.1, 0.95, 1.1] }}
-          transition={{ duration: 3, delay: 0.3 + delay, repeat: Infinity, ease: "easeInOut" }}
-        />
-      ))}
-
-      {/* Light rays behind logo */}
-      {Array.from({ length: 8 }, (_, i) => (
-        <motion.div
-          key={`ray-${i}`}
-          className="absolute top-1/2 left-1/2 pointer-events-none"
-          style={{
-            width: 2,
-            height: 140 + Math.random() * 80,
-            background: `linear-gradient(180deg, hsl(var(--primary) / 0.25), hsl(var(--primary) / 0.06), transparent)`,
-            transformOrigin: "top center",
-            transform: `rotate(${i * 45}deg)`,
-            filter: "blur(3px)",
-          }}
-          initial={{ opacity: 0, scaleY: 0 }}
-          animate={{ opacity: [0, 0.6, 0.2, 0.5], scaleY: [0, 1, 0.8, 1] }}
-          transition={{ duration: 2.5, delay: 0.4 + i * 0.08, repeat: Infinity, ease: "easeInOut" }}
-        />
-      ))}
-
-      {/* Logo reveal */}
+      {/* Main text — emerges from depth */}
       <AnimatePresence>
-        {(phase === "logo" || phase === "text" || phase === "exit") && (
+        {(phase === "text" || phase === "exit") && (
           <motion.div
-            key="logo"
-            className="relative z-10"
-            initial={{ opacity: 0, scale: 0.5, filter: "blur(12px)" }}
-            animate={{
-              opacity: phase === "exit" ? 0.3 : 1,
-              scale: phase === "exit" ? 1.1 : [0.5, 1.05, 1],
-              filter: "blur(0px)",
-              y: phase === "text" || phase === "exit" ? -30 : 0,
-            }}
-            transition={{ duration: 0.6, ease: EASE_PREMIUM }}
-            style={{
-              filter: "drop-shadow(0 0 30px hsl(var(--primary) / 0.4)) drop-shadow(0 0 60px hsl(var(--primary) / 0.2))",
-            }}
+            key="intro-text"
+            className="relative z-10 flex flex-col items-center gap-4 px-6 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: phase === "exit" ? 0 : 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8, ease: EASE_PREMIUM }}
           >
-            <FitJourneyLogo size="lg" />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Text sequence */}
-      <AnimatePresence mode="wait">
-        {phase === "text" && (
-          <motion.div
-            key="text-block"
-            className="relative z-10 mt-6 text-center flex flex-col items-center gap-2"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.5, ease: EASE_PREMIUM }}
-          >
-            <motion.p
-              className="text-sm md:text-base font-semibold tracking-[0.15em] uppercase"
+            {/* Horizontal accent line */}
+            <motion.div
+              className="h-[1px] rounded-full"
               style={{
-                background: "linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)))",
+                background:
+                  "linear-gradient(90deg, transparent, hsl(var(--primary) / 0.6), transparent)",
+              }}
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 120, opacity: 1 }}
+              transition={{ duration: 1, delay: 0.2, ease: EASE_PREMIUM }}
+            />
+
+            {/* "Bem-vindo ao" */}
+            <motion.p
+              className="text-sm md:text-base font-light tracking-[0.35em] uppercase text-white/60"
+              initial={{ opacity: 0, y: 40, scale: 0.8, filter: "blur(12px)" }}
+              animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+              transition={{ duration: 1.2, delay: 0.1, ease: EASE_PREMIUM }}
+            >
+              Bem-vindo ao
+            </motion.p>
+
+            {/* "ecossistema" */}
+            <motion.p
+              className="text-lg md:text-2xl font-light tracking-[0.25em] uppercase"
+              style={{
+                background: "linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--primary)))",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
-                textShadow: "none",
               }}
-              initial={{ opacity: 0, letterSpacing: "0.05em" }}
-              animate={{ opacity: 1, letterSpacing: "0.15em" }}
-              transition={{ duration: 0.6, ease: EASE_PREMIUM }}
+              initial={{ opacity: 0, y: 60, scale: 0.7, filter: "blur(16px)" }}
+              animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+              transition={{ duration: 1.4, delay: 0.3, ease: EASE_PREMIUM }}
             >
-              Sua nova jornada começa agora
+              ecossistema
             </motion.p>
 
-            <motion.p
-              className="text-xs md:text-sm text-muted-foreground/60 tracking-[0.08em] max-w-sm mt-1"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.7 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
+            {/* "FitJourney" — hero text */}
+            <motion.h1
+              className="text-4xl sm:text-5xl md:text-7xl font-display font-bold tracking-[0.08em]"
+              style={{
+                color: "white",
+                textShadow:
+                  "0 0 40px hsl(var(--primary) / 0.4), 0 0 80px hsl(var(--primary) / 0.15), 0 4px 20px rgba(0,0,0,0.5)",
+              }}
+              initial={{ opacity: 0, y: 80, scale: 0.6, filter: "blur(20px)" }}
+              animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+              transition={{ duration: 1.6, delay: 0.5, ease: EASE_PREMIUM }}
             >
-              Aqui você não faz apenas dieta.
-              <br />
-              Você inicia uma transformação inteligente.
-            </motion.p>
+              FitJourney
+            </motion.h1>
+
+            {/* Bottom accent line */}
+            <motion.div
+              className="h-[1px] rounded-full mt-2"
+              style={{
+                background:
+                  "linear-gradient(90deg, transparent, hsl(var(--primary) / 0.4), transparent)",
+              }}
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 80, opacity: 1 }}
+              transition={{ duration: 1, delay: 0.8, ease: EASE_PREMIUM }}
+            />
           </motion.div>
-        )}
-
-        {phase === "exit" && (
-          <motion.p
-            key="welcome"
-            className="relative z-10 mt-4 text-lg md:text-xl font-bold tracking-[0.12em]"
-            style={{
-              color: "hsl(var(--primary))",
-              textShadow: "0 0 20px hsl(var(--primary) / 0.3)",
-            }}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, ease: EASE_PREMIUM }}
-          >
-            Bem-vindo ao FitJourney
-          </motion.p>
         )}
       </AnimatePresence>
 
       {/* Skip button */}
       <motion.button
         onClick={skip}
-        className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] text-muted-foreground/40 hover:text-muted-foreground/80 hover:bg-white/[0.04] transition-all duration-300 backdrop-blur-sm border border-transparent hover:border-white/[0.06] z-20"
+        className="absolute top-4 right-4 md:top-6 md:right-6 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] text-white/30 hover:text-white/70 hover:bg-white/[0.06] transition-all duration-300 backdrop-blur-sm border border-transparent hover:border-white/[0.08] z-20"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.5, duration: 0.3 }}
+        transition={{ delay: 1, duration: 0.5 }}
         aria-label="Pular intro"
       >
         <span className="hidden sm:inline tracking-wider uppercase">Pular</span>
         <SkipForward className="w-3.5 h-3.5" />
       </motion.button>
 
-      {/* Bottom loading bar */}
+      {/* Bottom progress bar */}
       <motion.div
-        className="absolute bottom-6 left-1/2 -translate-x-1/2 w-28 h-[1.5px] rounded-full overflow-hidden"
-        style={{ background: "hsl(var(--primary) / 0.1)" }}
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 w-32 h-[1.5px] rounded-full overflow-hidden z-20"
+        style={{ background: "rgba(255,255,255,0.08)" }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.8 }}
-        transition={{ duration: 0.3, delay: 0.2 }}
+        transition={{ duration: 0.3, delay: 0.5 }}
       >
         <motion.div
           className="h-full rounded-full"
@@ -281,7 +198,7 @@ export default function CinematicIntro({ onComplete }: CinematicIntroProps) {
           }}
           initial={{ width: "0%" }}
           animate={{ width: "100%" }}
-          transition={{ duration: TOTAL_DURATION / 1000, ease: "easeInOut" }}
+          transition={{ duration: 5, ease: "easeInOut" }}
         />
       </motion.div>
     </motion.div>
