@@ -10,7 +10,7 @@ const features = [
 
 export default function LandingCoachSection() {
   return (
-    <section className="py-28 md:py-36 px-6 bg-[hsl(240,15%,6%)] relative overflow-hidden">
+    <section id="coach-bodybuilder" className="py-28 md:py-36 px-6 bg-[hsl(240,15%,6%)] relative overflow-hidden">
       {/* Subtle warm glow for coach section */}
       <div
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] rounded-full pointer-events-none"

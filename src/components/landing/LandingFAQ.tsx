@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/accordion";
 
 const faqs = [
-  { q: "Preciso pagar para testar?", a: "Não. O FitJourney possui teste gratuito de 14 dias com acesso completo a todas as funcionalidades." },
+  { q: "Preciso pagar para testar?", a: "Não. O FitJourney possui teste gratuito de 7 dias com acesso completo a todas as funcionalidades." },
   { q: "Preciso instalar algo?", a: "Não. A plataforma funciona direto no navegador, em qualquer dispositivo. Seus pacientes também podem instalar como app no celular." },
   { q: "Posso cancelar quando quiser?", a: "Sim. Sem fidelidade, sem multa. Cancele a qualquer momento pela sua conta." },
   { q: "Meus dados ficam seguros?", a: "Sim. Utilizamos infraestrutura cloud com criptografia ponta-a-ponta e conformidade com a LGPD." },
@@ -17,7 +17,7 @@ const faqs = [
 
 export default function LandingFAQ() {
   return (
-    <section className="py-24 md:py-32 px-6">
+    <section id="faq" className="py-24 md:py-32 px-6">
       <div className="max-w-3xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}

@@ -12,7 +12,7 @@ const features = [
 
 export default function LandingAIEngine() {
   return (
-    <section className="py-28 md:py-36 px-6 bg-[hsl(240,15%,6%)]">
+    <section id="funcionalidades" className="py-28 md:py-36 px-6 bg-[hsl(240,15%,6%)]">
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 lg:gap-20 items-center">
         <motion.div
           initial={{ opacity: 0, x: -30 }}
