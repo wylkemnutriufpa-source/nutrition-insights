@@ -13,6 +13,7 @@ export default function CinematicIntro({ onComplete }: CinematicIntroProps) {
   const [phase, setPhase] = useState<"video" | "text" | "exit">("video");
   const [videoReady, setVideoReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const timerRef = useRef<NodeJS.Timeout[]>([]);
 
   const clearTimers = useCallback(() => {
@@ -22,6 +23,10 @@ export default function CinematicIntro({ onComplete }: CinematicIntroProps) {
 
   const skip = useCallback(() => {
     clearTimers();
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
     sessionStorage.setItem(STORAGE_KEY, "1");
     onComplete();
   }, [clearTimers, onComplete]);
@@ -29,16 +34,34 @@ export default function CinematicIntro({ onComplete }: CinematicIntroProps) {
   useEffect(() => {
     if (!videoReady) return;
 
+    // Play intro audio
+    try {
+      const audio = new Audio("/audio/intro.wav");
+      audio.volume = 0.5;
+      audioRef.current = audio;
+      audio.play().catch(() => {});
+    } catch {}
+
     // Show text after 1.5s, start exit at 4s, complete at 5s
     const t1 = setTimeout(() => setPhase("text"), 1500);
     const t2 = setTimeout(() => setPhase("exit"), 4000);
     const t3 = setTimeout(() => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
       sessionStorage.setItem(STORAGE_KEY, "1");
       onComplete();
     }, 5000);
 
     timerRef.current = [t1, t2, t3];
-    return clearTimers;
+    return () => {
+      clearTimers();
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+    };
   }, [videoReady, onComplete, clearTimers]);
 
   return (
