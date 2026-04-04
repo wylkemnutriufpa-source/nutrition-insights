@@ -3,7 +3,8 @@ import { MealDetailProvider } from "@/components/patient/MealDetailContext";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Loader2, AlertTriangle, Zap, Save, Send, CheckCircle2,
-  Wand2, Trash2, Library, LayoutGrid, List, Minimize2, Maximize2, Sparkles, Utensils, UtensilsCrossed
+  Wand2, Trash2, Library, LayoutGrid, List, Minimize2, Maximize2, Sparkles, Utensils, UtensilsCrossed,
+  PanelTop, Grid3X3
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
