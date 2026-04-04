@@ -58,10 +58,15 @@ export default function MealPlanEditorV2() {
   const [isFullscreen, setIsFullscreen] = useState(() => {
     return localStorage.getItem(FULLSCREEN_KEY) === "true";
   });
+  const [editorLayout, setEditorLayout] = useState<EditorLayout>(() => {
+    const saved = localStorage.getItem(EDITOR_LAYOUT_KEY);
+    return saved === "compact" ? "compact" : "tabs";
+  });
 
   // Persist preferences
   useEffect(() => { localStorage.setItem(VIEW_MODE_KEY, viewMode); }, [viewMode]);
   useEffect(() => { localStorage.setItem(FULLSCREEN_KEY, String(isFullscreen)); }, [isFullscreen]);
+  useEffect(() => { localStorage.setItem(EDITOR_LAYOUT_KEY, editorLayout); }, [editorLayout]);
 
   // Keyboard shortcuts (Esc exits fullscreen)
   useEffect(() => {
