@@ -157,7 +157,7 @@ export default function EditorWorkspaceTabs({ viewMode, onViewModeChange }: Prop
         <TabsContent value="ia" className="mt-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
-              onClick={() => setAssisted Open(true)}
+              onClick={() => setAssistedOpen(true)}
               className="flex items-center gap-3 p-4 rounded-xl border-2 border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 transition-all text-left"
             >
               <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
