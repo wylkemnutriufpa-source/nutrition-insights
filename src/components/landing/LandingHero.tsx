@@ -66,14 +66,14 @@ export default function LandingHero() {
             className="flex items-center gap-3"
           >
             {/* Video logo with background removed via blend mode */}
-            <div className="relative w-[100px] h-[100px] md:w-[120px] md:h-[120px] flex-shrink-0 overflow-hidden rounded-full">
+            <div className="relative w-[64px] h-[64px] md:w-[76px] md:h-[76px] flex-shrink-0 overflow-hidden rounded-2xl">
               <video
                 src="/videos/logo-animated.mp4"
                 autoPlay
                 loop
                 muted
                 playsInline
-                className="w-full h-full object-cover"
+                className="w-[140%] h-[140%] object-cover absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
                 style={{
                   mixBlendMode: "screen",
                 }}
