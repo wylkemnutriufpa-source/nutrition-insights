@@ -406,6 +406,15 @@ export default function MealPlanEditorV2() {
               {publishing ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Send className="w-4 h-4 mr-1" />}
               Publicar
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setVisualLibOpen(true)}
+              className="gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
+            >
+              <UtensilsCrossed className="w-4 h-4" />
+              <span className="hidden sm:inline">Refeições</span>
+            </Button>
           </div>
         </div>
 
