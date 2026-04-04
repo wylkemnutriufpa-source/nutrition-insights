@@ -500,6 +500,10 @@ export default function MealPlanEditorV2() {
         open={assistedOpen}
         onOpenChange={setAssistedOpen}
       />
+      <MealVisualLibraryModal
+        open={visualLibOpen}
+        onOpenChange={setVisualLibOpen}
+      />
     </>
   );
 
