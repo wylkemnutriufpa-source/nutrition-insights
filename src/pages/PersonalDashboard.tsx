@@ -101,12 +101,20 @@ export default function PersonalDashboard() {
             <h1 className="text-2xl font-bold">Dashboard do Personal</h1>
             <p className="text-muted-foreground text-sm">Gerencie seus alunos e treinos</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <Button onClick={() => setLinkOpen(true)} size="sm" variant="outline" className="gap-1.5">
+              <Search className="w-4 h-4" />
+              Vincular Aluno
+            </Button>
+            <Button onClick={() => setAddOpen(true)} size="sm" className="gap-1.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white">
+              <UserPlus className="w-4 h-4" />
+              Cadastrar Aluno
+            </Button>
             <Link to="/personal/students">
-              <Button variant="outline" size="sm"><Users className="w-4 h-4 mr-1" /> Alunos</Button>
+              <Button variant="outline" size="sm"><Users className="w-4 h-4 mr-1" /> Ver Todos</Button>
             </Link>
             <Link to="/personal/workouts">
-              <Button size="sm"><Plus className="w-4 h-4 mr-1" /> Novo Treino</Button>
+              <Button size="sm" variant="outline"><Plus className="w-4 h-4 mr-1" /> Novo Treino</Button>
             </Link>
           </div>
         </div>
