@@ -301,29 +301,29 @@ export default function MealPlanEditorV2() {
               </div>
             )}
 
-            {/* View Mode Toggle */}
+            {/* Editor Layout Mode Toggle */}
             <div className="flex items-center rounded-lg border border-border bg-muted/50 p-0.5">
               <button
                 type="button"
-                onClick={() => setViewMode("grid")}
+                onClick={() => setEditorLayout("tabs")}
                 className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium transition-colors ${
-                  viewMode === "grid"
+                  editorLayout === "tabs"
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <LayoutGrid className="w-3.5 h-3.5" /> Grade
+                <PanelTop className="w-3.5 h-3.5" /> Abas
               </button>
               <button
                 type="button"
-                onClick={() => setViewMode("list")}
+                onClick={() => setEditorLayout("compact")}
                 className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium transition-colors ${
-                  viewMode === "list"
+                  editorLayout === "compact"
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <List className="w-3.5 h-3.5" /> Lista
+                <Grid3X3 className="w-3.5 h-3.5" /> Compacto
               </button>
             </div>
 
