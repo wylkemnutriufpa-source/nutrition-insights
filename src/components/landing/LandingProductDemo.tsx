@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Play, Stethoscope, User } from "lucide-react";
-import mockupDashboard from "@/assets/mockup-dashboard.jpg";
-import mockupMealPlan from "@/assets/mockup-meal-plan.jpg";
+import mockupDashboard from "@/assets/mockup-dashboard-premium.jpg";
+import mockupMealPlan from "@/assets/mockup-mealplan-premium.jpg";
 import { EnergyGlow, MockupParticles, PremiumMockupFrame, EnergyBeam } from "./LandingEffects";
 
 export default function LandingProductDemo() {
