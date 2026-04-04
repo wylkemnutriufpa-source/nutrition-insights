@@ -130,7 +130,10 @@ export default function LandingHero() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 1 }}
           >
-            <Link to="/auth?tab=login" className="text-white/40 hover:text-white/70 text-sm transition-colors underline underline-offset-4 decoration-white/20 hover:decoration-white/40">
+            <Link
+              to="/auth?tab=login"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/20 hover:border-primary/50 bg-white/[0.06] hover:bg-white/[0.12] text-white/70 hover:text-white text-sm font-medium transition-all duration-300 backdrop-blur-sm shadow-sm hover:shadow-primary/10"
+            >
               Já tenho conta → Entrar
             </Link>
           </motion.div>
