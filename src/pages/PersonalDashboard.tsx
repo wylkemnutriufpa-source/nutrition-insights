@@ -289,6 +289,19 @@ export default function PersonalDashboard() {
         <div className="mt-6">
           <IFJCommandCenter role="personal" />
         </div>
+
+        <LinkStudentModal
+          open={linkOpen}
+          onOpenChange={setLinkOpen}
+          onLinked={() => { refetchLinks(); window.location.reload(); }}
+          professionalRole="trainer"
+        />
+
+        <AddStudentModal
+          open={addOpen}
+          onOpenChange={setAddOpen}
+          onAdded={() => { refetchLinks(); window.location.reload(); }}
+        />
       </div>
     </DashboardLayout>
   );
