@@ -1,6 +1,9 @@
 import { motion } from "framer-motion";
-import { forwardRef, useMemo } from "react";
+import { forwardRef, useMemo, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import logoPng from "@/assets/logo.png";
+
+const STORAGE_KEY = "fj_intro_seen";
 
 interface FitJourneyLogoProps {
   collapsed?: boolean;
@@ -55,6 +58,18 @@ const FitJourneyLogo = forwardRef<HTMLDivElement, FitJourneyLogoProps>(function 
   ref,
 ) {
   const s = sizes[size];
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleClick = useCallback(() => {
+    sessionStorage.removeItem(STORAGE_KEY);
+    if (location.pathname === "/") {
+      // Already on gateway, dispatch custom event to trigger intro
+      window.dispatchEvent(new CustomEvent("fj-replay-intro"));
+    } else {
+      navigate("/?intro=1");
+    }
+  }, [navigate, location.pathname]);
 
   const particles = useMemo(() =>
     Array.from({ length: s.particles }, (_, i) => ({
@@ -69,7 +84,7 @@ const FitJourneyLogo = forwardRef<HTMLDivElement, FitJourneyLogoProps>(function 
     })), [s.particles]);
 
   return (
-    <div ref={ref} className="flex items-center gap-0">
+    <div ref={ref} className="flex items-center gap-0 cursor-pointer" onClick={handleClick}>
       <div
         className="relative flex-shrink-0 flex items-center justify-center"
         style={{ width: s.icon, height: s.icon }}
