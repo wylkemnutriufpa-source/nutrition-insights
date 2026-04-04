@@ -14,6 +14,18 @@ export default function CinematicIntro({ onComplete }: CinematicIntroProps) {
   const [videoReady, setVideoReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const videoReadyRef = useRef(false);
+
+  // Fallback: if video never fires onCanPlay, proceed anyway after 2s
+  useEffect(() => {
+    const fallback = setTimeout(() => {
+      if (!videoReadyRef.current) {
+        videoReadyRef.current = true;
+        setVideoReady(true);
+      }
+    }, 2000);
+    return () => clearTimeout(fallback);
+  }, []);
   const timerRef = useRef<NodeJS.Timeout[]>([]);
 
   const clearTimers = useCallback(() => {
@@ -78,7 +90,8 @@ export default function CinematicIntro({ onComplete }: CinematicIntroProps) {
         autoPlay
         muted
         playsInline
-        onCanPlay={() => setVideoReady(true)}
+        onCanPlay={() => { if (!videoReadyRef.current) { videoReadyRef.current = true; setVideoReady(true); } }}
+        onError={() => { if (!videoReadyRef.current) { videoReadyRef.current = true; setVideoReady(true); } }}
         style={{ filter: "brightness(0.55) contrast(1.1) saturate(1.2)" }}
       />
 
