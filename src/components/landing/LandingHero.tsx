@@ -35,7 +35,7 @@ const particles = [
 ];
 
 const trustBadges = [
-  "14 dias grátis",
+  "7 dias grátis",
   "Sem cartão de crédito",
   "Configuração em 2 minutos",
 ];
