@@ -24,6 +24,11 @@ export default function GatewayPage() {
     setShowIntro(false);
   };
 
+  const handleReplayIntro = () => {
+    sessionStorage.removeItem(STORAGE_KEY);
+    setShowIntro(true);
+  };
+
   return (
     <>
       <AnimatePresence>
@@ -31,7 +36,7 @@ export default function GatewayPage() {
       </AnimatePresence>
 
       <div className="min-h-screen mesh-gradient-bg">
-        <LandingTopNav />
+        <LandingTopNav onLogoClick={handleReplayIntro} />
         <div className="pt-16" /> {/* spacer for fixed nav */}
         <LandingHero />
         <LandingSocialProof />
