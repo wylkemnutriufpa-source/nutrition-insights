@@ -99,6 +99,11 @@ export function MealVisualLibraryModal({ open, onOpenChange, onDragStartFromLibr
     };
     e.dataTransfer.setData("application/json", JSON.stringify(payload));
     e.dataTransfer.effectAllowed = "copy";
+    // Close modal so user can see the canvas drop zones
+    setTimeout(() => {
+      onOpenChange(false);
+      onDragStartFromLibrary?.();
+    }, 50);
   };
 
   return (
