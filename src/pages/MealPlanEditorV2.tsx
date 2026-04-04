@@ -22,6 +22,7 @@ import { MealLibrarySidebar } from "@/components/meal-editor-v2/MealLibrarySideb
 import { MealLibraryModal } from "@/components/meal-editor-v2/MealLibraryModal";
 import { AutoGenerateModal } from "@/components/meal-editor-v2/AutoGenerateModal";
 import { AssistedPlanModal } from "@/components/meal-editor-v2/AssistedPlanModal";
+import { MealVisualLibraryModal } from "@/components/meal-editor-v2/MealVisualLibraryModal";
 import { ValidationCorrectionPanel, type ValidationResult } from "@/components/meal-editor-v2/ValidationCorrectionPanel";
 import PlanAuditPanel from "@/components/plans/PlanAuditPanel";
 import { toast } from "sonner";
