@@ -3,7 +3,8 @@ import { MealDetailProvider } from "@/components/patient/MealDetailContext";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Loader2, AlertTriangle, Zap, Save, Send, CheckCircle2,
-  Wand2, Trash2, Library, LayoutGrid, List, Minimize2, Maximize2, Sparkles, Utensils, UtensilsCrossed
+  Wand2, Trash2, Library, LayoutGrid, List, Minimize2, Maximize2, Sparkles, Utensils, UtensilsCrossed,
+  PanelTop, Grid3X3
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
@@ -24,14 +25,18 @@ import { AutoGenerateModal } from "@/components/meal-editor-v2/AutoGenerateModal
 import { AssistedPlanModal } from "@/components/meal-editor-v2/AssistedPlanModal";
 import { MealVisualLibraryModal } from "@/components/meal-editor-v2/MealVisualLibraryModal";
 import { ValidationCorrectionPanel, type ValidationResult } from "@/components/meal-editor-v2/ValidationCorrectionPanel";
+import EditorWorkspaceTabs from "@/components/meal-editor-v2/EditorWorkspaceTabs";
+import EditorCompactToolbar from "@/components/meal-editor-v2/EditorCompactToolbar";
 import PlanAuditPanel from "@/components/plans/PlanAuditPanel";
 import { toast } from "sonner";
 import { resolveOverallValidationStatus, runValidateAndFixMealPlan } from "@/lib/mealPlanValidationFlow";
 
 type ViewMode = "grid" | "list";
+type EditorLayout = "tabs" | "compact";
 
 const VIEW_MODE_KEY = "fj_editor_view_mode";
 const FULLSCREEN_KEY = "fj_editor_fullscreen";
+const EDITOR_LAYOUT_KEY = "fj_editor_layout";
 
 export default function MealPlanEditorV2() {
   const { id } = useParams<{ id: string }>();
@@ -55,10 +60,15 @@ export default function MealPlanEditorV2() {
   const [isFullscreen, setIsFullscreen] = useState(() => {
     return localStorage.getItem(FULLSCREEN_KEY) === "true";
   });
+  const [editorLayout, setEditorLayout] = useState<EditorLayout>(() => {
+    const saved = localStorage.getItem(EDITOR_LAYOUT_KEY);
+    return saved === "compact" ? "compact" : "tabs";
+  });
 
   // Persist preferences
   useEffect(() => { localStorage.setItem(VIEW_MODE_KEY, viewMode); }, [viewMode]);
   useEffect(() => { localStorage.setItem(FULLSCREEN_KEY, String(isFullscreen)); }, [isFullscreen]);
+  useEffect(() => { localStorage.setItem(EDITOR_LAYOUT_KEY, editorLayout); }, [editorLayout]);
 
   // Keyboard shortcuts (Esc exits fullscreen)
   useEffect(() => {
@@ -291,29 +301,29 @@ export default function MealPlanEditorV2() {
               </div>
             )}
 
-            {/* View Mode Toggle */}
+            {/* Editor Layout Mode Toggle */}
             <div className="flex items-center rounded-lg border border-border bg-muted/50 p-0.5">
               <button
                 type="button"
-                onClick={() => setViewMode("grid")}
+                onClick={() => setEditorLayout("tabs")}
                 className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium transition-colors ${
-                  viewMode === "grid"
+                  editorLayout === "tabs"
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <LayoutGrid className="w-3.5 h-3.5" /> Grade
+                <PanelTop className="w-3.5 h-3.5" /> Abas
               </button>
               <button
                 type="button"
-                onClick={() => setViewMode("list")}
+                onClick={() => setEditorLayout("compact")}
                 className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium transition-colors ${
-                  viewMode === "list"
+                  editorLayout === "compact"
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <List className="w-3.5 h-3.5" /> Lista
+                <Grid3X3 className="w-3.5 h-3.5" /> Compacto
               </button>
             </div>
 
@@ -453,8 +463,12 @@ export default function MealPlanEditorV2() {
           />
         )}
 
-        {/* Editor Content */}
-        {viewMode === "grid" ? <WeeklyGrid /> : <ListView />}
+        {/* Editor Content — Workspace Mode */}
+        {editorLayout === "tabs" ? (
+          <EditorWorkspaceTabs viewMode={viewMode} onViewModeChange={setViewMode} />
+        ) : (
+          <EditorCompactToolbar viewMode={viewMode} onViewModeChange={setViewMode} />
+        )}
 
         {/* Auditoria Clínica — Motor Determinístico */}
         <div className="glass rounded-xl p-5 mt-4">
@@ -470,7 +484,6 @@ export default function MealPlanEditorV2() {
               if (inPlace) {
                 store.hydrate(plan.id, user?.id ?? "");
               } else {
-                // Load the corrected draft in-place instead of navigating away
                 store.hydrate(newPlanId, user?.id ?? "");
                 navigate(`/meal-plans/${newPlanId}`, { replace: true });
               }
@@ -479,7 +492,7 @@ export default function MealPlanEditorV2() {
         </div>
       </div>
 
-      {/* Modals & Sidebars */}
+      {/* Legacy Modals — kept for dropdown tools menu */}
       <MealLibrarySidebar
         open={libraryOpen}
         onOpenChange={setLibraryOpen}
