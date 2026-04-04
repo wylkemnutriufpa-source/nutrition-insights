@@ -28,7 +28,11 @@ export default function LandingTopNav() {
             <a
               key={l.label}
               href={l.href}
-              className="text-sm text-white/50 hover:text-white transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                document.querySelector(l.href)?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="text-sm text-white/50 hover:text-white transition-colors cursor-pointer"
             >
               {l.label}
             </a>
