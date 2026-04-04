@@ -3,7 +3,7 @@ import { MealDetailProvider } from "@/components/patient/MealDetailContext";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Loader2, AlertTriangle, Zap, Save, Send, CheckCircle2,
-  Wand2, Trash2, Library, LayoutGrid, List, Minimize2, Maximize2, Sparkles, Utensils
+  Wand2, Trash2, Library, LayoutGrid, List, Minimize2, Maximize2, Sparkles, Utensils, UtensilsCrossed
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
@@ -22,6 +22,7 @@ import { MealLibrarySidebar } from "@/components/meal-editor-v2/MealLibrarySideb
 import { MealLibraryModal } from "@/components/meal-editor-v2/MealLibraryModal";
 import { AutoGenerateModal } from "@/components/meal-editor-v2/AutoGenerateModal";
 import { AssistedPlanModal } from "@/components/meal-editor-v2/AssistedPlanModal";
+import { MealVisualLibraryModal } from "@/components/meal-editor-v2/MealVisualLibraryModal";
 import { ValidationCorrectionPanel, type ValidationResult } from "@/components/meal-editor-v2/ValidationCorrectionPanel";
 import PlanAuditPanel from "@/components/plans/PlanAuditPanel";
 import { toast } from "sonner";
@@ -46,6 +47,7 @@ export default function MealPlanEditorV2() {
   const [mealLibModalOpen, setMealLibModalOpen] = useState(false);
   const [autoGenOpen, setAutoGenOpen] = useState(false);
   const [assistedOpen, setAssistedOpen] = useState(false);
+  const [visualLibOpen, setVisualLibOpen] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const saved = localStorage.getItem(VIEW_MODE_KEY);
     return saved === "list" ? "list" : "grid";
@@ -404,6 +406,15 @@ export default function MealPlanEditorV2() {
               {publishing ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Send className="w-4 h-4 mr-1" />}
               Publicar
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setVisualLibOpen(true)}
+              className="gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
+            >
+              <UtensilsCrossed className="w-4 h-4" />
+              <span className="hidden sm:inline">Refeições</span>
+            </Button>
           </div>
         </div>
 
@@ -488,6 +499,10 @@ export default function MealPlanEditorV2() {
       <AssistedPlanModal
         open={assistedOpen}
         onOpenChange={setAssistedOpen}
+      />
+      <MealVisualLibraryModal
+        open={visualLibOpen}
+        onOpenChange={setVisualLibOpen}
       />
     </>
   );
