@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Play, Stethoscope, User } from "lucide-react";
-import mockupDashboard from "@/assets/mockup-dashboard-premium.jpg";
-import mockupMealPlan from "@/assets/mockup-mealplan-premium.jpg";
+import screenshotDashboard from "@/assets/screenshot-dashboard.jpg";
+import screenshotMealPlan from "@/assets/screenshot-mealplan.jpg";
 import { EnergyGlow, MockupParticles, PremiumMockupFrame, EnergyBeam } from "./LandingEffects";
 
 export default function LandingProductDemo() {
@@ -95,7 +95,7 @@ export default function LandingProductDemo() {
             <EnergyBeam className="bottom-4 left-12" angle={20} color="hsl(210,92%,55%)" />
             <PremiumMockupFrame>
               <img
-                src={mockupDashboard}
+                src={screenshotDashboard}
                 alt="Dashboard FitJourney"
                 className="rounded-xl w-full relative z-10"
                 loading="lazy"
@@ -124,7 +124,7 @@ export default function LandingProductDemo() {
               floatDelay={1.5}
             >
               <img
-                src={mockupMealPlan}
+                src={screenshotMealPlan}
                 alt="Editor de Planos Alimentares"
                 className="rounded-xl w-full relative z-10"
                 loading="lazy"
