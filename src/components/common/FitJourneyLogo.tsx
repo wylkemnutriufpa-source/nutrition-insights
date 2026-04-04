@@ -58,18 +58,20 @@ const FitJourneyLogo = forwardRef<HTMLDivElement, FitJourneyLogoProps>(function 
   ref,
 ) {
   const s = sizes[size];
-  const navigate = useNavigate();
   const location = useLocation();
 
   const handleClick = useCallback(() => {
+    if (typeof window === "undefined") return;
+
     sessionStorage.removeItem(STORAGE_KEY);
+
     if (location.pathname === "/") {
-      // Already on gateway, dispatch custom event to trigger intro
-      window.dispatchEvent(new CustomEvent("fj-replay-intro"));
-    } else {
-      navigate("/?intro=1");
+      window.location.href = "/?intro=1";
+      return;
     }
-  }, [navigate, location.pathname]);
+
+    window.location.href = "/?intro=1";
+  }, [location.pathname]);
 
   const particles = useMemo(() =>
     Array.from({ length: s.particles }, (_, i) => ({
