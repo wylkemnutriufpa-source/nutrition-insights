@@ -17532,6 +17532,7 @@ export type Database = {
       check_simulation_rate_limit:
         | { Args: never; Returns: boolean }
         | { Args: { _mode?: string }; Returns: boolean }
+      check_workout_plan_expiry: { Args: never; Returns: Json }
       cleanup_observability_logs: {
         Args: { retention_days?: number }
         Returns: Json

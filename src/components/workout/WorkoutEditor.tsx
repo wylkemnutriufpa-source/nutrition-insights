@@ -516,8 +516,14 @@ export default function WorkoutEditor({ students, onSaved, onCancel }: WorkoutEd
 
                           {/* Sets */}
                           <div className="col-span-1">
-                            <Input type="number" value={ex.sets}
-                              onChange={(e) => updateExercise(rIdx, eIdx, "sets", parseInt(e.target.value) || 0)}
+                            <Input type="number" min={1} value={ex.sets || ""}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                updateExercise(rIdx, eIdx, "sets", val === "" ? "" : Math.max(1, parseInt(val) || 1));
+                              }}
+                              onBlur={() => {
+                                if (!ex.sets || ex.sets < 1) updateExercise(rIdx, eIdx, "sets", 3);
+                              }}
                               className="h-8 text-xs text-center" />
                           </div>
 
