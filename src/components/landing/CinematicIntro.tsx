@@ -46,12 +46,22 @@ export default function CinematicIntro({ onComplete }: CinematicIntroProps) {
     const t1 = setTimeout(() => setPhase("text"), 1500);
     const t2 = setTimeout(() => setPhase("exit"), 4000);
     const t3 = setTimeout(() => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
       sessionStorage.setItem(STORAGE_KEY, "1");
       onComplete();
     }, 5000);
 
     timerRef.current = [t1, t2, t3];
-    return clearTimers;
+    return () => {
+      clearTimers();
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+    };
   }, [videoReady, onComplete, clearTimers]);
 
   return (
