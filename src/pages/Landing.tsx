@@ -232,9 +232,7 @@ export default function Landing() {
       <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${navScrolled ? "glass border-b border-border/30 shadow-card" : "bg-transparent"}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Link to="/" className="flex items-center group">
-              <FitJourneyLogo size="sm" />
-            </Link>
+            <FitJourneyLogo size="sm" />
             <BrainIntelligence />
           </div>
 

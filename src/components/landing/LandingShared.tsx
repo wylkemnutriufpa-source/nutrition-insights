@@ -39,9 +39,7 @@ interface LandingNavProps {
 export function LandingNav({ ctaLabel, ctaClassName }: LandingNavProps) {
   return (
     <nav className="relative z-50 flex items-center justify-between px-6 md:px-12 py-5 border-b border-white/[0.05]">
-      <Link to="/">
-        <FitJourneyLogo size="sm" />
-      </Link>
+      <FitJourneyLogo size="sm" />
       <div className="flex items-center gap-3">
         <Link to="/">
           <Button variant="ghost" size="sm" className="text-white/60 hover:text-white text-sm">
