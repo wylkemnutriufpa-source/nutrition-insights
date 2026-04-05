@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { usePremiumPresence } from "@/hooks/usePremiumPresence";
 import { PremiumBadge, PremiumMessage, PremiumCardWrapper, PremiumAccentLine } from "@/components/premium";
 import { useAuth } from "@/lib/auth";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -118,130 +119,127 @@ export default function ClientDashboard() {
   const premium = usePremiumPresence();
   const lifecycle = usePatientLifecycleState();
   const { status: journeyStatus, loading: journeyLoading, canAccessOnboarding } = usePatientJourneyStatus();
-  const [programs, setPrograms] = useState<ProgramInfo[]>([]);
-  const [appointments, setAppointments] = useState<AppointmentInfo[]>([]);
-  const [notifications, setNotifications] = useState<NotificationInfo[]>([]);
-  const [checklistStats, setChecklistStats] = useState<ChecklistStats>({ total: 0, completed: 0 });
-  const [loading, setLoading] = useState(true);
   const [programJoinOpen, setProgramJoinOpen] = useState(false);
-  const [biquiniEnrollment, setBiquiniEnrollment] = useState<BiquiniEnrollment | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [workoutInfo, setWorkoutInfo] = useState<WorkoutInfo>({ planTitle: "", routineCount: 0, recentCompletions: [], hasPersonal: false });
+
+  // Single React Query for all dashboard data — cached, deduped, auto-refreshed
+  const { data: dashData, isLoading: loading } = useQuery({
+    queryKey: ["client-dashboard", user?.id],
+    enabled: !!user,
+    staleTime: 30 * 1000, // 30s cache — prevents re-fetch on tab switch
+    refetchInterval: 3 * 60 * 1000, // refresh every 3 min
+    queryFn: async () => {
+      const userId = user!.id;
+      const today = format(new Date(), "yyyy-MM-dd");
+
+      const [programsRes, appointmentsRes, notificationsRes, checklistRes] = await Promise.all([
+        supabase
+          .from("program_patients")
+          .select("program_id, current_phase, status, programs(id, title, tag, start_date)")
+          .eq("patient_id", userId)
+          .eq("status", "active"),
+        supabase
+          .from("patient_appointments")
+          .select("id, title, appointment_date, status, appointment_type")
+          .eq("patient_id", userId)
+          .gte("appointment_date", new Date().toISOString())
+          .order("appointment_date", { ascending: true })
+          .limit(5),
+        supabase
+          .from("notifications")
+          .select("id, title, message, created_at, is_read, type")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(8),
+        supabase
+          .from("checklist_tasks")
+          .select("id, completed")
+          .eq("patient_id", userId)
+          .eq("date", today),
+      ]);
+
+      const programs = (programsRes.data || []).map((p: any) => ({
+        id: p.programs?.id || p.program_id,
+        title: p.programs?.title || "Programa",
+        tag: p.programs?.tag || "",
+        start_date: p.programs?.start_date || "",
+        current_phase: p.current_phase,
+        status: p.status,
+      }));
+
+      // Fetch Biquíni enrollment
+      const { data: enrollmentData } = await (supabase as any)
+        .from("program_enrollments")
+        .select("*")
+        .eq("patient_id", userId)
+        .not("status", "eq", "completed")
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      // Fetch workout data
+      let workoutInfo: WorkoutInfo = { planTitle: "", routineCount: 0, recentCompletions: [], hasPersonal: false };
+      const { data: pts } = await supabase
+        .from("personal_trainer_students")
+        .select("id")
+        .eq("student_id", userId)
+        .eq("status", "active")
+        .limit(1);
+      if (pts && pts.length > 0) {
+        const [plansRes, completionsRes] = await Promise.all([
+          supabase
+            .from("workout_plans")
+            .select("title, workout_routines(id)")
+            .eq("student_id", userId)
+            .eq("is_active", true)
+            .limit(1),
+          supabase
+            .from("workout_completions")
+            .select("id, completed_at, perceived_effort, workout_routines(name)")
+            .eq("student_id", userId)
+            .order("completed_at", { ascending: false })
+            .limit(3),
+        ]);
+        const plan = plansRes.data?.[0];
+        workoutInfo = {
+          hasPersonal: true,
+          planTitle: plan?.title || "Treino",
+          routineCount: (plan as any)?.workout_routines?.length || 0,
+          recentCompletions: (completionsRes.data || []).map((c: any) => ({
+            id: c.id,
+            routine_name: c.workout_routines?.name || "Treino",
+            completed_at: c.completed_at,
+            perceived_effort: c.perceived_effort,
+          })),
+        };
+      }
+
+      const checklistData = checklistRes.data || [];
+      return {
+        programs,
+        appointments: appointmentsRes.data || [],
+        notifications: notificationsRes.data || [],
+        checklistStats: {
+          total: checklistData.length,
+          completed: checklistData.filter((t: any) => t.completed).length,
+        },
+        biquiniEnrollment: enrollmentData?.[0] || null,
+        workoutInfo,
+      };
+    },
+  });
+
+  const programs = dashData?.programs || [];
+  const appointments = dashData?.appointments || [];
+  const notifications = dashData?.notifications || [];
+  const checklistStats = dashData?.checklistStats || { total: 0, completed: 0 };
+  const biquiniEnrollment = dashData?.biquiniEnrollment || null;
+  const workoutInfo = dashData?.workoutInfo || { planTitle: "", routineCount: 0, recentCompletions: [], hasPersonal: false };
 
   useEffect(() => {
-    if (!user) return;
-    const today = format(new Date(), "yyyy-MM-dd");
-
-    Promise.all([
-      supabase
-        .from("program_patients")
-        .select("program_id, current_phase, status, programs(id, title, tag, start_date)")
-        .eq("patient_id", user.id)
-        .eq("status", "active"),
-      supabase
-        .from("patient_appointments")
-        .select("id, title, appointment_date, status, appointment_type")
-        .eq("patient_id", user.id)
-        .gte("appointment_date", new Date().toISOString())
-        .order("appointment_date", { ascending: true })
-        .limit(5),
-      supabase
-        .from("notifications")
-        .select("id, title, message, created_at, is_read, type")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(8),
-      supabase
-        .from("checklist_tasks")
-        .select("id, completed")
-        .eq("patient_id", user.id)
-        .eq("date", today),
-    ]).then(([programsRes, appointmentsRes, notificationsRes, checklistRes]) => {
-      if (programsRes.data) {
-        setPrograms(
-          programsRes.data.map((p: any) => ({
-            id: p.programs?.id || p.program_id,
-            title: p.programs?.title || "Programa",
-            tag: p.programs?.tag || "",
-            start_date: p.programs?.start_date || "",
-            current_phase: p.current_phase,
-            status: p.status,
-          }))
-        );
-      }
-      if (appointmentsRes.data) setAppointments(appointmentsRes.data);
-      if (notificationsRes.data) setNotifications(notificationsRes.data);
-      if (checklistRes.data) {
-        setChecklistStats({
-          total: checklistRes.data.length,
-          completed: checklistRes.data.filter((t: any) => t.completed).length,
-        });
-      }
-      setLoading(false);
-    });
-
-    // Fetch Biquíni Branco enrollment
-    (supabase as any)
-      .from("program_enrollments")
-      .select("*")
-      .eq("patient_id", user.id)
-      .not("status", "eq", "completed")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .then(({ data }: any) => {
-        if (data && data.length > 0) {
-          setBiquiniEnrollment(data[0]);
-          if (data[0].status === "pending_onboarding") {
-            setShowOnboarding(true);
-          }
-        }
-      });
-
-    // Fetch workout data (personal trainer integration)
-    (async () => {
-      try {
-        // Check if patient has a personal trainer
-        const { data: pts } = await supabase
-          .from("personal_trainer_students")
-          .select("id")
-          .eq("student_id", user.id)
-          .eq("status", "active")
-          .limit(1);
-
-        if (pts && pts.length > 0) {
-          const [plansRes, completionsRes] = await Promise.all([
-            supabase
-              .from("workout_plans")
-              .select("title, workout_routines(id)")
-              .eq("student_id", user.id)
-              .eq("is_active", true)
-              .limit(1),
-            supabase
-              .from("workout_completions")
-              .select("id, completed_at, perceived_effort, workout_routines(name)")
-              .eq("student_id", user.id)
-              .order("completed_at", { ascending: false })
-              .limit(3),
-          ]);
-
-          const plan = plansRes.data?.[0];
-          setWorkoutInfo({
-            hasPersonal: true,
-            planTitle: plan?.title || "Treino",
-            routineCount: (plan as any)?.workout_routines?.length || 0,
-            recentCompletions: (completionsRes.data || []).map((c: any) => ({
-              id: c.id,
-              routine_name: c.workout_routines?.name || "Treino",
-              completed_at: c.completed_at,
-              perceived_effort: c.perceived_effort,
-            })),
-          });
-        }
-      } catch (e) {
-        console.error("Error fetching workout data:", e);
-      }
-    })();
-  }, [user]);
+    if (biquiniEnrollment?.status === "pending_onboarding") {
+      setShowOnboarding(true);
+    }
+  }, [biquiniEnrollment]);
 
   const checklistPercent = checklistStats.total > 0
     ? Math.round((checklistStats.completed / checklistStats.total) * 100)
