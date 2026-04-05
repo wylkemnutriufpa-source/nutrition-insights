@@ -331,8 +331,8 @@ export default function ClientDashboard() {
                       .select("*")
                       .eq("id", biquiniEnrollment.id)
                       .maybeSingle()
-                      .then(({ data }: any) => {
-                        if (data) setBiquiniEnrollment(data);
+                      .then(() => {
+                        // Data will be refreshed on next query refetch
                       });
                   }}
                 />
