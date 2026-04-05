@@ -237,7 +237,7 @@ export default function MealPlans() {
           toast.success(`Plano gerado com ${genData.items_count || 0} refeições!`);
           runPostGenVisualMatch(genData.mealPlanId).catch(() => {});
           setOpen(false);
-          navigate(`/plan-builder/${genData.mealPlanId}`);
+          navigate(`/meal-plans/${genData.mealPlanId}`);
         }
       } else {
         const { data: newPlan, error } = await createMealPlanDraft({
@@ -332,7 +332,7 @@ export default function MealPlans() {
                     onGenerated={(planId) => {
                       runPostGenVisualMatch(planId).catch(() => {});
                       setOpen(false);
-                      navigate(`/plan-builder/${planId}`);
+                      navigate(`/meal-plans/${planId}`);
                     }}
                     onClose={() => setOpen(false)}
                   />
