@@ -38,7 +38,7 @@ export async function checkRateLimit(
     .eq("client_key", clientKey)
     .gte("window_start", windowStart)
     .limit(1)
-    .single();
+    .maybeSingle();
 
   if (existing) {
     const newCount = existing.request_count + 1;
