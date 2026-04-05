@@ -100,14 +100,14 @@ export default function LandingHero() {
                 Criar conta gratuita
               </Button>
             </Link>
-            <Link to="/landing">
+            <Link to="/demo/profissional">
               <Button
                 size="lg"
                 variant="outline"
                 className="h-14 px-10 text-sm font-bold rounded-xl border-white/10 text-white/70 hover:text-white hover:border-white/20 hover:bg-white/[0.04] transition-all duration-300"
               >
                 <Play className="w-4 h-4 mr-2" />
-                Ver demonstração
+                Explorar o sistema
               </Button>
             </Link>
           </div>
