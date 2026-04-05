@@ -1,11 +1,12 @@
 /**
- * usePatientPlanStatus — COMPATIBILITY LAYER
+ * @deprecated usePatientPlanStatus — COMPATIBILITY LAYER (DEPRECATED)
  *
- * This hook now delegates to the canonical usePatientLifecycleState hook.
- * It exists for backward compatibility with components that still reference
- * the old plan-status-only interface.
+ * This hook delegates to the canonical usePatientLifecycleState hook.
+ * It exists ONLY for backward compatibility with 3 legacy components:
+ * - OnboardingPipeline, OnboardingProgressModal, PlanRequestButton.
  *
- * NEW CODE SHOULD USE usePatientLifecycleState DIRECTLY.
+ * NEW CODE MUST USE usePatientLifecycleState DIRECTLY.
+ * This file will be removed once those components are migrated.
  */
 
 import { usePatientLifecycleState } from "@/hooks/usePatientLifecycleState";

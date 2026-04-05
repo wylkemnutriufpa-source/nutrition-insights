@@ -330,7 +330,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
         await transitionPlanToReview(newPlanId, user.id);
 
         toast.success(`Plano gerado com ${data.items_count} itens! Revise e aprove.`);
-        navigate(`/plan-builder/${newPlanId}`);
+        navigate(`/meal-plans/${newPlanId}`);
       }
     } catch (err: any) {
       toast.error("Erro ao gerar plano: " + (err.message || "Tente novamente"));
@@ -400,7 +400,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
         await transitionPlanToReview(resolvedPlanId, user.id);
       }
 
-      navigate(`/plan-builder/${resolvedPlanId}`);
+      navigate(`/meal-plans/${resolvedPlanId}`);
     } catch (err: any) {
       toast.error("Erro ao abrir plano: " + (err.message || "Tente novamente"));
     } finally {

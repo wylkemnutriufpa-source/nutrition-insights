@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Zap, Brain, Stethoscope, Loader2, Save } from "lucide-react";
+import { Zap, Brain, Stethoscope, Loader2, Save, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
@@ -50,10 +51,41 @@ export default function SmartPlanGenerator({ patientId, patientName, onGenerated
   const [selectedMode, setSelectedMode] = useState<GenerationMode>("quick");
   const [generating, setGenerating] = useState(false);
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
+  const [activePlanName, setActivePlanName] = useState<string | null>(null);
+  const [showReplaceDialog, setShowReplaceDialog] = useState(false);
+
+  // Check if patient already has an active plan
+  useEffect(() => {
+    if (!patientId) return;
+    supabase
+      .from("meal_plans")
+      .select("id, title")
+      .eq("patient_id", patientId)
+      .eq("is_active", true)
+      .in("plan_status", ["approved", "published_to_patient"])
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        setActivePlanName(data?.title || (data ? "Plano Ativo" : null));
+      });
+  }, [patientId]);
 
   const handleGenerate = async () => {
     if (!user) return;
+
+    // Warn if patient already has active plan
+    if (activePlanName) {
+      setShowReplaceDialog(true);
+      return;
+    }
+
+    await doGenerate();
+  };
+
+  const doGenerate = async () => {
+    if (!user) return;
     setGenerating(true);
+    setShowReplaceDialog(false);
 
     try {
       toast.info(`⚡ Gerando ${MODES.find(m => m.key === selectedMode)?.label}...`);
@@ -96,6 +128,17 @@ export default function SmartPlanGenerator({ patientId, patientName, onGenerated
           <p className="text-sm text-muted-foreground mt-1">Paciente: {patientName}</p>
         )}
       </div>
+
+      {/* Active plan warning banner */}
+      {activePlanName && (
+        <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-sm">
+          <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+          <span className="text-amber-700 dark:text-amber-400">
+            Este paciente já possui um plano ativo: <strong>{activePlanName}</strong>. 
+            Ao gerar um novo, o anterior será substituído.
+          </span>
+        </div>
+      )}
 
       {/* Mode selection */}
       <div className="grid gap-3">
@@ -166,6 +209,30 @@ export default function SmartPlanGenerator({ patientId, patientName, onGenerated
           Cancelar
         </Button>
       )}
+
+      {/* Replace active plan confirmation */}
+      <AlertDialog open={showReplaceDialog} onOpenChange={setShowReplaceDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-500" />
+              Paciente já possui plano ativo
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              O paciente <strong>{patientName}</strong> já possui o plano <strong>"{activePlanName}"</strong> ativo. 
+              Ao gerar um novo plano e publicá-lo, o plano anterior será automaticamente arquivado.
+              <br /><br />
+              Deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={doGenerate} className="gradient-primary">
+              Substituir e Gerar Novo
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -48,6 +48,9 @@ export const queryKeys = {
     recent: (userId: string, limit: number) => ["meals", "recent", userId, limit] as const,
   },
 
+  // Lifecycle
+  lifecycle: (userId: string) => ["lifecycle", userId] as const,
+
   // Profile
   profile: (userId: string) => ["profile", userId] as const,
 
