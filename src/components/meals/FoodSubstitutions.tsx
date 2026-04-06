@@ -108,7 +108,7 @@ export default function FoodSubstitutions({ currentFood, onSelect }: FoodSubstit
               >
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium truncate">{food.name}</p>
-                  <p className="text-[10px] text-muted-foreground">{food.portion}</p>
+                  <p className="text-[10px] font-semibold text-primary/70">📏 {food.portion}</p>
                 </div>
                 <div className="flex items-center gap-1.5 text-[10px] shrink-0">
                   <span className="flex items-center gap-0.5 text-muted-foreground">
