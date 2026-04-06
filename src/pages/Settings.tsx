@@ -15,6 +15,7 @@ import { User, Lock, Save, Bell, BellOff, Trophy, Eye, Camera, Database, Downloa
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import AvatarPicker from "@/components/profile/AvatarPicker";
 import ProtocolFitJourneyToggle from "@/components/admin/ProtocolFitJourneyToggle";
+import PixConfigManager from "@/components/admin/PixConfigManager";
 import { useTranslation } from "react-i18next";
 import ExperienceModeSwitcher from "@/components/settings/ExperienceModeSwitcher";
 import { Badge } from "@/components/ui/badge";
@@ -197,6 +198,9 @@ export default function Settings() {
             </CardContent>
           </Card>
         )}
+
+        {/* PIX Config Manager — only for professionals */}
+        {(isNutritionist || isPersonal) && <PixConfigManager />}
 
         {/* Profile */}
         <Card className="shadow-card">
