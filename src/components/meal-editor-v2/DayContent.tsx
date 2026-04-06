@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Coffee, Apple, Utensils, Cookie, Moon, Sun,
@@ -11,6 +11,7 @@ import { MealItemCard } from "./MealItemCard";
 import MacroBalanceBar from "@/components/meals/MacroBalanceBar";
 import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
 import type { FoodItem } from "@/components/meals/FoodAutocomplete";
+import { toast } from "sonner";
 
 const MEAL_TYPES: { key: MealType; label: string; icon: React.ReactNode; color: string }[] = [
   { key: "breakfast", label: "Café da Manhã", icon: <Coffee className="w-4 h-4" />, color: "text-amber-500" },
