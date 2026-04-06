@@ -38,6 +38,50 @@ export function DayContent({ day }: Props) {
   const { items, syncingMap, planId, addItem } = useMealPlanEditorV2Store();
   const [quickAddKey, setQuickAddKey] = useState<string | null>(null);
   const [quickAddText, setQuickAddText] = useState("");
+  const [dragOverKey, setDragOverKey] = useState<string | null>(null);
+
+  const handleDrop = useCallback((e: React.DragEvent, mealType: MealType) => {
+    e.preventDefault();
+    setDragOverKey(null);
+    if (!planId) return;
+
+    try {
+      const raw = e.dataTransfer.getData("application/json");
+      if (!raw) return;
+      const data = JSON.parse(raw);
+
+      if (data.source === "visual_library") {
+        addItem({
+          meal_plan_id: planId,
+          title: data.title || data.name || "Sem título",
+          description: data.portion || null,
+          meal_type: mealType,
+          day_of_week: day,
+          calories_target: data.calories ?? null,
+          protein_target: data.protein ?? null,
+          carbs_target: data.carbs ?? null,
+          fat_target: data.fat ?? null,
+          visual_library_item_id: data.id || null,
+          image_url: data.image_url || null,
+        });
+        toast.success(`${data.title} adicionado!`);
+      }
+    } catch {
+      // invalid drag data, ignore
+    }
+  }, [planId, day, addItem]);
+
+  const handleDragOver = useCallback((e: React.DragEvent, cellKey: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+    setDragOverKey(cellKey);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    // Only clear if leaving the container (not entering a child)
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    setDragOverKey(null);
+  }, []);
 
   const dayItems = items.filter(i => i.day_of_week === day);
 
