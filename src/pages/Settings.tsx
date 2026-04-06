@@ -199,6 +199,9 @@ export default function Settings() {
           </Card>
         )}
 
+        {/* PIX Config Manager — only for professionals */}
+        {(isNutritionist || isPersonal) && <PixConfigManager />}
+
         {/* Profile */}
         <Card className="shadow-card">
           <CardHeader>
