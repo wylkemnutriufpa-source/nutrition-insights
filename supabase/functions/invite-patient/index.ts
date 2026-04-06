@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
 
     // Verify caller is a professional
     const { data: callerRoles } = await callerClient.from("user_roles").select("role").eq("user_id", caller.id);
-    const isPro = callerRoles?.some((r: any) => ["nutritionist", "personal_trainer", "admin"].includes(r.role));
+    const isPro = callerRoles?.some((r: any) => ["nutritionist", "personal", "admin"].includes(r.role));
     if (!isPro) throw new Error("Only professionals can invite patients");
 
     const { name, email, phone, method, password } = await req.json();
