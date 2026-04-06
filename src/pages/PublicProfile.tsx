@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
   User, Star, Calendar, MessageSquare, Rocket, CheckCircle2,
-  Loader2, Send, MapPin, Award
+  Loader2, Send, MapPin, Award, CreditCard, Briefcase
 } from "lucide-react";
 
 interface PublicProfile {
@@ -38,6 +38,7 @@ interface ProgramData {
 
 export default function PublicProfile() {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [programs, setPrograms] = useState<ProgramData[]>([]);
@@ -155,6 +156,24 @@ export default function PublicProfile() {
                 <Calendar className="w-5 h-5" /> Solicitar Consulta
               </Button>
             )}
+            <div className="flex flex-wrap gap-3 justify-center mt-6">
+              <Button
+                variant="outline"
+                size="lg"
+                className="gap-2"
+                onClick={() => navigate(`/p/${slug}/paciente`)}
+              >
+                <CreditCard className="w-5 h-5" /> Planos para Pacientes
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className="gap-2"
+                onClick={() => navigate(`/p/${slug}/profissional`)}
+              >
+                <Briefcase className="w-5 h-5" /> Planos para Profissionais
+              </Button>
+            </div>
           </motion.div>
         </div>
 
