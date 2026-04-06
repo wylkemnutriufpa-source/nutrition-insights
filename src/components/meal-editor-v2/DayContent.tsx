@@ -136,7 +136,17 @@ export function DayContent({ day }: Props) {
         const cellKey = `${day}-${meal.key}`;
 
         return (
-          <div key={meal.key} className="glass rounded-xl p-3">
+          <div
+            key={meal.key}
+            className={`glass rounded-xl p-3 transition-all duration-200 ${
+              dragOverKey === cellKey
+                ? "ring-2 ring-primary bg-primary/5 scale-[1.01]"
+                : ""
+            }`}
+            onDragOver={(e) => handleDragOver(e, cellKey)}
+            onDragLeave={handleDragLeave}
+            onDrop={(e) => handleDrop(e, meal.key)}
+          >
             <div className="flex items-center gap-2 mb-2">
               <span className={meal.color}>{meal.icon}</span>
               <span className="text-xs font-semibold">{meal.label}</span>
