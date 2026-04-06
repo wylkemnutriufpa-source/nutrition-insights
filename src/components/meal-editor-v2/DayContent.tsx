@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Coffee, Apple, Utensils, Cookie, Moon, Sun,
@@ -11,6 +11,7 @@ import { MealItemCard } from "./MealItemCard";
 import MacroBalanceBar from "@/components/meals/MacroBalanceBar";
 import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
 import type { FoodItem } from "@/components/meals/FoodAutocomplete";
+import { toast } from "sonner";
 
 const MEAL_TYPES: { key: MealType; label: string; icon: React.ReactNode; color: string }[] = [
   { key: "breakfast", label: "Café da Manhã", icon: <Coffee className="w-4 h-4" />, color: "text-amber-500" },
@@ -37,6 +38,50 @@ export function DayContent({ day }: Props) {
   const { items, syncingMap, planId, addItem } = useMealPlanEditorV2Store();
   const [quickAddKey, setQuickAddKey] = useState<string | null>(null);
   const [quickAddText, setQuickAddText] = useState("");
+  const [dragOverKey, setDragOverKey] = useState<string | null>(null);
+
+  const handleDrop = useCallback((e: React.DragEvent, mealType: MealType) => {
+    e.preventDefault();
+    setDragOverKey(null);
+    if (!planId) return;
+
+    try {
+      const raw = e.dataTransfer.getData("application/json");
+      if (!raw) return;
+      const data = JSON.parse(raw);
+
+      if (data.source === "visual_library") {
+        addItem({
+          meal_plan_id: planId,
+          title: data.title || data.name || "Sem título",
+          description: data.portion || null,
+          meal_type: mealType,
+          day_of_week: day,
+          calories_target: data.calories ?? null,
+          protein_target: data.protein ?? null,
+          carbs_target: data.carbs ?? null,
+          fat_target: data.fat ?? null,
+          visual_library_item_id: data.id || null,
+          image_url: data.image_url || null,
+        });
+        toast.success(`${data.title} adicionado!`);
+      }
+    } catch {
+      // invalid drag data, ignore
+    }
+  }, [planId, day, addItem]);
+
+  const handleDragOver = useCallback((e: React.DragEvent, cellKey: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+    setDragOverKey(cellKey);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    // Only clear if leaving the container (not entering a child)
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    setDragOverKey(null);
+  }, []);
 
   const dayItems = items.filter(i => i.day_of_week === day);
 
@@ -91,7 +136,17 @@ export function DayContent({ day }: Props) {
         const cellKey = `${day}-${meal.key}`;
 
         return (
-          <div key={meal.key} className="glass rounded-xl p-3">
+          <div
+            key={meal.key}
+            className={`glass rounded-xl p-3 transition-all duration-200 ${
+              dragOverKey === cellKey
+                ? "ring-2 ring-primary bg-primary/5 scale-[1.01]"
+                : ""
+            }`}
+            onDragOver={(e) => handleDragOver(e, cellKey)}
+            onDragLeave={handleDragLeave}
+            onDrop={(e) => handleDrop(e, meal.key)}
+          >
             <div className="flex items-center gap-2 mb-2">
               <span className={meal.color}>{meal.icon}</span>
               <span className="text-xs font-semibold">{meal.label}</span>
