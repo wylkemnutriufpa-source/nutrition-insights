@@ -97,6 +97,7 @@ const AdminSubscriptionMonitor = lazy(() => import("./pages/AdminSubscriptionMon
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 const PublicBooking = lazy(() => import("./pages/PublicBooking"));
 const PublicProgram = lazy(() => import("./pages/PublicProgram"));
+const PublicPlans = lazy(() => import("./pages/PublicPlans"));
 const GrowthDashboard = lazy(() => import("./pages/GrowthDashboard"));
 const MyPublicProfile = lazy(() => import("./pages/MyPublicProfile"));
 const MyReferrals = lazy(() => import("./pages/MyReferrals"));
@@ -594,6 +595,8 @@ const App = () => (
               {/* Public pages */}
               <Route path="/p/:slug" element={<LP section="Perfil"><PublicProfile /></LP>} />
               <Route path="/p/:slug/agendar" element={<LP section="Agendamento"><PublicBooking /></LP>} />
+              <Route path="/p/:slug/paciente" element={<LP section="Planos Paciente"><PublicPlans planType="patient_prestige" /></LP>} />
+              <Route path="/p/:slug/profissional" element={<LP section="Planos Profissional"><PublicPlans planType="professional" /></LP>} />
               <Route path="/program/:programId/public" element={<LP section="Projeto"><PublicProgram /></LP>} />
 
               {/* Network pages */}
