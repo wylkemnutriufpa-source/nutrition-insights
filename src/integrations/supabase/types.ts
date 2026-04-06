@@ -11741,6 +11741,42 @@ export type Database = {
           },
         ]
       }
+      pix_payment_configs: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          is_active: boolean
+          pix_code: string
+          plan_label: string
+          plan_type: string
+          qr_code_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          pix_code: string
+          plan_label: string
+          plan_type?: string
+          qr_code_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          pix_code?: string
+          plan_label?: string
+          plan_type?: string
+          qr_code_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       plan_audit_results: {
         Row: {
           audit_run_id: string

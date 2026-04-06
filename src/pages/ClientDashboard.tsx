@@ -26,6 +26,7 @@ import WorkoutRequestButton from "@/components/patient/WorkoutRequestButton";
 import NutritionistStatusBanner from "@/components/chat/NutritionistStatusBanner";
 import ProgramJoinRequest from "@/components/patient/ProgramJoinRequest";
 import SubscriptionCard from "@/components/patient/SubscriptionCard";
+import PixPaymentSection from "@/components/patient/PixPaymentSection";
 import { Button } from "@/components/ui/button";
 import PhaseTransitionModal from "@/components/biquini/PhaseTransitionModal";
 import OnboardingProgressModal from "@/components/patient/OnboardingProgressModal";
@@ -416,9 +417,14 @@ export default function ClientDashboard() {
           </motion.div>
         )}
 
+        {/* Subscription & Payment */}
+        <motion.div variants={item} className="space-y-3">
+          <SubscriptionCard />
+          <PixPaymentSection />
+        </motion.div>
+
         {/* Action Buttons */}
         <motion.div variants={item} className="flex flex-wrap gap-2">
-          <SubscriptionCard />
           <PlanRequestButton />
           <WorkoutRequestButton />
         </motion.div>
