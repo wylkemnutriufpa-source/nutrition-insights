@@ -188,6 +188,7 @@ function DynamicSidebar({
   const isMobile = useIsMobile();
   const { coachBodybuilderEnabled, personalTrainerEnabled } = useProfessionalModules();
   const [approvalsOpen, setApprovalsOpen] = useState(false);
+  const [intelligenceOpen, setIntelligenceOpen] = useState(false);
   const [showcaseOpen, setShowcaseOpen] = useState(false);
 
   const isProRole = useMemo(() => isNutritionist || isPersonal || isAdmin, [isNutritionist, isPersonal, isAdmin]);
