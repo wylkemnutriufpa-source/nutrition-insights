@@ -330,7 +330,7 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
             </div>
             {!collapsed && (
               <span className="text-xs font-bold bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent">
-                {t(item.label_key, item.label)}
+                {String(t(item.label_key, item.label))}
               </span>
             )}
             {active && !collapsed && <Crown className="w-3.5 h-3.5 ml-auto text-amber-500" />}
