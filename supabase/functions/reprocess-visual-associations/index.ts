@@ -142,10 +142,12 @@ Deno.serve(async (req) => {
     let offset = 0;
     const batchSize = 500;
     while (true) {
+      // Only process items from draft/pending plans (skip published/approved — immutable)
       const { data: items } = await supabase
         .from('meal_plan_items')
-        .select('id, title, description, visual_library_item_id')
+        .select('id, title, description, visual_library_item_id, meal_plan_id, meal_plans!inner(plan_status)')
         .not('title', 'is', null)
+        .not('meal_plans.plan_status', 'in', '("approved","published","published_to_patient")')
         .range(offset, offset + batchSize - 1);
 
       if (!items || items.length === 0) break;
