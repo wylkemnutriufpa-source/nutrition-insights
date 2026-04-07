@@ -389,157 +389,37 @@ export default function DietTemplates() {
     setApplying(true);
 
     try {
-      const multiplier = getCalorieMultiplier(template);
 
-      // Build raw template items (pre-personalization)
-      const templateItems: any[] = [];
-      for (let day = 0; day <= 6; day++) {
-        for (const meal of (Array.isArray(template.meals) ? template.meals : [])) {
-          const adjustedFoods = (meal.foods || []).map((f) => adjustFood(f, multiplier));
-          const totalCals = adjustedFoods.reduce((s, f) => s + f.calories, 0);
-          const totalProtein = adjustedFoods.reduce((s, f) => s + f.protein, 0);
-          const totalCarbs = adjustedFoods.reduce((s, f) => s + f.carbs, 0);
-          const totalFat = adjustedFoods.reduce((s, f) => s + f.fat, 0);
-
-          const desc = adjustedFoods
-            .map((f) => {
-              const subText = f.substitutions?.length
-                ? `\n   🔄 Substituições: ${f.substitutions.join(" | ")}`
-                : "";
-              return `• ${f.name} (${f.portion}) — ${f.calories}kcal${subText}`;
-            })
-            .join("\n");
-
-          templateItems.push({
-            title: meal.title,
-            description: desc,
-            meal_type: meal.meal_type || (meal as any).type,
-            day_of_week: day,
-            calories_target: totalCals,
-            protein_target: totalProtein,
-            carbs_target: totalCarbs,
-            fat_target: totalFat,
-          });
-        }
-      }
-
-      // Resolve tenant
-      const { data: resolvedTenantId } = await supabase.rpc("get_user_tenant", { _user_id: user.id });
-
-      // ── DELEGATE TO PIPELINE ORCHESTRATOR (single source of truth) ──
+      // ── DELEGATE TO EDGE FUNCTION via wrapper (single source of truth) ──
+      // The generate-meal-plan edge function handles everything:
+      // food selection, macro calculation, visual resolution, substitutions
       let targetPlanId = mealPlanId;
 
-      if (!targetPlanId) {
-        // Pipeline creates the plan
-        const pipelineInput: PipelineInput = {
-          patientId,
-          nutritionistId: user.id,
-          tenantId: resolvedTenantId || "",
-          templateItems,
-          planTitle: template.name + (patientName ? ` - ${patientName}` : ""),
-          planDescription: `Baseado no modelo "${template.name}". ${anamnesis ? "Ajustado conforme anamnese do paciente." : ""}`,
-          startDate: new Date().toISOString().split("T")[0],
-          templateSlug: template.slug,
-        };
+      const pipelineInput: PipelineInput = {
+        patientId,
+        nutritionistId: user.id,
+        tenantId: "",
+        planTitle: template.name + (patientName ? ` - ${patientName}` : ""),
+        planDescription: `Baseado no modelo "${template.name}". ${anamnesis ? "Ajustado conforme anamnese do paciente." : ""}`,
+        startDate: new Date().toISOString().split("T")[0],
+        existingPlanId: targetPlanId || undefined,
+        templateSlug: template.slug,
+        generationMode: "quick",
+      };
 
-        const result = await runPlanPipeline(pipelineInput);
+      const result = await runPlanPipeline(pipelineInput);
 
-        if (!result.success || !result.planId) {
-          throw new Error("Falha no pipeline de personalização");
-        }
-
-        targetPlanId = result.planId;
-
-        // Auto-associate visual library items
-        try {
-          const { autoMatchSingle } = await import("@/lib/mealVisualAssociation");
-          const { data: savedItems } = await supabase
-            .from("meal_plan_items")
-            .select("id, title")
-            .eq("meal_plan_id", targetPlanId);
-
-          if (savedItems) {
-            await Promise.all(savedItems.map(async (item) => {
-              const visualId = await autoMatchSingle(item.title);
-              if (visualId) {
-                await supabase.from("meal_plan_items")
-                  .update({ visual_library_item_id: visualId })
-                  .eq("id", item.id);
-              }
-            }));
-          }
-        } catch { /* visual association is optional */ }
-
-        // Log personalization summary
-        const personalizationSummary = result.personalization?.changes?.length
-          ? ` Personalização: ${result.personalization.changes.length} ajustes (restrições, TMB/TED). Horários: ${result.auditLog.schedule_source || "padrão"}.`
-          : "";
-
-        console.log("[DietTemplates] Pipeline completed:", {
-          planId: targetPlanId,
-          changes: result.personalization?.changes?.length || 0,
-          scheduleSource: result.auditLog.schedule_source,
-          warnings: result.warnings,
-        });
-
-        // Add timeline event with full audit
-        await supabase.from("patient_timeline").insert({
-          patient_id: patientId,
-          created_by: user.id,
-          event_type: "meal_plan",
-          title: `Modelo "${template.name}" aplicado`,
-          description: `Plano alimentar criado via pipeline v2 com ${templateItems.length} refeições.${personalizationSummary}`,
-          metadata: {
-            template_slug: template.slug,
-            adjusted_calories: getAdjustedCalories(template),
-            pipeline_version: result.pipelineVersion,
-            personalization_changes: result.personalization?.changes?.length || 0,
-            schedule_source: result.auditLog.schedule_source,
-          },
-        });
-      } else {
-        // Existing plan: delete old items, run pipeline, insert new items
-        const pipelineInput: PipelineInput = {
-          patientId,
-          nutritionistId: user.id,
-          tenantId: resolvedTenantId || "",
-          templateItems,
-          planTitle: template.name,
-          startDate: new Date().toISOString().split("T")[0],
-          existingPlanId: targetPlanId,
-          templateSlug: template.slug,
-        };
-
-        // Delete old items first
-        const { error: deleteError } = await supabase
-          .from("meal_plan_items")
-          .delete()
-          .eq("meal_plan_id", targetPlanId);
-        if (deleteError) throw deleteError;
-
-        const result = await runPlanPipeline(pipelineInput);
-        if (!result.success) throw new Error("Falha no pipeline de personalização");
-
-        // Visual association on saved items
-        try {
-          const { autoMatchSingle } = await import("@/lib/mealVisualAssociation");
-          const { data: savedItems } = await supabase
-            .from("meal_plan_items")
-            .select("id, title")
-            .eq("meal_plan_id", targetPlanId);
-
-          if (savedItems) {
-            await Promise.all(savedItems.map(async (item) => {
-              const visualId = await autoMatchSingle(item.title);
-              if (visualId) {
-                await supabase.from("meal_plan_items")
-                  .update({ visual_library_item_id: visualId })
-                  .eq("id", item.id);
-              }
-            }));
-          }
-        } catch { /* optional */ }
+      if (!result.success || !result.planId) {
+        throw new Error(result.warnings?.[0] || "Falha ao gerar plano alimentar");
       }
+
+      targetPlanId = result.planId;
+
+      console.log("[DietTemplates] Pipeline completed via edge function:", {
+        planId: targetPlanId,
+        itemsCount: result.auditLog.items_total,
+        pipelineVersion: result.pipelineVersion,
+      });
 
       // Activate plan atomically
       const activateResult = await activateMealPlan(targetPlanId);
@@ -547,7 +427,7 @@ export default function DietTemplates() {
         console.warn("[DietTemplates] activateMealPlan fallback:", activateResult.error);
       }
 
-      toast.success(`Modelo aplicado com ${templateItems.length} refeições para 7 dias! 🎉`);
+      toast.success(`Plano alimentar gerado com ${result.auditLog.items_total} refeições! 🎉`);
       setPreviewOpen(false);
       navigate(`/meal-plans/${targetPlanId}`);
     } catch (e: any) {
