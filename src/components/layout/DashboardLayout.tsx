@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useMemo, useState } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -556,19 +556,46 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     setCollapsed(isTablet);
   }, [isTablet]);
 
+  const syncBrowserThemeChrome = useCallback((isDark: boolean) => {
+    const themeColor = isDark ? "#000000" : "#f5f7fa";
+    document.documentElement.style.colorScheme = isDark ? "dark" : "light";
+    document.documentElement.style.backgroundColor = themeColor;
+    document.body.style.backgroundColor = themeColor;
+
+    let meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "theme-color";
+      document.head.appendChild(meta);
+    }
+
+    meta.content = themeColor;
+  }, []);
+
+  useEffect(() => {
+    syncBrowserThemeChrome(dark);
+  }, [dark, syncBrowserThemeChrome]);
+
   const toggleDark = () => {
     const newDark = !dark;
     // Suppress all CSS transitions/animations during theme switch to prevent flashing
     const style = document.createElement("style");
     style.textContent = "*, *::before, *::after { transition: none !important; animation: none !important; }";
+    document.documentElement.setAttribute("data-theme-switching", "true");
     document.head.appendChild(style);
-    document.documentElement.classList.toggle("dark");
+    document.documentElement.classList.toggle("dark", newDark);
+    syncBrowserThemeChrome(newDark);
     localStorage.setItem("theme", newDark ? "dark" : "light");
     setDark(newDark);
     // Re-enable after a frame so the browser paints the new theme first
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        document.head.removeChild(style);
+        window.setTimeout(() => {
+          if (style.parentNode) {
+            style.parentNode.removeChild(style);
+          }
+          document.documentElement.removeAttribute("data-theme-switching");
+        }, 60);
       });
     });
   };

@@ -2,9 +2,9 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { useSidebarGroups } from "@/hooks/useLayoutPreference";
 import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { useWorkspace, type WorkspaceSection, type WorkspaceItem } from "@/hooks/useWorkspace";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   ChevronDown, Trophy, LayoutDashboard, Users, UtensilsCrossed,
   ClipboardCheck, Dumbbell, Brain, FileText, Target, Activity,
@@ -161,6 +161,7 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
   const { t } = useTranslation();
   const { sections, getItemsForSection, loading } = useWorkspace();
   const { isRouteAllowed } = useExperienceMode();
+  const isMobile = useIsMobile();
   const [openSection, setOpenSection] = useState<string | null>(null);
 
   if (loading) return null;
@@ -214,47 +215,89 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
               )}
             </button>
 
-            <AnimatePresence>
+            <AnimatePresence initial={false}>
               {isOpen && (
-                <SideFlyout
-                  title={section.section_name}
-                  icon={SectionIcon}
-                  colorClass={colorClass}
-                  items={sorted}
-                  onClose={() => setOpenSection(null)}
-                  onLinkClick={onLinkClick}
-                  collapsed={collapsed}
-                  renderItem={(item) => {
-                    const Icon = getIcon(item.icon || "LayoutDashboard");
-                    const active = location.pathname === item.route;
-                    const isPremium = item.premium_only;
-                    const label = item.custom_label || item.label || "Item";
+                isMobile ? (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-2 ml-2 space-y-1 rounded-xl border border-border/50 bg-muted/20 p-2">
+                      {sorted.map((item) => {
+                        const Icon = getIcon(item.icon || "LayoutDashboard");
+                        const active = location.pathname === item.route;
+                        const isPremium = item.premium_only;
+                        const label = item.custom_label || item.label || "Item";
 
-                    return (
-                      <Link
-                        key={item.id}
-                        to={item.route || "/"}
-                        onClick={() => { setOpenSection(null); onLinkClick?.(); }}
-                        className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl transition-all group/item text-center
-                          ${active
-                            ? isPremium
-                              ? "bg-amber-500/10 text-amber-500 ring-1 ring-amber-500/20"
-                              : "bg-primary/10 text-primary ring-1 ring-primary/20"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                          }`}
-                      >
-                        <Icon className={`w-5 h-5 transition-transform group-hover/item:scale-110 ${
-                          isPremium ? "text-amber-500" : active ? "text-primary" : ""
-                        }`} />
-                        <span className={`text-[10px] font-medium leading-tight line-clamp-2 ${
-                          isPremium ? "bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent font-bold" : ""
-                        }`}>
-                          {String(t(item.label_key || label, label))}
-                        </span>
-                      </Link>
-                    );
-                  }}
-                />
+                        return (
+                          <Link
+                            key={item.id}
+                            to={item.route || "/"}
+                            onClick={() => {
+                              setOpenSection(null);
+                              onLinkClick?.();
+                            }}
+                            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${
+                              active
+                                ? isPremium
+                                  ? "bg-amber-500/10 text-amber-500 ring-1 ring-amber-500/20"
+                                  : "bg-primary/10 text-primary ring-1 ring-primary/20"
+                                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                            }`}
+                          >
+                            <Icon className={`h-4 w-4 flex-shrink-0 ${isPremium ? "text-amber-500" : active ? "text-primary" : ""}`} />
+                            <span className={`min-w-0 flex-1 text-xs font-medium truncate ${isPremium ? "text-amber-500" : ""}`}>
+                              {String(t(item.label_key || label, label))}
+                            </span>
+                            {isPremium && <Crown className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" />}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                ) : (
+                  <SideFlyout
+                    title={section.section_name}
+                    icon={SectionIcon}
+                    colorClass={colorClass}
+                    items={sorted}
+                    onClose={() => setOpenSection(null)}
+                    onLinkClick={onLinkClick}
+                    collapsed={collapsed}
+                    renderItem={(item) => {
+                      const Icon = getIcon(item.icon || "LayoutDashboard");
+                      const active = location.pathname === item.route;
+                      const isPremium = item.premium_only;
+                      const label = item.custom_label || item.label || "Item";
+
+                      return (
+                        <Link
+                          key={item.id}
+                          to={item.route || "/"}
+                          onClick={() => { setOpenSection(null); onLinkClick?.(); }}
+                          className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl transition-all group/item text-center
+                            ${active
+                              ? isPremium
+                                ? "bg-amber-500/10 text-amber-500 ring-1 ring-amber-500/20"
+                                : "bg-primary/10 text-primary ring-1 ring-primary/20"
+                              : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                            }`}
+                        >
+                          <Icon className={`w-5 h-5 transition-transform group-hover/item:scale-110 ${
+                            isPremium ? "text-amber-500" : active ? "text-primary" : ""
+                          }`} />
+                          <span className={`text-[10px] font-medium leading-tight line-clamp-2 ${
+                            isPremium ? "bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent font-bold" : ""
+                          }`}>
+                            {String(t(item.label_key || label, label))}
+                          </span>
+                        </Link>
+                      );
+                    }}
+                  />
+                )
               )}
             </AnimatePresence>
           </div>
@@ -285,6 +328,7 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
   const location = useLocation();
   const { t } = useTranslation();
   const { isRouteAllowed } = useExperienceMode();
+  const isMobile = useIsMobile();
   const [openGroup, setOpenGroup] = useState<string | null>(null);
 
   const allItems = categories.flatMap((c) => c.items).filter(item => isRouteAllowed(item.route));
@@ -366,46 +410,88 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
               )}
             </button>
 
-            <AnimatePresence>
+            <AnimatePresence initial={false}>
               {isOpen && (
-                <SideFlyout
-                  title={group.name}
-                  icon={GroupIcon}
-                  colorClass={colorClass}
-                  items={group.items}
-                  onClose={() => setOpenGroup(null)}
-                  onLinkClick={onLinkClick}
-                  collapsed={collapsed}
-                  renderItem={(menuItem) => {
-                    const Icon = getIcon(menuItem.icon);
-                    const active = location.pathname === menuItem.route;
-                    const isPremium = menuItem.premium_only;
+                isMobile ? (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-2 ml-2 space-y-1 rounded-xl border border-border/50 bg-muted/20 p-2">
+                      {group.items.map((menuItem) => {
+                        const Icon = getIcon(menuItem.icon);
+                        const active = location.pathname === menuItem.route;
+                        const isPremium = menuItem.premium_only;
 
-                    return (
-                      <Link
-                        key={menuItem.id}
-                        to={menuItem.route}
-                        onClick={() => { trackClick(menuItem.id); setOpenGroup(null); onLinkClick?.(); }}
-                        className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl transition-all group/item text-center
-                          ${active
-                            ? isPremium
-                              ? "bg-amber-500/10 text-amber-500 ring-1 ring-amber-500/20"
-                              : "bg-primary/10 text-primary ring-1 ring-primary/20"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                          }`}
-                      >
-                        <Icon className={`w-5 h-5 transition-transform group-hover/item:scale-110 ${
-                          isPremium ? "text-amber-500" : active ? "text-primary" : ""
-                        }`} />
-                        <span className={`text-[10px] font-medium leading-tight line-clamp-2 ${
-                          isPremium ? "bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent font-bold" : ""
-                        }`}>
-                          {String(t(menuItem.label_key, menuItem.label))}
-                        </span>
-                      </Link>
-                    );
-                  }}
-                />
+                        return (
+                          <Link
+                            key={menuItem.id}
+                            to={menuItem.route}
+                            onClick={() => {
+                              trackClick(menuItem.id);
+                              setOpenGroup(null);
+                              onLinkClick?.();
+                            }}
+                            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${
+                              active
+                                ? isPremium
+                                  ? "bg-amber-500/10 text-amber-500 ring-1 ring-amber-500/20"
+                                  : "bg-primary/10 text-primary ring-1 ring-primary/20"
+                                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                            }`}
+                          >
+                            <Icon className={`h-4 w-4 flex-shrink-0 ${isPremium ? "text-amber-500" : active ? "text-primary" : ""}`} />
+                            <span className={`min-w-0 flex-1 truncate text-xs font-medium ${isPremium ? "text-amber-500" : ""}`}>
+                              {String(t(menuItem.label_key, menuItem.label))}
+                            </span>
+                            {isPremium && <Crown className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" />}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                ) : (
+                  <SideFlyout
+                    title={group.name}
+                    icon={GroupIcon}
+                    colorClass={colorClass}
+                    items={group.items}
+                    onClose={() => setOpenGroup(null)}
+                    onLinkClick={onLinkClick}
+                    collapsed={collapsed}
+                    renderItem={(menuItem) => {
+                      const Icon = getIcon(menuItem.icon);
+                      const active = location.pathname === menuItem.route;
+                      const isPremium = menuItem.premium_only;
+
+                      return (
+                        <Link
+                          key={menuItem.id}
+                          to={menuItem.route}
+                          onClick={() => { trackClick(menuItem.id); setOpenGroup(null); onLinkClick?.(); }}
+                          className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl transition-all group/item text-center
+                            ${active
+                              ? isPremium
+                                ? "bg-amber-500/10 text-amber-500 ring-1 ring-amber-500/20"
+                                : "bg-primary/10 text-primary ring-1 ring-primary/20"
+                              : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                            }`}
+                        >
+                          <Icon className={`w-5 h-5 transition-transform group-hover/item:scale-110 ${
+                            isPremium ? "text-amber-500" : active ? "text-primary" : ""
+                          }`} />
+                          <span className={`text-[10px] font-medium leading-tight line-clamp-2 ${
+                            isPremium ? "bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent font-bold" : ""
+                          }`}>
+                            {String(t(menuItem.label_key, menuItem.label))}
+                          </span>
+                        </Link>
+                      );
+                    }}
+                  />
+                )
               )}
             </AnimatePresence>
           </div>
