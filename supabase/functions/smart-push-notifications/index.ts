@@ -198,6 +198,89 @@ serve(async (req) => {
       results.push(`inactivity_alert: ${(inactivePatients || []).length}, ${pushCount} pushes`);
     }
 
+    // ═══════════════════════════════════════════════════
+    // 6. Workout plan expiry reminder (10-11 AM daily)
+    // Notifies students whose workout plan expires within 5 days
+    // ═══════════════════════════════════════════════════
+    if (hour >= 10 && hour < 11) {
+      const fiveDaysFromNow = new Date(Date.now() + 5 * 86400000).toISOString().split("T")[0];
+      const { data: expiringPlans } = await supabase
+        .from("workout_plans")
+        .select("id, title, student_id, personal_id, end_date")
+        .eq("is_active", true)
+        .not("end_date", "is", null)
+        .lte("end_date", fiveDaysFromNow)
+        .gte("end_date", today);
+
+      let pushCount = 0;
+      for (const plan of (expiringPlans || []).slice(0, 50)) {
+        const daysLeft = Math.ceil((new Date(plan.end_date).getTime() - Date.now()) / 86400000);
+        // Notify student
+        pushCount += await sendRealPush(supabase, plan.student_id, {
+          title: `Seu treino vence em ${daysLeft} dia(s)! 🏋️`,
+          body: `O plano "${plan.title}" está próximo do vencimento. Fale com seu personal.`,
+          url: "/workouts",
+          tag: "workout-expiry",
+        });
+        // Notify personal trainer
+        pushCount += await sendRealPush(supabase, plan.personal_id, {
+          title: `Plano de treino vencendo! ⏰`,
+          body: `O plano "${plan.title}" do aluno vence em ${daysLeft} dia(s).`,
+          url: "/personal/workouts",
+          tag: "workout-expiry-personal",
+        });
+      }
+      results.push(`workout_expiry: ${(expiringPlans || []).length} plans, ${pushCount} pushes`);
+    }
+
+    // ═══════════════════════════════════════════════════
+    // 7. Daily workout reminder (7-8 AM)
+    // Reminds students who have active workout plans
+    // ═══════════════════════════════════════════════════
+    if (hour >= 7 && hour < 8) {
+      const dayOfWeek = now.toLocaleDateString("en-US", { weekday: "long" }).toLowerCase();
+      const { data: activePlans } = await supabase
+        .from("workout_plans")
+        .select("student_id, title")
+        .eq("is_active", true);
+
+      const uniqueStudents = [...new Set((activePlans || []).map((p: any) => p.student_id))];
+      let pushCount = 0;
+      for (const studentId of uniqueStudents.slice(0, 50)) {
+        pushCount += await sendRealPush(supabase, studentId, {
+          title: "Hora do treino! 💪",
+          body: "Seu plano de treino te espera. Bora treinar?",
+          url: "/workouts",
+          tag: "workout-daily",
+        });
+      }
+      results.push(`workout_daily_reminder: ${uniqueStudents.length} students, ${pushCount} pushes`);
+    }
+
+    // ═══════════════════════════════════════════════════
+    // 8. Workout feedback pending (8-9 PM)
+    // Reminds students to give feedback after training
+    // ═══════════════════════════════════════════════════
+    if (hour >= 20 && hour < 21) {
+      const { data: todayLogs } = await supabase
+        .from("workout_logs")
+        .select("student_id")
+        .gte("completed_at", today)
+        .is("effort_level", null);
+
+      const uniquePending = [...new Set((todayLogs || []).map((l: any) => l.student_id))];
+      let pushCount = 0;
+      for (const studentId of uniquePending.slice(0, 30)) {
+        pushCount += await sendRealPush(supabase, studentId, {
+          title: "Como foi o treino? 📝",
+          body: "Registre seu feedback para seu personal acompanhar sua evolução.",
+          url: "/workouts",
+          tag: "workout-feedback",
+        });
+      }
+      results.push(`workout_feedback: ${uniquePending.length} students, ${pushCount} pushes`);
+    }
+
     return new Response(JSON.stringify({ success: true, results }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
