@@ -508,6 +508,46 @@ export default function PersonalWorkouts() {
             onClose={() => setAnamnesisStudent(null)}
           />
         )}
+
+        {/* Clone Plan Dialog */}
+        <Dialog open={!!clonePlan} onOpenChange={(open) => { if (!open) { setClonePlan(null); setCloneTargetStudent(""); } }}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Copy className="w-5 h-5 text-primary" />
+                Clonar Plano para Outro Aluno
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="p-3 rounded-lg bg-muted/50">
+                <p className="text-sm font-semibold">{clonePlan?.title}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {clonePlan?.objective} • Criado em {clonePlan?.created_at ? new Date(clonePlan.created_at).toLocaleDateString("pt-BR") : ""}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Selecionar aluno destino</label>
+                <Select value={cloneTargetStudent} onValueChange={setCloneTargetStudent}>
+                  <SelectTrigger><SelectValue placeholder="Escolha o aluno..." /></SelectTrigger>
+                  <SelectContent>
+                    {students.filter(s => s.student_id !== clonePlan?.student_id).map(s => (
+                      <SelectItem key={s.student_id} value={s.student_id}>
+                        <div className="flex items-center gap-2">
+                          <Users className="w-3 h-3" />
+                          {s.full_name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={handleClonePlan} disabled={cloning || !cloneTargetStudent} className="w-full gap-2">
+                <Copy className="w-4 h-4" />
+                {cloning ? "Clonando..." : "Clonar Plano"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
