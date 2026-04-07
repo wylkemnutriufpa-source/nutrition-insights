@@ -60,14 +60,39 @@ export default function ExerciseVideoLibrary({ draggable = false, onDragStart }:
 
   const loadVideos = async () => {
     if (!user) return;
-    const { data, error } = await supabase
+    
+    // Load user's personal videos
+    const { data: personalData } = await supabase
       .from("exercise_video_library")
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      setVideos(data as ExerciseVideo[]);
-    }
+    // Load system videos from exercises_library that have video_url
+    const { data: systemData } = await supabase
+      .from("exercises_library")
+      .select("id, name, muscle_group, video_url, thumbnail_url, tags, description, created_at")
+      .not("video_url", "is", null);
+
+    const personal: ExerciseVideo[] = (personalData || []).map((v: any) => ({
+      ...v,
+      _source: "personal" as const,
+    }));
+
+    const system: ExerciseVideo[] = (systemData || []).map((v: any) => ({
+      id: v.id,
+      title: v.name,
+      muscle_group: v.muscle_group || "Outro",
+      video_url: v.video_url,
+      thumbnail_url: v.thumbnail_url,
+      duration_seconds: null,
+      description: v.description,
+      tags: v.tags || [],
+      is_public: true,
+      created_at: v.created_at,
+      _source: "system" as const,
+    }));
+
+    setVideos([...personal, ...system]);
     setLoading(false);
   };
 
