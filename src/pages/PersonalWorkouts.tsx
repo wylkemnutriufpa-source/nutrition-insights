@@ -3,19 +3,21 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/lib/tenantContext";
-import { withTenantFilter } from "@/lib/tenantQueryHelpers";
+import { withTenantFilter, getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import {
-  Dumbbell, Plus, Search, ChevronDown, Pause, Play,
+  Dumbbell, Plus, Search, ChevronDown, Pause, Play, Copy,
   BookOpen, Layers, ClipboardList, Sparkles,
   TrendingUp, Heart, Ruler, Trophy, ArrowRightLeft, BarChart3, Film,
-  CalendarDays, MessageCircle, FileText, Zap, Timer, Command, ArrowLeft
+  CalendarDays, MessageCircle, FileText, Zap, Timer, Command, ArrowLeft, Users
 } from "lucide-react";
 import WorkoutEditor from "@/components/workout/WorkoutEditor";
 import ExerciseLibrary from "@/components/workout/ExerciseLibrary";
@@ -42,7 +44,7 @@ import IFJCommandCenter from "@/components/intelligence/modules/IFJCommandCenter
 import PersonalPremiumDashboard from "@/components/workout/PersonalPremiumDashboard";
 
 // --- Plans Tab Component ---
-function PlansTab({ plans, loading, students, onToggleStatus, onExpandPlan, expandedPlan, planDetails }: any) {
+function PlansTab({ plans, loading, students, onToggleStatus, onExpandPlan, expandedPlan, planDetails, onClonePlan }: any) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
@@ -75,55 +77,65 @@ function PlansTab({ plans, loading, students, onToggleStatus, onExpandPlan, expa
         </div>
       </div>
 
-      {filteredPlans.map((plan: any) => (
-        <Card key={plan.id} className="group hover:border-primary/20 transition-all">
-          <CardHeader className="pb-2 cursor-pointer" onClick={() => onExpandPlan(plan.id)}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Dumbbell className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-base">{plan.title}</CardTitle>
-                  <p className="text-xs text-muted-foreground">
-                    {plan.objective} • {new Date(plan.created_at).toLocaleDateString("pt-BR")}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant={plan.status === "active" ? "default" : "secondary"}>
-                  {plan.status === "active" ? "Ativo" : "Pausado"}
-                </Badge>
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); onToggleStatus(plan.id, plan.status); }}>
-                  {plan.status === "active" ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                </Button>
-                <ChevronDown className={`w-4 h-4 transition-transform ${expandedPlan === plan.id ? "rotate-180" : ""}`} />
-              </div>
-            </div>
-          </CardHeader>
-          {expandedPlan === plan.id && planDetails[plan.id] && (
-            <CardContent className="pt-0 space-y-3">
-              {planDetails[plan.id].map((routine: any) => (
-                <div key={routine.id} className="bg-muted/30 rounded-lg p-3">
-                  <p className="text-sm font-semibold mb-2">{routine.name}</p>
-                  <div className="space-y-1">
-                    {(routine.workout_exercises || []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((ex: any) => (
-                      <div key={ex.id} className={`flex items-center gap-2 text-xs p-1.5 rounded ${ex.group_type && ex.group_type !== "single" ? `border-l-2 ${GROUP_COLORS[ex.group_type] || ""} pl-3` : ""}`}>
-                        {ex.group_type && ex.group_type !== "single" && ex.group_order === 0 && (
-                          <Badge className="text-[9px] py-0 px-1">{ex.group_type.toUpperCase()}</Badge>
-                        )}
-                        <span className="font-medium flex-1">{ex.name}</span>
-                        <span className="text-muted-foreground">{ex.sets}×{ex.reps}</span>
-                        {ex.load_kg && <span className="text-muted-foreground">{ex.load_kg}kg</span>}
-                      </div>
-                    ))}
+      {filteredPlans.map((plan: any) => {
+        const studentName = students.find((s: any) => s.student_id === plan.student_id)?.full_name || "";
+        return (
+          <Card key={plan.id} className="group hover:border-primary/20 transition-all">
+            <CardHeader className="pb-2 cursor-pointer" onClick={() => onExpandPlan(plan.id)}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Dumbbell className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base">{plan.title}</CardTitle>
+                    <p className="text-xs text-muted-foreground">
+                      {studentName && <><Users className="w-3 h-3 inline mr-1" />{studentName} • </>}
+                      {plan.objective} • {new Date(plan.created_at).toLocaleDateString("pt-BR")}
+                    </p>
                   </div>
                 </div>
-              ))}
-            </CardContent>
-          )}
-        </Card>
-      ))}
+                <div className="flex items-center gap-2">
+                  <Badge variant={plan.status === "active" ? "default" : "secondary"}>
+                    {plan.status === "active" ? "Ativo" : "Pausado"}
+                  </Badge>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" title="Clonar para outro aluno"
+                    onClick={(e) => { e.stopPropagation(); onClonePlan(plan); }}>
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); onToggleStatus(plan.id, plan.status); }}>
+                    {plan.status === "active" ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                  </Button>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${expandedPlan === plan.id ? "rotate-180" : ""}`} />
+                </div>
+              </div>
+            </CardHeader>
+            {expandedPlan === plan.id && planDetails[plan.id] && (
+              <CardContent className="pt-0 space-y-3">
+                {planDetails[plan.id].map((routine: any) => (
+                  <div key={routine.id} className="bg-muted/30 rounded-lg p-3">
+                    <p className="text-sm font-semibold mb-2">{routine.name}</p>
+                    <div className="space-y-1">
+                      {(routine.workout_exercises || []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((ex: any) => (
+                        <div key={ex.id} className={`flex items-center gap-2 text-xs p-1.5 rounded ${ex.group_type && ex.group_type !== "single" ? `border-l-2 ${GROUP_COLORS[ex.group_type] || ""} pl-3` : ""}`}>
+                          {ex.group_type && ex.group_type !== "single" && ex.group_order === 0 && (
+                            <Badge className="text-[9px] py-0 px-1">{ex.group_type.toUpperCase()}</Badge>
+                          )}
+                          <span className="font-medium flex-1">{ex.name}</span>
+                          <span className="text-muted-foreground">{ex.sets}×{ex.reps}</span>
+                          {ex.rest_seconds && <span className="text-muted-foreground text-[10px]">{ex.rest_seconds}s</span>}
+                          {ex.load_kg && <span className="text-muted-foreground">{ex.load_kg}kg</span>}
+                          {ex.video_url && <Film className="w-3 h-3 text-primary" />}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            )}
+          </Card>
+        );
+      })}
 
       {filteredPlans.length === 0 && !loading && (
         <div className="text-center py-12 text-muted-foreground">
@@ -135,7 +147,6 @@ function PlansTab({ plans, loading, students, onToggleStatus, onExpandPlan, expa
     </div>
   );
 }
-
 // --- Anamnesis Tab ---
 function AnamnesisTab({ students, onSelectStudent }: any) {
   return (
@@ -239,6 +250,9 @@ export default function PersonalWorkouts() {
   const [planDetails, setPlanDetails] = useState<Record<string, any>>({});
   const [anamnesisStudent, setAnamnesisStudent] = useState<{ id: string; name: string } | null>(null);
   const [prePlanStudent, setPrePlanStudent] = useState<{ id: string; name: string } | null>(null);
+  const [clonePlan, setClonePlan] = useState<any>(null);
+  const [cloneTargetStudent, setCloneTargetStudent] = useState("");
+  const [cloning, setCloning] = useState(false);
 
   const load = async () => {
     if (!user) return;
@@ -282,6 +296,58 @@ export default function PersonalWorkouts() {
     setCreating(true);
     setActiveTab("plans");
     toast.info(`Template "${template.name}" carregado!`);
+  };
+
+  const handleClonePlan = async () => {
+    if (!user || !clonePlan || !cloneTargetStudent) return;
+    setCloning(true);
+    try {
+      const { data: newPlan, error: planErr } = await supabase.from("workout_plans").insert({
+        personal_id: user.id,
+        student_id: cloneTargetStudent,
+        title: `${clonePlan.title} (cópia)`,
+        description: clonePlan.description,
+        objective: clonePlan.objective,
+        start_date: new Date().toISOString().split("T")[0],
+        end_date: null,
+        status: "active",
+        is_active: true,
+        ...getTenantIdForInsert(tenantId),
+      }).select().single();
+      if (planErr || !newPlan) throw planErr;
+
+      const { data: srcRoutines } = await supabase
+        .from("workout_routines").select("*, workout_exercises(*)")
+        .eq("plan_id", clonePlan.id).order("sort_order");
+
+      for (const routine of (srcRoutines || [])) {
+        const { data: newRoutine } = await supabase.from("workout_routines").insert({
+          plan_id: newPlan.id, name: routine.name, description: routine.description,
+          day_of_week: routine.day_of_week, estimated_duration: routine.estimated_duration,
+          sort_order: routine.sort_order,
+        }).select().single();
+        if (!newRoutine) continue;
+
+        const exercises = (routine.workout_exercises || []).map((ex: any) => ({
+          routine_id: newRoutine.id, name: ex.name, sets: ex.sets, reps: ex.reps,
+          load_kg: ex.load_kg, rest_seconds: ex.rest_seconds, notes: ex.notes,
+          muscle_group: ex.muscle_group, video_url: ex.video_url, sort_order: ex.sort_order,
+          group_id: ex.group_id, group_type: ex.group_type, group_order: ex.group_order,
+          exercise_library_id: ex.exercise_library_id, rpe: ex.rpe, cadence: ex.cadence,
+          method_label: ex.method_label,
+        }));
+        if (exercises.length > 0) await supabase.from("workout_exercises").insert(exercises);
+      }
+
+      const targetName = students.find(s => s.student_id === cloneTargetStudent)?.full_name || "aluno";
+      toast.success(`Plano clonado para ${targetName}! 🎯`);
+      setClonePlan(null);
+      setCloneTargetStudent("");
+      load();
+    } catch (err: any) {
+      toast.error(err?.message || "Erro ao clonar plano");
+    }
+    setCloning(false);
   };
 
   if (creating) {
@@ -368,7 +434,7 @@ export default function PersonalWorkouts() {
           </TabsContent>
 
           <TabsContent value="plans" className="mt-4">
-            <PlansTab plans={plans} loading={loading} students={students} onToggleStatus={togglePlanStatus} onExpandPlan={loadPlanDetails} expandedPlan={expandedPlan} planDetails={planDetails} />
+            <PlansTab plans={plans} loading={loading} students={students} onToggleStatus={togglePlanStatus} onExpandPlan={loadPlanDetails} expandedPlan={expandedPlan} planDetails={planDetails} onClonePlan={setClonePlan} />
           </TabsContent>
 
           <TabsContent value="calendar" className="mt-4">
@@ -442,6 +508,46 @@ export default function PersonalWorkouts() {
             onClose={() => setAnamnesisStudent(null)}
           />
         )}
+
+        {/* Clone Plan Dialog */}
+        <Dialog open={!!clonePlan} onOpenChange={(open) => { if (!open) { setClonePlan(null); setCloneTargetStudent(""); } }}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Copy className="w-5 h-5 text-primary" />
+                Clonar Plano para Outro Aluno
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="p-3 rounded-lg bg-muted/50">
+                <p className="text-sm font-semibold">{clonePlan?.title}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {clonePlan?.objective} • Criado em {clonePlan?.created_at ? new Date(clonePlan.created_at).toLocaleDateString("pt-BR") : ""}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Selecionar aluno destino</label>
+                <Select value={cloneTargetStudent} onValueChange={setCloneTargetStudent}>
+                  <SelectTrigger><SelectValue placeholder="Escolha o aluno..." /></SelectTrigger>
+                  <SelectContent>
+                    {students.filter(s => s.student_id !== clonePlan?.student_id).map(s => (
+                      <SelectItem key={s.student_id} value={s.student_id}>
+                        <div className="flex items-center gap-2">
+                          <Users className="w-3 h-3" />
+                          {s.full_name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={handleClonePlan} disabled={cloning || !cloneTargetStudent} className="w-full gap-2">
+                <Copy className="w-4 h-4" />
+                {cloning ? "Clonando..." : "Clonar Plano"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

@@ -13,9 +13,10 @@ import { useTenant } from "@/lib/tenantContext";
 import { getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import { toast } from "sonner";
 import ExerciseLibrary from "./ExerciseLibrary";
+import ExerciseVideoLibrary from "./ExerciseVideoLibrary";
 import {
   Plus, Trash2, Copy, GripVertical, ChevronDown, ChevronUp,
-  BookOpen, Save, Zap, Layers, Play, Dumbbell, Link2, Unlink
+  BookOpen, Save, Zap, Layers, Play, Dumbbell, Link2, Unlink, Film
 } from "lucide-react";
 
 const MUSCLE_GROUPS = [
@@ -116,6 +117,8 @@ export default function WorkoutEditor({ students, onSaved, onCancel }: WorkoutEd
   const [saving, setSaving] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [libraryTarget, setLibraryTarget] = useState<{ rIdx: number; eIdx: number } | null>(null);
+  const [videoLibOpen, setVideoLibOpen] = useState(false);
+  const [videoTarget, setVideoTarget] = useState<{ rIdx: number; eIdx: number } | null>(null);
 
   // ── Routine Management ──
   const addRoutine = () => setRoutines([...routines, newRoutine(routines.length)]);
@@ -420,10 +423,10 @@ export default function WorkoutEditor({ students, onSaved, onCancel }: WorkoutEd
                     <div className="col-span-1"></div>
                     <div className="col-span-3">Exercício</div>
                     <div className="col-span-1">Grupo</div>
-                    <div className="col-span-1 text-center">Sér</div>
+                    <div className="col-span-1 text-center">Séries</div>
                     <div className="col-span-1 text-center">Reps</div>
                     <div className="col-span-1 text-center">Carga</div>
-                    <div className="col-span-1 text-center">Desc</div>
+                    <div className="col-span-1 text-center">Desc(s)</div>
                     <div className="col-span-3"></div>
                   </div>
 
@@ -543,15 +546,26 @@ export default function WorkoutEditor({ students, onSaved, onCancel }: WorkoutEd
 
                           {/* Rest */}
                           <div className="col-span-1">
-                            <Input type="number" placeholder="60s" value={ex.rest_seconds}
-                              onChange={(e) => updateExercise(rIdx, eIdx, "rest_seconds", parseInt(e.target.value) || 60)}
+                            <Input type="number" placeholder="60" value={ex.rest_seconds === 0 ? "" : ex.rest_seconds}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                updateExercise(rIdx, eIdx, "rest_seconds", val === "" ? 0 : parseInt(val) || 0);
+                              }}
+                              onBlur={() => {
+                                if (!ex.rest_seconds) updateExercise(rIdx, eIdx, "rest_seconds", 60);
+                              }}
                               className="h-8 text-xs text-center" />
                           </div>
 
                           {/* Actions */}
                           <div className="col-span-3 flex gap-0.5 justify-end">
+                            <Button variant="ghost" size="icon" className="h-7 w-7" title="Vincular vídeo"
+                              onClick={() => { setVideoTarget({ rIdx, eIdx }); setVideoLibOpen(true); }}>
+                              <Film className={`w-3 h-3 ${ex.video_url ? "text-primary" : "text-muted-foreground"}`} />
+                            </Button>
                             {ex.video_url && (
-                              <Button variant="ghost" size="icon" className="h-7 w-7" title="Vídeo">
+                              <Button variant="ghost" size="icon" className="h-7 w-7" title="Vídeo vinculado"
+                                onClick={() => window.open(ex.video_url, "_blank")}>
                                 <Play className="w-3 h-3 text-primary" />
                               </Button>
                             )}
@@ -615,6 +629,37 @@ export default function WorkoutEditor({ students, onSaved, onCancel }: WorkoutEd
             <DialogTitle>Selecionar da Biblioteca</DialogTitle>
           </DialogHeader>
           <ExerciseLibrary selectable onSelect={selectFromLibrary} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Video Library Modal */}
+      <Dialog open={videoLibOpen} onOpenChange={setVideoLibOpen}>
+        <DialogContent className="sm:max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Film className="w-5 h-5 text-primary" />
+              Vincular Vídeo ao Exercício
+            </DialogTitle>
+          </DialogHeader>
+          <ExerciseVideoLibrary
+            draggable={false}
+            onSelect={(video: any) => {
+              if (videoTarget) {
+                const { rIdx, eIdx } = videoTarget;
+                const u = [...routines];
+                const ex = u[rIdx].exercises[eIdx];
+                ex.video_url = video.video_url;
+                if (!ex.name.trim()) {
+                  ex.name = video.title;
+                  ex.muscle_group = video.muscle_group;
+                }
+                setRoutines(u);
+                toast.success(`Vídeo "${video.title}" vinculado!`);
+              }
+              setVideoLibOpen(false);
+              setVideoTarget(null);
+            }}
+          />
         </DialogContent>
       </Dialog>
     </div>
