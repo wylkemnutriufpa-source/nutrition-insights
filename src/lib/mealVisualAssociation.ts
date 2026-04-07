@@ -63,7 +63,7 @@ const CARB_KEYWORDS = new Set([
 
 const GENERIC_TITLES = new Set([
   "almoco", "jantar", "cafe da manha", "lanche",
-  "lanche da manha", "lanche da tarde", "ceia",
+  "lanche da manha", "lanche da tarde",
   "refeicao", "marmita",
 ]);
 
