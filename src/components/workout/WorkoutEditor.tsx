@@ -13,9 +13,10 @@ import { useTenant } from "@/lib/tenantContext";
 import { getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import { toast } from "sonner";
 import ExerciseLibrary from "./ExerciseLibrary";
+import ExerciseVideoLibrary from "./ExerciseVideoLibrary";
 import {
   Plus, Trash2, Copy, GripVertical, ChevronDown, ChevronUp,
-  BookOpen, Save, Zap, Layers, Play, Dumbbell, Link2, Unlink
+  BookOpen, Save, Zap, Layers, Play, Dumbbell, Link2, Unlink, Film
 } from "lucide-react";
 
 const MUSCLE_GROUPS = [
@@ -116,6 +117,8 @@ export default function WorkoutEditor({ students, onSaved, onCancel }: WorkoutEd
   const [saving, setSaving] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [libraryTarget, setLibraryTarget] = useState<{ rIdx: number; eIdx: number } | null>(null);
+  const [videoLibOpen, setVideoLibOpen] = useState(false);
+  const [videoTarget, setVideoTarget] = useState<{ rIdx: number; eIdx: number } | null>(null);
 
   // ── Routine Management ──
   const addRoutine = () => setRoutines([...routines, newRoutine(routines.length)]);
