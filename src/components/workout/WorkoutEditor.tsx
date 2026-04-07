@@ -423,10 +423,10 @@ export default function WorkoutEditor({ students, onSaved, onCancel }: WorkoutEd
                     <div className="col-span-1"></div>
                     <div className="col-span-3">Exercício</div>
                     <div className="col-span-1">Grupo</div>
-                    <div className="col-span-1 text-center">Sér</div>
+                    <div className="col-span-1 text-center">Séries</div>
                     <div className="col-span-1 text-center">Reps</div>
                     <div className="col-span-1 text-center">Carga</div>
-                    <div className="col-span-1 text-center">Desc</div>
+                    <div className="col-span-1 text-center">Desc(s)</div>
                     <div className="col-span-3"></div>
                   </div>
 
