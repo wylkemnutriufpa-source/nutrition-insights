@@ -262,16 +262,16 @@ export const SNACK_OPTIONS = [
   { name: "Banana com aveia", foods: ["1 banana", "1 col. sopa aveia"], kcal: 130, protein: 3, carbs: 28, fat: 2 },
 ];
 
-// ── Substituições por categoria ──
+// ── Substituições por categoria (synced from _shared/food-rules.ts) ──
 export const SUBSTITUTION_GROUPS = {
-  protein_main: ["frango", "carne moída", "bife", "tilápia", "porco", "sardinha"],
-  carb_main: ["arroz", "macarrão", "batata", "macaxeira", "batata doce", "inhame"],
-  carb_breakfast: ["pão integral", "tapioca", "cuscuz", "pão francês"],
+  protein_main: ["frango", "carne moída", "bife", "tilápia", "porco", "sardinha", "alcatra", "patinho", "acém"],
+  carb_main: ["arroz", "macarrão", "batata", "macaxeira", "batata doce", "inhame", "cará"],
+  carb_breakfast: ["pão integral", "tapioca", "cuscuz", "pão francês", "pão de forma"],
   protein_breakfast: ["ovo mexido", "ovo cozido", "queijo coalho", "queijo muçarela"],
-  fruit: ["banana", "maçã", "mamão", "laranja", "goiaba", "morango", "tangerina"],
+  fruit: ["banana", "maçã", "mamão", "laranja", "goiaba", "morango", "tangerina", "melancia", "abacaxi", "manga"],
   dairy: ["iogurte natural", "leite", "queijo coalho"],
-  legume: ["feijão", "lentilha", "feijão verde"],
-  vegetable: ["alface", "tomate", "brócolis", "cenoura", "couve"],
+  legume: ["feijão", "feijão carioca", "feijão preto", "lentilha", "feijão verde"],
+  vegetable: ["alface", "tomate", "brócolis", "cenoura", "couve", "repolho", "chuchu", "abobrinha"],
 };
 
 // ── Validação de alimentos ──
